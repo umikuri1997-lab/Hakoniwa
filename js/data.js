@@ -201,8 +201,9 @@ const BL={
   kadomatsu:{w:1,name:'かどまつ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。竹と松のおめでたいかざり。住み心地+10'},
   rockart:{hp:5,brk:1,fix:1,fixm:{stone:3},name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:5},desc:'土でできたかざり。住み心地+5'},
   vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度1.2倍（重複なし）。住み心地+4'},
+  blk_soil:{name:'土のブロック',kind:'cube',pc:0,time:0,qty:1,lv:1,mat:{},desc:'つむと、土の地面になるブロック'},
   blk_stone:{name:'石のブロック',kind:'cube',pc:1,time:40,qty:10,lv:1,mat:{stone:5},desc:'つむと、石の地面になるブロック'},
-  blk_brick:{name:'レンガのブロック',kind:'cube',pc:2,time:50,qty:10,lv:1,mat:{stone:3,tsuchi:3},desc:'つむと、レンガの地面になるブロック'},
+  blk_brick:{name:'レンガのブロック',kind:'cube',pc:2,time:50,qty:10,lv:1,mat:{stone:3,wood:2},desc:'つむと、レンガの地面になるブロック'},
   blk_wood:{name:'木のブロック',kind:'cube',pc:1,time:40,qty:10,lv:1,mat:{wood:5},desc:'つむと、板の地面になるブロック'},
   arrow:{name:'木の矢',kind:'ammo',pc:1,time:40,maker:'wood',qty:10,mat:{eda:1,stone:1},desc:'見張り台が放つ矢。1発で1本使う'},
   pit:{name:'落とし穴',fix:1,fixm:{wood:1},kind:'furn',pc:2,time:100,maker:'earth',qty:1,trap:1,attr:{earth:.5},mat:{wood:3,stone:3},desc:'ふんだ「コワイノ」が落ちて、その夜は出てこない。1回でつかいおわる'},
@@ -228,7 +229,7 @@ const BL={
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:1,can:2},desc:'ふんだ「コワイノ」と、まわり1マスの「コワイノ」に40ダメージ。つぎに使えるまで3時間',anim:1},
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、1.3分止める。つぎに使えるまで2時間30分',anim:1},
   dig:{name:'ほる',kind:'build',pc:0,time:15,attr:{},desc:'地面を1だんほる。土が1こ出る'},
-  mound:{name:'つむ',kind:'build',pc:0,time:15,attr:{},mat:{tsuchi:1},desc:'土を1こつんで、地面を1だん高くする'},
+  mound:{name:'つむ',kind:'build',pc:0,time:15,attr:{},mat:{},desc:'土を1こつんで、地面を1だん高くする'},
   watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。威力10／6.7分ごと／射程6マス'},
   coop:{name:'とり小屋',kind:'build',mat:{wood:20},pc:15,time:120,maker:'wood',lv:4,solid:1,attr:{wood:1},desc:'ハネマリが3羽まで住む小屋'},
   barn:{name:'家畜小屋',kind:'build',sz:[2,2],mat:{wood:50,stone:10},pc:30,time:200,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'モコダマかツノクサが3頭まで住む小屋'},
@@ -320,7 +321,7 @@ function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([
 const TABLES=new Set(['table','dtable','g_w_clover','g_e_geode','g_f_table','g_s_table']);/* 食べられる食卓（ふつう・大きな食卓） */
 const FURN=['gekkolamp','hotarukago','shitone','tsukimidai','terraceseat','madobachi','canallamp','araiba','shimahammock','fusenya','kagoisu','kazakadan','kazelamp','loom','composter','cooktable','joro','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','dtable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
-const TERRA=new Set(['dig','mound']),DIGIDS=new Set(['dig','mound']),CUBES=['blk_stone','blk_brick','blk_wood'],digSel=id=>DIGIDS.has(id)||CUBES.includes(id);/* つむブロック（S.vx：マス→だんごとのブロック。''は土） *//* 地面の工事（DIGIDS：ほる・つむ。守り神がタップでじかに、なぞるとせいれいにたのむ） */
+const TERRA=new Set(['dig','mound']),DIGIDS=new Set(['dig','mound']),CUBES=['blk_stone','blk_brick','blk_wood'],SOIL='blk_soil',PICKB=[SOIL,...CUBES],digSel=id=>DIGIDS.has(id)||CUBES.includes(id);/* つむブロック（S.vx：マス→だんごとのブロック。''は土） *//* 地面の工事（DIGIDS：ほる・つむ。守り神がタップでじかに、なぞるとせいれいにたのむ） */
 const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','smelter','coop','barn','lumber','well','quarry','windmill','fountain','lighthouse','bell','onsen','signw','signs','stele','lurestatue','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
@@ -590,7 +591,7 @@ const QUESTS1=[
   stepQuest({id:'guardLearn',text:'こもれびのまもり',
    steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバがたたかいに出て、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバがたたかうかは、せいれいの画面でえらぶ'}],
    talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
-    gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、たたかうフタバのまわり3マスで、「コワイノ」にねらわれている、たたかうせいれいを、葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
+    gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');guardLearnPop()}}},
    get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりのたね」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[

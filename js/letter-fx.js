@@ -15,7 +15,7 @@ function envPix(open){/* ふうとうのドット [x,y,色] */const P=[],put=(x,
       const lx=1+Math.round((y-1)*7.5/5),rx=17-lx;if(y<=6&&(x===lx||x===rx)){put(x,y,'L');continue}if(y<6&&x>lx&&x<rx){put(x,y,'F');continue}put(x,y,y===10?'S':'P')}
     for(const[x,y]of[[8,5],[9,5],[7,6],[10,6],[7,7],[10,7],[8,8],[9,8]])put(x,y,'R');put(8,6,'H');put(9,6,'R');put(8,7,'R');put(9,7,'D');put(10,7,'D');put(9,8,'D');return P}
   for(let y=0;y<6;y++){const a=8-Math.round(y*1.6),b=9+Math.round(y*1.6);for(let x=Math.max(0,a);x<=Math.min(17,b);x++)put(x,y,x===a||x===b||y===0?'O':'F')}/* ひらいた封（上の三角） */
-  for(let y=5;y<17;y++)for(let x=0;x<18;x++){if(x===0||x===17||y===16){put(x,y,'O');continue}if(y===5){put(x,y,'O');continue}
+  for(let y=5;y<17;y++)for(let x=0;x<18;x++){if(x===0||x===17||y===16){put(x,y,'O');continue}if(y===5)continue;/* 封のつけ根に線を引かない（ひらいた封がそのままつづく） */
     const dx=Math.min(x-1,16-x),vy=6+Math.round(dx*5.5/7.5);if(y<vy)put(x,y,'I');else if(y===vy)put(x,y,'L');else put(x,y,y===15?'S':'P')}return P}
 const ENVPX=[envPix(0),envPix(1)];
 function envDraw(g,x,y,s,open){for(const[px,py,c]of ENVPX[open?1:0]){g.fillStyle=c;g.fillRect(x+px*s,y+py*s,s,s)}}

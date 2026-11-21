@@ -238,7 +238,7 @@ function removeAt0(x,y){const tx0=x,ty0=y;
 function finishBuild(j,r){
   if(S.dyn[j]&&S.dyn[j].bp!=null&&typeof bpFinish==='function')return bpFinish(j,r);/* 家の設計図の部品 */
   if(S.dyn[j]&&S.dyn[j].build==='canal')return mzCanalDone(j,r);/* 水路をほりおえた */
-  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound',cube=S.dyn[j].cube;delete S.dyn[j];S.obj[j]='';let got='';if(up){if((S.hi[j]|0)<HMAX)terraUp(j,cube);else if(cube)S.inv[cube]=(S.inv[cube]||0)+1}else if((S.hi[j]|0)>HMIN){got=terraTop(j);terraDown(j)}if(MATN[got]){if(r&&roomN(r)>0)addMat(r,got,1);else S.mat[got]=(S.mat[got]||0)+1}else if(got){if(!(r&&addItem(r,got,1)>0))S.inv[got]=(S.inv[got]||0)+1}/* ほった物は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
+  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound',cube=S.dyn[j].cube;delete S.dyn[j];S.obj[j]='';let got='';if(up){if((S.hi[j]|0)<HMAX)terraUp(j,cube);else if(cube)S.inv[cube]=(S.inv[cube]||0)+1}else if((S.hi[j]|0)>HMIN){got=terraTop(j);terraDown(j)}if(got){if(!(r&&addItem(r,got,1)>0))S.inv[got]=(S.inv[got]||0)+1}/* ほった物は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(d.hole){delete S.dyn[j];S.obj[j]='kazaana';recount();burst(j,'furn');sfx('level');if(r)addSpiritXp(4,r);toast('風穴がひらいた！ 風がふき出した','good');memo('leaf','風穴がひらいて、風がふき出した');checkQuest();return}/* 風穴の石をどけた（wind.js） */if(d.wfix){windFixDone(j,d,r);return}/* こわれた遊具を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
   if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
@@ -265,32 +265,57 @@ const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short?short*(STAMPC10[id]==null?Infinity:STAMPC10[id]):0;/* 足りない分だけ、1こあたりの値段で買う（足りていれば0） */if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
 /* ---------- ほる・つむ（地面のブロック） ----------
-   タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった物はその場に落ち、せいれいがはこぶ。つむ土は箱から、ブロックはもちものから。
-   なぞる：えらんだ所を、せいれいにたのむ（建てる所のしくみ。つむ土は、せいれいが箱からはこぶ。ブロックは、たのんだときにもちものからへらす）。
+   守り神のどうぐ「かたちの筆」（selStamp 'pick'）：タップで、下の列でえらんだブロック（PICKB）をつむ。長おしで、筆のあとが光って、ほる（材質で時間がかわる pickMs）。
+   ほるとブロックが落ち（土は土のブロック、地面より下は石のブロック）、せいれいがはこぶ。つむブロックは、もちものから。
+   草原は、神殿を直したあと、カミサマにもらう（サブクエスト fude）。ほかの土地・フリーモードは、はじめから（fudeHas）。
    S.vx[マス]：だんごとのブロック（[1だんめ,2だんめ,…]、''は土）。ないマスは、ぜんぶ土 */
 const VX=()=>S.vx||(S.vx={});
 function cubeAt(j,lv){const v=S.vx&&S.vx[j];return v&&v[lv-1]||''}/* マス j の lv だんめのブロック（''は土） */
 function vxSet(j,lv,id){const v=VX()[j]||(VX()[j]=[]);while(v.length<lv)v.push('');v[lv-1]=id||'';while(v.length&&!v[v.length-1])v.pop();if(!v.length)delete S.vx[j]}
-function terraTop(j){const h=hiAt(j);return h>0?cubeAt(j,h)||'tsuchi':'stone'}/* ほると出る物（地面より下は石材） */
-function terraUp(j,id){const h=(S.hi[j]|0)+1;S.hi[j]=h;vxSet(j,h,CUBES.includes(id)?id:'')}/* 1だんつむ */
+function terraTop(j){const h=hiAt(j);return h>0?cubeAt(j,h)||SOIL:'blk_stone'}/* ほると落ちるブロック（土は土のブロック、地面より下は石のブロック） */
+function terraUp(j,id){const h=(S.hi[j]|0)+1;S.hi[j]=h;vxSet(j,h,CUBES.includes(id)?id:'')}/* 1だんつむ（土のブロックは ''） */
 function terraDown(j){const h=S.hi[j]|0;if(h>0)vxSet(j,h,'');S.hi[j]=h-1;if(h-1<0)pitFlood(j)}/* 1だんほる。地面より下になったら、水がながれこむかしらべる */
 function pitFlood(j0){/* 地面より下の穴が、水（池・川。雲の海はのぞく）にとなりあったら、つながった穴ぜんぶに水がながれこんで、池になる */
   const pit=k=>k>=0&&k<W*H&&hiAt(k)<0&&!S.ground[k]&&!S.floor[k]&&(!S.obj[k]||WEEDS.has(S.obj[k]))&&!fogAt(k);if(!pit(j0))return 0;
   const seen=new Set([j0]),Q=[j0];let wet=false;while(Q.length){const k=Q.pop(),x=k%W;for(const n of[x>0?k-1:-1,x<W-1?k+1:-1,k-W,k+W]){if(n<0||n>=W*H)continue;if(waterJ(n))wet=true;else if(!seen.has(n)&&pit(n)){seen.add(n);Q.push(n)}}}
   if(!wet)return 0;for(const k of seen){S.ground[k]=1;S.hi[k]=0;if(S.vx)delete S.vx[k];if(WEEDS.has(S.obj[k]))S.obj[k]='';if(seen.size<=40)spawnFX(k%W+.5,((k/W)|0)+.5,'#9fd4ef')}
   (S.cnt||(S.cnt={})).pond=((S.cnt||{}).pond||0)+seen.size;/* ほって作った池のマス（ゆめボード） */const x=j0%W,y=(j0/W)|0;sfxAt('splash',x+.5,y+.5);dirty=true;recount();if(!S.flags.pitPond){S.flags.pitPond=1;toast('水がながれこんで、池になった','good')}return seen.size}
-const terraHave=id=>CUBES.includes(id)?inv(id):S.mat.tsuchi||0;/* つむ物の、のこり */
-function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;
-  if(up&&terraHave(id)<1)return toast((CUBES.includes(id)?BL[id].name:'土')+'が足りません','warn');
-  let got='';if(up){if(CUBES.includes(id))S.inv[id]--;else S.mat.tsuchi--;terraUp(j,id)}else{got=terraTop(j);terraDown(j)}
-  recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up){const n0=(S.drops||[]).length;dropAt(x,y,MATN[got]?'mat:'+got:got,1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほった物は、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
-  if(!S.flags.digTip){S.flags.digTip=1;setTimeout(()=>toast('なぞると、せいれいにまとめてたのめる'),600)}}
-function askTerra(id,cells){const up=id!=='dig',ok=cells.filter(([x,y])=>canPlace(up?'mound':'dig',x,y,true)&&S.obj[y*W+x]!=='site');if(!ok.length)return toast(up?'つめる所がありません':'ほれる所がありません');
-  const nm=CUBES.includes(id)?BL[id].name:'土';if(up){const n=Math.min(ok.length,terraHave(id));if(!n)return toast(nm+'が足りません','warn');ok.length=n}
-  pending={kind:'terra',id,cells:ok};$('#confirmTxt').textContent=ok.length+'マス'+(up?'つむ・'+nm+ok.length:'ほる')+'・せいれいにたのむ';lackOn($('#cYes'),'');yesLbl(up?'つむ':'ほる');$('#cRot').hidden=true;$('#confirm').hidden=false}
-function terraAsk(p){const up=p.id!=='dig',cube=CUBES.includes(p.id),bid=up?'mound':'dig',b=BL[bid];let n=0;
-  for(const[x,y]of p.cells){if(!canPlace(bid,x,y,true))continue;if(up&&terraHave(p.id)<1)break;const j=y*W+x;if(up&&!cube)rsvAdd(b.mat);if(cube)S.inv[p.id]--;S.obj[j]='site';S.dyn[j]={build:bid,p:0,need:b.time,mat:up&&!cube?Object.assign({},b.mat):undefined,got:{}};if(cube)S.dyn[j].cube=p.id;if(n<14)burstAt(x,y,'block');n++}
-  if(!n)return toast(up?'つむ物が足りません':'ほれる所がありません','warn');recount();renderPalette();toast('せいれいが'+n+'マス'+(up?'つみ':'ほり')+'にきてくれる','good')}
+const terraHave=id=>inv(PICKB.includes(id)?id:SOIL);/* つむブロックの、のこり */
+const CUBEMAT={blk_soil:'tsoil',blk_stone:'tstone',blk_brick:'tstone',blk_wood:'twood'};/* ブロックの材質の音 */
+function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;const cb=PICKB.includes(id)?id:SOIL;
+  if(up&&terraHave(cb)<1)return toast(BL[cb].name+'が足りません','warn');
+  let got='';if(up){S.inv[cb]--;terraUp(j,cb);S.flags.fudeUp=1}else{got=terraTop(j);terraDown(j);S.flags.fudeDig=1}
+  recount();dirty=true;burst(j,'block');sfxAt((up?'put_':'brk_')+(CUBEMAT[up?cb:got]||'tsoil'),x+.5,y+.5);fudeFx(j,up);
+  if(!up){const n0=(S.drops||[]).length;dropAt(x,y,got,1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほったブロックは、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
+}
+function soilMigrate(){/* 前のセーブの素材「土」は、土のブロックにする（読みこむたび。はこんでいるとちゅうの土は、つぎに読みこんだとき） */
+  const n=S.mat&&S.mat.tsuchi|0;if(n>0){S.mat.tsuchi=0;S.inv[SOIL]=(S.inv[SOIL]||0)+n}
+  for(const d of S.drops||[])if(d.id==='mat:tsuchi')d.id=SOIL}
+function fudeHas(){/* かたちの筆をもっているか：草原の本編は、カミサマにもらってから（カミサマが旅立ったあとのセーブも） */return !S||WD!==0||!!S.free||!!S.flags.fude||!!S.godGone}
+let PICKSEL=SOIL,PICKH=null;/* 筆の下の列でえらんでいる物・長おし */
+const pickHave=k=>inv(k);
+function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?2000:t===SOIL?1000:t==='blk_brick'||t==='blk_wood'?1500:2000}/* ほるのにかかる時間（ミリ秒）：土1秒・レンガと木1.5秒・石と地面より下2秒 */
+const PICKTAP=250;/* これより短くはなしたら、つむ */
+function pickCell(sx,sy){let w=toWorld(sx,sy);const tl=tapLv(w.x,w.y);const x=Math.floor(w.x/TS),y=Math.floor((w.y+tl*LIFT)/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
+function pickDown(sx,sy){if(!fudeHas())return;const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
+function pickTick(now){const P=PICKH;if(!P||P.done)return;const a=now-P.t0;if(a<PICKTAP)return;if(!P.dig){if(nightLock()){PICKH=null;return toast('夜のあいだは、ほれません')}if(!canPlace('dig',P.x,P.y)){PICKH=null;return}P.dig=true;P.need=pickMs(P.j)}
+  const k=Math.floor(a/250);if(k>P.n){P.n=k;sfxAt('fudedig',P.x+.5,P.y+.5);spawnFX(P.x+.5,P.y+.6,'#b89a72');spawnFX(P.x+.2+hash(P.j+k)*.6,P.y+.3+hash(P.j*7+k)*.5,'#fff0b8')}/* ほっているあいだ、少しずつ土と光のつぶがとぶ */
+  if(a>=P.need){P.done=true;terraNow('dig',P.x,P.y)}}
+function pickUp(){const P=PICKH;PICKH=null;if(!P||P.done||P.dig)return;/* 長おしのとちゅうではなしたら、ほるのをやめる */if(performance.now()-P.t0>=PICKTAP)return;
+  if(nightLock())return toast('夜のあいだは、つめません');terraNow(PICKSEL,P.x,P.y)}
+function pickCancel(){PICKH=null}
+const FUDEFX=[];/* 筆でほった・つんだときの光（見た目だけ） */
+function fudeFx(j,up){FUDEFX.push({j,up,t0:performance.now()});if(FUDEFX.length>8)FUDEFX.shift()}
+const FUDEC='rgba(255,236,160,',FUDEMS=420;
+function fudeRect(px,py,r,a){/* 1マスのわくを、左上から時計まわりに r（0〜1）だけ光の線でなぞる（2ドット） */let L=r*4*TS;const s=[[px,py,1,0],[px+TS-2,py,0,1],[px+TS,py+TS-2,-1,0],[px,py+TS,0,-1]];ctx.fillStyle=FUDEC+a+')';
+  for(const[x,y,dx,dy]of s){const n=Math.min(TS,L);if(n<=0)break;if(dx>0)ctx.fillRect(x,y,n,2);else if(dx<0)ctx.fillRect(x-n,y,n,2);else if(dy>0)ctx.fillRect(x,y,2,n);else ctx.fillRect(x,y-n,2,n);L-=TS}}
+function drawPickCrack(now){const P=PICKH;ctx.save();
+  if(P&&P.dig&&!P.done){const r=Math.min(1,(now-P.t0)/P.need),px=P.x*TS,py=P.y*TS-liftOf(P.j);ctx.fillStyle=FUDEC+(.12+.25*r)+')';ctx.fillRect(px+2,py+2,TS-4,TS-4);fudeRect(px,py,r,.9);/* 筆のあとが、わくをなぞって光り、中がだんだん明るくなる */
+    for(let i=0;i<Math.ceil(r*6);i++){const x=4+Math.floor(hash(P.j*31+i*7)*(TS-8)),y=4+Math.floor(hash(P.j*17+i*13)*(TS-8)),b=(Math.sin(now/120+i)>0)?.9:.5;ctx.fillStyle=FUDEC+b+')';ctx.fillRect(x,y,2,2)}}
+  for(let i=FUDEFX.length-1;i>=0;i--){const f=FUDEFX[i],a=(now-f.t0)/FUDEMS;if(a>=1){FUDEFX.splice(i,1);continue}const px=f.j%W*TS,py=((f.j/W)|0)*TS-liftOf(f.j);
+    if(f.up){fudeRect(px,py,Math.min(1,a*2.2),1-a*.8)}/* つむ：光の線が、ブロックの形をさっと描く */
+    else{const g=Math.round(a*12);ctx.fillStyle=FUDEC+(1-a)+')';ctx.fillRect(px-g,py-g,TS+g*2,2);ctx.fillRect(px-g,py+TS+g-2,TS+g*2,2);ctx.fillRect(px-g,py-g,2,TS+g*2);ctx.fillRect(px+TS+g-2,py-g,2,TS+g*2)}}/* ほった：光のわくが、外へひろがって消える */
+  ctx.restore()}
 function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハケではぬれません');/* 窓・カーテンは、壁に1つずつかける */
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
@@ -323,7 +348,6 @@ function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
   if(!pending)return;const p=pending;pending=null;$('#confirm').hidden=true;selRect=null;
   if(p.kind==='one'){place(p.id,p.x,p.y);return}
-  if(p.kind==='terra'){terraAsk(p);return}/* ほる・つむを、せいれいにたのむ */
   if(p.kind==='bp'){bpPlace(p.i,p.x,p.y);return}/* 家の設計図 */
   if(p.kind==='plant'){{const D=plantDist();p.cells=p.cells.filter(([x,y])=>plantReach(D,y*W+x));if(!p.cells.length)return toast('せいれいが行けない場所です','warn')}if(inv(p.id)<p.cells.length)return toast(iname(p.id)+'が足りません');S.inv[p.id]-=p.cells.length;for(const[x,y]of p.cells){const j=y*W+x;S.obj[j]='sprout';S.dyn[j]={plant:p.id,p:0,userMound:true}}
     p.cells.forEach(([x,y],i)=>{if(i<12)burstAt(x,y,'plant')});recount();toast('せいれいたちが植えにきてくれる','good');return}
