@@ -357,7 +357,8 @@ function stairLink(a,b){/* bが階段の本体で、aがそのうしろの高い
 let CLV=1;/* いま絵を作っている段（1〜3）。がけの絵の関数は、この段より高いか同じマスを「高いマス」とみる */
 let TOPF=null;function topAt(j){return TOPF?TOPF(j):hiAt(j)>=CLV}/* TOPF：段差の部品を作るあいだだけ、まわりのマスの高さをまねる *//* 「上の面がある」（CLV の段で） */
 const HMAX=8,HMIN=-2;/* 段差は8だんまで（ほる・つむ）。地面より2だん下まで、ほれる */
-function cliff2(a,b){return Math.abs(hiAt(a)-hiAt(b))>1}/* 2だん以上ちがう所は、とびこえられない */
+function cliff2(a,b){return Math.abs(hiAt(a)-hiAt(b))>1}/* 2だん以上ちがう所（飼う生き物のかこい） */
+function cliffUp(a,b){return hiAt(b)-hiAt(a)>1}/* a から b へ：2だん以上のぼれない（とびおりるのは、何だんでもできる。落下ダメージ fall.js） */
 const LADDERS=new Set(['ladder_wood','ladder_bamboo']);/* ハシゴ：段差の下の低い地面に置く1マス。うしろ（手前・左右）のマスが、ちょうど1だん高い。上り下りは歩く速さ×0.5 */
 function ladderDir(j){/* ハシゴの向き（0：うしろが上のマス、1：左、3：右）。置いたときの向き S.rot、なければ自動 */const v=(S.rot||{})[j];if(v!=null&&LADDERS.has(S.obj[j]))return v;const h=hiAt(j),x=j%W;for(const d of[0,1,3]){const t=j-SDIR[d][1]*W-SDIR[d][0];if(t<0||t>=W*H||Math.abs(t%W-x)>1)continue;if(hiAt(t)===h+1&&S.ground[t]!==1)return d}return -1}
 const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];

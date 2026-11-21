@@ -137,7 +137,7 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
   /* 火山では、オオカゲが来ることは知らせない（草原で話したので、くりかえさない） *//* 草原は、はじめての夜のフタバの知らせだけ。2回目からは知らせない */
 }
 // 出現場所：マップの南のはし（いちばん下の行）から。水・障害物・明かりの中はさける
-const SPRC={n:-1,s:null,d:null};function spawnReach(){/* 村のまん中から歩いて行けるマス（コワイノは、村まで来られる所にだけ出る）。下絵が変わったら作りなおす */if(SPRC.n!==STATN||SPRC.s!==S){SPRC.n=STATN;SPRC.s=S;SPRC.d=bfsE(CX,CY,40,1).dist}return SPRC.d}
+const SPRC={n:-1,s:null,d:null};function spawnReach(){/* 村のまん中から歩いて行けるマス（コワイノは、村まで来られる所にだけ出る）。下絵が変わったら作りなおす */if(SPRC.n!==STATN||SPRC.s!==S){SPRC.n=STATN;SPRC.s=S;SPRC.d=bfsE(CX,CY,40,1,true).dist}return SPRC.d}
 function spawnSpot(){const R=spawnReach();if(WD===WIND){const w=windSpawnSpot(R);if(w)return w}/* 風：雲の海のふちから（wind.js） */
   for(let tries=0;tries<300;tries++){const x=(Math.random()*W)|0,y=fogSouth(x),j=y*W+x;/* 晴れている所の南のはし */
     if(y<0||S.ground[j]===1||solidOf(j)||lightAt(x+.5,y+.5)||R[j]<0)continue;return [x+.5,y+.5]}
