@@ -1,7 +1,7 @@
 # 限定の家具（トリポ）のモデルを、持ち主の直しのとおりに直す（モデルそのものを直す。UV とテクスチャはそのまま）。
 # 使い方：python3 tools/art/models/tripo/gf_edit.py   … gf/base/*.glb（切りわけて、天板を水平にした物）から、直した gf/*.glb を作る（何回やっても同じ）
 #   座標は glTF（x 右・y 上・z 手前、足もとが原点）。高さのわりあいは、その家具の高さ h に対する数。
-#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直したモデル（gf/base）を、そのまま使う（ここでは直さない。持ち主がきめた）
+#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直し、マテリアルを分けたい所をオブジェクトに分けたモデル（gf/base）を、そのまま使う（ここでは直さない。持ち主がきめた）
 #   ・火・風のびょうぶ：おく行きを0.35倍（ほぼまっすぐ）
 #   ・土の花のオブジェ：鉢のふちより上の花・多肉を、それぞれの根もとで1.25倍・まん中から少し外へ（いい感じにならべる）
 #   ・火のテーブル：天板の面のない所を、うらの円い板でうめる
@@ -17,7 +17,7 @@ def save(n,m):m.export(os.path.join(D,n+'.glb'));print(n,'なおした')
 def near(c,ref,tol):return np.abs(c-np.array(ref,float)).sum(1)<tol
 def screen(n,ky=1.0):
     m=load(n);v=m.vertices;v[:,2]*=0.35;v[:,1]*=ky;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる。ky：高さ（持ち主：風のびょうぶは低く。設計図の SIZE も同じだけ低くする）
-def keep(n):save(n,load(n))   # 持ち主が直したモデル：そのまま
+def keep(n):import shutil;shutil.copy(os.path.join(B,n+'.glb'),os.path.join(D,n+'.glb'));print(n,'そのまま')   # 持ち主が直したモデル：そのまま（オブジェクトの分けかたものこす）
 def planter():
     m=load('g_e_planter');v=m.vertices;h=v[:,1].max();c=vcol(m)
     cream=near(c,(222,190,158),70);top=(v[:,1]>0.55*h)&~cream
