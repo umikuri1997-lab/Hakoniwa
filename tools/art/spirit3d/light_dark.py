@@ -6,8 +6,9 @@
 折り返しは額で高さ約56ドット、うなじで約32ドット。幅12〜16ドットの
 帯を頭に回し、その上辺に丸い紫の布をつなぐ。布は後頭部の中央近くで
 帯の上にたれ、うなじの高さで直径約18ドットの房をとめる。
-ケープは首もとから幅約64ドットに広がり、肩と背中を一枚の布で包む。
-胸の前は開いて三日月で留め、裾は丸い波形にする。
+ケープは首もとから幅約65ドットに広がり、肩と背中を一枚の布で包む。
+トモリは金縁のクリーム色の布を胸のしずくで、ツキミは淡い紫の布を
+三日月で留める。背中の裾は中央と左右に丸いひだが見える形にする。
 """
 from math import pi
 import numpy as np
@@ -115,12 +116,14 @@ def chest_mark(body, dark):
         mask = outer & ~inner
         pigment = np.tile(rgb('#e8d5ed'),(mask.sum(),1))
     else:
-        depth = (z-19)/6.3
-        mask = np.abs(x)/5.1+np.abs(depth) <= 1
-        pigment = tones(rgb('#ecad48'),rgb('#fff2ad'),
-                        np.clip(.58+.45*depth[mask]-.10*x[mask],0,1))
+        depth = (z-20)/6.3
+        edge = np.abs(x)/5.1+np.abs(depth)
+        mask = edge <= 1
+        glint = .59+.35*depth[mask]-.08*x[mask]
+        inside = np.clip((.97-edge[mask])/.37,0,1)
+        pigment = tones(rgb('#e7a535'),rgb('#fff1aa'),np.clip(.24*glint+.76*inside,0,1))
     at = surface_points[mask].copy()
-    at[:,1] += 1.9 if dark else .32
+    at[:,1] += 1.9
     return at,pigment
 
 
@@ -183,28 +186,37 @@ def night_cap():
     return texture(vertices.astype(float)*pitch,colors[first])
 
 
-def mantle():
-    """三日月の留め具から肩と背中を一枚で包む短いケープ。"""
+def mantle(dark):
+    """胸の留め具から肩と背中を一枚で包む短いケープ。"""
     drop = np.linspace(0,1,115)[:,None]
     around = np.linspace(0,1,560)
-    opening = .035+.36*drop**1.35
+    opening = .02+.375*drop**2
     angle = opening+(2*pi-2*opening)*around
     side,front = np.sin(angle),np.cos(angle)
 
-    # 襟から肩へ広げ、六つの丸い山が裾につながる。
-    lobe = .5+.5*np.cos(6*angle)
+    # 肩からすそへ広げ、背中の中央と左右のひだを丸く落とす。
+    back = np.maximum(-front,0)
+    rear = np.clip(2.4*back,0,1)
+    lobe = .5+.5*((1-rear)*np.cos(6*angle)+rear*np.cos(8*angle))
     ripple = lobe*drop**2.4
-    x = (9.4+22.2*drop+1.4*ripple)*side
+    x = (9.4+23.2*drop+1.4*ripple)*side
     y = (11.5+9.8*drop+.9*ripple)*front
     y += drop*(4.5*side**2-.7)
     # 背中の布はしっぽのつけ根を覆い、下からしっぽを出す。
-    y -= 9*np.maximum(-front,0)**5*np.sin(pi*drop)**1.5
-    hem = 16.3+1.1*front-5*lobe
+    y -= 9*back**5*np.sin(pi*drop)**1.5
+    hem = 17.5+1.1*front-(5+2*rear)*lobe
     z = 28.7+(hem-28.7)*drop**1.3
     cloth = np.stack((x,y,z),axis=-1).reshape(-1,3)
 
-    shade = np.clip(.69-.26*drop+.15*lobe*drop-.09*side+.035*front,0,1)
-    color = tones(rgb('#875995'),rgb('#c9a6d2'),shade.ravel())
+    shade = np.clip(.71-.23*drop+.14*lobe*drop-.09*side+.035*front,0,1)
+    if dark:
+        color = tones(rgb('#885795'),rgb('#c7a4d0'),shade.ravel())
+    else:
+        color = tones(rgb('#f3e3bd'),rgb('#fff9e9'),shade.ravel())
+        # 胸の開きと裾の端に細い金色の縁を回す。
+        rim = (drop >= .90) | ((np.minimum(around,1-around) < .012) & (drop > .23))
+        color[rim.ravel()] = tones(rgb('#ecb148'),rgb('#ffdf88'),shade[rim])
+
     return cloth,color
 
 
@@ -224,11 +236,11 @@ class LightDark(Spirit):
             self.body_color = rgb('#584466')
             self.arm_color = rgb('#847392')
             self.far_leg_color = rgb('#4c385a')
-            self.cape = mantle()
         else:
             self.body_color = rgb('#fff7e3')
             self.arm_color = rgb('#fff7e3')
             self.far_leg_color = rgb('#f4e5c6')
+        self.cape = mantle(dark)
         self.chest = chest_mark(self.solid['body'],dark)
         self.hood(dark)
         self.tail = self.make_tail(dark)

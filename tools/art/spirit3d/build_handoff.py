@@ -106,7 +106,7 @@ def still_sheet(spirits, out):
             image = image.crop((0,10,144,133)).resize(cell,Image.Resampling.NEAREST)
             x,y = j*cell[0], i*(cell[1]+20)
             draw.rectangle((x+3,y+21,x+cell[0]-4,y+cell[1]+16),
-                           fill=('#f4ebdb','#ede5f2')[i])
+                           fill=('#ede8e2','#ede5f2')[i])
             space = '　' if japanese else '  '
             draw.text((x+15,y+1),f'{names[i]}{space}{label}',font=font,fill='#4a4149')
             sheet.paste(image,(x,y+20),image)
