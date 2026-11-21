@@ -621,6 +621,8 @@
 - 大きな影はたたかわない（`S.enemies` に入れない）。さいごの夜のトモリはたたかれてもおなかがへらず、3回（`YHITMAX`）か朝になったら、3日あと（`YRETRY`）にやりなおし（`yamiHitRes`・`yamiFail`）。
 - トモリ・ゆりかごを直す子の行動（`ysit`・`yhold`・`ywalk`・`ywork`）は `decide0` のはじめの `yamiDecide` できめる。夜も歩く・待つのは `NIGHT_OK` に入れてある。
 - クリアのあとは、空・暗さが、ほかのステージと同じ昼と夜（`skyHour`・`darkness` の `S.cleared`）。
+- クリアした日の夜20時、ゆりかごから闇のせいれいツキミが生まれる（`tsukimiBirth`、会話をさいごまで見てから `S.flags.tsukimi` 1）。闇の属性（`ELEM.dark`）はツキミだけ：神殿では呼べない・たたかわない・絵は水の形を色がえ。夜はねむらず、ねむるせいれいのそばにすわって見守り（`tsukiDecide`・`ACT.tkwatch`、家の中ではかくれる）、まわり `TKWR` マスでねむる子のつかれのとれる速さ `TKWK` 倍（`tkWatchK`）。朝はねむる（`r.tkNap`）。
+- クリアのあと、追いはらったコワイノは夜のほうへかえる（`yamiHomeOn`・`drawHome`：白く止まる → ふりむいて北へ歩く → 紺にとけて、ドットの三日月がのこって消える）。たしかめは `tools/tests/yami-after.cjs`。
 - 会話でヒイロがいないときは、ヒイロの行だけはぶく（`ideaDialogue`）。
 - たしかめは `tools/tests/yami.cjs`・`tools/tests/yami-story.cjs`・`tools/tests/yami-story2.cjs`（会話は自動プレイと同じ送り方 `DLGA`＋`#dlgBtns`。朝の日記の紙はとじる。タップで始める会話は `DLGTAP` を入れてから）。
 ## 洞窟の探検

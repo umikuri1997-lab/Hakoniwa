@@ -302,7 +302,7 @@ function nearRes(e){return e.hitT!=null&&S.t-e.hitT<5||S.res.some(r=>foeAt(e,r))
 function foeStealing(e){return e.stealKey!=null&&S.t-(e.busyT??-1e9)<1}/* 箱・畑からぬすんでいる（カゲドロボウ） */
 function sortieOn(){return !!(S&&(S.free||S.flags&&S.flags.sortie))}/* 出撃（サブクエスト sortie を受けたら、えらべる。草原でおぼえたら、ほかのステージでも） */
 function sortieGuard(r){return !!r&&!WD&&!!S&&r.name===POKO&&!!(S.flags&&S.flags.guard)}/* こもれびのまもりをおぼえたフタバは、出撃をえらべる（はじめは出撃する） */
-function sortieOK(r){return r.elem!=='light'&&(sortieOn()||sortieGuard(r))}/* 光のせいれいは、たたかわない */
+function sortieOK(r){return r.elem!=='light'&&r.elem!=='dark'&&(sortieOn()||sortieGuard(r))}/* 光・闇のせいれいは、たたかわない */
 function sortieDef(r){return r.elem==='fire'||sortieGuard(r)}/* はじめの出撃：火のせいれいと、こもれびのまもりをおぼえたフタバ */
 function fighter(r){if(!r)return false;if(r.name===POKO&&!WD&&S.ns&&S.ns.final&&isNight())return true;/* 草原のさいごの夜は、フタバはかならず出撃 */if(!sortieOK(r))return r.elem==='fire';return r.sortie==null?sortieDef(r):r.sortie===true}/* 夜にコワイノと近接でたたかう子。r.sortie：えらんだ出撃（なければ sortieDef） */
 function foeHitsFire(e){if(typeof e.tg!=='number')return false;const q=S.res.find(q=>q.id===e.tg);return !!q&&fighter(q)&&!q.hidden&&Math.hypot(q.x-e.x,q.y-e.y)<((EN[e.type]||{}).rng||1)+.5}/* 火のせいれいをたたいているコワイノ（とどかない所からでも、火のせいれいが近よって攻撃する） *//* だれかの3マス以内・だれかのいる家に来たコワイノと、塀・壁・建物をこうげきしているコワイノ（火の子がむかえうつ） */
