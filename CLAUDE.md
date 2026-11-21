@@ -692,6 +692,7 @@
 - 風の塀は、遊園地の白い塀（`parkfence`・ドア `parkdoor`・入場ゲート `parkgate`、`STAGEONLY` 風）。3Dから写す（`fence3d.py` の `scene_park`・`doors3d.py`）。白い物は、ふつうのかげだと灰色になるので、かげをつけない材質（`flat`）で写す。
 - 風の家の壁は、帆布の壁（`canvaswall`、新しい風の村のはじめの家・設計図の壁）とアカシアの板壁（`acaciawall`）。3Dとテクスチャで写した5まい（上の面・正面・柱の切り口と正面・たての帯）を、竹の壁の道具の `part`・`vpart` で組む（`tools/art/windwall/windwall3d.py`）。壁の正面に光があたる向きで写す（ふつうの光だと、正面がかげになって白い布が灰色になる）。
 - 風の村にも、神殿を直したあとから夜にコワイノが来る（目標2の `enemy:true`。前のセーブの `calmNight` は `S.flags.windFoe1` で読みかえ）。来る所は雲の海のふち（雲の海にとなりあう、村まで歩いて行ける陸、`windSpawnSpot`）。オオカゲは来ない（`waveFor` の `WD===WIND`。さいごの夜はナギノオオカゲ）。はじめての夜はカザネのひとこと（`S.flags.windFoeTold`）。
+- 風のさいごの夜（`js/wind-story.js` の `windNightTick`）：遊具をねらう影の群れに、ナギノオオカゲ（`EN.nagi`、`windLure`。絵はオオカゲの絵に色をかさねた、かりの絵）が1ぴきまじる。ナギノオオカゲだけは風穴・かざみもねらい（`windLureOK`）、こわすと風穴はふさがり、かざみはもちものへもどる（`windRideBreak`）。勝った朝、ヌシ様をもちあげる守り神の出番「風をあつめる」（`WIND_PLAY` の `windLift`、`trace`：遊具からのぼる風のすじ3本を、指で下から上へなぞる。すじからはなれると風がちる）。3回しっぱいしたら、つぎの日の朝にもう一度（`S.wind.liftD`）。たしかめは `tools/tests/wind-story.cjs`。
 - コワイノの来ない夜（`S.flags.calmNight`）：`S.enemyOn` がないと時計は18時で止まる（朝が来ない）ので、コワイノなしで夜をすごさせるステージは、この印で時計を進める。
 
 ## 火山らしさ
