@@ -12,8 +12,8 @@ from common import WOOD
 from rides import BRASS, CREAM, GOLD
 
 STONE = [(164, 157, 140), (188, 179, 157), (177, 168, 150)]
-VANE_GREEN = (50, 195, 155)
-VANE_RED = (208, 114, 69)
+VANE_GREEN = (125, 207, 183)
+VANE_RED = (223, 141, 155)
 
 
 def hole(m, blocked):
