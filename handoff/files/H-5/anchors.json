@@ -1,0 +1,114 @@
+{
+  "pixels_per_tile": 64,
+  "milliseconds_per_frame": 100,
+  "frames": {
+    "fly_00": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_01": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_02": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_03": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_04": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_05": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_06": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_07": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_08": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_09": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_10": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_11": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_12": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_13": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_14": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "fly_15": {
+      "width": 736,
+      "height": 768,
+      "origin_x": 368,
+      "origin_y": 448
+    },
+    "support": {
+      "width": 678,
+      "height": 307,
+      "origin_x": 339,
+      "origin_y": 222
+    },
+    "face": {
+      "width": 56,
+      "height": 161,
+      "origin_x": 28,
+      "origin_y": 77
+    }
+  }
+}

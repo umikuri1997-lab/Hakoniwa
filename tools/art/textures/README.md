@@ -20,3 +20,8 @@
   取ってきた所：GitHub にある写し（matthewm174/Godot4.3-soulslike-controller の `textures/Rock030_1K-PNG/Rock030_1K-PNG_NormalGL.png`）。256×256 に色の平均（BOX）でちぢめ、16bit を 8bit にした。
 - Metal032 のノーマルマップは、たいらで、でこぼこがない（使わない）。金属は、つやのすじ（`oblique3d` の `material('metal')`）と、金属の色のむら（`metal032.png`）で出す。
 - `oldpaper.png`：Dugi「Old paper texture」（OpenGameArt、https://opengameart.org/content/old-paper-texture 、CC0 をふくむ複数のライセンスからえらべる。CC0 で使う）。しわのある古い紙。思い出帳・図鑑・ひでんのしょの紙に、うすく（`tools/ui/paper_ui.py` の `oldpaper_rows` が、ドットにちぢめて `index.html` に書きこむ）。
+
+### 水路の水面
+
+- `water-h6-generated.png` は H-6 用に画像生成で作った水のテクスチャ。外部素材は使用していない。
+- `tools/art/handoff3d/canal.py` で明るさを取り出し、上下左右の端を重ねて、水の透けと岸の映り込みの間に使う。
