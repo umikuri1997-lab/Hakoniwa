@@ -6,6 +6,8 @@
 """
 from math import pi
 import numpy as np
+from PIL import Image, ImageDraw
+from scipy.ndimage import binary_erosion, distance_transform_edt
 
 from core import Q, QH, TAILBASE, Spirit, ry
 
@@ -82,6 +84,40 @@ def chest_mark(body, dark):
     return at,pigment
 
 
+def night_cap():
+    """帽子の外周を丸め、一つながりの断面から厚みを作る。"""
+    contour = np.array([
+        (-13,23),(-25,27),(-32,35),(-34,45),(-32,56),(-27,67),
+        (-17,79),(-4,89),(12,96),(24,96),(35,91),(43,82),(48,70),
+        (49,61),(46,56),(42,56),(39,61),(34,69),(28,74),(30,63),
+        (32,53),(33,43),(28,32),(19,26),(9,23),
+    ], dtype=float)
+    outline = []
+    for i in range(len(contour)):
+        a,b,c,d = contour[(i+np.array([-1,0,1,2]))%len(contour)]
+        for t in np.linspace(0,1,10,endpoint=False):
+            point = (2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+
+                     (-a+3*b-3*c+d)*t*t*t)/2
+            outline.append(tuple(point))
+    xs = np.arange(-39,53,QH)
+    ys = np.arange(-42,30,QH)
+    zs = np.arange(20,100,QH)
+    mask = Image.new('1',(len(xs),len(zs)))
+    ImageDraw.Draw(mask).polygon([((x-xs[0])/QH,(z-zs[0])/QH)
+                                  for x,z in outline],fill=1)
+    front = np.array(mask).T
+    distance = distance_transform_edt(front)*QH
+    depth = np.interp(zs,(20,37,53,68,80,92,100),(11,23,26,26,22,14,5))
+    inset = np.minimum(distance,depth)
+    half = np.sqrt(inset*(2*depth-inset))
+    cx,cz = np.meshgrid(xs,zs,indexing='ij')
+    center = -5-.98*np.maximum(0,cx-24)-.10*np.maximum(0,cz-71)
+    body = front[:,None,:] & (np.abs(ys[None,:,None]-center[:,None,:])
+                             <= half[:,None,:])
+    x,y,z = np.nonzero(body & ~binary_erosion(body,iterations=2))
+    return np.column_stack((xs[x],ys[y],zs[z]))
+
+
 def mantle():
     """左右の肩から伸びて、先へ行くほど下がる短い外套。"""
     u,v = np.meshgrid(np.linspace(0,1,100),np.linspace(0,1,55),indexing='ij')
@@ -126,25 +162,20 @@ class LightDark(Spirit):
     def hood(self, dark):
         original = self.tex['hood'][0]
         if dark:
-            upper = surface([(62,2,-1,27,27),(68,4,-2,30,27),
-                             (75,9,-4,31,25),(82,15,-5,29,22),
-                             (89,17,-6,24,19),(95,14,-7,15,12),
-                             (98,12,-8,2,2)])
-            fold = surface([(58,43,-5,3,4),(64,42,-5,6,7),
-                            (72,38,-5,10,10),(81,31,-5,12,13),
-                            (86,24,-6,10,14)])
-            p = np.concatenate((original,upper,fold))
+            p = night_cap()
             x,y,z = p.T
-            tint = np.clip(.51+.008*(z-58)-.007*x+.003*y,0,1)
-            color = tones(rgb('#463d58'),rgb('#776688'),tint)
-            # 折り返しの弧は、帽子の高さと横幅に合わせて前・横に回す。
-            trim_height = 71-.021*x*x-.023*np.maximum(-y,0)**2
-            trim = (y>-25)&(z>35)&(z<trim_height)&(z>trim_height-16)
-            color[trim] = tones(rgb('#b8a5c7'),rgb('#ebdbed'),
-                                np.clip(.55-.012*x[trim]+.016*(z[trim]-60),0,1))
-            pom = volume((43,-5,55),(7.8,7.5,8))
-            tint = np.clip(.49+.05*(pom[:,2]-55)-.028*(pom[:,0]-43)
-                           +.022*pom[:,1],0,1)
+            tint = np.clip(.55+.006*(z-60)-.006*x+.004*y,0,1)
+            color = tones(rgb('#453a56'),rgb('#766684'),tint)
+            # 折り返しは帽子の表面を回り、横に行くほど幅を細くする。
+            angle = np.arctan2(np.abs(x),y+7)/(pi/2)
+            top = 74-24*np.clip(angle,0,1)**1.55
+            width = 16*np.clip((1.14-angle)/.30,0,1)
+            trim = (z<top)&(z>top-width)
+            color[trim] = tones(rgb('#bbacc9'),rgb('#eee0ee'),
+                                np.clip(.63-.010*x[trim]+.012*(z[trim]-53),0,1))
+            pom = volume((44,-28,53),(7.5,7.4,7.6))
+            tint = np.clip(.54+.045*(pom[:,2]-53)-.029*(pom[:,0]-44)
+                           +.012*(pom[:,1]+28),0,1)
             self.top('tip',pom,tones(rgb('#b8a5c7'),rgb('#eee1ee'),tint))
         else:
             crown=surface([(62,-.5,-5,21.3,19.8),(69,0,-4,16,15),
