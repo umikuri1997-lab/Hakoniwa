@@ -41,7 +41,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     w.hunger=200;const G=bfs(w.x|0,w.y|0),st=(w.y|0)*W+(w.x|0)-8;startAct(w,G,'flee',st,{run:true});if(!w.act||w.act.type!=='flee')throw Error('no flee');
     escTick();if(!g.act||g.act.type!=='escort'||g.act.who!==w.id||w.escBy!==g.id)throw Error('no escort '+JSON.stringify(g.act&&g.act.type));
     /* なかよし30より下なら助けない */
-    if(escGuard(w)!==g)throw Error('no guard');const wh=w.hunger,gh=g.hunger;hitRes(S.enemies[0],w,EN.basic);if(w.hunger!==wh||!(g.hunger<gh))throw Error('not covered '+wh+'/'+w.hunger+' '+gh+'/'+g.hunger);
+    if(escGuard(w)!==g)throw Error('no guard');const wh=w.hunger,gh=g.hunger;hitRes(S.enemies[0],w,EN.basic);if(w.hunger!==wh||!(g.hunger<gh))throw Error('not covered '+wh+'/'+w.hunger+' '+gh+'/'+g.hunger);g.hunger=hMax(g);/* たたかれて、おなかが250より少なくなると、つきそいをやめるので、もどす */
     g.x=w.x+3;if(escGuard(w))throw Error('guard far');g.x=w.x+1;
     /* とどいた */w.x=st%W+.5;w.y=((st/W)|0)+.5;w.path=[];w.act.stage='do';g.x=w.x+1;g.y=w.y;const b0=bondOf(w,g);escTick();if(bondOf(w,g)!==b0+2)throw Error('no bond '+bondOf(w,g));if(g.act&&g.act.type==='escort')throw Error('still escort');if(w.escBy!=null)throw Error('ward keeps');
     /* なかよしが低いと助けない */endAct(w);endAct(g);S.bond={};bondAdd(w,g,20);g.x=w.x+1;startAct(w,bfs(w.x|0,w.y|0),'flee',(w.y|0)*W+(w.x|0)+6,{run:true});escTick();if(g.act&&g.act.type==='escort')throw Error('helped at 20');
