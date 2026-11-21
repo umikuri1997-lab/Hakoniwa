@@ -217,7 +217,7 @@ function stageGive(from,to){/* 会話の「わたす」：from が to のほう�
 function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
   if(c==='give')stageGive(POKO,MINA);
   else{n.face=f.x>=n.x?1:-1;f.face=n.face;sacredScenePose(n,'storyTouch',1300,{side:true,face:n.face});villageTimeout(()=>{JUMP.set(f,performance.now());JOYU.set(f,performance.now()+1500);sfx('wave')},450);STAGEWAIT=now+1300}}
-function visionFX(lines,after){const d=document.createElement('div');d.style.cssText='position:absolute;inset:0;background:#0b0f0a;opacity:0;pointer-events:none;z-index:25;transition:opacity .9s ease';$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='.55'}));setTimeout(()=>dialog(lines,()=>{d.style.opacity='0';setTimeout(()=>{d.remove();after&&after()},900)},null,''),1000)}/* かけらにふれたとき、画面が暗くなって記憶がうかぶ（会話の枠は暗くしない・暗さは控えめ） */
+function visionFX(lines,after){dialog(lines,()=>{after&&after()},null,'')}/* かけらにふれたとき、記憶がうかぶ（画面は暗くしない） */
 function flashScreen(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#fff;opacity:.85;pointer-events:none;z-index:60;transition:opacity 1.4s ease-out';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='0'}));setTimeout(()=>d.remove(),1600)}/* 白くひかる */
 const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番に） */
   '#think|……風が、やわらかくなったな。この土地が、息をふきかえしている。',
