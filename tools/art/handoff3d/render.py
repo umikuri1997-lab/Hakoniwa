@@ -12,11 +12,13 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = Path(__file__).resolve().parent
 ART = HERE.parent
 ROOT = ART.parents[1]
-sys.path[:0] = [str(ART), str(ART / "furn3d")]
+sys.path[:0] = [str(ART), str(ART / "furn3d"), str(ART / "kowaino3d")]
 import furntone
+from kw_tex import bump
 import oblique3d as O
 from blueprint import Part, build
 from furn3d import ELEV, FOV, FRAME, KEEP, LW
+from common import WOOD
 from rides import CREAM, MODELS, SEATS, SPEED
 from wind_objects import hole, vane
 from water_objects import chest, dock, gate, raft
@@ -25,6 +27,16 @@ SCALE = 64
 FRAMES = 16
 RIDE_EXT = (-1.90, 1.90, -5.85, 0.85)
 SMALL_EXT = (-.70, .70, -1.20, .49)
+
+TEXTURES = ART / "textures"
+SURFACES = {
+    "wood": O.Tex(TEXTURES / "wood049.png", flow=7, minrun=4,
+                  dark=(.23, .82), light=(.16, 1.12)),
+    "stone": O.Tex(TEXTURES / "rock030.png", span=.57, flow=3, minrun=3,
+                   dark=(.19, .91), light=(.13, 1.06)),
+    "metal": O.Tex(TEXTURES / "metal032.png", span=.65, flow=4, minrun=4),
+    "cloth": O.Tex(TEXTURES / "fabric026.png", span=.72, flow=5, minrun=4),
+}
 
 
 class Model:
@@ -38,44 +50,56 @@ class Model:
         return tuple(round(base*.32+paint*.68)
                      for base, paint in zip(color, (178, 168, 151)))
 
-    def part(self, color, smooth=False):
+    def material(self, color, smooth, surface):
+        surface = "wood" if surface is None and color == WOOD else surface
+        self.sc.texture(SURFACES.get(surface))
+        # The stone normal map follows world-space surfaces, including cut faces.
+        self.sc.bump(self.stone_relief() if surface == "stone" else None)
         self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(smooth)
+        self.sc.smooth(smooth or surface == "stone")
+
+    def stone_relief(self):
+        sample = bump("rock", .65, self.sc.pid)
+
+        def relief(points, normals):
+            rough, brightness = sample(points, normals)
+            mixed = normals*.46 + rough*.54
+            mixed /= np.linalg.norm(mixed, axis=1, keepdims=True)
+            return mixed, .36 + brightness*.64
+
+        return relief
+
+    def part(self, color, *, surface=None):
+        self.material(color, False, surface)
         self.sc.part()
 
-    def lathe(self, profile, color, x=0, y=0):
-        self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(True)
+    def lathe(self, profile, color, x=0, y=0, *, surface=None):
+        self.material(color, True, surface)
         self.sc.revolve(x, y, profile, lambda *_: self.color(color), n=40)
 
-    def rod(self, start, end, radius, color):
-        self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(False)
+    def rod(self, start, end, radius, color, *, surface=None):
+        self.material(color, False, surface)
         self.sc.beam(start, end, radius, self.color(color))
 
-    def tube(self, points, radius, color):
-        self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(False)
+    def tube(self, points, radius, color, *, surface=None):
+        self.material(color, False, surface)
         self.sc.tube(points, radius, self.color(color))
 
-    def box(self, start, end, color):
-        self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(False)
+    def box(self, start, end, color, *, surface=None):
+        self.material(color, False, surface)
         self.sc.box(*start, *end, self.color(color), bevel=0)
 
-    def ball(self, center, radius, color):
-        self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(True)
+    def ball(self, center, radius, color, *, surface=None):
+        self.material(color, True, surface)
         self.sc.sphere(*center, radius, self.color(color), n=16, m=8)
 
-    def prism(self, points, low, high, color):
-        self.sc.material("flat" if color == CREAM else None)
-        self.sc.smooth(False)
+    def prism(self, points, low, high, color, *, surface=None):
+        self.material(color, False, surface)
         build(self.sc, [Part("板", "prism", (points, low, high, "z"),
                              self.color(color))])
 
     def rock(self, x, y, z, width, height, angle, color):
-        self.part(color)
+        self.part(color, surface="stone")
         rings = [[(x+width*r*cos(angle+i*tau/5), y+width*r*sin(angle+i*tau/5),
                    z+dz) for i in range(5)]
                  for r, dz in ((.76, 0), (1, height*.45), (.55, height))]
@@ -114,7 +138,7 @@ def render(model, ext, ground, parallel=False):
     O.GRAD = True
     image = O.render_px(model.sc, projection, ext, depth, k=.80, k2=.90,
                         lw=LW, merge=0)
-    image = furntone.tone(image, dw=0, world=furntone.worldlight(KEEP))
+    image = furntone.tone(image, dw=0, streak=(.22, .13), world=furntone.worldlight(KEEP))
     anchor = tuple(round(v*SCALE) for v in (ext[0], ext[2]))
     bounds = image.getbbox()
     assert bounds and 0 < bounds[0] < bounds[2] < image.width, (bounds, ext)

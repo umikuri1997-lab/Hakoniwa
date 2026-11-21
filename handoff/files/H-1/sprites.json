@@ -2,10 +2,10 @@
   "g": 64,
   "merry_static": {
     "file": "merry_static.png",
-    "x": -85,
-    "y": -239,
-    "w": 170,
-    "h": 253
+    "x": -86,
+    "y": -241,
+    "w": 172,
+    "h": 255
   },
   "merry": {
     "frames": 16,
@@ -248,24 +248,24 @@
   },
   "merry_preview": {
     "file": "merry_preview.png",
-    "x": -85,
-    "y": -239,
-    "w": 170,
-    "h": 253
+    "x": -86,
+    "y": -241,
+    "w": 172,
+    "h": 255
   },
   "merryb_preview": {
     "file": "merryb_preview.png",
-    "x": -85,
-    "y": -239,
-    "w": 170,
-    "h": 253
+    "x": -86,
+    "y": -241,
+    "w": 172,
+    "h": 255
   },
   "cup_static": {
     "file": "cup_static.png",
     "x": -89,
-    "y": -99,
+    "y": -105,
     "w": 178,
-    "h": 118
+    "h": 124
   },
   "cup": {
     "frames": 16,
@@ -445,9 +445,9 @@
   "cup_preview": {
     "file": "cup_preview.png",
     "x": -89,
-    "y": -126,
+    "y": -127,
     "w": 178,
-    "h": 145
+    "h": 146
   },
   "cupb_preview": {
     "file": "cupb_preview.png",
@@ -706,7 +706,7 @@
     "file": "skyswing_preview.png",
     "x": -52,
     "y": -332,
-    "w": 142,
+    "w": 143,
     "h": 327
   },
   "skyswingb_preview": {
@@ -721,7 +721,7 @@
     "x": -102,
     "y": -332,
     "w": 204,
-    "h": 327
+    "h": 331
   },
   "wheel": {
     "frames": 16,
@@ -1031,13 +1031,13 @@
     "x": -116,
     "y": -334,
     "w": 232,
-    "h": 329
+    "h": 333
   },
   "wheelb_preview": {
     "file": "wheelb_preview.png",
     "x": -111,
     "y": -333,
     "w": 202,
-    "h": 328
+    "h": 332
   }
 }
