@@ -70,16 +70,19 @@ def chest(m):
     m.box((-.31, -.18, 0), (.31, .188, .27), WOOD)
     for z in (.012,.098,.184):
         m.box((-.304,.183,z),(.304,.211,z+.074),WOOD)
-    for i in range(8):
-        a, b = i*pi/8, (i+1)*pi/8
-        y, u = .015+.195*cos(a), .015+.195*cos(b)
-        z, w = .267+.15*sin(a), .267+.15*sin(b)
+    curve = [(.015+.195*cos(i*pi/8), .267+.15*sin(i*pi/8))
+             for i in range(9)]
+    for (y,z),(u,w) in zip(curve,curve[1:]):
         m.part(WOOD)
-        m.sc.quad((-.31,y,z), (.31,y,z), (.31,u,w), (-.31,u,w), WOOD)
-        for x in (-.31, .31):
-            m.sc.tri((x,.015,.267), (x,y,z), (x,u,w), WOOD)
-        for x in (-.232, .186):
-            m.rod((x,y+.002,z+.006), (x,u+.002,w+.006), .022, GOLD)
+        m.sc.quad((-.31,y,z),(.31,y,z),(.31,u,w),(-.31,u,w),WOOD)
+    # ふたの小口は左右それぞれ一枚、表は別々の板。
+    for x in (-.31,.31):
+        m.part(WOOD)
+        for (y,z),(u,w) in zip(curve,curve[1:]):
+            m.sc.tri((x,.015,.267),(x,y,z),(x,u,w),WOOD)
+    for x in (-.232,.186):
+        m.bent_tube([(x,y+.002,z+.006) for y,z in curve],.020,GOLD,
+                    (1,0,0),surface="metal")
     for x in (-.232, .186):
         m.box((x-.022, .21, .025), (x+.022, .229, .291), GOLD)
     m.box((-.075, .213, .153), (.075, .247, .305), GOLD)

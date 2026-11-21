@@ -17,9 +17,9 @@
   "mzchest": {
     "file": "mzchest.png",
     "x": -21,
-    "y": -49,
+    "y": -48,
     "w": 42,
-    "h": 42
+    "h": 41
   },
   "mzgate": {
     "file": "mzgate.png",
