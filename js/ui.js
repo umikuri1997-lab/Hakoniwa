@@ -445,9 +445,10 @@ function renderSheet(){
     body.appendChild(grid);
     if(typeof sheetArg==='string'&&(sheetArg==='mseed'?(S.mseed||0)>0:sheetArg.startsWith('seed:')?!!CROPS[sheetArg.slice(5)]:ids.includes(sheetArg))){const a=sheetArg;sheetArg=null;itemPop(a)}/* ほかの画面から、物をえらんで開いたときは、そのメニューも出す */
   }else if(sheet==='event'){evSheet(body);
+  }else if(sheet==='yume'){yumeSheet(body);
   }else if(sheet==='craft'){
     T.textContent='依頼ボード';
-    {const eb=el('<button class="btn" id="evBtn" style="width:100%;margin-bottom:8px">イベント</button>');eb.onclick=()=>{sfx('tap');openSheet('event')};body.appendChild(eb)}/* 強化のイベント（events.js） */
+    {const eb=el('<button class="btn" id="evBtn" style="width:100%;margin-bottom:8px">イベント</button>');eb.onclick=()=>{sfx('tap');openSheet('event')};body.appendChild(eb)}{const yb=el('<button class="btn" id="yumeBtn" style="width:100%;margin-bottom:8px">ゆめ</button>');yb.onclick=()=>{sfx('tap');openSheet('yume')};body.appendChild(yb)}/* 村のゆめボード（yume.js） *//* 強化のイベント（events.js） */
     body.appendChild(el('<p class="note">'+(orderLock()?'いまは「'+BL[orderLock()].name+'」だけたのめます。':'できたものはおそなえ箱に入ります。')+'</p>'));
     const bd=el('<div class="board"></div>');
     for(let n=0;n<boardMax();n++){const o=S.orders[n];

@@ -278,7 +278,7 @@ function pitFlood(j0){/* 地面より下の穴が、水（池・川。雲の海�
   const pit=k=>k>=0&&k<W*H&&hiAt(k)<0&&!S.ground[k]&&!S.floor[k]&&(!S.obj[k]||WEEDS.has(S.obj[k]))&&!fogAt(k);if(!pit(j0))return 0;
   const seen=new Set([j0]),Q=[j0];let wet=false;while(Q.length){const k=Q.pop(),x=k%W;for(const n of[x>0?k-1:-1,x<W-1?k+1:-1,k-W,k+W]){if(n<0||n>=W*H)continue;if(waterJ(n))wet=true;else if(!seen.has(n)&&pit(n)){seen.add(n);Q.push(n)}}}
   if(!wet)return 0;for(const k of seen){S.ground[k]=1;S.hi[k]=0;if(S.vx)delete S.vx[k];if(WEEDS.has(S.obj[k]))S.obj[k]='';if(seen.size<=40)spawnFX(k%W+.5,((k/W)|0)+.5,'#9fd4ef')}
-  const x=j0%W,y=(j0/W)|0;sfxAt('splash',x+.5,y+.5);dirty=true;recount();if(!S.flags.pitPond){S.flags.pitPond=1;toast('水がながれこんで、池になった','good')}return seen.size}
+  (S.cnt||(S.cnt={})).pond=((S.cnt||{}).pond||0)+seen.size;/* ほって作った池のマス（ゆめボード） */const x=j0%W,y=(j0/W)|0;sfxAt('splash',x+.5,y+.5);dirty=true;recount();if(!S.flags.pitPond){S.flags.pitPond=1;toast('水がながれこんで、池になった','good')}return seen.size}
 const terraHave=id=>CUBES.includes(id)?inv(id):S.mat.tsuchi||0;/* つむ物の、のこり */
 function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;
   if(up&&terraHave(id)<1)return toast((CUBES.includes(id)?BL[id].name:'土')+'が足りません','warn');
