@@ -130,6 +130,7 @@
         "critfrog#0",
         "critfrog#1"
       ]
-    }
-  ]
+    },
+  {"reason": "前の限定の家具（石つみのかざり・どんぐりのランプ・金魚ばち・ほのお色のガラスの小鳥）は、新しい限定の家具25こ（トリポのモデル）にかえた。前のセーブの物は gfMigrate で新しい家具にかわる。", "ids": ["g_ishitsumi", "g_donguri", "g_shizuku", "g_hidamari"]}
+ ]
 }
