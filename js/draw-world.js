@@ -364,6 +364,7 @@ function cubeTex(id){let c=CUBET[id];if(c)return c.ok?c:null;c=document.createEl
     for(const yy of[22,48]){g.fillStyle='rgba(90,60,36,.25)';for(let x=0;x<64;x+=2)g.fillRect(x,yy+((hash(x*3+yy)*2|0)*2),2,2)}}
   else if(tk){const im=ch&&chipImgs(ch,tk)[0];if(!im||!im.ok){c.width=c.height=0;return null}g.drawImage(im,0,0,64,64,0,0,64,64)}/* テクスチャは1マス64ドットの細かさ：はじめの64ドットを、そのまま */
   else{g.fillStyle='#e6d3b6';g.fillRect(0,0,64,64);const B=['#c47a58','#b86f50','#cd8562','#bf7553'];for(let r=0;r<4;r++)for(let k=-1;k<3;k++){const x=k*32+(r%2?16:0)+1,y=r*16+1;g.fillStyle=B[(r*3+k+4)%4];g.fillRect(x,y,30,14);g.fillStyle='rgba(255,236,214,.35)';g.fillRect(x,y,30,1);g.fillStyle='rgba(90,48,32,.22)';g.fillRect(x,y+13,30,1)}}/* レンガ：1こ32×16ドット、目地2ドット、段ごとに半分ずらす */
+  nmBake(g,64,64);/* ノーマルマップ（地面と同じ光） */
   g.fillStyle='rgba(70,52,40,.35)';g.fillRect(0,0,64,1);g.fillRect(0,63,64,1);g.fillRect(0,0,1,64);g.fillRect(63,0,1,64);/* ブロックのさかい */
   c.ok=1;CUBET[id]=c;return c}
 function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を描く（B：遠くの絵に描くときの {g:描く先,kz:細かさ,ox,oy:ドットをそろえる元}）：かげ・がけ（部品A）→ 上の面の地面（地面の下絵をずらす）→ ふち（部品B）。top：うしろが低い所の、上はしだけ（うしろの物の足もとをかくす） */
@@ -372,7 +373,7 @@ function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を�
   if(!top){const m=i=>(keys[i]&2)&&!(keys[i]&256);let i=0;while(i<keys.length){if(!m(i)){i++;continue}let e=i;while(e+1<keys.length&&m(e+1))e++;const px=(R.x0+i)*TS,w=(e-i+1)*TS,py=y*TS;g.save();g.translate(0,2*(py+TS)-dy);g.scale(1,-1);gblit(g,px-6,py+TS,w+12,8,px-6,py+TS,w+12,8,lod);g.restore();i=e+1}}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし。つづいた所はまとめて1回） */
   const PK=kz>1.5?2:1,part=(L)=>{for(let i=0;i<keys.length;i++){const kk=keys[i],k=R.x0+i;if(!(kk&15)&&L==='a')continue;if(!ok(k))continue;const q=cliffPart(kk,PK)[L];if(!q)continue;const a=Math.max(q.x,(kk&4)?0:8),b=Math.min(q.x+q.w,(kk&8)?TS+16:TS+8),y2=Math.min(q.y+q.h,hh);if(b<=a||y2<=q.y)continue;DI(q.c,q.sx+(a-q.x)*PK,q.sy,(b-a)*PK,(y2-q.y)*PK,k*TS-8+a,oy+q.y,b-a,y2-q.y)}};
   if(BLOCKV){/* ブロックの見え方：上の面も正面も、ブロックの絵だけ。となりあう同じブロックは、ひとつのかたまりにつなげ（あいだに線を引かない）、かたまりの外がわのふちだけ、ななめに面とりした光とかげ（ベベル）と1ドットの線 */
-    const LN=(x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.fillRect(a,b,Math.max(SX(x+w)-a,1/kz),Math.max(SY(y2+h)-b,1/kz))},D1=.5,BV=1.5,HI='rgba(255,246,222,.32)',HI2='rgba(255,246,222,.16)',SH='rgba(40,28,18,.28)',SH2='rgba(40,28,18,.14)',OL='rgba(46,32,22,.55)';
+    const LN=(x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.fillRect(a,b,Math.max(SX(x+w)-a,1/kz),Math.max(SY(y2+h)-b,1/kz))},D1=.5,BV=3,HI='rgba(255,246,222,.6)',HI2='rgba(255,246,222,.3)',SH='rgba(40,28,18,.52)',SH2='rgba(40,28,18,.26)',OL='rgba(46,32,22,.55)';
     const mat=(jj,l)=>l>hiAt(jj)||l<1?null:(cubeAt(jj,l)||SOIL),tri=(x1,y1,x2,y2,x3,y3)=>{g.beginPath();g.moveTo(SX(x1),SY(y1));g.lineTo(SX(x2),SY(y2));g.lineTo(SX(x3),SY(y3));g.closePath();g.fill()};
     if(!top)for(let i=0;i<keys.length;i++){if(!(keys[i]&2))continue;const k=R.x0+i,j=y*W+k,id=mat(j,lv);const fy=y*TS+TS-lv*LIFT,x0=k*TS;
       if(id===SOIL)soilFace(g,x0,fy,TS,LIFT,SX,SY);else{const T=cubeTex(id);if(T)DI(T,0,0,64,64,x0,fy,TS,LIFT)}g.fillStyle='rgba(30,20,12,.3)';LN(x0,fy,TS,LIFT);/* 正面：土は、いまの乾いた地面の絵を世界の場所どおりに（となりとつながる）。上の面より暗く */
