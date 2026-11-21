@@ -5,7 +5,7 @@
    → おわり（evShowEnd：その場でこちらを向き、1人ずつ木の札・ハンコ → 紙ふぶき・はくしゅ → その日の写真 → カメラがもどる）。
    見た目と音は実時間（EVV はセーブしない）。ごほうび（evExtra）・お話（evTopic）・手紙（letterQ の ev）・日記（S.dy の ev）・雑談（CHATS の evc）は evEnd からよぶ。
    指あそび（EVMG）は10秒。うまくできたら（E.ek が EVOK 以上）、上がる能力が EVPLAY ずつ・たのしさが EVPLAYFUN ふえる。曲は大会の曲（audio.js の cupMusicWant）。
-   文は js/ev-text.js（EVTALK・EVTALKOK・EVCHAT・EVLT・EVLTE・EVDY・EVDYB）。 */
+   文は js/ev-text.js（EVTALK・EVTALKOK・EVCHAT・EVDY・EVDYB）。 */
 const EVMGT=10000,EVOK=.6,EVPLAY={work:1,move:1,sta:1,atk:5,cap:0},EVPLAYFUN=5,EVCLXP=.6,EVCLXMS=3600,EVCOMF=5,EVCOMFD=3,EVDREAMP=.6,EVTAIKOCD=2;
 const EVKIND={taiso:'move',soji:'move',oni:'move',ensoku:'move',takara:'move',mizu:'move',matoate:'move',undo:'move',gochi:'eat',pikunikku:'eat',shukaku:'eat',utage:'eat',cha:'eat',ocha:'eat',yomi:'calm',hoshi:'calm',hokomairi:'calm',onsen:'calm',camp:'calm',hana:'fest',lantern:'fest',himatsuri:'fest',hanabi:'fest',taikokai:'fest'};
 const EVSONGMOVE=new Set(['taiso','soji','oni','ensoku','takara','mizu','matoate','undo','taikokai','himatsuri','hana']);/* 動く曲（MusMus「BGM-141」）。ほかは、しずかな曲（魔王魂「fantasy05」） */
@@ -280,6 +280,6 @@ function evScreenDraw(now){if(!EVV.shine&&!EVV.met.length&&!EVV.pet.length&&!EVV
 /* 地面の層：体そうのお立ち台 */
 function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS);pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)}
 /* ---------- 文をつなぐ（読みこむときに1回）：手紙・雑談・日記 ---------- */
-if(typeof EVLT!=='undefined'){LETTERK.ev='イベントのこと';const T={};for(const id in EVLT){T[id]={};for(const el of['earth','wood','water','fire','wind'])T[id][el]=EVLT[id].map((l,i)=>[l].concat(((EVLTE[el]||EVLTE.wood)[i%3]||[]).map(t=>t.split('{e}').join('{f}'))))}LETTERD.ev=T}
+LETTERK.ev='イベントのこと';/* イベントの手紙の文は letter-data.js の LETTERD.ev（イベント→属性→5通、1通まるごと） */
 if(typeof EVCHAT!=='undefined')for(const id of Object.keys(EVCHAT).sort())for(const ch of EVCHAT[id])CHATS.push(Object.assign(ch,{evc:1,ok:(r,p)=>evMemBoth(r,p,id)}));/* CHATS の番号はセーブに入るので、うしろに足すだけ（id の名前の順） */
 if(typeof EVDY!=='undefined'){Object.assign(DYFULL,EVDY);Object.assign(DYBODY,EVDYB)}
