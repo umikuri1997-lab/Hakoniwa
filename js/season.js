@@ -42,7 +42,7 @@ const TALKSEA=[
    冬：移動速度0.8倍・おなかのへり1.2倍（火のせいれいと、あたたかい物 WARMOBJ・温泉の水・火のせいれいのまわり3マスにいる子はかわらない seaWarm）、風のせいれい1.2倍、
    コワイノの体力・攻撃・速さ0.8倍（冬の夜に出てきたコワイノ。出てきたときにきめる seaFoeInit・e.wz）。画面の能力は「20→24」（seaTxt）。 ---------- */
 const SEAUP=1.2,SEAEL=[['wood'],['fire','water'],['earth'],['wind']],SEATIRED=1.2,SEACOLD=.8,SEAHUN=1.2,SEAFOE=.8,SEAWARMR=3;
-const WARMOBJ=new Set(['g_danro','campfire','oven','torch','onsen','hotstone','smelter','yogan']);
+const WARMOBJ=new Set(['g_f_lamp','campfire','oven','torch','onsen','hotstone','smelter','yogan']);
 const SEAFXT=['木のせいれいの能力1.2倍','火・水のせいれいの能力1.2倍・つかれのへり1.2倍','土のせいれいの能力1.2倍','移動速度0.8倍・おなかのへり1.2倍・風のせいれいの能力1.2倍・「コワイノ」の能力0.8倍'];
 const SEAWC=new WeakMap();
 function seaWarm(r){/* 冬の寒さがとどかない子：火のせいれい・あたたかい料理を食べた子（r.warmT）・あたたかい物や火のせいれいのまわり3マス（マスがかわるか、時計の数分ごとに調べなおす） */if(!r||r.elem==='fire'||r.warmT>S.t)return true;const j=(r.y|0)*W+(r.x|0);let c=SEAWC.get(r);if(c&&c.j===j&&Math.abs(S.t-c.t)<5)return c.v;

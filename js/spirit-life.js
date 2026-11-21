@@ -608,7 +608,7 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK,gn=!!goneTalkName()
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;if(evIn(o)||evIn(r))return false;/* イベントに出ている子は、おしゃべりによばない */endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const NIGATE={fire:['fountain'],wood:['campfire'],water:['campfire'],earth:['swing'],wind:[]};/* 属性ごとの、にがてなおもちゃ：遊びに行かない */
 const nigate=(el,k)=>(NIGATE[el]||[]).includes(k);
-const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw','sandbox','swing','fountain','campfire','g_hammock','merry','cup','skyswing','wheel']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
+const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw','sandbox','swing','fountain','campfire','merry','cup','skyswing','wheel']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
 const FISHP=.125,FISHPS=.2,FISHPA=.1;/* つりに行く確率：ふつうの水べ12.5%、つり場（水べのいす）20%、つりスポット・よるづり場は1つで+10% */
 function goPlay(r,G,strict){
   if(windOpGo(r,G))return true;/* 風の遊園地：風のせいれいは、遊具の係になる（wind.js） */

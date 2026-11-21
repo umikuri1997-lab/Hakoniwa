@@ -5,12 +5,23 @@
    お返し：だいすきの物をあげたら、かならず。すきの物なら GFRETP%。
    プレゼントをあげると（presentGive → gfPresentShow）：つつみを両手でかかえて、がさごそ → ぽんっとひらく → 中身ごとの動き（GFMOT）→ 好みでよろこびの大きさ（だいすき：紙ふぶき・ジャンプ・まわりの子もはくしゅ）。返事の会話は、動きを待たずにすぐ出す（gifts.js）。会話をとじたら、お返し・節目のつつみ（treasureReveal）。
    動きと絵は実時間（sacredSetPose）。村の時間は止めない。 */
-const GFURN={ret:['g_ishitsumi','g_donguri','g_shizuku','g_hidamari','g_kazaguruma'],let:['g_kabin','g_oshibana','g_kaifun','g_post','g_penzukue'],bond:['g_ishibench','g_happasofa','g_suisou','g_danro','g_hammock']};
+const GFURN={ret:['g_w_kinoko','g_w_acorn','g_e_planter','g_e_lantern','g_f_hanger','g_f_lamp','g_k_fan','g_k_egg','g_s_jelly','g_s_vanity'],let:['g_w_clover','g_w_shelf','g_e_bath','g_e_arch','g_f_table','g_f_screen','g_k_screen','g_k_chest','g_s_table','g_s_tank'],bond:['g_w_stump','g_e_geode','g_f_sofa','g_k_bed','g_s_sofa']};/* 属性ごとに、お返し2・手紙2・節目1（持ち主がきめた） */
 const GFRETP=20,GFBONDN=10;
 const GFOPENMS=1400,GFSHOWMS=3200,GFJOYMS=1600;/* つつみをあける・中身の動き・よろこぶ（ミリ秒） */
 const GFMOT={gf_kirei:'gf_lift',gf_garasu:'gf_lift',gf_kai:'gf_ear',gf_hane:'gf_wave',gf_matsu:'gf_sniff',gf_oshibana:'gf_sniff',gf_kibori:'gf_hug',gf_wara:'gf_hug',gf_koma:'gf_spin',gf_ehagaki:'gf_read',gf_biidama:'gf_peek',gf_mangekyo:'gf_peek',gf_hoshisuna:'gf_shake'};/* 素材は lnod（うなずいて、しまう） */
 const gfGot=id=>!!(S.flags.gfGot&&S.flags.gfGot[id]);
 function gfPick(cat,el){/* まだもらっていない限定の家具を1つ（とっておく：もらったことにする） */const L=(GFURN[cat]||[]).filter(id=>BL[id]&&!gfGot(id));if(!L.length)return null;const id=L.find(q=>BL[q].el===el)||pick(L);(S.flags.gfGot||(S.flags.gfGot={}))[id]=1;return id}
+/* 前のセーブ：前の限定の家具15こは、同じ属性・同じもらい方の新しい家具にかえる（持ち主がきめた）。置いてある物は同じマスに置きなおし、置けなければ、もちものへ（S.flags.gf25、1回だけ） */
+const GFOLD={g_ishitsumi:'g_e_planter',g_kabin:'g_e_bath',g_ishibench:'g_e_geode',g_donguri:'g_w_acorn',g_oshibana:'g_w_shelf',g_happasofa:'g_w_stump',g_shizuku:'g_s_jelly',g_kaifun:'g_s_tank',g_suisou:'g_s_sofa',g_hidamari:'g_f_hanger',g_post:'g_f_screen',g_danro:'g_f_sofa',g_kazaguruma:'g_k_fan',g_penzukue:'g_k_chest',g_hammock:'g_k_bed'};
+function gfMigrate(){if(!S||S.flags.gf25)return;S.flags.gf25=1;const M=GFOLD;
+  for(let j=0;j<S.obj.length;j++){const o=S.obj[j],n=M[o];if(!n)continue;
+    for(const k in S.ref)if(S.ref[k]==j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];if(S.rot)delete S.rot[j];for(const k of['useOwn','bedOwn'])if(S[k])delete S[k][j];
+    const x=j%W,y=(j/W)|0,pr=PLROTS[n];PLROTS[n]=0;let ok=false;try{ok=canPlace(n,x,y,true)}catch(e){}finally{if(pr==null)delete PLROTS[n];else PLROTS[n]=pr}
+    if(ok){S.obj[j]=n;setParts(n,j,'part')}else S.inv[n]=(S.inv[n]||0)+1}
+  for(const o in M){if(S.inv&&S.inv[o]){S.inv[M[o]]=(S.inv[M[o]]||0)+S.inv[o];delete S.inv[o]}if(S.flags.gfGot&&S.flags.gfGot[o]){delete S.flags.gfGot[o];S.flags.gfGot[M[o]]=1}for(const r of S.res||[])if(r.citem&&r.citem[o]){r.citem[M[o]]=(r.citem[M[o]]||0)+r.citem[o];delete r.citem[o]}}
+  for(const q of S.gfShow||[])if(M[q.id])q.id=M[q.id];
+  for(const L of [S.letters,S.letterQ])for(const l of L||[])if(l&&l.g&&typeof l.g.k==='string'&&l.g.k.startsWith('furn:')&&M[l.g.k.slice(5)])l.g.k='furn:'+M[l.g.k.slice(5)];
+  if(S.broken)for(const b of S.broken)if(M[b.id])b.id=M[b.id];if(Array.isArray(S.got))S.got=S.got.map(id=>M[id]||id)}
 function gfGive(id){if(!BL[id])return;(S.flags.gfGot||(S.flags.gfGot={}))[id]=1;giveItem(id,1);dirty=true}
 /* ---- つつみの絵（16×16のドット。紙は属性の色、ひもは金色） ---- */
 const GFWRAPC={earth:['#d9a66b','#b98450','#ecc79a'],wood:['#8fc96a','#6aa44c','#b4e09a'],water:['#7fbfe6','#5a9cc8','#aedcf6'],fire:['#ec8a7a','#c8665a','#f6b4a8'],wind:['#b9a8e6','#9483c8','#d8ccf6']};
