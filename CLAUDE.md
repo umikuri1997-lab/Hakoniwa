@@ -620,7 +620,7 @@
 - ずっと夜：暗さは `yamiDark`、空・光・環境音の時刻は `skyHour`（`yamiSkyHour`）。時計・ねる時間（`isNight`）はほかのステージと同じ。空・光・音を時刻でかえる所を足したら、`hour()` でなく `skyHour()` を使う。
 - はじめは、せいれいが0人。まもりの光が地面にとどく（`glHit`）と、はじめの1回だけ、光のせいれいトモリが生まれる（`yamiBirth`・`S.flags.tomori`）。
 - 光の属性（`ELEM.light`）はトモリだけ：神殿では呼べない（`ELEM_KEYS` に入れない）・たたかわない（`sortieOK`）・コワイノにねらわれない・たたかれない（`noHit`・`yamiSafe`。さいごの夜の、むかえる〜ゆりかごへ、だけはねらわれる）・まわり4マスが歩くあかり（`YAMILIGHT`・`yamiLights`・`yamiLightAt`）。属性ごとの表を足したら、光でこわれないか（`表[r.elem]` をそのまま使っていないか）を見る。
-- トモリの絵は、かりの絵：水の形を色がえ（`SPART`・`spArt`・`SPC.light`）。せいれいの絵を属性の名前でさがす所は `spArt(el)` を通す。
+- トモリ（光）・ツキミ（闇）の絵は、GPT の H-4：部品のチップ `sp_light:*`・`sp_dark:*`（ケープ `cape`・胸のかざり `chest`・ツキミのナイトキャップ `cap`）と、3Dの動きの絵（`tools/art/spirit3d/light_dark.py` の `LightDark`、`build.py --add light,dark` で、ほかの属性の絵をそのままに足せる）。`SPC.light`・`SPC.dark` は、3Dの絵の色と同じにする（ちがうと、色がえで合わない）。せいれいの絵を属性の名前でさがす所は `spArt(el)` を通す。
 - コワイノの来かた：トモリが生まれたときから来る（`S.enemyOn`）。23時〜6時は、ほかのステージと同じ大きな群れ（`waveFor`）。6時〜23時は、時計の1時間ごとに25%（`YAMIDAYP`）でコカゲが1〜2ひき（`yamiTick`・`yamiDayWave`）。朝の光がないので、朝6時に消えない（`level.js` の `yk`）。追いはらうまでのこる。
 - お話の前半（`QUESTS6`）：あかり → ヒイロ（はじめに来る火のせいれい、あにき。`SECOND[YAMI]`、`qAt('hiiro')` から）→ ヨリ（夜、ねているトモリのとなりにいる、おそってこない影。`S.enemies` に入れず、コワイノの絵で描くだけ `yoriPos`・`yamiDrawAdd`。夜にタップ `yamiTap`→`yoriMeet`）→ 夜の仕事のあと3つ（見た目だけの印 `YMARKS`・`S.yami.marks`。昼、ヨリがまだ見ていない印で待つ）→ あさやけ（聞いたつぎの朝6時の場面 `yamiDawnTick`・`YDAWN`。ヨリが朝の光でうすれて消える）。
 - 朝の空：おわったお話の数（`yamiSky`）ぶん、朝の時間（4時半〜8時半）だけ明るい（`YAMISKYK`）。あさやけのあとは、朝の時間に本当の朝の光（`yamiSkyHour`）。
@@ -631,7 +631,7 @@
 - 大きな影はたたかわない（`S.enemies` に入れない）。さいごの夜のトモリはたたかれてもおなかがへらず、3回（`YHITMAX`）か朝になったら、3日あと（`YRETRY`）にやりなおし（`yamiHitRes`・`yamiFail`）。
 - トモリ・ゆりかごを直す子の行動（`ysit`・`yhold`・`ywalk`・`ywork`）は `decide0` のはじめの `yamiDecide` できめる。夜も歩く・待つのは `NIGHT_OK` に入れてある。
 - クリアのあとは、空・暗さが、ほかのステージと同じ昼と夜（`skyHour`・`darkness` の `S.cleared`）。
-- クリアした日の夜20時、ゆりかごから闇のせいれいツキミが生まれる（`tsukimiBirth`、会話をさいごまで見てから `S.flags.tsukimi` 1）。闇の属性（`ELEM.dark`）はツキミだけ：神殿では呼べない・たたかわない・絵は水の形を色がえ。夜はねむらず、ねむるせいれいのそばにすわって見守り（`tsukiDecide`・`ACT.tkwatch`、家の中ではかくれる）、まわり `TKWR` マスでねむる子のつかれのとれる速さ `TKWK` 倍（`tkWatchK`）。朝はねむる（`r.tkNap`）。
+- クリアした日の夜20時、ゆりかごから闇のせいれいツキミが生まれる（`tsukimiBirth`、会話をさいごまで見てから `S.flags.tsukimi` 1）。闇の属性（`ELEM.dark`）はツキミだけ：神殿では呼べない・たたかわない。夜はねむらず、ねむるせいれいのそばにすわって見守り（`tsukiDecide`・`ACT.tkwatch`、家の中ではかくれる）、まわり `TKWR` マスでねむる子のつかれのとれる速さ `TKWK` 倍（`tkWatchK`）。朝はねむる（`r.tkNap`）。
 - クリアのあと、追いはらったコワイノは夜のほうへかえる（`yamiHomeOn`・`drawHome`：白く止まる → ふりむいて北へ歩く → 紺にとけて、ドットの三日月がのこって消える）。たしかめは `tools/tests/yami-after.cjs`。
 - 会話でヒイロがいないときは、ヒイロの行だけはぶく（`ideaDialogue`）。
 - たしかめは `tools/tests/yami.cjs`・`tools/tests/yami-story.cjs`・`tools/tests/yami-story2.cjs`（会話は自動プレイと同じ送り方 `DLGA`＋`#dlgBtns`。朝の日記の紙はとじる。タップで始める会話は `DLGTAP` を入れてから）。
