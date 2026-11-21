@@ -371,7 +371,17 @@ function caveFrame(rdt,now){const C=CV;if(!C||cvHold())return;const sp=S.speed||
   cvDripTick(now)}
 /* 下へおりる坂まで来たら、その階はクリア。つぎの階がひらく（S.cvClr：ひらいた階の数。出かけるときに、ひらいた階からえらぶ） */
 function cvClearCheck(){const C=CV;if(C.clr)return;for(const[j,o]of C.ob)if(o.k==='R'&&C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6)){C.clr=true;const first=(S.cvClr||0)<C.fl+1;S.cvClr=Math.max(S.cvClr||0,C.fl+1);
-    if(first){sfx('quest');for(const a of C.party){a.joyU=performance.now()+1600;a.jumpT=performance.now()}toast(C.fl+1<CVFLOORS.length?'下へおりる坂を見つけた。つぎは'+(C.fl+2)+'階から出かけられます':'下へおりる坂を見つけた。この先は、岩でふさがっている','good')}return}}
+    if(first){sfx('quest');const now=performance.now(),x=cvX(j)+.5,y=cvY(j)+.5;for(const a of C.party){a.joyU=now+1600;a.jumpT=now}C.pill={x,y,t0:now};C.flash={x,y,t0:now};if(typeof juiceCheer==='function')juiceCheer();cvClearCard(C)}return}}
+/* 階のクリア：坂の所に光の柱（caveRender の C.pill）と紙ふぶき → 「ひらいた」の大きな知らせ（あたらしいイベントと同じ形） */
+const CVPILLMS=2400;
+function cvClearCard(C){const more=C.fl+1<CVFLOORS.length;setTimeout(()=>{if(CV!==C)return;GIFT_ACTIVE=true;const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="下へおりる坂"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi('star')+'</div><h2>下へおりる坂を見つけた！</h2><div class="idea-items"></div></div>'),it=el('<div class="idea-item"><b></b><span></span></div>');
+  it.querySelector('b').textContent=more?(C.fl+2)+'階':'この先';it.querySelector('span').textContent=more?'つぎから、ここから出かけられる':'岩でふさがっている';card.querySelector('.idea-items').append(it);
+  const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('good');if(more&&typeof recRevealFx==='function')recRevealFx(card,ov,'ひらいた');
+  setTimeout(()=>{if(ov.isConnected)b.disabled=false},1400);b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();GIFT_ACTIVE=false}},1300)}
+function cvPillDraw(now){/* 光の柱：坂の上へ、たてにのびて、光のつぶがのぼる（2点のドット） */const C=CV,P=C&&C.pill;if(!P)return;const u=(now-P.t0)/CVPILLMS;if(u>=1){C.pill=null;return}
+  const a=u<.15?u/.15:1-(u-.15)/.85,cx=Math.round(P.x*TS/2)*2,by=Math.round((P.y+CVOY)*TS/2)*2,h=Math.round(TS*3.2*Math.min(1,u/.25)/2)*2,w=14;
+  for(let y=0;y<h;y+=2){const f=1-y/h;ctx.globalAlpha=a*.55*f;ctx.fillStyle='#fff3c4';ctx.fillRect(cx-w/2,by-y,w,2);ctx.globalAlpha=a*.8*f;ctx.fillStyle='#ffffff';ctx.fillRect(cx-2,by-y,4,2)}
+  for(let i=0;i<12;i++){const t=((u*1.6+i/12)%1),x=cx+Math.round(Math.sin(i*2.4)*w*.9/2)*2,y=by-Math.round(t*TS*3/2)*2;ctx.globalAlpha=a*(1-t);ctx.fillStyle=i%3?'#fff3c4':'#ffffff';ctx.fillRect(x,y,2,2)}ctx.globalAlpha=1}
 function cvSnd(k,v){if(typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx)playU(k,v)}
 /* しずく：天井から、見えている床・水に落ちる（見た目と音だけ） */
 function cvDripTick(now){const C=CV;if(now<C.dripT)return;C.dripT=now+CVDRIP[0]+Math.random()*(CVDRIP[1]-CVDRIP[0]);if(!C.party.length)return;const a=C.party[(Math.random()*C.party.length)|0];
@@ -549,6 +559,6 @@ function caveRender(now){const C=CV;if(!C)return;cvCamTo(.12);const k=dpr*cam.z;
     /* まだ見ていない所でも、近くの光るきのこ・鉱石は、ぼんやり見える */
     g.globalCompositeOperation='destination-out';g.globalAlpha=.7;for(const[j,o]of C.ob)if(o.k==='g'&&!C.seen[j]&&cvLureOn(j))cut(cvX(j)+.5,cvY(j)+CVOY+.6,.8);for(const j of C.ore)if(!C.seen[j+CVW]&&cvLureOn(j))cut(cvX(j)+.5,cvY(j)+CVOY+.7,.6);g.globalAlpha=1;g.globalCompositeOperation='source-over';
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(D,0,0);ctx.restore()}
-  drawTopFx();drawBattleFx(now);
+  drawTopFx();drawBattleFx(now);cvPillDraw(now);
   if(C.mark){const t=(now-C.mark.t0)/450;if(t>=1)C.mark=null;else{ctx.globalAlpha=1-t;const cx=C.mark.x*TS,cy=(C.mark.y+CVOY)*TS+(C.mark.foe?0:4),r=6+t*8,col=C.mark.foe?'#ff9aa8':'#fff3c4';for(let i=0;i<8;i++){const an=i/8*6.283;P4(col,cx+Math.cos(an)*r-1,cy+Math.sin(an)*r*.5-1,2,2)}ctx.globalAlpha=1}}
-  ctx.imageSmoothingEnabled=sm}
+  ctx.imageSmoothingEnabled=sm;if(typeof juiceDraw==='function'){ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);juiceDraw(now);ctx.restore()}/* 紙ふぶき（画面の点で） */}
