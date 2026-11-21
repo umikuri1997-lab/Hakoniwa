@@ -116,6 +116,8 @@ const RIDEPH=new Map();
 function rideAng(j,now){let p=RIDEPH.get(j);if(!p){p={a:(j*.37)%6.28,t:now};RIDEPH.set(j,p)}const dt=Math.max(0,Math.min(.1,(now-p.t)/1000));p.t=now;if(S&&RIDES.has(S.obj[j])&&rideOn(j))p.a+=dt*1.5;return p.a}
 function windRidePose(r,a,now){if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
   const K=RIDEK,fx=X+(a.what==='wheel'?48:32),fy=Y+56,PX=v=>fx+(v-fx)*K,PY=v=>fy+(v-fy)*K;
+  const ch=window.CHIPS&&CHIPS[a.what];if(ch&&ch.seats){/* 3Dの絵の座席（コマごと、足もとからの g64）。そのコマの座席の、うしろ半分にいるときは、遊具の奥に描く */const F=ch.seats,f=rideFrame(a.what,j,now),n=F[0].length,q=k%n,p=F[f][q],nx=F[(f+1)%16][q];let my=0;for(const L of F)my+=L[q][1];my/=16;
+    r.face=a.what==='wheel'?1:nx[0]>p[0]?1:nx[0]<p[0]?-1:r.face||1;const front=p[1]>=my;return{x:fx+p[0]/2,y:fy+p[1]/2,z:Y/TS+(front?2.06:a.what==='skyswing'?.95:1.4)}}
   if(a.what==='wheel'){const th=A*.35+k*1.5708,cx=X+48,cy=Y-6;r.face=1;return{x:PX(cx+Math.cos(th)*34),y:PY(cy+Math.sin(th)*34+12),z:Y/TS+2.06}}
   const cx=X+32,n=a.what==='cup'?2:3,th=A*(a.what==='cup'?1.3:1)+k*6.2832/n,sn=Math.sin(th),cs=Math.cos(th);r.face=sn>0?(cs>0?-1:1):(cs>0?1:-1);
   if(a.what==='skyswing')return{x:PX(cx+cs*27),y:PY(Y+30+sn*9),z:Y/TS+(sn>0?2.06:.95)};
@@ -149,7 +151,10 @@ function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c
 function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白いつぶ */if(i==null)return;const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}
 
 /* 遊具の絵（コードの仮のドット絵）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
-function drawRide(c,id,brk,x0,y0,i,now,R0){const fx=id==='wheel'?48:32,fy=56;c.save();c.translate(Math.round(x0+fx),Math.round(y0+fy));c.scale(RIDEK,RIDEK);const x=-fx,y=-fy,R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};drawRide0(c,id,brk,x,y,i,now,R);c.restore()}
+function rideFrame(id,i,now){/* 遊具の絵のコマ（16コマでひとまわり。チップの pf がまわる速さの倍） */const ch=window.CHIPS&&CHIPS[id];if(!ch||!ch.pf||i==null)return 0;const a=rideAng(i,now||0)*ch.pf/6.2832*16;return((Math.round(a)%16)+16)%16}
+function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。ないときはコードの仮の絵 */const C=window.CHIPS;
+  if(C){if(brk){const ch=C[id+'b'];if(ch&&drawChip(c,ch,id+'b',x0,y0,now,i))return}else if(i==null||ICON){const ch=C[id];if(ch&&drawChip(c,ch,id,x0,y0,now,i))return}else{const st=C[id+':s'],mv=C[id+':m'+rideFrame(id,i,now)];if(st&&mv&&drawChip(c,st,id,x0,y0,now,i)){drawChip(c,mv,id,x0,y0,now,i);return}}}
+const fx=id==='wheel'?48:32,fy=56;c.save();c.translate(Math.round(x0+fx),Math.round(y0+fy));c.scale(RIDEK,RIDEK);const x=-fx,y=-fy,R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};drawRide0(c,id,brk,x,y,i,now,R);c.restore()}
 function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0):.6,O=(cx,cy,rx,ry,col)=>{c.fillStyle=col;for(let q=-ry;q<=ry;q++){const w=Math.round(rx*Math.sqrt(Math.max(0,1-q*q/(ry*ry+.01))));if(w>0)c.fillRect(Math.round(x+cx-w),Math.round(y+cy+q),w*2,1)}},
     Ln=(x0,y0,x1,y1,col,t)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))|0;c.fillStyle=col;for(let q=0;q<=n;q++)c.fillRect(Math.round(x+x0+(x1-x0)*q/Math.max(1,n)),Math.round(y+y0+(y1-y0)*q/Math.max(1,n)),t||1,t||1)},
     P=brk?{a:'#c9c2b4',b:'#e3ddd0',p:'#a79f90',w:'#8f8676',m:'#b3aa98'}:{a:'#f2a7b5',b:'#fff6e8',p:'#c9a46a',w:'#b08a52',m:'#8fd3c2'};
