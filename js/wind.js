@@ -167,3 +167,45 @@ function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0)
   if(id==='skyswing'){O(32,52,16,5,P.w);O(32,50,16,5,P.p);R(30,-34,4,84,P.p);R(31,-34,1,84,P.b);const sp=brk?0:5;
     for(let q=0;q<3;q++){const th=A+q*2.0944,sx=32+Math.cos(th)*(22+sp),sy=22+Math.sin(th)*9;Ln(32+Math.cos(th)*14,-30+Math.sin(th)*4,sx,sy,P.m,1);R(sx-4,sy,9,3,P.a);R(sx-4,sy+3,9,1,P.w)}
     O(32,-31,18,5,P.w);O(32,-33,18,5,P.a);for(let q=-16;q<16;q+=8)R(32+q,-35,4,2,P.b);R(30,-42,4,6,P.a);if(brk)Ln(44,-28,52,6,P.m,1);return}}
+/* ---------- 観覧車の山場・雲の下（目標6・7）：観覧車のてっぺんから、雲のすきまにヌシ様のつばさが見える（wind:peek）。
+   雲の海のはしでカザネたちが待つ所に、まもりの光を落とすと、雲がひらいて、つばさ・ヌシ様の顔・つばさのかげでねむる影が見え、ヌシ様が話す（windGlHit・windPartScene）。
+   絵はコードで描くかりのドット絵（drawWindScene）。場面の動き・カメラは実時間、ひらく場面のあいだは村の時間を止める（SCENEHOLD） ---------- */
+const NUSHI4='風のヌシ',WIND_BEAT_MS={peek:3200},WPARTMS=4200,WKUMOR=2/* まもりの光が、印のまわり何マスまでなら、とどく */;
+let WSCN=[];/* {k:'peek'|'part',x,y,t0,end,s} 世界の点・実時間 */
+function windKumoSpot(){/* 雲の海のはしの印：観覧車にいちばん近い、雲の海にとなりあう、歩ける陸のマス（1回きめて S.wind.kj に） */if(!windOn())return null;if(S.wind.kj!=null&&walk(S.wind.kj))return S.wind.kj;if(WKNULL.s===S&&performance.now()<WKNULL.t)return null;/* 行けないときは、2秒に1回だけさがしなおす */
+  let w=-1;for(let j=0;j<W*H&&w<0;j++)if(S.obj[j]==='wheel'||S.obj[j]==='wheelb'||S.obj[j]==='site'&&S.dyn[j]&&S.dyn[j].build==='wheel')w=j;const wx=w<0?CX:w%W,wy=w<0?CY:(w/W)|0;
+  const r0=S.res.find(q=>q.name===KAZANE&&!q.hidden)||S.res.find(q=>!q.hidden);if(!r0)return null;const G=bfs(r0.x|0,r0.y|0);/* せいれいが歩いて行ける所だけ */
+  let best=-1,bd=1e9;for(let j=0;j<W*H;j++){if(!walk(j)||S.obj[j]||skyJ(j)||windSunk(j)||!(G.dist[j]>=0))continue;const x=j%W,y=(j/W)|0;if(!(skyJ(j+W)&&y<H-1))continue;/* 南が雲の海（見おろすので南のはし） */const d=Math.hypot(x-wx,y-wy);if(d<bd){bd=d;best=j}}
+  S.wind.kj=best<0?null:best;if(best<0){WKNULL.s=S;WKNULL.t=performance.now()+2000}return S.wind.kj}
+const WKNULL={s:null,t:0};
+function windKumoOn(){return windOn()&&!S.free&&qAt('kumoshita')&&!S.flags.kumo}
+function windKumoWait(n){const r=S.res.find(q=>q.name===n&&!q.hidden);return !!(r&&r.act&&r.act.type==='wwait'&&r.act.stage==='do')}
+function windKumoProg(){if(!S.qTalked)return '';if(isNight())return '朝を待とう';if(windKumoSpot()==null)return '雲の海のはしへ行けない';const k=S.res.find(q=>q.name===KAZANE&&!q.hidden);if(!k)return 'カザネが村にいない';return windKumoWait(KAZANE)?'カザネが雲の海のはしで待っている':'カザネが雲の海のはしへ向かっている'}
+function windDecide(r,G){/* 雲の海のはしで待つ：カザネ（いなくてもよいのはハヤテ）。昼だけ。待っているあいだ、おなか・たのしさ・つかれはへらない（wwait） */
+  if(!windKumoOn()||WPART||!S.qTalked||isNight()||r.name!==KAZANE&&r.name!==HAYATE)return false;if(r.hunger<250||r.meal||r.carry||r.bm)return false;
+  const kj=windKumoSpot();if(kj==null)return false;const here=(r.y|0)*W+(r.x|0),k=yamiFreeNear(kj,r,G);if(k<0)return false;
+  if(k===here)return startAct(r,G,'wwait',-1,{dur:30,kj}),true;return startAct(r,G,'ywalk',k,{}),true}
+ACT.wwait={start(r,a){r.bubble='';r.nap=false;a.h0=r.hunger;a.f0=r.fun;a.e0=r.energy;r.face=(a.kj%W)+.5>=r.x?1:-1},tick(r,a){r.hunger=Math.max(r.hunger,a.h0);r.fun=Math.max(r.fun,a.f0);r.energy=Math.max(r.energy,a.e0)},done:(r,a)=>a.t>=a.dur||isNight()||!windKumoOn()||!!WPART};
+ACT_LBL.wwait='雲の海のはしで待っている';
+let WPART=null;
+function windGlHit(tx,ty){/* まもりの光が、雲の海のはしの印にとどいた */if(!windKumoOn()||WPART||isNight()||!S.qTalked)return;const kj=windKumoSpot();if(kj==null)return;if(Math.max(Math.abs(tx-kj%W),Math.abs(ty-((kj/W)|0)))>WKUMOR)return;
+  if(!windKumoWait(KAZANE)){toast('カザネが来るのを待とう');return}windPartScene(kj)}
+function windPartScene(kj){const S0=S,x=(kj%W+.5)*TS,y=((kj/W|0)+2.2)*TS,now=performance.now();WPART={S:S0,t0:now};SCENEHOLD=now+WPARTMS+600;
+  camAnim={fz:cam.z,tz:Math.max(cam.z,1.4),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:x,ty:y-TS,t:0,dur:1.4};if(typeof musicDuck==='function')musicDuck(WPARTMS);
+  WSCN.push({k:'part',x,y,t0:now+GLFX,end:Infinity});sfx('wave');for(const r of S.res)if(!r.hidden&&Math.hypot(r.x*TS-x,r.y*TS-y)<6*TS){r.face=x>=r.x*TS?1:-1;SHOCKU.set(r,now+1600)}if(typeof hdBig==='function')hdBig();
+  villageTimeout(()=>{if(S!==S0){WPART=null;return}const H2=S.res.some(q=>q.name===HAYATE&&!q.hidden);
+    dialog([[NUSHI4,'……風の子らか。よく、ここまで来たな。'],[KAZANE,'#surprise|ヌシ様……！ どうして、風を止めたんですか。'],[NUSHI4,'見よ。わたしのつばさのかげで、影たちがねむっている。'],[NUSHI4,'夜に休む場所をなくした子らだ。風がふけば、目をさまして、さまよってしまう。'],[NUSHI4,'だから、わたしは風をたたみ、つばさで島をささえて、ここにいた。'],[HAYATE,'#worry|……だから、遊び場も止まったんだ。'],[NUSHI4,'すまぬ。おまえたちから、楽しむことまで、うばってしまったな。'],[KAZANE,'#think|……いいえ。思い出しましたよ。ハヤテと、守り神のおかげでね。'],[NUSHI4,'……そうか。笑い声は、ここまでとどいていた。あたたかかった。']].filter(l=>H2||l[0]!==HAYATE),
+      ()=>{WPART=null;for(const s of WSCN)if(s.k==='part')s.end=performance.now()+1500;if(S!==S0)return;S.flags.kumo=1;for(const r of S.res)if(r.act&&r.act.type==='wwait')endAct(r);memo('spirit','雲の海のはしで、風のヌシ様に会った');checkQuest();renderQuest();save()},null,NUSHI4)},WPARTMS)}
+function windBeat(k){/* 会話の合図 wind:<場面> */if(k!=='peek'||!windOn())return;const kj=windKumoSpot();if(kj==null)return;const x=(kj%W+.5)*TS,y=((kj/W|0)+2.2)*TS,now=performance.now();
+  camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:x,ty:y-TS,t:0,dur:1.2};WSCN.push({k:'peek',x,y,t0:now+900,end:now+WIND_BEAT_MS.peek+2200});sfx('wave')}
+function windSceneReset(){WSCN=[];WPART=null}
+function drawWindScene(c,now){/* つばさ・ヌシ様の顔・ねむる影（雲の上、夜の暗さより下） */if(!WSCN.length)return;WSCN=WSCN.filter(s=>now<s.end+1500);
+  for(const s of WSCN){if(now<s.t0)continue;const fin=Math.min(1,(now-s.t0)/1500),out=s.end===Infinity?1:Math.max(0,1-(now-s.end)/1500),a=fin*out;if(a<=0)continue;
+    if(s.k==='peek'){const tw=.55+.45*Math.sin((now-s.t0)/260);wingDots(c,s.x,s.y,1,a*.6*tw,now)}
+    else{c.save();c.globalAlpha=a*.85;c.fillStyle='#eef6ff';const R=4*TS;for(let i=-R;i<=R;i+=8){const h=Math.round(Math.sqrt(Math.max(0,R*R-i*i))*.45/4)*4;c.fillRect(Math.round(s.x+i),Math.round(s.y-h),8,h*2)}c.restore();/* 雲がひらいた所：うすい空の色のだ円（段々） */
+      wingDots(c,s.x,s.y+10,1.6,a,now);for(const[dx,dy]of[[-46,18],[-14,26],[22,20]])if(typeof drawShade==='function'){c.save();c.globalAlpha=a*.8;drawShade(c,'basic',s.x+dx,s.y+dy,.18,1,{dot:1,t:0});c.restore()}/* つばさのかげで、ねむる影 */
+      nushiFaceDots(c,s.x,s.y-30,a,now)}}}
+function wingDots(c,x,y,k,a,now){/* 白いつばさ（2点の四角のドット）：羽根を、ゆっくりはばたく角度でならべる */const P=2*Math.max(1,Math.round(k)),fl=Math.sin(now/900)*.08;c.save();c.globalAlpha=a;
+  for(const sd of[-1,1])for(let f=0;f<9;f++){const L=(44-f*3)*k,ang=(-.25+f*.11+fl)*sd,bx=x+sd*(10+f*7)*k,by=y-f*2*k;for(let t=0;t<L;t+=P){const px=Math.round((bx+Math.sin(ang)*t*.3*sd+sd*t*.55)/P)*P,py=Math.round((by+t*.25)/P)*P;c.fillStyle=t<P*2?'#d6deef':'#f8fbff';c.fillRect(px,py,P,P*2)}}c.restore()}
+function nushiFaceDots(c,x,y,a,now){/* 風のヌシ様の顔：白い大きな鳥の頭（かりのドット絵） */const P=4,R=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round((x+dx*P)/2)*2,Math.round((y+dy*P)/2)*2,w*P,h*P)};c.save();c.globalAlpha=a;
+  R(-5,-4,10,8,'#f8fbff');R(-4,-5,8,1,'#f8fbff');R(-6,-2,1,5,'#e2e8f4');R(5,-2,1,5,'#e2e8f4');R(-4,4,8,1,'#e2e8f4');const bl=Math.floor(now/2600)%7===0?1:0;R(-3,-1,2,bl?1:2,'#5a6a8a');R(1,-1,2,bl?1:2,'#5a6a8a');R(-1,1,2,2,'#f0c46a');R(-1,3,2,1,'#d9a64a');c.restore()}

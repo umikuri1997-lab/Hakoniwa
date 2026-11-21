@@ -53,7 +53,7 @@ function sacredBody(r,now){
 const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:3200,leaf:3600,grow:5000,omoishard:5200,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800,echo:3900,still:3200,sunny:3200};
 const SACRED_AWAY=new Set(['bud','gaze','echo','still','sunny']);/* この動きのあいだは、会話のわくをしまって場面を見せる（dlgAway） */
 const sacredLineAway=cue=>String(cue||'').split('+').some(c=>c.startsWith('stree:')&&SACRED_AWAY.has(c.slice(6)));
-function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):0),0);}
+function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):c.startsWith('wind:')&&typeof WIND_BEAT_MS!=='undefined'?(WIND_BEAT_MS[c.slice(5)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
   const k=beats[a.fieldId]?.[a.phase];if(!k)return step.lines;
