@@ -396,7 +396,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
   return goPlay(r,G);
 }
 const ripeAdj=types=>j=>adjOf(j,k=>types.includes(S.obj[k])&&S.dyn[k]&&S.dyn[k].g>=100&&free('o'+k,1));
-const SEATPT={stool:1,chair:2,pouf:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:.9,achair:2.25};/* SEATPT：けいけん、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
+const SEATPT={stool:1,chair:2,pouf:3,kagoisu:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:.9,kagoisu:.9,achair:2.25};/* SEATPT：けいけん、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
 function tableRoom(tj){/* 食卓：食べている人数が、その食卓の人数（eat.cap：食卓2・大きな食卓4）より少ないか */const t=S.obj[tj];if(!TABLES.has(t))return true;let n=0;for(const q of S.res){const a=q.act;if(a&&a.type==='eat'&&a.tdir!=null&&typeof a.key==='string'&&a.key.startsWith('seat')&&anc(+a.key.slice(4)+a.tdir)===tj)n++}return n<BL[t].eat.cap}
 function warmSeat(j){return S.sacredRoot!=null&&fieldDistance(j,S.sacredRoot)<=FIELD_NEAR_R+1}/* 切り株のそばの席 */
 function warmTableJ(){if(S.sacredRoot==null)return -1;for(let j=0;j<S.obj.length;j++)if(TABLES.has(S.obj[j])&&fieldDistance(j,S.sacredRoot)<=FIELD_NEAR_R)return j;return -1}/* 切り株のそばの食卓（芽のそばのごはん） */
@@ -417,7 +417,7 @@ function fishLoot(r){/* つり：家具1%・空き缶30%・枝30%・地図の切
   const k=q<.31?'can':'eda';if(k==='can'&&!(S.guardianIdeas||{}).joro){(S.recipes||(S.recipes={})).joro=true;(S.guardianIdeas||(S.guardianIdeas={})).joro=true;sfx('level');queueItemGift({joro:1},'あたらしいレシピ！',true);if(typeof spReact==='function')spReact(r,'joy',1600)}/* はじめて空き缶をつったら、ブリキのじょうろを思いつく（レシピ：よろこぶ） */else if(k==='eda'&&typeof spReact==='function')spReact(r,'sad',1800);/* 枝：がっかり */r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1);return true}
 const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const STORET=9;/* 箱にしまう時間 */const WEEDDAY=[1,2],WEEDMAX=20,FUNDAY=[1,2],FUNMAX=20,KINODAY=1,KINOMAX=5,EDADAY=5,EDAMAX=10,EDAP=.25;/* 1エリアの雑草・きのこの最大 */
 function weedMorning(first){/* 毎朝、16エリアごとに：雑草1〜2本（2日で3本、20本まで）・ふんばり草1〜2本（2日で3本）（よみがえった土地、20本まで）・きのこ1本（木のそば、5本まで）・枝5本（木のまわり、10本まで） */
-  const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k)&&!(typeof sacredReserved==='function'&&sacredReserved(k)),NA=AREAN*AREAN;const WN=new Array(NA).fill(0),FN=new Array(NA).fill(0),KN=new Array(NA).fill(0),RV=Array.from({length:NA},()=>[]),KT=Array.from({length:NA},()=>[]);
+  const st=weedSt(),ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k)&&!(typeof sacredReserved==='function'&&sacredReserved(k)),NA=AREAN*AREAN;const WN=new Array(NA).fill(0),FN=new Array(NA).fill(0),KN=new Array(NA).fill(0),RV=Array.from({length:NA},()=>[]),KT=Array.from({length:NA},()=>[]);
   S.obj.forEach((o,j)=>{const a=areaOf(j);if(o==='kinoko')KN[a]++;else if(o==='weedc')FN[a]++;else if(WEEDS.has(o))WN[a]++;if(o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')KT[a].push(j)});for(const k of REV)RV[areaOf(k)].push(k);/* エリアごとの数 */
   const rk=a=>((((a/AREAN)|0)*AREAW+((Math.random()*AREAW)|0))*W+(a%AREAN)*AREAW+((Math.random()*AREAW)|0));/* エリアの中のマス */
   for(let a=0;a<NA;a++){
