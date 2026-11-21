@@ -21,7 +21,26 @@ function starMorning(){/* 朝6時：ゆうべのおねがいが、かなう */co
   if(k==='yutaka'){const L=WD===1?['wood','stone','bamboo','kuru','chiri']:['wood','stone','shina','kasa','eda'],a=pick(L);let b=pick(L);if(b===a)b=L[(L.indexOf(a)+1)%L.length];const na=8,nb=STARMAT-na;S.mat[a]=(S.mat[a]||0)+na;S.mat[b]=(S.mat[b]||0)+nb;got.push(MATN[a]+'×'+na,MATN[b]+'×'+nb)}
   else if(k==='minori'){const L=Object.keys(CROPS).filter(c=>cropOn(c));const c=L.length?pick(L):null;if(c){giveItem('seed:'+c,STARSEED);got.push(CROPS[c].name+'のたね×'+STARSEED)}}
   else if(k==='genki'){for(const r of S.res)if(!r.hidden)funAdd(r,STARFUN,'star');got.push('みんなのたのしさ+'+STARFUN)}
-  if(got.length){toast('流れ星のおねがいが、かなった：'+got.join('・'),'good');memo('power','流れ星のおねがいが、かなった')}}
+  if(got.length){S.starG={k,got};memo('power','流れ星のおねがいが、かなった')}}/* 見せるのは starWishTick（見おわったら S.starG をけす） */
+/* おねがいがかなう演出：村の時間を止め、カメラが神殿（なければおそなえ箱）へ → 空から星の光がおりて、はじける（キラッ）→ 素材・たねは上の数へとぶ／たのしさは、みんながよろこぶ → 大きな知らせ → カメラがもどる。演出は実時間 */
+let STARG=null;
+function starWishTick(){if(!S||!S.starG||STARG||GIFT_ACTIVE||camAnim||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof stageReady==='function'&&!stageReady())return;starWishShow()}
+function starWishShow(){const G=S.starG,owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION;GIFT_ACTIVE=true;STARG={};
+  const j=STATUE>=0?STATUE:OBOX,back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2},tx=j>=0?(j%W+.5)*TS:back.x,ty=j>=0?((j/W|0)+.2)*TS:back.y;
+  const finish=()=>{if(!STARG)return;STARG=null;GIFT_ACTIVE=false};
+  musicDuck(3200);
+  camAnim=STARG.cam={fz:cam.z,tz:Math.min(2.2,Math.max(cam.z,1.6)),fx:back.x,fy:back.y,tx,ty,t:0,dur:1.1,done:()=>{if(!ok())return finish();
+    const T0=performance.now(),x=tx,y=ty-6,top=y-VH/cam.z*.55;sfx('starkira');
+    scnAdd('orb',900,{x0:x+40,y0:top,x1:x,y1:y,arc:-14,col:'#fff6c8',n:5});scnAdd('glow',900,{x,y:top+30,r:14,col:'#fff6c8'},0);
+    setTimeout(()=>{if(!ok()||!STARG)return finish();sfx('good');scnAdd('glow',1600,{x,y,r:30,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:34,col:'#fff0a8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:46,col:'#cfe4ff'},260);
+      for(let i=0;i<8;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*.785)*30,y1:y-6+Math.sin(i*.785)*16,arc:8,col:i%2?'#cfe4ff':'#fff0a8',n:1},60+i*40);
+      if(typeof juiceGlowAt==='function'&&j>=0)juiceGlowAt(j%W+.5,(j/W|0)+.5,2);
+      if(G.k==='genki'){for(const r of S.res)if(!r.hidden&&!(r.act&&r.act.type==='sleep')){JOYU.set(r,performance.now()+2600);JUMP.set(r,performance.now())}}
+      else if(typeof juiceFly==='function')setTimeout(()=>{if(ok())juiceFly(x/TS,y/TS,'mat',3)},300);
+      setTimeout(()=>{if(!ok()||!STARG)return finish();const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="流れ星のおねがいが、かなった"></div>'),card=el('<div class="idea-card"><h2>おねがいが、かなった！</h2><p class="note"></p></div>');
+        card.querySelector('.note').textContent=G.got.join('・');const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');if(typeof juiceCheer==='function')juiceCheer();setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
+        b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();delete S.starG;camAnim=STARG.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:finish}}},1300)},850)}}}
+function starWishReset(){if(!STARG)return;if(STARG.cam&&camAnim===STARG.cam)camAnim=null;STARG=null;GIFT_ACTIVE=false;document.querySelectorAll('.gift-reveal').forEach(e=>{if(e.getAttribute('aria-label')==='流れ星のおねがいが、かなった')e.remove()})}/* 村を切りかえたとき */
 function drawStar(now){/* 空を流れる星（3点のドットの段々と、うすれる尾） */if(!STAR)return;const p=(now-STAR.t0)/STARMS;if(p>=1.4){STAR=null;return}if(p>=1)return;const e=p<.15?p/.15:1,u=3;
   const hx=(STAR.x0+(STAR.x1-STAR.x0)*p)*VW,hy=(STAR.y0+(STAR.y1-STAR.y0)*p)*VH,dx=(STAR.x0-STAR.x1)*VW,dy=(STAR.y0-STAR.y1)*VH,L=Math.hypot(dx,dy)||1;
   for(let i=18;i>=0;i--){const q=i*u*1.6,x=Math.round((hx+dx/L*q)/u)*u,y=Math.round((hy+dy/L*q)/u)*u,a=(1-i/19)*e*(p>.85?(1-p)/.15:1);ctx.fillStyle='rgba(255,246,214,'+(a*.85).toFixed(3)+')';ctx.fillRect(x,y,u,u)}

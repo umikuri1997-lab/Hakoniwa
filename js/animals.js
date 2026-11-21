@@ -34,7 +34,7 @@ function animalMorning(){if(!S||IS_STORY_REPLAY)return;S.ani=S.ani||[];
       const f=hutFront(h).find(j=>PENS.get(h).includes(j));
       const k=mother.k;
       S.ani.push({id:S.aniId=Math.max(S.aniId||0,...S.ani.map(a=>a.id))+1,k,h,born:day,fun:50,x:f%W+.5,y:(f/W|0)+.6,face:1,wt:2});
-      toast(ANI[k].name+'の子どもが生まれた！','good');
+      S.ani[S.ani.length-1].nb=1;/* 子どもが生まれた演出は aniBirthTick（さいごまで見たら nb をけす） */
     }
     for(const a of residents)a.fun=Math.max(0,Math.min(100,aniFun(a)+(a.fd===day-1?aniComfort(h)/10-8:-18)));
   }
@@ -236,4 +236,22 @@ function strayMeet(a){if(AMEET||GIFT_ACTIVE||camAnim&&camAnim.done)return strayP
       const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
       b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();(S.flags.aniMet||(S.flags.aniMet={}))[a.k]=1;
         camAnim=AMEET.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:()=>finish(true)}}},Math.max(0,1500-(performance.now()-T0)))}}}
+/* ---------- 子どもが生まれた：出会いと同じ形の演出 ----------
+   村の時間を止め（GIFT_ACTIVE）、カメラが子どもへよる → 子どもがはねて光る・親もはねる・鳴き声 → 「子どもが生まれた！」のカード → カメラがもどる。
+   さいごまで見たら a.nb をけす（とちゅうで村を切りかえたら、つぎにまたはじめから）。演出は実時間 */
+function aniBirthTick(){if(AMEET||GIFT_ACTIVE||camAnim||!S||!S.ani||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof stageReady==='function'&&!stageReady())return;const a=S.ani.find(q=>q.nb&&!q.in&&!q.stray);if(a)aniBirth(a)}
+function aniBirth(a){const owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION&&S.ani.includes(a);GIFT_ACTIVE=true;AMEET={a};
+  const back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2},tx=a.x*TS,ty=a.y*TS-uLift(a)-16;
+  const finish=()=>{if(!AMEET)return;AMEET=null;GIFT_ACTIVE=false};
+  musicDuck(2600);a.path=null;a.wt=3;
+  camAnim=AMEET.cam={fz:cam.z,tz:Math.min(2.6,Math.max(cam.z,2)),fx:back.x,fy:back.y,tx,ty,t:0,dur:1.2,done:()=>{if(!ok())return finish();
+    const T0=performance.now(),x=a.x*TS,y=a.y*TS-uLift(a)-8;aniJoy(a);sfx('good');
+    S.ani.filter(q=>q!==a&&q.h===a.h&&q.k===a.k&&!q.in&&!q.stray).slice(0,2).forEach((q,i)=>setTimeout(()=>{if(ok()&&AMEET)aniJoy(q)},350+i*300));/* 親もはねる */
+    scnAdd('glow',1700,{x,y,r:24,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+6,r0:5,r1:26,col:'#ffe2ea'},120);scnAdd('ring',900,{x,y:y+6,r0:5,r1:36,col:'#fff6c8'},420);
+    for(let i=0;i<6;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*1.05)*20,y1:y-12+Math.sin(i*1.05)*10,arc:6,col:i%2?'#ffd9e4':'#fff0a8',n:1},200+i*70);
+    setTimeout(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="子どもが生まれた"></div>'),card=el('<div class="idea-card"><h2>子どもが生まれた！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p></div>');
+      const pic=aniMeetPic(a.k);if(pic)card.querySelector('.pic').append(pic);card.querySelector('.nm').textContent=ANI[a.k].name+'の子ども';card.querySelector('.ds').textContent=(BL[S.obj[a.h]]?BL[S.obj[a.h]].name+'で、':'')+'すくすく育っていくよ。';
+      const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');if(typeof juiceCheer==='function')juiceCheer();setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
+      b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();delete a.nb;memo('heart',ANI[a.k].name+'の子どもが生まれた');
+        camAnim=AMEET.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:finish}}},Math.max(0,1500-(performance.now()-T0)))}}}
 function aniMeetReset(){if(!AMEET)return;if(AMEET.cam&&camAnim===AMEET.cam)camAnim=null;AMEET=null;GIFT_ACTIVE=false;document.querySelectorAll('.anim-meet').forEach(e=>e.remove())}/* 村を切りかえたとき */

@@ -37,7 +37,13 @@ function gearEquip(r,i){const L=gearList(),q=L[i];if(!q)return false;const why=g
 function gearOff(r,k){if(!r.gear||!r.gear[k])return;gearList().push(r.gear[k]);delete r.gear[k];gearChanged(r)}
 function gearDropAll(r){if(!r||!r.gear)return;for(const k of GSLOTK)if(r.gear[k])gearList().push(r.gear[k]);r.gear={};gearChanged(r)}/* いなくなった子のそうびは、もちものにもどる */
 function gearUpCost(q){const n=(q.lv||0)+1;return{k:gearMain(q.id),n:GUPN[n-1],pc:n===3?GUPPC:0}}
-function gearUp(q){if(!q||!gearCanUp(q.id)||(q.lv||0)>=3)return false;const c=gearUpCost(q);if((S.mat[c.k]||0)<c.n){toast(MATN[c.k]+'が足りません','warn');return false}if(S.pt<c.pc){toast('パワーが足りません','warn');return false}S.mat[c.k]-=c.n;S.pt-=c.pc;if(c.pc){PTW.q=true;sfx('power')}else sfx('level');q.lv=(q.lv||0)+1;for(const r of S.res)if(r.gear)for(const k of GSLOTK)if(r.gear[k]===q)gearChanged(r);toast(BL[q.id].name+'+'+q.lv+'になった','good');return true}
+function gearUp(q){if(!q||!gearCanUp(q.id)||(q.lv||0)>=3)return false;const c=gearUpCost(q);if((S.mat[c.k]||0)<c.n){toast(MATN[c.k]+'が足りません','warn');return false}if(S.pt<c.pc){toast('パワーが足りません','warn');return false}S.mat[c.k]-=c.n;S.pt-=c.pc;if(c.pc){PTW.q=true;sfx('power')}else sfx('level');q.lv=(q.lv||0)+1;for(const r of S.res)if(r.gear)for(const k of GSLOTK)if(r.gear[k]===q)gearChanged(r);gearUpFx(q);return true}
+/* 強化できた：そうびの絵がシールのように、ぺたっ（はねる）→ 「+1」のハンコ → 紙ふぶき（見た目と音だけ） */
+function gearUpFx(q){const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="強化できた"></div>'),card=el('<div class="idea-card"><h2>強化できた！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b></div>');
+  const im=new Image();im.className='ampic';im.style.width=im.style.height='96px';im.style.imageRendering='pixelated';im.src=gearIcon(q.id);card.querySelector('.pic').append(im);card.querySelector('.nm').textContent=gearName(q);
+  const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('good');
+  setTimeout(()=>{if(!ov.isConnected)return;if(typeof uiStamp==='function')uiStamp(card.querySelector('.pic'),false,'+'+q.lv);if(typeof juiceCheer==='function')juiceCheer()},450);setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
+  b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove()}}
 const gearName=q=>BL[q.id].name+(q.lv?'+'+q.lv:'');
 
 /* ---------- コワイノへの、とくべつな効果 ---------- */
