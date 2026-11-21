@@ -1,6 +1,10 @@
 """GPT（handoff/files/H-*）の絵を、ゲームのチップ（chips.js とアトラス）に入れる。
 
-  python3 tools/art/handoff3d/register.py H-2 H-3
+  python3 tools/art/handoff3d/register.py H-1 H-2 H-3
+
+H-1 の遊具：`<id>`（0コマめのまるごとの絵。アイコン・置く前・足場のうすい絵）、`<id>:s`（動かない所）、
+`<id>:m0〜m15`（動く所。16コマで、まわる角度 rideAng×pf のひとまわり）、`<id>b`（こわれた遊具）。
+`<id>` には、コマごとの座席の場所（足もとの点からの g64）`seats` と、まわる速さの倍 `pf` も入れる。
 
 sprites.json の x・y は、足もとの点（g64）からの場所。足もとの点は、仮の絵とくらべたときと同じ
 （placeholder.cjs：風のしかけ (32,56)・水の置き物 (32,64)）。チップの ax・ay は、マスの左上からの場所なので、足もとの点をたす。
@@ -29,11 +33,37 @@ def still(req, C):
         print(k, C[k]['ax'], C[k]['ay'], s['w'], s['h'])
 
 
+RIDEFOOT = {'merry': (64, 112), 'cup': (64, 112), 'skyswing': (64, 112), 'wheel': (96, 112)}
+
+
+def rides(C):
+    d = os.path.join(ROOT, 'handoff', 'files', 'H-1')
+    S = json.load(open(os.path.join(d, 'sprites.json')))
+    for k, (fx, fy) in RIDEFOOT.items():
+        M = S[k]; cw, ch = M['cell']; ox, oy = M['origin']; n = M['frames']; cols = M['columns']
+        full = Image.open(os.path.join(d, k + '_frames.png')).convert('RGBA')
+        mot = Image.open(os.path.join(d, k + '_motion.png')).convert('RGBA')
+        def cell(im, i):
+            return im.crop(((i % cols) * cw, (i // cols) * ch, (i % cols) * cw + cw, (i // cols) * ch + ch))
+        def put(key, im, extra=None):
+            b = im.getbbox(); im = im.crop(b)
+            C[key] = {'g': 64, 'ax': fx + ox + b[0], 'ay': fy + oy + b[1], 'w': im.width, 'h': im.height, 'f': [im]}
+            if extra: C[key].update(extra)
+        put(k, cell(full, 0), {'seats': M['seats'], 'pf': M['phase_factor']})
+        st = S[k + '_static']; im = Image.open(os.path.join(d, st['file'])).convert('RGBA')
+        C[k + ':s'] = {'g': 64, 'ax': fx + st['x'], 'ay': fy + st['y'], 'w': im.width, 'h': im.height, 'f': [im]}
+        for i in range(n):
+            put('%s:m%d' % (k, i), cell(mot, i))
+        b = S[k + 'b_preview']; im = Image.open(os.path.join(d, b['file'])).convert('RGBA')
+        C[k + 'b'] = {'g': 64, 'ax': fx + b['x'], 'ay': fy + b['y'], 'w': im.width, 'h': im.height, 'f': [im]}
+        print(k, C[k]['ax'], C[k]['ay'], C[k]['w'], C[k]['h'])
+
+
 def main():
     reqs = sys.argv[1:]
     head, C = chips.load_imgs()
     for r in reqs:
-        still(r, C)
+        rides(C) if r == 'H-1' else still(r, C)
     chips.pack_imgs(head, C)
 
 
