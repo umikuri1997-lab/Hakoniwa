@@ -2,7 +2,7 @@
 場所で色をぬり（paint）、骨（BONE：足・うで・頭・耳・あご・指など）でポーズ（warp）をつけて、コマごとに写す。bake_build.py が設計図を作って写す。
 座標：model_tris のあと（x 東・y 南＝手前・z 上、足もとのまん中が (0.5,0.5,0)）。モデルの高さ H でわった数 xn・yn・zn で色をきめる。
 コマ：'0'・'1' 止まる（息）・'w0'〜'w3' 歩く・'a0'・'a1' たたく（ためる・ふりおろす）。"""
-import math,numpy as np
+import math,os,numpy as np
 def sm(a,b,x):t=np.clip((x-a)/(b-a),0,1);return t*t*(3-2*t)
 TURN=-25   # 正面から右へ（顔が見える、ななめ）
 # 名前→(size 高さのマス, 色の関数, ポーズの種類)
@@ -102,7 +102,7 @@ SKEL={
         ('earL_u','head',(-.15,.5,.70),(-.15,.5,.85)),('earL_l','earL_u',(-.15,.5,.85),(-.15,.52,1.0)),('earR_u','head',(.15,.5,.70),(.15,.5,.85)),('earR_l','earR_u',(.15,.5,.85),(.15,.52,1.0))],
  'te':[('root',None,(0,0,0),(0,0,.25)),('arm','root',(0,0,.25),(0,0,.5)),('palm','arm',(0,0,.5),(0,0,.76)),('f1','palm',(0,0,.76),(0,0,.86)),('f2','f1',(0,0,.86),(0,0,.94)),('f3','f2',(0,0,.94),(0,0,1.0))]}
 FARK=1.5   # 空間で、いちばん近い骨のこの倍よりとおい、木の上ではなれた骨は、まぜない
-ARMR={'tame':{'armL_u':.05,'armR_u':.05}}   # 上うでの太さ（モデルの高さを1として）
+ARMR={}   # 上うでの太さ（モデルの高さを1として）
 ISLAND=40   # これより点の少ない、ほかの手足にかこまれた島は、まわりにつける
 RIGID={'mi'}   # べつべつの部品でできた体（あやつり人形のよう）：部品ごとに1本の骨にまるごとつける（まぜると部品がのびる）
 KIND={'kui':'hum','tame':'hum','hone':'hum','ro':'hum','mi':'hum','sui':'float','yoru':'blob','esa':'hop','te':'te'}
@@ -141,6 +141,10 @@ def weights(name,V,F):
     W/=W.sum(1,keepdims=True)
     A=coo_matrix((np.ones(len(e)*2),(np.r_[e[:,0],e[:,1]],np.r_[e[:,1],e[:,0]])),shape=(n,n)).tocsr();deg=np.maximum(np.asarray(A.sum(1)).ravel(),1)
     for _ in range(3):W=.5*W+.5*(A@W)/deg[:,None]   # 関節のさかいを、なだらかに
+    hp=os.path.join(os.path.dirname(os.path.abspath(__file__)),'heat',name+'.npz')
+    if os.path.exists(hp):   # Blender の自動の重み（ボーンヒート、bake_heat.py）があれば、それを使う
+        hz=np.load(hp)
+        if int(hz['n'])==n and list(hz['names'])==[b[0] for b in B]:W=hz['W'].astype(float);W/=np.maximum(W.sum(1,keepdims=True),1e-12)
     if name in RIGID:   # 部品ごとに1本（1本の骨が7わりより多い部品だけ。いくつもの骨にまたがる部品は、なだらかなまま）
         for c in np.unique(comp):
             m=comp==c;sw=W[m].sum(0);b=int(sw.argmax())
@@ -265,7 +269,7 @@ def warp(name,fr):
     return f
 _FACES={};_REST={};_CUT={};_TD={}
 def faces(name,F):_FACES[name]=F
-TEAR=2.5
+TEAR=1.8
 def tear(name):
     """ポーズでのびた面（うでと足など、モデルでくっついていた所をつなぐ面）を描かない。TEAR 倍よりのびた辺のある面"""
     def f(V,F,C):
