@@ -78,23 +78,30 @@ SMALL={   # 小さな部品：'eye'・色・None（からだのまま）
 #  ・重み：骨（線分）までのきょりで決め、1つの点は4本まで・合計1（normalize）。メッシュのとなりの点どうしでならす（smooth）。関節のまん中に 1/0 のさかいを作らない
 #  ・ポーズは、骨ごとに関節のまわりの回転（FK）。子は親の動きについていく。点は、骨の動きを重みでまぜる（線形のスキニング）
 # 場所の数は、モデルの高さ H でわった数（x：まん中からの横・y：まん中からの前（手前が+）・z：足もとからの高さ）。断面をしらべてきめた
-def _hum(hip,legx,knee,sp,sh,armx,elb,hand,neck,legy=0.0,top=1.0):
-    B=[('root',None,(0,0,hip),(0,0,sp)),('spine','root',(0,0,sp),(0,0,sh)),('head','spine',(0,0,neck),(0,0,top))]
-    for s_,k in(('L',-1),('R',1)):
-        B+=[('arm%s_u'%s_,'spine',(k*armx,0,sh),(k*armx*1.08,0,elb)),('arm%s_l'%s_,'arm%s_u'%s_,(k*armx*1.08,0,elb),(k*armx*1.1,0,hand)),
-            ('leg%s_u'%s_,'root',(k*legx,legy,hip),(k*legx,legy,knee)),('leg%s_l'%s_,'leg%s_u'%s_,(k*legx,legy,knee),(k*legx,legy,0.0))]
+def _hum(sh,elb,hand,hip,knee,foot,sp,neck,top=1.0,rigid=False):
+    """ひと形の骨。sh・elb・hand・hip・knee・foot は左がわ（x がマイナス）の (x,y,z)。右は x をうらがえす。断面をはかって、その骨のまん中に置く"""
+    B=[('root',None,(0,0,hip[2]),(0,0,sp)),('spine','root',(0,0,sp),(0,0,neck)),('head','spine',(0,0,neck),(0,0,top))]
+    m=lambda p,k:(p[0]*k,p[1],p[2])
+    for s_,k in(('L',1),('R',-1)):
+        B+=[('clav%s'%s_,'spine',(0,sh[1],sh[2]+.03),m(sh,k)),('arm%s_u'%s_,'clav%s'%s_,m(sh,k),m(elb,k)),('arm%s_l'%s_,'arm%s_u'%s_,m(elb,k),m(hand,k)),
+            ('leg%s_u'%s_,'root',m(hip,k),m(knee,k)),('leg%s_l'%s_,'leg%s_u'%s_,m(knee,k),m(foot,k))]
     return B
 SKEL={
- 'kui':_hum(hip=.36,legx=.15,knee=.18,sp=.5,sh=.56,armx=.25,elb=.32,hand=.06,neck=.70),   # 根の足・横の根のうで
- 'tame':_hum(hip=.27,legx=.13,knee=.13,sp=.46,sh=.66,armx=.20,elb=.50,hand=.33,neck=.72),
- 'hone':_hum(hip=.19,legx=.10,knee=.09,sp=.40,sh=.60,armx=.21,elb=.40,hand=.15,neck=.66),
- 'ro':_hum(hip=.12,legx=.10,knee=.06,sp=.30,sh=.46,armx=.23,elb=.31,hand=.15,neck=.57),
- 'mi':_hum(hip=.34,legx=.05,knee=.17,sp=.50,sh=.72,armx=.14,elb=.45,hand=.12,neck=.76),
- 'sui':[('root',None,(0,0,.45),(0,0,1.0))]+[b for k,x in enumerate((-.12,0,.12)) for b in (('t%d_u'%k,'root',(x,0,.45),(x,0,.25)),('t%d_l'%k,'t%d_u'%k,(x,0,.25),(x,0,.02)))],
- 'yoru':[('root',None,(0,0,0),(0,0,.45)),('top','root',(0,0,.45),(0,0,1.0)),('lobL','root',(-.25,0,.2),(-.6,0,.08)),('lobR','root',(.25,0,.2),(.6,0,.08))],
+ 'kui':_hum(sh=(-.21,.09,.45),elb=(-.24,.11,.25),hand=(-.23,.03,.03),hip=(-.12,.05,.32),knee=(-.13,.09,.15),foot=(-.11,0,.0),sp=.5,neck=.70),   # 根の足・横の根のうで
+ 'tame':_hum(sh=(-.19,.08,.64),elb=(-.18,.08,.47),hand=(-.2,0,.30),hip=(-.14,.06,.25),knee=(-.14,.1,.12),foot=(-.14,.08,.0),sp=.46,neck=.74),
+ 'hone':_hum(sh=(-.19,-.02,.60),elb=(-.2,-.03,.38),hand=(-.22,-.02,.15),hip=(-.12,-.03,.19),knee=(-.11,-.04,.09),foot=(-.12,-.02,.0),sp=.40,neck=.66),
+ 'ro':_hum(sh=(-.21,0,.45),elb=(-.22,0,.30),hand=(-.24,0,.15),hip=(-.10,0,.12),knee=(-.10,0,.06),foot=(-.11,0,.0),sp=.30,neck=.57),
+ 'mi':_hum(sh=(-.10,0,.70),elb=(-.13,0,.46),hand=(-.15,.03,.12),hip=(-.06,0,.47),knee=(-.055,.02,.23),foot=(-.06,0,.0),sp=.58,neck=.77,rigid=True),
+ # 光すい（ふわふわ）：かさ（bell）が息をするようにのびちぢみ、下にたれた4本の足は3つのふしで、つけねから先へおくれて波がつたわる
+ 'sui':[('root',None,(0,0,.3),(0,0,.6)),('bell','root',(0,0,.6),(0,0,1.0))]+[b for k,x in enumerate((-.18,-.08,.03,.13)) for b in (
+        ('t%d_a'%k,'root',(x,-.06,.32),(x,-.06,.22)),('t%d_b'%k,'t%d_a'%k,(x,-.06,.22),(x,-.06,.11)),('t%d_c'%k,'t%d_b'%k,(x,-.06,.11),(x,-.06,.0)))],
+ # 夜の水のかたまり（ねばねば）：まん中の柱（3つ）がのびちぢみ・ゆれ、下の4つのへり（前・うしろ・左・右）がひろがる・ちぢむ
+ 'yoru':[('root',None,(0,0,0),(0,0,.35)),('mid','root',(0,0,.35),(0,.1,.7)),('tip','mid',(0,.1,.7),(.1,.3,1.0)),
+        ('lobF','root',(0,.45,.15),(0,.9,.05)),('lobB','root',(0,-.45,.15),(0,-.9,.05)),('lobL','root',(-.45,0,.15),(-.9,0,.05)),('lobR','root',(.45,0,.15),(.9,0,.05))],
  'esa':[('root',None,(0,0,.3),(0,.25,.35)),('back','root',(0,0,.3),(0,-.62,.25)),('head','root',(0,.25,.35),(0,.5,.62)),('jaw','head',(0,.42,.38),(0,.62,.2)),
         ('earL_u','head',(-.15,.5,.70),(-.15,.5,.85)),('earL_l','earL_u',(-.15,.5,.85),(-.15,.52,1.0)),('earR_u','head',(.15,.5,.70),(.15,.5,.85)),('earR_l','earR_u',(.15,.5,.85),(.15,.52,1.0))],
  'te':[('root',None,(0,0,0),(0,0,.25)),('arm','root',(0,0,.25),(0,0,.5)),('palm','arm',(0,0,.5),(0,0,.76)),('f1','palm',(0,0,.76),(0,0,.86)),('f2','f1',(0,0,.86),(0,0,.94)),('f3','f2',(0,0,.94),(0,0,1.0))]}
+RIGID={'mi'}   # べつべつの部品でできた体（あやつり人形のよう）：部品ごとに1本の骨にまるごとつける（まぜると部品がのびる）
 KIND={'kui':'hum','tame':'hum','hone':'hum','ro':'hum','mi':'hum','sui':'float','yoru':'blob','esa':'hop','te':'te'}
 def _segd(P,a,b):
     a=np.array(a,float);b=np.array(b,float);d=b-a;t=np.clip(((P-a)@d)/max(d@d,1e-9),0,1);return np.linalg.norm(P-(a+t[:,None]*d),axis=1)
@@ -103,20 +110,38 @@ def _norm(name,V):
     if name=='yoru':pass
     return H,cx,cy
 def weights(name,V,F):
-    """骨の重み（点ごと。4本まで・合計1・メッシュのとなりでならす）"""
-    B=SKEL[name];H,cx,cy=_norm(name,V);P=np.c_[(V[:,0]-cx)/H,(V[:,1]-cy)/H,V[:,2]/H]
-    if name=='yoru':   # 横に広いかたまり：横はばに合わせて、ふくらみの骨を外へ
-        xm=np.abs(P[:,0]).max();B=[(n,p,(h[0]*xm/.6,h[1],h[2]),(t[0]*xm/.6,t[1],t[2])) for n,p,h,t in B]
-    # 同じ場所の点（UV のつなぎ目で2つにわかれた点）は1つにまとめる：べつの重みだと、まげたとき、つなぎ目がひらく
-    _,uid=np.unique(np.round(V,5),axis=0,return_inverse=True);uid=uid.ravel();n=uid.max()+1
-    Pu=np.zeros((n,3));np.add.at(Pu,uid,P);Pu/=np.bincount(uid,minlength=n)[:,None]
-    D=np.stack([_segd(Pu,h,t) for _,_,h,t in B],1);W=1/(D*D+.0004)**2
-    # メッシュのとなりの点（面の辺）でならす：関節のまわりの重みがなだらかになる
-    Fu=uid[F];e=np.r_[Fu[:,[0,1]],Fu[:,[1,2]],Fu[:,[2,0]]]
+    """骨の重み：メッシュの面の上を通る道のり（はなれた体の所へ、すきまをこえて重みがとばない）で、1つの点は4本まで・合計1。
+    骨のたね：その骨にいちばん近く、ほかの骨よりはっきり近い点。部品にたねがなければ、部品ぜんたいを、まん中にいちばん近い骨にまるごとつける。
+    べつべつの部品でできた体（RIGID）は、部品ごとに重みのいちばん大きい骨1本にまるごと"""
     from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import dijkstra,connected_components
+    B=SKEL[name];H,cx,cy=_norm(name,V);P=np.c_[(V[:,0]-cx)/H,(V[:,1]-cy)/H,V[:,2]/H]
+    _,uid=np.unique(np.round(V,5),axis=0,return_inverse=True);uid=uid.ravel();n=uid.max()+1   # UV のつなぎ目の点は1つに
+    Pu=np.zeros((n,3));np.add.at(Pu,uid,P);Pu/=np.bincount(uid,minlength=n)[:,None]
+    Fu=uid[F];e=np.r_[Fu[:,[0,1]],Fu[:,[1,2]],Fu[:,[2,0]]];e=e[e[:,0]!=e[:,1]];L=np.linalg.norm(Pu[e[:,0]]-Pu[e[:,1]],axis=1)+1e-6
+    G=coo_matrix((np.r_[L,L],(np.r_[e[:,0],e[:,1]],np.r_[e[:,1],e[:,0]])),shape=(n,n)).tocsr()
+    D=np.stack([_segd(Pu,h,t) for _,_,h,t in B],1);nb=len(B)
+    near=D.argmin(1);ds=np.sort(D,1);clear=ds[:,0]<.7*ds[:,1]
+    Gd=np.full((n,nb),np.inf)
+    for b in range(nb):
+        ok=(near==b)&clear&(D[:,b]<.06)
+        if B[b][0].startswith('arm') and B[b][0].endswith('_u'):ok&=Pu[:,2]<B[b][2][2]-.03   # 上うでのたねは、かたの関節より下だけ（かたの肉・かたにのった物は、さこつ clav へ）
+        sd=np.where(ok)[0]
+        if len(sd)==0:sd=np.argsort(D[:,b])[:4]
+        Gd[:,b]=dijkstra(G,indices=sd,min_only=True)   # たねからの、メッシュの上の道のり
+    _,comp=connected_components(G,directed=False);W=np.zeros((n,nb))
+    for c in np.unique(comp):
+        m=comp==c;g=Gd[m]
+        if not np.isfinite(g).any():   # たねのない部品：まん中にいちばん近い骨にまるごと
+            cen=Pu[m].mean(0)[None];b=int(np.argmin([_segd(cen,h,t)[0] for _,_,h,t in B]));W[m,b]=1;continue
+        g=np.where(np.isfinite(g),g,1e9);W[m]=1/(g*g+.0004)**2
+    W/=W.sum(1,keepdims=True)
     A=coo_matrix((np.ones(len(e)*2),(np.r_[e[:,0],e[:,1]],np.r_[e[:,1],e[:,0]])),shape=(n,n)).tocsr();deg=np.maximum(np.asarray(A.sum(1)).ravel(),1)
-    W=W/W.sum(1,keepdims=True)
-    for _ in range(6):W=.5*W+.5*(A@W)/deg[:,None]
+    for _ in range(3):W=.5*W+.5*(A@W)/deg[:,None]   # 関節のさかいを、なだらかに
+    if name in RIGID:   # 部品ごとに1本（1本の骨が7わりより多い部品だけ。いくつもの骨にまたがる部品は、なだらかなまま）
+        for c in np.unique(comp):
+            m=comp==c;sw=W[m].sum(0);b=int(sw.argmax())
+            if sw[b]>=.7*sw.sum():W[m]=0;W[m,b]=1
     k=np.argsort(-W,1)[:,4:];np.put_along_axis(W,k,0,1);W/=W.sum(1,keepdims=True)   # 4本まで
     return W[uid],P,B,H,cx,cy
 def _R(rx,ry):
@@ -128,8 +153,10 @@ def skin(B,W,P,pose):
     """FK：骨ごとに、親の動きのあとで、自分の関節（head）のまわりにまわす。点は重みでまぜる"""
     M={};out=np.zeros_like(P)
     for j,(n,par,h,t) in enumerate(B):
-        rx,ry=pose.get(n,(0,0)) if isinstance(pose.get(n,0),tuple) else (pose.get(n,0),0)
-        R=_R(rx,ry);h=np.array(h,float);L=np.eye(4);L[:3,:3]=R;L[:3,3]=h-R@h
+        v=pose.get(n,0);sc=(1,1,1)
+        if isinstance(v,dict):sc=v.get('s',(1,1,1));v=v.get('r',(0,0))
+        rx,ry=v if isinstance(v,tuple) else (v,0)
+        R=_R(rx,ry)@np.diag(sc);h=np.array(h,float);L=np.eye(4);L[:3,:3]=R;L[:3,3]=h-R@h   # のびちぢみ（s）も関節を中心に
         M[n]=(M[par]@L) if par else L
         Q=P@M[n][:3,:3].T+M[n][:3,3];out+=W[:,j:j+1]*Q
     return out
@@ -141,18 +168,28 @@ def _mir(p):
     return o
 _W0=dict(legL_u=-24,legL_l=10,legR_u=22,legR_l=34,armL_u=20,armL_l=-12,armR_u=-20,armR_l=-24,spine=2,head=3,bob=.02)
 _W1=dict(legL_u=-4,legL_l=4,legR_u=6,legR_l=48,armL_u=4,armR_u=-4,armR_l=-10,bob=.035)
-def _wave(chains,ph,amp):
+def _wave(ph,amp,lag=.9,lean=0):
+    """光すいの足：つけねから先へ、おくれて波がつたわる（ふしごとに lag ずつおくれ、先ほど大きく）。lean：ぜんぶの足を、うしろへたなびかせる"""
     o={}
-    for k in range(chains):
-        a=2*math.pi*ph+k*1.7;o['t%d_u'%k]=(amp*math.sin(a),amp*.7*math.cos(a));o['t%d_l'%k]=(amp*1.5*math.sin(a+.9),amp*math.cos(a+.9))
+    for k in range(4):
+        a=2*math.pi*ph+k*1.3
+        for q,(sg,g) in enumerate((('a',.6),('b',1.0),('c',1.4))):o['t%d_%s'%(k,sg)]=(lean*(q==0)+amp*g*math.sin(a-q*lag),amp*.5*g*math.cos(a-q*lag))
+    return o
+def _bell(s):return {'bell':{'s':(1/math.sqrt(s),1/math.sqrt(s),s)}}   # かさ：たてにのびるとき横はほそく（体積をたもつ）
+def _blob(mid=0,tip=0,sq=1.0,lob=(1,1,1,1),midy=0,tipy=0):
+    """夜の水：まん中の柱を、まげ（mid・tip）・たてにのびちぢみ（sq。横は体積をたもつ）、へりを前・うしろ・左・右にのばす（lob）"""
+    w=1/math.sqrt(sq);o={'root':{'s':(w,w,sq)},'mid':(mid,midy),'tip':(tip,tipy)}
+    for nm,f in zip(('lobF','lobB','lobL','lobR'),lob):o[nm]={'s':(f,f,1/f)}
     return o
 FR={'hum':{'0':{},'1':dict(spine=3,head=5,armL_u=4,armR_u=4,sq=.985),'w0':_W0,'w1':_W1,'w2':_mir(_W0),'w3':_mir(_W1),
        'a0':dict(armL_u=-125,armR_u=-125,armL_l=-25,armR_l=-25,spine=-10,head=-12,legL_u=-8,legR_u=8,legR_l=10),
        'a1':dict(armL_u=-30,armR_u=-30,armL_l=-6,armR_l=-6,spine=18,head=14,legL_u=-14,legR_u=12,legR_l=16)},
-    'float':{'0':dict(_wave(3,0,8),bob=.06),'1':dict(_wave(3,.5,8),bob=.03,sq=.97),'w0':dict(_wave(3,0,16),bob=.06,lean=8),'w1':dict(_wave(3,.25,16),bob=.08,lean=8),
-       'w2':dict(_wave(3,.5,16),bob=.06,lean=8),'w3':dict(_wave(3,.75,16),bob=.04,lean=8),'a0':dict(_wave(3,.1,-20),bob=.1,sq=1.06,lean=-8),'a1':dict(_wave(3,.6,30),bob=.02,lean=16,sq=.92)},
-    'blob':{'0':{},'1':dict(top=(4,3),sq=.95,wid=1.03),'w0':dict(top=(10,-6),lobL=(0,-8),lobR=(0,8),sq=.9,wid=1.06),'w1':dict(top=(-4,4),lobL=(0,6),lobR=(0,-6),sq=1.04,lean=4),
-       'w2':dict(top=(10,6),lobL=(0,8),lobR=(0,-8),sq=.9,wid=1.06),'w3':dict(top=(-4,-4),lobL=(0,-6),lobR=(0,6),sq=1.04,lean=-3),'a0':dict(top=(-16,0),lobL=(0,-12),lobR=(0,12),sq=.82,wid=1.1),'a1':dict(top=(28,0),lobL=(0,10),lobR=(0,-10),sq=1.12,wid=.92)},
+    'float':{'0':dict(_wave(0,8),**_bell(1.04),bob=.06),'1':dict(_wave(.5,8),**_bell(.95),bob=.03),
+       'w0':dict(_wave(0,14,lean=12),**_bell(1.06),bob=.06,lean=8),'w1':dict(_wave(.25,14,lean=12),**_bell(.94),bob=.08,lean=8),'w2':dict(_wave(.5,14,lean=12),**_bell(1.06),bob=.06,lean=8),'w3':dict(_wave(.75,14,lean=12),**_bell(.94),bob=.04,lean=8),
+       'a0':dict(_wave(.1,10,lean=-25),**_bell(.85),bob=.1,lean=-8),'a1':dict(_wave(.6,10,lean=35),**_bell(1.15),bob=.02,lean=16)},
+    'blob':{'0':_blob(mid=2,tip=3,sq=1.0),'1':_blob(mid=-2,tip=-4,sq=.94,lob=(1.04,1.04,1.04,1.04)),
+       'w0':_blob(mid=-4,tip=-6,sq=.86,lob=(1.12,1.1,1.1,1.1)),'w1':_blob(mid=14,tip=10,sq=1.1,lob=(1.18,.9,.96,.96)),'w2':_blob(mid=8,tip=-6,sq=.94,lob=(1.1,.92,1.0,1.0)),'w3':_blob(mid=-6,tip=8,sq=1.0,lob=(1.0,1.04,1.02,1.02)),
+       'a0':_blob(mid=-14,tip=-14,sq=1.22,lob=(.88,.9,.9,.9)),'a1':_blob(mid=26,tip=22,sq=.84,lob=(1.28,1.0,1.15,1.15))},
     'hop':{'0':{},'1':dict(earL_u=-6,earR_u=-6,earL_l=-6,earR_l=-6,sq=.97),'w0':dict(back=10,earL_u=14,earR_u=14,earL_l=10,earR_l=10,sq=.86,wid=1.05),'w1':dict(back=-12,head=-6,earL_u=-20,earR_u=-20,earL_l=-16,earR_l=-16,sq=1.06),
        'w2':dict(back=-4,earL_u=-8,earR_u=-8,sq=1.02),'w3':dict(back=8,earL_u=10,earR_u=10,earL_l=8,earR_l=8,sq=.9),'a0':dict(head=-12,jaw=18,earL_u=-22,earR_u=-22,earL_l=-18,earR_l=-18,sq=.92),'a1':dict(head=14,jaw=40,earL_u=18,earR_u=18,earL_l=14,earR_l=14,sq=1.08,wid=1.04)},
     'te':{'0':dict(f1=8,f2=10,f3=10),'1':dict(f1=14,f2=18,f3=20,palm=3),'w0':dict(arm=(4,5),palm=6,f1=6,f2=8,f3=8),'w1':dict(arm=(2,0),palm=4,f1=16,f2=22,f3=24),'w2':dict(arm=(4,-5),palm=6,f1=6,f2=8,f3=8),'w3':dict(arm=(2,0),palm=4,f1=16,f2=22,f3=24),
