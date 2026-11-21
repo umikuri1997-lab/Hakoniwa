@@ -60,7 +60,7 @@ function tfThud(f){const B=JBRK.wood,L=TS*2.2;for(let i=0;i<14;i++){const q=Math
   fx.push({k:'ring',x:f.px+TS/2+f.dir*L*.5,y:f.py+TS*.7,life:1,col:'rgba(225,205,165,.85)'});/* 土ぼこり */
   if(!f.red&&cam.z>=homeZ()*.7)juiceShake()}
 function treeFallTick(now){for(let i=TFALL.length-1;i>=0;i--){const f=TFALL[i];if((now-f.t0)/1000>TFTHUD+TFLIE+TFOUT||f.S!==S)TFALL.splice(i,1)}}/* 終わった・村がかわった */
-function juiceShake(){const now=performance.now();if(now-JSHAKE<JUICE_SHAKEGAP)return;if(typeof uiReduced==='function'&&uiReduced())return;JSHAKE=now;try{const v=document.getElementById('cv');if(v.classList.contains('shk2')||v.classList.contains('shk3'))return;v.classList.add('shk2');setTimeout(()=>v.classList.remove('shk2'),280)}catch(e){}}
+function juiceShake(){const now=performance.now();if(now-JSHAKE<JUICE_SHAKEGAP)return;if(typeof uiReduced==='function'&&uiReduced())return;JSHAKE=now;shakeScreen('s')}
 
 /* ---------- つづけて置く気持ちよさ ---------- */
 function juicePlace(j,kind){/* burst から。かえす数：この物が着地するまでのおくれ（ミリ秒。まとめて置いたときだけ） */if(!juiceOK()||kind!=='block'&&kind!=='furn'&&kind!=='plant')return 0;const now=performance.now(),C=JCOMBO;
