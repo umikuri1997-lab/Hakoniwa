@@ -6,5 +6,5 @@ from natcommon import notex,flat
 ID='bktame#w3';GRAD=True;ELEV=20;BOTTOM=58
 VIEWS=[('bktame#w3',0)]
 def PARTS():
-    p=P('tame','model',('cave/bk_tame.glb',0.5,0.5,0,1.0,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=bake_rig.warp('tame','w3');p.paint=bake_rig.paint('tame')
+    p=P('tame','model',('cave/bk_tame.glb',0.5,0.5,0,1.0,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=bake_rig.warp('tame','w3');p.fsel=bake_rig.tear('tame');p.remesh=bake_rig.remesh('tame');p.paint=bake_rig.paint('tame')
     return[flat(notex(p))]

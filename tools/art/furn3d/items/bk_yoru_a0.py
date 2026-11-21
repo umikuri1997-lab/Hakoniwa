@@ -6,5 +6,5 @@ from natcommon import notex,flat
 ID='bkyoru#a0';GRAD=True;ELEV=20;BOTTOM=58
 VIEWS=[('bkyoru#a0',0)]
 def PARTS():
-    p=P('yoru','model',('cave/bk_yoru.glb',0.5,0.5,0,0.55,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=bake_rig.warp('yoru','a0');p.paint=bake_rig.paint('yoru')
+    p=P('yoru','model',('cave/bk_yoru.glb',0.5,0.5,0,0.55,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=bake_rig.warp('yoru','a0');p.fsel=bake_rig.tear('yoru');p.remesh=bake_rig.remesh('yoru');p.paint=bake_rig.paint('yoru')
     return[flat(notex(p))]

@@ -16,7 +16,7 @@ from natcommon import notex,flat
 ID='bk{name}#{fr}';GRAD=True;ELEV=20;BOTTOM=58
 VIEWS=[('bk{name}#{fr}',0)]
 def PARTS():
-    p=P('{name}','model',('cave/bk_{name}.glb',0.5,0.5,0,{size},{rot},0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=bake_rig.warp('{name}','{fr}');p.paint=bake_rig.paint('{name}')
+    p=P('{name}','model',('cave/bk_{name}.glb',0.5,0.5,0,{size},{rot},0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=bake_rig.warp('{name}','{fr}');p.fsel=bake_rig.tear('{name}');p.remesh=bake_rig.remesh('{name}');p.paint=bake_rig.paint('{name}')
     return[flat(notex(p))]
 '''
 def gen(name):

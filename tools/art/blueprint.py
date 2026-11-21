@@ -96,6 +96,8 @@ def build(sc,parts):
             V,F,C=model_tris(*d);sc.part()
             pt=getattr(p,'paint',None)
             if pt is not None:C=pt(V,F,C)   # paint：形をかえる前（ポーズの前）の点で、面の色をかえる（みつばちのしまもよう など）
+            rm=getattr(p,'remesh',None)
+            if rm is not None:V,F,C=rm(V,F,C)   # remesh：ポーズの前に、面をふやす・へらす（くっついた手足を手足ごとに分ける）
             if getattr(p,'warp',None):V=p.warp(V.copy())
             fs=getattr(p,'fsel',None)
             if fs is not None:m_=fs(V,F,C);F=F[m_];C=C[m_]   # fsel：使う面だけえらぶ（同じモデルの幹と葉を、べつの部品にする。色で見分ける）   # warp：モデルの形をかえる関数（点の一覧 → 点の一覧。根をちぢめる など）

@@ -88,7 +88,7 @@ def _hum(sh,elb,hand,hip,knee,foot,sp,neck,top=1.0,rigid=False):
     return B
 SKEL={
  'kui':_hum(sh=(-.21,.09,.45),elb=(-.24,.11,.25),hand=(-.23,.03,.03),hip=(-.12,.05,.32),knee=(-.13,.09,.15),foot=(-.11,0,.0),sp=.5,neck=.70),   # 根の足・横の根のうで
- 'tame':_hum(sh=(-.21,.02,.62),elb=(-.22,-.01,.34),hand=(-.22,.14,.03),hip=(-.14,.06,.25),knee=(-.14,.1,.12),foot=(-.14,.08,.0),sp=.46,neck=.74),
+ 'tame':_hum(sh=(-.21,.02,.62),elb=(-.22,-.01,.34),hand=(-.23,.12,.06),hip=(-.12,.0,.3),knee=(-.12,.06,.14),foot=(-.11,.17,.02),sp=.46,neck=.74),
  'hone':_hum(sh=(-.19,-.02,.60),elb=(-.2,-.03,.38),hand=(-.22,-.02,.15),hip=(-.12,-.03,.19),knee=(-.11,-.04,.09),foot=(-.12,-.02,.0),sp=.40,neck=.66),
  'ro':_hum(sh=(-.21,0,.45),elb=(-.22,0,.30),hand=(-.24,0,.15),hip=(-.10,0,.12),knee=(-.10,0,.06),foot=(-.11,0,.0),sp=.30,neck=.57),
  'mi':_hum(sh=(-.10,0,.70),elb=(-.13,0,.46),hand=(-.15,.03,.12),hip=(-.06,0,.47),knee=(-.055,.02,.23),foot=(-.06,0,.0),sp=.58,neck=.77,rigid=True),
@@ -101,6 +101,8 @@ SKEL={
  'esa':[('root',None,(0,0,.3),(0,.25,.35)),('back','root',(0,0,.3),(0,-.62,.25)),('head','root',(0,.25,.35),(0,.5,.62)),('jaw','head',(0,.42,.38),(0,.62,.2)),
         ('earL_u','head',(-.15,.5,.70),(-.15,.5,.85)),('earL_l','earL_u',(-.15,.5,.85),(-.15,.52,1.0)),('earR_u','head',(.15,.5,.70),(.15,.5,.85)),('earR_l','earR_u',(.15,.5,.85),(.15,.52,1.0))],
  'te':[('root',None,(0,0,0),(0,0,.25)),('arm','root',(0,0,.25),(0,0,.5)),('palm','arm',(0,0,.5),(0,0,.76)),('f1','palm',(0,0,.76),(0,0,.86)),('f2','f1',(0,0,.86),(0,0,.94)),('f3','f2',(0,0,.94),(0,0,1.0))]}
+FARK=1.5   # 空間で、いちばん近い骨のこの倍よりとおい、木の上ではなれた骨は、まぜない
+ISLAND=40   # これより点の少ない、ほかの手足にかこまれた島は、まわりにつける
 RIGID={'mi'}   # べつべつの部品でできた体（あやつり人形のよう）：部品ごとに1本の骨にまるごとつける（まぜると部品がのびる）
 KIND={'kui':'hum','tame':'hum','hone':'hum','ro':'hum','mi':'hum','sui':'float','yoru':'blob','esa':'hop','te':'te'}
 def _segd(P,a,b):
@@ -142,7 +144,53 @@ def weights(name,V,F):
         for c in np.unique(comp):
             m=comp==c;sw=W[m].sum(0);b=int(sw.argmax())
             if sw[b]>=.7*sw.sum():W[m]=0;W[m,b]=1
+    def limb(b):   # 骨のつながりの先（うで・足・しょく手など）：根もとから2つめの骨までさかのぼる
+        p=b
+        while B[p][1] and B[ix0[B[p][1]]][1]:p=ix0[B[p][1]]
+        return p
+    ix0={B[b][0]:b for b in range(nb)};lb=np.array([limb(b) for b in range(nb)])
+    par0=[ix0.get(B[b][1],-1) if B[b][1] else -1 for b in range(nb)]
+    def anc0(b):
+        o=[]
+        while b>=0:o.append(b);b=par0[b]
+        return o
+    TD0=np.zeros((nb,nb),int)
+    for a_ in range(nb):
+        for b_ in range(nb):
+            A_=anc0(a_);B_=anc0(b_);c_=next(x for x in A_ if x in B_);TD0[a_,b_]=A_.index(c_)+B_.index(c_)
+    dn=D.argmin(1);far=(TD0[dn]>2)&(D>FARK*D[np.arange(n),dn][:,None])   # 木の上ではなれた骨（うでと足）は、空間でも近いときだけ：モデルで手足がくっついていても、道のりでとばない
+    W=np.where(far,0,W);W/=np.maximum(W.sum(1,keepdims=True),1e-12)
+    z_=W.sum(1)==0;W[z_,dn[z_]]=1
+    for _ in range(3):   # 小さな島：ほかの手足のまん中に、ぽつんとのこった点のかたまり（手が足にくっついていた所）は、まわりの手足につける
+        lv=lb[W.argmax(1)];same=lv[e[:,0]]==lv[e[:,1]];es=e[same]
+        _,cc=connected_components(coo_matrix((np.ones(len(es)),(es[:,0],es[:,1])),shape=(n,n)),directed=False)
+        cnt=np.bincount(cc);small=cnt[cc]<ISLAND
+        if not small.any():break
+        ed=e[~same];Wn=W.copy()
+        for v in np.where(small)[0]:pass
+        acc=np.zeros_like(W);k=np.zeros(n)
+        for a_,b_ in((0,1),(1,0)):
+            m_=small[ed[:,a_]]&~small[ed[:,b_]];np.add.at(acc,ed[m_,a_],W[ed[m_,b_]]);np.add.at(k,ed[m_,a_],1)
+        ok=k>0;Wn[ok]=acc[ok]/k[ok,None];W=Wn
+    nb_=[{b} for b in range(nb)];ix={B[b][0]:b for b in range(nb)}
+    for b in range(nb):
+        if B[b][1]:p_=ix[B[b][1]];nb_[b].add(p_);nb_[p_].add(b)
+    dm=W.argmax(1);keep=np.zeros_like(W,bool)
+    for b in range(nb):keep[np.ix_(dm==b,list(nb_[b]))]=True
+    W=np.where(keep,W,0);W/=W.sum(1,keepdims=True)   # まぜるのは、いちばん重い骨と、その親・子だけ（うでと足など、はなれた骨をまぜない）
     k=np.argsort(-W,1)[:,4:];np.put_along_axis(W,k,0,1);W/=W.sum(1,keepdims=True)   # 4本まで
+    par=[ix0.get(B[b][1],-1) if B[b][1] else -1 for b in range(nb)]
+    def anc(b):
+        o=[]
+        while b>=0:o.append(b);b=par[b]
+        return o
+    TD=np.zeros((nb,nb),int)
+    for a_ in range(nb):
+        A_=anc(a_)
+        for b_ in range(nb):
+            B_=anc(b_);c_=next(x for x in A_ if x in B_);TD[a_,b_]=A_.index(c_)+B_.index(c_)
+    _TD[name]=TD
+    dv=W.argmax(1)[uid][F];_CUT[(name,len(V))]=(TD[dv[:,0],dv[:,1]]>2)|(TD[dv[:,1],dv[:,2]]>2)|(TD[dv[:,0],dv[:,2]]>2)   # うでと足など、はなれた骨にまたがる面（モデルでくっついていた所）
     return W[uid],P,B,H,cx,cy
 def _R(rx,ry):
     a=math.radians(rx);b=math.radians(ry)
@@ -200,7 +248,7 @@ _BW={}
 def warp(name,fr):
     q=dict(FR[KIND[name]][fr]);q.update(OVR.get(name,{}).get(fr,{}))
     def f(V):
-        key=(name,len(V))
+        key=(name,len(V));_REST[key]=V.copy();_RH[name]=max(V[:,2].max(),1e-6)
         if key not in _BW:_BW[key]=weights(name,V,_FACES[name])
         W,P,B,H,cx,cy=_BW[key];Q=skin(B,W,P,{k:v for k,v in q.items() if k not in('bob','sq','wid','lean')})
         V=np.c_[Q[:,0]*H+cx,Q[:,1]*H+cy,Q[:,2]*H];c=np.array([cx,cy,0.])
@@ -211,5 +259,38 @@ def warp(name,fr):
         a=math.radians(TURN);x0=V[:,0]-c[0];y0=V[:,1]-c[1];V[:,0]=c[0]+x0*math.cos(a)-y0*math.sin(a);V[:,1]=c[1]+x0*math.sin(a)+y0*math.cos(a)
         return V
     return f
-_FACES={}
+_FACES={};_REST={};_CUT={};_TD={}
 def faces(name,F):_FACES[name]=F
+TEAR=2.5
+def tear(name):
+    """ポーズでのびた面（うでと足など、モデルでくっついていた所をつなぐ面）を描かない。TEAR 倍よりのびた辺のある面"""
+    def f(V,F,C):
+        R=_REST.get((name,len(V)))
+        if R is None:return np.ones(len(F),bool)
+        cut=_CUT.get((name,len(V)));cut=cut if cut is not None and len(cut)==len(F) else np.zeros(len(F),bool)
+        l0=np.stack([np.linalg.norm(R[F[:,i]]-R[F[:,(i+1)%3]],axis=1) for i in range(3)],1);l1=np.stack([np.linalg.norm(V[F[:,i]]-V[F[:,(i+1)%3]],axis=1) for i in range(3)],1)
+        return ~((l1>TEAR*l0+1e-4*_RH.get(name,1)).any(1)|cut)
+    return f
+_RH={}
+
+def remesh(name):
+    """手足がくっついていた所（はなれた骨にまたがる面）を、手足ごとに1まいずつにふやす。
+    ふやした面のはしの点は、同じ場所に点をふやし、その手足の重みにする。うでを上げても、足にもうでにも、あながあかない"""
+    def f(V,F,C):
+        W,P,B,H,cx,cy=weights(name,V,F);TD=_TD[name];dm=W.argmax(1)
+        d3=dm[F];cf=(TD[d3[:,0],d3[:,1]]>2)|(TD[d3[:,1],d3[:,2]]>2)|(TD[d3[:,0],d3[:,2]]>2)
+        if not cf.any():return V,F,C
+        Vn=[V];Wn=[W];Pn=[P];Fn=[F[~cf]];Cn=[C[~cf]];n=len(V)
+        for fi in np.where(cf)[0]:
+            f_=F[fi];left=list(range(3))
+            while left:
+                a=left[0];g=[i for i in left if TD[dm[f_[a]],dm[f_[i]]]<=2];left=[i for i in left if i not in g]
+                w_=W[f_[g]].mean(0);nf=[]
+                for i in range(3):
+                    if i in g:nf.append(f_[i])
+                    else:Vn.append(V[f_[i]][None]);Pn.append(P[f_[i]][None]);Wn.append(w_[None]);nf.append(n);n+=1
+                Fn.append(np.array([nf]));Cn.append(C[fi][None])
+        V2=np.concatenate(Vn);F2=np.concatenate(Fn);C2=np.concatenate(Cn)
+        _BW[(name,len(V2))]=(np.concatenate(Wn),np.concatenate(Pn),B,H,cx,cy);_FACES[name]=F2;_CUT[(name,len(V2))]=np.zeros(len(F2),bool)
+        return V2,F2,C2
+    return f
