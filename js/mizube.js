@@ -42,7 +42,7 @@ function mzGenWorld(s){const R=mulberry(20261120),N=W*H,h=new Array(N).fill(0),P
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;if(s.ground[j]===1||s.floor[j])continue;const core=Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7,r=R();if(core||Math.abs(x-CX)<=1&&y<CY&&y>PY1)continue;/* 水門への道すじはあけておく */
     if(r<.06)s.obj[j]='deadtree';else if(r<.1)s.obj[j]='rock';else if(r<.107){s.obj[j]='berry';s.dyn[j]={g:100}}}
   for(let d=1;d<=4;d++){const j=(CY-4)*W+CX+d;s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}
-  const gates=[CX-8,CX,CX+8].map(x=>{const j=(PY1+1)*W+x;s.obj[j]='mzgateb';delete s.dyn[j];return {j,open:0}});
+  const gates=[[CX-8,PY1+1],[CX,PY1+1],[PX0-1,PY0+4]].map(([x,y])=>{const j=y*W+x;s.obj[j]='mzgateb';delete s.dyn[j];s.ground[j]=0;return {j,open:0}});/* 3つめは、ため池の北西のふち（霧の奥） */
   const chests=[[CX-8,PY1-1],[CX+1,PY1-4],[CX+8,PY1-7]].map(([x,y])=>{const j=y*W+x;s.obj[j]='mzchest';return {j,got:0}});
   const clr=new Array(N).fill(0);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(Math.max(Math.abs(x-CX),Math.abs(y-CY))<=MZBASE||Math.abs(x-CX)<=3&&y<CY&&y>=PY1-1)clr[y*W+x]=1;/* まん中のまわりと、まん中の水門への道 */
   s.mz={gates,chests,pond:[PX0,PY0,PX1,PY1],cn:{},clr,req:[],send:{},trade:[],td:{},boats:{},v:0}}
@@ -128,7 +128,7 @@ function mzRaftPick(best){/* goPlay から：いかだ乗り場の遊びは、�
 ACT.mzraft={start(r,a){const C=mzCourse(a.obj);if(C.length<2)return false;a.cs=C;r.bubble='🎵'},
   tick(r,a,dt){funAdd(r,a.fun/a.dur*dt,'play');const C=a.cs,p=Math.min(1,a.t/a.dur)*(C.length-1),i=Math.floor(p),f=p-i,A=C[i],B=C[Math.min(C.length-1,i+1)];
     r.x=(A%W+.5)*(1-f)+(B%W+.5)*f;r.y=(((A/W)|0)+.5)*(1-f)+(((B/W)|0)+.5)*f;if(B%W!==A%W)r.face=B%W<A%W?-1:1;if(hiAt(B)<hiAt(A)&&f>.4&&!a['s'+i]){a['s'+i]=1;sfxAt('twater',r.x,r.y)}},
-  done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw,r,a.pt);r.lastToy={j:a.obj,t:S.t}}};
+  done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw,r,a.pt);r.lastToy={j:a.obj,t:S.t};if(a.t>=a.dur&&qAt('mzraft')&&(r.name===MIO||r.name===NOMI)){(S.mz.race||(S.mz.race={}))[r.name]=1;checkQuest()}}};/* くだりくらべ：依頼のあと、さいごまでくだったら数える */
 
 /* ---- 舟便 ---- */
 function mzNearBoxes(d){const x=d%W,y=(d/W)|0;return (typeof BOXL!=='undefined'?BOXL:[]).filter(j=>Math.max(Math.abs(j%W-x),Math.abs(((j/W)|0)-y))<=MZNEAR)}
@@ -199,18 +199,51 @@ function mzToolIcon(g){/* 「水路をほる」のアイコン（72×72のキャ
 /* ---- はじまりの会話と目標（お話は、まだない） ---- */
 PROS[MIZU]=[[GOD,'さて、こんどは水の土地じゃ。'],[GOD,'#worry|霧がはれず、水の流れも止まっておる。ひとりで歌っとる子が、まっておるぞい。'],[GOD,'では、行こうかの。']];
 INTROS[MIZU]=[[GOD,'ほい到着〜。ここが霧のみずべの村じゃ。'],[MIO,'#shy|……あ。守り神さま……？ わたし、ミオ。'],[MIO,'水が止まってから、村は、ずっと霧の中なの。'],[GOD,'まずは、あそこの古い神殿を直すとしようかの。']];
+/* ノミ：2人めのキーキャラ（土。ぶっきらぼうな職人、一人称「おれ」）。目標「なかまをむかえよう」を聞いてから、神殿の「！」で来る */
+const NOMI='ノミ';KEYS[MIZU]=[MIO,NOMI];KEYEL[NOMI]='earth';
+KEYVR[NOMI]={key:true,tr:'',pk:'nomi',h:0,l:0,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.9};
+KEYHELLO[NOMI]='……よばれたから、来た。';
+KEYBACK[NOMI]=['……もどった。それだけだ。','#nod|待たせたな。水路は、おれが見る。','ふん。……ただいま。'];
+SECOND[MIZU]={elem:'earth',name:NOMI,ok:()=>qAt('mznomi')};
+const MZQ_OLD=['statue','mzgate1','mzflow','mzdock','mzraft','mzchest','mzshop','mzstage','mzall'];/* 前のならび（古いセーブの読みかえ用 mzQuestMig） */
 QL[MIZU]=[
-  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',gives:{enemy:true},story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[MIO,'……神殿。きれいに、なった。']]},
-  {id:'mzgate1',text:'水門をひらこう',check:()=>mzOn()&&mzOpenN()>=1,prog:()=>'ひらいた水門 '+Math.min(1,mzOn()?mzOpenN():0)+'/1',how:'「しらべる」で、北の高い所にある、こわれた水門をタップ',story:[[MIO,'#joy|……水の音。ひさしぶりに、きこえた。']]},
-  {id:'mzflow',text:'水路で水をながそう',check:()=>mzOn()&&MZC.wetN>=10,prog:()=>'水のとどいた水路 '+Math.min(10,MZC.wetN)+'/10',how:'「おく」→「水路をほる」で、ひらいた水門から低いほうへ、水路をつなぐ',story:[[MIO,'水がとおると、霧が、うすくなるの。'],[MIO,'#nod|もっと、とおくまで、ながしたいな。']]},
-  {id:'mzdock',text:'船着き場を2つ、水でつなごう',check:()=>mzOn()&&MZC.comps.length>=1,prog:()=>'つながった船着き場 '+(mzOn()&&MZC.comps.length?2:Math.min(1,cnt('dock')))+'/2',how:'「おく」→「建てる」で、船着き場を水のとなりに2つ建てる。同じ高さの水でつながると、小舟が行き来する',story:[[MIO,'#joy|小舟が、うごいた。……むかしは、村じゅうを、舟がめぐっていたの。']]},
-  {id:'mzraft',text:'いかだ乗り場をつくろう',check:()=>cnt('raft')>=1,prog:()=>'いかだ乗り場 '+Math.min(1,cnt('raft'))+'/1',how:'「おく」→「建てる」で、いかだ乗り場を、水の流れる水路のとなりに建てる',story:[[MIO,'いかだで、水といっしょに、くだるの。'],[MIO,'#shy|……わたしも、のってみたい。']]},
-  {id:'mzchest',text:'しずんだ宝箱をあけよう',check:()=>mzOn()&&S.mz.chests.some(c=>c.got),prog:()=>'あけた宝箱 '+(mzOn()?Math.min(1,S.mz.chests.filter(c=>c.got).length):0)+'/1',how:'水門をひらくと、池の水が引く。浅くなった所の宝箱を、「しらべる」でタップ',story:[[MIO,'#think|池の底に、むかしの物が、のこっていたのね。']]},
-  {id:'mzshop',text:'食堂をひらこう',check:()=>mzOn()&&(S.mz.served||0)>=1,prog:()=>mzOn()&&typeof shopOf==='function'&&shopOf()?'お客さんに出した料理 '+Math.min(1,S.mz.served||0)+'/1':'食堂 0/1',how:'家の中に、店の看板・食卓・いす・料理の家具を置く。船着き場から、お客さんが舟で来る',talk:{who:MIO,when:()=>true,lines:[[MIO,'……カナデとわたしで、やるはずだったの。カナデが作って、わたしが歌う、歌のある食堂。'],[MIO,'#shy|ひとりじゃ、できないと思ってた。……でも、舟が来るなら。']]},story:[[MIO,'#think|……カナデの味じゃない。'],[MIO,'#joy|でも、お皿が、からっぽ。……また、来てね。']]},
-  {id:'mzstage',text:'歌の舞台で歌おう',check:()=>mzOn()&&(S.mz.sung||0)>=1,prog:()=>'舞台で歌った日 '+(mzOn()?Math.min(1,S.mz.sung||0):0)+'/1',how:'食堂の家の中に、歌の舞台を置く。夕方の前に、ミオが歌う',story:[[MIO,'#shy|……ふたりで歌う歌だから、ひとりじゃ、半分なの。'],[MIO,'それでも、手拍子が、きこえた。']]},
-  {id:'mzall',text:'水門を3つひらこう',check:()=>mzOn()&&mzOpenN()>=3,prog:()=>'ひらいた水門 '+(mzOn()?mzOpenN():0)+'/3',how:'水路をのばして霧を晴らすと、のこりの水門が見つかる',story:[[MIO,'#joy|みんな、ひらいた。水が、村へかえってくる。'],[MIO,'守り神さま、ありがとう。']]},
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',gives:{enemy:true},story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[MIO,'……きれい。こんなにきれいな物、ひさしぶりに見た。']]},
+  {id:'mzgate1',text:'水門をひらこう',check:()=>mzOn()&&mzOpenN()>=1,prog:()=>'ひらいた水門 '+Math.min(1,mzOn()?mzOpenN():0)+'/1',how:'「しらべる」で、北の高い所にある、こわれた水門をタップ',
+   talk:{who:MIO,when:()=>true,lines:[[MIO,'北のため池に、水門がある。……3つ。'],[MIO,'むかしは、あそこから村じゅうに水が流れてたの。'],[MIO,'#think|いまは、ぜんぶ、とじてる。……ひとつだけでも、あけられたら。']]},
+   story:[[MIO,'#joy big|……水の音。'],[MIO,'#joy|ずっと、ずっと、聞きたかった音。']]},
+  {id:'mzflow',text:'水路で水をながそう',check:()=>mzOn()&&MZC.wetN>=10,prog:()=>'水のとどいた水路 '+Math.min(10,MZC.wetN)+'/10',how:'「おく」→「水路をほる」で、ひらいた水門から低いほうへ、水路をつなぐ',story:[[MIO,'#surprise|……水がとおったところの霧が、晴れてく。'],[MIO,'#think|もっと、とおくまで、ながせたら。']]},
+  {id:'mzchest',text:'しずんだ宝箱をあけよう',check:()=>mzOn()&&S.mz.chests.some(c=>c.got),prog:()=>'あけた宝箱 '+(mzOn()?Math.min(1,S.mz.chests.filter(c=>c.got).length):0)+'/1',how:'水門をひらくと、池の水が引く。浅くなった所の宝箱を、「しらべる」でタップ',story:[[MIO,'#surprise|……カナデの字。'],[MIO,'ふたりのお店の、はじめの一品。……'],[MIO,'#cry hush|……。']]},
+  {id:'mznomi',text:'なかまをむかえよう',check:()=>S.res.some(r=>r.name===NOMI)&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「しらべる」で神殿をタップ',
+   talk:{who:GOD,when:()=>true,lines:[[GOD,'水の音が、遠くまでとどいとる。'],[GOD,'#think|……岩場のほうの子にも、聞こえたかもしれんのう。']]},
+   story:[[NOMI,'……水が、流れてる。'],[MIO,'#surprise|ノミ……？ 岩場から、おりてきたの？'],[NOMI,'よばれたからな。……それだけだ。'],[NOMI,'#think|あの水路、ほり方がなってねえ。だれがほった。'],[GOD,'#joy|わしらじゃ。'],[NOMI,'……ふん。直してやる。'],[GOD,'#nod|ふたりそろえば、もうだいじょうぶじゃな。'],[GOD,'わしは、ほかの土地も見てまわらねばならん。ときどき、のぞきにくるからの。'],[MIO,'#shy|……行っちゃうの。'],[GOD,'#joy|おヌシの歌、遠くからでも聞こえるぞい。'],[NOMI,'……行ってこい。この村は、おれが見とく。']],
+   gives:{godLeave:true}},
+  {id:'mzdock',text:'船着き場を2つ、水でつなごう',check:()=>mzOn()&&MZC.comps.length>=1,prog:()=>'つながった船着き場 '+(mzOn()&&MZC.comps.length?2:Math.min(1,cnt('dock')))+'/2',how:'「おく」→「建てる」で、船着き場を水のとなりに2つ建てる。同じ高さの水でつながると、小舟が行き来する',
+   talk:{who:NOMI,when:()=>true,lines:[[NOMI,'水路があるなら、舟だ。'],[NOMI,'むかしはな、この村は、舟で行き来してたんだ。'],[MIO,'#joy|ノミの舟、はやかった。'],[NOMI,'……おぼえてるのか。']]},
+   story:[[MIO,'#joy|うごいた……！'],[NOMI,'#proud|当たり前だ。']]},
+  {id:'mzshop',text:'食堂をひらこう',check:()=>mzOn()&&(S.mz.served||0)>=1,prog:()=>mzOn()&&typeof shopOf==='function'&&shopOf()?'お客さんに出した料理 '+Math.min(1,S.mz.served||0)+'/1':'食堂 0/1',how:'家の中に、店の看板・食卓・いす・料理の家具を置く。船着き場から、お客さんが舟で来る',
+   talk:{who:MIO,when:()=>true,lines:[[MIO,'……あの、こわれたお店。'],[MIO,'カナデとわたしで、やるはずだったの。カナデが作って、わたしが歌う、歌のある食堂。'],[MIO,'#shy|ひとりじゃ、できないと思ってた。……でも、舟が来るなら。'],[NOMI,'#nod|屋根なら、おれがかける。']]},
+   story:[[MIO,'#think|……カナデの味じゃない。'],[NOMI,'うまいぞ。'],[MIO,'#surprise|……え。'],[NOMI,'うまいって、言ってんだ。……客も、そう言ってる。'],[MIO,'#joy|……また、来てね。']]},
+  {id:'mzstage',text:'歌の舞台で歌おう',check:()=>mzOn()&&(S.mz.sung||0)>=1,prog:()=>'舞台で歌った日 '+(mzOn()?Math.min(1,S.mz.sung||0):0)+'/1',how:'食堂の家の中に、歌の舞台を置く。夕方の前に、ミオが歌う',story:[[MIO,'#shy|……ふたりで歌う歌だから、ひとりじゃ、半分なの。'],[NOMI,'半分でも、客は来た。']]},
+  {id:'mzraft',text:'いかだで、くだりくらべをしよう',check:()=>mzOn()&&cnt('raft')>=1&&mzRaced(),prog:()=>cnt('raft')?'くだった：'+[MIO,NOMI].filter(n=>(S.mz.race||{})[n]).length+'/2':'いかだ乗り場 0/1',how:'「おく」→「建てる」で、いかだ乗り場を、水の流れる水路のとなりに建てる。ミオとノミが、1回ずつくだる',
+   talk:{who:NOMI,when:()=>true,lines:[[NOMI,'おい、ミオ。いかだで下るぞ。'],[MIO,'#surprise|え……いま？'],[NOMI,'くらべっこだ。負けたほうが、あしたの水くみ。']]},
+   story:[[MIO,'#giggle big|……ふふっ。わたしの、かち。'],[NOMI,'#surprise|……おまえ、笑うんだな。'],[MIO,'#shy|……え？'],[NOMI,'なんでもねえ。あしたの水くみは、おれだ。']]},
+  {id:'mzgate2',text:'2つめの水門をひらこう',check:()=>mzOn()&&mzOpenN()>=2,prog:()=>'ひらいた水門 '+(mzOn()?Math.min(2,mzOpenN()):0)+'/2',how:'「しらべる」で、ため池の南のふちの、こわれた水門をタップ',
+   talk:{who:NOMI,when:()=>true,lines:[[NOMI,'水門は、あと2つ。つぎは、ため池の南のふちだ。'],[MIO,'……うん。']]},
+   story:[[NOMI,'よし。のこりは、ひとつ。'],[NOMI,'ミオ。3つめは、どこだった。'],[MIO,'#think|……わからない。おぼえてない。'],[NOMI,'……そうか。']]},
+  {id:'mzfind3',text:'霧を晴らして、3つめの水門を見つけよう',check:()=>mzOn()&&!!S.mz.clr[mzGate3()],prog:()=>mzOn()&&S.mz.clr[mzGate3()]?'':'3つめの水門は、まだ霧の中',how:'水路をのばして、ため池の北西の霧を晴らす',
+   story:[[NOMI,'#surprise|……あった。霧の奥に、水門だ。'],[MIO,'#think hush|……。'],[NOMI,'ミオ。おまえ、知ってたな。'],[MIO,'#shy|……ごめん。']]},
+  {id:'mzNext',text:'霧のみずべの村のつづき',check:()=>false,how:'この土地のお話のつづきは、まだない'},
 ];
+function mzGate3(){return S.mz.gates[2]?S.mz.gates[2].j:-1}
+function mzRaced(){const R=S.mz.race||{};return !!R[MIO]&&(!!R[NOMI]||!S.res.some(r=>r.name===NOMI))}
+function mzQuestMig(){/* 前のならび（MZQ_OLD）のセーブ：おわっていた目標をとばして、はじめのおわっていない目標へ（名前で） */if(WD!==MIZU||S.flags.mzq2)return;S.flags.mzq2=1;if(!S.mz)return;
+  const done=new Set(MZQ_OLD.slice(0,S.quest||0)),cur=MZQ_OLD[S.quest]||null,i=QUESTS.findIndex(q=>!done.has(q.id));if(i<0)return;if(QUESTS[i].id!==cur){S.qTalked=false;S.qStory=null}S.quest=i}
+function mzGate3Mig(){/* 3つめの水門を、ため池の北西の霧の奥へ（ひらいていなければ） */if(WD!==MIZU||!S.mz||S.flags.mzGate3)return;S.flags.mzGate3=1;const g=S.mz.gates[2];if(!g||g.open)return;const [PX0,PY0]=S.mz.pond,j=(PY0+4)*W+PX0-1;if(S.obj[g.j]==='mzgateb')S.obj[g.j]='';S.obj[j]='mzgateb';delete S.dyn[j];S.ground[j]=0;g.j=j}
 
 /* 堀：水の流れる水路のマスは、コワイノの歩く速さ MZMOAT 倍（浅瀬の2倍ゆっくりに、かさねる。night.js） */
 const MZMOAT=.5;
 function mzMoat(j){return mzOn()&&!!MZC.wet&&MZC.S===S&&!!MZC.wet[j]}
+
+function mzDecide(r,G){/* くだりくらべ：依頼を聞いたら、ミオとノミが、昼に1回ずついかだでくだりにいく */if(!mzOn()||S.free||!qAt('mzraft')||mzRaced()||isNight()||enemyLive())return false;if(r.name!==MIO&&r.name!==NOMI||(S.mz.race||{})[r.name])return false;if(r.hunger<250||r.meal||r.carry||r.bm||r.energy<30)return false;
+  const rj=S.obj.indexOf('raft');if(rj<0||!free('o'+rj,1))return false;const f=mzRaftFun(rj);if(!f)return false;const st=nearest(G,j=>mzAdj(j).includes(rj)&&walk(j),200);if(st<0)return false;const P=BL.raft.play;
+  startAct(r,G,'mzraft',st,{key:'o'+rj,obj:rj,what:'raft',dur:P.dur,fun:f,pw:P.pw,pt:P.pt});return true}

@@ -46,10 +46,10 @@ const assert=require('node:assert/strict');
   const noon=`if(hour()>=17||hour()<7)S.t=Math.floor(S.t/DAYLEN)*DAYLEN+DAYLEN*10/24;`;/* 夜にならないように、夕方になったら、その日の10時へ（毎コマもどすと、時計で待つ動きが終わらない） */
   await run(`templeRuinTap(RUINT)`);for(let k=0;k<40&&!(await J(`STATUE>=0`));k++)await run(`(()=>{${noon}S.res[0].hunger=500;S.res[0].energy=100;for(let i=0;i<200&&STATUE<0;i++)stepWorld(.25)})()`);
   assert.equal(await J(`STATUE>=0`),true,'the temple is repaired first');
-  /* お礼の会話を読みおえる（読むまで、せいれいは待っている）。もうできている目標（水門・水路・船着き場・いかだ・宝箱）も、会話を読むたびに1つずつ進む */
-  for(let i=0;i<120&&await J(`S.quest`)<6;i++){await page.waitForTimeout(300);/* 会話と会話のあいだは、3秒まつ（DLGWAIT） */await run(`(()=>{${noon}for(let k=0;k<40;k++)stepWorld(.25);if(document.querySelector('#dialog').hidden)startTalk()})()`);for(let k=0;k<40&&!(await J(`document.querySelector('#dialog').hidden`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(120)}}
+  /* お礼の会話を読みおえる（読むまで、せいれいは待っている）。もうできている目標（水門・水路・宝箱）も、会話を読むたびに1つずつ進み、ノミをむかえる目標で止まる */
+  for(let i=0;i<120&&await J(`S.quest`)<4;i++){await page.waitForTimeout(300);/* 会話と会話のあいだは、3秒まつ（DLGWAIT） */await run(`(()=>{${noon}for(let k=0;k<40;k++)stepWorld(.25);if(document.querySelector('#dialog').hidden)startTalk()})()`);for(let k=0;k<40&&!(await J(`document.querySelector('#dialog').hidden`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(120)}}
   for(let k=0;k<60&&!(await J(`document.querySelector('#dialog').hidden&&!DLGQ.length`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(150)}/* さいごの会話をとじる */
-  assert.equal(await J(`S.quest`),6,'the goals that are already met (gate, flow, docks, raft, chest) pass one by one after their talks');
+  assert.equal(await J(`QUESTS[S.quest].id`),'mznomi','the goals that are already met (gate, flow, chest) pass one by one after their talks, then wait for Nomi');
   console.log('Mizube: the goals advance through their talks');
   const p2=await J(`(()=>{const g=S.mz.gates[1].j,g0=S.mz.gates[0].j;for(let k=1;k<=5;k++){const j=g+W-k;S.obj[j]='';S.mz.cn[j]=1}recount();mzTap(g0%W,(g0/W)|0);const pt=S.pt,cj=g+W-6;S.obj[cj]='';sel='canal';place('canal',cj%W,(cj/W)|0);
     return {mist:fogAt(g0),req:S.mz.req.length,site:S.obj[cj],paid:pt-S.pt,cj}})()`);

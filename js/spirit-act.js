@@ -338,7 +338,8 @@ const PHEWDL={wood:0,water:.4,earth:.8,fire:1.2,wind:1.6};/* ふぅのリアク�
 function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive()&&r.hunger>=250)return startAct(r,null,'stretch',-1,{dur:5})}/* 朝おきたら、のびをする */
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
   if(WD===YAMI&&typeof yamiDecide==='function'&&yamiDecide(r,G))return;
-  if(WD===WIND&&typeof windDecide==='function'&&windDecide(r,G))return;/* 風：雲の海のはしで待つカザネたち（wind.js） *//* 闇のステージ：すわりこむトモリ・さいごの夜の2人（yami.js） */
+  if(WD===WIND&&typeof windDecide==='function'&&windDecide(r,G))return;
+  if(WD===MIZU&&typeof mzDecide==='function'&&mzDecide(r,G))return;/* 水：くだりくらべ（mizube.js） *//* 風：雲の海のはしで待つカザネたち（wind.js） *//* 闇のステージ：すわりこむトモリ・さいごの夜の2人（yami.js） */
   if(r.phewNext){r.phewNext=false;if(!hostileNow(r))return startAct(r,G,'phew',-1)}/* コワイノがいなくなったら、その場で「ふぅ」 */
   if(r.cing&&isNight())cingBack(r);/* 夜は料理ができないので、持っている材料は箱にもどす */
   if(r.wantEat){r.wantEat=0;if(r.hunger<hMax(r)-80&&!r.meal&&goEat(r,G))return}
