@@ -21,7 +21,7 @@ const WEND_LINES=[
   [NUSHI4,'#joy|それでいい。風は、遊ぶためにふくものだ。'],
   [GOD,'#joy|空の遊び場に、風がもどったのう。'],
 ];
-const windLines=L=>L.filter(x=>x[0]===GOD||x[0]===NUSHI4||S.res.some(r=>r.name===x[0]&&!r.hidden));/* いないせいれいの行は、はぶく */
+const windLines=L=>L.filter(x=>x[0]===GOD||x[0]===NUSHI4||typeof NUSHI3!=='undefined'&&x[0]===NUSHI3||S.res.some(r=>r.name===x[0]&&!r.hidden));/* いないせいれいの行は、はぶく */
 const windRidesN=()=>{let n=0;for(const id of RIDES)n+=cnt(id);return n};
 const windQ=id=>!!S&&!S.cleared&&QUESTS[S.quest]&&QUESTS[S.quest].id===id;
 function windWheelIsle(){const I=windIsles(S);for(const id of['wheel','wheelb']){const j=S.obj.indexOf(id);if(j>=0)return I.id[j]}let k=0;for(let q=1;q<=I.n;q++)if(q!==I.mid&&(!k||I.size[q]>I.size[k]))k=q;return k}
