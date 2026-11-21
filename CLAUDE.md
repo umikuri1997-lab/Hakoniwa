@@ -680,6 +680,7 @@
   - 水の中を歩く所（道さがし・ハスを植える・水あび）は `waterJ` で見る（`S.ground===1` で見ると、雲の橋から雲の海へ歩き出す）。
 - 風の草・花・素材（`tools/art/windgrass/windgrass_art.py`、もらった白い背景の絵は `unwhite.py` ですかす）：雑草はなびき草 `weed4g`・ほうき草 `weed4k`（`weedSt` が4）、花はたんぽぽ `tanpopo`（風の村でははじめから植えられる）。雲わた（雲の海のふちの陸）・風の羽（風の道の上・風の小鳥の落とし物）は毎朝、落とし物でわく（`windMatMorning`）。草原の草を使う家具は、`mat3`（水）・`mat4`（風）・`mat5`（闇）でその土地の草で作る（実数で書く）。素材を足したら、`MATN`・`MATTRADE`・`GRASSK`・`NOMAT` にも足す。
 - 水・闇の草・花・素材（`tools/art/mizuyami/mizuyami_art.py`）：水はあし `weed3g`・がま `weed3k`・アイリス `ayame`、闇は夜つゆ草 `weed5g`・かげ草 `weed5k`・月見草 `tsukimi`（その土地の花は `recount` ではじめから植えられる）。粘土は水路をほると1こ（`mzCanalDone`）、丸石は毎朝、水べの陸に落とし物（`mzStoneMorning`）。闇は、庭の岩をほると月光石、木を切ると古木の材も1こ。たしかめは `tools/tests/stage-mats.cjs`。
+- 水の木はオーク（`tree~m`・`deadtree~m`）と、自然の木の4わりはメープル（`maple~m`）。闇の木は枯れたオーク（`tree~y`・`deadtree~y`）。どれもアカシアと同じ作り（`tools/art/nature3d/tree_prep.py`・`furn3d/items/nat_oak.py`・`nat_maple.py`・`nat_deadoak.py`、落ち影も）。
 - 風の木はアカシア（植えた木 `tree~k`・自然の木 `deadtree~k`、切ると木材。設計図 `tools/art/furn3d/items/nat_acacia.py`、モデルは `acacia_prep.py`）。ステージでの木の名前は `STAGEN[ステージ]`。風・水・闇でそろえる物の案は `IDEAS.md`。
 - 風の家具（しまもようのハンモック・風船の屋台・気球のかごのいす・かざぐるまの花壇・風見のランプ、`STAGEONLY` 風）：まわりのたのしさは、風の道のそば（まわり2マス `windNear`）では `envW`（実数）、ほかは `env`。気球のかごのいすは、すわれるいす（`SEATS`）。
 - 風の柵は、ロープの手すり（`ropefence`、新しい風の村ではじめから使える）。となりの柵のドアは、ロープの戸の絵（`ropefence.gate#h0〜3`・`#v0〜3`。御簾垣の戸と同じ作り）。
