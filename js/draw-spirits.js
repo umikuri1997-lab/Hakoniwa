@@ -195,8 +195,8 @@ function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは 
   return SPM[A]?A:''}
 /* 首を先に向ける（Frostwind の attention.js の考え方。MIT）：歩いていて、よこ向きと正面・うしろ向きがかわるとき、HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵（walk_hp・walk_hn など、motions.py の HTURN）。
    正面では hy＋が画面の右・うしろでは画面の左・よこでは＋がこちら（正面）・−が奥（うしろ）。正面とうしろのあいだ・よこの右と左のあいだは、そのまま切りかえる。
-   首はいっぺんに向けない：はじめの HTURNA0 は、とちゅうまで向けた絵（walk_hpa など、s は ±0.5）、そのあと向けきった絵 */
-const HTURNMS=100,HTURNA0=35;
+   首はいっぺんに向けない：はじめの HTURNA0 は、半分の角度の絵（walk_hpa など、s は ±0.5）、そのあと同じ時間だけ向けきった絵（同じ速さで向く） */
+const HTURNMS=100,HTURNA0=50;
 function spHeadTurn(v,walking,face,now){const k=v.back?2:v.turn?1:0,f=face<0?-1:1;
   if(!walking||v.hk==null){v.hk=k;v.hf=f;v.ht=null;return null}
   if(k!==v.hk||k===1&&f!==v.hf){const from=v.hk,ff=v.hf;v.hk=k;v.hf=f;v.ht=(from===1)!==(k===1)?{t:now,from,ff,to:k,tf:f}:null}
