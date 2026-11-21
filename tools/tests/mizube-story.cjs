@@ -11,7 +11,7 @@ const assert=require('node:assert/strict');
     /* 古いセーブ：前のならびで「食堂をひらこう」まで来ていた → ノミをむかえる目標から */S.flags.mzq2=0;S.quest=MZQ_OLD.indexOf('mzshop');S.qTalked=true;mzQuestMig();o.mig=QUESTS[S.quest].id;o.migT=S.qTalked;mzQuestMig();o.mig2=QUESTS[S.quest].id;
     return JSON.stringify(o)})()`));
   console.log(JSON.stringify(r));
-  assert.equal(r.ids,'statue,mzgate1,mzflow,mzchest,mznomi,mzdock,mzshop,mzstage,mzraft,mzgate2,mzfind3,mzNext');
+  assert.equal(r.ids,'statue,mzgate1,mzflow,mzchest,mznomi,mzdock,mzshop,mzstage,mzraft,mzgate2,mzfind3,mzpond,mzokuri,mzkiri,mzsend,mzdawn');
   assert.ok(r.g3nw,'3つめの水門は、ため池の北西');assert.ok(r.g3fog,'はじめは霧の中');assert.ok(r.second);assert.equal(r.okAfter,true);assert.ok(r.key);assert.ok(r.godLeave,'ノミが来たら、カミサマが旅立つ');
   assert.match(r.tone,/おれ/);assert.doesNotMatch(r.tone,/ぼく/);
   assert.equal(r.raced0,false);assert.equal(r.raced1,false);assert.equal(r.raced2,true);assert.equal(r.find0,false);assert.equal(r.find1,true);

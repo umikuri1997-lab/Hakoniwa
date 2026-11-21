@@ -8,7 +8,7 @@
    貿易：料理をおくると、つぎの朝に、水の土地にない材料がとどく。
    お客さんは、見た目と動きだけ（セーブしない）。かいがら・メニュー・料理のおいしさ・歌の日はセーブ（S.mz） */
 const SHOP={waves:[[11,14],[17,20]]/* お客さんの来る時間 */,min:2,max:4/* 1回のお客さん */,price:[3,5,8]/* おいしさ★1・2・3のかいがら */,extra:5/* メニューにない注文 */,
-  fun:{deco:2,light:3,rug:3,plant:2,counter:5,menuboard:5,stage:10},star:[20,40,60,80],song:2/* 歌で、夕方のお客さん */,udeN:10/* うでが1つ上がる料理の数 */,udeMax:10,
+  fun:{deco:2,light:3,rug:3,plant:2,counter:5,menuboard:5,stage:10},star:[20,40,60,80],song:2/* 歌で、夕方のお客さん */,songAll:4/* クリアのあと、みんなの歌 */,udeN:10/* うでが1つ上がる料理の数 */,udeMax:10,
   trade:{n:10,get:3,items:['takenoko','egg','milk','apple']},wait:90/* 料理を待つ時間（時計の60分） */,eat:20/* 食べる時間 */,xtra:.1/* メニューにない注文のわりあい */,songH:16,songDur:30};
 const SHOPIDS=new Set(['shopsign','counter','menuboard','stage']);
 BL.shopsign={hp:4,brk:1,fix:3,fixm:{wood:3},name:'店の看板',kind:'furn',mat:{wood:6},pc:0,time:60,maker:'water',lv:1,w:MIZU,solid:1,attr:{water:1},desc:'家の中に置くと、その家が食堂になる'};
@@ -44,7 +44,7 @@ function shopCooked(r,d){/* spirit-act の料理のおわり：うでと、そ�
 const SHOPNAMES=['旅のせいれい','川むこうのせいれい','ふもとのせいれい','島のせいれい'];
 function shopDock(){const D=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='dock')D.push(j);if(!D.length)return -1;const d=D[(Math.random()*D.length)|0];return mzAdj(d).find(n=>walk(n)&&!S.ground[n])??-1}
 function shopWave(i){const sh=shopOf();if(!sh)return;const start=shopDock();if(start<0)return;const m=shopMenu();if(!m.length)return;
-  let n=SHOP.min+((Math.random()*(SHOP.max-SHOP.min+1))|0)+sh.stars+(i===1&&S.mz.songD===callDay()?SHOP.song:0);n=Math.min(n,sh.seats.length);
+  let n=SHOP.min+((Math.random()*(SHOP.max-SHOP.min+1))|0)+sh.stars+(i===1&&S.mz.songD===callDay()?(S.cleared?SHOP.songAll:SHOP.song):0);n=Math.min(n,sh.seats.length);
   const used=new Set(SHOPC.cust.map(c=>c.seat));const free0=sh.seats.filter(s=>!used.has(s));n=Math.min(n,free0.length);
   for(let k=0;k<n;k++){const seat=free0[k],known=shopKnown().filter(d=>!m.includes(d)),x=known.length&&Math.random()<SHOP.xtra;
     const want=x?known[(Math.random()*known.length)|0]:m[(Math.random()*m.length)|0],el=pick(ELEM_KEYS);
