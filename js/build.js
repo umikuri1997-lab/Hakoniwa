@@ -73,7 +73,7 @@ function canPlace1(id,x,y,quiet){
   if(S.ground[j]===1){if(!quiet)toast(skyJ(j)?'雲の上には置けません':'水の上には置けません');return false}
   if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
   if(id==='suisha'&&![j-1,j+1,j-W,j+W].some(n=>n>=0&&n<W*H&&waterJ(n)&&(n%W===x||((n/W)|0)===y))){if(!quiet)toast('水車は、水のとなりにだけ建てられます');return false}
-  if(TERRA.has(id)){const k=id==='dig';if(k?!hiAt(j):hiAt(j)>=HMAX){if(!quiet)toast(k?'高いマスだけ、けずれます':'これより高くは、もれません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、けずれません':'階段のうしろは、もれません');return false}return true}/* だんさスコップ：けずる・もる */
+  if(TERRA.has(id)){const k=id==='dig';if(k?!hiAt(j):hiAt(j)>=HMAX){if(!quiet)toast(k?'これより低くは、ほれません':'これより高くは、つめません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、ほれません':'階段のうしろは、つめません');return false}return true}/* だんさスコップ：けずる・もる */
   if(LADDERS.has(id)){if(ladderDir(j)<0){if(!quiet)toast('ハシゴは、がけの下の、うしろか左右が1だん高い所に置けます');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(STAIRS.has(id)){const d=SROT[stairRot(id,j)];if(!stairOK(j,d)){if(!quiet)toast('その向きには置けません');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
@@ -237,7 +237,7 @@ function removeAt0(x,y){const tx0=x,ty0=y;
 function finishBuild(j,r){
   if(S.dyn[j]&&S.dyn[j].bp!=null&&typeof bpFinish==='function')return bpFinish(j,r);/* 家の設計図の部品 */
   if(S.dyn[j]&&S.dyn[j].build==='canal')return mzCanalDone(j,r);/* 水路をほりおえた */
-  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?Math.min(HMAX,(S.hi[j]|0)+1):Math.max(0,(S.hi[j]|0)-1);recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);return}/* けずる・もる：段差の高さをかえる */
+  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?Math.min(HMAX,(S.hi[j]|0)+1):Math.max(0,(S.hi[j]|0)-1);if(!up){if(r&&roomN(r)>0)addMat(r,'tsuchi',1);else S.mat.tsuchi=(S.mat.tsuchi||0)+1}/* ほった土は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(d.hole){delete S.dyn[j];S.obj[j]='kazaana';recount();burst(j,'furn');sfx('level');if(r)addSpiritXp(4,r);toast('風穴がひらいた！ 風がふき出した','good');memo('leaf','風穴がひらいて、風がふき出した');checkQuest();return}/* 風穴の石をどけた（wind.js） */if(d.wfix){windFixDone(j,d,r);return}/* こわれた遊具を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
   if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
@@ -263,6 +263,20 @@ function yesLbl(t){$('#cYes').textContent=t}/* たしかめのボタンの字は
 const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない分を買うときの値段（1こあたり、パワーの10倍の数：畑3.2・柵1.6・石1.6・あぜ道0.8） */
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short?short*(STAMPC10[id]==null?Infinity:STAMPC10[id]):0;/* 足りない分だけ、1こあたりの値段で買う（足りていれば0） */if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
+/* ---------- ほる・つむ（地面のブロック） ----------
+   タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった土は箱へ（boxSync）、つむ土は箱から。
+   なぞる：えらんだ所を、せいれいにたのむ（建てる所のしくみ。つむ土は、せいれいが箱からはこぶ） */
+function terraNow(id,x,y){if(!canPlace(id,x,y))return;const j=y*W+x,up=id==='mound';
+  if(up&&(S.mat.tsuchi||0)<1)return toast('土が足りません','warn');
+  S.hi[j]=up?(S.hi[j]|0)+1:(S.hi[j]|0)-1;if(up)S.mat.tsuchi--;else S.mat.tsuchi=(S.mat.tsuchi||0)+1;
+  recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up&&typeof juiceFly==='function')juiceFly(x+.5,y+.5,'mat',1);renderPalette();
+  if(!S.flags.digTip){S.flags.digTip=1;setTimeout(()=>toast('なぞると、せいれいにまとめてたのめる'),600)}}
+function askTerra(id,cells){const up=id==='mound',ok=cells.filter(([x,y])=>canPlace(id,x,y,true)&&S.obj[y*W+x]!=='site');if(!ok.length)return toast(up?'つめる所がありません':'ほれる所がありません');
+  if(up){const n=Math.min(ok.length,S.mat.tsuchi||0);if(!n)return toast('土が足りません','warn');ok.length=n}
+  pending={kind:'terra',id,cells:ok};$('#confirmTxt').textContent=ok.length+'マス'+(up?'つむ・土'+ok.length:'ほる')+'・せいれいにたのむ';lackOn($('#cYes'),'');yesLbl(up?'つむ':'ほる');$('#cRot').hidden=true;$('#confirm').hidden=false}
+function terraAsk(p){const up=p.id==='mound',b=BL[p.id];let n=0;
+  for(const[x,y]of p.cells){if(!canPlace(p.id,x,y,true))continue;if(up&&(S.mat.tsuchi||0)<1)break;const j=y*W+x;if(up)rsvAdd(b.mat);S.obj[j]='site';S.dyn[j]={build:p.id,p:0,need:b.time,mat:up?Object.assign({},b.mat):undefined,got:{}};if(n<14)burstAt(x,y,'block');n++}
+  if(!n)return toast(up?'土が足りません':'ほれる所がありません','warn');recount();renderPalette();toast('せいれいが'+n+'マス'+(up?'つみ':'ほり')+'にきてくれる','good')}
 function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハケではぬれません');/* 窓・カーテンは、壁に1つずつかける */
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
@@ -295,6 +309,7 @@ function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
   if(!pending)return;const p=pending;pending=null;$('#confirm').hidden=true;selRect=null;
   if(p.kind==='one'){place(p.id,p.x,p.y);return}
+  if(p.kind==='terra'){terraAsk(p);return}/* ほる・つむを、せいれいにたのむ */
   if(p.kind==='bp'){bpPlace(p.i,p.x,p.y);return}/* 家の設計図 */
   if(p.kind==='plant'){{const D=plantDist();p.cells=p.cells.filter(([x,y])=>plantReach(D,y*W+x));if(!p.cells.length)return toast('せいれいが行けない場所です','warn')}if(inv(p.id)<p.cells.length)return toast(iname(p.id)+'が足りません');S.inv[p.id]-=p.cells.length;for(const[x,y]of p.cells){const j=y*W+x;S.obj[j]='sprout';S.dyn[j]={plant:p.id,p:0,userMound:true}}
     p.cells.forEach(([x,y],i)=>{if(i<12)burstAt(x,y,'plant')});recount();toast('せいれいたちが植えにきてくれる','good');return}

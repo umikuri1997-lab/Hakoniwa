@@ -34,6 +34,7 @@ cv.addEventListener('pointermove',e=>{
     const k=BL[sel]&&BL[sel].kind;
     if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=toWorld(gest.sx,gest.sy),t0=tapLv(w0.x,w0.y);leafAdd(Math.floor((w0.y+(t0?t0*LIFT:0))/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
     else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=toWorld(gest.sx,gest.sy);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
+    else if(mode==='build'&&DIGIDS.has(sel)){let w=toWorld(gest.sx,gest.sy);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}/* ほる・つむ：なぞった所を、せいれいにたのむ */
     else gest.type='pan'}
   if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */cam.x=gest.cx-dx/cam.z;cam.y=gest.cy-dy/cam.z;clampCam(1)}
   if(gest.type==='leaf'){const w=toWorld(cX(e),cY(e)),tl=tapLv(w.x,w.y);leafAdd(Math.floor((w.y+(tl?tl*LIFT:0))/TS)*W+Math.floor(w.x/TS));return}
@@ -42,7 +43,7 @@ cv.addEventListener('pointermove',e=>{
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
   if(gest&&gest.type==='maybe'&&e.type==='pointerup')onTap(cX(e),cY(e));
-  else if(gest&&gest.type==='rect'&&selRect)askBulk(sel,rectCells(selRect.a,selRect.b));
+  else if(gest&&gest.type==='rect'&&selRect)(DIGIDS.has(sel)?askTerra:askBulk)(sel,rectCells(selRect.a,selRect.b));
   else if(gest&&gest.type==='leaf'){const c=LEAFDRAG;LEAFDRAG=null;leafPlace(c)}
   if(ptrs.size===1){const p=[...ptrs.values()][0];gest={type:'pan',sx:p.x,sy:p.y,cx:cam.x,cy:cam.y}}else if(!ptrs.size)gest=null;
 }
@@ -181,6 +182,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
+  if(mode==='build'&&DIGIDS.has(sel))return terraNow(sel,tx,ty);/* ほる・つむ：守り神が、その場ですぐ */
   if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('tplace');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
   if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty);if(selStamp&&selStamp.startsWith('bp:'))return askBp(+selStamp.slice(3),tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらぶ');return toast('ぬりたい物をえらんで、なぞる')}

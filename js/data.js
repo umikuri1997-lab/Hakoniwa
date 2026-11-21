@@ -224,8 +224,8 @@ const BL={
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が10分止まる',anim:1},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:1,can:2},desc:'ふんだ「コワイノ」と、まわり1マスの「コワイノ」に40ダメージ。つぎに使えるまで3時間',anim:1},
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、1.3分止める。つぎに使えるまで2時間30分',anim:1},
-  dig:{name:'けずる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事。パワー50'},
-  mound:{name:'もる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'低いマスを1だん高くする工事。パワー50'},
+  dig:{name:'ほる',kind:'build',pc:0,time:15,attr:{},desc:'地面を1だんほる。土が1こ出る'},
+  mound:{name:'つむ',kind:'build',pc:0,time:15,attr:{},mat:{tsuchi:1},desc:'土を1こつんで、地面を1だん高くする'},
   watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。威力10／6.7分ごと／射程6マス'},
   coop:{name:'とり小屋',kind:'build',mat:{wood:20},pc:15,time:120,maker:'wood',lv:4,solid:1,attr:{wood:1},desc:'ハネマリが3羽まで住む小屋'},
   barn:{name:'家畜小屋',kind:'build',sz:[2,2],mat:{wood:50,stone:10},pc:30,time:200,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'モコダマかツノクサが3頭まで住む小屋'},
@@ -316,7 +316,7 @@ function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([
 const TABLES=new Set(['table','dtable','g_w_clover','g_e_geode','g_f_table','g_s_table']);/* 食べられる食卓（ふつう・大きな食卓） */
 const FURN=['gekkolamp','hotarukago','shitone','tsukimidai','terraceseat','madobachi','canallamp','araiba','shimahammock','fusenya','kagoisu','kazakadan','kazelamp','loom','composter','cooktable','joro','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','dtable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
-const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
+const TERRA=new Set(['dig','mound']),DIGIDS=new Set(['dig','mound']);/* 地面の工事（DIGIDS：ほる・つむ。守り神がタップでじかに、なぞるとせいれいにたのむ） */
 const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','smelter','coop','barn','lumber','well','quarry','windmill','fountain','lighthouse','bell','onsen','signw','signs','stele','lurestatue','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
