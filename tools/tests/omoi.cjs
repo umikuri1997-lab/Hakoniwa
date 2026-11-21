@@ -44,12 +44,17 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  assert(await run('QUESTS[S.quest].check()'));
  await clear('omoi');await read();
  assert.equal(await run('S.shards'),2);assert(await run('S.flags.sh_land&&S.flags.sh_key'));assert.equal(await run('QUESTS[S.quest].id'),'wood6');
- /* 木のなかまと花畑：えらんだ花を御神木のそばに5本咲かせ、木のせいれい5人が1人ずつ世話をする */
+ /* きょうだいの花畑：晴れた土地にかくれた、えらんだ花のたね5つを見つけ、御神木のそばに5本咲かせ、フタバとなかま（村にいる5人）が1人ずつ世話をする */
  await read();assert(await run(`S.qTalked&&QUESTS[S.quest].id==='wood6'`));const fl=await run('wflKind()');assert(await run(`!!S.unlocked['${fl}']`),'chosen flower unlocked');
+ assert.deepEqual(JSON.parse(await run(`JSON.stringify((()=>{const L=S.drops.filter(d=>d.ws),j=S.sacredRoot;return [L.length,L.every(d=>d.id===wflKind()&&!fogAt(d.y*W+d.x)&&!VILL[d.y*W+d.x]&&Math.hypot(d.x-j%W,d.y-(j/W|0))>=WSEED_FAR)]})())`)),[5,true],'5 seeds on cleared land, away from the village');
+ assert(!await run('QUESTS[S.quest].steps[0].check()'));
+ assert.equal(await run(`(()=>{const r=S.res.find(r=>r.name===POKO),d=S.drops.find(d=>d.ws);S.drops.splice(S.drops.indexOf(d),1);takeDrop(d,r);return wseedN()})()`),1,'picking a seed counts');
+ assert.equal(await run(`(()=>{S.drops=S.drops.filter(d=>!d.ws).concat(S.drops.filter(d=>d.ws).slice(1));wseedTick();return S.drops.filter(d=>d.ws).length})()`),4,'a lost seed is hidden again');
+ assert(await run(`(()=>{S.flags.wSeedN=5;return QUESTS[S.quest].steps[0].check()})()`),'5 seeds found');
  assert.equal(await run(`(()=>{const j=S.sacredRoot;for(let a=0;a<5;a++){const k=j+(sacredSpan()+1)*W+a;S.obj[k]='${fl}';S.floor[k]=0}const k=j+(sacredSpan()+2)*W;S.obj[k]='lotus';return wflN()})()`),5);
- assert.equal(await run(`(()=>{const x=S.sacredRoot%W,y=S.sacredRoot/W|0;for(let i=0;i<4;i++){const r=mkRes(S,'木'+i,'wood',x+i+.5,y+sacredSpan()+3.5);r.hunger=hMax(r);r.energy=100;S.res.push(r)}return S.res.filter(r=>r.elem==='wood').length})()`),5);
- for(let i=0;i<5;i++){assert(await run(`(()=>{const r=S.res.filter(r=>r.elem==='wood'&&!wflT().includes(r.id))[0];endAct(r);r.carry=null;r.cmat=null;r.citem=null;r.meal=null;r.cing=null;r.avoidJ=-1;if(!wflJob(r,bfs(r.x|0,r.y|0))||r.act.type!=='fltend')return false;ACT.fltend.end(r,r.act);endAct(r);return true})()`),'tend '+i);
-   assert(!await run(`(()=>{const r=S.res.filter(r=>r.elem==='wood'&&!wflT().includes(r.id))[0];return !!r&&S.res.some(q=>q!==r&&q.act&&q.act.type==='fltend')})()`));}
+ assert.equal(await run(`(()=>{const x=S.sacredRoot%W,y=S.sacredRoot/W|0,r=mkRes(S,'木0','wood',x+.5,y+sacredSpan()+3.5);r.hunger=hMax(r);r.energy=100;S.res.push(r);return wflWant(r)})()`),false,'other wood spirits do not tend');
+ const need=await run('wflNeed()');assert.equal(need,5);
+ for(let i=0;i<need;i++){assert(await run(`(()=>{const r=wflWho().filter(r=>!wflT().includes(r.id))[0];endAct(r);r.carry=null;r.cmat=null;r.citem=null;r.meal=null;r.cing=null;r.avoidJ=-1;r.x=S.sacredRoot%W+.5;r.y=(S.sacredRoot/W|0)+sacredSpan()+3.5;if(!wflJob(r,bfs(r.x|0,r.y|0))||r.act.type!=='fltend')return false;ACT.fltend.end(r,r.act);endAct(r);return true})()`),'tend '+i);}
  assert.equal(await run('wflTN()'),5);assert(await run('QUESTS[S.quest].check()'),'wood6 clears');
  assert.match(await run(`QUESTS[S.quest].story[0][1]`),new RegExp(await run('wflName()')));
  /* なかよしがもう、ぜんぶそろっているとき：なかよし60になった組を数える */

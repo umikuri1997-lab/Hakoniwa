@@ -3,28 +3,38 @@
 const fieldNear=(j,R,f)=>{const s=fieldStump(j),sx=s%W,sy=s/W|0;for(let y=sy-R;y<=sy+R;y++)for(let x=sx-R;x<=sx+R;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,o=S.obj[k]==='part'?S.obj[S.ref[k]]:S.obj[k];if(o&&f(o,k))return true}return false};
 /* 調べの前に、その調べのために作る物（作る・建てる → 切り株のそばに置く）。依頼を受けてから、この調べのために置いた物だけを数える（前からある物では進まない） */
 const FIELD_PREP={
-  earthListen:{label:'切り株のそばに、あさぶくろを置こう',build:{ids:['asabukuro']},learn:['asabukuro'],legacy:j=>fieldNear(j,3,o=>o==='asabukuro')},
-  fireRoot:{label:'切り株のそばに、たき火を置こう',build:{ids:['campfire']},learn:['campfire'],legacy:j=>fieldNear(j,3,o=>o==='campfire')},
-  waterFilm:{label:'切り株のそばに、みずがめを置こう',build:{ids:['jar']},learn:['jar'],legacy:j=>fieldNear(j,3,o=>o==='well'||o==='jar')},
+  earthListen:{label:'切り株のそばに、「根もとのものおき」を建てよう',wait:'「根もとのものおき」ができあがるのを待とう',bp:'nemoto',build:{ids:['asabukuro']},learn:['asabukuro'],legacy:j=>fieldNear(j,3,o=>o==='asabukuro')},
+  fireRoot:{label:'切り株のそばに、「たき火のひろば」を作ろう',wait:'「たき火のひろば」ができあがるのを待とう',bp:'takibi',build:{ids:['campfire']},learn:['campfire'],legacy:j=>fieldNear(j,3,o=>o==='campfire')},
+  waterFilm:{label:'切り株のそばに、井戸を建てよう',wait:'井戸ができあがるのを待とう',build:{ids:['well']},old:['jar'],learn:['well'],legacy:j=>fieldNear(j,3,o=>o==='well'||o==='jar')},
   windEcho:{label:'切り株のそばに、風車を建てよう',wait:'風車ができあがるのを待とう',build:{ids:['windmill']},learn:['windmill'],legacy:j=>fieldNear(j,3,o=>o==='lily')},
   tower:{label:'切り株のそばに、ベンチを置こう',build:{ids:['bench']},learn:['bench'],legacy:()=>false}
 };
 const FIELD_NEAR_R=6;/* 「切り株のそば」：木のマスから6マスまで */
 const fieldBuildHas=(k,ids)=>ids.includes(S.obj[k])||ids.includes(S.floor[k]);
-function fieldBuildCount(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b)return 0;if(b.legacy)return p.build.n||1;return (b.cells||[]).filter(k=>fieldBuildHas(k,p.build.ids)).length}
+function fieldBuildCount(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b)return 0;if(b.legacy)return p.build.n||1;return (b.cells||[]).filter(k=>fieldBuildHas(k,fieldOldIds(p))).length}
 const fieldBuildOK=id=>fieldBuildCount(id)>=(FIELD_PREP[id]?.build?.n||1);
 /* 作った物のマス（なかまが見にいく所）。古いセーブで前の準備のまま進めたときは、なし */
-function fieldBuiltCell(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b||b.legacy)return null;const k=(b.cells||[]).find(k=>fieldBuildHas(k,p.build.ids));return k==null?null:k}
+function fieldBuiltCell(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b||b.legacy)return null;const k=(b.cells||[]).find(k=>fieldBuildHas(k,fieldOldIds(p)));return k==null?null:k}
+/* 数えるときは、前の準備の物（old：前のセーブで、もう記録してあった物）も入れる。新しく記録するのは build.ids と、設計図（fieldBpDone）だけ */
+const fieldOldIds=p=>p.old?[...p.build.ids,...p.old]:p.build.ids;
 /* 置いたとき（place）：いまの調べが作る物を待っていて、切り株のそばなら、この調べの物として記録する */
-function fieldBuildNote(id,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const fid=q.id,p=FIELD_PREP[fid];if(!p||!p.build.ids.includes(id)||S.sacredRoot==null||fieldDistance(j,S.sacredRoot)>FIELD_NEAR_R)return;
+function fieldBuildNote(id,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const fid=q.id,p=FIELD_PREP[fid];if(!p||p.bp||!p.build.ids.includes(id)||S.sacredRoot==null||fieldDistance(j,S.sacredRoot)>FIELD_NEAR_R)return;
   const st=fieldStoryEnsure(fid);if(!st||(st.step||0)>0||fieldBuildOK(fid))return;const b=st.built||(st.built={cells:[]});if(b.legacy)return;if(!b.cells.includes(j))b.cells.push(j);dirty=true;renderQuest();}
 /* ひっこしミトンでうつしたとき：この調べのために置いた物なら、記録のマスもうつす（切り株のそばでなくなったら、記録からはずす） */
 function fieldBuildMove(id,a,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const st=fieldStoryState(q.id),b=st&&st.built;if(!b||b.legacy||!b.cells)return;const i=b.cells.indexOf(a);if(i<0)return;b.cells.splice(i,1);if((st.step||0)===0&&S.sacredRoot!=null&&fieldDistance(j,S.sacredRoot)<=FIELD_NEAR_R)b.cells.push(j);dirty=true;renderQuest()}
 /* 依頼の前から切り株のそばにある物も、この調べの物として数に入れる（いまの調べで、まだ始まっていないときだけ） */
-function fieldBuildAdopt(id){const p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||fieldBuildOK(id))return;const q=fieldStoryCurrent();if(!q||q.id!==id)return;const st=fieldStoryEnsure(id);if(!st||(st.step||0)>0)return;const b=st.built||(st.built={cells:[]});if(b.legacy)return;const R=FIELD_NEAR_R,x0=j%W-R,y0=(j/W|0)-R,n=sacredSpan()+R*2;for(let dy=0;dy<n;dy++)for(let dx=0;dx<n;dx++){const x=x0+dx,y=y0+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(fieldBuildHas(k,p.build.ids)&&fieldDistance(k,j)<=R&&!b.cells.includes(k)){b.cells.push(k);dirty=true}}}
-function fieldPrepNeed(id){fieldBuildAdopt(id);const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(!IS_STORY_REPLAY&&st?.retry&&callDay()<st.retry&&!fieldStoryDone(id))return {label:'あした、もう一度ためそう'};/* 守り神の出番でしっぱいした日は、もう調べない */if(!IS_STORY_REPLAY&&id==='tower'&&WD===0&&j!=null&&!S.obj.includes('tower')&&!sacredRootFits(j))return {label:sacredCells(j).some(k=>roomOf(k))?'木のまわりを、家の中にしないでおこう':'木のまわりにある物を、先に片づけよう'};/* 切り株の4×4がふさがっていると、御神木に育たない（growStoryTree と同じ条件） */if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */
+function fieldBuildAdopt(id){const p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||p.bp||j==null||fieldBuildOK(id))return;const q=fieldStoryCurrent();if(!q||q.id!==id)return;const st=fieldStoryEnsure(id);if(!st||(st.step||0)>0)return;const b=st.built||(st.built={cells:[]});if(b.legacy)return;const R=FIELD_NEAR_R,x0=j%W-R,y0=(j/W|0)-R,n=sacredSpan()+R*2;for(let dy=0;dy<n;dy++)for(let dx=0;dx<n;dx++){const x=x0+dx,y=y0+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(fieldBuildHas(k,p.build.ids)&&fieldDistance(k,j)<=R&&!b.cells.includes(k)){b.cells.push(k);dirty=true}}}
+function fieldPrepNeed(id){fieldBuildAdopt(id);const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(!IS_STORY_REPLAY&&st?.retry&&callDay()<st.retry&&!fieldStoryDone(id))return {label:'あした、もう一度ためそう'};/* 守り神の出番でしっぱいした日は、もう調べない */if(!IS_STORY_REPLAY&&id==='tower'&&WD===0&&j!=null&&!S.obj.includes('tower')&&!sacredRootFits(j))return {label:sacredCells(j).some(k=>roomOf(k))?'木のまわりを、家の中にしないでおこう':'木のまわりにある物を、先に片づけよう'};/* 切り株の4×4がふさがっていると、御神木に育たない（growStoryTree と同じ条件） */if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}for(const k of p.learn||[])if(BL[k]&&BL[k].kind==='build'&&!S.flags['lv_'+k]){S.flags['lv_'+k]=true;dirty=true}/* 準備に使う建物は、村レベルによらず建てられる */fieldBpGive(id);/* 古いセーブでも、準備に使う物を作れるように */
   const n=p.build.n||1,b=st?.built;if(n>1)return {...p,label:p.label+'（'+fieldBuildCount(id)+'/'+n+'）'};
-  if(p.wait&&b&&!b.legacy&&(b.cells||[]).some(k=>S.obj[k]==='site'&&S.dyn[k]?.build===p.build.ids[0]))return {...p,label:p.wait};return p}
+  if(p.wait&&(p.bp?(S.bp||[]).some(e=>e.k===p.bp):b&&!b.legacy&&(b.cells||[]).some(k=>S.obj[k]==='site'&&S.dyn[k]?.build===p.build.ids[0])))return {...p,label:p.wait};return p}
+/* 設計図の準備（FIELD_PREP の bp）：依頼を聞いたら、設計図をわたす（持っていない・建てていないときだけ。とちゅうでやめて設計図がなくなっても、またわたす） */
+function fieldBpGive(id){const p=FIELD_PREP[id];if(!p||!p.bp||IS_STORY_REPLAY||!S.qTalked||S.qStory!=null||QUESTS[S.quest]?.id!==id)return;if((S.bpInv||[]).some(q=>q.k===p.bp)||(S.bp||[]).some(e=>e.k===p.bp))return;bpGive(p.bp,null);dirty=true}
+/* 設計図の、目じるしの物（BPS の key）のマス */
+function fieldBpKey(k,x,y){const b=BPS[k],f=b&&b.furn.find(q=>q[2]===b.key);return f?(y+f[1])*W+x+f[0]:-1}
+function fieldBpNear(k,x,y){const c=fieldBpKey(k,x,y);return c>=0&&S.sacredRoot!=null&&fieldDistance(c,S.sacredRoot)<=FIELD_NEAR_R}
+/* bpComplete から：いまの調べの準備の設計図ができたら、その調べの物として記録する */
+function fieldBpDone(e){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const p=FIELD_PREP[q.id];if(!p||p.bp!==e.k||!fieldBpNear(e.k,e.x,e.y))return;const st=fieldStoryEnsure(q.id);if(!st||(st.step||0)>0)return;
+  st.built={cells:[fieldBpKey(e.k,e.x,e.y)],bp:1};dirty=true;renderQuest()}
 /* 古いセーブ：いまの依頼で、前の準備（その時の決まり）がもうそろっていた調べは、そのまま進める（1回だけ） */
 function migrateFieldBuild(state){if(!state.flags||state.flags.fieldBuild1)return;state.flags.fieldBuild1=1;if(state.free||(state.world||0)!==0||state.sacredRoot==null||!state.qTalked||state.qStory!=null)return;
   const q=QUESTS1[state.quest];if(!q?.fieldParts)return;const S0=S;S=state;try{{const id=q.fieldParts.find(p=>((state.fieldStories?.[p]?.step)||0)<(FIELD_STORIES[p]?.length||0)),p=id&&FIELD_PREP[id],st=state.fieldStories?.[id];if(p&&!((st?.step||0)>0)&&!st?.built)if(p.legacy(state.sacredRoot)){state.fieldStories||(state.fieldStories={});(state.fieldStories[id]||(state.fieldStories[id]={step:0})).built={legacy:1};}}}finally{S=S0}}

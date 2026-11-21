@@ -120,10 +120,11 @@ H.kikyo=()=>B.plantAll('bellf');H.farm6=()=>{B.ensure('farm',6,44,56)};H.imoseed
 const field=prep=>q=>{const [sx,sy]=SR(),st=B.st;
   if(typeof SPLAY!=='undefined'&&SPLAY){if(!st.pw||performance.now()-st.pw>4000){st.pw=performance.now();sacredPlayWin()}return}
   /* 調べの準備の物：依頼のあとに、切り株のそばへ置いた物だけが数に入る（前からある物では進まない）。足りないあいだは、持っていれば置き、なければたのむ・建てる */
-  if(S.qTalked&&!fieldBuildOK(q.id)&&!B.sites(prep)){const near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1,k=BL[prep].kind;
+  {const bp=FIELD_PREP[q.id]&&FIELD_PREP[q.id].bp;if(bp){/* 設計図の準備：もらった設計図を、切り株のそばに置く */if(S.qTalked&&!fieldBuildOK(q.id)&&!(S.bp||[]).some(e=>e.k===bp)){const i=(S.bpInv||[]).findIndex(it=>it.k===bp);if(i>=0)for(let b=-10;b<=10&&(S.bpInv||[]).some(it=>it.k===bp);b++)for(let a=-10;a<=10;a++){const x=sx+a,y=sy+b;if(bpCheck(bp,x,y)[0]){bpPlace(i,x,y);break}}}prep=null}}
+  if(prep&&S.qTalked&&!fieldBuildOK(q.id)&&!B.sites(prep)){const near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1,k=BL[prep].kind;
     if(k==='build')B.put(prep,sx+2,sy+6,near);else if(inv(prep)>0)B.put(prep,sx+2,sy+6,near);else if(!B.ordered(prep)&&recipeKnown(prep))orderFurn(prep)}
   if(!isNight()&&S.qTalked){try{fieldStoryTap(sx+1,sy+1)}catch(e){B.lg('fieldTap err '+e.message)}}};
-H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('jar');H.windEcho=field('windmill');H.tower=field('bench');
+H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('well');H.windEcho=field('windmill');H.tower=field('bench');
 H.warmMeal=()=>{if(warmTableJ()>=0)return;const [sx,sy]=SR(),near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1;if(inv('table')>0)B.put('table',sx+2,sy+6,near);else if(!B.ordered('table'))orderFurn('table')};/* 切り株のそばに食卓。フタバはそこで食べる */
 H.aoFish=()=>{if(S.obj.some(o=>o==='lotus'))return;if(B.opts.supply&&!(S.inv.lotus>0))S.inv.lotus=1;B.plantAll('lotus')};/* ハスのそばの水あび：ハスがなければ池に植える（補給のときは種をわたす。水あびは夕方に、せいれいがする） */
 H.kite=()=>{if((S.mat.shina||0)<4){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0g'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}};/* たこの材料：しなやかな草（枝はいつもひろう） */
@@ -173,6 +174,7 @@ H._all=()=>{all0();
   if(q&&(q.id==='lv5'||q.id==='wood6')&&S.qTalked){let n=0;for(let i=0;i<400&&n<8;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]&&!S.floor[j]&&walk(j)&&S.ground[j]!==1){S.obj[j]='clover';n++}}if(n)recount()}
   if(q&&q.id==='lv5'&&S.qTalked&&!isNight()&&q.check()===false){const f=printList().find(f=>!printTraced(f.j));if(f){if(S.fog&&S.fog[f.a])fogClear(f.a,true);if(!S.fogReq.includes(f.j)&&!S.res.some(r=>r.act&&r.act.type==='foglook'))S.fogReq.push(f.j)}}/* 足あと：霧を晴らして、フタバに見にいってもらう */
   if(q&&q.id==='omoi'&&S.qTalked&&omoiWait()&&!OMOI_RUN&&!isNight()&&$('#dialog').hidden)sacredTreeTap(S.obj.indexOf('tower'));/* なかよしの2人を、御神木へ */
+  if(q&&q.id==='wood6'&&S.qTalked)for(const d of S.drops||[])if(d.ws)d.tap=1;/* きょうだいのたね：ひろいにいってもらう */
   if(q&&q.id==='wood6'&&S.qTalked&&wflCells().length<WFL_N&&S.sacredRoot!=null){const j=S.sacredRoot,R=FIELD_NEAR_R;for(let b=-R;b<sacredSpan()+R&&wflCells().length<WFL_N;b++)for(let a=-R;a<sacredSpan()+R&&wflCells().length<WFL_N;a++){const k=j+b*W+a;if(k>=0&&k<W*H&&!S.obj[k]&&!S.floor[k]&&walk(k)&&S.ground[k]===0)S.obj[k]=wflKind()}recount()}/* えらんだ花を、御神木のそばに */
   if(q&&q.id==='omoi'&&S.qTalked&&omoiN()+(S.flags.omoiW||[]).length<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
   for(const e of S.enemies)if(e.type==='boss2'&&e.hp>300)e.hp=300;

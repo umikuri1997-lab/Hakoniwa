@@ -585,14 +585,28 @@ function morning(){if(typeof mzMorning==='function')mzMorning();if(typeof windMa
 /* 虹：雨のつぎの朝に出ることがある。S.rbDay：虹の日 */
 const rainbowToday=()=>!!S&&S.rbDay===dayNo()&&!S.rain;
 const RB_FUN=.5;/* 虹の日：たのしさのへりかた0.5倍 */
-/* 草原のメイン「木のなかまと花畑」（wood6）：えらんだ「ヌシ様に見せたい花」（S.flags.choice.nushiFlower）を、御神木のそば（FIELD_NEAR_R）に5本咲かせる。
-   咲いたら、木のせいれいが1人ずつ世話をしにいく（S.flags.flTend：世話をした子の id。この依頼のあいだにした世話だけ）。5人が世話をおえたら、花畑が満開になる */
-const WFL_N=5,WFL_TEND=5,WFL_AT=3,WFL_NAME={bellf:'ききょう',lily:'ゆり',clover:'シロツメクサ'};
+/* 草原のメイン「きょうだいの花畑」（wood6）：えらんだ「ヌシ様に見せたい花」（S.flags.choice.nushiFlower）のたねを、晴れた土地から5つ見つけ（wseedPlace・S.flags.wSeedN）、
+   御神木のそば（FIELD_NEAR_R）に5本咲かせる。咲いたら、フタバと土・火・水・風のなかま（WFL_WHO）が1人ずつ世話をしにいく（S.flags.flTend：世話をした子の id）。村にいる5人がおえたら、花畑が満開になる */
+const WFL_N=5,WFL_AT=3,WFL_NAME={bellf:'ききょう',lily:'ゆり',clover:'シロツメクサ'};
 const wflKind=()=>S&&S.flags.choice&&S.flags.choice.nushiFlower||'bellf',wflName=()=>WFL_NAME[wflKind()]||BL[wflKind()].name;
 function wflOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&QUESTS[S.quest]?.id==='wood6'&&S.qTalked&&S.qStory==null}
 function wflCells(){/* 御神木のそばで咲いている、えらんだ花 */const j=S.sacredRoot;if(j==null)return [];const id=wflKind(),R=FIELD_NEAR_R,n=sacredSpan()+R*2,x0=j%W-R,y0=(j/W|0)-R,L=[];
   for(let b=0;b<n;b++)for(let a=0;a<n;a++){const x=x0+a,y=y0+b;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(S.obj[k]===id&&!isBud(k))L.push(k)}return L}
-const wflN=()=>Math.min(WFL_N,wflCells().length),wflT=()=>S&&S.flags.flTend||[],wflTN=()=>Math.min(WFL_TEND,wflT().length);
-function wflWant(r){if(!wflOn()||isNight()||r.elem!=='wood'||r.hidden)return false;const T=wflT();return T.length<WFL_TEND&&!T.includes(r.id)&&S.res.filter(q=>q!==r&&q.act&&q.act.type==='fltend').length<WFL_AT&&wflCells().length>=WFL_N}/* 3人まで同時に */
+const WFL_WHO=()=>[POKO,MINA,keyName('fire'),keyName('water'),keyName('wind')];/* 花の世話をする5人 */
+const wflWho=()=>{const N=WFL_WHO();return S.res.filter(r=>N.includes(r.name))},wflNeed=()=>Math.max(1,wflWho().length);/* 村にいない子は、まつ人数に入れない */
+const wflN=()=>Math.min(WFL_N,wflCells().length),wflT=()=>S&&S.flags.flTend||[],wflTN=()=>{const ids=new Set(wflWho().map(r=>r.id));return Math.min(wflNeed(),wflT().filter(id=>ids.has(id)).length)};
+/* きょうだいがかくしたたね：晴れた土地の、せいれいが歩いて行ける所に、落とし物（ws）として光らせる。ひろったら S.flags.wSeedN をふやす（takeDrop） */
+const WSEED_N=5,WSEED_FAR=12,WSEED_GAP=12;/* 5つ・切り株から12マスより遠く・たがいに12マスはなす */
+const wseedN=()=>S&&S.flags.wSeedN||0;
+function wseedPlace(){if(!S||IS_STORY_REPLAY||WD!==0||S.free)return;if(!S.drops)S.drops=[];const left=WSEED_N-wseedN()-S.drops.filter(d=>d.ws).length;if(left<=0)return;
+  const r0=S.res.find(q=>!q.hidden),G=bfs(r0?r0.x|0:CX,r0?r0.y|0:CY),root=S.sacredRoot!=null?S.sacredRoot:CY*W+CX,used=S.drops.filter(d=>d.ws).map(d=>d.y*W+d.x),C=[];
+  const near=(k,f)=>{const x=k%W,y=(k/W)|0;for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const q=(y+b)*W+x+a;if(x+a>=0&&y+b>=0&&x+a<W&&y+b<H&&f(q))return true}return false};
+  for(let k=0;k<W*H;k++){if(G.dist[k]<0||S.obj[k]||S.floor[k]||!walk(k)||S.ground[k]!==0||fogAt(k)||VILL[k]||S.drops.some(d=>d.y*W+d.x===k))continue;const d=Math.hypot(k%W-root%W,((k/W)|0)-((root/W)|0));if(d<WSEED_FAR)continue;
+    const w=1+(near(k,q=>waterJ(q))?3:0)+(near(k,q=>BL[S.obj[q]]&&BL[S.obj[q]].natural&&/tree/.test(S.obj[q]))?3:0);C.push([k,w])}/* 川べり・木の下が、えらばれやすい */
+  for(let gap=WSEED_GAP,n=left;n>0&&gap>=0;gap-=4){let L=C.filter(([k])=>used.every(u=>Math.hypot(u%W-k%W,((u/W)|0)-((k/W)|0))>=gap));while(n>0&&L.length){let t=Math.random()*L.reduce((a,c)=>a+c[1],0),i=0;for(;i<L.length-1;i++)if((t-=L[i][1])<0)break;const k=L[i][0];used.push(k);S.drops.push({x:k%W,y:(k/W)|0,id:wflKind(),n:1,ws:1});n--;L=L.filter(([q])=>Math.hypot(q%W-k%W,((q/W)|0)-((k/W)|0))>=gap)}}
+  dirty=true}
+function wseedTick(){/* 1秒ごと：たねをさがしているのに、のこりのたねが足りなければ（霧が晴れる前など）、置きなおす */if(!wflOn()||wseedN()>=WSEED_N||wflN()>=WFL_N||S.flags.wSeedOld)return;if(wseedN()+(S.drops||[]).filter(d=>d.ws).length<WSEED_N)wseedPlace()}
+function wseedTake(d,r){if(!d.ws)return;S.flags.wSeedN=wseedN()+1;const n=Math.min(WSEED_N,S.flags.wSeedN);toast((r?r.name+'が、':'')+'きょうだいの'+wflName()+'のたねを見つけた（'+n+'/'+WSEED_N+'）','good');if(r)addFloat(r.x,r.y-1.6,n+'/'+WSEED_N);renderQuest();checkQuest();dirty=true}
+function wflWant(r){if(!wflOn()||isNight()||!WFL_WHO().includes(r.name)||r.hidden)return false;const T=wflT();return wflTN()<wflNeed()&&!T.includes(r.id)&&S.res.filter(q=>q!==r&&q.act&&q.act.type==='fltend').length<WFL_AT&&wflCells().length>=WFL_N}/* 3人まで同時に */
 function wflJob(r,G){if(!wflWant(r))return false;if(!S.unlocked[wflKind()])S.unlocked[wflKind()]=true;/* えらんだ花は、カミサマのお店でも買える */const C=wflCells().filter(c=>free('fl'+c,1)),ad=(k,c)=>Math.abs(k%W-c%W)+Math.abs((k/W|0)-(c/W|0))===1;
   const st=nearest(G,k=>walk(k)&&!S.obj[k]&&C.some(c=>ad(k,c)),9999);if(st<0)return false;const c=C.find(c=>ad(st,c));startAct(r,G,'fltend',st,{key:'fl'+c,obj:c});return true}/* 同じ花には1人ずつ */

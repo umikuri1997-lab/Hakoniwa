@@ -97,7 +97,15 @@ ACT.rideop={start(r,a){if(!RIDES.has(S.obj[a.obj]))return false;r.bubble='';r.fa
 for(const id of RIDES)TOYS.add(id);/* のっているせいれいを、遊具の上に描く（toyR・toyPose） */
 if(typeof ACT_LBL!=='undefined')ACT_LBL.rideop='遊具を動かしている';if(typeof WORKFACE!=='undefined')WORKFACE.add('rideop');
 function windPlayEnd(r,a){if(!windFun()||!RIDES.has(a.what))return;windRemember(r,a.what);const F=S.flags.rideRun||(S.flags.rideRun={});F[a.what]=(F[a.what]||0)+1;const op=rideOp(a.obj);if(op){funAdd(op,RIDEOPFUN,'play');op.bubble='🎵'}}
-function windRemember(r,ride){/* はじめてその遊具にのった・係をした：遊び方を1つ思い出す */r.rode=r.rode||{};if(r.rode[ride])return;r.rode[ride]=1;r.rem=r.rem||{};const L=Object.keys(BL).filter(id=>BL[id].play&&!RIDES.has(id)&&!r.rem[id]&&!nigate(r.elem,id));if(!L.length)return;const here=L.filter(id=>cnt(id)>0),t=L.includes(r.like)?r.like:here.length?here[(Math.random()*here.length)|0]:L[(Math.random()*L.length)|0];r.rem[t]=1;toast(r.name+'が、'+BL[t].name+'の遊び方を思い出した','good');if(typeof spReact==='function')spReact(r,'joy',1400)}
+function windRemember(r,ride){/* はじめてその遊具にのった・係をした：遊び方を1つ思い出す */r.rode=r.rode||{};if(r.rode[ride])return;r.rode[ride]=1;r.rem=r.rem||{};const L=Object.keys(BL).filter(id=>BL[id].play&&!RIDES.has(id)&&!r.rem[id]&&!nigate(r.elem,id));if(!L.length)return;const here=L.filter(id=>cnt(id)>0),t=L.includes(r.like)?r.like:here.length?here[(Math.random()*here.length)|0]:L[(Math.random()*L.length)|0];r.rem[t]=1;toast(r.name+'が、'+BL[t].name+'の遊び方を思い出した','good');if(typeof spReact==='function')spReact(r,'joy',1400);windRemFx(r,t)}
+/* 思い出した：頭の上に、その遊び家具の絵がふわっとうかんで光り、風のつぶがあつまる。その子の言いかたのひとこと（見た目と音だけ。実時間） */
+const WREMLINE=['そうだ、こうやって遊んだんだ！','思い出した！ 体がおぼえてる。','あっ、この遊び、すきだったなあ。','風がふいたら、思い出したよ。','なつかしい……もう一回やりたい！','わすれてたのが、うそみたい！'],WREMIMG=new Map(),WREMMS=3200;
+function windRemFx(r,t){if(!r||r.hidden||IS_STORY_REPLAY)return;let im=WREMIMG.get(t);if(!im){im=new Image();im.src=iconURL(t);WREMIMG.set(t,im)}
+  const x=r.x*TS,y=r.y*TS-uLift(r)-58;scnAdd('windrem',WREMMS,{r,im});scnAdd('glow',WREMMS*.8,{x,y,r:22,col:'#e8f6ff'},150);scnAdd('ring',900,{x,y,r0:6,r1:30,col:'#dff4ff'},150);
+  for(let i=0;i<6;i++){const a=i*1.047;scnAdd('orb',700,{x0:x+Math.cos(a)*34,y0:y+Math.sin(a)*20,x1:x,y1:y,arc:i%2?10:-10,col:i%2?'#dff4ff':'#fff6c8',n:1},i*80)}
+  sfx('good');addFloat(r.x,r.y-1.7,chatTone(pickFresh('wrem',WREMLINE),r),'#e8f6ff')}
+SCN_DRAW.windrem=(e,t,now)=>{/* 頭の上の遊び家具の絵（144のアイコンを30の大きさに。うかんでから、ゆっくりゆれる） */const r=e.r,im=e.im;if(!r||r.hidden||!im.complete||!im.naturalWidth)return;const env=scnEnv(t,.1,.18);if(env<=0)return;
+  const s=30,rise=Math.min(1,t/.12),x=Math.round(r.x*TS-s/2),y=Math.round((r.y*TS-uLift(r)-44-rise*14-s/2+Math.sin(now/320)*2)/2)*2;ctx.save();ctx.globalAlpha=env;ctx.imageSmoothingEnabled=true;ctx.drawImage(im,x,y,s,s);ctx.restore()}
 function windRemNote(r){if(!windFun())return '';const n=Object.keys(r.rem||{}).length;return '思い出した遊び：'+n}
 /* ハヤテ：はじめにうかんだ島で目をさます（カザネのおさななじみ）。会話を読みおえてから、来たことにする */
 function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYATE))return false;const I=windIsles(S),h=S.wind.holes.find(q=>I.id[q.j]===k);let c=-1,bd=1e9;for(let j=0;j<W*H;j++){if(I.id[j]!==k||!walk(j)||S.obj[j])continue;const d=h?Math.hypot(j%W-h.j%W,((j/W)|0)-((h.j/W)|0)):Math.hypot(j%W-I.cx[k],((j/W)|0)-I.cy[k]);if(d>=1&&d<bd){bd=d;c=j}}if(c<0)return false;
