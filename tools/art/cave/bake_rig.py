@@ -88,7 +88,7 @@ def _hum(sh,elb,hand,hip,knee,foot,sp,neck,top=1.0,rigid=False):
     return B
 SKEL={
  'kui':_hum(sh=(-.21,.09,.45),elb=(-.24,.11,.25),hand=(-.23,.03,.03),hip=(-.12,.05,.32),knee=(-.13,.09,.15),foot=(-.11,0,.0),sp=.5,neck=.70),   # 根の足・横の根のうで
- 'tame':_hum(sh=(-.19,.08,.64),elb=(-.18,.08,.47),hand=(-.2,0,.30),hip=(-.14,.06,.25),knee=(-.14,.1,.12),foot=(-.14,.08,.0),sp=.46,neck=.74),
+ 'tame':_hum(sh=(-.21,.02,.62),elb=(-.22,-.01,.34),hand=(-.22,.14,.03),hip=(-.14,.06,.25),knee=(-.14,.1,.12),foot=(-.14,.08,.0),sp=.46,neck=.74),
  'hone':_hum(sh=(-.19,-.02,.60),elb=(-.2,-.03,.38),hand=(-.22,-.02,.15),hip=(-.12,-.03,.19),knee=(-.11,-.04,.09),foot=(-.12,-.02,.0),sp=.40,neck=.66),
  'ro':_hum(sh=(-.21,0,.45),elb=(-.22,0,.30),hand=(-.24,0,.15),hip=(-.10,0,.12),knee=(-.10,0,.06),foot=(-.11,0,.0),sp=.30,neck=.57),
  'mi':_hum(sh=(-.10,0,.70),elb=(-.13,0,.46),hand=(-.15,.03,.12),hip=(-.06,0,.47),knee=(-.055,.02,.23),foot=(-.06,0,.0),sp=.58,neck=.77,rigid=True),
@@ -194,7 +194,7 @@ FR={'hum':{'0':{},'1':dict(spine=3,head=5,armL_u=4,armR_u=4,sq=.985),'w0':_W0,'w
        'w2':dict(back=-4,earL_u=-8,earR_u=-8,sq=1.02),'w3':dict(back=8,earL_u=10,earR_u=10,earL_l=8,earR_l=8,sq=.9),'a0':dict(head=-12,jaw=18,earL_u=-22,earR_u=-22,earL_l=-18,earR_l=-18,sq=.92),'a1':dict(head=14,jaw=40,earL_u=18,earR_u=18,earL_l=14,earR_l=14,sq=1.08,wid=1.04)},
     'te':{'0':dict(f1=8,f2=10,f3=10),'1':dict(f1=14,f2=18,f3=20,palm=3),'w0':dict(arm=(4,5),palm=6,f1=6,f2=8,f3=8),'w1':dict(arm=(2,0),palm=4,f1=16,f2=22,f3=24),'w2':dict(arm=(4,-5),palm=6,f1=6,f2=8,f3=8),'w3':dict(arm=(2,0),palm=4,f1=16,f2=22,f3=24),
        'a0':dict(arm=-6,palm=-16,f1=-12,f2=-10,f3=-8,sq=1.03),'a1':dict(arm=10,palm=24,f1=30,f2=36,f3=40,sq=.93)}}
-OVR={'mi':{'a0':dict(armL_u=-95,armR_u=-95)},'kui':{'a0':dict(armL_u=-70,armR_u=-70,armL_l=-15,armR_l=-15)}}   # ポーズを、からだに合わせてかえる（うでの長い物・根のうで）
+OVR={'mi':{'a0':dict(armL_u=-95,armR_u=-95)},'tame':{'a0':dict(armL_u=-100,armR_u=-100,armL_l=-35,armR_l=-35)},'kui':{'a0':dict(armL_u=-70,armR_u=-70,armL_l=-15,armR_l=-15)}}   # ポーズを、からだに合わせてかえる（うでの長い物・根のうで）
 def frames(name):return list(FR[KIND[name]])
 _BW={}
 def warp(name,fr):
