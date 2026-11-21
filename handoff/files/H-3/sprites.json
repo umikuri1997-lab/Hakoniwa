@@ -1,0 +1,38 @@
+{
+  "g": 64,
+  "dock": {
+    "file": "dock.png",
+    "x": -28,
+    "y": -69,
+    "w": 56,
+    "h": 70
+  },
+  "raft": {
+    "file": "raft.png",
+    "x": -25,
+    "y": -74,
+    "w": 50,
+    "h": 73
+  },
+  "mzchest": {
+    "file": "mzchest.png",
+    "x": -21,
+    "y": -48,
+    "w": 42,
+    "h": 41
+  },
+  "mzgate": {
+    "file": "mzgate.png",
+    "x": -32,
+    "y": -71,
+    "w": 64,
+    "h": 71
+  },
+  "mzgateb": {
+    "file": "mzgateb.png",
+    "x": -32,
+    "y": -71,
+    "w": 64,
+    "h": 71
+  }
+}

@@ -21,6 +21,7 @@ from furn3d import ELEV, FOV, FRAME, KEEP, LW
 from common import WOOD
 from rides import CREAM, MODELS, SEATS, SPEED
 from wind_objects import hole, vane
+from water_objects import chest, dock, gate, raft
 
 SCALE = 64
 FRAMES = 16
@@ -378,14 +379,31 @@ def wind_objects(out, metadata):
     return comparisons
 
 
+def water_objects(out, metadata):
+    comparisons = []
+    for name, make in (("dock", dock), ("raft", raft), ("mzchest", chest),
+                       ("mzgate", lambda m: gate(m, False)),
+                       ("mzgateb", lambda m: gate(m, True))):
+        model = Model()
+        make(model)
+        image, offset, _ = render(model, SMALL_EXT, .35)
+        image = Image.fromarray(palette([image])[0])
+        save(image, offset, name, out, metadata)
+        x, y, right, bottom = image.getbbox()
+        comparisons.append((name, game_image(name),
+                            (image.crop((x, y, right, bottom)),
+                             (offset[0]+x, offset[1]+y))))
+    return comparisons
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("request", choices=("H-1", "H-2"))
+    parser.add_argument("request", choices=("H-1", "H-2", "H-3"))
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     metadata = {"g": SCALE}
-    make = {"H-1": rides, "H-2": wind_objects}[args.request]
+    make = {"H-1": rides, "H-2": wind_objects, "H-3": water_objects}[args.request]
     rows = make(args.output, metadata)
     compare(rows, args.output / "cmp_x4.png", 4)
     for name, _, (sprite, _) in rows:
