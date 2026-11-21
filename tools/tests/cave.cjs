@@ -21,6 +21,9 @@ const assert=require('node:assert/strict');
     /* 水たまりは歩けない・石じゅんは歩けない・光るきのこは歩ける */out.terr=[cvWalk(J(19,8)),cvWalk(J(21,6)),cvWalk(J(20,24)),C.wt[J(19,8)]];
     /* 高さ：岩だなからくぼ地へは、とびおりられる。のぼるのは坂から */out.step=[cvStepOK(J(36,7),J(36,8)),cvStepOK(J(36,8),J(36,7)),cvStepOK(J(42,8),J(42,7)),(cvBfs(J(36,9),j=>j===J(36,7))||[]).length>6];
     out.ore=C.ore.size>0;out.top=C.top;
+    /* タップで歩く先：暗い所でも行ける所へ・岩の中で近くに床がなければ歩かない・しまったとびらの先は手前まで・ドラッグのあとカメラは追わない */
+    out.tapDark=!C.seen[J(23,24)]&&cvTapGoal(23,24)===J(23,24);out.tapRock=cvTapGoal(0,0);out.tapGate=cvTapGoal(42,21)!==J(42,21)&&cvTapGoal(42,21)>=0;
+    clampCam(1);out.look=C.lookU>performance.now();clampCam();
     C.en=[];C.seen.fill(1);
     /* 歩く */cvGo(J(23,27));step(4);out.walked=C.party.every(a=>Math.hypot(a.x-23.5,a.y-CVOY-27.5)<2.2);
     /* 風・木のせいれいがいないと、風車・われ目はつかえない */cvUse(J(2,5),C.ob.get(J(2,5)));out.windNo=!C.sel;cvUse(J(9,6),C.ob.get(J(9,6)));out.woodNo=!C.party.some(a=>a.job);
@@ -66,7 +69,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(r));
   assert.equal(r.nightPop,false,'夜は出かけられない');assert.equal(r.prep,true);assert.equal(r.slots,5);
   assert.equal(r.enter,true);assert.equal(r.paused,true,'洞窟のあいだ村は止まる');assert.equal(r.cls,true);assert.equal(r.hud,true);assert.equal(r.seenStart,true);assert.equal(r.unseenFar,true);
-  assert.equal(r.mainPath,true,'どのパーティでも、かえりの光まで行ける');assert.deepEqual(r.closed,[false,false,false,false,false,false,false,false]);assert.equal(r.walked,true);
+  assert.equal(r.mainPath,true,'どのパーティでも、かえりの光まで行ける');assert.deepEqual(r.closed,[false,false,false,false,false,false,false,false]);assert.equal(r.walked,true);assert.deepEqual([r.tapDark,r.tapRock,r.tapGate,r.look],[true,-1,true,true],'タップで歩く先・見回し');
   assert.equal(r.windNo,true);assert.equal(r.woodNo,true);
   assert.equal(r.sel,'b');assert.equal(r.dirs.length,2,'左はでっぱり・右は立つ所がない：上と下にだけおせる');assert.equal(r.pushed,true);assert.equal(r.reset,1);assert.equal(r.home,true);assert.equal(r.hole,true);assert.equal(r.earthOpen,true);
   assert.equal(r.chest,true);assert.equal(r.fos,1);
