@@ -596,13 +596,14 @@ for _n in FOLLOW: _follow(_n)
 
 # ---- 首を先に向ける（Frostwind の attention.js の考え方。MIT）----
 # 歩いていて向きがかわるとき、ゲームが HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵を出す（draw-spirits.js の spHeadTurn）。
-# _hp は hy を +HTURN、_hn は −HTURN。正面では + が画面の右・うしろでは + が画面の左・横では + が手前（こちら）を向く。
-# _hpa・_hna は、ちょうど半分の角度（HTURNA）。ゲームは同じ時間ずつ出して、首が同じ速さで向く。
+# _hp<k>・_hn<k>（k は 1〜HTSTEP）は hy を ±HTURN×k/HTSTEP。正面では + が画面の右・うしろでは + が画面の左・横では + が手前（こちら）を向く。
+# ゲームは画面の1コマごとに1だんずつ出して、首が同じ速さで、なめらかに向く。
 HTURN = 0.13
-HTURNA = 0.065
+HTSTEP = 6
 for _b in ('walk', 'carry'):
-    for _s, _k, _a in ((1, '_hp', HTURN), (-1, '_hn', HTURN), (1, '_hpa', HTURNA), (-1, '_hna', HTURNA)):
-        _m = MOTIONS[_b]
-        def _f(w, face, f0=_m['f'], s=_s*_a):
-            p = f0(w, face); p['hy'] = p.get('hy', 0.0)+s; return p
-        M(_b+_k, _m['n'], _m['rate'], _f)
+    for _i in range(1, HTSTEP+1):
+        for _s, _k in ((1, '_hp'), (-1, '_hn')):
+            _m = MOTIONS[_b]
+            def _f(w, face, f0=_m['f'], s=_s*HTURN*_i/HTSTEP):
+                p = f0(w, face); p['hy'] = p.get('hy', 0.0)+s; return p
+            M(_b+_k+str(_i), _m['n'], _m['rate'], _f)
