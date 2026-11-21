@@ -365,6 +365,15 @@ function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を�
   const hh=top?LIFT+6:CPH,ok=k=>!top||!(y>0&&hiAt((y-1)*W+k)>=lv)&&hiAt(y*W+k)<=lv;/* 上はしをもう1回描くのは、そのマスのいちばん上の段だけ（下の段の上はしで、上の段のブロックの正面をかくさない） */
   if(!top){const m=i=>(keys[i]&2)&&!(keys[i]&256);let i=0;while(i<keys.length){if(!m(i)){i++;continue}let e=i;while(e+1<keys.length&&m(e+1))e++;const px=(R.x0+i)*TS,w=(e-i+1)*TS,py=y*TS;g.save();g.translate(0,2*(py+TS)-dy);g.scale(1,-1);gblit(g,px-6,py+TS,w+12,8,px-6,py+TS,w+12,8,lod);g.restore();i=e+1}}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし。つづいた所はまとめて1回） */
   const PK=kz>1.5?2:1,part=(L)=>{for(let i=0;i<keys.length;i++){const kk=keys[i],k=R.x0+i;if(!(kk&15)&&L==='a')continue;if(!ok(k))continue;const q=cliffPart(kk,PK)[L];if(!q)continue;const a=Math.max(q.x,(kk&4)?0:8),b=Math.min(q.x+q.w,(kk&8)?TS+16:TS+8),y2=Math.min(q.y+q.h,hh);if(b<=a||y2<=q.y)continue;DI(q.c,q.sx+(a-q.x)*PK,q.sy,(b-a)*PK,(y2-q.y)*PK,k*TS-8+a,oy+q.y,b-a,y2-q.y)}};
+  if(BLOCKV){/* ブロックの見え方：上の面も正面も、ブロックの絵だけ。ふちは、さかいの1ドットの線だけ（前のがけの帯・ぼかしたかげ・うすい光は使わない） */
+    const LN=(x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.fillRect(a,b,Math.max(SX(x+w)-a,1/kz),Math.max(SY(y2+h)-b,1/kz))},D1=.5;
+    if(!top)for(let i=0;i<keys.length;i++){if(!(keys[i]&2))continue;const k=R.x0+i,j=y*W+k,T=cubeTex(cubeAt(j,lv)||SOIL);if(!T)continue;const fy=y*TS+TS-lv*LIFT;
+      DI(T,0,0,64,64,k*TS,fy,TS,LIFT);g.fillStyle='rgba(30,20,12,.3)';LN(k*TS,fy,TS,LIFT);/* 正面：ブロックの絵を、上の面より暗く */
+      g.fillStyle='rgba(46,32,22,.55)';LN(k*TS,fy,TS,D1);LN(k*TS,fy+LIFT-D1,TS,D1);if(keys[i]&4)LN(k*TS,fy,D1,LIFT);if(keys[i]&8)LN(k*TS+TS-D1,fy,D1,LIFT)}/* 正面のさかいの線 */
+    const h=top?LIFT:TS;for(let i=0;i<keys.length;i++){const k=R.x0+i;if(!ok(k))continue;const j=y*W+k,ty=y*TS-lv*LIFT,id=hiAt(j)===lv?cubeAt(j,lv):'',soil=!id&&!S.floor[j]&&!REV.has(j)&&!S.ground[j];
+      if(id||soil){const T=cubeTex(id||SOIL);if(T)DI(T,0,0,64,h*2,k*TS,ty,TS,h)}else gblit(g,k*TS,y*TS,TS,h,SX(k*TS),SY(ty),SX(k*TS+TS)-SX(k*TS),SY(ty+h)-SY(ty),lod);/* 上の面：ブロックなら、その絵。ブロックのない土のだんは土のブロックの絵。草地・道・床は地面の下絵 */
+      g.fillStyle='rgba(46,32,22,.55)';if(keys[i]&1)LN(k*TS,ty,TS,D1);if(keys[i]&4)LN(k*TS,ty,D1,h);if(keys[i]&8)LN(k*TS+TS-D1,ty,D1,h)}/* 上の面のさかいの線 */
+    return}
   part('a');
   if(!top)for(let i=0;i<keys.length;i++){if(!(keys[i]&2))continue;const k=R.x0+i,j=y*W+k,id=cubeAt(j,lv)||SOIL,T=cubeTex(id);if(!T)continue;const fy=y*TS+TS-lv*LIFT,a=SX(k*TS),b=SY(fy),a2=SX(k*TS+TS),b2=SY(fy+LIFT);
     DI(T,0,(lv*24)%40,64,LIFT*2,k*TS,fy,TS,LIFT);g.fillStyle=id===SOIL?'rgba(48,34,24,.16)':'rgba(48,34,24,.26)';g.fillRect(a,b,a2-a,b2-b);/* ブロックの正面：その材質の絵を、すこし暗く（土は、だんごとに絵をずらして、つづけて見えないように） */
