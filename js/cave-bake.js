@@ -107,7 +107,19 @@ function cvBakeLight(tx,ty,R){const C=CV;if(!C.sc)return;const now=performance.n
     else if(s.k==='esa'&&!s.rev){s.rev=now+900;s.bite=0;cvSpark(x+.5,y+.5,'#fff3c4',12);if(!C.note.esaL){C.note.esaL=1;toast('光をあびて、正体をあらわした','good')}}
     else if(s.k==='me')cvScOff(s,[6,12])}}
 /* ---------- 絵（仮のドット絵） ---------- */
-function cvBkDraw(e,now){const D=EN[e.type],k=e.type,s=D.size,t=now/1000+e.id,ho=hitOff(e,now,1),x=Math.round(e.x*TS+ho[0]),y=Math.round(e.y*TS+ho[1]),R=(c,a,b,w,h)=>P4(c,x+a*s,y+b*s,Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s))),bob=Math.round(Math.sin(t*3)*1.5),fl=ho[2];
+/* 3Dから写したチップ（tools/art/cave/bake_build.py。bk<名前>#<コマ>）：止まる 0・1／歩く w0〜w3／たたく a0（ためる）・a1（ふりおろす） */
+const CVBKV=new WeakMap();
+function cvBkFrame(e,now){const D=EN[e.type];let v=CVBKV.get(e);if(!v){v={x:e.x,y:e.y,mv:0,f:1};CVBKV.set(e,v)}const dx=e.x-v.x,dy=e.y-v.y;if(Math.abs(dx)+Math.abs(dy)>.001){v.mv=now;if(Math.abs(dx)>.0005)v.f=dx<0?-1:1}v.x=e.x;v.y=e.y;
+  if(e.tg&&!e.asleep&&Math.abs(e.tg.x-e.x)>.05)v.f=e.tg.x<e.x?-1:1;
+  const t=now/1000+e.id*.7;let fr;if(now-(e.swing||-1e9)<260)fr='a1';else if(!e.asleep&&(e.atk||0)/D.atk>.55)fr='a0';else if(now-v.mv<220)fr='w'+(((t*6)|0)%4);else fr=((t*1.6)|0)%2?'1':'0';return[fr,v.f]}
+function cvBkChip(g,id,fx,fy,f,al){const ch=cvChipOf(id);if(!ch)return false;const im=chipImgs(ch,id)[0];if(!im||!im.ok)return false;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al==null?1:al;g.translate(Math.round(fx),Math.round(fy));if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm;return true}
+function cvBkDraw(e,now){if(!e.down){const D=EN[e.type],[fr,f]=cvBkFrame(e,now),ho=hitOff(e,now,1),x=e.x*TS+ho[0],y=e.y*TS+ho[1];P4('rgba(0,0,0,.3)',x-9*D.size,y+6,18*D.size,3);
+    if(cvBkChip(ctx,'bk'+e.type.slice(3)+'#'+fr,x,y+7,f,e.stun>0?.6:1)){
+      if(D.thaw&&e.asleep){ctx.globalAlpha=.55;P4('#c0e2f6',x-10,y-30,20,36);ctx.globalAlpha=.9;P4('#e6f8ff',x-10,y-30,2,36);ctx.globalAlpha=1}/* 氷の中でねむる */
+      if(ho[2]){ctx.globalAlpha=.5;P4('#ffffff',x-8,y-28,16,30);ctx.globalAlpha=1}
+      if(e.hp<e.max&&!e.asleep){const w=18;P4('rgba(0,0,0,.5)',x-w/2,y-40*D.size-4,w,3);P4('#ff8a8a',x-w/2,y-40*D.size-4,Math.max(1,Math.round(w*e.hp/e.max)),3)}return}}
+  cvBkDraw0(e,now)}
+function cvBkDraw0(e,now){const D=EN[e.type],k=e.type,s=D.size,t=now/1000+e.id,ho=hitOff(e,now,1),x=Math.round(e.x*TS+ho[0]),y=Math.round(e.y*TS+ho[1]),R=(c,a,b,w,h)=>P4(c,x+a*s,y+b*s,Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s))),bob=Math.round(Math.sin(t*3)*1.5),fl=ho[2];
   ctx.globalAlpha=e.stun>0?.6:1;P4('rgba(0,0,0,.3)',x-9*s,y+6,18*s,3);
   if(e.down){/* くずれたほね */R('#b8a888',-10,0,20,4);R('#e8dcc0',-8,-2,8,3);R('#e8dcc0',2,-3,9,3);R('#e8dcc0',-3,-5,5,5);R('#8a7a62',-2,-4,2,2);ctx.globalAlpha=1;return}
   if(k==='bk_kui'){R('#4a3a2c',-6,-26+bob,12,26);R('#6a5a48',-5,-25+bob,9,24);R('#8a5a36',-1,-34+bob,3,40);R('#b06a3a',-1,-34+bob,1,10);R('#6a5030',-12,-18+bob,7,2);R('#6a5030',6,-16+bob,8,2);R('#6a5030',-13,-18+bob,2,8);R('#6a5030',13,-16+bob,2,7);R('#5a4a3c',-5,-32+bob,10,8);R(D.eye,-3,-29+bob,2,2);R(D.eye,1,-29+bob,2,2)}
@@ -124,12 +136,12 @@ function cvBkDraw(e,now){const D=EN[e.type],k=e.type,s=D.size,t=now/1000+e.id,ho
 function cvBakeL(L,now){const C=CV;if(!C.sc)return;
   for(const[j,u]of C.hotT){if(!C.seen[j])continue;L.push([-1,()=>{const p=.5+.5*Math.sin(now/300+j),ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS;ctx.globalAlpha=Math.min(1,(u-C.t)/3)*(.35+.3*p);P4('#ff5a20',ox+4,oy+8,24,16);P4('#ffb040',ox+10,oy+13,12,5);ctx.globalAlpha=1}])}
   for(const s of C.sc){if(!s.on)continue;
-    if(s.k==='esa'){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.9,()=>{if(s.rev){/* 正体：口をあけた黒いかげ */const b=s.bite?1:.8;P4('#0a0608',ox+2,oy+2,28*b,26*b);P4('#3a0a10',ox+6,oy+10,20*b,10*b);for(let i=0;i<5;i++)P4('#e8e0d0',ox+7+i*4,oy+10,2,3);P4('#ff6b8a',ox+9,oy+5,3,2);P4('#ff6b8a',ox+20,oy+5,3,2);return}
+    if(s.k==='esa'){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.9,()=>{if(s.rev&&cvBkChip(ctx,'bkesa#'+(s.bite?'a1':'a0'),ox+16,oy+30,1))return;if(s.rev){/* 正体：口をあけた黒いかげ */const b=s.bite?1:.8;P4('#0a0608',ox+2,oy+2,28*b,26*b);P4('#3a0a10',ox+6,oy+10,20*b,10*b);for(let i=0;i<5;i++)P4('#e8e0d0',ox+7+i*4,oy+10,2,3);P4('#ff6b8a',ox+9,oy+5,3,2);P4('#ff6b8a',ox+20,oy+5,3,2);return}
       if(!cvChip(ctx,s.cr+'#'+(((now/250)|0)%2?'w0':'0'),ox,oy,now)){P4('#d8c8b0',ox+10,oy+16,12,10);P4('#d8c8b0',ox+12,oy+8,3,8)}/* かげがない（足もとに、かげを描かない） */}])}
     if(s.k==='koe'&&s.vis>now){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.9,()=>{ctx.globalAlpha=.35*(s.vis-now)/1500;P4('#d8d0ff',ox+10,oy-14,12,40);P4('#d8d0ff',ox+8,oy-18,16,8);ctx.globalAlpha=1}])}
     if(s.k==='te'&&C.seen[cvJ(s.x,s.y)]){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.95,()=>cvTeDraw(s,ox,oy,now)])}}}
 /* ほりつづける手：大穴からのびる、黒い大きな手（仮の絵） */
-function cvTeDraw(s,ox,oy,now){const up=s.st===1?Math.min(1,s.t/CVSC.te.wind):s.st===2?1-Math.min(1,s.t/1):0,t=now/1000,h=Math.round(30+up*40),wob=Math.round(Math.sin(t*1.3)*2),C=s.stun>0?'#3a3040':'#120e14';
+function cvTeDraw(s,ox,oy,now){if(cvBkChip(ctx,'bkte#'+(s.st===1?'a0':s.st===2?'a1':'w'+(((now/400)|0)%4)),ox+16,oy+30,1,s.stun>0?.7:1))return;const up=s.st===1?Math.min(1,s.t/CVSC.te.wind):s.st===2?1-Math.min(1,s.t/1):0,t=now/1000,h=Math.round(30+up*40),wob=Math.round(Math.sin(t*1.3)*2),C=s.stun>0?'#3a3040':'#120e14';
   P4(C,ox+6+wob,oy+20-h,20,h+12);P4('#2a222c',ox+8+wob,oy+20-h,4,h+10);for(let i=0;i<4;i++){P4(C,ox+4+i*6+wob,oy+10-h-8-up*6,5,14+up*6);P4('#2a222c',ox+4+i*6+wob,oy+10-h-8-up*6,1,10)}
   P4(C,ox-2+wob,oy+14-h,6,10);if(Math.sin(t*5)>.5)P4('#85776a',ox+(Math.random()*30),oy+24,2,2)}
 /* 暗さの上：見はりの目 */

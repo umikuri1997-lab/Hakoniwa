@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
       mk=(t,x,y,o)=>Object.assign({id:CV.eid++,type:t,x:x+.5,y:y+.5+CVOY,hp:EN[t].hp,max:EN[t].hp,spawned:true,asleep:false,stun:0,atk:0,path:[],rp:0,dead:false,tg:null,cj:cvJ(x,y)},o||{}),
       open=C=>{for(let j=0;j<CVW*CVH;j++)if(cvWalk(j)){const x=cvX(j),y=cvY(j);if([[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]].every(([dx,dy])=>cvWalk(cvJ(x+dx,y+dy))))return[x,y]}};
     /* ===== 階のバケモノ ===== */
-    out.types=CVFLOORS.map(F=>cvFoeType('c',F.theme));
+    out.types=CVFLOORS.map(F=>cvFoeType('c',F.theme));out.chips=['kui','sui','yoru','tame','hone','ro','mi','esa','te'].every(n=>['0','1','w0','w1','w2','w3','a0','a1'].every(f=>!!cvChipOf('bk'+n+'#'+f)));
     {let C=enter(0,['earth','fire','water']);out.kui=C.en.length>0&&C.en.every(e=>e.type==='bk_kui');out.koe=!!sc('koe')&&!sc('me');C.seen.fill(1);caveRender(performance.now());caveAbort()}
     /* 光すい：そばにいると、光の広さが小さくなる */
     {let C=enter(1,['earth','fire','water']);C.en=[];const[x,y]=open(C);for(const a of C.party)put(a,x,y);out.lr0=cvLR();C.en.push(mk('bk_sui',x+2,y));C.sc=[];cvBakeTick(0,0,performance.now());out.lr1=cvLR();out.me=!!sc('me')||true;C.seen.fill(1);caveRender(performance.now());caveAbort()}
@@ -47,7 +47,7 @@ const assert=require('node:assert/strict');
       LIGHTCD=0;cvLightHit(s.x,s.y,1);out.teStun=s.stun>0;C.seen.fill(1);caveRender(performance.now());caveAbort()}
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.deepEqual(r.types,['bk_kui','bk_sui','bk_yoru','bk_tame','bk_hone','bk_ro','bk_mi'],'階ごとのバケモノ');assert.equal(r.kui,true);
+  assert.deepEqual(r.types,['bk_kui','bk_sui','bk_yoru','bk_tame','bk_hone','bk_ro','bk_mi'],'階ごとのバケモノ');assert.equal(r.kui,true);assert.equal(r.chips,true,'バケモノのチップ（3Dから写した絵）');
   assert.ok(r.lr1<r.lr0,'光すいのそばで、光の広さが小さくなる');assert.deepEqual(r.split,[2,90],'わかれる（のこりを半分ずつ）');assert.equal(r.split2,2,'わかれた子は、もうわかれない');
   assert.equal(r.thaw0,true,'火のせいれいでなければ、目をさまさない');assert.equal(r.thaw1,true,'火のせいれいが近づくと、とける');
   assert.deepEqual(r.down,[true,true],'くずれる');assert.deepEqual(r.up,[true,true],'組みなおす');assert.equal(r.final,true,'まもりの光でとどめ');
