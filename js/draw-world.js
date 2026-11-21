@@ -15,6 +15,7 @@ function fxSpr(n,x,y,col,fl){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x,y,
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
 function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
   if(it.sand)return drawSand(it,now,e,D,z,px,py,v);
+  if(it.home)return drawHome(it,now,e,D,z,px,py,v);
   if(it.die){const a=now-it.t0;if(a<KO_HOLD){drawShade(ctx,e.type,px+(a<0?0:Math.sin(now/18)*1.5),py+8,.27*z,v.f,{dot:1,t:it.t0/1000+e.id*1.3,flash:a>=0,hurt:a>=0?0:null});return}/* 当たるまではそのまま、当たったら白く止まって小さくふるえる */const p=(a-KO_HOLD)/(it.dur||1800);/* たおれるモーション（やられの3コマ）→ 体が つぶに ほどけて、上へ きえる（やられの4・5コマ） */if(p>=.92)return;drawShade(ctx,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,die:p<.12?0:p<.24?1:p<.6?2:p<.76?3:4,flash:p<.12});return}
   if(p<.75){ctx.save();ctx.globalAlpha=Math.max(0,1-p/.75)*.9;ctx.translate(px,py+8);ctx.scale(1+p*.35,1-p*.55);ctx.translate(-px,-py-8);drawShade(ctx,e.type,px,py+8-p*10,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,flash:Math.sin(now/40)>0});ctx.restore()}
   for(let i=0;i<9;i++){const q=p*1.2-i*.06;if(q<0||q>1)continue;const sx=px+Math.sin(i*2.3+e.id)*14*z+Math.sin(now/300+i)*4,sy=py-6*z-q*48*z,r=(4+q*9)*z;ctx.globalAlpha=(1-q)*.55;ctx.fillStyle='#f4f0ff';ctx.beginPath();ctx.arc(sx,sy,r,0,7);ctx.fill()}ctx.globalAlpha=1}
@@ -442,7 +443,7 @@ function render(now){RFN++;hdFrame();
   if(WD===1)storyStageAdd(add,now);if(WD===1&&typeof kgrAdd==='function')kgrAdd(add,now);/* 火山の幕間・さいごのうずみ火の影と火（kagari.js） *//* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
   if(visitHere()){const g=visitor(),px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 温泉宿のお客さん */
   if(typeof shopRows==='function')shopRows(add,now);/* 水のステージの食堂のお客さん */if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
-  if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
+  if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die||it.home?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>liftDraw(uLift(e),()=>drawEnemy(e,now)),(e.y|0)*W+(e.x|0))}
   if(WD===YAMI)yamiDrawAdd(add,now);/* 闇のステージ：ヨリ・夜の仕事のあと */
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar',gk=onA?((STATUE/W)|0)+1.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0));}
