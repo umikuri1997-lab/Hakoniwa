@@ -10,29 +10,29 @@
   "raft": {
     "file": "raft.png",
     "x": -25,
-    "y": -72,
+    "y": -74,
     "w": 50,
-    "h": 71
+    "h": 73
   },
   "mzchest": {
     "file": "mzchest.png",
     "x": -21,
     "y": -49,
     "w": 42,
-    "h": 43
+    "h": 42
   },
   "mzgate": {
     "file": "mzgate.png",
     "x": -32,
-    "y": -70,
+    "y": -71,
     "w": 64,
-    "h": 68
+    "h": 71
   },
   "mzgateb": {
     "file": "mzgateb.png",
     "x": -32,
-    "y": -70,
+    "y": -71,
     "w": 64,
-    "h": 68
+    "h": 71
   }
 }

@@ -10,13 +10,15 @@
 柱の溝に幅0.50の木戸を通す。開いた絵では木戸を上げ、
 こわれた絵では木戸を下げ、折れた板の間にすきまを残す。
 """
-from math import cos, pi, sin
+from math import cos, pi, sin, tau
 
 from common import WOOD
-from rides import CREAM, GOLD, TRIM
+from rides import BRASS, CREAM, GOLD, TRIM
 from wind_objects import STONE
 
 FLAG = (227, 126, 96)
+IRON = (112, 115, 110)
+ENDGRAIN = (211, 164, 114)
 
 
 def dock(m):
@@ -27,8 +29,12 @@ def dock(m):
     for i in range(7):
         y = -.32 + i*.094
         m.box((-.42, y, .264), (.42, y+.087, .325), WOOD)
+        for x in (-.33, .33):
+            m.box((x-.010,y+.030,.324),(x+.010,y+.050,.333),IRON)
     m.box((-.049, -.27, .32), (.049, -.17, .62), WOOD)
     m.rod((-.12, -.22, .60), (.12, -.22, .60), .041, WOOD)
+    for x in (-.094,.094):
+        m.rod((x,-.22,.579),(x,-.22,.629),.016,IRON,surface="metal")
     m.tube([(-.056, -.15, .48), (.062, -.15, .49), (.061, -.29, .53),
             (-.055, -.29, .54), (-.057, -.15, .51)], .015, CREAM)
 
@@ -37,6 +43,14 @@ def raft(m):
     for i in range(5):
         x = -.30+i*.15
         m.tube([(x, -.24, .076), (x, .32, .076)], .076, WOOD)
+        m.part(ENDGRAIN)
+        for outer, inner, color in ((.075,.059,WOOD),(.059,.044,ENDGRAIN),
+                                    (.044,.031,WOOD),(.031,0,ENDGRAIN)):
+            for j in range(20):
+                a, b = j*tau/20, (j+1)*tau/20
+                ring = [(x+r*cos(t), .321, .076+r*sin(t)) for r,t in
+                        ((outer,a),(outer,b),(inner,b),(inner,a))]
+                m.sc.quad(*ring, color)
     for y in (-.17, .23):
         m.box((-.374, y-.04, .13), (.374, y+.04, .205), WOOD)
         for x in (-.31, .31):
@@ -44,14 +58,18 @@ def raft(m):
     m.rod((-.075, -.17, .195), (-.075, -.17, .73), .024, WOOD)
     flag = [(-.075, -.171, .72), (.25, -.15, .69),
             (.19, -.15, .62), (.25, -.15, .55), (-.075, -.171, .57)]
-    m.part(FLAG)
+    m.part(FLAG, surface="cloth")
     m.sc.tri(flag[0], flag[1], flag[2], FLAG)
     m.sc.tri(flag[0], flag[2], flag[4], FLAG)
     m.sc.tri(flag[2], flag[3], flag[4], FLAG)
+    m.rod((-.066,-.169,.56),(-.066,-.169,.716),.017,CREAM)
+    m.ball((-.075,-.17,.737),.025,BRASS)
 
 
 def chest(m):
-    m.box((-.31, -.18, 0), (.31, .21, .27), WOOD)
+    m.box((-.31, -.18, 0), (.31, .188, .27), WOOD)
+    for z in (.012,.098,.184):
+        m.box((-.304,.183,z),(.304,.211,z+.074),WOOD)
     for i in range(8):
         a, b = i*pi/8, (i+1)*pi/8
         y, u = .015+.195*cos(a), .015+.195*cos(b)
@@ -66,6 +84,11 @@ def chest(m):
         m.box((x-.022, .21, .025), (x+.022, .229, .291), GOLD)
     m.box((-.075, .213, .153), (.075, .247, .305), GOLD)
     m.box((-.016, .247, .199), (.016, .258, .245), TRIM)
+    for x in (-.232,.186):
+        for z in (.073,.152,.235):
+            m.ball((x,.228,z),.012,BRASS,surface="metal")
+    for x in (-.049,.049):
+        m.ball((x,.246,.266),.015,CREAM)
 
 
 def gate(m, broken):
@@ -73,8 +96,16 @@ def gate(m, broken):
         for i in range(3):
             z = i*.238
             m.box((x-.087, .016, z), (x+.087, .30, z+.231),
-                  STONE[(i+int(x>0))%3])
-    m.box((-.48, -.01, .705), (.48, .325, .815), STONE[1])
+                  STONE[(i+int(x>0))%3], surface="stone")
+    for x in (-.34,.34):
+        m.box((x-.104,.004,0),(x+.104,.327,.071),STONE[1],surface="stone")
+        m.box((x-.088,.244,.065),(x-.064,.315,.697),STONE[0],surface="stone")
+    m.box((-.48, -.01, .705), (.48, .325, .803), STONE[1], surface="stone")
+    m.box((-.453,.008,.798),(.453,.307,.842),STONE[2],surface="stone")
+    m.box((-.053,.323,.721),(.053,.351,.789),IRON,surface="metal")
+    m.rod((0,.34,.748),(0,.34,.906),.025,IRON,surface="metal")
+    m.rod((-.105,.34,.897),(.105,.34,.897),.023,WOOD)
+    m.ball((.105,.34,.898),.025,BRASS)
     bottom = .06 if broken else .48
     for i in range(5):
         x = -.253+i*.102
@@ -89,3 +120,5 @@ def gate(m, broken):
                 m.rod((start, .178, z), (end, .198, z-.02), .027, WOOD)
         else:
             m.box((-.254, .17, z), (.254, .214, z+.037), WOOD)
+        for x in ((-.217,.211) if broken else (-.217,0,.211)):
+            m.ball((x,.218,z+.019),.014,IRON,surface="metal")
