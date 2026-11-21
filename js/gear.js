@@ -132,7 +132,7 @@ function gearIdea(material,crafted,carried=0){
   const ore=VOLK()&&GEAR_ORES.some(k=>acquired(k)>0);
   for(const id of GEAR_IDS){
     const b=BL[id],g=b.g;
-    if(g.sp||!b.mat||g.gr&&WD!==0||!g.gr&&!b.idea&&WD!==1)continue;
+    if(g.sp||!b.mat||(g.gr||g.wd?WD!==(g.gr?0:g.wd):!b.idea&&WD!==1))continue;/* 草原の物（gr）・風の物（wd）は、その土地だけ */
     const primary=source(b.idea||gearMain(id));
     const gear=g.s==='w'||g.s==='a';
     const key=primary+':'+g.s;
@@ -140,7 +140,7 @@ function gearIdea(material,crafted,carried=0){
     if(known[id])continue;
     if(crafted&&crafted!=='nuno'&&source(gearMain(crafted))!==primary)continue;
     if(material&&source(material)!==primary&&!Object.keys(b.mat).some(k=>source(k)===source(material)))continue;
-    if(b.idea?acquired(b.idea)<1:!g.gr&&!ore&&primary!=='bamboo')continue;
+    if(b.idea?acquired(b.idea)<1:!g.gr&&!g.wd&&!ore&&primary!=='bamboo')continue;
     const related=crafted&&BL[crafted]?.g&&['w','a'].includes(BL[crafted].g.s)&&
       gear&&source(gearMain(crafted))===primary;
     const threshold=rank<=1?1:(rank-1)*(related?1:3)+1;
