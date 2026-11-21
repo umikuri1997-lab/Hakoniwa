@@ -86,6 +86,8 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(wm));
   assert.equal(wm.st,4);assert.ok(wm.ws.length&&wm.ws.every(o=>o==='weed4g'||o==='weed4k'||o==='weedc'),'風の雑草');assert.ok(wm.k>0&&wm.kedge,'雲わたは雲の海のふち');assert.ok(wm.h>0&&wm.hpath,'風の羽は風の道の上');
   assert.deepEqual(wm.swing,{wood:12,nabiki:4});assert.deepEqual(wm.picnic,{wood:4,nabiki:8});assert.deepEqual(wm.swing0,{wood:12,shina:4});assert.ok(wm.tan,'たんぽぽ');assert.ok(wm.chips&&wm.ic,'絵');assert.equal(wm.mn,'雲わた風の羽');
+  /* ロープの手すり（風の柵）：風だけで作れる・はじめから使える・柵としてつながる。となりの柵のドアは、ロープの戸の絵 */
+  const rp=await run(`[stageItemOK('ropefence'),FENCE_IDS.has('ropefence'),!!CHIPS['ropefence:m15'],!!CHIPS['ropefence.gate#h3'],!!CHIPS['ropefence.gate#v0'],newState(WIND).unlocked.ropefence===true,BL.ropefence.mat.nabiki,(()=>{const w=WD;WD=0;const r=stageItemOK('ropefence');WD=w;return r})()]`);assert.deepEqual(rp,[true,true,true,true,true,true,3,false],'ロープの手すり');
   /* マップえらび：風のカードは「つづきから」。土は、ひらかない（水は試作のあいだ、いつでも入れる） */
   const e=JSON.parse(await run(`(()=>{save();showMaps();const C=k=>document.querySelector('#mList .wcard[data-k="'+k+'"]'),B=k=>[...C(k).querySelectorAll('.wbtns button')].map(x=>x.textContent).join('/');const o={w:B(4),w2:B(2),w3:B(3),open:C(4).classList.contains('open'),name:C(4).querySelector('h3').textContent};document.querySelector('#maps').hidden=true;return JSON.stringify(o)})()`));
   console.log(JSON.stringify(e));
