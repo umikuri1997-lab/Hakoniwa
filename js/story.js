@@ -288,7 +288,7 @@ const QUESTS5=[
    story:[[KAZANE,'フッ……ヌシ様も、ひとりで、ずいぶんがんばっていたんだね。'],[HAYATE,'#think|ぼくたちの風で、ヌシ様をささえられたらいいのに。'],[GOD,'#joy|ええ考えじゃ。遊び場の風を、もっと強くしていこうかの。']]},
   {id:'windNight',text:'ひと晩、遊び場を守ろう',check:()=>!!S.flags.windWon,prog:()=>typeof windNightProg==='function'?windNightProg():'',how:'遊具を4つとも直すと、その夜、影が遊具をねらってくる。朝まで遊具を2つのこせば、守りぬける',
    talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'ヌシ様が、つばさをひらけば、風がもどる。'],[KAZANE,'#think|でも、つばさのかげの影たちも、目をさます。さまよって、遊び場までのぼってくるはずだ。'],[HAYATE,'#joy|ひと晩だけ、守りぬこう。朝の光がとどけば、影たちも、また休めるよ。']]}},/* さいごの夜とおわりは wind-story.js */
-  {id:'windEnd',text:'ヌシ様をむかえよう',check:()=>!!S.flags.windEnd,how:'朝になると、ヌシ様が雲の上へのぼってくる'},
+  {id:'windEnd',text:'ヌシ様をむかえよう',check:()=>!!S.flags.windEnd,prog:()=>S.wind&&S.wind.liftD>dayNo()?'あしたの朝、もう一度':'',how:'朝になると、ヌシ様が雲の海のはしへ来る。光る風のはじまりに指をおいて、すじにそって上へなぞり、遊具の風をつばさへとどける'},
 ];
 QL[WIND]=QUESTS5;PROS[WIND]=PROLOGUE5;INTROS[WIND]=INTRO5;
 

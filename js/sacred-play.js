@@ -58,7 +58,9 @@ const VOL_PLAY={
   yumomi:{type:'yumomi',pop:'湯をもむ',hint:'指を左右にふって、板で湯をかきまぜる。速くふりすぎると、湯がこぼれる',bonus:{fun:10,word:'いい湯かげん',why:'bath'}},
   towerLight:{type:'bellows',pop:'火だねに火を入れる',hint:'おしているあいだ、火が大きくなる。火を、光るわくの中にたもつ',bonus:{fun:10,word:'台座があたたまった',why:'altar'}},
 };
-const playDef=id=>FIELD_PLAY[id]||VOL_PLAY[id];
+/* 風の出番（ヌシ様をもちあげる）。遊具からのぼる風のすじを、指で下から上へなぞって、つばさの下へとどける */
+const WIND_PLAY={windLift:{type:'trace',pop:'風をあつめる',hint:'光る風のはじまりに指をおいて、すじにそって上へなぞる。すじからはなれると、風がちる',bonus:{fun:10,word:'風がつばさになった',why:'ride'}}};
+const playDef=id=>FIELD_PLAY[id]||VOL_PLAY[id]||WIND_PLAY[id];
 let SPLAY=null;
 /* 遊べる出番：3回しっぱいしたら、その日の調べはおわり。つぎの日に、もう一度（fieldPlayRetry） */
 const PLAY_MISS=3;
@@ -80,6 +82,7 @@ function startSacredPlay(id,j,cast,done,fail){
   if(P.type==='gather'){P.order=[...cast.filter(r=>r.name!==POKO),...cast.filter(r=>r.name===POKO)];P.need=P.order.length;P.prog=0;P.holding=false}/* 切り株を長おし：みんなが、じゅんに切り株へ力をおくる（フタバはさいご） */
   if(P.type==='brush'){P.area={x:cx-34,y:cy-10,w:68,h:20}}
   if(P.type==='bellows')bellowsInit(P,now);/* 守護の台座の火入れ */
+  if(P.type==='trace')traceInit(P,now);/* 風をなぞってあつめる */
   if(P.type==='crank'){P.wx=j%W+.5;P.wy=(j/W|0)-1;P.ang=0;P.pa=null;P.fastT=0;P.need=CRANK.need}/* 熱の装置のハンドル */
   if(P.type==='yumomi'){P.wx=HSPC.a[0];P.wy=HSPC.a[1]-1;P.need=YUMOMI.need;P.bx=cx;P.dir=0;P.ex=cx;P.lastRev=0;P.quick=0}/* 湯もみ */
   SPLAY=P;if(pop)sacredPlayPopOpen(P,def.pop);else camAnim={fz:cam.z,tz:Math.max(cam.z,2.4),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cx,ty:cy-10,t:0,dur:.6};
@@ -111,6 +114,7 @@ function sacredPlayDown(w,now){const P=SPLAY;P.down={x:w.x,y:w.y,t:now,last:{x:w
   else if(P.type==='pipe')pipeTap(P,w,now);
   else if(P.type==='rhythm'){P.last=-1;P.trail=[{x:w.x,y:w.y,t:now}];sacredPlayWind(P,w,now)}
   else if(P.type==='bellows'){if(!P.won)P.holding=true}
+  else if(P.type==='trace')traceDown(P,w,now);
   else if(P.type==='crank'){P.pa=null;P.fastT=0}
   else if(P.type==='yumomi'){P.dir=0;P.ex=w.x;P.bx=w.x}
 }
@@ -122,6 +126,7 @@ function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.las
   else if(P.type==='dig')digRub(P,w,now,dist);
   else if(P.type==='crank')crankMove(P,w,now);
   else if(P.type==='yumomi')yumomiMove(P,w,now);
+  else if(P.type==='trace')traceMove(P,w,now);
 }
 function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
   if(P.type==='hold'&&P.holding){P.holding=false;if(P.heat>=.58&&P.heat<=.84){sfx('sacred');sacredPlayWin()}else if(P.heat<.6)sacredPlayMsg('まだ、つめたい');else sacredPlayMiss('こげちゃった')}
@@ -132,6 +137,7 @@ function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
   else if(P.type==='cover'&&P.carry){const c=P.carry;P.carry=null;let hit=-1;P.spots.forEach((p,i)=>{if(!P.covered.has(i)&&sacredPlayNear(c,p,10))hit=i});if(hit>=0&&P.cold.has(hit)){P.covered.add(hit);P.got=P.covered.size;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},500);return}if(hit>=0)sacredPlayMsg('ここは、あたたかい');P.back={x:c.x,y:c.y,t:now}}/* のせなかった草は、山へもどる */
   else if(P.type==='gather'&&P.holding){P.holding=false;if(P.got<P.need)sacredPlayMsg('はなさずに……')}
   else if(P.type==='bellows')P.holding=false;
+  else if(P.type==='trace')P.tr=false;
 }
 /* 出番のあいだは、地図の操作より先に指をうけとる */
 for(const [ev,fn] of [['pointerdown',sacredPlayDown],['pointermove',sacredPlayMove],['pointerup',sacredPlayUp]])cv.addEventListener(ev,e=>{if(!sacredPlayActive()||SPLAY.pop||!$('#dialog').hidden)return;e.stopImmediatePropagation();e.preventDefault();if(ev==='pointerdown')cv.setPointerCapture(e.pointerId);fn({x:cam.x+e.clientX/cam.z,y:cam.y+e.clientY/cam.z},performance.now())},{capture:true});
@@ -176,6 +182,7 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
   if(P.type==='bellows'){bellowsPaint(P,now,t);if(SPLAY!==P)return}
   if(P.type==='crank')crankPaint(P,now,t);
   if(P.type==='yumomi')yumomiPaint(P,now,t);
+  if(P.type==='trace')tracePaint(P,now,t);
   if(P.type==='drip'){const pa=P.path,b=P.bud;if(!mgs('leafL',P.leaf.x+25,P.leaf.y+12.5,0,1)){PXG.fillStyle='#5f9e3f';pxPath(pa.map(p=>({x:p.x,y:p.y+2})),pa.length-1,7);PXG.fillStyle='#8fdc6a';pxPath(pa,pa.length-1,5);PXG.fillStyle='#bfe89a';pxPath(pa.map(p=>({x:p.x,y:p.y-1})),pa.length-1,1);PXG.fillStyle='#5f9e3f';PXG.fillRect(PXR(pa[0].x)-4,PXR(pa[0].y)-1,2,3)}/* かたむいた葉（葉のすじ・茎） */
     PXG.fillStyle='rgba(255,255,255,.6)';pa.forEach((p,i)=>{if(i>P.reach&&i%3===0)PXG.fillRect(PXR(p.x),PXR(p.y),1,1)});
     const op=P.open?Math.min(1,(now-P.open)/700):0,bx=PXR(b.x),by=PXR(b.y);if(mgOK()){if(op>0)glow(b.x,b.y-6,10,.5*(1-op*.5));mgs('bud'+Math.min(3,Math.floor(op*3.99)),b.x,b.y+3,'b')}else{PXG.fillStyle='#5f9e3f';PXG.fillRect(bx,by-2,1,4);PXG.fillStyle='#8fdc6a';if(op<=0)PXG.fillRect(bx-1,by-5,3,3);else{const n=1+PXR(op*3);PXG.fillRect(bx-n,by-3-PXR(op*2),n,2);PXG.fillRect(bx+1,by-3-PXR(op*2),n,2);PXG.fillStyle='#bfe89a';PXG.fillRect(bx,by-4-PXR(op*2),1,2);glow(b.x,b.y-3,10,.5*(1-op*.5))}}/* 芽：とどくと、ひらく */
@@ -314,11 +321,32 @@ function sacredPlayPopOpen(P,title){sacredPlayPopFree();const o=el('<div id="pla
   for(const [ev,fn] of [['pointerdown',sacredPlayDown],['pointermove',sacredPlayMove],['pointerup',sacredPlayUp],['pointercancel',sacredPlayUp]])cvs.addEventListener(ev,e=>{if(SPLAY!==P||!sacredPlayActive()||!$('#dialog').hidden)return;e.preventDefault();if(ev==='pointerdown')cvs.setPointerCapture(e.pointerId);fn(at(e),performance.now())});
   o.addEventListener('pointerdown',e=>e.stopPropagation())}
 function sacredPlayPopFree(){const o=$('#playPop');if(o){const c=o.querySelector('canvas');if(c)c.width=c.height=0;o.remove()}}
-function drawSacredPlayPop(now){const P=SPLAY,cvs=P.popCv;if(!cvs||!cvs.isConnected)return;const g=cvs.getContext('2d');PXG=g;g.setTransform(1,0,0,1,0,0);g.imageSmoothingEnabled=false;const vol=VOLTYPES.has(P.type);g.fillStyle=vol?'#a39a8c':'#a9c97a';g.fillRect(0,0,cvs.width,cvs.height);g.fillStyle=vol?'#948b7e':'#9cbd6c';for(let y=0;y<PLAYH;y+=6)for(let x=(y/6&1)*5;x<PLAYW;x+=10)g.fillRect(x*PLAYK,y*PLAYK,PLAYK,PLAYK);/* 草地：うすい点々（火山は、灰まじりの土） */
-  g.setTransform(PLAYK,0,0,PLAYK,0,0);if(!vol){g.fillStyle='rgba(66,53,28,.18)';pxDisk(P.cx,P.cy-8,30,7)}if(!vol&&S.sacredRoot!=null&&typeof drawStoryTreeFrame==='function')drawStoryTreeFrame(g,P.cx-64,P.cy-STUMPBY,S.sacredRoot,now);/* 村と同じ切り株（いまの育ちぐあい） */
+function drawSacredPlayPop(now){const P=SPLAY,cvs=P.popCv;if(!cvs||!cvs.isConnected)return;const g=cvs.getContext('2d');PXG=g;g.setTransform(1,0,0,1,0,0);g.imageSmoothingEnabled=false;const vol=VOLTYPES.has(P.type);const sky=P.type==='trace';g.fillStyle=sky?'#bfe3f3':vol?'#a39a8c':'#a9c97a';g.fillRect(0,0,cvs.width,cvs.height);g.fillStyle=sky?'#d6eef8':vol?'#948b7e':'#9cbd6c';for(let y=0;y<PLAYH;y+=6)for(let x=(y/6&1)*5;x<PLAYW;x+=10)g.fillRect(x*PLAYK,y*PLAYK,PLAYK,PLAYK);/* 草地：うすい点々（火山は、灰まじりの土） */
+  g.setTransform(PLAYK,0,0,PLAYK,0,0);if(!vol&&!sky){g.fillStyle='rgba(66,53,28,.18)';pxDisk(P.cx,P.cy-8,30,7)}if(!vol&&!sky&&S.sacredRoot!=null&&typeof drawStoryTreeFrame==='function')drawStoryTreeFrame(g,P.cx-64,P.cy-STUMPBY,S.sacredRoot,now);/* 村と同じ切り株（いまの育ちぐあい） */
   sacredPlayPaint(P,now);g.setTransform(1,0,0,1,0,0)}
 /* 調べを1回はじめたら、その話の最後まで自動で続ける（会話のあと3秒あける） */
 function tryFieldAuto(r){const q=fieldStoryCurrent();if(!q||isNight()||!$('#dialog').hidden||sacredPlayActive())return false;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return false;
   const step=FIELD_STORIES[q.id][st.step];if(!step||fieldStoryActor(step)!==r)return false;if(r.act&&['eat','fetch','flee','faint','pray','bury','fieldstory','fieldassist'].includes(r.act.type))return false;/* 遊び・散歩などは、やめて調べへ */
   if(performance.now()<(FIELD_AUTO_AT.get(S)||0))return false;FIELD_AUTO_AT.set(S,performance.now()+2000);return fieldStoryStart(q,true)}
 const FIELD_AUTO_AT=new WeakMap();
+
+/* 風をなぞってあつめる（風のヌシ様をもちあげる）：遊具からのぼる風のすじ TRACE.n 本を、1本ずつ、下のはしから上のつばさまで指でなぞる。
+   すじから TRACE.off（ドット）よりはなれると、その1本はちって、はじめから（しっぱい1回）。とどいた分の風が、つばさの下にたまる */
+const TRACE={n:3,off:9,near:8,pts:24};
+function traceInit(P,now){P.need=TRACE.n;P.k=0;P.reach=0;P.tr=false;P.paths=[];P.wx=null;
+  for(let i=0;i<TRACE.n;i++){const x0=24+i*40,ph=i*1.7,L=[];for(let q=0;q<=TRACE.pts;q++){const u=q/TRACE.pts,y=86-u*62;L.push({x:x0+(64-x0)*u*u+Math.sin(u*5.2+ph)*10*(1-u),y})}P.paths.push(L)}}
+function traceDown(P,w,now){if(P.k>=P.need)return;const L=P.paths[P.k],p=L[P.reach];if(Math.hypot(w.x-p.x,w.y-p.y)<=TRACE.near)P.tr=true}
+function traceMove(P,w,now){if(!P.tr||P.k>=P.need)return;const L=P.paths[P.k];let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(L.length-1,P.reach+4);i++){const d=Math.hypot(w.x-L[i].x,w.y-L[i].y);if(d<bd){bd=d;best=i}}
+  if(bd>TRACE.off){P.tr=false;P.scatter={x:L[P.reach].x,y:L[P.reach].y,t:now};P.reach=0;sacredPlayMiss('風が、ちっちゃった');return}
+  if(best>P.reach){P.reach=best;if(Math.random()<.4)sfx('chime')}
+  if(P.reach>=L.length-1){P.tr=false;P.k++;P.got=P.k;P.reach=0;P.flow=now;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.k>=P.need){P.won=now;setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900)}}}
+function tracePaint(P,now,t){const R=(x,y,w,h,c)=>{PXG.fillStyle=c;PXG.fillRect(PXR(x),PXR(y),w,h)};
+  for(let i=0;i<5;i++){const x=((t*6+i*31)%150)-12;R(x,10+i*14,14,2,'#eef8fd')}/* 雲の海 */
+  const k=P.won?P.need:P.k,lift=P.won?Math.min(1,(now-P.won)/900)*6:0;
+  for(const sd of[-1,1])for(let f=0;f<6;f++){const x=64+sd*(8+f*7),y=16-f*2+(f>3?3:0)-lift;R(x-3,y,6,3+(f&1),f<k*2?'#ffffff':'#e3eef4')}R(58,12-lift,12,6,'#ffffff');R(62,9-lift,4,3,'#f2c46a');/* ヌシ様のつばさ（下から見た形）。とどいた風のぶん、白くかがやく */
+  P.paths.forEach((L,i)=>{const done=i<P.k,cur=i===P.k&&!P.won;for(let q=0;q<L.length;q++){const p=L[q];if(done)R(p.x-1,p.y-1,2,2,'#ffffff');else if(cur){if(q<=P.reach)R(p.x-1,p.y-1,3,3,'#fff6c8');else if(q%2===0)R(p.x,p.y,1,1,'rgba(255,255,255,.75)')}else if(q%3===0)R(p.x,p.y,1,1,'rgba(255,255,255,.35)')}
+    const b=L[0];R(b.x-5,b.y+2,10,4,['#e88b9a','#8fc4e8','#f2c46a'][i%3]);R(b.x-3,b.y,6,2,'#ffffff')});/* 下：遊具からのぼる風のはじまり */
+  if(!P.won&&P.k<P.need){const p=P.paths[P.k][P.reach];if(!P.tr){PXG.fillStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*5)).toFixed(2)+')';pxRing(p.x,p.y,6,1)}}
+  if(P.flow&&now-P.flow<900){const u=(now-P.flow)/900;for(let i=0;i<6;i++)R(64-10+i*4,86-u*70-(i%2)*4,2,2,'#ffffff')}
+  if(P.scatter&&now-P.scatter.t<600){const u=(now-P.scatter.t)/600;for(let i=0;i<6;i++){const a=i/6*6.28;R(P.scatter.x+Math.cos(a)*u*12,P.scatter.y+Math.sin(a)*u*12,2,2,'rgba(255,255,255,'+(1-u).toFixed(2)+')')}}
+  for(let i=0;i<P.need;i++)R(64-P.need*3+i*6+1,90,4,i<P.got?3:1,'#ffffff')}
