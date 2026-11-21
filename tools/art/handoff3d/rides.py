@@ -60,12 +60,7 @@ def flag(m, x, y, z, broken):
          (x+u, y+.041*sin(u*10), z+.29+h+.085*u))
         for u, h in wave
     ]
-    # 一枚の布として輪郭と布目の単位を共有し、頂点で面の向きをまぜる。
-    m.material(BLUE, True, "cloth")
-    m.sc.part()
-    color = m.color(BLUE)
-    for (upper, lower), (next_upper, next_lower) in zip(edges, edges[1:]):
-        m.sc.quad(upper, next_upper, next_lower, lower, color)
+    m.strip(edges, BLUE, surface="cloth")
 
 
 def deck(m, radius, broken):
@@ -98,14 +93,14 @@ def deck(m, radius, broken):
         a1 = polar(radius-.048,b,z)
         m.rod(a0,a1,.034,HONEY,surface="wood")
         if sin((a+b)/2) > .08:
-            for j in range(4):
-                u,v = j/4,(j+1)/4
-                def edge(t, lower):
-                    p = a+(b-a)*t
-                    h = z if not lower else z-.025-.16*sin(t*tau/2)
-                    return polar(radius-.021,p,h)
-                board(m,(edge(u,False),edge(v,False),edge(v,True),edge(u,True)),
-                      BLUE_LIGHT,"cloth")
+            edges = []
+            for j in range(5):
+                t = j/4
+                angle = a+(b-a)*t
+                top = tuple((1-t)*u+t*v for u,v in zip(a0,a1))
+                bottom = polar(radius-.021,angle,z-.025-.16*sin(t*tau/2))
+                edges.append((top,bottom))
+            m.strip(edges,BLUE_LIGHT,surface="cloth")
 
 
 def sprig(m, origin, tangent, size):
@@ -136,30 +131,45 @@ def lantern(m, x, y, z):
 
 def canopy(m, radius, eaves, peak, lean, broken):
     """しまの屋根と、持ち送りの付いた波形の幕板。"""
-    for i in range(12):
+    panels = [i for i in range(12) if not broken or i not in (1,2)]
+    m.material(BLUE, True, "cloth")
+    m.sc.part()
+    for i in panels:
         a,b = i*tau/12,(i+1)*tau/12
-        if broken and i in (1,2):
-            continue
         edge = [polar(radius,t,eaves) for t in (a,b)]
-        top = (lean,0,peak)
         mid = [polar(radius*.48,t,peak-.25*(peak-eaves)) for t in (a,b)]
-        color = BLUE if i%2 else LINEN
-        m.part(color,surface="cloth")
-        m.sc.tri(top,*mid,m.color(color))
-        m.sc.quad(mid[0],mid[1],edge[1],edge[0],m.color(color))
+        paint = m.color(BLUE if i%2 else LINEN)
+        m.sc.tri((lean,0,peak),*mid,paint)
+        m.sc.quad(mid[0],edge[0],edge[1],mid[1],paint)
+    for i in panels:
+        a,b = i*tau/12,(i+1)*tau/12
         profile = ((0,.055),(.25,.118),(.5,.164),(.75,.118),(1,.055))
-        for (u,h),(v,k) in zip(profile,profile[1:]):
-            p,q = a+(b-a)*u,a+(b-a)*v
-            upper = polar(radius+.007,p,eaves+h),polar(radius+.007,q,eaves+k)
-            lower = polar(radius+.007,p,eaves-.17),polar(radius+.007,q,eaves-.17)
-            board(m,(*upper,*reversed(lower)),IVORY)
-            m.rod(*upper,.022,HONEY)
-            m.rod(*lower,.019,HONEY)
+        edges = [(polar(radius+.007,a+(b-a)*u,eaves+h),
+                  polar(radius+.007,a+(b-a)*u,eaves-.17))
+                 for u,h in profile]
+        m.strip(edges,IVORY)
+        upper, lower = zip(*edges)
+        m.bent_tube(upper,.022,HONEY,(0,0,1))
+        m.bent_tube(lower,.019,HONEY,(0,0,1))
         x,y,z = polar(radius+.009,a,eaves-.174)
         m.rod((x,y,z),(x,y,eaves+.074),.034,HONEY,surface="wood")
         bead(m,(x,y,eaves+.068),.043,LINEN)
         t=(a+b)/2
         sprig(m,polar(radius+.013,t,eaves-.114),(-sin(t),cos(t)),.25)
+
+
+def canopy_support(m, radius, height, center, broken):
+    """柱の上から腕木をのばし、吊り部品の輪を受ける。"""
+    angles = [i*tau/36 for i in (range(6,36) if broken else range(36))]
+    ring = [(center+x,y,z) for x,y,z in
+            (polar(radius,a,height) for a in angles)]
+    m.bent_tube(ring,.042,HONEY,(0,0,1),surface="wood",closed=not broken)
+    for i in range(6):
+        if broken and i == 1:
+            continue
+        x,y,z = polar(radius,i*tau/6,height)
+        m.rod((0,0,height+.06),(center+x,y,z),.039,OAK,surface="wood")
+    m.rod((0,0,height),(center,0,height+.25),.048,HONEY,surface="wood")
 
 
 def carousel(m, phase, broken, seats):
@@ -173,9 +183,14 @@ def carousel(m, phase, broken, seats):
         q = polar(.266,a,2.13)
         m.rod(p,q,.026,HONEY,surface="wood")
         sprig(m,polar(.274,a,1.15),(-sin(a),cos(a)),.32)
+    canopy_support(m,.94,2.10,0,False)
+    for i in range(6):
+        a = i*tau/6
+        m.rod(polar(.93,a,2.10),polar(1.30,a,2.078),.032,HONEY,surface="wood")
     canopy(m,1.31,2.11,2.97,lean,broken)
     flag(m,lean,0,2.97,broken)
     for a in (tau*.07,tau*.43):
+        m.rod(polar(1.31,a,1.962),polar(1.205,a,1.94),.023,HONEY)
         lantern(m,*polar(1.205,a,1.94))
     for i in range(3):
         a=phase+i*tau/3
@@ -209,28 +224,39 @@ def carousel(m, phase, broken, seats):
 
 def cafe_arch(m,broken):
     """奥の門形の枠。看板と小旗は水平線に沿って吊るす。"""
-    y=-.65
-    r=.97
+    y=-.72
+    r=1.04
     for side in (-1,1):
         x=r*side
         tip=(x-.07 if broken and side==1 else x,y,1.85)
         m.rod((x,y,.29),tip,.066,HONEY,surface="wood")
         bead(m,tip,.081,HONEY)
-        lantern(m,side*.75,y+.044,1.66)
+        lx = side*.75
+        arch_bottom = 1.66+.49*sqrt(1-(lx/r)**2)
+        m.rod((lx,y+.035,arch_bottom),(lx,y+.044,1.66),.016,BRASS)
+        lantern(m,lx,y+.044,1.66)
     frame=[(r*cos(i*tau/48),y,1.85+.49*sin(i*tau/48)) for i in range(25)]
-    for a,b in zip(frame,frame[1:]):
-        board(m,(a,b,(b[0],y,b[2]-.19),(a[0],y,a[2]-.19)),IVORY)
-    m.tube(frame,.057,HONEY,surface="wood")
-    m.tube([(x,y,z-.19) for x,_,z in frame],.048,HONEY,surface="wood")
+    lower = [(x,y,z-.19) for x,_,z in frame]
+    m.strip(list(zip(frame,lower)),IVORY)
+    m.bent_tube(frame,.057,HONEY,(0,1,0),surface="wood")
+    m.bent_tube(lower,.048,HONEY,(0,1,0),surface="wood")
     flag(m,0,y,2.34,broken)
     if not broken:
+        # 紐と旗は同じ点でつながる。三角の上辺は紐の傾きにそろえる。
+        def cord(t):
+            return (r-.03)*(2*t-1),y+.04,1.575+.282*(2*t-1)**2
+        tie_points = [0,1]
         for i in range(9):
-            x=-.78+i*.173
-            z=1.76+.23*(x/.85)**2
-            top=((x,y+.01,z),(x+.153,y+.01,z+.012))
-            color=BLUE if i%2 else LINEN
+            a,b = (i+.17)/9,(i+.83)/9
+            left,right = cord(a),cord(b)
+            tie_points.extend((a,b))
+            color = BLUE if i%2 else LINEN
             m.part(color,surface="cloth")
-            m.sc.tri(*top,(x+.074,y+.018,z-.15),m.color(color))
+            tip = ((left[0]+right[0])/2,y+.059,(left[2]+right[2])/2-.118)
+            m.sc.tri(left,right,tip,m.color(color))
+        m.bent_tube([cord(t) for t in sorted(tie_points)],.013,HONEY,(0,1,0))
+        for t in (0,1):
+            bead(m,cord(t),.032,BRASS,surface="polished")
     for radius, cy, color in ((.275,y+.012,HONEY),(.229,y+.025,LINEN)):
         m.part(color)
         for i in range(24):
@@ -271,7 +297,7 @@ def cups(m, phase, broken, seats):
             handle=[(x+cos(a)*(.268+.145*sin(tau*j/32)),
                      y+sin(a)*(.268+.145*sin(tau*j/32)),
                      low+.185+.118*cos(tau*j/32)) for j in range(17)]
-            m.tube(handle,.034,LINEN,surface="enamel")
+            m.bent_tube(handle,.034,LINEN,(-sin(a),cos(a),0),surface="enamel")
         for t in (a+tau/4,a+3*tau/4):
             dx,dy,_=polar(.293,t,0)
             sprig(m,(x+dx,y+dy,low+.124),(-sin(t),cos(t)),.17)
@@ -289,9 +315,18 @@ def swing(m, phase, broken, seats):
     for a in (0,tau/4,tau/2,3*tau/4):
         sprig(m,polar(.164,a,1.39),(-sin(a),cos(a)),.21)
         m.rod(polar(.295,a,.39),polar(.188,a,.68),.029,BLUE)
+    canopy_support(m,1.026,2.66,lean,broken)
+    for i in range(6):
+        a = i*tau/6
+        if broken and i == 1:
+            continue
+        x,y,z = polar(1.23,a,2.718)
+        m.rod(polar(.99,a,2.66),(x+lean,y,z),.035,HONEY,surface="wood")
     canopy(m,1.23,2.76,3.50,lean,broken)
     flag(m,lean,0,3.50,broken)
     for a in (tau*.09,tau*.40):
+        x,y,z = polar(1.026,a,2.66)
+        m.rod((x+lean,y,z),polar(.93,a,2.59),.018,BRASS)
         lantern(m,*polar(.93,a,2.59))
     for i in range(6):
         a=phase+i*tau/6
@@ -329,20 +364,21 @@ def wheel(m, phase, broken, seats):
     deck(m,1.49,broken)
     hub=(-.11 if broken else 0,-.19,2.64)
     for side in (-1,1):
-        for y in (-.48,.40):
+        for y in (-.48,.448):
             x=side*1.02
             m.box((x-.16,y-.11,.282),(x+.16,y+.115,.415),OAK,surface="wood")
             m.rod((x,y,.407),(hub[0],y,hub[2]),.087,HONEY,surface="wood")
-    m.rod((hub[0],-.57,hub[2]),(hub[0],.50,hub[2]),.10,BRASS,
+    m.rod((hub[0],-.72,hub[2]),(hub[0],.563,hub[2]),.10,BRASS,
           surface="polished")
     m.rod((hub[0],-.69,hub[2]),(hub[0],-.69,4.14),.065,HONEY,surface="wood")
     flag(m,hub[0],-.69,4.08,broken)
 
     def rim(a,y):
         return (hub[0]+1.405*cos(a),y,hub[2]-1.405*sin(a)+.125*cos(a)*broken)
-    angles=[tau*j/48 for j in (range(4,45) if broken else range(49))]
+    angles=[tau*j/48 for j in (range(4,45) if broken else range(48))]
     for y in (-.37,-.14):
-        m.tube([rim(a,y) for a in angles],.050,HONEY,surface="wood")
+        m.bent_tube([rim(a,y) for a in angles],.050,HONEY,(0,1,0),
+                    surface="wood",closed=not broken)
         for i in range(8):
             if broken and i==1:
                 continue
@@ -370,7 +406,7 @@ def wheel(m, phase, broken, seats):
                 BLUE,x,.061,surface="enamel")
         if i%2==0:
             seats.append((x,.073,z-.32))
-    for radius,y,color in ((.255,.519,HONEY),(.201,.533,BLUE)):
+    for radius,y,color in ((.255,.555,HONEY),(.201,.572,BLUE)):
         m.part(color)
         for i in range(32):
             a,b=i*tau/32,(i+1)*tau/32
@@ -379,7 +415,7 @@ def wheel(m, phase, broken, seats):
                      (x+radius*cos(b),y,z+radius*sin(b)),m.color(color))
     for j in range(4):
         a=j*tau/4
-        x,y,z=hub[0]+.092*cos(a),.54,hub[2]+.092*sin(a)
+        x,y,z=hub[0]+.092*cos(a),.58,hub[2]+.092*sin(a)
         board(m,((x-.034,y,z),(x,y,z+.041),(x+.034,y,z),(x,y,z-.041)),LINEN)
 
 
