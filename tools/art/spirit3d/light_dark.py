@@ -1,20 +1,21 @@
 """トモリとツキミの頭巾・しっぽ・胸飾り。座標はチップのドット。
 
 顔・耳の位置と体、手足の形、骨は水の精霊と同じ。
-トモリは金色の頭巾、七つの光、胸のしずく。ツキミは紫のナイトキャップ、
-肩にかかる布と胸の三日月。ナイトキャップの白い折り返しは、額で高さ
-約60ドット、うなじで約34ドット。幅10〜13ドットの帯で頭を囲み、
-その上辺に紫の布をつなぐ。布は右後ろに垂れ、先端で房をとめる。
+トモリは金色の縁のある頭巾、頭の後ろ側に並ぶ七つの光、胸のしずく。
+ツキミは紫のナイトキャップ、肩にかかる布と胸の三日月。淡い桃紫の
+折り返しは額で高さ約56ドット、うなじで約32ドット。幅12〜16ドットの
+帯を頭に回し、その上辺に丸い紫の布をつなぐ。布は後頭部の中央近くで
+帯の上にたれ、うなじの高さで直径約18ドットの房をとめる。
 """
 from math import pi
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 
-from core import Q, QH, TAILBASE, Spirit, ry
+from core import QH, TAILBASE, Spirit, rx, ry, rz
 
 LIGHT = {
     'hood': '#ffdc75', 'dark': '#eeb75d', 'cheek': '#fff0ba',
-    'eye': '#3f5e26', 'hand': '#fff3d5', 'line': '#edcf92',
+    'eye': '#3f5e26', 'hand': '#fff3d5', 'line': '#e6bd76',
 }
 DARK = {
     'hood': '#645578', 'dark': '#40374e', 'cheek': '#81738f',
@@ -45,15 +46,51 @@ def surface(rows):
     return np.concatenate(g)
 
 
-def volume(center, radii, angle=0):
-    """光の粒・房の表面。しずくの長い軸は頭の中心から外へ向く。"""
+def volume(center, radii):
+    """房の丸い表面。"""
     theta = np.linspace(0, 2*pi, 112, endpoint=False)
     phi = np.linspace(0, pi, 49)
     t, p = np.meshgrid(theta, phi)
     points = np.column_stack((np.cos(t).ravel()*np.sin(p).ravel(),
                               np.sin(t).ravel()*np.sin(p).ravel(),
                               np.cos(p).ravel()))
-    return (points*np.array(radii))@ry(angle).T+center
+    return points*np.array(radii)+center
+
+
+def light_petals():
+    """正面と横の両方で粒が読めるよう、先のとがった光を後ろへ配る。"""
+    theta = np.linspace(0,2*pi,112,endpoint=False)
+    height = np.linspace(-1,1,89)[:,None]
+    radius = (1-height**2)**.86
+    shape = np.stack(np.broadcast_arrays(radius*np.cos(theta),
+                                         radius*np.sin(theta),height),axis=-1).reshape(-1,3)
+    color = tones(rgb('#fff8da'),rgb('#ffd571'),np.clip(.56+.48*shape[:,2],0,1))
+    rays = []
+    for sign in (-1,1):
+        for x,y,z,angle,tilt,length in ((18,-16,89,.59,.37,9.3),
+                                        (31,-25,77,1.05,.51,9.2),
+                                        (40,-35,61,1.51,.55,8.4)):
+            rotation = rz(-sign*.35)@rx(tilt)@ry(sign*angle)
+            rays.append((shape*(4.7,4.0,length))@rotation.T+(sign*x,y,z))
+    rays.append((shape*(5.1,4.1,9.2))@rx(.14).T+(0,-4,99))
+    return texture(np.concatenate(rays),np.tile(color,(len(rays),1)))
+
+
+def gold_hood(points):
+    """丸い頭巾の表面を明るくし、写した形のふちに金色を残す。"""
+    x,y,z = points.T
+    rows = np.rint((z-z.min())/QH).astype(int)
+    colors = []
+    for across in (x,y):
+        lo = np.full(rows.max()+1,np.inf)
+        hi = np.full(rows.max()+1,-np.inf)
+        np.minimum.at(lo,rows,across)
+        np.maximum.at(hi,rows,across)
+        distance = np.minimum(across-lo[rows],hi[rows]-across)
+        light = np.clip(.67+.24*distance/5-.004*x+.002*(z-48),0,1)
+        rim = np.clip((distance-.65)/3.7,0,1)
+        colors.append(tones(rgb('#f2b84e'),rgb('#fff0b7'),.33*light+.67*rim*light))
+    return points,(colors[0],colors[1],colors[0])
 
 
 def texture(points, colors):
@@ -86,7 +123,7 @@ def chest_mark(body, dark):
 
 
 def cuff_height(front):
-    return 46.5+13*np.maximum(front,0)**1.37-12.5*np.maximum(-front,0)**1.45
+    return 45+11*np.maximum(front,0)**1.37-13*np.maximum(-front,0)**1.45
 
 
 def night_cap():
@@ -95,35 +132,35 @@ def night_cap():
     dx,dy = np.cos(theta),np.sin(theta)
     low = cuff_height(dy)
     back = np.maximum(-dy,0)
-    width = 10.2+2.8*back
+    width = 12+4*np.maximum(dy,0)
     # 後頭部のふくらみを越えて、うなじへ向かう厚みのある帯。
     rim_x = -.7+dx*(30.7+2.2*(1-np.maximum(dy,0)))
     rim_y = -5+dy*(24.8+6.6*back)
-    t = np.linspace(0,1,27)[:,None]
+    t = np.linspace(0,1,73)[:,None]
     roll = np.sin(pi*t)
     cuff = np.stack((rim_x+1.55*dx*roll,rim_y+1.6*dy*roll,
                      low+width*t),axis=-1).reshape(-1,3)
-    cuff_colors = tones(rgb('#d4c8df'),rgb('#faf4f8'),
+    cuff_colors = tones(rgb('#d9b7df'),rgb('#fff0f8'),
                         np.clip(.55+.016*(t*width).ravel()
                                 -.008*cuff[:,0]+.004*cuff[:,1],0,1))
 
-    # 軸は上から右うしろへ曲がり、房のつく先へ下がる。
+    # 丸い頂部から後頭部をまわり、中央近くの房へ下がる。
     rows = np.array([
-        (0, 0,-5,58.7,29.7,24.8),
-        (.18,1,-6,68,28.5,23.8),
-        (.36,7,-9,78,24,20),
-        (.53,17,-14,85,17.5,15),
-        (.67,28,-19,85.5,12,12),
-        (.80,36,-24,80,8,9),
-        (.91,41,-27,71,5,6),
-        (1,43,-29,63,2.5,3.5),
+        (0, 0,-5,58.7,32,28),
+        (.16,0,-7,66,31,25),
+        (.32,1,-12,73,28,21),
+        (.49,2,-21,76,22,17),
+        (.65,3,-31,70,15,12),
+        (.80,4,-37,60,10,8),
+        (.91,5,-42,49,6,4.5),
+        (1,6,-43,40,2.5,3.5),
     ])
-    u = np.linspace(0,1,336)
+    u = np.linspace(0,1,440)
     result = PchipInterpolator(rows[:,0],rows[:,1:],axis=0)(u)
     center,radii = result[:,:3],result[:,3:]
     forward = np.gradient(center,axis=0)
     forward /= np.linalg.norm(forward,axis=1,keepdims=True)
-    side = np.cross(np.broadcast_to((0,1.,0),forward.shape),forward)
+    side = np.array([1.,0,0])-forward*forward[:,0,None]
     side /= np.linalg.norm(side,axis=1,keepdims=True)
     depth = np.cross(forward,side)
     fabric = (center[:,None,:]+dx[None,:,None]*radii[:,0,None,None]*side[:,None,:]
@@ -133,8 +170,8 @@ def night_cap():
     weight = np.clip(1-u/.24,0,1)**2
     fabric += weight[:,None,None]*(rim-fabric[0])[None,:,:]
     p = fabric.reshape(-1,3)
-    pigment = tones(rgb('#483d59'),rgb('#766583'),
-                    np.clip(.53+.005*(p[:,2]-72)-.005*p[:,0]+.007*p[:,1],0,1))
+    pigment = tones(rgb('#654977'),rgb('#af87b9'),
+                    np.clip(.22+.015*(p[:,2]-52)-.006*p[:,0]+.003*p[:,1],0,1))
     cloth = np.concatenate((cuff,p))
     colors = np.concatenate((cuff_colors,pigment))
     # 斜めから写しても布に点のすきまができないよう、細かい間隔で点をまとめる。
@@ -157,7 +194,7 @@ def mantle():
     left = right*np.array([-1,1,1])
     points = np.concatenate((right,left))
     shade = np.clip(.64+.017*(points[:,2]-21)-.007*points[:,0],0,1)
-    return points,tones(rgb('#695879'),rgb('#9683a3'),shade)
+    return points,tones(rgb('#795483'),rgb('#bc96c5'),shade)
 
 
 class LightDark(Spirit):
@@ -173,9 +210,9 @@ class LightDark(Spirit):
         self.line = rgb(self.desc['line'])
         dark = element=='dark'
         if dark:
-            self.body_color = rgb('#504560')
+            self.body_color = rgb('#584466')
             self.arm_color = rgb('#847392')
-            self.far_leg_color = rgb('#463d55')
+            self.far_leg_color = rgb('#4c385a')
             self.cape = mantle()
         else:
             self.body_color = rgb('#fff7e3')
@@ -192,46 +229,33 @@ class LightDark(Spirit):
             forward = (y+5)/np.maximum(np.hypot(x,y+5),1)
             p = original[z<cuff_height(forward)+5]
             tint = np.clip(.49+.007*(p[:,2]-38)-.012*p[:,0]+.005*p[:,1],0,1)
-            color = tones(rgb('#43384f'),rgb('#645570'),tint)
+            color = tones(rgb('#493655'),rgb('#6c5379'),tint)
             self.fixed_head_parts = ('cap','tip')
+            self.tex['hood'] = texture(p,color)
             self.tex['cap'] = night_cap()
-            pom = volume((43.7,-29.5,57.1),(7.0,7.0,7.2))
-            tint = np.clip(.54+.045*(pom[:,2]-57.1)-.029*(pom[:,0]-43.7)
-                           +.012*(pom[:,1]+29.5),0,1)
-            self.tex['tip'] = texture(pom,tones(rgb('#b8a5c7'),rgb('#eee1ee'),tint))
+            pom = volume((6,-43,33.5),(8.8,8.4,8.8))
+            tint = np.clip(.55+.034*(pom[:,2]-33.5)-.028*(pom[:,0]-6)
+                           +.012*(pom[:,1]+43),0,1)
+            self.tex['tip'] = texture(pom,tones(rgb('#c394d3'),rgb('#fff0f8'),tint))
         else:
             crown=surface([(62,-.5,-5,21.3,19.8),(69,0,-4,16,15),
                            (77,0,-3,9.5,10),(83,0,-2,4.5,5.5),
                            (87,0,-2,.8,1)])
-            p=np.concatenate((original[original[:,2]<62.5],crown))
-            x,y,z=p.T
-            color=tones(rgb('#edb850'),rgb('#fff1b5'),
-                        np.clip(.69-.011*x+.004*(z-55)+.003*y,0,1))
-            rays=[]
-            for side in (-1,1):
-                for x,z,angle,length,y in ((16,91,.55,6.6,1),(29,79,.95,7,0),
-                                             (37,62,1.47,6.3,-2)):
-                    rays.append(volume((x*side,y,z),(3.8,3.1,length),angle*side))
-            rays.append(volume((0,0,99),(4.8,4.3,7.5),0))
-            rays=np.concatenate(rays)
-            self.top('tip',rays,tones(rgb('#f4bd58'),rgb('#fff0a9'),
-                                     np.clip(.75-.007*rays[:,0]+.01*(rays[:,2]-78),0,1)))
-        self.tex['hood'] = texture(p,color)
+            p = np.concatenate((original[original[:,2]<62.5],crown))
+            self.tex['hood'] = gold_hood(p)
+            self.tex['tip'] = light_petals()
+            self.tops.append(('tip',np.array([0,0,75])))
         face, source = self.tex['face']
         if dark:
             x,y,z = face.T
             tint = np.clip(.49+.009*(z-41)-.01*x+.004*y,0,1)
-            self.tex['face'] = texture(face,tones(rgb('#4c425c'),
-                                                rgb('#60546e'),tint))
+            self.tex['face'] = texture(face,tones(rgb('#534263'),
+                                                rgb('#70587e'),tint))
         else:
             low,high=rgb('#f4e9cc'),rgb('#fffaf0')
             self.tex['face'] = (face,tuple(tones(low,high,
                                 np.clip((color[:,0].astype(float)-220)/35,0,1))
                                 for color in source))
-
-    def top(self, name, p, colors):
-        self.tex[name] = texture(p,colors)
-        self.tops.append((name,np.array([0,0,75])))
 
     def make_tail(self, dark):
         points=surface([(8,0,-8,3,2),(11,2,-12,5,4),

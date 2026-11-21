@@ -7,6 +7,7 @@ import argparse
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import json
+from math import pi
 from pathlib import Path
 
 import numpy as np
@@ -88,21 +89,24 @@ def add_eyes(image, overlay, eye, color, origin, expression='n'):
 def still_sheet(spirits, out):
     scale = 2
     cell = (144*scale,123*scale)
-    sheet = Image.new('RGB',(cell[0]*3,cell[1]*2+40),'#f4eee8')
+    # 左向きは横のカメラを半周させ、同じ立体を反対から写す。
+    views = ((0,0),(1,0),(2,0),(1,pi))
+    sheet = Image.new('RGB',(cell[0]*len(views),cell[1]*2+40),'#f4eee8')
     draw = ImageDraw.Draw(sheet)
     japanese = FONT.is_file()
     font = ImageFont.truetype(str(FONT),17) if japanese else ImageFont.load_default()
     names = ('トモリ','ツキミ') if japanese else ('Tomori','Tsukimi')
-    direction_labels = ('正面','横','後ろ') if japanese else FACES
+    direction_labels = ('正面','右','背面','左') if japanese else ('front','right','back','left')
     for i,spirit in enumerate(spirits):
-        for j,label in enumerate(direction_labels):
-            pixels,over,anchors = shoot(spirit,j,POSE)
+        for j,(face,spin) in enumerate(views):
+            label = direction_labels[j]
+            pixels,over,anchors = shoot(spirit,face,{**POSE,'spin':spin})
             image = add_eyes(Image.fromarray(pixels),Image.fromarray(over),
                              anchors['eye'],spirit.desc['eye'],(EXT[0],EXT[2]))
             image = image.crop((0,10,144,133)).resize(cell,Image.Resampling.NEAREST)
             x,y = j*cell[0], i*(cell[1]+20)
             draw.rectangle((x+3,y+21,x+cell[0]-4,y+cell[1]+16),
-                           fill=('#fff6da','#ede5f2')[i])
+                           fill=('#f4ebdb','#ede5f2')[i])
             space = '　' if japanese else '  '
             draw.text((x+15,y+1),f'{names[i]}{space}{label}',font=font,fill='#4a4149')
             sheet.paste(image,(x,y+20),image)
