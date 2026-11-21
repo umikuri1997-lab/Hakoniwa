@@ -545,7 +545,7 @@ const QUESTS1=[
   /* 根まで届く水のあと：水のせいれいが、つかれたみんなを、ハスのそばの水あびにさそう（aoIns1。id は前のまま） */
   stepQuest({id:'aoFish',text:'ハスのそばの水あび',
    steps:[{id:'aoLotus',t:'池に、ハスの花を咲かせる',check:()=>S.obj.some((o,j)=>o==='lotus'&&!isBud(j)),how:'「おく」で、ハスのたねを池の上に置く'},
-    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3'+(typeof seasonNow==='function'&&seasonNow()===3?'（冬は水あびをしない）':''),how:'夕方になると、せいれいが水べで水あびをする'}],
+    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3'+(typeof seasonNow==='function'&&seasonNow()===3?'　冬は、春まで水あびをしない':''),how:'夕方になると、せいれいが水べで水あびをする'}],
    talk:{get who(){return keyName('water')},when:()=>{if(S.flags.aoFishD==null)S.flags.aoFishD=dayNo();return dayNo()>S.flags.aoFishD},wait:'みんなのくらしを、水のせいれいが見まもっている',/* みんなが毎日はたらくのを見てから話す：前の目標をおえた日のうちには話さない */get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
    get story(){return KS([['F','#joy|つめたくて、きもちいいね！'],['N','ハスの花のにおいがするよぉ。ねむくなっちゃうねぇ。'],['M','#joy|よかった。みなさんが笑ってくれると、水も、うれしそうです。'],['H','へっ。見てるだけでも、なんだか、すっとするな。'],['M','つかれた日は、また、ここで水あびしましょう。'],['F','#joy|うん！']])}}),
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],

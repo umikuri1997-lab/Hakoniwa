@@ -102,7 +102,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
   lastFirst(list);
-  $('#mSnd').textContent=SND.bgm?'♪ 曲 オン':'♪ 曲 オフ';$('#mSfx').textContent=SND.sfx?'効果音 オン':'効果音 オフ';/* 曲と効果音は、べつべつに出す（まとめて出すと、曲がオフでも「オン」に見えた） */
+  $('#mSnd').innerHTML=pxi('note','bi')+(SND.bgm?'曲を止める':'曲をながす');$('#mSfx').textContent=SND.sfx?'効果音を止める':'効果音を出す';/* ボタンの字は、することのことば *//* 曲と効果音は、べつべつに出す（まとめて出すと、曲がオフでも「オン」に見えた） */
 }
 const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{audioInit();setSnd('bgm',!SND.bgm);showMaps()};$('#mSfx').onclick=()=>{audioInit();setSnd('sfx',!SND.sfx);showMaps()};
