@@ -1,7 +1,7 @@
 """引き継ぎ用の透過 PNG と比較図。チップの登録はしない。"""
 import argparse
 import json
-from math import cos, sin, tau
+from math import cos, radians, sin, tau
 from pathlib import Path
 import subprocess
 import sys
@@ -24,6 +24,7 @@ from rides import CREAM, MODELS, SEATS, SPEED
 SCALE = 64
 FRAMES = 16
 RIDE_ELEV = 29
+RIDE_SMOOTH_ANGLE = 80
 RIDE_EXT = (-1.93, 1.93, -5.85, 1.01)
 SMALL_EXT = (-.70, .70, -1.20, .49)
 
@@ -134,7 +135,7 @@ class Model:
                     v[2] = z-dx*sin(angle)+dz*cos(angle)
 
 
-def render(model, ext, ground, parallel=False, elevation=ELEV):
+def render(model, ext, ground, parallel=False, elevation=ELEV, smooth_angle=None):
     project, depth = O.persp(elevation, FOV, None if parallel else FRAME,
                              center=(0, 0, ground), keep=KEEP)
     anchor_y = project((0, ground, 0))[1]
@@ -150,8 +151,14 @@ def render(model, ext, ground, parallel=False, elevation=ELEV):
     ext = tuple(round(v*SCALE)/SCALE for v in ext)
     O.S = SCALE
     O.GRAD = True
-    image = O.render_px(model.sc, projection, ext, depth, k=.80, k2=.90,
-                        lw=LW, merge=0)
+    crease = O.SMCREASE
+    if smooth_angle is not None:
+        O.SMCREASE = cos(radians(smooth_angle))
+    try:
+        image = O.render_px(model.sc, projection, ext, depth, k=.80, k2=.90,
+                            lw=LW, merge=0)
+    finally:
+        O.SMCREASE = crease
     toned = furntone.tone(image, dw=0, streak=(.22, .13),
                          world=furntone.worldlight(KEEP))
     reflective = [pid for pid, finish in O.LAST_MT.items()
@@ -267,14 +274,18 @@ def rides(out, metadata):
             phase = frame*tau/FRAMES
             model, seat_points = Model(), []
             make(model, phase, False, seat_points)
-            im, offset, projection = render(model, RIDE_EXT, ground, parallel=True, elevation=RIDE_ELEV)
+            im, offset, projection = render(
+                model, RIDE_EXT, ground, parallel=True, elevation=RIDE_ELEV,
+                smooth_angle=RIDE_SMOOTH_ANGLE)
             images.append(im)
             assert len(seat_points) == SEATS[name]
             seats.append([[round(v*SCALE) for v in projection(point)]
                           for point in seat_points])
         model = Model(faded=True)
         make(model, .6, True, [])
-        broken, broken_offset, _ = render(model, RIDE_EXT, ground, parallel=True, elevation=RIDE_ELEV)
+        broken, broken_offset, _ = render(
+            model, RIDE_EXT, ground, parallel=True, elevation=RIDE_ELEV,
+            smooth_angle=RIDE_SMOOTH_ANGLE)
         assert broken_offset == offset
         *frames, damaged = palette(images+[broken])
         frames = [daylight(frame) for frame in frames]
