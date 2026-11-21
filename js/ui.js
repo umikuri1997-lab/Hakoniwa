@@ -266,9 +266,9 @@ function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、�
   mk(true,'たたかう');mk(false,'たたかわない');body.appendChild(sec)}
 const CAREPAT=10;
 function patJoy(r){/* なでられたら、手をとめて、正面を向き、目を細めてゆらゆら（PETU・動き petted）。おわったら、ぴょんとはねて、よろこぶ（たたかっている子は、そのままたたかう） */const now=performance.now();r.bubble='💕';JOYU.set(r,now+3200);if(typeof inBattle==='function'&&inBattle(r))return;RHOLD.set(r,now+3200);PETU.set(r,now+2400);fxSpr('hearts',r.x*TS,(r.y-.7)*TS);sfxAt('pat',r.x,r.y);villageTimeout(()=>{if(S.res.includes(r)&&!inBattle(r)){JUMP.set(r,performance.now());sfxAt('good',r.x,r.y)}},2400)}
-function boxSec(body,j){/* しまう家具：中身と、入れる物 */const a=anc(j);if(!boxTypeAt(a))return;const b=BOX()[a]||{},used=boxUsed(a),cap=boxCap(a);
+function boxSec(body,j){/* しまう家具：中身と、入れる物 */const a=anc(j);if(!boxTypeAt(a))return;const b=BOX()[a]||{},used=slotUsed(a),cap=boxSlots(a);
   {const MOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc'},mic=k=>isFK(k)?foodIc(k.slice(2)):ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):null);
-    {const s=el('<div class="stockSec boxCapSec"><div class="stockHead"><b>中身</b><span class="stockN"></span></div><div class="gauge stockBar"><i></i></div></div>');s.querySelector('.stockN').textContent=used+' / '+cap;const i=s.querySelector('.stockBar i');i.style.width=(cap>0?Math.min(100,used/cap*100):0)+'%';if(cap>0&&used>=cap)i.style.background='#d9a441';body.appendChild(s)}/* しまえる数は、ゲージで */
+    {const s=el('<div class="stockSec boxCapSec"><div class="stockHead"><b>中身</b><span class="stockN"></span></div><div class="gauge stockBar"><i></i></div></div>');s.querySelector('.stockN').textContent='わく '+used+' / '+cap;const i=s.querySelector('.stockBar i');i.style.width=(cap>0?Math.min(100,used/cap*100):0)+'%';if(cap>0&&used>=cap)i.style.background='#d9a441';body.appendChild(s)}/* 使っているわく・わくの数は、ゲージで（ひとわく STACK こ） */
     const g=el('<div class="rows box-contents"></div>');
     const ks=Object.keys(b).filter(k=>b[k]>0).sort((p,q)=>isFK(p)-isFK(q)||b[q]-b[p]);if(!ks.length){const p=nodata('box','なにも入っていないよ');p.style.gridColumn='1/-1';g.appendChild(p)}
     for(const food of [false,true]){
