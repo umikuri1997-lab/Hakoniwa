@@ -103,6 +103,7 @@ SKEL={
  'te':[('root',None,(0,0,0),(0,0,.25)),('arm','root',(0,0,.25),(0,0,.5)),('palm','arm',(0,0,.5),(0,0,.76)),('f1','palm',(0,0,.76),(0,0,.86)),('f2','f1',(0,0,.86),(0,0,.94)),('f3','f2',(0,0,.94),(0,0,1.0))]}
 FARK=1.5   # 空間で、いちばん近い骨のこの倍よりとおい、木の上ではなれた骨は、まぜない
 ARMR={}   # 上うでの太さ（モデルの高さを1として）
+SMALLP=.05   # これより点の少ない、はなれた部品は、となりの部品の重み（モデルの点の数にたいして）
 ISLAND=40   # これより点の少ない、ほかの手足にかこまれた島は、まわりにつける
 RIGID={'mi'}   # べつべつの部品でできた体（あやつり人形のよう）：部品ごとに1本の骨にまるごとつける（まぜると部品がのびる）
 KIND={'kui':'hum','tame':'hum','hone':'hum','ro':'hum','mi':'hum','sui':'float','yoru':'blob','esa':'hop','te':'te'}
@@ -144,7 +145,12 @@ def weights(name,V,F):
     hp=os.path.join(os.path.dirname(os.path.abspath(__file__)),'heat',name+'.npz')
     if os.path.exists(hp):   # Blender の自動の重み（ボーンヒート、bake_heat.py）があれば、それを使う
         hz=np.load(hp)
-        if int(hz['n'])==n and list(hz['names'])==[b[0] for b in B]:W=hz['W'].astype(float);W/=np.maximum(W.sum(1,keepdims=True),1e-12)
+        if int(hz['n'])==n and list(hz['names'])==[b[0] for b in B]:
+            W=hz['W'].astype(float);W/=np.maximum(W.sum(1,keepdims=True),1e-12)
+            _,cc_=connected_components(G,directed=False);cn_=np.bincount(cc_);big=cn_[cc_]>=SMALLP*n
+            if (~big).any() and big.any():   # 小さなはなれた部品（爪の先・かざり）は、いちばん近い大きな部品の点と同じ重み（ボーンヒートは、はなれた小さな部品の重みがずれる）
+                from scipy.spatial import cKDTree
+                bi=np.where(big)[0];_,nn_=cKDTree(Pu[bi]).query(Pu[~big]);W[~big]=W[bi[nn_]]
     if name in RIGID:   # 部品ごとに1本（1本の骨が7わりより多い部品だけ。いくつもの骨にまたがる部品は、なだらかなまま）
         for c in np.unique(comp):
             m=comp==c;sw=W[m].sum(0);b=int(sw.argmax())
