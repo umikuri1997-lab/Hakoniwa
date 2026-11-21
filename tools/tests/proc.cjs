@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
   const pop=await page.evaluate(()=>[...document.querySelectorAll('.pxcard .nm')].map(e=>e.textContent));
   assert.deepEqual(pop,['布（かさかさ草0/7）'],'2こしかない草は出ない');
   await page.click('.pxcard .p');await page.click('.pxcard .p');
-  assert.equal(await page.textContent('.pxcard .v'),'2');assert.equal(await page.evaluate(()=>document.querySelector('.pxcard .p').disabled),true,'7こなら2つまで');
+  assert.equal(await page.textContent('.pxcard .v'),'2');assert.equal(await page.evaluate(()=>document.querySelector('.pxcard .p').classList.contains('lack')),true,'7こなら2つまで');
   await page.click('.pxcard .go');
   assert.deepEqual(JSON.parse(await run(`JSON.stringify([S.mat.kasa,S.prQ])`)),[1,{[lj]:{kasa:6}}]);
   /* 粉ひき：じかにたのむ */

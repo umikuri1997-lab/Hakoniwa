@@ -71,7 +71,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2074;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2077;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -102,7 +102,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
   lastFirst(list);
-  $('#mSnd').textContent=SND.bgm?'♪ 曲 オン':'♪ 曲 オフ';$('#mSfx').textContent=SND.sfx?'効果音 オン':'効果音 オフ';/* 曲と効果音は、べつべつに出す（まとめて出すと、曲がオフでも「オン」に見えた） */
+  $('#mSnd').innerHTML=pxi('note','bi')+(SND.bgm?'曲を止める':'曲をながす');$('#mSfx').textContent=SND.sfx?'効果音を止める':'効果音を出す';/* ボタンの字は、することのことば *//* 曲と効果音は、べつべつに出す（まとめて出すと、曲がオフでも「オン」に見えた） */
 }
 const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{audioInit();setSnd('bgm',!SND.bgm);showMaps()};$('#mSfx').onclick=()=>{audioInit();setSnd('sfx',!SND.sfx);showMaps()};
@@ -190,7 +190,7 @@ function updTut(){
     else if((S.mat.nuno||0)>0){const g=orderTut('bed');if(pp){el=pp.querySelector('.x');lbl='とじる'}else if(g&&g.kind==='close'){el=$('#sheetX');lbl='とじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.bed.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'ベッドの「はる」をタップ'}}
     else if(L<0){if(inv('loom')>0)placeHint('loom')}
     else if(busy){if(pp){el=pp.querySelector('.x');lbl='布ができるまで待とう'}}/* 布をおっているあいだは待つ */
-    else if(pp){const go=pp.querySelector('.go'),pl=pp.querySelector('.ks .p');if(!pl){el=pp.querySelector('.x');lbl='草が集まるまで待とう'}else if(go.disabled){el=pl;lbl='「＋」で数をえらぶ'}else{el=go;lbl='「おる」をタップ'}}
+    else if(pp){const go=pp.querySelector('.go'),pl=pp.querySelector('.ks .p');if(!pl){el=pp.querySelector('.x');lbl='草が集まるまで待とう'}else if(go.disabled||go.classList.contains('lack')){el=pl;lbl='「＋」で数をえらぶ'}else{el=go;lbl='「おる」をタップ'}}
     else if(sheet){el=$('#sheetX');lbl='とじる'}
     else lookAt([(L%W+.5)*TS,((L/W)|0)*TS+8],'はたおり機をタップ')}
   else if(qt==='watch1'){if(watchQ())placeHint('watch');else if(inv('spike')>0&&(S.placed.spike||0)<2)placeHint('spike')}
