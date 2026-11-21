@@ -14,6 +14,7 @@
 #   柱（はし・角・まじわる所）：0.16角・高さ1.0（先は四角すい0.08）。まん中 (0.5, 0.865)。よこの柵と同じ線。
 #   横木：よこは、くい・柱の前（y 0.945〜0.985）、高さ 0.62〜0.76 と 0.16〜0.30。くぎは、くいのまん中。
 #     たては、くいの東がわ（x 0.51〜0.55）、同じ高さ。柱のうしろ・前の面にとめる。
+# ロープの手すり（風）：scene_rope のはじめの行。
 # 丸太の塀：
 #   丸太：半径1/6・高さ1.0、よこは x のまん中 1/6・1/2・5/6、y のまん中 0.78。たては x 0.5、y のまん中 1/6・1/2・5/6。
 #   横木：丸太の前（y 0.94〜0.985）、高さ 0.62〜0.74 と 0.18〜0.30。丸太のさかいに鉄の帯。たては丸太の東がわ。
@@ -201,6 +202,24 @@ def scene_park(m):   # 遊園地の白い塀（風）：板の柵と同じ線に
         for y0,y1 in vsegs(m,PC[1],0.775,0.985 if (L or R) else 0.955):
             addv(P,'railv',lambda a,b,z0=z0,z1=z1,col=col:Part('横木','box',(0.51,a,z0,0.55,b,z1),col,grp='pv%d'%(z0*100)),y0,y1,col)
     return P
+ACAC=(222,170,108);ROPE=(226,206,152);ROPED=(204,182,126)   # ロープの手すり（風）：アカシアの木・なびき草をよったロープ
+def scene_rope(m):   # ロープの手すり（風）：柱は角・はしだけ（アカシアの丸い柱、半径0.075・高さ0.8、ロープを2かい巻く）。そのあいだは、ロープ2本（高さ0.62・0.34、太さ0.026）と、マスのさかいの細いくい（半径0.045・高さ0.7。たては1マスに1本）
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865;PC=(0.5,YC)
+    for cx in(0.0,1.0):
+        if (cx<0.5 and L) or (cx>0.5 and R):P.append(('post',Part('くい','cyl',(cx,YC,0.045,0,0.7),ACAC),(cx%1,0)))
+    if m==3:P.append(('post',Part('くい','cyl',(0.5,YC,0.045,0,0.7),ACAC),(0.5,0)))
+    if m==12 or U and not post:P.append(('post',Part('くい','cyl',(0.5,0.375,0.045,0,0.7),ACAC),(0,0.375)))
+    if post:
+        P.append(('post',Part('柱','cyl',(0.5,YC,0.075,0,0.8),ACAC),(0,0)))
+        for z in(0.62,0.34):P.append(('rope',Part('巻いたロープ','cyl',(0.5,YC,0.085,z-0.035,z+0.035),ROPED),None))
+    for z in(0.62,0.34):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5
+            P.append(('rope',tube('ロープ',(x0,YC+0.05,z),(x1,YC+0.05,z),0.026,ROPE),None))
+        for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+            g='rv%d'%(z*100)
+            addv(P,'ropev',lambda a,b,z=z,g=g:Part('ロープ','frust',((0.55,a,z),(0.55,b,z),0.026,0.026),ROPE,detail=12,grp=g),y0,y1,ROPE)
+    return P
 def render(P,xr=(0,1)):
     sc=O.Scene();sc.txo={};sc.txax={};ext_ids=set()
     for kind,p,org in P:
@@ -232,7 +251,7 @@ def render(P,xr=(0,1)):
     im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0]+int(round(xr[0]*64)),bb[1]-128
 OLD={0:'H0',1:'HL',2:'HR',3:'HLR',4:'VU',8:'VD',12:'VUD'}
 def build_all(iid):
-    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park}[iid];out={}
+    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park,'ropefence':scene_rope}[iid];out={}
     for m in range(16):im,ax,ay=render(fn(m));out[m]=(im,ax,ay)
     return out
 def sheet(res,path,layout):

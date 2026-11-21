@@ -134,5 +134,10 @@ const GEARBL={
   gg08:{"name":"草ぶえ","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"shina":2},"g":{"s":"c","fear":1,"gr":1},"desc":"「コワイノ」をこわがるきょり2マス"},
   gg09:{"name":"ヌシ様の角のつるぎ","kind":"gear","time":90,"maker":"fire","g":{"s":"w","atk":30,"iv":0.9,"sp":1,"nf":1,"gr":1},"desc":"攻撃力+30・攻撃の間かく0.9倍"},
   gg10:{"name":"こもれびのマント","kind":"gear","time":90,"maker":"fire","g":{"s":"a","hun":30,"fun":0.9,"sp":1,"nf":1,"gr":1},"desc":"たたかれたときのおなかのへり－30・たのしさのへる速さ0.9倍"},
+  /* 風のそうび（wd：その土地の物。風ではじめて、その素材を手に入れたときに思いつく） */
+  gk01:{"name":"アカシアのぼう","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"wood":3},"g":{"s":"w","atk":10,"iv":0.9,"wd":4},"desc":"攻撃力+10・攻撃の間かく0.9倍"},
+  gk02:{"name":"羽の矢","kind":"ammo","pc":3,"time":60,"maker":"wind","qty":10,"mat":{"wood":1,"hane":1},"g":{"s":"ar","dmg":0,"rng":1,"wd":4},"desc":"見張り台が放つ矢。射程+1マス"},
+  gk03:{"name":"追い風のマント","kind":"gear","pc":4,"time":90,"maker":"wind","mat":{"kumowata":4,"nuno":1},"g":{"s":"a","hun":10,"mv":4,"wd":4},"desc":"たたかれたときのおなかのへり－10・移動速度+4"},
+  gk04:{"name":"羽のおまもり","kind":"gear","pc":3,"time":90,"maker":"wind","mat":{"hane":3},"g":{"s":"c","rec":1.2,"wd":4},"desc":"つかれのとれる速さ1.2倍"},
 };
 const GEAR_IDS=Object.keys(GEARBL),GEAR_ARROWS=GEAR_IDS.filter(id=>GEARBL[id].g.s==='ar');Object.assign(BL,GEARBL);/* BL にならべる（依頼ボード・アイコン・説明を、ほかの物と同じしくみで使う） */

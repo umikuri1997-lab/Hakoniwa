@@ -35,7 +35,7 @@ function newState(w){w=w||0;
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:12*60,/* 草原は15時からはじまる */speed:1,
-    unlocked:{floor:true,farm:true,[w===1?'misugaki':'fence']:true,[w===1?'bamboowall':w===WIND?'canvaswall':'hwall']:true,...(w===WIND?{tanpopo:true}:{})},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
+    unlocked:{floor:true,farm:true,[w===1?'misugaki':w===WIND?'ropefence':'fence']:true,[w===1?'bamboowall':w===WIND?'canvaswall':'hwall']:true,...(w===WIND?{tanpopo:true}:{})},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
   s.world=w;s.vk=vkNew();/* 村の見分け（photo.js） */if(w===FREE)s.flags.valley=1;/* フリーモード：花の谷（free.js。前のセーブの地形はそのまま） */if(w===MIZU)mzGenWorld(s);else genWorld(s,w);
   if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else if(w===MIZU)s.res.push(mkRes(s,MIO,'water',CX+.5,CY-1.5,'fountain'));else if(w===WIND){s.res.push(mkRes(s,KAZANE,'wind',CX+.5,CY-1.5,'slide'));s.flags.minaCame=true}/* 風（土台）：はじめはカザネひとり。2人めのキーキャラは、お話を作るときに */else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
@@ -329,7 +329,7 @@ const workOK=j=>workCells(j).some(k=>walk(k));
 let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
 function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
 /* すわる・ねる・遊ぶ家具とお墓（通れる家具）は、使うときだけ上に乗る。道さがしでは、上を通るのを大きな手間（SEATCOST）にして、ほかに道がないときだけ通る。行き先にするのは、その家具を使う行動だけ（startAct の seatStand） */
-const SEATF=new Set(['bed','yorubed','chair','achair','stool','pouf','bench','takebench','swing','grave']),SEATCOST=600;
+const SEATF=new Set(['bed','yorubed','chair','achair','stool','pouf','kagoisu','bench','takebench','swing','grave']),SEATCOST=600;
 const seatJ=j=>j>=0&&j<W*H&&SEATF.has(typeAt(j));
 function walkR(j){return walk(j)&&!seatJ(j)}/* せいれいが、使わずに立ってよいマス */
 function seatBackStep(i,j){/* i→j が、いす・ベンチの背もたれのがわからの乗りおり（その家具のマスどうしは、のぞく） */if(typeof seatBack!=='function')return false;const ci=seatCell(i),cj=seatCell(j);if(cj&&!ci&&seatBack(j)===i)return true;if(ci&&!cj&&seatBack(i)===j)return true;return false}

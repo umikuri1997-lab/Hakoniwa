@@ -38,7 +38,7 @@ const EDGES=new Set(['bedge']);/* 花壇のふちは、床の上の層（S.edge�
 function canEdge(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x>=W||y>=H)return false;const j=y*W+x;if(sacredNoBuild(j))return no('みんなで世話をしている木の場所です');if(S.ground[j]===1)return no(skyJ(j)?'雲の上には置けません':'水の上には置けません');if(S.ground[j]===2)return no('浅瀬には置けません');if(S.edge&&S.edge[j])return no('ここにはもうふちがあります');const o=S.obj[j];if(o&&!WEEDS.has(o)&&!FLOWERS.has(o))return no('ここにはもう何かあります');return true}
 const rugCells=a=>[a,a+1,a+W,a+W+1];
 const lowRoof=id=>{if(LOWROOF.has(id))return true;const b=BL[id];if(!b||CANOPY.has(id)||b.kind!=='furn'&&b.kind!=='plant')return false;const c=CHIPS[id]||CHIPS[id+'#0'];return !!c&&-(c.ay||0)*64/(c.g||32)<=24};/* 屋根の下に置ける、高さ1マスの物：絵がマスの上へ24ドット（g64）までしかはみ出さない物 */
-const CANOPY=new Set(['gazebo','azumaya']),LOWROOF=new Set(['chair','stool','achair','pouf','sofa1','bench','takebench','table','dtable','ltable','clover','bellf','salvia','lily','tanpopo']);/* ガゼボ・東屋は、物の上にかぶせる層（S.roof：左上のマス→id）。たて2・よこ2マス。下に置けるのは、ひくい物だけ（ラグはべつの層なので、いつでも） */
+const CANOPY=new Set(['gazebo','azumaya']),LOWROOF=new Set(['chair','stool','achair','pouf','kagoisu','sofa1','bench','takebench','table','dtable','ltable','clover','bellf','salvia','lily','tanpopo']);/* ガゼボ・東屋は、物の上にかぶせる層（S.roof：左上のマス→id）。たて2・よこ2マス。下に置けるのは、ひくい物だけ（ラグはべつの層なので、いつでも） */
 function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;{const h0=hiAt(y*W+x);if(hiAt(y*W+x+1)!==h0||hiAt(y*W+W+x)!==h0||hiAt(y*W+W+x+1)!==h0)return no('段差をまたいでは置けません')}
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no(skyJ(c)?'雲の上には置けません':'水の上には置けません');if(RFC.has(c))return no('ここにはもう屋根があります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!lowRoof(a)&&!WEEDS.has(a))return no('下には、ひくい物だけ置けます')}return true}
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
@@ -273,7 +273,7 @@ function askStamp(sid,x,y){
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
   $('#confirmTxt').textContent=st.name+(s.parts.length?'・足りない分は'+SP(s.cost)+'で':'・おそなえ箱から');lackOn($('#cYes'),lackPt(s.cost));yesLbl('おく');($('#cRot').hidden=true,$('#confirm').hidden=false);
 }
-const SWAPG=[['fence','misugaki','logfence','bamboofence','parkfence','wall'],['hwall','bamboowall','canvaswall','acaciawall','logwall','plasterwall','brickwall','yozorawall'],['path','gravel','woodpath','stone','brick'],['floor','brickfloor','stonefloor','herrfloor','carpet']],SWAPTHRU=[new Set(['gate','stonegate','logdoor','sdoor']),new Set(['door','yozoradoor']),new Set(),new Set()],SWAPNO=['柵や塀ではありません','家の壁ではありません','道ではありません','床ではありません'];/* つけかえトンカチ：柵・塀／家の壁／道／床のなかま。ドア・門はとおりぬけて、その先もつけかえる。道・床は S.floor */
+const SWAPG=[['fence','misugaki','ropefence','logfence','bamboofence','parkfence','wall'],['hwall','bamboowall','canvaswall','acaciawall','logwall','plasterwall','brickwall','yozorawall'],['path','gravel','woodpath','stone','brick'],['floor','brickfloor','stonefloor','herrfloor','carpet']],SWAPTHRU=[new Set(['gate','stonegate','logdoor','sdoor']),new Set(['door','yozoradoor']),new Set(),new Set()],SWAPNO=['柵や塀ではありません','家の壁ではありません','道ではありません','床ではありません'];/* つけかえトンカチ：柵・塀／家の壁／道／床のなかま。ドア・門はとおりぬけて、その先もつけかえる。道・床は S.floor */
 const swapT=(id,k)=>BL[id].floor?S.floor[k]:S.obj[k];
 function askSwap(id,x,y){const gi=SWAPG.findIndex(g=>g.includes(id)),G=SWAPG[gi],T=SWAPTHRU[gi],j0=y*W+x;
   if(!G.includes(swapT(id,j0)))return toast(SWAPNO[gi]);
@@ -310,7 +310,7 @@ let RECALL=false,NATIVE=null,NATIVEW=-1;
 function nativeSet(){if(NATIVE&&NATIVEW===WD)return NATIVE;const N=new Set();const add=L=>{for(const id of L||[])N.add(id)};
   for(const q of QUESTS||[]){add(q.learn);add(q.talk&&q.talk.learn);add(q.gives&&q.gives.recipes);add(QUEST_INSPIRATIONS[q.id]);add(QUEST_INSPIRATIONS_CLEAR[q.id])}
   for(const q of SUBQ)if(q.w==null||q.w===WD){add(q.learn);add(QUEST_INSPIRATIONS[q.k]);add(QUEST_INSPIRATIONS_CLEAR[q.k])}
-  for(const id in BL){const b=BL[id];if(STAGEONLY[id]===WD||b.kwr||b.g&&WD===(b.g.gr?0:1)||(b.w!=null&&b.w===WD))N.add(id);else if(STAGEONLY[id]==null&&(b.w||0)<=WD&&b.lv&&(LEVELUP_ITEMS.has(id)||b.kind!=='furn')&&!RLOCK.has(id)&&!QB.has(id))N.add(id)}
+  for(const id in BL){const b=BL[id];if(STAGEONLY[id]===WD||b.kwr||b.g&&WD===(b.g.gr?0:b.g.wd||1)||(b.w!=null&&b.w===WD))N.add(id);else if(STAGEONLY[id]==null&&(b.w||0)<=WD&&b.lv&&(LEVELUP_ITEMS.has(id)||b.kind!=='furn')&&!RLOCK.has(id)&&!QB.has(id))N.add(id)}
   NATIVEW=WD;return NATIVE=N}
 function otherLand(id){if(!S||S.free||!WD)return false;const g=grecOf().get(id);return g!=null&&g<WD&&!nativeSet().has(id)}
 function recShown(id){return RECALL||!otherLand(id)}

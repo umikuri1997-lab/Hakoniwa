@@ -396,7 +396,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
   return goPlay(r,G);
 }
 const ripeAdj=types=>j=>adjOf(j,k=>types.includes(S.obj[k])&&S.dyn[k]&&S.dyn[k].g>=100&&free('o'+k,1));
-const SEATPT={stool:1,chair:2,pouf:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:.9,achair:2.25};/* SEATPT：けいけん、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
+const SEATPT={stool:1,chair:2,pouf:3,kagoisu:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:.9,kagoisu:.9,achair:2.25};/* SEATPT：けいけん、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
 function tableRoom(tj){/* 食卓：食べている人数が、その食卓の人数（eat.cap：食卓2・大きな食卓4）より少ないか */const t=S.obj[tj];if(!TABLES.has(t))return true;let n=0;for(const q of S.res){const a=q.act;if(a&&a.type==='eat'&&a.tdir!=null&&typeof a.key==='string'&&a.key.startsWith('seat')&&anc(+a.key.slice(4)+a.tdir)===tj)n++}return n<BL[t].eat.cap}
 function warmSeat(j){return S.sacredRoot!=null&&fieldDistance(j,S.sacredRoot)<=FIELD_NEAR_R+1}/* 切り株のそばの席 */
 function warmTableJ(){if(S.sacredRoot==null)return -1;for(let j=0;j<S.obj.length;j++)if(TABLES.has(S.obj[j])&&fieldDistance(j,S.sacredRoot)<=FIELD_NEAR_R)return j;return -1}/* 切り株のそばの食卓（芽のそばのごはん） */
