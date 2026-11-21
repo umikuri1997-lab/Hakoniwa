@@ -31,7 +31,7 @@ const context = vm.createContext({
 });
 const wind = fs.readFileSync('js/wind.js', 'utf8');
 const windArt = wind.slice(wind.indexOf('function drawWindObj'), wind.indexOf('function drawRide0'));
-const ride = wind.slice(wind.indexOf('function drawRide0')).split('\n\n')[0];
+const ride = wind.slice(wind.indexOf('function drawRide0')).split(/\n(?=\/\*|function |const |ACT\.)/)[0];
 vm.runInContext(windArt + ride, context);
 let anchor = [32, 56];
 if (rides.has(base)) {
