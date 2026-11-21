@@ -15,7 +15,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['温泉のそばに、ベンチ・水おけ・のれん（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
   ['台座にはめるヌシ様の火だね（いま'+shLeft()+'つ）',shLeft()>=1],
-  ['しまえる数'+(tm.wood+tm.stone)+'こ（いま'+boxCapTot()+'こ）',boxCapTot()>=tm.wood+tm.stone],/* 箱が小さいと、台座の素材がためられない */
+  ['しまう家具のわく'+(Math.ceil(tm.wood/STACK)+Math.ceil(tm.stone/STACK))+'（いま'+boxSlotTot()+'）',boxSlotTot()>=Math.ceil(tm.wood/STACK)+Math.ceil(tm.stone/STACK)],/* 箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
   return [['御神木にヌシのかけらを2つ届ける（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2]]}/* 草原：かけらがそろえば、さいごの防衛へ */
 const clearReady=()=>clearConds().every(c=>c[1]);

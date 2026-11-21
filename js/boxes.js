@@ -5,7 +5,7 @@
    S.rsv：建てる・作る・炉・コンポスター・おたきあげのために、とっておいた数（まだ箱の中にある）。
    S.mat・S.fs は「使える数」＝箱と神殿のまえの合計 － とっておいた数。
    S.mat などを、じかにふやした・へらした分は、boxSync があわせる（ふえた分はあいた箱へ、入らなければ神殿のまえへ。へった分は神殿のまえ → 箱からへらす）。 */
-const BOXCAP={crate:80,taru:60,kabebukuro:55,asabukuro:65,makidana:200,shelf1:160,shelf2:200,wshelf:200,cabinet:90,g_k_chest:60};/* しまえる数 */
+const BOXCAP={crate:6,taru:4,kabebukuro:3,asabukuro:4,makidana:2,shelf1:8,shelf2:10,wshelf:10,cabinet:6,g_k_chest:4},STACK=99;/* わくの数（スタック制：ひとつのわくに1しゅるい、STACK こまで） */
 const BOXONLY={makidana:{wood:1,eda:1}};/* その物しか入らない家具 */
 const PILE=-1,fkey=k=>'f:'+k,isFK=k=>k.charCodeAt(0)===102&&k.charCodeAt(1)===58,itemKeyName=k=>isFK(k)?(FOODS[k.slice(2)]||{}).name||k:MATN[k]||k;
 let BOXL=[];const RSV=()=>S.rsv||(S.rsv={}),BOX=()=>S.box||(S.box={}),PIL=()=>S.pile||(S.pile={});/* 箱のマス（recount で作る） */
@@ -13,14 +13,16 @@ function boxTypeAt(k){if(k<0||k>=W*H)return '';const a=anc(k),id=S.obj[a];if(HOM
 function boxScan(){BOXL=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(BOXCAP[o])BOXL.push(j)}for(const k in S.win||{}){const j=+k;if(BOXCAP[S.win[k]]&&HOME_WALLS.has(S.obj[j]))BOXL.push(j)}}
 const pileJ=()=>STATUE>=0?STATUE:RUINT>=0?RUINT:OBOX;/* フリーモードは、おそなえ箱のまえ */
 const bx=j=>{if(j===PILE)return PIL();const B=BOX();return B[j]||(B[j]={})};
-function boxCapAdd(){let add=typeof pathBox==='function'?pathBox():0;/* むらのちから */const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
-const boxCap=j=>Math.floor((BOXCAP[boxTypeAt(j)]||0)*(1+boxCapAdd()));
+function boxCapAdd(){let add=typeof pathBox==='function'?pathBox():0;/* むらのちから */const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* ふえるわくの数。しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
+const boxSlots=j=>{const t=boxTypeAt(j);return t?BOXCAP[t]+boxCapAdd():0},boxCap=j=>boxSlots(j)*STACK;/* わくの数・ぜんぶつめたときの数 */
 function boxUsed(j){const b=BOX()[j];let n=0;if(b)for(const k in b)n+=b[k];return n}
+function slotUsed(j){const b=j===PILE?null:BOX()[j];let n=0;if(b)for(const k in b)if(b[k]>0)n+=Math.ceil(b[k]/STACK);return n}/* 使っているわく */
+const stackPart=n=>n>0&&n%STACK?STACK-n%STACK:0;/* つみかけのわくの、のこり */
 function boxOK(j,key){/* その箱に、この物を入れてよいか */const O=BOXONLY[boxTypeAt(j)];if(O&&!O[key])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(isFK(key)?F.food:F.mat)return true;return !!(F.it&&F.it[key])}
 function boxCat(j,food){/* その箱に、食べ物（素材）のどれかを入れてよいか（その物しか入らない家具は、数えない） */if(BOXONLY[boxTypeAt(j)])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(food?F.food:F.mat)return true;for(const k in F.it||{})if(isFK(k)===food)return true;return false}
-const boxRoom=(j,key)=>boxOK(j,key)?Math.max(0,boxCap(j)-boxUsed(j)):0;
+const boxRoom=(j,key)=>boxOK(j,key)?Math.max(0,boxSlots(j)-slotUsed(j))*STACK+stackPart(boxHas(j,key)):0;/* あいたわく＋その物のつみかけのわく */
 function boxHas(j,key){const b=j===PILE?PIL():BOX()[j];return b?b[key]||0:0}
-function roomFor(food){/* 食べ物（素材）を、あといくつしまえるか */let n=0;for(const j of BOXL)if(boxCat(j,food))n+=Math.max(0,boxCap(j)-boxUsed(j));return n}
+function roomFor(food){/* 食べ物（素材）を、あといくつしまえるか（あいたわく＋つみかけのわく） */let n=0;for(const j of BOXL){if(!boxCat(j,food))continue;n+=Math.max(0,boxSlots(j)-slotUsed(j))*STACK;const b=BOX()[j];if(b)for(const k in b)if(isFK(k)===food&&boxOK(j,k))n+=stackPart(b[k])}return n}
 function totKey(key){let n=boxHas(PILE,key);for(const j of BOXL)n+=boxHas(j,key);return n}
 const availOf=key=>isFK(key)?S.fs[key.slice(2)]||0:S.mat[key]||0;
 function availAdd(key,n){if(isFK(key)){const k=key.slice(2);S.fs[k]=Math.max(0,(S.fs[k]||0)+n);syncFood()}else S.mat[key]=Math.max(0,(S.mat[key]||0)+n)}
@@ -41,6 +43,7 @@ function boxSync(){if(!S)return;S.box=S.box||{};S.pile=S.pile||{};S.rsv=S.rsv||{
     else if(d<0){/* じかにへった分：神殿のまえ → 中身の多い箱から */d=-d;d-=btake(PILE,key,d);const L=BOXL.filter(j=>boxHas(j,key)>0).sort((a,b)=>boxHas(b,key)-boxHas(a,key));for(const j of L){if(d<=0)break;d-=btake(j,key,d)}}
     const t=totKey(key),rv=Math.min(R[key]||0,t);/* とっておく数は、いつも数えなおす（建てる所がなくなった など） */if(rv>0)S.rsv[key]=rv;else delete S.rsv[key];
     const a=t-rv;if(isFK(key))S.fs[key.slice(2)]=a;else S.mat[key]=a}
+  for(const j of BOXL){let over=slotUsed(j)-boxSlots(j);if(over<=0)continue;const b=BOX()[j],ks=Object.keys(b).filter(k=>b[k]>0).sort((p,q)=>b[p]-b[q]);for(const k of ks){if(over<=0)break;const n=b[k];over-=Math.ceil(n/STACK);btake(j,k,n);bput(PILE,k,n)}}/* わくに入りきらない物（前のセーブ・わくがへった）は、神殿のまえへ（せいれいが、あいた箱へ運ぶ） */
   syncFood();for(const k in S.box)if(!Object.keys(BOX()[k]).length&&!BOXL.includes(+k))delete BOX()[k]}
 function boxSpill(j){/* 箱がなくなった：中身は、その場所の地面に落とす（せいれいが、ほかの箱へ運ぶ） */const b=BOX()[j];delete BOX()[j];if(!b)return;const x=j%W,y=(j/W)|0;
   for(const key in b){const n=b[key];if(!(n>0))continue;let a=Math.min(n,availOf(key));availAdd(key,-a);const r=n-a;if(r>0&&S.rsv[key])S.rsv[key]=Math.max(0,S.rsv[key]-r);
@@ -93,7 +96,7 @@ function fetchFor(r,G,t){/* 建てる所・依頼の素材を、箱へとりに�
 function haulWant(){/* 神殿のまえの物を、あいた箱へ運ぶ */if(isNight()||pileJ()<0||!PIL())return false;for(const k in PIL())if(PIL()[k]>0&&availOf(k)>0&&BOXL.some(j=>boxRoom(j,k)>0))return true;return false}
 function haulJob(r,G){if(!haulWant()||heldN(r)>0||r.bm)return false;if(S.res.filter(q=>q!==r&&q.act&&q.act.type==='haul').length>=2)return false;const pj=pileJ(),j=nearest(G,q=>adjOf(q,k=>anc(k)===pj)>=0,300);if(j<0)return false;startAct(r,G,'haul',j,{});return r.act&&r.act.type==='haul'}
 const HAULN=10;/* 神殿のまえから、1回に運ぶ数 */
-function boxCapTot(){let n=0;for(const j of BOXL)n+=boxCap(j);return n}/* 村ぜんぶの、しまえる数 */
+function boxSlotTot(){let n=0;for(const j of BOXL)n+=boxSlots(j);return n}/* 村ぜんぶの、わくの数 */
 function boxMigrate(s){/* 食料箱・素材箱を木箱にまとめ、箱ごとの中身にした（box1）。1回だけ */if(!s.flags||s.flags.box1)return;s.flags.box1=1;
   for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='stor'||s.obj[j]==='mbox')s.obj[j]='crate';
   const iv=s.inv||{};for(const k of['stor','mbox'])if(iv[k]){iv.crate=(iv.crate||0)+iv[k];delete iv[k]}

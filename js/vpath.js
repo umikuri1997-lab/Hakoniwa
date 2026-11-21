@@ -1,10 +1,10 @@
 /* ---------- むらのちから（メニュー。守り神のちからと1つの木） ----------
    パワーをつかって、村の力を3つの道（くらし・しごと・まもり）で、じゅんにひらいていく。ステージごと（S.vpath）。
-   どれも実数：a はたし算する数（はたらく速さ・移動速度・持てる数・攻撃力・住み心地・見張り台の威力と射程）、box はしまえる数の%、fun はたのしさのへりかた。 */
+   どれも実数：a はたし算する数（はたらく速さ・移動速度・持てる数・攻撃力・住み心地・見張り台の威力と射程）、box はしまう家具のわくの数、fun はたのしさのへりかた。 */
 const VPATH=[/* 点：x・y は木の絵の上の場所（1ドット1.5px）、r はひらくのに先にひらく点（ぜんぶ） */
  {k:'kurashi',n:'くらし',lx:40,ly:772,at:785,L:[
-  {id:'kb1',c:50,t:'箱のしまえる数+5%',a:{box:5},x:84,y:770,r:[]},
-  {id:'kb2',c:80,t:'箱のしまえる数+5%',a:{box:5},x:40,y:736,r:['kb1']},
+  {id:'kb1',c:50,t:'しまう家具のわく+1',a:{box:1},x:84,y:770,r:[]},
+  {id:'kb2',c:80,t:'しまう家具のわく+1',a:{box:1},x:40,y:736,r:['kb1']},
   {id:'kc1',c:120,t:'料理の速さ+10%',a:{cook:10},x:24,y:702,r:['kb2']},
   {id:'kc2',c:160,t:'料理の速さ+10%',a:{cook:10},x:24,y:668,r:['kc1']},
   {id:'kf1',c:100,t:'たのしさのへりかた－5%',a:{fun:5},x:84,y:736,r:['kb1']},
@@ -33,7 +33,7 @@ const VPATH=[/* 点：x・y は木の絵の上の場所（1ドット1.5px）、r
   {id:'mp1',c:300,t:'「コワイノ」を追いはらうとパワー+1',a:{kpt:1},x:84,y:464,r:['ma2']}]}];
 const vpOn=id=>!!(S&&S.vpath&&S.vpath[id]);
 function pathA(k){/* ひらいた所の、たし算する数 */if(!S||!S.vpath)return 0;let n=0;for(const b of VPATH)for(const p of b.L)if(p.a[k]&&S.vpath[p.id])n+=p.a[k];return n}
-const pathBox=()=>pathA('box')/100,pathFun=()=>1-pathA('fun')/100;
+const pathBox=()=>pathA('box'),pathFun=()=>1-pathA('fun')/100;
 const VPATH_OLD={k1:100,k2:200,k3:300,s1:100,s2:200,s3:400,m1:150,m2:250,m3:350};/* 前の木（1つの道に3つ）の点と、ひらくのにつかったパワー */
 function vpathMigrate(){/* 前の木でひらいた点は、とじて、つかったパワーをもどす（1回だけ） */if(S.flags.vpath2)return;S.flags.vpath2=1;let back=0;for(const k in S.vpath||{})if(VPATH_OLD[k])back+=VPATH_OLD[k];S.vpath={};if(back){S.pt+=back;toast('むらのちからの木が新しくなり、パワー'+back+'がもどった','good')}}
 function pathBuy(p){if(vpOn(p.id))return false;if(!p.r.every(vpOn))return false;if(S.pt<p.c){sfx('tap');toast(lackPt(p.c),'warn');return false}S.pt-=p.c;(S.vpath||(S.vpath={}))[p.id]=1;sfx('power');toast('むらのちから：'+p.t,'good');logEv('むらのちからをひらいた：'+p.t);recount();dirty=true;return true}
