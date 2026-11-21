@@ -3,7 +3,7 @@
    地図は tools/cave/cave_maps.py で作るので、場所は数字でなく、物のしゅるい（S・R・b・t・x・m・k など）でさがす */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
-  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;const out={};
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;{const ce=caveEnter;caveEnter=(...q)=>{const v=ce(...q);if(CV)CV.sc=[];return v}}/* こわい物（cave-bake.js）は tools/tests/cave-bake.cjs でたしかめる */S.introSeen=true;S.flags.tapped=1;const out={};
     for(const el of ['earth','fire','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const q of S.res){q.nap=false;q.hunger=hMax(q)}
     S.t=Math.floor(S.t/1440)*1440+9*60;S.hold=0;S.fs.imo=5;syncFood();S.pt=50;
     const by=el=>S.res.find(q=>q.elem===el),step=(sec)=>{for(let i=0;i<sec*30;i++)caveFrame(1/30,performance.now())},J=cvJ,act=el=>CV.party.find(a=>a.elem===el),
