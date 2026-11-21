@@ -20,18 +20,20 @@ from math import cos, sin, sqrt, tau
 
 from common import WOOD
 
-PINK = (247, 112, 155)
+PINK = (245, 153, 181)
 CREAM = (255, 241, 211)
-MINT = (79, 219, 180)
+MINT = (148, 218, 202)
 GOLD = (222, 176, 116)
 TRIM = (168, 118, 111)
-BLUE = (139, 209, 239)
-LILAC = (168, 129, 237)
-PEACH = (255, 155, 92)
-SUN = (255, 205, 92)
-SILVER = (189, 205, 216)
+BLUE = (167, 221, 245)
+LILAC = (194, 172, 238)
+PEACH = (252, 184, 150)
+SUN = (255, 218, 141)
+SILVER = (195, 200, 228)
 BRASS = (184, 136, 83)
-LEATHER = (159, 102, 95)
+LEATHER = (160, 109, 100)
+PALE_MINT = (174, 229, 217)
+CREAM_PAINT = (249, 224, 179)
 ROPE = (195, 161, 113)
 SEATS = {"merry": 3, "cup": 2, "skyswing": 3, "wheel": 4}
 SPEED = {"merry": 1, "cup": 1.3, "skyswing": 1, "wheel": .35}
@@ -60,7 +62,7 @@ def carousel(m, phase, broken, seats):
         b = (panel + 1) * tau / 12
         x, y, z = polar(1.31, a, 2.14 + .10 * cos(a) * broken)
         u, v, w = polar(1.31, b, 2.14 + .10 * cos(b) * broken)
-        color = (PINK, CREAM, PEACH, CREAM, MINT, CREAM)[panel % 6]
+        color = (PINK, CREAM, LILAC, CREAM, MINT, CREAM)[panel % 6]
         m.part(color, surface="cloth")
         m.sc.tri((roof_x, 0, 2.65), (x, y, z), (u, v, w), m.color(color))
         m.sc.quad((x, y, z), (u, v, w), (u, v, w-.10),
@@ -69,11 +71,12 @@ def carousel(m, phase, broken, seats):
         m.rod((roof_x, 0, 2.65), (x, y, z+.015), .014, CREAM)
         if not broken:
             cx, cy = (x+u)/2, (y+v)/2
-            m.part((MINT, SUN, LILAC)[panel % 3], surface="cloth")
+            flag = (PINK, SUN, MINT, LILAC)[panel % 4]
+            m.part(flag, surface="cloth")
             m.sc.tri((x*.34+cx*.66, y*.34+cy*.66, z-.10),
                      (u*.34+cx*.66, v*.34+cy*.66, w-.10),
                      (cx, cy, (z+w)/2-.235),
-                     m.color((MINT, SUN, LILAC)[panel % 3]))
+                     m.color(flag))
     m.ball((roof_x, 0, 2.69), .09, SUN, surface="polished")
     for index in range(3):
         angle = phase + index * tau / 3
@@ -106,7 +109,7 @@ def carousel(m, phase, broken, seats):
 
 def cups(m, phase, broken, seats):
     m.lathe([(0, 0), (1.32, 0), (1.38, .11), (1.38, .23),
-             (1.30, .30), (0, .30)], MINT)
+             (1.30, .30), (0, .30)], PALE_MINT)
     m.lathe([(0,.30),(.11,.30),(.105,.49),(.169,.54),(.244,.64),
              (.253,.68),(.253,.703),(.213,.703),(.184,.602),
              (0,.601)], BLUE, surface="enamel")
@@ -120,7 +123,7 @@ def cups(m, phase, broken, seats):
     m.lathe([(1.29,.231),(1.37,.231),(1.36,.265),(1.29,.265)], CREAM)
     for i in range(12):
         m.ball(polar(1.29, i*tau/12, .269), .036,
-               (SUN, PEACH, LILAC)[i % 3], surface="enamel")
+               (SUN, PINK, LILAC)[i % 3], surface="enamel")
     for index in range(2):
         angle = phase + index * tau / 2
         x, y, _ = polar(.70, angle, 0)
@@ -166,12 +169,12 @@ def swing(m, phase, broken, seats):
         m.ball(polar(.59, i*tau/6, .216), .029, BRASS, surface="polished")
     m.lathe([(0, 4.04), (.74, 4.04), (.78, 4.17), (.71, 4.25),
              (.10, 4.42), (0, 4.42)], PINK, top[0], surface="enamel")
-    m.lathe([(.75,4.08),(.782,4.08),(.782,4.124),(.75,4.124)], SUN,
+    m.lathe([(.75,4.08),(.782,4.08),(.782,4.124),(.75,4.124)], CREAM_PAINT,
             top[0], surface="polished")
     m.ball((top[0], 0, 4.48), .081, CREAM)
     for i in range(12):
         x, y, z = polar(.742, i*tau/12, 4.17)
-        m.ball((x+top[0], y, z), .041, (CREAM, SUN, LILAC)[i % 3],
+        m.ball((x+top[0], y, z), .041, (CREAM, MINT, LILAC)[i % 3],
                surface="enamel")
     for index in range(3):
         angle = phase + index * tau / 3
@@ -237,12 +240,13 @@ def wheel(m, phase, broken, seats):
         return (hub[0]+radius*cos(angle), y,
                 hub[2]-radius*sin(angle)+(.18*cos(angle) if broken else 0))
 
-    for y in (-.34, -.07):
+    for y, rim_color in ((-.34, LILAC), (-.07, PINK)):
         if broken:
             angles = [tau*i/48 for i in range(4, 45)]
         else:
             angles = [tau*i/48 for i in range(49)]
-        m.tube([rim(a, y) for a in angles], .046, PINK, surface="polished")
+        m.tube([rim(a, y) for a in angles], .046, rim_color,
+               surface="polished")
         for index in range(8):
             a = phase + index*tau/8
             if not broken and index % 2 == 0:
