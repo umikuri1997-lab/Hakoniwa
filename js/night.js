@@ -89,7 +89,7 @@ function waveFor(day){
     else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift('boss');
     return list}
   defWave(list,alv);/* 草原：ヨロイカゲ（defense.js） */
-  if(WD===WIND)return list;/* 風：オオカゲは来ない（さいごの夜はナギノオオカゲ） */
+  if(WD===WIND||WD===MIZU)return list;/* 風・水：オオカゲは来ない（さいごの夜は、風はナギノオオカゲ・水はキリノオオカゲ） */
   const bq=QUESTS.find(q=>q.id==='ookage'),bOK=S.cleared||!bq||qAt(bq.id);/* オオカゲのクエストが出るまでは来ない */
   if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
   if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift('boss');S.bossOwed=false}else if(bOK)S.bossOwed=true}/* クエストが出る前の分はためない（クエストが出てから3日後に来る） *//* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
@@ -126,6 +126,7 @@ function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(lat
 function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りをやめる */
   const hasBoss=list.some(type=>EN[type].boss),wv=wavesOn(),n0=S.enemies.length;list.forEach((type,k)=>{const d=EN[type];const hp=d.hp+(WD===0&&S.bossKills&&!d.boss?NIGHTHP[Math.min(NIGHTHP.length-1,Math.floor((S.nights||0)/10))]:0);S.enemies.push({id:S.nid++,type,x:0,y:0,hp,max:hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});const nsc=wv?waveApply(S.enemies.slice(n0)):0;/* 草原：波に分けて来る・先ぶれ（waves.js） */
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')||list.includes('yama')?1:0,trial:!!S.trialOn,final:!!S.finalOn,rush:S.rushOn?S.rushN:0};if(nsc)S.ns.n+=nsc;if(wv){const nv=S.flags.nv||(S.flags.nv={});nv.wave=1;if(nsc)nv.scout=1;if(nightSideNow())nv.side=1}S.trialOn=false;S.finalOn=false;S.rushOn=false;if(typeof ngSpawn==='function')ngSpawn();/* 夜のたからさがし（nightglow.js） */
+  if(WD===MIZU&&!S.flags.mizuFoeTold&&!S.free&&S.res.some(r=>r.name===MIO&&!r.hidden)){S.flags.mizuFoeTold=1;dialog([[MIO,'#scared|……霧のむこうから、なにか来る。'],[MIO,'#worry|影……。水の流れているところは、わたりにくいみたい。']],null,null,MIO)}/* 水：はじめての夜の影 */
   if(WD===WIND&&!S.flags.windFoeTold&&!S.free&&S.res.some(r=>r.name===KAZANE&&!r.hidden)){S.flags.windFoeTold=1;dialog([[KAZANE,'#surprise|……雲の海から、なにかのぼってくる。'],[KAZANE,'#think|影だ。風がもどって、目をさましたのかもしれないね。'],[KAZANE,'フッ……せっかくの遊び場だ。こわされるわけにはいかないさ。']],null,null,KAZANE)}/* 風：はじめての夜の影 */
   if(S.ns.rush&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,S.ns.rush===1?'#alarm big|守り神さま、見て……！ 影が、あんなにたくさん……！ 御神木を守らなきゃ！':'#think|ゆうべより、もっと多い……！ みんな、もうひと晩、がんばろう！']]);
   else if(list.includes('yama'))dialog([[HOMURA,'守り神！ 火の山が、あばれてる……！'],[HOMURA,'「ヤマノオオカゲ」だ。温泉の熱をうばいに来るよ。'],[SHIZUKU,'温泉を、朝まで守りぬきましょう……！']],null,null,LEAD());
@@ -312,7 +313,7 @@ function updEnemy(e,dt){
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j],L:S.hp['L'+j],rot:rotAt(j)});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(j));clearObj(j);recount();houseBreakFlee(hb)}toast(nm+'がこわされた！','warn')}}
     return}}
   if(!walk(j)){e.path=[];e.stk=(e.stk||0)+dt;if(e.stk>20&&!e.flee){e.stk=0;enemyFallback(e,D);e.repath=8;EREACH.delete(e)}return}/* 道の先が歩けないマスのまま止まっていたら、行ける所へ歩く */
-  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1)*moonSp()*nebariMul(e)*rageMul(e)*(typeof seaFoeK==='function'?seaFoeK(e):1);/* 冬のコワイノは速さ0.8倍 *//* 満月・新月・ねばり草 */if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;if(S.ground[j]===2)sp/=2;/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間は5倍ゆっくり */
+  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1)*moonSp()*nebariMul(e)*rageMul(e)*(typeof seaFoeK==='function'?seaFoeK(e):1);/* 冬のコワイノは速さ0.8倍 *//* 満月・新月・ねばり草 */if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;if(S.ground[j]===2)sp/=2;/* 浅瀬は2倍ゆっくり */if(WD===MIZU&&typeof mzMoat==='function'&&mzMoat(j))sp*=MZMOAT;/* 水のステージの堀：水の流れる水路は、もっとゆっくり（mizube.js） *//* 段差を飛ぶ間は5倍ゆっくり */
   const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
 }
