@@ -47,7 +47,7 @@ function drawNest(c,x,y,now){/* かげの巣（コードのドット絵、仮の
 const RAGET=15,RAGESP=1.3;
 function bossCall(e,n){let k=0;for(let i=0;i<12&&k<n;i++){const a=i/12*Math.PI*2,x=e.x+Math.cos(a)*1.5,y=e.y+Math.sin(a)*1.5,j=(y|0)*W+(x|0);if(!walk(j))continue;const hp=EN.basic.hp;S.enemies.push({id:S.nid++,type:'basic',x:(x|0)+.5,y:(y|0)+.5,hp,max:hp,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});if(typeof seaFoeInit==='function')seaFoeInit(S.enemies[S.enemies.length-1]);fxSpr('shock',((x|0)+.5)*TS,((y|0)+.5)*TS,'#5b3f8a');k++}if(S.ns)S.ns.n+=k;return k}
 function bossPhase(e){const t=e.type;if(t!=='boss'&&t!=='boss2'||e.dead)return;
-  if(!e.ph1&&e.hp<=e.max/2){e.ph1=1;sfx('night');if(typeof shakeScreen==='function')try{shakeScreen(6,400)}catch(_){}bossCall(e,t==='boss2'?3:2);if(t==='boss')e.rage=S.t+RAGET;toast(EN[t].name+'がほえた！','warn')}
+  if(!e.ph1&&e.hp<=e.max/2){e.ph1=1;sfx('night');if(typeof shakeScreen==='function')try{shakeScreen('m')}catch(_){}bossCall(e,t==='boss2'?3:2);if(t==='boss')e.rage=S.t+RAGET;toast(EN[t].name+'がほえた！','warn')}
   if(t==='boss2'&&!e.ph2&&e.hp<=e.max/4){e.ph2=1;bossLeap(e)}}
 function bossLeap(e){/* いちばん近い柵・塀を1つとびこえる（むこうがわが歩ける所だけ） */let best=null,bd=1e9;const x0=e.x|0,y0=e.y|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const j=(y0+dy)*W+x0+dx;if(j<0||j>=W*H||!breakable(typeAt(j)))continue;const d=Math.hypot(dx,dy);if(d>=bd||d<.5)continue;const ux=Math.sign(dx),uy=Math.sign(dy),k=j+uy*W+ux;if(!walk(k))continue;bd=d;best=k}
   if(best==null)return;e.x=best%W+.5;e.y=((best/W)|0)+.5;e.path=[];e.repath=0;sfxAt('bonk',e.x,e.y);fxSpr('shock',e.x*TS,e.y*TS,'#120a24');toast(EN[e.type].name+'が柵をとびこえた！','warn')}

@@ -146,6 +146,7 @@ function bellRing(x,y){/* 村の鐘：教会の鐘の音を、間をあけて3�
 /* nail2 の録音は4回打つ音。1回ふるあいだに1回だけ鳴らすので、どれか1つの打つ音だけを切って鳴らす（打つ所の時刻、秒） */
 const NAILHIT=[0,.308,.617,.930],NAILLEN=.28;
 function playHit(k,vol){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length||!AC)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime,o=pick(NAILHIT);src.buffer=b;src.playbackRate.value=.92+Math.random()*.16;const v=vol*(SFXO?1:SFXV);g.gain.setValueAtTime(v,t);g.gain.setValueAtTime(v,t+NAILLEN-.06);g.gain.linearRampToValueAtTime(0,t+NAILLEN);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.min(o,Math.max(0,b.duration-NAILLEN)),NAILLEN);return true}
+let RMRT=1;/* こわす音の高さ（spirit-act.js の burst が、つづけてこわすほど下げる） */
 function playS(k,vol,dl,rt,ex){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=(rt||1)*(ex?1:.92+Math.random()*.16);/* ex：高さをゆらさない（動きと時刻を合わせる音） */g.gain.value=vol*(SFXO?1:SFXV);src.connect(g);g.connect(SFXO||sfxG);src.start(AC.currentTime+(dl||0));return true}
 /* UIの本物の音：鳴らすたびに、ちがう録音（3〜5しゅるい）と、少しちがう高さ・大きさ（同じ音のくりかえしは機械っぽく聞こえる） */
 function playU(k,vol,rt,dl){return playS(k,vol*(.85+Math.random()*.3),dl,rt||1)}
@@ -350,7 +351,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'saw':rustle(t,.2,.07,o,1500,2600,2.4);knock(160,t+.02,.03,o,.06);break;/* のこぎり：ごりっ */
   case'workdone':knock(420,t,.1,o,.07);seq([79,86,91],.07,'sine',.045);break;/* できた：ぽん、きらん */
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
-  case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6))break;noise(t,.18,.09,o,900);break;
+  case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6,0,RMRT))break;noise(t,.18,.09,o,900);break;
   case'nail':playHit('nail2',.28);break;
   case'mine1':playS('mine',.375);break;/* 石をほる（前の crack の1.5倍） */
   case'dpour':playSeg('trickle',.4,.5);break;/* 水くみ：バケツを水に入れる音（1回ずつ） */
