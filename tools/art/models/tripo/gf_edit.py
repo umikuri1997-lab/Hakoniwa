@@ -1,7 +1,7 @@
 # 限定の家具（トリポ）のモデルを、持ち主の直しのとおりに直す（モデルそのものを直す。UV とテクスチャはそのまま）。
 # 使い方：python3 tools/art/models/tripo/gf_edit.py   … gf/base/*.glb（切りわけて、天板を水平にした物）から、直した gf/*.glb を作る（何回やっても同じ）
 #   座標は glTF（x 右・y 上・z 手前、足もとが原点）。高さのわりあいは、その家具の高さ h に対する数。
-#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直し、マテリアルを分けたい所をオブジェクトに分けたモデル（gf/base）を使う（オブジェクトの分けかたはのこす）。風のベッド・水のソファは、はば1.5倍。水のテーブルは、もらったモデルに左の脚2本しかない（ミラーが書き出されていない）ので、左右反対にして右の2本を足す（持ち主がきめた）
+#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直し、マテリアルを分けたい所をオブジェクトに分けたモデル（gf/base）を使う（オブジェクトの分けかたはのこす）。風のベッド・水のソファは、はば1.5倍。風のベッドの頭のわくは少しひくく。水のテーブルは、もらったモデルに左の脚2本しかない（ミラーが書き出されていない）ので、左右反対にして右の2本を足す（持ち主がきめた）
 #   ・火・風のびょうぶ：おく行きを0.35倍（ほぼまっすぐ）
 #   ・土の花のオブジェ：鉢のふちより上の花・多肉を、それぞれの根もとで1.25倍・まん中から少し外へ（いい感じにならべる）
 #   ・火のテーブル：天板の面のない所を、うらの円い板でうめる
@@ -25,6 +25,11 @@ def own(n,fn=None):   # 持ち主が直したモデル：オブジェクト（�
             if r is not None:sc.geometry[gn]=r
     sc.export(os.path.join(D,n+'.glb'));print(n,'持ち主のモデル')
 def wide15(nd,g):g.vertices[:,0]*=1.5;return g   # はば1.5倍（まん中は x=0）
+HEADY,HEADK=0.09,0.65   # 風のベッドの頭のわく（持ち主：少し小さく）：かけぶとんより上（高さ HEADY より上）を HEADK 倍にひくく。高さがかわるので、設計図の SIZE も同じだけ小さくした
+def bedfix(nd,g):
+    g=wide15(nd,g)
+    if nd=='o1':v=g.vertices;m=(v[:,2]<-0.065)&(v[:,1]>HEADY);v[m,1]=HEADY+(v[m,1]-HEADY)*HEADK;g.vertices=v
+    return g
 def legs4(nd,g):   # 脚（o0）：左の2本を左右反対にして、右に2本を足す（天板のまん中は x=0）
     if nd!='o0':return None
     m=g.copy();m.vertices[:,0]*=-1;m.faces=m.faces[:,::-1]
@@ -61,4 +66,4 @@ def tablefill():
     disk=trimesh.Trimesh(P,F,process=False);disk.visual=trimesh.visual.TextureVisuals(uv=np.tile(uvp,(len(P),1)),material=m.visual.material)
     save('g_f_table',trimesh.util.concatenate([m,disk]))
 screen('g_f_screen');screen('g_k_screen',0.75);planter();vanity()
-own('g_f_sofa');own('g_k_bed',wide15);own('g_s_table',legs4);own('g_s_sofa',wide15);own('g_w_stump')
+own('g_f_sofa');own('g_k_bed',bedfix);own('g_s_table',legs4);own('g_s_sofa',wide15);own('g_w_stump')
