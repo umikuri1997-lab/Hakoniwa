@@ -415,7 +415,7 @@ const TSUKIMI='ツキミ',TKWR=3,TKWK=1.5,TKFLOOR=35;/* TKFLOOR：見守って�
 ELEM.dark={name:'闇',col:'#6a5fa8',body:'#c9c0ea',can:'はたらく速さ20・移動速度20・スタミナ20・夜、まわり3マスでねむるせいれいのつかれのとれる速さ1.5倍'};
 EL_BASE.dark={work:20,move:20,sta:20,cap:1};EL_GROW.dark={atk:[0,0],work:90,move:80,cap:30};EL_ATK.dark=0;
 DEATHL.dark=DEATHL.wood;DEATHL2.dark=DEATHL2.wood;OFFER.dark=OFFER.light;BDGIFT.dark='よつゆのしずく';
-SPC.dark={hood:'#6a5fa8',cheek:'#cfc6ec',dark:'#4e4488',eye:'#2a2350',hand:'#e6e0f6',line:'#d8d2ea'};SPART.dark='water';
+SPC.dark={hood:'#645578',cheek:'#81738f',dark:'#40374e',eye:'#f2e1f5',hand:'#554963',line:'#40354e'};/* 3Dの絵（light_dark.py の DARK）と同じ色 */
 KEYEL[TSUKIMI]='dark';
 KEYVR[TSUKIMI]={key:true,tr:'',h:0,l:0,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.1};
 KEYHELLO[TSUKIMI]='……こんばんは。夜は、ぼくの番だよ。';
