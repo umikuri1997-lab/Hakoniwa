@@ -271,7 +271,7 @@ const QUESTS5=[
    gives:{recipes:['kazami'],items:{kazami:3}}},
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',
    story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[KAZANE,'神殿まで直すとはね。……ほんとうに、ものずきだ。'],[GOD,'雲の下に、まだ島がしずんでおる。風がとどけば、うかんでくるはずじゃ。'],[KAZANE,'#think|……しずんだ島、か。あそこには、まだ、ねむっているやつがいるんだ。']],
-   gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10},flag:'calmNight',run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る */
+   gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10},enemy:true,run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る */
   {id:'windReach',text:'となりの島に風をとどけよう',check:()=>windUpN()>=1&&S.flags.hayate===2,how:'風の道に「かざみ」を置くと、風の向きがかわる。雲にしずんだ島に風がとどくと、島がうかぶ'},
   {id:'merryFix',text:'メリーゴーラウンドを動かそう',check:()=>!!(S.flags.rideRun&&S.flags.rideRun.merry),prog:()=>cnt('merry')?'':'こわれたメリーゴーラウンド 0/1',how:'「しらべる」で、こわれたメリーゴーラウンドをタップして直す。風のせいれいが係になると動き、ほかのせいれいがのれる',
    talk:{who:HAYATE,when:()=>true,lines:[[HAYATE,'カザネ、あれを直そう。ぼくがのるから、きみがまわすんだ。'],[KAZANE,'#think|……やれやれ。むかしから、きみは言いだしたら聞かないね。'],[HAYATE,'#joy|そうこなくっちゃ！']]},

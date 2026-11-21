@@ -89,6 +89,7 @@ function waveFor(day){
     else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift('boss');
     return list}
   defWave(list,alv);/* 草原：ヨロイカゲ（defense.js） */
+  if(WD===WIND)return list;/* 風：オオカゲは来ない（さいごの夜はナギノオオカゲ） */
   const bq=QUESTS.find(q=>q.id==='ookage'),bOK=S.cleared||!bq||qAt(bq.id);/* オオカゲのクエストが出るまでは来ない */
   if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
   if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift('boss');S.bossOwed=false}else if(bOK)S.bossOwed=true}/* クエストが出る前の分はためない（クエストが出てから3日後に来る） *//* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
@@ -125,6 +126,7 @@ function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(lat
 function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りをやめる */
   const hasBoss=list.some(type=>EN[type].boss),wv=wavesOn(),n0=S.enemies.length;list.forEach((type,k)=>{const d=EN[type];const hp=d.hp+(WD===0&&S.bossKills&&!d.boss?NIGHTHP[Math.min(NIGHTHP.length-1,Math.floor((S.nights||0)/10))]:0);S.enemies.push({id:S.nid++,type,x:0,y:0,hp,max:hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});const nsc=wv?waveApply(S.enemies.slice(n0)):0;/* 草原：波に分けて来る・先ぶれ（waves.js） */
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')||list.includes('yama')?1:0,trial:!!S.trialOn,final:!!S.finalOn,rush:S.rushOn?S.rushN:0};if(nsc)S.ns.n+=nsc;if(wv){const nv=S.flags.nv||(S.flags.nv={});nv.wave=1;if(nsc)nv.scout=1;if(nightSideNow())nv.side=1}S.trialOn=false;S.finalOn=false;S.rushOn=false;if(typeof ngSpawn==='function')ngSpawn();/* 夜のたからさがし（nightglow.js） */
+  if(WD===WIND&&!S.flags.windFoeTold&&!S.free&&S.res.some(r=>r.name===KAZANE&&!r.hidden)){S.flags.windFoeTold=1;dialog([[KAZANE,'#surprise|……雲の海から、なにかのぼってくる。'],[KAZANE,'#think|影だ。風がもどって、目をさましたのかもしれないね。'],[KAZANE,'フッ……せっかくの遊び場だ。こわされるわけにはいかないさ。']],null,null,KAZANE)}/* 風：はじめての夜の影 */
   if(S.ns.rush&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,S.ns.rush===1?'#alarm big|守り神さま、見て……！ 影が、あんなにたくさん……！ 御神木を守らなきゃ！':'#think|ゆうべより、もっと多い……！ みんな、もうひと晩、がんばろう！']]);
   else if(list.includes('yama'))dialog([[HOMURA,'守り神！ 火の山が、あばれてる……！'],[HOMURA,'「ヤマノオオカゲ」だ。温泉の熱をうばいに来るよ。'],[SHIZUKU,'温泉を、朝まで守りぬきましょう……！']],null,null,LEAD());
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる……！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
@@ -135,7 +137,7 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
 }
 // 出現場所：マップの南のはし（いちばん下の行）から。水・障害物・明かりの中はさける
 const SPRC={n:-1,s:null,d:null};function spawnReach(){/* 村のまん中から歩いて行けるマス（コワイノは、村まで来られる所にだけ出る）。下絵が変わったら作りなおす */if(SPRC.n!==STATN||SPRC.s!==S){SPRC.n=STATN;SPRC.s=S;SPRC.d=bfsE(CX,CY,40,1).dist}return SPRC.d}
-function spawnSpot(){const R=spawnReach();
+function spawnSpot(){const R=spawnReach();if(WD===WIND){const w=windSpawnSpot(R);if(w)return w}/* 風：雲の海のふちから（wind.js） */
   for(let tries=0;tries<300;tries++){const x=(Math.random()*W)|0,y=fogSouth(x),j=y*W+x;/* 晴れている所の南のはし */
     if(y<0||S.ground[j]===1||solidOf(j)||lightAt(x+.5,y+.5)||R[j]<0)continue;return [x+.5,y+.5]}
   return edgeSpot();

@@ -209,3 +209,7 @@ function wingDots(c,x,y,k,a,now){/* 白いつばさ（2点の四角のドット�
   for(const sd of[-1,1])for(let f=0;f<9;f++){const L=(44-f*3)*k,ang=(-.25+f*.11+fl)*sd,bx=x+sd*(10+f*7)*k,by=y-f*2*k;for(let t=0;t<L;t+=P){const px=Math.round((bx+Math.sin(ang)*t*.3*sd+sd*t*.55)/P)*P,py=Math.round((by+t*.25)/P)*P;c.fillStyle=t<P*2?'#d6deef':'#f8fbff';c.fillRect(px,py,P,P*2)}}c.restore()}
 function nushiFaceDots(c,x,y,a,now){/* 風のヌシ様の顔：白い大きな鳥の頭（かりのドット絵） */const P=4,R=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round((x+dx*P)/2)*2,Math.round((y+dy*P)/2)*2,w*P,h*P)};c.save();c.globalAlpha=a;
   R(-5,-4,10,8,'#f8fbff');R(-4,-5,8,1,'#f8fbff');R(-6,-2,1,5,'#e2e8f4');R(5,-2,1,5,'#e2e8f4');R(-4,4,8,1,'#e2e8f4');const bl=Math.floor(now/2600)%7===0?1:0;R(-3,-1,2,bl?1:2,'#5a6a8a');R(1,-1,2,bl?1:2,'#5a6a8a');R(-1,1,2,2,'#f0c46a');R(-1,3,2,1,'#d9a64a');c.restore()}
+/* 風の夜のコワイノ：雲の海のふち（雲の海にとなりあう陸）の、村まで歩いて行ける所から来る（つばさの下から、のぼってくる） */
+const WSPC={n:-1,s:null,L:null};
+function windSpawnSpot(R){if(!windOn())return null;if(WSPC.n!==STATN||WSPC.s!==S){WSPC.n=STATN;WSPC.s=S;const L=[];for(let j=0;j<W*H;j++){if(S.ground[j]===1||windSunk(j)||!walk(j)||R[j]<0)continue;const x=j%W,y=(j/W)|0;if(skyJ(j-1)&&x>0||skyJ(j+1)&&x<W-1||skyJ(j-W)&&y>0||skyJ(j+W)&&y<H-1)L.push(j)}WSPC.L=L}
+  const L=WSPC.L;if(!L.length)return null;for(let t=0;t<60;t++){const j=L[(Math.random()*L.length)|0],x=j%W,y=(j/W)|0;if(solidOf(j)||lightAt(x+.5,y+.5))continue;return [x+.5,y+.5]}return null}
