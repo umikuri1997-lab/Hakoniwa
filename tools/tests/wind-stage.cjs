@@ -94,6 +94,8 @@ const assert=require('node:assert/strict');
   /* 風のそうび：風で、木材・雲わた・風の羽を手に入れると思いつく。草原のそうびは思いつかない */
   const wg=await run(`(()=>{const m0=Object.assign({},S.mat);S.mat.wood=Math.max(S.mat.wood||0,3);S.mat.hane=3;S.mat.kumowata=4;const r0=Object.assign({},S.recipes);gearIdea();const out=['gk01','gk02','gk03','gk04','gg01','gw01'].map(id=>!!S.recipes[id]);S.recipes=r0;S.mat=m0;ITEM_GIFTS.length=0;return out})()`);
   assert.deepEqual(wg,[true,true,true,true,false,false],'風のそうび');
+  /* 帆布のドア：風だけで作れる家のドア。壁ごとの絵がある */
+  const cd=await run(`[stageItemOK('canvasdoor'),HOME_DOORS.has('canvasdoor'),!!CHIPS['canvaswall.canvasdoor#h2'],!!CHIPS['canvaswall.canvasdoor#h0~in'],!!CHIPS.canvasdoor]`);assert.deepEqual(cd,[true,true,true,true,true],'帆布のドア');
   /* マップえらび：風のカードは「つづきから」。土は、ひらかない（水は試作のあいだ、いつでも入れる） */
   const e=JSON.parse(await run(`(()=>{save();showMaps();const C=k=>document.querySelector('#mList .wcard[data-k="'+k+'"]'),B=k=>[...C(k).querySelectorAll('.wbtns button')].map(x=>x.textContent).join('/');const o={w:B(4),w2:B(2),w3:B(3),open:C(4).classList.contains('open'),name:C(4).querySelector('h3').textContent};document.querySelector('#maps').hidden=true;return JSON.stringify(o)})()`));
   console.log(JSON.stringify(e));
