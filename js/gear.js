@@ -13,7 +13,7 @@ function gearMigrate(){
     delete r.gear.t;gearChanged(r);
   }
 }
-const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
+const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',nabiki:'#b4d890',houki:'#e2cc8e',kumowata:'#e8f0f8',hane:'#d6e8f4',ashi:'#b8d494',gama:'#dcc68c',nendo:'#c0bcb6',maruishi:'#c4ccd4',yotsuyu:'#9cc8bc',kagekusa:'#b8b0c8',gekko:'#d8e8f8',kogi:'#c8bcae',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
 const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
@@ -132,7 +132,7 @@ function gearIdea(material,crafted,carried=0){
   const ore=VOLK()&&GEAR_ORES.some(k=>acquired(k)>0);
   for(const id of GEAR_IDS){
     const b=BL[id],g=b.g;
-    if(g.sp||!b.mat||g.gr&&WD!==0||!g.gr&&!b.idea&&WD!==1)continue;
+    if(g.sp||!b.mat||(g.gr||g.wd?WD!==(g.gr?0:g.wd):!b.idea&&WD!==1))continue;/* 草原の物（gr）・風の物（wd）は、その土地だけ */
     const primary=source(b.idea||gearMain(id));
     const gear=g.s==='w'||g.s==='a';
     const key=primary+':'+g.s;
@@ -140,7 +140,7 @@ function gearIdea(material,crafted,carried=0){
     if(known[id])continue;
     if(crafted&&crafted!=='nuno'&&source(gearMain(crafted))!==primary)continue;
     if(material&&source(material)!==primary&&!Object.keys(b.mat).some(k=>source(k)===source(material)))continue;
-    if(b.idea?acquired(b.idea)<1:!g.gr&&!ore&&primary!=='bamboo')continue;
+    if(b.idea?acquired(b.idea)<1:!g.gr&&!g.wd&&!ore&&primary!=='bamboo')continue;
     const related=crafted&&BL[crafted]?.g&&['w','a'].includes(BL[crafted].g.s)&&
       gear&&source(gearMain(crafted))===primary;
     const threshold=rank<=1?1:(rank-1)*(related?1:3)+1;

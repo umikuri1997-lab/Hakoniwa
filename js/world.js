@@ -35,7 +35,7 @@ function newState(w){w=w||0;
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:12*60,/* 草原は15時からはじまる */speed:1,
-    unlocked:{floor:true,farm:true,[w===1?'misugaki':'fence']:true,[w===1?'bamboowall':w===WIND?'canvaswall':'hwall']:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
+    unlocked:{floor:true,farm:true,[w===1?'misugaki':w===WIND?'ropefence':'fence']:true,[w===1?'bamboowall':w===WIND?'canvaswall':'hwall']:true,...(w===WIND?{tanpopo:true}:{})},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
   s.world=w;s.vk=vkNew();/* 村の見分け（photo.js） */if(w===FREE)s.flags.valley=1;/* フリーモード：花の谷（free.js。前のセーブの地形はそのまま） */if(w===MIZU)mzGenWorld(s);else genWorld(s,w);
   if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else if(w===MIZU)s.res.push(mkRes(s,MIO,'water',CX+.5,CY-1.5,'fountain'));else if(w===WIND){s.res.push(mkRes(s,KAZANE,'wind',CX+.5,CY-1.5,'slide'));s.flags.minaCame=true}/* 風（土台）：はじめはカザネひとり。2人めのキーキャラは、お話を作るときに */else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
@@ -189,7 +189,7 @@ function festAct(r,G){if(festBase()<0)return false;const h=hour(),ib=k=>VILL[k];
   if(x<.72&&trySocial(r,G))return true;/* おまつりのおしゃべり */
   const j=festSpot(G,k=>ib(k)&&Math.hypot(k%W+.5-r.x,((k/W)|0)+.5-r.y)>=4,30);if(j>=0){startAct(r,G,'fwalk',j);if(r.fsnack&&Math.random()<.6)r.bubble=r.fsnack;return true}/* 村の中を、ぶらぶら見てまわる */
   return false}
-for(const id in STAGEONLY)Object.defineProperty(BL[id],'offerOnly',{get:()=>WD!==STAGEONLY[id]&&!grec(id),configurable:true});/* ステージの物は、そのステージで作れる。ほかのステージでは、おぼえるまではおそなえだけ */for(const id in BL){const b=BL[id];if(b.mat1){const m0=b.mat;b.mat0=m0;Object.defineProperty(b,'mat',{get:()=>WD===1?b.mat1:m0,configurable:true})}}/* mat1：火山での素材（実数で書いてある）。mat0：ほかのステージの素材（matHere がステージにかかわらず読む） */
+for(const id in STAGEONLY)Object.defineProperty(BL[id],'offerOnly',{get:()=>WD!==STAGEONLY[id]&&!grec(id),configurable:true});/* ステージの物は、そのステージで作れる。ほかのステージでは、おぼえるまではおそなえだけ */for(const id in BL){const b=BL[id];if(b.mat1||b.mat3||b.mat4||b.mat5){const m0=b.mat;b.mat0=m0;Object.defineProperty(b,'mat',{get:()=>WD===1&&b.mat1?b.mat1:WD>1&&b['mat'+WD]?b['mat'+WD]:m0,configurable:true})}}/* mat1：火山・mat3：水・mat4：風・mat5：闇での素材（実数で書いてある）。mat0：ほかのステージの素材（matHere がステージにかかわらず読む） */
 const FLAM=new Set(Object.keys(BL).filter(id=>id!=='hwall'&&id!=='door'&&id!=='yozoradoor'&&(()=>{const b=BL[id],m=b.mat||{};return (b.kind==='furn'||b.kind==='block'||b.kind==='build')&&(m.wood>0||m.bamboo>0)&&!m.stone&&!b.natural&&id!=='torch'&&id!=='candle'})()));/* 火山のふもとで燃える物：木材だけで作る家具・柵・壁など（たいまつ・ろうそくは、もともと火がついている物なのでのぞく） */
 const burnHp=o=>BL[o].hp||10,fireAt=j=>WD===1&&!!S.st2&&!!S.st2.fire&&S.st2.fire[j]!=null;/* じょうぶさのない家具は、燃えるときだけ10とする */
 function ignite(j){if(WD!==1||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))return;const F=S.st2.fire||(S.st2.fire={});if(F[j]!=null)return;F[j]=S.t;toast(BL[o].name+'が燃えている！','warn');sfxAt('cookfire',j%W+.5,(j/W)|0)}
@@ -302,7 +302,7 @@ function nearRes(e){return e.hitT!=null&&S.t-e.hitT<5||S.res.some(r=>foeAt(e,r))
 function foeStealing(e){return e.stealKey!=null&&S.t-(e.busyT??-1e9)<1}/* 箱・畑からぬすんでいる（カゲドロボウ） */
 function sortieOn(){return !!(S&&(S.free||S.flags&&S.flags.sortie))}/* 出撃（サブクエスト sortie を受けたら、えらべる。草原でおぼえたら、ほかのステージでも） */
 function sortieGuard(r){return !!r&&!WD&&!!S&&r.name===POKO&&!!(S.flags&&S.flags.guard)}/* こもれびのまもりをおぼえたフタバは、出撃をえらべる（はじめは出撃する） */
-function sortieOK(r){return r.elem!=='light'&&(sortieOn()||sortieGuard(r))}/* 光のせいれいは、たたかわない */
+function sortieOK(r){return r.elem!=='light'&&r.elem!=='dark'&&(sortieOn()||sortieGuard(r))}/* 光・闇のせいれいは、たたかわない */
 function sortieDef(r){return r.elem==='fire'||sortieGuard(r)}/* はじめの出撃：火のせいれいと、こもれびのまもりをおぼえたフタバ */
 function fighter(r){if(!r)return false;if(r.name===POKO&&!WD&&S.ns&&S.ns.final&&isNight())return true;/* 草原のさいごの夜は、フタバはかならず出撃 */if(!sortieOK(r))return r.elem==='fire';return r.sortie==null?sortieDef(r):r.sortie===true}/* 夜にコワイノと近接でたたかう子。r.sortie：えらんだ出撃（なければ sortieDef） */
 function foeHitsFire(e){if(typeof e.tg!=='number')return false;const q=S.res.find(q=>q.id===e.tg);return !!q&&fighter(q)&&!q.hidden&&Math.hypot(q.x-e.x,q.y-e.y)<((EN[e.type]||{}).rng||1)+.5}/* 火のせいれいをたたいているコワイノ（とどかない所からでも、火のせいれいが近よって攻撃する） *//* だれかの3マス以内・だれかのいる家に来たコワイノと、塀・壁・建物をこうげきしているコワイノ（火の子がむかえうつ） */
@@ -329,7 +329,7 @@ const workOK=j=>workCells(j).some(k=>walk(k));
 let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
 function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
 /* すわる・ねる・遊ぶ家具とお墓（通れる家具）は、使うときだけ上に乗る。道さがしでは、上を通るのを大きな手間（SEATCOST）にして、ほかに道がないときだけ通る。行き先にするのは、その家具を使う行動だけ（startAct の seatStand） */
-const SEATF=new Set(['bed','yorubed','chair','achair','stool','pouf','bench','takebench','swing','grave']),SEATCOST=600;
+const SEATF=new Set(['bed','yorubed','chair','achair','stool','pouf','kagoisu','bench','takebench','swing','grave']),SEATCOST=600;
 const seatJ=j=>j>=0&&j<W*H&&SEATF.has(typeAt(j));
 function walkR(j){return walk(j)&&!seatJ(j)}/* せいれいが、使わずに立ってよいマス */
 function seatBackStep(i,j){/* i→j が、いす・ベンチの背もたれのがわからの乗りおり（その家具のマスどうしは、のぞく） */if(typeof seatBack!=='function')return false;const ci=seatCell(i),cj=seatCell(j);if(cj&&!ci&&seatBack(j)===i)return true;if(ci&&!cj&&seatBack(i)===j)return true;return false}

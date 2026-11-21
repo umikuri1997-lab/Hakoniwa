@@ -29,7 +29,7 @@ ACT.ngget={start(r,a){if(!ngAt(a.obj))return false;r.bubble='';if(a.stand!==a.ob
     if(typeof juiceGlowAt==='function')juiceGlowAt(g.x+.5,g.y+.6,g.t);sfx('seed');addFloat(r.x,r.y-1.8,'たからもの！',NGCOL[g.t]);toast(r.name+'が「夜のたからもの」をひろった','good');logEv('夜のたからものをひろった');dirty=true}};
 ACT_LBL.ngget='光るつぶをひろいに行く';
 /* ---- あける ---- */
-function ngRoll(t){/* [物,数] */if(t===0){const L=WD===1?['wood','stone','bamboo','kuru','chiri']:['wood','stone','shina','kasa','eda'];return['mat:'+pick(L),NGMAT]}if(t===1)return Math.random()<.5?['mapPc',1]:[pick(GIFTDROP),1];return['fukuro',1]}
+function ngRoll(t){/* [物,数] */if(t===0){const L=WD===1?['wood','stone','bamboo','kuru','chiri']:WD===WIND?['wood','stone','nabiki','houki','kumowata']:WD===MIZU?['wood','stone','ashi','gama','maruishi']:WD===YAMI?['wood','stone','yotsuyu','kagekusa','kogi']:['wood','stone','shina','kasa','eda'];return['mat:'+pick(L),NGMAT]}if(t===1)return Math.random()<.5?['mapPc',1]:[pick(GIFTDROP),1];return['fukuro',1]}
 function ngOpen(id){const t=NGID.indexOf(id);if(t<0||!(S[id]>0))return;if(isNight())return toast('あけるのは、朝になってから','warn');S[id]--;const[it,n]=ngRoll(t),items=[],gifts={};sfx('seed');/* 中身は、さきにわたす（とちゅうでとじても、なくならない） */
   if(it.startsWith('mat:')){const k=it.slice(4);S.mat[k]=(S.mat[k]||0)+n;let img='';try{img=ICONS[k]||''}catch(e){}items.push({img,nm:MATN[k]+'×'+n})}
   else if(it==='mapPc'||it==='fukuro'){trStow(it,n);items.push({img:trIco(it),nm:TRNAME[it]+'×'+n})}
