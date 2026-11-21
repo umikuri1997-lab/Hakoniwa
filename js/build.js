@@ -291,6 +291,12 @@ function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y)
 function soilMigrate(){/* 前のセーブの素材「土」は、土のブロックにする（読みこむたび。はこんでいるとちゅうの土は、つぎに読みこんだとき） */
   const n=S.mat&&S.mat.tsuchi|0;if(n>0){S.mat.tsuchi=0;S.inv[SOIL]=(S.inv[SOIL]||0)+n}
   for(const d of S.drops||[])if(d.id==='mat:tsuchi')d.id=SOIL}
+function blockMig(){/* 前のセーブ：レンガ・木のブロック（いまはない）は、つんだ物は石のブロックに、もちもの・落とし物は作ったときの素材にもどす（10こで1回ぶん、切り上げ） */if(S.flags.blk2)return;S.flags.blk2=1;
+  for(const j in S.vx||{})S.vx[j]=S.vx[j].map(id=>CUBEOLD.includes(id)?'blk_stone':id);
+  const back=(id,n)=>{for(const m in BL[id].mat)S.mat[m]=(S.mat[m]||0)+Math.ceil(BL[id].mat[m]*n/10)};
+  for(const id of CUBEOLD){const n=S.inv[id]|0;if(n>0)back(id,n);delete S.inv[id]}
+  S.drops=(S.drops||[]).filter(d=>{if(!CUBEOLD.includes(d.id))return true;back(d.id,d.n||1);return false});
+  for(const o of (S.orders||[]).filter(o=>CUBEOLD.includes(o.type)))cancelOrder(o.id)}
 function fudeHas(){/* かたちの筆をもっているか：草原の本編は、カミサマにもらってから（カミサマが旅立ったあとのセーブも） */return !S||WD!==0||!!S.free||!!S.flags.fude||!!S.godGone}
 let PICKSEL=SOIL,PICKH=null;/* 筆の下の列でえらんでいる物・長おし */
 const pickHave=k=>inv(k);
