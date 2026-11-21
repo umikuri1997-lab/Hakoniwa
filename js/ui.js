@@ -361,7 +361,7 @@ function renderSheet(){
     if(!visitHere())return closeSheet();const p=VISITORS[S.st2.visit.who];T.textContent=p[0]+'のお店';
     body.appendChild(el('<p class="note">草原の花のたね・りんごの苗と、パワーを交換します。</p>'));
     const d=el('<div class="sec"><h3>花のたね・りんごの苗</h3><div class="rows"></div></div>'),rows=d.querySelector('.rows');body.appendChild(d);
-    for(const id of PLANTS.filter(id=>id!=='tree'&&(!PLANTDEF.has(id)||S.unlocked[id]))){/* 守りの草（ねばり草・ほたる）は、おぼえた土地だけ */const b=BL[id],r=rowEl(iname(id),'所持：'+inv(id),iconURL(id));helpify(r,withAttr(id,b.desc||''));const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);
+    for(const id of PLANTS.filter(id=>id!=='tree'&&!STAGEFL.has(id)&&(!PLANTDEF.has(id)||S.unlocked[id]))){/* 守りの草（ねばり草・ほたる）は、おぼえた土地だけ */const b=BL[id],r=rowEl(iname(id),'所持：'+inv(id),iconURL(id));helpify(r,withAttr(id,b.desc||''));const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);
       for(const k of [1,5]){const c=shopPrice(id,k),bt=el('<button class="btn'+(k===1?' pri':'')+'"></button>');bt.textContent='×'+k+'　'+SP(c);lackOn(bt,lackPt(c));bt.onclick=()=>{if(S.pt<c)return;S.pt-=c;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;S.unlocked[id]=true;giveItem(id,k);sfx('power');renderSheet();renderPalette()};bx.appendChild(bt)}}
     return}
   if(sheet==='shop'){
