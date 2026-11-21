@@ -144,5 +144,10 @@ const GEARBL={
   gm02:{"name":"あしの矢","kind":"ammo","pc":3,"time":60,"maker":"water","qty":10,"mat":{"ashi":2,"maruishi":1},"g":{"s":"ar","dmg":10,"wd":3},"desc":"見張り台が放つ矢。威力+10"},
   gm03:{"name":"粘土のむねあて","kind":"gear","pc":4,"time":90,"maker":"water","mat":{"nendo":5},"g":{"s":"a","hun":20,"wd":3},"desc":"たたかれたときのおなかのへり－20"},
   gm04:{"name":"丸石のおまもり","kind":"gear","pc":3,"time":90,"maker":"water","mat":{"maruishi":3},"g":{"s":"c","hun":10,"wd":3},"desc":"たたかれたときのおなかのへり－10"},
+  /* 闇のそうび（wd 5。トモリはたたかわないので、ほかのせいれいの物） */
+  gy01:{"name":"古木のこん棒","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"kogi":4},"g":{"s":"w","atk":20,"kb":1,"wd":5},"desc":"攻撃力+20・のけぞらせる"},
+  gy02:{"name":"月光の矢","kind":"ammo","pc":3,"time":60,"maker":"fire","qty":10,"mat":{"kogi":1,"gekko":1},"g":{"s":"ar","dmg":10,"rng":0.5,"wd":5},"desc":"見張り台が放つ矢。威力+10・射程+0.5マス"},
+  gy03:{"name":"月光石のたて","kind":"gear","pc":4,"time":90,"maker":"fire","mat":{"gekko":3,"stone":2},"g":{"s":"a","hun":30,"mv":-2,"wd":5},"desc":"たたかれたときのおなかのへり－30・移動速度－2"},
+  gy04:{"name":"夜つゆのおまもり","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"yotsuyu":3,"gekko":1},"g":{"s":"c","rec":1.2,"hun":10,"wd":5},"desc":"たたかれたときのおなかのへり－10・つかれのとれる速さ1.2倍"},
 };
 const GEAR_IDS=Object.keys(GEARBL),GEAR_ARROWS=GEAR_IDS.filter(id=>GEARBL[id].g.s==='ar');Object.assign(BL,GEARBL);/* BL にならべる（依頼ボード・アイコン・説明を、ほかの物と同じしくみで使う） */

@@ -202,7 +202,25 @@ def rankandoor(v,n):   # 欄干の戸（水。運河の石の欄干のとなり�
         k=6;sp=(u1-u0-0.06)/(k-1)
         for i in range(k):c=u0+0.03+i*sp;b.box('iron','棒',c-0.012,FR-0.012,0.10,c+0.012,FR+0.012,0.68,IR)
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
-DOORS={'ashifence.gate':(ashidoor,True),'rankan.gate':(rankandoor,True),'ropefence.gate':(ropedoor,True),'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False)}
+def ibaradoor(v,n):   # いばらの戸（闇。いばらの生垣のとなりの柵のドアの絵）：古木のくい、とびらは古木の細いわくに、いばらのくきをからめる
+    b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;r=0.06;OLD=(150,132,120)
+    posts=[0.0,1.0] if not v else [0.09,0.91]
+    for pu in posts:b.cyl('post','くい',pu,PW,r,0,0.85,OLD,(0,0))
+    u0,u1=posts[0]+r,posts[1]-r;rot=b.hinge(u0,FR,ANG[n])
+    def body(b):
+        for z in(0.72,0.08):b.box('railh','わく',u0+0.01,FR-0.02,z,u1-0.01,FR+0.02,z+0.05,OLD,(0,0))
+        for uu in(u0+0.01,u1-0.06):b.box('post','わく',uu,FR-0.02,0.08,uu+0.05,FR+0.02,0.77,OLD,(0,0))
+        b.plate('railh','すじかい',(u0+0.05,FR,0.12),(u1-0.05,FR,0.70),0.04,0.03,OLD,(0,0))
+        import math as _m
+        for z,ph in((0.24,0.0),(0.44,1.7),(0.62,3.1)):
+            pts=[(u0+0.03+(u1-u0-0.06)*i/8,FR+0.035,z+0.05*_m.sin(i*1.5+ph)) for i in range(9)]
+            b.P.append(('vine',F.Part('くき','tube',([(*b.xy(p[0],p[1]),p[2]) for p in pts],0.024),F.IBS),None))
+    leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
+def kuzuredoor(v,n):   # くずれた欄干の戸（闇）：欄干の戸と同じ形で、こけむした灰色の石
+    P,xr=rankandoor(v,n)
+    for k,p,o in P:p.col=F.MSTONE if p.col==F.RSTN else p.col
+    return P,xr
+DOORS={'ibara.gate':(ibaradoor,True),'kuzure.gate':(kuzuredoor,True),'ashifence.gate':(ashidoor,True),'rankan.gate':(rankandoor,True),'ropefence.gate':(ropedoor,True),'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False)}
 def build_door(iid):
     fn,hasv=DOORS[iid];out={}
     for o in(['h','v'] if hasv else ['h']):

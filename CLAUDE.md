@@ -683,6 +683,7 @@
 - 水の木はオーク（`tree~m`・`deadtree~m`）と、自然の木の4わりはメープル（`maple~m`）。闇の木は枯れたオーク（`tree~y`・`deadtree~y`）。どれもアカシアと同じ作り（`tools/art/nature3d/tree_prep.py`・`furn3d/items/nat_oak.py`・`nat_maple.py`・`nat_deadoak.py`、落ち影も）。
 - 風の木はアカシア（植えた木 `tree~k`・自然の木 `deadtree~k`、切ると木材。設計図 `tools/art/furn3d/items/nat_acacia.py`、モデルは `acacia_prep.py`）。ステージでの木の名前は `STAGEN[ステージ]`。風・水・闇でそろえる物の案は `IDEAS.md`。
 - 風の家具（しまもようのハンモック・風船の屋台・気球のかごのいす・かざぐるまの花壇・風見のランプ、`STAGEONLY` 風）：まわりのたのしさは、風の道のそば（まわり2マス `windNear`）では `envW`（実数）、ほかは `env`。水の家具（テラスの席・窓辺の花の鉢・運河の街灯・水路の洗い場）は、水べのそば（まわり2マスに水、`envNear`）で `envW`。気球のかごのいすは、すわれるいす（`SEATS`）。
+- 闇の家の壁はこけむした石の壁（`mosswall`）・月光石の壁（`moonwall`）、柵はいばらの生垣（`ibara`）、塀はくずれた石の欄干（`kuzure`）、家具は月光石のランプ・ほたるのかご（あかり）・夜のしとね・月見台。闇の物を作るのは火のせいれい（はじめのヒイロ）。
 - 水の家の壁は木組みの壁（`timberwall`）・運河の石積みの壁（`canalwall`）、柵はあしの垣（`ashifence`）、塀は運河の石の欄干（`rankan`）。となりの柵のドアは、その柵・塀の戸の絵（`<柵>.gate#h0〜3`・`#v0〜3`、`drawDoorChip` の `rg`）。その土地の物を作るせいれいは、その土地にはじめからいる属性（風は `wind`・水は `water`）にする（`maker`。ちがうと作れない）。
 - 風の柵は、ロープの手すり（`ropefence`、新しい風の村ではじめから使える）。となりの柵のドアは、ロープの戸の絵（`ropefence.gate#h0〜3`・`#v0〜3`。御簾垣の戸と同じ作り）。
 - 風の塀は、遊園地の白い塀（`parkfence`・ドア `parkdoor`・入場ゲート `parkgate`、`STAGEONLY` 風）。3Dから写す（`fence3d.py` の `scene_park`・`doors3d.py`）。白い物は、ふつうのかげだと灰色になるので、かげをつけない材質（`flat`）で写す。

@@ -258,11 +258,44 @@ def scene_rankan(m):   # 運河の石の欄干（水）：石の台（高さ0〜
             g='kv%d'%(z0*100)
             addv(P,'stonev',lambda a,b,z0=z0,z1=z1,w=w,g=g:Part('手すり','box',(0.5-w,a,z0,0.5+w,b,z1),RSTN,grp=g),y0,y1,RSTN)
     return P
+IBS=(126,104,120);IBSD=(104,86,104);IBL=(120,150,112);IBF=(236,214,232)   # いばらの生垣（闇）：くき（くすんだむらさき）・葉・花
+def scene_ibara(m):   # いばらの生垣（闇）：古木のくい（柱は角・はし、半径0.06・高さ0.85）に、いばらのくき（太さ0.028）を5本ずつ、波うたせてからめる。とげ（小さな円すい）・葉（小さな板）・うすいピンクの小さな花
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865
+    import math as _m
+    def vine(a,b,z,ph,horiz):   # a〜b を、高さ z のまわりで波うつ、いばらのくき（折れ線）
+        n=10;pts=[]
+        for i in range(n+1):
+            t=a+(b-a)*i/n;dz=0.07*_m.sin(t*_m.pi*4+ph);dw=0.02*_m.cos(t*_m.pi*4+ph)
+            pts.append((t,YC+dw,z+dz) if horiz else (0.5+dw,t,z+dz))
+        return pts
+    for z,ph,col in((0.12,0.0,IBSD),(0.27,1.7,IBS),(0.42,3.1,IBSD),(0.57,4.4,IBS),(0.72,5.6,IBSD)):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5;pts=vine(x0,x1,z,ph,True)
+            P.append(('vine',Part('くき','tube',(pts,0.028),col),None))
+            for i in range(1,len(pts)-1):
+                x,y,zz=pts[i]
+                if i%2:P.append(('vine',Part('とげ','cone',(x,y+0.02,0.014,zz+0.01,zz+0.06),col),None))
+                P.append(('leaf',Part('葉','plate',((x,y+0.03,zz-0.01),(x+0.07*(1 if i%2 else -1),y+0.04,zz+0.05),0.05,0.006),IBL),None))
+            for i in range(2,len(pts)-1,4):
+                x,y,zz=pts[i];P.append(('flower',Part('花','cyl',(x,y+0.035,0.022,zz+0.02,zz+0.03),IBF,detail=8),None))
+        for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+            if y0<0:y0=0.0
+            if y1>y0:P.append(('vine',Part('くき','tube',(vine(y0,y1,z,ph,False),0.028),col),None))
+    if post:P.append(('post',Part('くい','cyl',(0.5,YC,0.06,0,0.85),(150,132,120)),(0,0)))
+    return P
+def scene_kuzure(m):   # くずれた石の欄干（闇）：運河の石の欄干と同じ組み方で、こけむした灰色の石。小柱は、ところどころかけている
+    P=scene_rankan(m);out=[]
+    for i,(k,p,o) in enumerate(P):
+        p.col=MSTONE if p.col==RSTN else MSTONED if p.col==RSTND else p.col
+        if p.name=='小柱' and (i*7)%5==0:continue   # かけた小柱
+        out.append((k,p,o))
+    return out
+MSTONE=(178,176,170);MSTONED=(160,158,154)
 def render(P,xr=(0,1)):
     sc=O.Scene();sc.txo={};sc.txax={};ext_ids=set()
     for kind,p,org in P:
         if kind=='stone':sc.texture(TS)
-        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP,PARKB,PARKW,REED,REEDG,BIND,RSTN,RSTND):sc.texture(TW)
+        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP,PARKB,PARKW,REED,REEDG,BIND,RSTN,RSTND,IBS,IBSD,IBL,IBF,MSTONE,MSTONED):sc.texture(TW)
         else:sc.texture(None)
         sc.material('metal' if kind=='iron' else 'flat' if p.col==PARKW else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         ids=range(p0+1,sc.pid+1)
@@ -289,7 +322,7 @@ def render(P,xr=(0,1)):
     im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0]+int(round(xr[0]*64)),bb[1]-128
 OLD={0:'H0',1:'HL',2:'HR',3:'HLR',4:'VU',8:'VD',12:'VUD'}
 def build_all(iid):
-    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park,'ropefence':scene_rope,'ashifence':scene_ashi,'rankan':scene_rankan}[iid];out={}
+    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park,'ropefence':scene_rope,'ashifence':scene_ashi,'rankan':scene_rankan,'ibara':scene_ibara,'kuzure':scene_kuzure}[iid];out={}
     for m in range(16):im,ax,ay=render(fn(m));out[m]=(im,ax,ay)
     return out
 def sheet(res,path,layout):
