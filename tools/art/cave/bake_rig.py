@@ -110,7 +110,7 @@ _BW={}
 # ポーズ（コマごと）。hum：leg 足をふる度（左が+なら右は−）・arm うでをふる度（足と逆）・armU 両うでを前へあげる度・head うなずく度・lean からだを前へ・bob 上へ・sq たて
 #  float：ph 波の位置（0〜1）・amp ゆれのはば　blob：ph・amp　hop：ear 耳の度・jaw あごの度　te：wr 手首の度・fg 指の度
 FR={'hum':{'0':dict(),'1':dict(sq=.97,head=4,arm=3),'w0':dict(leg=26,arm=-22,bob=.03,head=3),'w1':dict(leg=0,sq=.97),'w2':dict(leg=-26,arm=22,bob=.03,head=3),'w3':dict(leg=0,sq=.97),
-      'a0':dict(armU=-150,lean=-8,head=-10,sq=1.02),'a1':dict(armU=-20,lean=16,head=14,sq=.95)},
+      'a0':dict(armU=-115,lean=-8,head=-10,sq=1.02),'a1':dict(armU=-20,lean=16,head=14,sq=.95)},
     'float':{'0':dict(ph=0,amp=.05,bob=.06),'1':dict(ph=.5,amp=.05,bob=.03),'w0':dict(ph=0,amp=.09,bob=.06,lean=8),'w1':dict(ph=.25,amp=.09,bob=.08,lean=8),'w2':dict(ph=.5,amp=.09,bob=.06,lean=8),'w3':dict(ph=.75,amp=.09,bob=.04,lean=8),
       'a0':dict(ph=.1,amp=.04,bob=.1,sq=1.06,lean=-6),'a1':dict(ph=.6,amp=.14,bob=.02,lean=16,sq=.92)},
     'blob':{'0':dict(ph=0,amp=.04),'1':dict(ph=.5,amp=.04,sq=.94,wid=1.03),'w0':dict(ph=0,amp=.1,sq=.88,wid=1.08),'w1':dict(ph=.25,amp=.1,sq=1.05,wid=.96,lean=6),'w2':dict(ph=.5,amp=.1,sq=.9,wid=1.06),'w3':dict(ph=.75,amp=.1,sq=1.04,wid=.97,lean=-4),
