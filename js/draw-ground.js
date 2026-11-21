@@ -31,7 +31,8 @@ function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh
     const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
     const q=GRD.s===S&&GRD.c.get(cy*64+cx);if(!q)continue;let im=lod?q.l:(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;q.u=RFN;/* できていない区画はとばす（つぎのコマ以降に、見えている区画から作る）。くわしい絵をすてた区画は、半分の絵で */
     const e1=a===ox&&a>sx?GPAD:0,e2=a2===ox+GPX&&a2<sx+sw?GPAD:0,f1=b===oy&&b>sy?GPAD:0,f2=b2===oy+GPX&&b2<sy+sh?GPAD:0,A=a-e1,B=b-f1,A2=a2+e2,B2=b2+f2;/* 区画のさかいでは、のりしろの分だけ、となりの区画にかさねて描く（Safari は切りとった所のはしを透明とまぜるので、さかいめに線が出る） */
-    c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}}
+    c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}
+  dcBlit(c,dx,dy,dw,dh)}/* 物といっしょに描く地面の絵にも、地面の層の色（daycolor.js） */
 let dirty=true,STATICFULL=false,ICON=false,VIG=null;
 function artLoaded(){for(const q in iconCache)delete iconCache[q];STATICFULL=true;dirty=true}/* 絵が読みこまれたら、次に描くときに1回だけ地面を全部描きなおす */
 
