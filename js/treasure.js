@@ -22,7 +22,7 @@ ACT.tdig={start(r,a){if(S.tx!==a.obj)return false;r.bubble='';if(a.stand!==a.obj
 ACT_LBL.tdig='宝をほっている';
 /* ふしぎなふくろ：あけると出てくる物（[確率, 物]） */
 function fukuroRoll(){const q=Math.random();
-  if(q<.4){const L=WD===1?['wood','stone','bamboo','kuru','chiri']:WD===WIND?['wood','stone','nabiki','houki','kumowata']:['wood','stone','shina','kasa','eda'],a=pick(L);let b=pick(L);if(b===a)b=L[(L.indexOf(a)+1)%L.length];return[['mat:'+a,8],['mat:'+b,5]]}
+  if(q<.4){const L=WD===1?['wood','stone','bamboo','kuru','chiri']:WD===WIND?['wood','stone','nabiki','houki','kumowata']:WD===MIZU?['wood','stone','ashi','gama','maruishi']:WD===YAMI?['wood','stone','yotsuyu','kagekusa','kogi']:['wood','stone','shina','kasa','eda'],a=pick(L);let b=pick(L);if(b===a)b=L[(L.indexOf(a)+1)%L.length];return[['mat:'+a,8],['mat:'+b,5]]}
   if(q<.65){const L=Object.keys(CROPS).filter(k=>cropOn(k));return L.length?[['seed:'+pick(L),3]]:[['mat:wood',8]]}
   if(q<.8)return[['food:'+(WD===1?'takenoko':'apple'),5]];
   if(q<.9)return[['mseed',1]];
