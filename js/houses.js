@@ -166,7 +166,7 @@ function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使
     {const rc=S&&S.roofCol&&S.roofCol[hKey(h)],P=rc&&ROOFCOL[rc];if(P)roofTint(c,cv,P)}/* 屋根の色（村レベル13から、家をタップしてえらぶ） */
     return{cv,ox,oy,sc,chim}}}
 function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
-  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);if(typeof feelRoof==='function')feelRoof(c,h,R,A);if(typeof feelRoofWet==='function')feelRoofWet(c,h,R,A);/* 冬：屋根の雪 */
+  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);dcRoof(c,h,R,A);/* 屋根の層の色（daycolor.js） */c.globalAlpha=A;if(typeof feelRoof==='function')feelRoof(c,h,R,A);if(typeof feelRoofWet==='function')feelRoofWet(c,h,R,A);/* 冬：屋根の雪 */
     if(!R.chim||eo)continue;const cx=R.chim.cx,cy=R.chim.cy;
     c.fillStyle='#8f8f8f';c.fillRect(cx-7,cy-10,14,18);
     for(let r=0;r<3;r++)for(let k=0;k<2;k++){c.fillStyle=(r+k)%2?'#b8b8b8':'#acacac';c.fillRect(cx-6+k*6.5+(r%2?-2:0),cy-9+r*5.6,6,4.8)}
