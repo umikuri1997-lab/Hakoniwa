@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""風のステージの家の壁（帆布の壁 canvaswall・アカシアの板壁 acaciawall）を、3Dで組んで写して、チップにする。
+"""風・水のステージの家の壁（風：帆布の壁 canvaswall・アカシアの板壁 acaciawall、水：木組みの壁 timberwall・運河の石積みの壁 canalwall）を、3Dで組んで写して、チップにする。
   python3 tools/art/windwall/windwall3d.py <出力フォルダ> [canvaswall acaciawall] [--chips]
 竹の壁（tools/art/bamboowall/bamboowall_art.py）と同じ5まいの絵（上の面・正面・柱の切り口・柱の正面・たての壁を上から見た帯）を、
 もらった絵のかわりに3Dから写し、部品（H0〜HLR・VU〜VUD・m5〜m15、かげのうすい ~in）は竹の壁の道具の part・vpart で組む。
@@ -28,8 +28,41 @@ X0, X1 = 10/64, 54/64; YB, YF, ZT = 0.72, 1.0, 1.25
 def stripes(x, y, z):   # 帆布のたてじま（0.25ごと。1マスで2くみ）
     return CORAL if (x % 0.5) < 0.25 else CREAM
 
+TP = O.Tex(os.path.join(ART, 'textures', 'plaster001.png'), span=1.0, flow=2, minrun=2, dark=(0.08, 0.97), light=(0.06, 1.02))   # しっくい（うすく）
+TR = O.Tex(os.path.join(ART, 'textures', 'rock030.png'), span=1.0, flow=2, minrun=2, dark=(0.14, 0.93), light=(0.12, 1.05))   # 石
+PLAS = (244, 236, 218); TIMB = (150, 108, 78); STN = (204, 210, 214); STND = (188, 194, 202); MORT = (230, 230, 224)
+def stones(u, z):   # 石積み：だんの高さ0.25、石のはば0.5、1だんごとに半分ずらす。目地は明るい
+    r = int(z / 0.25); uu = u + (0.25 if r % 2 else 0)
+    if (z % 0.25) < 0.025 or (uu % 0.5) < 0.025: return MORT
+    return STN if (int(uu / 0.5) + r) % 2 == 0 else STND
+def timber_parts(piece):   # 木組みの壁（水）：しっくいの面に、こげ茶の木わく（下の土台・上のけた・まん中のたて材・すじかい）
+    P = []
+    if piece == 'h':
+        P.append((Part('しっくい', 'box', (-1, YB+0.03, 0.10, 2, YF-0.03, ZT-0.10), PLAS), TP, None, (1, 0, 0)))
+        P.append((Part('けた', 'box', (-1, YB, ZT-0.10, 2, YF, ZT), TIMB), TW, None, (1, 0, 0)))
+        P.append((Part('土台', 'box', (-1, YB, 0, 2, YF, 0.10), TIMB), TW, None, (1, 0, 0)))
+        for x in (-0.5, 0.0, 0.5, 1.0, 1.5): P.append((Part('たて材', 'box', (x-0.04, YF-0.04, 0.10, x+0.04, YF-0.01, ZT-0.10), TIMB), TW, None, (0, 0, 1)))
+        for x in (0.0, 1.0): P.append((Part('すじかい', 'prism', ([(x+0.04, 0.10), (x+0.10, 0.10), (x+0.46, ZT-0.10), (x+0.40, ZT-0.10)], YF-0.04, YF-0.015), TIMB), TW, None, (0, 0, 1)))
+    elif piece == 'p':
+        P.append((Part('柱', 'box', (X0, YB, 0, X1, YF, ZT), TIMB), TW, None, (0, 0, 1)))
+    else:
+        P.append((Part('けた', 'box', (X0, -1, 0, X1, 2, ZT), TIMB), TW, None, (0, 1, 0)))   # 上から見ると、けた（横の壁のてっぺんと同じ）
+    return P
+def canal_parts(piece):   # 運河の石積みの壁（水）：うすい青みの灰色の石を、だんごとに半分ずらしてつむ。上に、少し出たかさ石
+    P = []
+    if piece == 'h':
+        P.append((Part('石積み', 'box', (-1, YB+0.02, 0, 2, YF, ZT-0.08), STN), TR, lambda x, y, z: stones(x, z), (1, 0, 0)))
+        P.append((Part('かさ石', 'box', (-1, YB, ZT-0.08, 2, YF+0.015, ZT), MORT), TR, None, (1, 0, 0)))
+    elif piece == 'p':
+        P.append((Part('石の柱', 'box', (X0, YB, 0, X1, YF, ZT-0.08), STN), TR, lambda x, y, z: stones(x+y, z), (0, 0, 1)))
+        P.append((Part('かさ石', 'box', (X0-0.01, YB-0.01, ZT-0.08, X1+0.01, YF+0.015, ZT), MORT), TR, None, (1, 0, 0)))
+    else:
+        P.append((Part('かさ石', 'box', (X0, -1, 0, X1, 2, ZT), MORT), TR, None, (0, 1, 0)))   # 上から見ると、かさ石（横の壁のてっぺんと同じ）
+    return P
 def parts(wall, piece):
     """piece：'h'（よこの壁）・'p'（柱）・'v'（たての壁を上から見た帯）。[(部品, テクスチャ, もよう, 木目の向き)]"""
+    if wall == 'timberwall': return timber_parts(piece)
+    if wall == 'canalwall': return canal_parts(piece)
     P = []
     if wall == 'canvaswall':
         if piece == 'h':
@@ -81,7 +114,9 @@ def pieces(wall):
     return TOP, FRONT, CAP, PBODY, VS
 
 WOODPAL = {'canvaswall': [(196, 192, 182), (218, 214, 204), (234, 231, 222), (244, 242, 234), (250, 248, 242), (255, 254, 250)],   # 白くぬった木
-           'acaciawall': [(150, 104, 58), (178, 128, 76), (202, 152, 94), (216, 166, 104), (230, 184, 122), (242, 204, 148)]}  # はちみつ色のアカシア
+           'acaciawall': [(150, 104, 58), (178, 128, 76), (202, 152, 94), (216, 166, 104), (230, 184, 122), (242, 204, 148)],  # はちみつ色のアカシア
+           'timberwall': [(92, 62, 44), (110, 76, 54), (128, 90, 64), (142, 102, 74), (158, 116, 86), (176, 132, 100)],  # こげ茶の木わく
+           'canalwall': [(150, 156, 164), (170, 176, 184), (186, 192, 200), (198, 204, 210), (212, 216, 222), (226, 230, 234)]}  # 石の灰色
 def wood_map(rgb, pal):
     pal = np.array(pal, float); L = rgb @ np.array([.3, .59, .11])
     t = np.clip((L - 60) / (215 - 60), 0, 1) * (len(pal) - 1); i = np.minimum(t.astype(int), len(pal) - 2); f = (t - i)[..., None]

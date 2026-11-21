@@ -181,7 +181,28 @@ def ropedoor(v,n):   # ロープの戸（風）：アカシアの丸い柱（半
         for z in(0.58,0.44,0.30):b.tube('rope','ロープ',(u0+0.06,FR,z),(u1-0.06,FR,z),0.022,F.ROPE)
         c=(u0+u1)/2;b.tube('rope','むすぶロープ',(c,FR+0.005,0.18),(c,FR+0.005,0.70),0.022,F.ROPED)
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
-DOORS={'ropefence.gate':(ropedoor,True),'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False)}
+def ashidoor(v,n):   # あしの戸（水。あしの垣のとなりの柵のドアの絵）：木の丸い柱、とびらは細い木のわくに、あしをならべ、なわでしばる
+    b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;r=0.07
+    posts=[0.0,1.0] if not v else [0.09,0.91]
+    for pu in posts:b.cyl('post','柱',pu,PW,r,0,0.95,F.RPOST,(0,0))
+    u0,u1=posts[0]+r,posts[1]-r;rot=b.hinge(u0,FR,ANG[n])
+    def body(b):
+        for z in(0.74,0.08):b.box('railh','わく',u0+0.01,FR-0.02,z,u1-0.01,FR+0.02,z+0.05,F.RPOST,(0,0))
+        k=9;sp=(u1-u0-0.06)/(k-1)
+        for i in range(k):c=u0+0.03+i*sp;b.cyl('reed','あし',c,FR,0.03,0.08,0.80,F.REED if i%3 else F.REEDG)
+        for z in(0.26,0.58):b.tube('rope','なわ',(u0+0.02,FR+0.035,z),(u1-0.02,FR+0.035,z),0.02,F.BIND)
+    leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
+def rankandoor(v,n):   # 欄干の戸（水。運河の石の欄干のとなりの柵のドアの絵）：石の柱（0.2角・高さ0.86、かさ石）、とびらは鉄のわくに、たての鉄の棒
+    b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;h=0.10;IR=(150,156,168)
+    posts=[0.0,1.0] if not v else [0.11,0.89]
+    for pu in posts:b.box('stone','石の柱',pu-h,PW-h,0,pu+h,PW+h,0.80,F.RSTN);b.box('stone','かさ石',pu-h-0.02,PW-h-0.02,0.80,pu+h+0.02,PW+h+0.02,0.86,F.RSTN)
+    u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR,ANG[n])
+    def body(b):
+        for z in(0.60,0.10):b.box('iron','わく',u0+0.01,FR-0.015,z,u1-0.01,FR+0.015,z+0.04,IR)
+        k=6;sp=(u1-u0-0.06)/(k-1)
+        for i in range(k):c=u0+0.03+i*sp;b.box('iron','棒',c-0.012,FR-0.012,0.10,c+0.012,FR+0.012,0.68,IR)
+    leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
+DOORS={'ashifence.gate':(ashidoor,True),'rankan.gate':(rankandoor,True),'ropefence.gate':(ropedoor,True),'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False)}
 def build_door(iid):
     fn,hasv=DOORS[iid];out={}
     for o in(['h','v'] if hasv else ['h']):
