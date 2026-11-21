@@ -9,7 +9,7 @@
   道具 prop（手前の手に持つ道具の名前）・propF（奥の手）・kN・kF（手首：道具を、にぎる所のまわりで、うでのふる向きに回す。+で道具の先が、かたから手への向きへたおれる）"""
 import math
 import numpy as np
-from core import (Q, QH, SSN, DZ, EXT, CREAM, rx, ry, rz, view, arm_xf, SH)
+from core import (Q, QH, SSN, DZ, EXT, rx, ry, rz, view, arm_xf, SH)
 import props as PR
 
 PIVB = np.array([0., 0, 11]); PIVH = np.array([0., 0, 26]); EYEP = np.array([0., 22, 40.5]); HANDU = np.array([[13.0, 0, 0]])
@@ -29,11 +29,11 @@ def posed(sp, face, p):
     out = {'body': (body(sp.solid['body']), 'cream', 'c')}
     for nm, hipx in (('M', -8.0), ('P', 8.0)):
         h = np.array([hipx, 0, 11.]); R = rx(g('leg'+nm)); d = np.array([g('x'), g('y'), g('legz')+g('lift'+nm)])
-        out['leg'+nm] = ((sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h+d, 'creamf' if face == 1 and nm == 'P' else 'cream', 'c')   # 横向きの奥の足（+x）は1段暗い色（FARLEG）
+        out['leg'+nm] = ((sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h+d, 'creamf' if face == 1 and nm == 'P' else 'cream', 'c')   # 横向きの奥の足（+x）は1段暗い色
     anchors = {}
     for near, k in ((True, 'N'), (False, 'F')):
         f, _ = arm_xf(face, near, g('s'+k), g('b'+k), g('t'+k)); A, Hn = sp.arm[face]
-        out['arm'+k] = (body(f(A)), 'cream', 'c'); out['hand'+k] = (body(f(Hn)), 'hand', 'h')
+        out['arm'+k] = (body(f(A)), 'arm', 'c'); out['hand'+k] = (body(f(Hn)), 'hand', 'h')
         anchors['hand'+k] = body(f(HANDU))[0]
         pn = p.get('prop' if near else 'propF')
         if pn:
@@ -48,6 +48,11 @@ def posed(sp, face, p):
                     Pw = (Pw-hc0)@R.T+hc0; fw = {a: (v-hc0)@R.T+hc0 for a, v in fw.items()}
             out['prop'+k] = (Pw, C, 'p')
             for a, v in fw.items(): anchors[a+k] = v
+    for name in ('cape','chest'):
+        decoration = getattr(sp,name)
+        if decoration is not None:
+            points, colors = decoration
+            out[name] = (body(points), colors, 'd')
     # 頭の色：カメラに近い向き（前・横・うしろ）の、いまの絵の色
     R0 = rz(-face*math.pi/2+g('spin')); v = rz(-(g('yaw')+g('hy')))@(R0.T@np.array([0, 1., 0]))
     ti = 0 if v[1] >= abs(v[0]) else 2 if -v[1] >= abs(v[0]) else 1
@@ -70,7 +75,6 @@ def posed(sp, face, p):
     anchors['ti'] = ti; anchors['mir'] = bool(ti == 1 and v[0]*ref[0] < 0)   # 目の絵：0 正面・1 横・2 なし（うしろ）、横は左右反対か
     return out, anchors
 
-FARLEG = (239, 231, 218)   # 横向きの奥の足の色：体の色（CREAM）より1段暗く、手前の足と見分ける（Frostwind の PIXEL-ART.md の考え方。MIT）
 def darker(c, k=0.72): return tuple(int(v*k) for v in c)
 
 def shoot(sp, face, p):
@@ -89,9 +93,11 @@ def shoot(sp, face, p):
     _, _, zc = V(parts['body'][0].mean(0)[None]); zc = zc[0]   # 体のまん中の奥行き
     HEAD = ('hood', 'face')+tuple(nm for nm, _ in sp.tops); fa = np.zeros(Wd*Hd, bool)   # fa：頭に勝つ、うで・手・道具のドット
     hoodi = names.index('hood'); headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
+    colors = {'cream': sp.body_color, 'creamf': sp.far_leg_color,
+              'arm': sp.arm_color, 'hand': sp.hand}
     for i, nm in enumerate(names):
         P, col, kind = parts[nm]; X, Y, Z = V(P)
-        C = np.tile(np.array(CREAM if col == 'cream' else FARLEG if col == 'creamf' else sp.hand, np.uint8), (len(P), 1)) if isinstance(col, str) else col
+        C = np.tile(np.array(colors[col], np.uint8), (len(P), 1)) if isinstance(col, str) else col
         g0 = grp[nm]; gb = GB[nm[:-1]] if g0 else 0.0
         same = np.array([grp[n] == g0 for n in names]+[False]) if g0 else None
         k = int(round((QH if kind == 't' and not nm.startswith(('tail', 'wing')) else Q)*SSN))

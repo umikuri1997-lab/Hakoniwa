@@ -16,9 +16,9 @@ from motions import MOTIONS
 import rig
 
 _SP = {}
-def job(a):
+def job(a, *, factory=Spirit):
     """1つの動き・属性：絵（PNG のまま）と、わく・目・手の場所"""
-    name, el = a; sp = _SP.get(el) or _SP.setdefault(el, Spirit(el)); m = MOTIONS[name]; n = m['n']
+    name, el = a; sp = _SP.get(el) or _SP.setdefault(el, factory(el)); m = MOTIONS[name]; n = m['n']
     fr = {}; fo = {}; meta = {}
     for face in (0, 1, 2):
         for i in range(n):
