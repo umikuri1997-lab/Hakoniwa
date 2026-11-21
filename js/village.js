@@ -185,7 +185,7 @@ function recount(){{const fl={[MIZU]:'ayame',[WIND]:'tanpopo',[YAMI]:'tsukimi'}[
     if(!o||o==='part')continue;counts[o]=(counts[o]||0)+1;
     if(o==='statue')STATUE=j;if(o==='statueb'||o==='site'&&S.dyn[j]&&S.dyn[j].ruin)RUINT=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
-    if(o==='lurestatue')LURES.push(j);
+    if(o==='lurestatue'||typeof windLureOn==='function'&&windLureOn(o))LURES.push(j);/* 風のさいごの夜：影は遊具をねらう（wind-story.js） */
     if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'&&!campOut(j)||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='oldlantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='g_w_acorn'||o==='g_e_lantern'||o==='g_f_lamp'||o==='g_s_jelly'||o==='kazelamp'||o==='canallamp'||o==='gekkolamp'||o==='hotarukago'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
     if(LIGHTP[o]&&!(o==='hotaru'&&isBud(j))&&!(o==='kaeribi'&&!kgrLit())&&!(o==='campfire'&&campOut(j))||o==='watch'&&watchLit(j))LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
