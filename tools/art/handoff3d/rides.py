@@ -8,7 +8,9 @@
 両端を止め、内側の座面は底から少し上に取りつける。
 中央に青い釉薬の水盤を固定し、底から0.07上に水面を張る。
 空中ブランコ（2×2）：高さ4.16の柱を半径0.72の基礎に固定。
-半径0.72の回転頭に3組の吊り材をつなぎ、高さ1.57の座板を吊るす。
+回転頭と座席の手すりを2本ずつの丸いひもでつなぐ。座席は外向き。
+上の留め具と下の留め具の間隔はどちらも0.31。張ったひもは直線、
+ちぎれたひもだけは先で曲がる。座板の基準の高さは1.57。
 観覧車（3×2）：左右に開く支柱を基礎から車軸（高さ2.94）へ
 つなぐ。半径1.55の二重の輪を8本のスポークで車軸に固定。
 4個のゴンドラを輪の横軸に吊り、座面を横軸の0.49下に置く。
@@ -18,19 +20,19 @@ from math import cos, sin, sqrt, tau
 
 from common import WOOD
 
-PINK = (243, 146, 176)
+PINK = (247, 112, 155)
 CREAM = (255, 241, 211)
-MINT = (143, 208, 186)
-RIDE_MINT = (137, 216, 192)
+MINT = (79, 219, 180)
 GOLD = (222, 176, 116)
 TRIM = (168, 118, 111)
-BLUE = (166, 222, 237)
-LILAC = (189, 169, 231)
-PEACH = (253, 177, 125)
-SUN = (252, 219, 126)
+BLUE = (139, 209, 239)
+LILAC = (168, 129, 237)
+PEACH = (255, 155, 92)
+SUN = (255, 205, 92)
 SILVER = (189, 205, 216)
 BRASS = (184, 136, 83)
 LEATHER = (159, 102, 95)
+ROPE = (195, 161, 113)
 SEATS = {"merry": 3, "cup": 2, "skyswing": 3, "wheel": 4}
 SPEED = {"merry": 1, "cup": 1.3, "skyswing": 1, "wheel": .35}
 
@@ -58,7 +60,7 @@ def carousel(m, phase, broken, seats):
         b = (panel + 1) * tau / 12
         x, y, z = polar(1.31, a, 2.14 + .10 * cos(a) * broken)
         u, v, w = polar(1.31, b, 2.14 + .10 * cos(b) * broken)
-        color = (PINK, CREAM, PEACH, CREAM, RIDE_MINT, CREAM)[panel % 6]
+        color = (PINK, CREAM, PEACH, CREAM, MINT, CREAM)[panel % 6]
         m.part(color, surface="cloth")
         m.sc.tri((roof_x, 0, 2.65), (x, y, z), (u, v, w), m.color(color))
         m.sc.quad((x, y, z), (u, v, w), (u, v, w-.10),
@@ -67,11 +69,11 @@ def carousel(m, phase, broken, seats):
         m.rod((roof_x, 0, 2.65), (x, y, z+.015), .014, CREAM)
         if not broken:
             cx, cy = (x+u)/2, (y+v)/2
-            m.part((RIDE_MINT, SUN, LILAC)[panel % 3], surface="cloth")
+            m.part((MINT, SUN, LILAC)[panel % 3], surface="cloth")
             m.sc.tri((x*.34+cx*.66, y*.34+cy*.66, z-.10),
                      (u*.34+cx*.66, v*.34+cy*.66, w-.10),
                      (cx, cy, (z+w)/2-.235),
-                     m.color((RIDE_MINT, SUN, LILAC)[panel % 3]))
+                     m.color((MINT, SUN, LILAC)[panel % 3]))
     m.ball((roof_x, 0, 2.69), .09, SUN, surface="polished")
     for index in range(3):
         angle = phase + index * tau / 3
@@ -84,7 +86,7 @@ def carousel(m, phase, broken, seats):
         if broken and index == 1:
             m.rod((x, y, .31), horse(.16, -.33), .029, TRIM)
             continue
-        trim = (PINK, RIDE_MINT, LILAC)[index]
+        trim = (PINK, MINT, LILAC)[index]
         m.rod((x, y, .27), (x, y, 2.15), .024, GOLD, surface="polished")
         m.rod(horse(-.17, 0), horse(.15, 0), .115, CREAM)
         m.rod(horse(.12, .02), horse(.18, .25), .065, CREAM)
@@ -104,7 +106,7 @@ def carousel(m, phase, broken, seats):
 
 def cups(m, phase, broken, seats):
     m.lathe([(0, 0), (1.32, 0), (1.38, .11), (1.38, .23),
-             (1.30, .30), (0, .30)], RIDE_MINT)
+             (1.30, .30), (0, .30)], MINT)
     m.lathe([(0,.30),(.11,.30),(.105,.49),(.169,.54),(.244,.64),
              (.253,.68),(.253,.703),(.213,.703),(.184,.602),
              (0,.601)], BLUE, surface="enamel")
@@ -136,7 +138,7 @@ def cups(m, phase, broken, seats):
             a = angle+j*tau/8
             dx, dy, dz = polar(.379, a, z+.30)
             m.ball((x+dx,y+dy,dz), .035, SUN, surface="enamel")
-        m.box((x-.19, y-.10, z+.16), (x+.19, y+.05, z+.22), RIDE_MINT)
+        m.box((x-.19, y-.10, z+.16), (x+.19, y+.05, z+.22), MINT)
         m.rod((x,y,z+.15), (x,y,z+.31), .033, BRASS, surface="polished")
         wheel = [(x+.095*cos(i*tau/20), y+.095*sin(i*tau/20), z+.31)
                  for i in range(21)]
@@ -174,22 +176,41 @@ def swing(m, phase, broken, seats):
     for index in range(3):
         angle = phase + index * tau / 3
         x, y, z = polar(1.20 if not broken else .81, angle, 1.57)
-        hx, hy, hz = polar(.70, angle, 4.10)
+        hx, hy, hz = polar(.67, angle, 4.075)
+        yaw = angle-tau/4
+        c, s = cos(yaw), sin(yaw)
         if broken and index == 1:
-            m.rod((hx+top[0], hy, hz), (hx+.38, hy, 2.40), .020, RIDE_MINT)
+            start = (hx+top[0], hy, hz)
+            points = [
+                (start[0]+cos(angle)*(.11*t*t+.12*t**5),
+                 start[1]+sin(angle)*(.11*t*t+.12*t**5),
+                 start[2]-1.65*t)
+                for t in (0, .33, .65, .86, 1)
+            ]
+            m.tube(points, .013, ROPE, surface="cloth")
             continue
+
         for side in (-1, 1):
-            m.rod((hx+top[0]+side*.09, hy, hz),
-                  (x+side*.15, y, z+.03), .019, RIDE_MINT)
-        color = (PINK, RIDE_MINT, LILAC)[index]
+            attachment = side*.155
+            dx = attachment*c-.035*s
+            dy = attachment*s+.035*c
+            start = (hx+top[0]+dx, hy+dy, hz)
+            end = (x+dx, y+dy, z+.15)
+            m.tube([start, end], .013, ROPE, surface="cloth")
+            m.ball(start, .025, BRASS, surface="polished")
+            m.ball(end, .021, BRASS, surface="polished")
+
+        color = (PINK, MINT, LILAC)[index]
+        chair_start = m.sc.pid
         m.box((x-.19, y-.12, z-.05), (x+.19, y+.12, z+.04), color,
               surface="enamel")
         m.box((x-.19, y-.13, z+.04), (x+.19, y-.08, z+.21), CREAM,
               surface="cloth")
         for side in (-1, 1):
             sx = x+side*.175
-            m.rod((sx,y-.10,z+.13), (sx,y+.095,z+.13), .024, color)
-            m.ball((sx,y+.09,z+.12), .026, CREAM)
+            m.rod((sx, y-.10, z+.13), (sx, y+.095, z+.13), .024, color)
+            m.ball((sx, y+.09, z+.12), .026, CREAM)
+        m.yaw(chair_start, (x, y), yaw)
         seats.append((x, y, z+.04))
 
 
@@ -203,7 +224,7 @@ def wheel(m, phase, broken, seats):
     m.box((-.35,.62,.074),(.35,.72,.119), WOOD)
     for side in (-1, 1):
         for y in (-.58, .51):
-            m.rod((side*1.06, y, .12), (hub[0], y, hub[2]), .089, RIDE_MINT,
+            m.rod((side*1.06, y, .12), (hub[0], y, hub[2]), .089, MINT,
                   surface="polished")
             x = side*1.06
             m.box((x-.15,y-.10,.144), (x+.15,y+.10,.21), BRASS)
@@ -232,7 +253,7 @@ def wheel(m, phase, broken, seats):
     if not broken:
         for i in range(24):
             x, y, z = rim(phase+i*tau/24, -.019, 1.574)
-            m.ball((x,y,z), .042, (SUN, CREAM, RIDE_MINT, LILAC)[i % 4],
+            m.ball((x,y,z), .042, (SUN, CREAM, MINT, LILAC)[i % 4],
                    surface="enamel")
     for index in range(4):
         if broken and index == 2:
@@ -241,7 +262,7 @@ def wheel(m, phase, broken, seats):
         x, y, z = rim(a, -.01)
         m.rod((x, -.35, z), (x, .11, z), .038, TRIM)
         m.rod((x, .11, z), (x, .11, z-.17), .033, GOLD)
-        color = (RIDE_MINT, PINK, LILAC, PEACH)[index]
+        color = (MINT, PINK, LILAC, PEACH)[index]
         m.box((x-.25, -.07, z-.55), (x+.25, .26, z-.43), color)
         m.box((x-.25, -.07, z-.24), (x+.25, .26, z-.17), CREAM)
         for dx in (-.25, .19):

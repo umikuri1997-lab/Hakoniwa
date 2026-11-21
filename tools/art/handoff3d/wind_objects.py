@@ -9,9 +9,11 @@
 from math import cos, sin, tau
 
 from common import WOOD
-from rides import BRASS, CREAM, GOLD, MINT, TRIM
+from rides import BRASS, CREAM, GOLD
 
 STONE = [(164, 157, 140), (188, 179, 157), (177, 168, 150)]
+VANE_GREEN = (50, 195, 155)
+VANE_RED = (208, 114, 69)
 
 
 def hole(m, blocked):
@@ -44,11 +46,11 @@ def vane(m):
     for z in (.09, .49):
         m.lathe([(0,z),(.055,z),(.055,z+.034),(0,z+.034)], BRASS,
                 surface="metal")
-    m.lathe([(0, .51), (.065, .51), (.065, .61), (0, .61)], TRIM)
+    m.lathe([(0, .51), (.065, .51), (.065, .61), (0, .61)], VANE_RED, surface="metal")
     m.rod((0, -.25, .63), (0, .25, .63), .024, CREAM)
-    m.prism([(-.085, .15), (.085, .15), (0, .33)], .596, .663, MINT, surface="metal")
+    m.prism([(-.085, .15), (.085, .15), (0, .33)], .596, .663, VANE_GREEN, surface="metal")
     m.prism([(-.115, -.30), (.115, -.30), (.061, -.17), (-.061, -.17)],
-            .606, .647, MINT, surface="metal")
+            .606, .647, VANE_GREEN, surface="metal")
     m.prism([(-.043,.166),(.043,.166),(0,.30)], .662,.669, CREAM)
     m.rod((0,-.281,.65),(0,-.182,.65),.017,GOLD)
     m.ball((0,0,.663),.028,BRASS,surface="metal")

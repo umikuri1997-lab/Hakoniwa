@@ -148,6 +148,17 @@ class Model:
         for i in range(1, 4):
             self.sc.tri(rings[-1][0], rings[-1][i], rings[-1][i+1], color)
 
+    def yaw(self, first_pid, pivot, angle):
+        """指定の部品を座面の中心で水平に回す。"""
+        x, y = pivot
+        c, s = cos(angle), sin(angle)
+        for a, b, d, _, pid in self.sc.t:
+            if pid > first_pid:
+                for v in (a, b, d):
+                    dx, dy = v[0]-x, v[1]-y
+                    v[0] = x+dx*c-dy*s
+                    v[1] = y+dx*s+dy*c
+
     def tilt(self, first_pid, pivot, angle):
         x, _, z = pivot
         for a, b, c, _, pid in self.sc.t:
