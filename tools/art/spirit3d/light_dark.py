@@ -6,9 +6,10 @@
 折り返しは額で高さ約56ドット、うなじで約32ドット。幅12〜16ドットの
 帯を頭に回し、その上辺に丸い紫の布をつなぐ。布は後頭部の中央近くで
 帯の上にたれ、うなじの高さで直径約18ドットの房をとめる。
-ケープは首もとから幅約65ドットに広がり、肩と背中を一枚の布で包む。
-トモリは金縁のクリーム色の布を胸のしずくで、ツキミは淡い紫の布を
-三日月で留める。背中の裾は中央と左右に丸いひだが見える形にする。
+ケープは胸の留め具から首の後ろへ回る襟を土台にする。肩で幅約55
+ドット、腰で約62ドット。一枚の布が肩に沿って広がり、そこから下に
+垂れる。背中側は長く、前が開いて手足が出る。トモリは金縁のクリーム
+色の布をしずくで留め、ツキミは淡い紫の布を三日月で留める。
 """
 from math import pi
 import numpy as np
@@ -187,37 +188,51 @@ def night_cap():
 
 
 def mantle(dark):
-    """胸の留め具から肩と背中を一枚で包む短いケープ。"""
-    drop = np.linspace(0,1,115)[:,None]
-    around = np.linspace(0,1,560)
-    opening = .02+.375*drop**2
+    """襟ぐりから肩に沿って広がり、腰へ垂れる前開きのケープ。"""
+    drop = np.linspace(0,1,129)[:,None]
+    around = np.linspace(0,1,512)
+    opening = .035+.51*drop**1.8
     angle = opening+(2*pi-2*opening)*around
     side,front = np.sin(angle),np.cos(angle)
-
-    # 肩からすそへ広げ、背中の中央と左右のひだを丸く落とす。
+    chest = np.maximum(front,0)
     back = np.maximum(-front,0)
-    rear = np.clip(2.4*back,0,1)
-    lobe = .5+.5*((1-rear)*np.cos(6*angle)+rear*np.cos(8*angle))
-    ripple = lobe*drop**2.4
-    x = (9.4+23.2*drop+1.4*ripple)*side
-    y = (11.5+9.8*drop+.9*ripple)*front
-    y += drop*(4.5*side**2-.7)
-    # 背中の布はしっぽのつけ根を覆い、下からしっぽを出す。
-    y -= 9*back**5*np.sin(pi*drop)**1.5
-    hem = 17.5+1.1*front-(5+2*rear)*lobe
-    z = 28.7+(hem-28.7)*drop**1.3
-    cloth = np.stack((x,y,z),axis=-1).reshape(-1,3)
 
-    shade = np.clip(.71-.23*drop+.14*lobe*drop-.09*side+.035*front,0,1)
+    # 断面は襟、肩の内側、肩先、腰、裾の順。
+    rows = np.array([
+        (0,12.6,13.65,28.4),
+        (.30,21,17,25.6),
+        (.52,27.5,20.5,21.8),
+        (.78,30,22,15.1),
+        (1,29.7,22.7,10.5),
+    ])
+    width,depth,height = PchipInterpolator(rows[:,0],rows[:,1:],axis=0)(drop[:,0]).T
+    fold = (np.cos(8*angle)+1)/2
+    lower = drop**3
+    # 肩を丸く越え、裾では横へ広がりすぎずに小さなひだを作る。
+    binding = .4*np.sin(pi*np.clip((drop-.9)/.1,0,1))
+    x = (width[:,None]+(.3+fold)*lower+binding)*side
+    y = (depth[:,None]+.7*fold*lower+binding)*front
+    y += drop*(3.4*side**2-.7)
+    # 背中の布はしっぽのつけ根より外を通る。
+    y -= 6*back**4*np.sin(pi*drop)**1.35
+    z = height[:,None]-2.7*chest*(1-drop)**2
+    z += (6.6*chest-3*back-1.5*fold)*lower
+    surface = np.stack((x,y,z),axis=-1)
+
+    along_drop,along_edge = np.gradient(surface,axis=(0,1))
+    normal = np.cross(along_edge,along_drop)
+    normal /= np.linalg.norm(normal,axis=-1,keepdims=True)
+    light = np.clip(normal@np.array([-.36,.24,.72]),-.45,.8)
+    shade = np.clip(.52+.43*light+.08*fold*lower-.10*(1-drop)**6,0,1)
+    rim = (drop >= .923) | (np.minimum(around,1-around) < .0075)
     if dark:
-        color = tones(rgb('#885795'),rgb('#c7a4d0'),shade.ravel())
+        color = tones(rgb('#856094'),rgb('#c6a6d0'),shade.ravel())
+        color[rim.ravel()] = tones(rgb('#80548b'),rgb('#b28abe'),shade[rim])
     else:
-        color = tones(rgb('#f3e3bd'),rgb('#fff9e9'),shade.ravel())
-        # 胸の開きと裾の端に細い金色の縁を回す。
-        rim = (drop >= .90) | ((np.minimum(around,1-around) < .012) & (drop > .23))
-        color[rim.ravel()] = tones(rgb('#ecb148'),rgb('#ffdf88'),shade[rim])
+        color = tones(rgb('#ead9b5'),rgb('#fff9ea'),shade.ravel())
+        color[rim.ravel()] = tones(rgb('#e6a947'),rgb('#ffdb83'),shade[rim])
 
-    return cloth,color
+    return surface.reshape(-1,3),color
 
 
 class LightDark(Spirit):
