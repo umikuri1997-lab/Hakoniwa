@@ -609,7 +609,7 @@
 - お話の設定は `STORY.md` の「さいごの章」、作る順番とまだきめていないことは `IDEAS.md`。水・土・風ができるまでは、マップえらびのとじたカードを5回タップでひらく（`hakoniwa-w6open`）。
 - ずっと夜：暗さは `yamiDark`、空・光・環境音の時刻は `skyHour`（`yamiSkyHour`）。時計・ねる時間（`isNight`）はほかのステージと同じ。空・光・音を時刻でかえる所を足したら、`hour()` でなく `skyHour()` を使う。
 - はじめは、せいれいが0人。まもりの光が地面にとどく（`glHit`）と、はじめの1回だけ、光のせいれいトモリが生まれる（`yamiBirth`・`S.flags.tomori`）。
-- 光の属性（`ELEM.light`）はトモリだけ：神殿では呼べない（`ELEM_KEYS` に入れない）・たたかわない（`sortieOK`）・まわり4マスが歩くあかり（`YAMILIGHT`・`yamiLights`・`yamiLightAt`）。属性ごとの表を足したら、光でこわれないか（`表[r.elem]` をそのまま使っていないか）を見る。
+- 光の属性（`ELEM.light`）はトモリだけ：神殿では呼べない（`ELEM_KEYS` に入れない）・たたかわない（`sortieOK`）・コワイノにねらわれない・たたかれない（`noHit`・`yamiSafe`。さいごの夜の、むかえる〜ゆりかごへ、だけはねらわれる）・まわり4マスが歩くあかり（`YAMILIGHT`・`yamiLights`・`yamiLightAt`）。属性ごとの表を足したら、光でこわれないか（`表[r.elem]` をそのまま使っていないか）を見る。
 - トモリの絵は、かりの絵：水の形を色がえ（`SPART`・`spArt`・`SPC.light`）。せいれいの絵を属性の名前でさがす所は `spArt(el)` を通す。
 - コワイノの来かた：トモリが生まれたときから来る（`S.enemyOn`）。23時〜6時は、ほかのステージと同じ大きな群れ（`waveFor`）。6時〜23時は、時計の1時間ごとに25%（`YAMIDAYP`）でコカゲが1〜2ひき（`yamiTick`・`yamiDayWave`）。朝の光がないので、朝6時に消えない（`level.js` の `yk`）。追いはらうまでのこる。
 - お話の前半（`QUESTS6`）：あかり → ヒイロ（はじめに来る火のせいれい、あにき。`SECOND[YAMI]`、`qAt('hiiro')` から）→ ヨリ（夜、ねているトモリのとなりにいる、おそってこない影。`S.enemies` に入れず、コワイノの絵で描くだけ `yoriPos`・`yamiDrawAdd`。夜にタップ `yamiTap`→`yoriMeet`）→ 夜の仕事のあと3つ（見た目だけの印 `YMARKS`・`S.yami.marks`。昼、ヨリがまだ見ていない印で待つ）→ あさやけ（聞いたつぎの朝6時の場面 `yamiDawnTick`・`YDAWN`。ヨリが朝の光でうすれて消える）。

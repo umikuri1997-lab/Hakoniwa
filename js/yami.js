@@ -335,6 +335,7 @@ function yamiAllOff(){const Y=yamiState(),t=yamiTomori(),c=Y.cr;Y.ph='meet';
   dialog([[TOMORI,'ぼくのあかりも……おとすね。'],[TOMORI,'#surprise|……見て。道に、あけよい草が咲いていく。']],()=>{if(YSH)panTo(YSH.x*TS,YSH.y*TS);renderQuest();save()},null,TOMORI);renderQuest()}
 function yamiFail(why){const Y=yamiState(),t=yamiTomori(),S0=S,ev=hour()<6?dayNo()-1:dayNo();Y.ph=null;Y.fn=ev+YRETRY;Y.hits=0;const sh=YSH;YSH=null;if(sh)fxSpr('dawnfade',sh.x*TS,sh.y*TS);if(t){t.act=null;t.path=[]}
   dialog([[TOMORI,why==='dawn'?'#sad|……朝に、なっちゃった。':'#scared|……っ！'],[GOD,'#worry|影が、おびえて、行ってしもうた……。'],[GOD,'また、夜があつまるのを待とう。3日もすれば、もう一度来るじゃろう。']],()=>{if(S!==S0)return;renderQuest();save()},null,TOMORI);renderQuest();save()}
+function yamiSafe(r){if(r.name!==TOMORI)return false;const Y=yamiState();return !(Y.ph==='meet'||Y.ph==='go')}/* トモリは、コワイノにねらわれない・たたかれない。さいごの夜（大きな影をむかえに行く〜ゆりかごへ）だけは、ねらわれる */
 function yamiHitRes(e,r){const Y=yamiState();if(r.name!==TOMORI||!(Y.ph==='meet'||Y.ph==='go'))return false;/* さいごの夜のトモリ：おなかはへらない。3回たたかれたら、やりなおし */
   r.hurt=40;Y.hits=(Y.hits||0)+1;sfxAt('bonk',r.x,r.y);if(typeof shakeScreen==='function')shakeScreen();addFloat(r.x,r.y-1.4,'あぶない！','#ffd2cc');renderQuest();if(Y.hits>=YHITMAX&&$('#dialog').hidden)yamiFail('hit');return true}
 function yamiShadowStep(dt){const sh=YSH,Y=yamiState(),t=yamiTomori();if(!sh||!t)return;sh.a=Math.min(1,(performance.now()-sh.t0)/1500);
