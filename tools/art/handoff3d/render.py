@@ -1,7 +1,7 @@
 """引き継ぎ用の透過 PNG と比較図。チップの登録はしない。"""
 import argparse
 import json
-from math import cos, radians, sin, tau
+from math import cos, sin, tau
 from pathlib import Path
 import subprocess
 import sys
@@ -23,7 +23,8 @@ from rides import CREAM, MODELS, SEATS, SPEED
 
 SCALE = 64
 FRAMES = 16
-RIDE_EXT = (-1.90, 1.90, -5.85, 0.85)
+RIDE_ELEV = 29
+RIDE_EXT = (-1.93, 1.93, -5.85, 1.01)
 SMALL_EXT = (-.70, .70, -1.20, .49)
 
 TEXTURES = ART / "textures"
@@ -55,7 +56,7 @@ class Model:
         self.sc.bump(self.stone_relief() if surface == "stone" else None)
         finish = {"polished": "metal" if self.faded else "shinym",
                   "enamel": None if self.faded else "shiny",
-                  "glass": "glass", "water": "clear"}.get(
+                  "glass": "glass"}.get(
                       surface, "flat" if color == CREAM else None)
         self.sc.material(finish)
         self.sc.smooth(smooth or surface == "stone")
@@ -75,9 +76,9 @@ class Model:
         self.material(color, False, surface)
         self.sc.part()
 
-    def lathe(self, profile, color, x=0, y=0, *, surface=None):
+    def lathe(self, profile, color, x=0, y=0, *, surface=None, detail=40):
         self.material(color, True, surface)
-        self.sc.revolve(x, y, profile, lambda *_: self.color(color), n=40)
+        self.sc.revolve(x, y, profile, lambda *_: self.color(color), n=detail)
 
     def rod(self, start, end, radius, color, *, surface=None):
         self.material(color, False, surface)
@@ -99,41 +100,6 @@ class Model:
         self.material(color, False, surface)
         build(self.sc, [Part("板", "prism", (points, low, high, "z"),
                              self.color(color))])
-
-    def water_disk(self, radius, z, color, ornament):
-        """水面の小波。波の面で空と水盤の金の飾りを反射する。"""
-        self.part(color, surface="water")
-        angle = radians(ELEV)
-        eye = np.array((0, cos(angle), sin(angle)))
-        tint = np.array(color)
-        sky = np.array((225, 244, 255))
-        center, ornament_radius, gold = ornament
-        ripple = ((0, .000), (.22, .007), (.44, -.004), (.65, .006),
-                  (.83, -.003), (1, .000))
-        for (r0, h0), (r1, h1) in zip(ripple, ripple[1:]):
-            for i in range(24):
-                a, b = i*tau/24, (i+1)*tau/24
-                points = np.array([(r*radius*cos(t), r*radius*sin(t),
-                                    z+h*(.82+.18*cos(3*t))) for r, h, t in
-                                   ((r0,h0,a),(r1,h1,a),(r1,h1,b),(r0,h0,b))])
-                for face in (points[[0,1,2]], points[[0,2,3]]):
-                    normal = np.cross(face[1]-face[0], face[2]-face[0])
-                    area = np.linalg.norm(normal)
-                    if area < 1e-10:
-                        continue
-                    normal /= area
-                    facing = max(0, float(eye@normal))
-                    ray = 2*facing*normal-eye
-                    to_ornament = np.asarray(center)-face.mean(axis=0)
-                    t = float(to_ornament@ray)
-                    hits = t > 0 and np.linalg.norm(to_ornament-t*ray) < ornament_radius
-                    # 反射色は視線の角度に合わせる。水底との合成は clear が行う。
-                    fresnel = .08 + .92*(1-facing)**5
-                    reflected = np.asarray(gold) if hits else sky
-                    if hits:
-                        fresnel = max(.32, fresnel)
-                    paint = tuple(np.rint(tint*(1-fresnel)+reflected*fresnel))
-                    self.sc.tri(*face, paint)
 
     def rock(self, x, y, z, width, height, angle, color):
         self.part(color, surface="stone")
@@ -168,8 +134,8 @@ class Model:
                     v[2] = z-dx*sin(angle)+dz*cos(angle)
 
 
-def render(model, ext, ground, parallel=False):
-    project, depth = O.persp(ELEV, FOV, None if parallel else FRAME,
+def render(model, ext, ground, parallel=False, elevation=ELEV):
+    project, depth = O.persp(elevation, FOV, None if parallel else FRAME,
                              center=(0, 0, ground), keep=KEEP)
     anchor_y = project((0, ground, 0))[1]
 
@@ -301,14 +267,14 @@ def rides(out, metadata):
             phase = frame*tau/FRAMES
             model, seat_points = Model(), []
             make(model, phase, False, seat_points)
-            im, offset, projection = render(model, RIDE_EXT, ground, parallel=True)
+            im, offset, projection = render(model, RIDE_EXT, ground, parallel=True, elevation=RIDE_ELEV)
             images.append(im)
             assert len(seat_points) == SEATS[name]
             seats.append([[round(v*SCALE) for v in projection(point)]
                           for point in seat_points])
         model = Model(faded=True)
         make(model, .6, True, [])
-        broken, broken_offset, _ = render(model, RIDE_EXT, ground, parallel=True)
+        broken, broken_offset, _ = render(model, RIDE_EXT, ground, parallel=True, elevation=RIDE_ELEV)
         assert broken_offset == offset
         *frames, damaged = palette(images+[broken])
         frames = [daylight(frame) for frame in frames]
