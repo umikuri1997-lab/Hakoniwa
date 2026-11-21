@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720 420" width="720" height="420">
+  <title>トモリ・ツキミの形の案</title>
+  <defs>
+    <g id="body" stroke-linejoin="round" stroke-width="3">
+      <path d="M-21 25c-4 12-12 20-12 37 0 10 15 15 33 15s33-5 33-15c0-17-8-25-12-37z"/>
+      <path d="M-22 48c-9 0-15 10-13 15 2 5 8 4 13-2m44-13c9 0 15 10 13 15-2 5-8 4-13-2" fill="none"/>
+      <path d="M-17 72c-5 2-9 7-7 12 2 4 13 4 16-1l2-7m23-4c5 2 9 7 7 12-2 4-13 4-16-1l-2-7"/>
+    </g>
+    <g id="face">
+      <path d="M-23 2q6-13 23-13T23 2v14q-3 14-23 14t-23-14z" stroke="none"/>
+      <circle cx="-9" cy="11" r="2.7" fill="#473642" stroke="none"/>
+      <circle cx="9" cy="11" r="2.7" fill="#473642" stroke="none"/>
+      <path d="M-3 19q3 3 6 0" fill="none" stroke="#8d676e" stroke-width="1.5"/>
+    </g>
+  </defs>
+  <rect width="720" height="420" fill="#f2eee8"/>
+  <rect x="18" y="18" width="333" height="384" rx="12" fill="#fff5db"/>
+  <rect x="369" y="18" width="333" height="384" rx="12" fill="#eceaf8"/>
+  <g font-family="sans-serif" font-weight="600" font-size="20" text-anchor="middle" fill="#473642">
+    <text x="184" y="58">TOMORI</text>
+    <text x="536" y="58">TSUKIMI</text>
+  </g>
+  <g transform="translate(104 215)" fill="#f6c77e" stroke="#b77854">
+    <use xlink:href="#body"/>
+    <path d="M-34 14q-6-27 12-44 5-5 12-7 9-7 12-28 7 15 7 27 16 1 24 16 8 17 1 37-6 18-34 18t-34-19z" stroke-width="3"/>
+    <path d="M-29-12q7-15 20-18 8-4 12-15l3 14q12 2 20 14Q4-26-29-12z" fill="#ffeab2" stroke="none"/>
+    <use xlink:href="#face" fill="#fff3d4"/>
+    <path d="M-24 39q24 13 48 0" fill="none" stroke="#ffe6b0" stroke-width="5"/>
+  </g>
+  <g transform="translate(264 215)" fill="#f0b994" stroke="#b17870">
+    <use xlink:href="#body"/>
+    <path d="M-34 16q-8-20 1-34l-5-16 18 5 5-17 13 10L8-51l8 17 16-6 1 19 10 7-7 9q6 39-36 38-26 0-34-17z" stroke-width="3"/>
+    <path d="M-27-15q10-16 26-11 19-11 29 11-23-10-55 0z" fill="#ffe5b0" stroke="none"/>
+    <use xlink:href="#face" fill="#fff3d4"/>
+    <path d="M-15 44h30" stroke="#fff0cb" stroke-width="4"/>
+  </g>
+  <g transform="translate(455 215)" fill="#9586bd" stroke="#655783">
+    <use xlink:href="#body"/>
+    <path d="M-34 16q-7-26 12-45 12-12 28-11 15 0 23-14 0 17-6 23 18 15 13 39-4 21-36 25-25 0-34-17z" stroke-width="3"/>
+    <path d="M-30-10q5-19 24-24 18 1 25-6-4 13-16 13-21-2-33 17z" fill="#c6b9df" stroke="none"/>
+    <use xlink:href="#face" fill="#efe6f6"/>
+    <path d="M-23 42q23 12 46 0" fill="none" stroke="#c7b9df" stroke-width="5"/>
+  </g>
+  <g transform="translate(615 215)" fill="#858eb6" stroke="#515c8a">
+    <use xlink:href="#body"/>
+    <path d="M-38 20q-7-14-3-29 5-19 25-27 9-4 16-4 31 0 41 33 5 17-3 32l-11 19-12-13q-15 7-30 0l-12 13z" stroke-width="3"/>
+    <path d="M-35-7q9-25 35-25T35-7Q0-24-35-7z" fill="#adb7d5" stroke="none"/>
+    <use xlink:href="#face" fill="#e8edf9"/>
+    <path d="M-18 48h36" stroke="#c5cde6" stroke-width="3"/>
+  </g>
+  <g font-family="sans-serif" font-weight="600" font-size="20" text-anchor="middle" fill="#473642">
+    <text x="104" y="356">1</text><text x="264" y="356">2</text>
+    <text x="455" y="356">1</text><text x="615" y="356">2</text>
+  </g>
+</svg>
