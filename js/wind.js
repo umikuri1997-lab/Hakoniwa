@@ -78,7 +78,7 @@ function windMatMorning(){if(!windOn())return;if(!WN||WNS!==S)windSync();if(!S.d
   const put=(L,id,n,max)=>{for(let k=cnt(id);n>0&&k<max&&L.length;){const i=(Math.random()*L.length)|0,j=L[i];L.splice(i,1);if(!ok(j))continue;S.drops.push({x:j%W,y:(j/W)|0,id,n:1});has.add(j);n--;k++}};
   const edge=[],path=[];for(let j=0;j<W*H;j++){if(!ok(j))continue;if([j-1,j+1,j-W,j+W].some(q=>q>=0&&q<W*H&&M[q]))edge.push(j);if(WN.dir[j]>=0)path.push(j)}
   put(edge,'mat:kumowata',KUMODAY,KUMOMAX);put(path,'mat:hane',HANEDAY,HANEMAX)}
-function windTick(){if(!windOn())return;if(!S.unlocked.tanpopo)S.unlocked.tanpopo=true;/* 風の花（前のセーブにも） */if(!WN||WNS!==S)windSync();windCarry();windRiseTick()}
+function windTick(){if(!windOn())return;if(!WN||WNS!==S)windSync();windCarry();windRiseTick()}
 /* ---------- 風の遊園地 ----------
    遊具（RIDES）は、風のせいれいが係（rideop）になって風を送っているあいだだけ動き、ほかのせいれいがのれる。係は、のったせいれいが遊びおわるたびに、たのしさ+RIDEOPFUN。風の道が2マス以内にとどいている遊具は、係がつかれない。
    わすれた楽しさ：この土地のせいれいは、遊び家具の遊び方をわすれている（r.rem にない遊び家具へは、自分から行かない）。動いている遊具にはのる。遊具にはじめてのる・係をつとめると、遊び方を1つ思い出す。

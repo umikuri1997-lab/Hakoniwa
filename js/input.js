@@ -81,7 +81,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
   return openSheet('clear');
 }
 /* 「みる」でタップした物の音：材質で分ける（木・石・金物・布・植物・畑や地面・水。御神木と切り株は太い木の音、神殿と台座は石） */
-let TAPPEND=0;const TAPCLOTH=new Set(['nuno','wool','shina','kasa','kuru','chiri','funba','nabiki','houki','kumowata','hane']),TAPMETAL=new Set(['can','icopper','iiron','isilver','igold']),TAPHOLY=new Set(['statue','statueb','altar','tower']),TAPNATW=new Set(['tree','ntree','deadtree','fruit','bamboo','takenoko']),TAPNATS=new Set(['rock','boulder','volcano','crack']);
+let TAPPEND=0;const TAPCLOTH=new Set(['nuno','wool','shina','kasa','kuru','chiri','funba','nabiki','houki','kumowata','hane','ashi','gama','yotsuyu','kagekusa']),TAPMETAL=new Set(['can','icopper','iiron','isilver','igold']),TAPHOLY=new Set(['statue','statueb','altar','tower']),TAPNATW=new Set(['tree','ntree','deadtree','fruit','bamboo','takenoko']),TAPNATS=new Set(['rock','boulder','volcano','crack']);
 function tapMatOf(o){if(o==='tower')return WD===0?'tsacred':'tstone';/* 草原は御神木（木）、火山は守護の台座（石） */if(TAPHOLY.has(o))return 'tstone';if(TAPNATS.has(o))return 'tstone';if(TAPNATW.has(o))return 'twood';const b=BL[o];if(!b)return null;if(b.kind==='plant'||o==='berry')return 'tgrass';if(o==='farm'||o==='plot'||o==='sprout')return 'tsoil';
   let w=0,st=0,cl=0,me=0;for(const k in b.mat||{}){const n=b.mat[k];if(TAPCLOTH.has(k))cl+=n;else if(TAPMETAL.has(k))me+=n;else if(k==='stone')st+=n;else w+=n}
   if(b.mat&&b.mat.nuno||b.mat&&b.mat.wool||cl>w+st+me)return 'tcloth';if(me>w&&me>=st)return 'tcan';if(st>w)return 'tstone';return 'twood'}
