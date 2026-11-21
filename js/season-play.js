@@ -79,7 +79,7 @@ function splayAnim(r){const a=r.act;if(!a||a.stage!=='do')return'';const ph=Math
   if(a.k==='leaf')return a.t<a.dur*.5?'qstone':ph%2?'talkjoy':'clap';return'talk'}
 /* 見た目だけの物を描く：かまくら（冬だけ）・落ち葉の山・水切りの石と波紋。どれもドット（1ドット＝ゲームの2点） */
 function kamaDraw(add,vis,ctx){if(!S)return;const now=performance.now();kiriTick(now);
-  if(S.kama&&S.kama.length&&seasonNow()===3&&snowCover()>=.05)for(const m of S.kama){const j=m.j;if(S.obj[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.9};if(!vis(o))continue;const px=Math.round(o.x*TS/2)*2,fy=Math.round((o.y*TS-(S.hi?hiAt(j)*LIFT:0))/2)*2,g=Math.max(1,(m.g|0)+1)/4;
+  if(S.kama&&S.kama.length&&seasonNow()===3&&snowCover()>=.05)for(const m of S.kama){const j=m.j;if(S.obj[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.9};if(!vis(o))continue;const px=Math.round(o.x*TS/2)*2,fy=Math.round((o.y*TS-(S.hi?liftOf(j):0))/2)*2,g=Math.max(1,(m.g|0)+1)/4;
     add(o.y,2,[px-26,fy-32,px+26,fy+4],()=>{const R=Math.round(11*g)*2,Hh=Math.round(10*g)*2;
       for(let y=0;y<Hh;y+=2){const w=Math.round(R*Math.sqrt(1-Math.pow(y/Hh,2))/2)*2;if(w<=0)continue;ctx.fillStyle='#b9c8dc';ctx.fillRect(px-w-2,fy-y-2,w*2+4,2)}/* ふち：中の色より少しこい色 */
       for(let y=0;y<Hh-2;y+=2){const w=Math.round(R*Math.sqrt(1-Math.pow((y+2)/Hh,2))/2)*2;if(w<=0)continue;ctx.fillStyle=y<4?'#dbe5f1':'#eef4fb';ctx.fillRect(px-w,fy-y-2,w*2,2);ctx.fillStyle='#d3dfec';ctx.fillRect(px+w-4,fy-y-2,4,2);if(y>Hh/2){ctx.fillStyle='#ffffff';ctx.fillRect(px-w+4,fy-y-2,Math.max(2,w-6),2)}}/* 右はかげ、上は光 */
@@ -87,7 +87,7 @@ function kamaDraw(add,vis,ctx){if(!S)return;const now=performance.now();kiriTick
       if(m.g>=3){const dw=5,dh=6;for(let y=0;y<dh*2;y+=2){const w=Math.round(dw*Math.sqrt(1-Math.pow(y/(dh*2),2)))*2;ctx.fillStyle='#93a5bf';ctx.fillRect(px-w-2,fy-y-2,w*2+4,2);ctx.fillStyle=y<4?'#4a5873':'#5b6b84';ctx.fillRect(px-w,fy-y-2,w*2,2)}/* 入口：ふちは少しこい、中はかげ */
         ctx.fillStyle='#f0b860';ctx.fillRect(px-2,fy-4,4,2)}},j)}/* 中に、小さなあかり */
   for(const r of S.res){const a=r.act;if(!a||a.type!=='splay'||a.k!=='leaf'||a.i!==0||a.stage!=='do')continue;const j=a.c,o={x:j%W+.5,y:((j/W)|0)+.7};if(!vis(o))continue;/* 落ち葉の山：あつめるほど大きく、とびこむと少しひくく */
-    const p=Math.min(1,a.t/(a.dur*.5)),g=a.t<a.dur*.5?p:1-.25*Math.min(1,(a.t-a.dur*.5)/(a.dur*.5)),px=Math.round(o.x*TS/2)*2,fy=Math.round((o.y*TS-(S.hi?hiAt(j)*LIFT:0))/2)*2;if(g<.08)continue;
+    const p=Math.min(1,a.t/(a.dur*.5)),g=a.t<a.dur*.5?p:1-.25*Math.min(1,(a.t-a.dur*.5)/(a.dur*.5)),px=Math.round(o.x*TS/2)*2,fy=Math.round((o.y*TS-(S.hi?liftOf(j):0))/2)*2;if(g<.08)continue;
     add(o.y-.05,2,[px-20,fy-14,px+20,fy+2],()=>{const R=Math.round(9*g)*2,Hh=Math.max(2,Math.round(5*g)*2);for(let y=0;y<Hh;y+=2){const w=Math.round(R*Math.sqrt(1-Math.pow(y/Hh,2))/2)*2;for(let x=-w;x<w;x+=2){const h=hash(j*31+x*7+y*13);ctx.fillStyle=y===0&&h<.5?'#a04a24':LEAFC[(h*4)|0];ctx.fillRect(px+x,fy-y,2,2)}}},j)}
   for(const s of SPLAYFX){const now2=now;if(s.k==='rip'){const p=(now2-s.t0)/s.dur;if(p>=1)continue;const o={x:s.x/TS,y:s.y/TS};if(!vis(o))continue;
       add(o.y-.4,2,[s.x-24,s.y-8,s.x+24,s.y+8],()=>{const rx=Math.round((3+p*(s.big?11:8)))*2,ry=Math.max(2,Math.round(rx/4)*2),n=Math.max(8,rx*2);ctx.globalAlpha=1-p;ctx.fillStyle='#e8f6ff';for(let i=0;i<n;i++){const q=i/n*6.283;ctx.fillRect(Math.round((s.x+Math.cos(q)*rx)/2)*2,Math.round((s.y+Math.sin(q)*ry)/2)*2,2,2)}ctx.globalAlpha=1})}/* 波紋：ひろがりながら、うすくなるドットの輪 */

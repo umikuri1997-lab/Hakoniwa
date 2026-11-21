@@ -198,7 +198,7 @@ function strayAsk(a){/* 行けるせいれいのうち、道のりがいちば�
 /* 野良をタップすると、1ぴき1回だけ、50%で、とれる物（たまご・わた毛・ミルク）を1こ落とす（STRAYDROPP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
 const STRAYDROPP=.5;
 function strayDrop(a){if(a.dr||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;a.dr=1;if(Math.random()>=STRAYDROPP)return;const pk=ANI[a.k].prod,key=(FOODS[pk]?'food:':'mat:')+pk,n0=(S.drops||[]).length;dropAt(a.x,a.y,key,1);if(!(S.drops&&S.drops.length>n0))return;
-  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:a.x*TS,sy:(a.y-.6)*TS-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
+  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:a.x*TS,sy:(a.y-.6)*TS-liftOf(d.y*W+d.x),t0:performance.now()})}
 function strayPop(a){if(strayIdea(a))return;const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">むかえる</button></div></div></div>');
   o.querySelector('.t').textContent='野良の'+ANI[a.k].name;const rows=o.querySelector('.rows'),h=strayHut(a);rows.appendChild(rowEl('すめる小屋',h!=null?BL[S.obj[h]].name:'ない'));rows.appendChild(rowEl('とれる物',aniProdName(ANI[a.k].prod)));
   const g=o.querySelector('.go');lackOn(g,strayWhy(a));

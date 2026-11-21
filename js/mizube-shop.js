@@ -76,7 +76,7 @@ ACT.mzpick={start(r,a){r.bubble=''},done:(r,a)=>a.t>=4,end(r,a){const c=SHOPC.cu
 ACT.mzgive={start(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);if(!c||!r.mzd)return false;r.face=(c.x<r.x)?-1:1},done:(r,a)=>a.t>=3,end(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);if(c&&c.st==='wait'&&r.mzd){c.st='eat';c.wt=0;S.mz.served=(S.mz.served||0)+1;c.bubble='';JUMP.set(c,performance.now());addFloat(c.x,c.y-1.2,FOODS[r.mzd.d].name,'#ffd38a')}else if(r.mzd)availAdd('f:'+r.mzd.d,1);r.mzd=null;r.bubble=''}};
 ACT.mzsing={start(r,a){r.bubble='🎵';r.face=1},tick(r,a,dt){funAdd(r,dt*.05,'play')},done:(r,a)=>a.t>=SHOP.songDur,end(r,a){if(a.t>=SHOP.songDur){S.mz.songD=callDay();S.mz.sung=(S.mz.sung||0)+1;toast('ミオの歌が、川にひびいた','good')}r.bubble=''}};
 function shopRows(add,now){if(!mzOn())return;for(const c of SHOPC.cust){if(c.delay>0)continue;add(c.y+.03,2,[c.x*TS-30,c.y*TS-70,c.x*TS+30,c.y*TS+15],()=>drawRes(c,now),(c.y|0)*W+(c.x|0))}
-  if(performance.now()-SHOPC.boatT<8000){const d=S.obj.indexOf('dock');if(d>=0){const w=mzAdj(d).find(n=>mzWater(n));if(w!=null)add(((w/W)|0)+.02,-1,null,()=>mzBoatDraw((w%W+.5)*TS,(((w/W)|0)+.5)*TS-hiAt(w)*LIFT,0),-1)}}}
+  if(performance.now()-SHOPC.boatT<8000){const d=S.obj.indexOf('dock');if(d>=0){const w=mzAdj(d).find(n=>mzWater(n));if(w!=null)add(((w/W)|0)+.02,-1,null,()=>mzBoatDraw((w%W+.5)*TS,(((w/W)|0)+.5)*TS-liftOf(w),0),-1)}}}
 
 /* ---- 貿易・朝 ---- */
 function shopMorning(){if(!mzOn())return;const t=S.mz.strade;if(!t)return;const id=SHOP.trade.items[t.i%SHOP.trade.items.length];addFood(id,SHOP.trade.get);toast('貿易の舟が、'+FOODS[id].name+'を'+SHOP.trade.get+'こ とどけてくれた','good');S.mz.strade=null}

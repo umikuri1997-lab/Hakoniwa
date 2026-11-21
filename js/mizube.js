@@ -184,7 +184,7 @@ function mzRowDraw(y,x0,x1,now){const M=S.mz,t=(now/260)|0;
       if(dry(j-W))mzPx(ctx,'#c9c4b4',X,Y,TS,4);if(dry(j+W)){mzPx(ctx,'#c9c4b4',X,Y+TS-4,TS,4);mzPx(ctx,'#a39d8c',X,Y+TS-2,TS,2)}if(x===0||dry(j-1))mzPx(ctx,'#c9c4b4',X,Y,4,TS);if(x===W-1||dry(j+1))mzPx(ctx,'#c9c4b4',X+TS-4,Y,4,TS)}}}
 function mzRows(add,x0,y0,x1,y1,now){if(!mzOn())return;if(MZC.S!==S)mzRefresh();
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)add(y-1+.0007,-1,null,()=>mzRowDraw(y,x0-1,x1+1,now),-1);
-  for(const C of MZC.comps){const B=S.mz.boats[C.key],n=C.route.length;if(!B||!n)continue;const i=Math.floor(B.d)%n,f=B.d-Math.floor(B.d),a=C.route[i],b=C.route[(i+1)%n],bx=(a%W+.5)*(1-f)+(b%W+.5)*f,by=(((a/W)|0)+.5)*(1-f)+(((b/W)|0)+.5)*f,L=hiAt(a)*LIFT;
+  for(const C of MZC.comps){const B=S.mz.boats[C.key],n=C.route.length;if(!B||!n)continue;const i=Math.floor(B.d)%n,f=B.d-Math.floor(B.d),a=C.route[i],b=C.route[(i+1)%n],bx=(a%W+.5)*(1-f)+(b%W+.5)*f,by=(((a/W)|0)+.5)*(1-f)+(((b/W)|0)+.5)*f,L=liftOf(a);
     add(by+.02,-1,null,()=>mzBoatDraw(bx*TS,by*TS-L+Math.round(Math.sin(now/500)),B.cg),-1)}
   if(mzKanadeOn()){const p=mzKanadePos(now);if(p)add(p.y+.03,-1,null,()=>mzKanadeDraw(ctx,now),-1)}/* 白い影（mizube-story.js） */
   for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(r.act&&r.act.type==='mzraft'&&r.act.stage!=='walk')add(r.y-.01,-1,null,()=>mzRaftDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4),-1);

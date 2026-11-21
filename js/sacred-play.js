@@ -69,7 +69,7 @@ function sacredPlayHint(t){if(SPLAY?.pop&&SPLAY.popHint){SPLAY.popHint.textConte
 function sacredPlayCount(){const P=SPLAY;if(!P)return '';const n=P.need?' '+P.got+'/'+P.need:'';return playDef(P.id)?.bonus?n+' のこり'+(PLAY_MISS-(P.fails||0))+'回':n}
 function startSacredPlay(id,j,cast,done,fail){
   const def=playDef(id);if(!def)return done();
-  const s=fieldStump(j),pop=!!def.pop,cx=pop?PLAYW/2:storyTreeX(j)*TS,cy=pop?PLAYBASE:((s/W|0)+.8)*TS-hiAt(j)*LIFT,now=performance.now();
+  const s=fieldStump(j),pop=!!def.pop,cx=pop?PLAYW/2:storyTreeX(j)*TS,cy=pop?PLAYBASE:((s/W|0)+.8)*TS-liftOf(j),now=performance.now();
   const P={owner:S,session:VILLAGE_SESSION,id,type:def.type,hint:def.hint,pop,j,cx,cy,t0:now,done,fail,cast,got:0,need:0,prog:0,msg:'',msgT:0};
   const ring=(n,rx,ry,a0=0)=>Array.from({length:n},(_,i)=>{const a=a0+i/n*Math.PI*2;return{x:cx+Math.cos(a)*rx,y:cy+8+Math.sin(a)*ry}});
   if(P.type==='cover'){P.spots=ring(6,36,14,.2);const c=new Set();let k=0;while(c.size<3)c.add((hash((S.sacredRoot||0)*3+k++)*6)|0);P.cold=c;P.covered=new Set();P.need=3;P.pile={x:cx-50,y:cy-30};P.carry=null}/* 草の山から、草を1つずつ指で運ぶ */

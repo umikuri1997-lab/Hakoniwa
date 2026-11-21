@@ -343,6 +343,7 @@ const skyJ=j=>{const M=skyM();return !!M&&M[j]===1},waterJ=j=>S.ground[j]===1&&!
 const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||!!fogAt(j);/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
+function liftOf(j){const h=S.hi?S.hi[j]|0:0;return h>0?h*LIFT:0}/* 描くときに上へずらす高さ。地面より下（ほった穴）は、地面の高さのまま描く（穴の絵は pitDraw） */
 const SLOPES=new Set(['slope_earth']),STAIRS=new Set(['stairs_wood','stairs_stone','stairs_brick',...SLOPES]),/* 土は坂だけ、木・石・レンガは階段だけ */SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
 const SROT=[-1,0,1,3,2];/* 置くときにえらんだ向き（S.rot）→ 下りる向き */
 function stairOK(j,d){/* j に、d の向きに下りる階段を置けるか：j のうしろが高いマス。j と、その先のマスは、低い地面（水でない） */const x=j%W,y=(j/W)|0,bx=x-SDIR[d][0],by=y-SDIR[d][1],ox=x+SDIR[d][0],oy=y+SDIR[d][1];if(bx<0||by<0||bx>=W||by>=H||ox<0||oy<0||ox>=W||oy>=H)return false;const o=oy*W+ox;const h=hiAt(j);return hiAt(by*W+bx)===h+1&&(d===0||hiAt(o)===h&&S.ground[o]!==1)}/* うしろが、ちょうど1だん高い *//* 手前向きは1マス（がけの正面を1マスと数える）、ほかは2マス */
@@ -355,7 +356,7 @@ function stairLink(a,b){/* bが階段の本体で、aがそのうしろの高い
 
 let CLV=1;/* いま絵を作っている段（1〜3）。がけの絵の関数は、この段より高いか同じマスを「高いマス」とみる */
 let TOPF=null;function topAt(j){return TOPF?TOPF(j):hiAt(j)>=CLV}/* TOPF：段差の部品を作るあいだだけ、まわりのマスの高さをまねる *//* 「上の面がある」（CLV の段で） */
-const HMAX=8;/* 段差は8だんまで（ほる・つむ） */
+const HMAX=8,HMIN=-2;/* 段差は8だんまで（ほる・つむ）。地面より2だん下まで、ほれる */
 function cliff2(a,b){return Math.abs(hiAt(a)-hiAt(b))>1}/* 2だん以上ちがう所は、とびこえられない */
 const LADDERS=new Set(['ladder_wood','ladder_bamboo']);/* ハシゴ：段差の下の低い地面に置く1マス。うしろ（手前・左右）のマスが、ちょうど1だん高い。上り下りは歩く速さ×0.5 */
 function ladderDir(j){/* ハシゴの向き（0：うしろが上のマス、1：左、3：右）。置いたときの向き S.rot、なければ自動 */const v=(S.rot||{})[j];if(v!=null&&LADDERS.has(S.obj[j]))return v;const h=hiAt(j),x=j%W;for(const d of[0,1,3]){const t=j-SDIR[d][1]*W-SDIR[d][0];if(t<0||t>=W*H||Math.abs(t%W-x)>1)continue;if(hiAt(t)===h+1&&S.ground[t]!==1)return d}return -1}
@@ -363,7 +364,7 @@ const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];
 function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LADDERS.has(S.obj[b]))return false;const d=ladderDir(b);return d>=0&&ladderTop(b,d)===a}
 const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
-function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return hiAt(c)*LIFT+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return hiAt(c)*LIFT;const d=stairDir(a);if(d<0)return hiAt(c)*LIFT;const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
+function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return liftOf(c)+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return liftOf(c);const d=stairDir(a);if(d<0)return liftOf(c);const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
 const LANDSEED=w=>w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:20261018;
 function landMade(s,j){const o=s.obj[j];return !!s.floor[j]||o==='part'||!!o&&!!BL[o]&&!BL[o].natural&&!WEEDS.has(o)}/* 人の作った物（床・道・家具・建物）がある */

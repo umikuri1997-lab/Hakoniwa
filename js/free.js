@@ -35,7 +35,7 @@ let WILDL=null,WILDS=null;
 function wildDraw(add,vis,ctx,now){/* 奥行きの順に、ほかの物といっしょに描く（draw-world.js） */if(!S||!S.wild)return;
   if(WILDS!==S||!WILDL){WILDS=S;WILDL=Object.keys(S.wild).map(Number)}
   for(const j of WILDL){if(S.obj[j]||S.floor[j])continue;const x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;const id=WILDK[S.wild[j]]||WILDK[0];
-    add(objectDepth(id,j),1,null,()=>sideClip(j,()=>drawObj(ctx,id,x*TS,y*TS-hiAt(j)*LIFT,j,100,now)),j)}}
+    add(objectDepth(id,j),1,null,()=>sideClip(j,()=>drawObj(ctx,id,x*TS,y*TS-liftOf(j),j,100,now)),j)}}
 
 /* ---------- 土地をクリアすると開く ---------- */
 let FTS=null,FTV=0;
