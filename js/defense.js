@@ -90,14 +90,6 @@ function drawPit(c,x,y,i){/* 落とし穴（コードのドット絵、仮の絵
 /* ---------- 季節のコワイノ（草原、はじめてオオカゲを追いはらったあと、夜に1〜2ひき） ---------- */
 const SEASONEN=['hana','hoteri','ochiba','yuki'];
 function seasonFoes(list){const t=SEASONEN[seasonNow()];if(!t)return;const n=1+(dayNo()%2);for(let i=0;i<n;i++)list.push(t)}
-/* ---------- せいれいの大わざ：攻撃を10回あてると、つぎの1回が大わざ（r.ult） ---------- */
-const ULTN=10;
-function ultHit(r,en,dmg){r.ult=(r.ult||0)+1;if(r.ult<=ULTN)return;r.ult=0;const near=R=>S.enemies.filter(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<=R);addFloat(r.x,r.y-1.4,'大わざ！','#ffd38a');sfxAt('kankan',r.x,r.y);fxSpr('shock',r.x*TS,r.y*TS,ELEM[r.elem].col);
-  if(r.elem==='fire'){for(const e of near(1.5)){hurtEn(e,dmg*2,{lag:HIT_LAG,sx:r.x,sy:r.y,dt:'fire',el:'fire',skill:1});if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}}
-  else if(r.elem==='earth'){for(const e of near(2)){e.stun=Math.max(e.stun||0,3);e.path=[]}}
-  else if(r.elem==='water'){for(const e of near(2)){e.stun=Math.max(e.stun||0,4.5);e.path=[]}}
-  else if(r.elem==='wind'){for(const e of near(2)){let dx=e.x-r.x,dy=e.y-r.y;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;let bx=null,by=null;for(let k=1;k<=3;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by;e.path=[];e.repath=0}}}
-  else if(r.elem==='wood'){for(const q of S.res)if(!q.hidden&&Math.hypot(q.x-r.x,q.y-r.y)<=2)q.hunger=Math.min(hMax(q),q.hunger+50)}}
 /* ---------- 守りつづけた夜：けがもこわされた物もない夜がつづくと、はたらく速さ+（S.streak） ---------- */
 const STREAKN=[3,7,14],STREAKW=[1,2,3];
 function streakWork(){const n=(S&&S.streak)||0;let b=0;for(let i=0;i<STREAKN.length;i++)if(n>=STREAKN[i])b=STREAKW[i];return b}

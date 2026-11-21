@@ -266,7 +266,7 @@ function stampCost(need){let c10=0;const parts=[];for(const id in need){const sh
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
 /* ---------- ほる・つむ（地面のブロック） ----------
    タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった物はその場に落ち、せいれいがはこぶ。つむ土は箱から、ブロックはもちものから。
-   なぞる：えらんだ所を、せいれいにたのむ（建てる所のしくみ。つむ土は、せいれいが箱からはこぶ。ブロックは、たのんだときにもちものからへらす）。
+   守り神のどうぐ「つるはし」（selStamp 'pick'）：タップで、下の列でえらんだ物（土・ブロック PICKB）をつむ。長おしで、ひびが入ってほる（材質で時間がかわる pickMs）。
    S.vx[マス]：だんごとのブロック（[1だんめ,2だんめ,…]、''は土）。ないマスは、ぜんぶ土 */
 const VX=()=>S.vx||(S.vx={});
 function cubeAt(j,lv){const v=S.vx&&S.vx[j];return v&&v[lv-1]||''}/* マス j の lv だんめのブロック（''は土） */
@@ -284,13 +284,21 @@ function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y)
   if(up&&terraHave(id)<1)return toast((CUBES.includes(id)?BL[id].name:'土')+'が足りません','warn');
   let got='';if(up){if(CUBES.includes(id))S.inv[id]--;else S.mat.tsuchi--;terraUp(j,id)}else{got=terraTop(j);terraDown(j)}
   recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up){const n0=(S.drops||[]).length;dropAt(x,y,MATN[got]?'mat:'+got:got,1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほった物は、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
-  if(!S.flags.digTip){S.flags.digTip=1;setTimeout(()=>toast('なぞると、せいれいにまとめてたのめる'),600)}}
-function askTerra(id,cells){const up=id!=='dig',ok=cells.filter(([x,y])=>canPlace(up?'mound':'dig',x,y,true)&&S.obj[y*W+x]!=='site');if(!ok.length)return toast(up?'つめる所がありません':'ほれる所がありません');
-  const nm=CUBES.includes(id)?BL[id].name:'土';if(up){const n=Math.min(ok.length,terraHave(id));if(!n)return toast(nm+'が足りません','warn');ok.length=n}
-  pending={kind:'terra',id,cells:ok};$('#confirmTxt').textContent=ok.length+'マス'+(up?'つむ・'+nm+ok.length:'ほる')+'・せいれいにたのむ';lackOn($('#cYes'),'');yesLbl(up?'つむ':'ほる');$('#cRot').hidden=true;$('#confirm').hidden=false}
-function terraAsk(p){const up=p.id!=='dig',cube=CUBES.includes(p.id),bid=up?'mound':'dig',b=BL[bid];let n=0;
-  for(const[x,y]of p.cells){if(!canPlace(bid,x,y,true))continue;if(up&&terraHave(p.id)<1)break;const j=y*W+x;if(up&&!cube)rsvAdd(b.mat);if(cube)S.inv[p.id]--;S.obj[j]='site';S.dyn[j]={build:bid,p:0,need:b.time,mat:up&&!cube?Object.assign({},b.mat):undefined,got:{}};if(cube)S.dyn[j].cube=p.id;if(n<14)burstAt(x,y,'block');n++}
-  if(!n)return toast(up?'つむ物が足りません':'ほれる所がありません','warn');recount();renderPalette();toast('せいれいが'+n+'マス'+(up?'つみ':'ほり')+'にきてくれる','good')}
+}
+const PICKB=['tsuchi',...CUBES];let PICKSEL='tsuchi',PICKH=null;/* つるはしの下の列・えらんでいる物・長おし */
+const pickHave=k=>k==='tsuchi'?S.mat.tsuchi||0:inv(k);
+function pickMs(j){const t=terraTop(j);return t==='tsuchi'?1000:t==='blk_brick'||t==='blk_wood'?1500:2000}/* ほるのにかかる時間（ミリ秒）：土1秒・レンガと木1.5秒・石と地面より下2秒 */
+const PICKTAP=250;/* これより短くはなしたら、つむ */
+function pickCell(sx,sy){let w=toWorld(sx,sy);const tl=tapLv(w.x,w.y);const x=Math.floor(w.x/TS),y=Math.floor((w.y+tl*LIFT)/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
+function pickDown(sx,sy){const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
+function pickTick(now){const P=PICKH;if(!P||P.done)return;const a=now-P.t0;if(a<PICKTAP)return;if(!P.dig){if(nightLock()){PICKH=null;return toast('夜のあいだは、ほれません')}if(!canPlace('dig',P.x,P.y)){PICKH=null;return}P.dig=true;P.need=pickMs(P.j)}
+  const k=Math.floor(a/250);if(k>P.n){P.n=k;sfxAt('dig',P.x+.5,P.y+.5);spawnFX(P.x+.5,P.y+.6,'#b89a72')}/* ほっているあいだ、少しずつ土がとぶ */
+  if(a>=P.need){P.done=true;terraNow('dig',P.x,P.y)}}
+function pickUp(){const P=PICKH;PICKH=null;if(!P||P.done||P.dig)return;/* 長おしのとちゅうではなしたら、ほるのをやめる */if(performance.now()-P.t0>=PICKTAP)return;
+  if(nightLock())return toast('夜のあいだは、つめません');terraNow(PICKSEL==='tsuchi'?'mound':PICKSEL,P.x,P.y)}
+function pickCancel(){PICKH=null}
+function drawPickCrack(now){const P=PICKH;if(!P||!P.dig||P.done)return;const r=Math.min(1,(now-P.t0)/P.need),px=P.x*TS,py=P.y*TS-liftOf(P.j),n=Math.ceil(r*12);ctx.save();ctx.fillStyle='rgba(255,246,222,.5)';ctx.fillRect(px,py,TS,1);ctx.fillRect(px,py+TS-1,TS,1);ctx.fillRect(px,py,1,TS);ctx.fillRect(px+TS-1,py,1,TS);ctx.fillStyle='rgba(46,32,22,.7)';
+  for(let i=0;i<n;i++){let x=16+Math.floor((hash(P.j*31+i*7)-.5)*8),y=16+Math.floor((hash(P.j*17+i*13)-.5)*8);for(let s=0;s<4;s++){ctx.fillRect(px+x,py+y,1.5,1.5);x+=Math.round((hash(P.j+i*5+s)-.5)*5);y+=Math.round((hash(P.j*3+i+s*11)-.5)*5);x=Math.max(1,Math.min(TS-2,x));y=Math.max(1,Math.min(TS-2,y))}}ctx.restore()}/* ほっているマスのわくと、のびていくひび（ドット） */
 function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハケではぬれません');/* 窓・カーテンは、壁に1つずつかける */
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
@@ -323,7 +331,6 @@ function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
   if(!pending)return;const p=pending;pending=null;$('#confirm').hidden=true;selRect=null;
   if(p.kind==='one'){place(p.id,p.x,p.y);return}
-  if(p.kind==='terra'){terraAsk(p);return}/* ほる・つむを、せいれいにたのむ */
   if(p.kind==='bp'){bpPlace(p.i,p.x,p.y);return}/* 家の設計図 */
   if(p.kind==='plant'){{const D=plantDist();p.cells=p.cells.filter(([x,y])=>plantReach(D,y*W+x));if(!p.cells.length)return toast('せいれいが行けない場所です','warn')}if(inv(p.id)<p.cells.length)return toast(iname(p.id)+'が足りません');S.inv[p.id]-=p.cells.length;for(const[x,y]of p.cells){const j=y*W+x;S.obj[j]='sprout';S.dyn[j]={plant:p.id,p:0,userMound:true}}
     p.cells.forEach(([x,y],i)=>{if(i<12)burstAt(x,y,'plant')});recount();toast('せいれいたちが植えにきてくれる','good');return}
