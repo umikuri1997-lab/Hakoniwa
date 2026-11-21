@@ -89,6 +89,39 @@ class Model:
         self.material(color, False, surface)
         self.sc.tube(points, radius, self.color(color))
 
+    def strip(self, edges, color, *, surface=None, smooth=True):
+        """隣の面と辺を共有する、一枚の帯や布。"""
+        self.material(color, smooth, surface)
+        self.sc.part()
+        paint = self.color(color)
+        for (upper, lower), (next_upper, next_lower) in zip(edges, edges[1:]):
+            self.sc.quad(upper, next_upper, next_lower, lower, paint)
+
+    def bent_tube(self, points, radius, color, axis, *, surface=None, closed=False):
+        """断面を共有しながら曲がる、一続きの丸い材。"""
+        centers = np.asarray(points, float)
+        if closed:
+            tangent = np.roll(centers, -1, axis=0)-np.roll(centers, 1, axis=0)
+        else:
+            tangent = np.gradient(centers, axis=0)
+        tangent /= np.linalg.norm(tangent, axis=1, keepdims=True)
+        across = np.cross(tangent, axis)
+        across /= np.linalg.norm(across, axis=1, keepdims=True)
+        up = np.cross(tangent, across)
+        count = 8
+        rings = [[point+radius*(cos(i*tau/count)*u+sin(i*tau/count)*v)
+                  for i in range(count)]
+                 for point, u, v in zip(centers, across, up)]
+        if closed:
+            rings.append(rings[0])
+        self.material(color, True, surface)
+        self.sc.part()
+        paint = self.color(color)
+        for lower, upper in zip(rings, rings[1:]):
+            for i in range(count):
+                j = (i+1)%count
+                self.sc.quad(lower[i], upper[i], upper[j], lower[j], paint)
+
     def box(self, start, end, color, *, surface=None):
         self.material(color, False, surface)
         self.sc.box(*start, *end, self.color(color), bevel=0)
