@@ -28,6 +28,7 @@ const context = vm.createContext({
   RIDEK: 1.5, RIDES: rides, RIDEB: {},
   i: phase === null ? null : 1, rideAng: () => phase,
   PLROTS: {kazami: dir}, performance: {now: () => 0},
+  window: {}, chipOf: () => null,  // チップを入れたあとも、仮の絵を写す
 });
 const water = ['dock', 'raft', 'mzchest', 'mzgate', 'mzgateb'].includes(name);
 const wind = fs.readFileSync('js/wind.js', 'utf8');

@@ -137,13 +137,16 @@ function drawWindGround(c,x0,y0,x1,y1,now){/* 地面の高さの絵：雲の橋�
 function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};
   if(RIDES.has(id)||RIDEB[id]){drawRide(c,RIDEB[id]||id,!!RIDEB[id],x,y,i,now,R);return}
   if(id==='oldmill'){drawObj(c,'windmill',x,y,i,g,now);return}/* 古い風車：風があたっているときだけ、まわる */
-  if(id==='kazaana'||id==='kazaanab'){/* 風穴：石でかこんだ穴。ふさがった風穴は、石の山 */
+  if(id==='kazaana'||id==='kazaanab'){/* 風穴：石でかこんだ穴。ふさがった風穴は、石の山（3Dから写したチップ。ないときはコードの仮の絵） */const ch=window.CHIPS&&CHIPS[id];
+    if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='kazaana')windHoleDots(c,x,y,i,now);return}
     R(5,12,22,14,'#8f8672');R(3,15,26,9,'#8f8672');R(6,11,20,2,'#b3aa94');R(4,14,3,2,'#b3aa94');R(25,14,3,2,'#b3aa94');R(5,25,22,2,'#6f6857');
     if(id==='kazaana'){R(8,14,16,9,'#3d4a5c');R(10,13,12,1,'#3d4a5c');R(10,23,12,1,'#3d4a5c');R(9,15,14,2,'#2b3442');
-      if(i!=null){const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}}
+      windHoleDots(c,x,y,i,now)}
     else{R(8,10,8,8,'#a39a84');R(15,7,9,10,'#b3aa94');R(11,15,11,9,'#9a917b');R(18,16,7,7,'#a8a08a');R(9,11,6,1,'#cfc7b2');R(16,8,7,1,'#cfc7b2');R(12,16,9,1,'#c2baa4');R(8,17,1,1,'#6f6857');R(22,23,3,1,'#6f6857')}return}
-  if(id==='kazami'){/* かざみ：柱の上に、風の向きをさす矢の羽 */const d=(i!=null?rotAt(i):(PLROTS.kazami||0))&3;R(12,26,8,3,'rgba(60,50,30,.25)');R(15,10,2,18,'#8a6a42');R(14,26,4,2,'#6f5433');R(14,8,4,3,'#c9a46a');
+  if(id==='kazami'){/* かざみ：柱の上に、風の向きをさす矢の羽 */const d=(i!=null?rotAt(i):(PLROTS.kazami||0))&3,ch=chipOf('kazami',i,i!=null?null:d);if(ch&&drawChip(c,ch,id,x,y,now,i))return;R(12,26,8,3,'rgba(60,50,30,.25)');R(15,10,2,18,'#8a6a42');R(14,26,4,2,'#6f5433');R(14,8,4,3,'#c9a46a');
     const a='#f4fbfd',b='#7fc7b4';if(d===1){R(8,4,16,3,a);R(22,2,3,7,b);R(25,4,2,3,b);R(6,2,3,7,b)}else if(d===3){R(8,4,16,3,a);R(7,2,3,7,b);R(5,4,2,3,b);R(23,2,3,7,b)}else if(d===0){R(14,0,4,12,a);R(12,10,8,3,b);R(14,13,4,2,b);R(12,-1,8,2,b)}else{R(14,0,4,12,a);R(12,0,8,3,b);R(14,-2,4,2,b);R(12,11,8,2,b)}return}}
+
+function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白いつぶ */if(i==null)return;const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}
 
 /* 遊具の絵（コードの仮のドット絵）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
 function drawRide(c,id,brk,x0,y0,i,now,R0){const fx=id==='wheel'?48:32,fy=56;c.save();c.translate(Math.round(x0+fx),Math.round(y0+fy));c.scale(RIDEK,RIDEK);const x=-fx,y=-fy,R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};drawRide0(c,id,brk,x,y,i,now,R);c.restore()}
