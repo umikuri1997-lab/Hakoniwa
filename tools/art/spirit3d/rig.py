@@ -56,7 +56,7 @@ def posed(sp, face, p):
     # 頭の色：カメラに近い向き（前・横・うしろ）の、いまの絵の色
     R0 = rz(-face*math.pi/2+g('spin')); v = rz(-(g('yaw')+g('hy')))@(R0.T@np.array([0, 1., 0]))
     ti = 0 if v[1] >= abs(v[0]) else 2 if -v[1] >= abs(v[0]) else 1
-    for nm in ('hood', 'face'):
+    for nm in ('hood', 'face')+sp.fixed_head_parts:
         if nm in sp.tex: out[nm] = (head(sp.tex[nm][0]), sp.tex[nm][1][ti], 't')
     for nm, base in sp.tops:
         P, C = sp.tex[nm]; C = C[ti]
@@ -91,7 +91,7 @@ def shoot(sp, face, p):
     GB = {'arm': 0.0, 'hand': 7.0, 'prop': 1.5}
     grp = {nm: (nm[-1] if nm.startswith(('arm', 'hand', 'prop')) else None) for nm in names}
     _, _, zc = V(parts['body'][0].mean(0)[None]); zc = zc[0]   # 体のまん中の奥行き
-    HEAD = ('hood', 'face')+tuple(nm for nm, _ in sp.tops); fa = np.zeros(Wd*Hd, bool)   # fa：頭に勝つ、うで・手・道具のドット
+    HEAD = ('hood', 'face')+sp.fixed_head_parts+tuple(nm for nm, _ in sp.tops); fa = np.zeros(Wd*Hd, bool)   # fa：頭に勝つ、うで・手・道具のドット
     hoodi = names.index('hood'); headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
     colors = {'cream': sp.body_color, 'creamf': sp.far_leg_color,
               'arm': sp.arm_color, 'hand': sp.hand}
@@ -106,7 +106,7 @@ def shoot(sp, face, p):
                 c = np.floor((X-EXT[0])*SSN).astype(int)+ox; r = np.floor((Y-EXT[2])*SSN).astype(int)+oy
                 ok = (c >= 0) & (c < Wd) & (r >= 0) & (r < Hd); j = r[ok]*Wd+c[ok]; z = Z[ok]; cc = C[ok]
                 o = np.lexsort((z, j)); j, z, cc = j[o], z[o], cc[o]; last = np.r_[j[1:] != j[:-1], True]; j, z, cc = j[last], z[last], cc[last]
-                if nm in ('hood', 'face'): headcov[j] |= (nm == 'hood') or facing
+                if nm in ('hood', 'face')+sp.fixed_head_parts: headcov[j] |= (nm != 'face') or facing
                 if nm == 'face':
                     bt = ((z > zb[j]) | ((idb[j] == hoodi) & facing)) & ~fa[j]
                     zb[j[bt]] = np.maximum(z[bt], zb[j[bt]]+0.5)

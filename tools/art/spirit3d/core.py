@@ -152,6 +152,7 @@ class Spirit:
         self.far_leg_color = (239, 231, 218)
         self.chest = None
         self.cape = None
+        self.fixed_head_parts = ()
         self.solid = {'body': hull('sp:body0', 'sp:bodyS0', Q, bottom=(13.0, 6.5))[0], 'legL': hull('sp:footL', 'sp:footS', Q)[0], 'legR': hull('sp:footR', 'sp:footS', Q)[0]}
         self.tex = {}
         def textured(nm, front, side, fronttex, sidetex, backtex):
