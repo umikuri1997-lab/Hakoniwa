@@ -171,19 +171,22 @@ function mzDrawObj(c,id,x,y,i,now){now=now||performance.now();const P=(col,a,b,w
   if(id==='dock'){P('#8a6238',4,22,4,10);P('#8a6238',24,22,4,10);P('#a67c4c',2,24,28,2);P('#c49a66',2,12,28,12);for(let k=0;k<4;k++)P('#a67c4c',2+k*8,12,2,12);P('#d9b684',2,12,28,2);P('#8a6238',14,4,4,10);P('#a67c4c',12,4,8,2);P('#e9dcc0',12,8,8,2);return}
   if(id==='raft'){P('#8a6238',14,4,2,24);P('#e8734a',16,4,10,8);P('#f29a72',16,4,10,2);P('#b08552',4,26,24,4);P('#c49a66',4,22,24,4);P('#d9b684',4,22,24,2);P('#8a6238',8,22,2,8);P('#8a6238',22,22,2,8);return}}
 function mzGateWater(c,x,y,now){/* ひらいた水門の、戸の下を流れる水（石の柱のあいだ） */const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);P('#6fbfe0',8,14,16,18);const t=((now/160)|0)%6;for(let k=0;k<3;k++)P('#d7f1f8',10+k*5,14+((t+k*2)%6)*3,2,4)}
-function mzBoatDraw(px,py,cargo){mzPx(ctx,'#6b4526',px-12,py+2,24,2);mzPx(ctx,'#a8743f',px-12,py-4,24,6);mzPx(ctx,'#c99a62',px-12,py-4,24,2);mzPx(ctx,'#a8743f',px+12,py-2,2,4);mzPx(ctx,'#a8743f',px-14,py-2,2,4);if(cargo){mzPx(ctx,'#b08a4a',px-4,py-10,8,6);mzPx(ctx,'#d8b26a',px-4,py-10,8,2)}}
-function mzRaftDraw(px,py){mzPx(ctx,'#b08552',px-10,py+2,20,4);mzPx(ctx,'#c49a66',px-10,py-2,20,4);mzPx(ctx,'#d9b684',px-10,py-2,20,2)}
+function mzBoatDraw(px,py,cargo){/* 小舟（3Dから写したチップ mzboat・荷をつんだ mzboat:c。まん中が px,py。ないときはコードの仮の絵） */const ch=window.CHIPS&&CHIPS[cargo?'mzboat:c':'mzboat'];if(ch&&drawChip(ctx,ch,'mzboat',px,py))return;mzPx(ctx,'#6b4526',px-12,py+2,24,2);mzPx(ctx,'#a8743f',px-12,py-4,24,6);mzPx(ctx,'#c99a62',px-12,py-4,24,2);mzPx(ctx,'#a8743f',px+12,py-2,2,4);mzPx(ctx,'#a8743f',px-14,py-2,2,4);if(cargo){mzPx(ctx,'#b08a4a',px-4,py-10,8,6);mzPx(ctx,'#d8b26a',px-4,py-10,8,2)}}
+function mzRaftDraw(px,py){const ch=window.CHIPS&&CHIPS.mzraftb;if(ch&&drawChip(ctx,ch,'mzraftb',px,py))return;/* いかだ（チップ mzraftb） */mzPx(ctx,'#b08552',px-10,py+2,20,4);mzPx(ctx,'#c49a66',px-10,py-2,20,4);mzPx(ctx,'#d9b684',px-10,py-2,20,2)}
 function mzRowDraw(y,x0,x1,now){const M=S.mz,t=(now/260)|0;
   for(let x=Math.max(0,x0);x<Math.min(W,x1+1);x++){const j=y*W+x,hh=hiAt(j),X=x*TS,Y=y*TS-hh*LIFT,g=S.ground[j];
     if(M.cn[j]){const wet=MZC.wet&&MZC.wet[j],con=n=>n>=0&&n<W*H&&(!!M.cn[n]||S.obj[n]==='mzgate'||S.obj[n]==='mzgateb');
-      mzPx(ctx,'#c9c4b4',X,Y,TS,TS);mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+4,TS-8,TS-8);
+      const cm=(x>0&&con(j-1)?1:0)|(x<W-1&&con(j+1)?2:0)|(con(j-W)?4:0)|(con(j+W)?8:0),cch=window.CHIPS&&CHIPS['mzcanal:'+(wet?'w':'d')+cm];/* 水路のチップ（H-6：つながる向き 左1・右2・上4・下8） */
+      if(!(cch&&drawChip(ctx,cch,'mzcanal',X,Y,now))){mzPx(ctx,'#c9c4b4',X,Y,TS,TS);mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+4,TS-8,TS-8);
       if(con(j-W))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y,TS-8,4);if(con(j+W))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+TS-4,TS-8,4);if(x>0&&con(j-1))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X,Y+4,4,TS-8);if(x<W-1&&con(j+1))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+TS-4,Y+4,4,TS-8);
-      mzPx(ctx,'#a39d8c',X,Y+TS-2,4,2);mzPx(ctx,'#a39d8c',X+TS-4,Y+TS-2,4,2);
+      mzPx(ctx,'#a39d8c',X,Y+TS-2,4,2);mzPx(ctx,'#a39d8c',X+TS-4,Y+TS-2,4,2)}
       if(wet&&M.ice&&M.ice[j]){mzPx(ctx,'#d9f1f7',X+4,Y+4,TS-8,TS-8);mzPx(ctx,'#ffffff',X+8,Y+10,10,2);mzPx(ctx,'#ffffff',X+16,Y+20,8,2)}
       else if(wet){const k=(t+x*3+y*5)%6;mzPx(ctx,'#bfe9f5',X+8+k*2,Y+8,6,2);mzPx(ctx,'#bfe9f5',X+18-k*2,Y+20,4,2);
         const s=j+W;if(s<W*H&&M.cn[s]&&hiAt(s)<hh&&MZC.wet[s]){const dh=(hh-hiAt(s))*LIFT;mzPx(ctx,'#9ad8ee',X+4,Y+TS,TS-8,dh);for(let k2=0;k2<3;k2++)mzPx(ctx,'#e6f7fb',X+8+k2*7,Y+TS+((t*4+k2*9)%Math.max(1,dh-4)),2,4)}}
-      else{mzPx(ctx,'#7d766a',X+8,Y+10,4,2);mzPx(ctx,'#7d766a',X+20,Y+20,4,2)}}
-    else if(hh>0&&(g===1||g===2)){const dry=n=>n<0||n>=W*H||!S.ground[n];mzPx(ctx,g===1?'#4f9fd0':'#8fd0e6',X,Y,TS,TS);const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);if(g===2){mzPx(ctx,'#d9cfa8',X+8,Y+22,4,2);mzPx(ctx,'#d9cfa8',X+22,Y+6,2,2)}
+      else if(!cch){mzPx(ctx,'#7d766a',X+8,Y+10,4,2);mzPx(ctx,'#7d766a',X+20,Y+20,4,2)}}
+    else if(hh>0&&(g===1||g===2)){const dry=n=>n<0||n>=W*H||!S.ground[n],pm=(x>0&&!dry(j-1)?1:0)|(x<W-1&&!dry(j+1)?2:0)|(!dry(j-W)?4:0)|(!dry(j+W)?8:0),pch=window.CHIPS&&CHIPS['mzpond:'+pm];/* 高い段の水（ため池）のふちのチップ（H-6） */
+      if(pch&&drawChip(ctx,pch,'mzpond',X,Y,now)){const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);continue}
+      mzPx(ctx,g===1?'#4f9fd0':'#8fd0e6',X,Y,TS,TS);const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);if(g===2){mzPx(ctx,'#d9cfa8',X+8,Y+22,4,2);mzPx(ctx,'#d9cfa8',X+22,Y+6,2,2)}
       if(dry(j-W))mzPx(ctx,'#c9c4b4',X,Y,TS,4);if(dry(j+W)){mzPx(ctx,'#c9c4b4',X,Y+TS-4,TS,4);mzPx(ctx,'#a39d8c',X,Y+TS-2,TS,2)}if(x===0||dry(j-1))mzPx(ctx,'#c9c4b4',X,Y,4,TS);if(x===W-1||dry(j+1))mzPx(ctx,'#c9c4b4',X+TS-4,Y,4,TS)}}}
 function mzRows(add,x0,y0,x1,y1,now){if(!mzOn())return;if(MZC.S!==S)mzRefresh();
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)add(y-1+.0007,-1,null,()=>mzRowDraw(y,x0-1,x1+1,now),-1);

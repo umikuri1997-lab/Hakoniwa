@@ -48,7 +48,7 @@ function shopWave(i){const sh=shopOf();if(!sh)return;const start=shopDock();if(s
   const used=new Set(SHOPC.cust.map(c=>c.seat));const free0=sh.seats.filter(s=>!used.has(s));n=Math.min(n,free0.length);
   for(let k=0;k<n;k++){const seat=free0[k],known=shopKnown().filter(d=>!m.includes(d)),x=known.length&&Math.random()<SHOP.xtra;
     const want=x?known[(Math.random()*known.length)|0]:m[(Math.random()*m.length)|0],el=pick(ELEM_KEYS);
-    const c=mkRes({nid:-2000-(SHOPC.seq++)},pick(SHOPNAMES),el,start%W+.5,((start/W)|0)+.5);c.id=-2000-SHOPC.seq;c.hidden=false;c.st='come';c.seat=seat;c.want=want;c.x0=x?1:0;c.delay=k*6;c.wt=0;c.path=[];c.act={type:'mzc',stage:'walk',t:0};c.home=start;
+    const c=mkRes({nid:-2000-(SHOPC.seq++)},pick(SHOPNAMES),el,start%W+.5,((start/W)|0)+.5);c.id=-2000-SHOPC.seq;c.hidden=false;c.guest=1;/* 旅の外套の絵（guestDraw） */c.st='come';c.seat=seat;c.want=want;c.x0=x?1:0;c.delay=k*6;c.wt=0;c.path=[];c.act={type:'mzc',stage:'walk',t:0};c.home=start;
     SHOPC.cust.push(c)}
   if(n){SHOPC.boatT=performance.now();toast('お客さんが、舟で来た','good')}}
 function shopGoal(c){/* すわる所の、となりの歩けるマス */const s=c.seat;return [s+W,s-1,s+1,s-W].find(n=>walk(n))??-1}
@@ -98,7 +98,7 @@ function shopPop(){const P=pxPop('食堂'),B=P.body;
   draw()}
 
 /* ---- 絵（コードで描く仮のドット絵） ---- */
-function shopDrawObj(c,id,x,y){const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);
+function shopDrawObj(c,id,x,y){const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);const ch=window.CHIPS&&CHIPS[id];if(ch&&drawChip(c,ch,id,x,y))return;/* 3Dから写したチップ（GPT の H-7） */
   if(id==='shopsign'){P('#8a6238',14,10,4,22);P('#c49a66',4,4,24,12);P('#d9b684',4,4,24,2);P('#6fbfe0',8,8,6,4);P('#f29a72',18,8,6,4);return}
   if(id==='counter'){P('#8a6238',2,14,28,18);P('#a67c4c',2,14,28,4);P('#c49a66',0,10,32,6);P('#d9b684',0,10,32,2);P('#e9dcc0',10,6,6,4);return}
   if(id==='menuboard'){P('#8a6238',8,24,4,8);P('#8a6238',20,24,4,8);P('#3f5a4a',4,4,24,20);P('#c49a66',4,4,24,2);for(let k=0;k<4;k++)P('#e9dcc0',8,9+k*4,10+(k%2)*6,2);return}
