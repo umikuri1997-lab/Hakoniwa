@@ -79,7 +79,7 @@ let PALF='all';
 function gotNote(id){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||!id)return;const b=BL[id];if(!(String(id).startsWith('seed:')||b&&(b.kind==='furn'||b.kind==='block'||b.kind==='plant')))return;const L=S.got||(S.got=[]),i=L.indexOf(id);if(i>=0)L.splice(i,1);L.unshift(id);if(L.length>30)L.length=30}
 function palTags(id){if(id.startsWith('seed:'))return['はたけ'];const b=BL[id];if(!b)return[];const t=tagsOf(id).slice();if(b.kind==='plant'&&!t.includes('ガーデン'))t.push('ガーデン');if(b.kind==='build'&&!t.length)t.push('建物');return t}
 function palBar(box,cand){const tags=[...CRAFT_TAGS.filter(t=>t!=='ぜんぶ'),'建物','はたけ'].filter(t=>cand.some(id=>palTags(id).includes(t)));if(PALF!=='all'&&PALF!=='recent'&&!tags.includes(PALF))tags.unshift(PALF);/* えらんでいるタグは、物がなくても出す（もどせるように） */
-  const bar=el('<div class="palbar" id="palBar" role="group" aria-label="しぼりこみ"></div>');for(const[k,t]of[['all','すべて'],['recent','さいきん'],...tags.map(t=>[t,t])]){const b=el('<button class="ctab"></button>');b.textContent=t;b.dataset.pf=k;if(PALF===k)b.classList.add('on');b.setAttribute('aria-pressed',PALF===k?'true':'false');b.onclick=()=>{sfx('tap');PALF=k;renderPalette();const p=$('#palItems');if(p)p.scrollTop=0};bar.appendChild(b)}const pal=$('#palette');pal.insertBefore(bar,pal.firstChild);/* 一覧の外（上）に置く：一覧をスクロールしても見える */
+  const bar=el('<div class="palbar" id="palBar" role="group" aria-label="しぼりこみ"></div>');for(const[k,t]of[['all','すべて'],['recent','さいきん'],...((S.bpInv||[]).length||PALF==='bp'?[['bp','設計図']]:[]),...tags.map(t=>[t,t])]){const b=el('<button class="ctab"></button>');b.textContent=t;b.dataset.pf=k;if(PALF===k)b.classList.add('on');b.setAttribute('aria-pressed',PALF===k?'true':'false');b.onclick=()=>{sfx('tap');PALF=k;renderPalette();const p=$('#palItems');if(p)p.scrollTop=0};bar.appendChild(b)}const pal=$('#palette');pal.insertBefore(bar,pal.firstChild);/* 一覧の外（上）に置く：一覧をスクロールしても見える */
   requestAnimationFrame(()=>{const on=bar.querySelector('.on');if(on&&on.scrollIntoView)on.scrollIntoView({block:'nearest',inline:'nearest'})})}
 function palEmpty(box,t){const d=nodata('paper',t);d.classList.add('palnone');const b=el('<button class="btn">すべてを見る</button>');b.onclick=()=>{sfx('tap');PALF='all';renderPalette()};d.appendChild(b);box.appendChild(d)}
 function renderPalette(){
@@ -94,6 +94,7 @@ function renderPalette(){
   $('#palette').classList.toggle('open',palOpen);
   if(!palOpen&&mode==='bulk'){/* ハケ・スタンプ・つけかえも、えらんだら小さくして、マップを見えるように */
     if(selStamp==='move')box.appendChild(chip(toolIcon('mover'),'ひっこしミトン',MOVESRC?moveName(MOVESRC):'うつす','sel',()=>{}));
+    else if(selStamp&&selStamp.startsWith('bp:')){const it=(S.bpInv||[])[+selStamp.slice(3)];if(it)box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','sel wide',()=>{}))}/* えらんだ設計図 */
     else if(selStamp)box.appendChild(chip(selStamp.startsWith('swap:')?iconURL(selStamp.slice(5)):stampIcon(selStamp),selStamp.startsWith('swap:')?BL[selStamp.slice(5)].name:STAMPS[selStamp].name,selStamp.startsWith('swap:')?'×'+inv(selStamp.slice(5)):'スタンプ','sel',()=>{}));
     else if(sel&&BL[sel])box.appendChild(chip(iconURL(sel),iname(sel),'×'+inv(sel),'sel',()=>{}));
     const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
@@ -111,6 +112,7 @@ function renderPalette(){
   const PF=mode==='build'?PALF:'all',pf=id=>PF==='all'||PF!=='recent'&&palTags(id).includes(PF);
   if(mode==='build'){const bLock0=id=>!noTemple()&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),cand=[...(noTemple()?[]:BLOCKS.filter(id=>inv(id)>0)),...Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0),...(S.feat.plant?PLANTS.filter(id=>inv(id)>0):[]),...(cnt('farm')?Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0).map(k=>'seed:'+k):[]),...BUILDS.filter(id=>(usable(id)||bLock0(id))&&recShown(id))];
     palBar(box,cand);
+    if(PF==='bp'){if(!(S.bpInv||[]).length)return palEmpty(box,'設計図は、まだないよ');lbl(box,'設計図');S.bpInv.forEach((it,i)=>box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide',()=>{sfx('tap');bpPop(i)})));return}/* 設計図のしぼりこみ：1まいずつ */
     if(PF==='recent'){const L=(S.got||[]).filter(id=>cand.includes(id));if(!L.length)return palEmpty(box,(S.got||[]).length?'さいきんもらった物は、もう置いたよ':'これからもらった物が、ここにならぶよ');lbl(box,'さいきんもらった');
       for(const id of L){const sd=id.startsWith('seed:'),n=sd?cseed(id.slice(5)):inv(id);box.appendChild(chip(iconURL(id),iname(id),'×'+n,sel===id&&!selStamp?'sel':'',pickItem(id)))}return}}
   const n0=box.children.length;
@@ -438,6 +440,7 @@ function renderSheet(){
     if((S.horn||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">よびごえの角笛</span></button>');b.querySelector('img').src=hornIco();b.querySelector('.ct').textContent=S.horn;b.onclick=()=>{sfx('tap');itemPop('horn')};grid.appendChild(b)}
     if((S.herb||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">まよけのハーブ</span></button>');b.querySelector('img').src=herbIco();b.querySelector('.ct').textContent=S.herb;b.onclick=()=>{sfx('tap');itemPop('herb')};grid.appendChild(b)}
     if(S.letters&&S.letters.length){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">手紙</span></button>');b.querySelector('img').src=envURL(letterUnread()?0:1);b.querySelector('.ct').textContent=letterUnread()||S.letters.length;b.onclick=()=>{sfx('tap');letterList()};grid.appendChild(b)}/* せいれいの手紙 */
+    (S.bpInv||[]).forEach((it,i)=>{const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');b.querySelector('img').src=bpIcon(it.k);b.querySelector('.nm').textContent=BPS[it.k].name;b.onclick=()=>{sfx('tap');bpPop(i)};grid.appendChild(b)});/* 設計図：タップでプレビュー → 置く場所をえらぶ */
     for(const k of['tmap','mapPc','fukuro','ng0','ng1','ng2'])if((S[k]||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');b.querySelector('img').src=trIco(k);b.querySelector('.nm').textContent=TRNAME[k];b.querySelector('.ct').textContent=S[k];b.onclick=()=>{sfx('tap');itemPop(k)};grid.appendChild(b)}/* 宝の地図・ふしぎなふくろ */
     body.appendChild(grid);
     if(typeof sheetArg==='string'&&(sheetArg==='mseed'?(S.mseed||0)>0:sheetArg.startsWith('seed:')?!!CROPS[sheetArg.slice(5)]:ids.includes(sheetArg))){const a=sheetArg;sheetArg=null;itemPop(a)}/* ほかの画面から、物をえらんで開いたときは、そのメニューも出す */
