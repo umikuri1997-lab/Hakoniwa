@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   assert.equal(a.statue,-1);assert.equal(a.usable,false,'temple is not built from the palette');assert.equal(a.place,false,'cannot place over the ruin');assert.equal(a.still,'statueb','ruin cannot be removed');
   assert.equal(a.q,'statue');assert.match(a.how,/こわれた神殿/);
   /* 「しらべる」でタップ（屋根の所） */
-  await run(`(()=>{setMode('look');const j=RUINT,wx=(j%W+.5)*TS,wy=((j/W)|0)*TS-2*TS;onTap((wx-cam.x)*cam.z,(wy-cam.y)*cam.z)})()`);/* 屋根の所（像のマスの2マス上）をタップ */
+  await run(`(()=>{setMode('look');const j=RUINT,wx=(j%W+.5)*TS,wy=((j/W)|0)*TS-2*TS;{const q=objS(j,wx,wy);onTap(q.x,q.y)}})()`);/* 屋根の所（像のマスの2マス上）をタップ */
   const b=JSON.parse(await run(`JSON.stringify({o:S.obj[RUINT],d:S.dyn[RUINT],s2:[RUINT-1,RUINT+1,RUINT+W,RUINT+2,RUINT+3].map(k=>S.obj[k])})`));
   assert.equal(b.o,'site');assert.equal(b.d.build,'statue');assert.equal(b.d.ruin,1);assert.deepEqual(b.s2,['site2','site2','site2','site2','site2']);
   assert.equal(await run(`templeRuinTap(RUINT)`),false,'second tap does nothing');

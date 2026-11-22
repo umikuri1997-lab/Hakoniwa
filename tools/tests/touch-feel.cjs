@@ -9,8 +9,8 @@ const assert=require('node:assert/strict');
   assert.ok(f.on&&f.moved>20&&f.n<200&&!f.slow,'fling '+JSON.stringify(f));console.log('touch: the map glides after a fast flick and stops ('+Math.round(f.moved)+' pts, '+f.n+' frames)');
   /* 2. 置く前の絵をつまんで、ずらす */
   const g=JSON.parse(await run(`(()=>{setMode('build');const id=Object.keys(BL).find(k=>BL[k].kind==='furn'&&!ROTS[k]&&(szR(k,0)||[1,1])[0]===1&&(szR(k,0)||[1,1])[1]===1);sel=id;S.unlocked[id]=true;const cx=Math.floor((cam.x+VW/cam.z/2)/TS),cy=Math.floor((cam.y+VH/cam.z/2)/TS);
-    pending={kind:'one',id,x:cx,y:cy,ok:true};const s=(x,y)=>({x:(x*TS+TS/2-cam.x)*cam.z,y:(y*TS+TS/2-cam.y)*cam.z});let p=s(cx,cy);const tl=tapLv(cx*TS+16,cy*TS+16);if(tl){pending=null;return JSON.stringify({skip:1})}
-    const hit=grabAt(p.x,p.y),miss=grabAt(s(cx+3,cy).x,p.y);gest={type:'grab',grab:hit};REC.length=0;const q=s(cx+2,cy+1);grabMove(q.x,q.y);const r={hit:!!hit,miss:!!miss,x:pending.x-cx,y:pending.y-cy,snd:REC.includes('notch')};pending=null;gest=null;setMode('look');return JSON.stringify(r)})()`));
+    pending={kind:'one',id,x:cx,y:cy,ok:true};const s=(x,y)=>w2s(x*TS+TS/2,y*TS+TS/2);let p=s(cx,cy);const tl=tapLv(cx*TS+16,cy*TS+16);if(tl){pending=null;return JSON.stringify({skip:1})}
+    const hit=grabAt(p.x,p.y),miss=grabAt(s(cx+3,cy).x,s(cx+3,cy).y);gest={type:'grab',grab:hit};REC.length=0;const q=s(cx+2,cy+1);grabMove(q.x,q.y);const r={hit:!!hit,miss:!!miss,x:pending.x-cx,y:pending.y-cy,snd:REC.includes('notch')};pending=null;gest=null;setMode('look');return JSON.stringify(r)})()`));
   if(!g.skip){assert.deepEqual(g,{hit:true,miss:false,x:2,y:1,snd:true});console.log('touch: the item waiting to be placed follows the finger, tile by tile')}
   /* 3. わざのボタン：たまった瞬間に、はねて「ちりん」。チャージ中におすと、ふるえる */
   const k=JSON.parse(await run(`(()=>{const el=document.createElement('div');document.body.appendChild(el);REC.length=0;skillReady(el,'t',.5);skillReady(el,'t',1);const a=el.classList.contains('sready')&&REC.includes('tink');REC.length=0;skillReady(el,'t',1);const b=!REC.includes('tink');skillDeny(el);const c=el.classList.contains('ushake');el.remove();return JSON.stringify({a,b,c})})()`));

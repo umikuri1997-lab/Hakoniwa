@@ -71,7 +71,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2197;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2184;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -126,9 +126,9 @@ let tutCache={k:'',t:0,v:null};
 function craftHintEl(){/* 依頼ボードのしぼりこみで、さがす物がかくれているとき、もとにもどす所をさす */if(craftCan)return[document.querySelector('.cfind .cnow'),'「いま作れる」をタップ'];if(craftQ)return[document.getElementById('craftQ'),'さがす名前をけそう'];const cp=document.getElementById('craftPop');if(cp)return[cp.querySelector('.clr'),'「けす」をタップ'];return[document.querySelector('.cfind .cflt'),'「しぼりこみ」をタップ']}
 function orderTut(id){if(sheet){if(sheet!=='craft'||inv(id)>0||S.orders.some(o=>o.type===id))return{kind:'close'};return craftInTag(id)&&!craftQ&&(!craftCan||canMakeNow(id))?{kind:'row'}:{kind:'tab'}}if(inv(id)>0)return{kind:'place'};if(S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
 function tutView(){/* 画面のうち、上のバーと下のパネルにかくれていない所 */const ar=$('#app').getBoundingClientRect(),q=$('#questChip').getBoundingClientRect();let b=$('#botUI').getBoundingClientRect().top;const ii=$('#itemInfo');if(!ii.hidden){const t=ii.getBoundingClientRect().top;if(t>0)b=Math.min(b,t)}return[30,q.bottom-ar.top+50,VW-30,b-ar.top-100]}
-function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x+(V[0]+(V[2]-V[0])*.72)/cam.z)/TS-sz[0]/2+.5),Math.floor((cam.y+(V[1]+(V[3]-V[1])*.66)/cam.z)/TS-sz[1]/2+.5)];/* 画面の右下のマス（まん中だとじゃまなので） */
+function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=(w=>[Math.floor(w.x/TS-sz[0]/2+.5),Math.floor(w.y/TS-sz[1]/2+.5)])(toWorld(V[0]+(V[2]-V[0])*.72,V[1]+(V[3]-V[1])*.66));/* 画面の右下のマス（まん中だとじゃまなので） */
   const k=S.quest+':'+id+':'+vc;if(tutCache.k===k&&performance.now()-tutCache.t<1500)return tutCache.v;let v=null;
-  const inV=(x,y)=>{const sx=((x+sz[0]/2)*TS-cam.x)*cam.z,sy=((y+sz[1]/2)*TS-cam.y)*cam.z;return sx>=V[0]&&sx<=V[2]&&sy>=V[1]&&sy<=V[3]};
+  const inV=(x,y)=>{const p=w2s((x+sz[0]/2)*TS,(y+sz[1]/2)*TS),sx=p.x,sy=p.y;return sx>=V[0]&&sx<=V[2]&&sy>=V[1]&&sy<=V[3]};
   const nf=!BL[id].floor,bare=(x,y)=>fp(id,x,y).every(([a,c])=>!S.floor[c*W+a]);/* 道や床の上はなるべくさける */
   const gap=id!=='hwall'&&!HOUSES.length;/* 家の壁のすきまには、ほかの物を案内しない */
   const near=(c0,need)=>{for(const f of nf?[1,0]:[0])for(let r=0;r<14;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=c0[0]+dx,y=c0[1]+dy;if((!need||inV(x,y))&&canPlace(id,x,y,true)&&(!f||bare(x,y))&&!(gap&&fp(id,x,y).some(([a,c])=>c===CY-2&&a>=CX-5&&a<=CX-3)))return[x,y]}return null};
@@ -197,7 +197,7 @@ function updTut(){
   else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y,elT=0;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2;const nb=r.top-ar.top>ar.height-120,sd=!nb&&r.right-ar.left+170<ar.width;elT=sd?2:r.top-ar.top<140?1:-1;if(sd){x=r.right-ar.left-2}else y=elT<0?r.top-ar.top+2:r.bottom-ar.top-2}/* ボタンは、指と文字をボタンの上（上のほうなら下）に出して、ボタンの文字をかくさない */
-  else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(qt==='statue'&&WD===KUSA&&TUTPAN!==S&&!sheet&&(x<0||x>ar.width||y>ar.height||y<($('#topUI').getBoundingClientRect().bottom||0)-ar.top+8)){TUTPAN=S;if(focusMainStoryPlace(true))return hide()}/* はじめの神殿が、画面の外か上の欄の下なら、1回だけカメラをよせる（そのあと手で動かしたら、もどさない） */if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
+  else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();{const p=w2s(wp[0],wp[1]);x=cr.left-ar.left+p.x*(cr.width/VW);y=cr.top-ar.top+p.y*(cr.height/VH)}if(qt==='statue'&&WD===KUSA&&TUTPAN!==S&&!sheet&&(x<0||x>ar.width||y>ar.height||y<($('#topUI').getBoundingClientRect().bottom||0)-ar.top+8)){TUTPAN=S;if(focusMainStoryPlace(true))return hide()}/* はじめの神殿が、画面の外か上の欄の下なら、1回だけカメラをよせる（そのあと手で動かしたら、もどさない） */if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
   else return hide();
   hand.style.zIndex=el&&el.closest&&el.closest('#prPop')?'46':'';/* はたおり機などのポップアップの中をさすときは、その上に出す */
   hand.hidden=false;hand.style.transform='translate('+x+'px,'+y+'px)';hand.classList.toggle('up',elT?elT>0:y<120);hand.classList.toggle('down',!swipe&&(elT?elT<0:y>innerHeight-110));hand.classList.toggle('elt',!!elT);hand.classList.toggle('side',elT===2);if(elT===2)hand.classList.remove('up','down');// 画面の下のほうは指を上から向ける

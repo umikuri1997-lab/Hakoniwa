@@ -25,7 +25,7 @@ function letterPostArrive(who){/* 朝に手紙がとどいた：小鳥がとど�
 function letterCanFly(){return started&&S&&sheet==null&&$('#dialog').hidden&&NEWRES==null&&!GIFT_ACTIVE&&!(camAnim&&camAnim.done)}
 function letterBirdStart(now){const T=letterSpot();if(!T){LPEND=null;return}const vw=VW/cam.z,vh=VH/cam.z;
   LBIRD={t0:now,T,who:LPEND,fx:T.x-vw*.55,fz:vh*.5,ox:T.x+vw*.55,oz:vh*.55,drop:0};LPEND=null;
-  const sx=(T.x-cam.x)*cam.z,sy=(T.y-cam.y)*cam.z;if(sx<VW*.15||sx>VW*.85||sy<VH*.2||sy>VH*.8)panTo(T.x,T.y);/* 見えないときは、おそなえ箱へカメラをよせる */
+  const p=w2s(T.x,T.y),sx=p.x,sy=p.y;if(sx<VW*.15||sx>VW*.85||sy<VH*.2||sy>VH*.8)panTo(T.x,T.y);/* 見えないときは、おそなえ箱へカメラをよせる */
   sfxAt('cv_bird',T.x/TS,T.y/TS)}
 function letterBirdDraw(g,now){const B=LBIRD,t=now-B.t0,T=B.T,C=window.CHIPS;let x,z,fl=1;
   if(t<LBIRD_IN){const k=t/LBIRD_IN,e=1-Math.pow(1-k,3);x=B.fx+(T.x-B.fx)*e;z=B.fz+(30-B.fz)*e+Math.sin(k*Math.PI*3)*6*(1-k)}
@@ -47,7 +47,7 @@ function letterLanded(T){/* ふうとうが着地した：きらきら・音・�
   if(typeof juiceGlowAt==='function')juiceGlowAt(T.x/TS,T.y/TS-.3);const w=LBIRD&&LBIRD.who;toast((w&&w.length>1?w.length+'通の':(w&&w[0]||L[n-1].who)+'から')+'手紙がとどいた！','good')}
 function letterFxDraw(now){/* せかいの上の層で毎コマ（draw-world.js）。夜の暗さより上 */if(!S)return;if(LPEND&&!LBIRD&&letterCanFly())letterBirdStart(now);
   const un=letterUnread();if(LBIRD){letterBirdDraw(ctx,now);if(!LBIRD||LBIRD.drop)un&&letterGroundDraw(ctx,now)}else if(un&&!LPEND)letterGroundDraw(ctx,now);if(!LBIRD&&LLAND&&now-LLAND>700)LLAND=0;letterHud(now,un)}
-function letterTap(sx,sy){/* 「しらべる」でふうとうをタップ */if(mode!=='look'||!S||!letterUnread()||LPEND||LBIRD&&!LBIRD.drop)return false;const T=letterSpot();if(!T)return false;const w=toWorld(sx,sy);if(Math.abs(w.x-T.x)>16||w.y<T.y-28||w.y>T.y+8)return false;sfx('tap');letterOpen();return true}
+function letterTap(sx,sy){/* 「しらべる」でふうとうをタップ */if(mode!=='look'||!S||!letterUnread()||LPEND||LBIRD&&!LBIRD.drop)return false;const T=letterSpot();if(!T)return false;const w=isoOn()&&TAPS?tapAt(ptFoot(T.x,T.y)):toWorld(sx,sy);/* クォータービュー：立てて描いたふうとうの上の点 */if(Math.abs(w.x-T.x)>16||w.y<T.y-28||w.y>T.y+8)return false;sfx('tap');letterOpen();return true}
 function letterOpen(){const U=(S.letters||[]).filter(l=>!l.read);if(U.length===1)return letterRead(U[0]);letterList()}
 let LHUD=null,LHN=-1;function letterHud(now,n){/* 上の欄のふうとう・下のバーの数 */if(!LHUD){const row=document.querySelector('.hrow');if(!row)return;LHUD=el('<button class="htag letag" hidden aria-label="手紙"><img alt=""><span class="n"></span></button>');LHUD.querySelector('img').src=envURL(0);LHUD.onclick=e=>{e.stopPropagation();sfx('tap');letterOpen()};row.appendChild(LHUD);const di=$('#dockInv');if(di){di.style.position='relative';di.appendChild(el('<span class="dbadge" hidden></span>'))}}
   const on=n>0&&!LPEND&&!(LBIRD&&!LLAND&&!(LBIRD.drop&&now-LBIRD.drop>LDROP));if(n!==LHN||LHUD.hidden===on){LHN=n;LHUD.hidden=!on;LHUD.querySelector('.n').textContent=n>1?n:'';const b=document.querySelector('#dockInv .dbadge');if(b){b.hidden=!n;b.textContent=n}}
