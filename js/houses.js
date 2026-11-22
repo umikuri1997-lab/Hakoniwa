@@ -167,8 +167,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
   if(BL[id]&&BL[id].g)return gearIcon(id);/* そうび・矢：ドット絵 */
   if(iconCache[id])return iconCache[id];
-  if(id==='blk_soil'&&typeof ICONS!=='undefined'&&ICONS.tsuchi)return ICONS.tsuchi;/* 土のブロック：土のアイコン */
-  if(typeof CUBES!=='undefined'&&CUBES.includes(id)){const T=cubeTex(id);if(!T)return '';const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(T,0,0,64,40,8,6,128,80);g.drawImage(T,0,0,64,26,8,86,128,52);g.fillStyle='rgba(48,34,24,.3)';g.fillRect(8,86,128,52);g.fillStyle='rgba(255,250,230,.5)';g.fillRect(8,86,128,2);const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u}/* つむブロック：上の面と正面を、そのまま2倍のドットで */
+  if(typeof PICKB!=='undefined'&&PICKB.includes(id)){const u=cubeIcon(id);if(u)iconCache[id]=u;return u}/* つむブロック：マイクラのような、ななめから見た立方体 */
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
@@ -176,6 +175,14 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
   const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;
 }
+function cubeIcon(id){/* ブロックのアイコン：上の面と左右の面が見える立方体（48ドットのドット絵を3倍で144に）。面の色は、つんだブロックと同じ絵（cubeTex）を、ドットごとにひろう。左の面は少し暗く・右の面はもっと暗く、まわり1ドットは、となりの色を少し暗く */
+  const T=cubeTex(id);if(!T)return '';const sd=T.getContext('2d').getImageData(0,0,64,64).data,N=48,cx=24,ty=2,hw=21,hh=10.5,sh=24,px=new Array(N*N).fill(null);
+  const at=(u,v,k)=>{const o=((Math.min(63,v*64|0))*64+Math.min(63,u*64|0))*4;return[sd[o]*k,sd[o+1]*k,sd[o+2]*k]};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const dx=x+.5-cx,dy=y+.5-ty,u=dy/(2*hh)+dx/(2*hw),v=dy/(2*hh)-dx/(2*hw);let q=null;
+    if(u>=0&&v>=0&&u<1&&v<1)q=at(u,v,1);else if(dx<0&&dx>=-hw){const s0=(dx+hw)/hw,t=(dy-hh-s0*hh)/sh;if(t>=0&&t<1)q=at(s0,t,.8)}else if(dx>=0&&dx<hw){const s0=dx/hw,t=(dy-2*hh+s0*hh)/sh;if(t>=0&&t<1)q=at(s0,t,.62)}px[y*N+x]=q}
+  const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d'),P=(x,y,q)=>{g.fillStyle='rgb('+(q[0]|0)+','+(q[1]|0)+','+(q[2]|0)+')';g.fillRect(x*3,y*3,3,3)};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const q=px[y*N+x];if(!q)continue;const edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const X=x+a,Y=y+b;return X<0||Y<0||X>=N||Y>=N||!px[Y*N+X]});P(x,y,edge?q.map(v=>v*.78):q)}
+  const u=c.toDataURL();c.width=c.height=0;return u}
 function toolIcon(k){
   const key='tool_'+k;if(iconCache[key])return iconCache[key];
   const c=document.createElement('canvas');c.width=72;c.height=72;const g=c.getContext('2d');

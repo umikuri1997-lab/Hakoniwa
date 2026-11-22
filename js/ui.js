@@ -44,7 +44,7 @@ function toast(msg,kind,stamp){kind=kind||'';TOASTN++;const box=$('#toasts');
   if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');
   if(TOASTQ.length>=4)TOASTQ.splice(TOASTQ.findIndex(it=>!it.kind)>=0?TOASTQ.findIndex(it=>!it.kind):0,1);/* まちが長くなりすぎたら、小さい知らせからすてる */
   TOASTQ.push({msg,kind,stamp,n:1});toastNext()}
-const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]',people:'[data-sheet="people"]'};
+const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]'};/* せいれいの画面は、メニューの中（持ち主がきめた） */
 function applyFeats(){
   if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>3)S.speed=1;glassUI();
   for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft';/* 依頼は依頼ボードから。おそなえ箱は下のバーにも出す */
@@ -518,7 +518,7 @@ function renderSheet(){
     if(S.sand){const p=el('<p class="note"></p>');p.textContent='やすらぎの砂：'+S.sand;body.appendChild(p)}
     const hold=S.res.filter(r=>heldN(r)>0);if(hold.length){const p=el('<p class="note"></p>');p.textContent='せいれいが運んでいるとちゅう：'+hold.map(r=>r.name+'（'+[...Object.entries(r.carry&&typeof r.carry==='object'?r.carry:{}).map(([k,n])=>FOODS[k].name+n),...Object.entries(r.cmat||{}).map(([k,n])=>MATN[k]+n),...Object.entries(r.citem||{}).map(([k,n])=>itemName(k)+n)].join('・')+'）').join('、');body.appendChild(p)}
   }else if(sheet==='people'){
-    T.textContent='せいれい '+S.res.length+'人';
+    T.textContent='せいれい '+S.res.length+'人';sheetBack();/* メニューの中からひらく */
     const a=el('<div class="sec"><h3>この土地の属性</h3><div class="attr"></div></div>');const g=a.querySelector('.attr');
     for(const k of ELEM_KEYS){const v=ATTR[k],n=needFor(k),p=Math.min(100,v/n*100);
       g.insertAdjacentHTML('beforeend',`<span class="el" style="background:${ELEM[k].col}">${ELEM[k].name}</span><div class="bar"><i style="width:${p|0}%;background:${ELEM[k].col}"></i></div><small>${Math.floor(v)}/${n}</small>`);
@@ -698,13 +698,13 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['work','hammer','しごと'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
+    const MI=[...(S.feat.people?[['people','spirit','せいれい']]:[]),['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['work','hammer','しごと'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
       const g=el('<div class="mgrid"></div>'),g2=el('<div class="mgrid msub"></div>');
       for(const[k,ic,nm,sub]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
-        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}GOALCHIP=false;openSheet('menu',k)};(sub?g2:g).appendChild(b)}
+        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='people')return openSheet('people');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}GOALCHIP=false;openSheet('menu',k)};(sub?g2:g).appendChild(b)}
       body.appendChild(g);body.appendChild(g2);return}
     T.textContent=sub[2];
     if(!(sheetArg==='goal'&&GOALCHIP))sheetBack();/* 上の目標の札からひらいたときは、メニューへもどるボタンを出さない */
