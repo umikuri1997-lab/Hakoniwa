@@ -178,9 +178,10 @@ const SLTEX=new Map();function slopeTex(a,d){/* 坂の面のもようは、の�
   const t=stairTop(a,d),f=S.floor[t]||'',g=REV.has(t);let e=SLTEX.get(a);if(e&&e.t===t&&e.f===f&&e.g===g&&e.w===WD)return e.p;const C=window.CHIPS||{},mk=(ch,id)=>{if(!ch)return null;const cv=document.createElement('canvas');cv.width=cv.height=TS;drawChip(cv.getContext('2d'),ch,id,0,0,0);return cv};
   let src=f?mk(C[(f==='woodpath'?'floor':f==='brickfloor'?'brick':f==='stonefloor'?'stonefloor':f)+'#0'],f):g?(C['tex:grass']&&chipImgs(C['tex:grass'],'ground')[0]):WD===1?mk(C['groundr#0'],'ground'):(C['tex:dry']&&chipImgs(C['tex:dry'],'ground')[0]);
   if(!src||src.ok===false)return null;e={t,f,g,w:WD,p:document.createElement('canvas').getContext('2d').createPattern(src,'repeat')};SLTEX.set(a,e);return e.p}
-function soilFace(g,x,y,w,h,SX,SY){/* 土のブロックの正面：いまの乾いた地面の絵（草原は あれ地の224ドットのテクスチャ、ほかは地面のチップ）を、世界の場所どおりにしきつめる（となりの正面とつながる） */
+function soilFace(g,x,y,w,h,SX,SY){/* 土のブロックの正面（断面）：がけの岩の絵 cliff:block を、世界のマスどおりにしきつめる（読みこむまでは、乾いた地面の絵） */
   const C=window.CHIPS||{},X=v=>SX?SX(v):v,Y=v=>SY?SY(v):v;g.save();g.beginPath();g.rect(X(x),Y(y),X(x+w)-X(x),Y(y+h)-Y(y));g.clip();
-  if(WD===0&&C['tex:dry']){for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS){const im=dryTex(xx,yy);if(im&&im.ok!==false)g.drawImage(im,((xx%DRTEX)+DRTEX)%DRTEX,((yy%DRTEX)+DRTEX)%DRTEX,TS,TS,X(xx),Y(yy),X(xx+TS)-X(xx),Y(yy+TS)-Y(yy))}}
+  const cb=C['cliff:block'],ci=cb&&chipImgs(cb,'cliff')[0];if(ci&&ci.ok){for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS)g.drawImage(ci,0,0,64,64,X(xx),Y(yy),X(xx+TS)-X(xx),Y(yy+TS)-Y(yy))}/* 前の岩のがけの正面の絵（cliff:block、1マス×1だん） */
+  else if(WD===0&&C['tex:dry']){for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS){const im=dryTex(xx,yy);if(im&&im.ok!==false)g.drawImage(im,((xx%DRTEX)+DRTEX)%DRTEX,((yy%DRTEX)+DRTEX)%DRTEX,TS,TS,X(xx),Y(yy),X(xx+TS)-X(xx),Y(yy+TS)-Y(yy))}}
   else{const r=WD===1?'r':'';for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS){const n=Math.abs((((yy/TS)|0)*W+((xx/TS)|0))),ch=C['ground'+r+'#'+((hash(n*7+1)*8)|0)];if(ch){g.save();g.translate(X(xx),Y(yy));g.scale((X(xx+TS)-X(xx))/TS,(Y(yy+TS)-Y(yy))/TS);drawChip(g,ch,'ground',0,0,0,n);g.restore()}}}
   g.restore()}
 function soilFill(c,x,y,w,h,dark){/* 土のブロックの正面の絵で、四角をうめる（乾いた地面の絵を、世界の座標でならべる） */soilFace(c,x,y,w,h);c.fillStyle='rgba(48,34,24,'+(dark||.16)+')';c.fillRect(x,y,w,h)}
