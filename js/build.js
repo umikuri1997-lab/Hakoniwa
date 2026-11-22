@@ -74,7 +74,7 @@ function canPlace1(id,x,y,quiet){
   if(S.ground[j]===1){if(!quiet)toast(skyJ(j)?'雲の上には置けません':'水の上には置けません');return false}
   if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
   if(id==='suisha'&&![j-1,j+1,j-W,j+W].some(n=>n>=0&&n<W*H&&waterJ(n)&&(n%W===x||((n/W)|0)===y))){if(!quiet)toast('水車は、水のとなりにだけ建てられます');return false}
-  if(TERRA.has(id)){const k=id==='dig';if(k?hiAt(j)<=(id==='dig'?HMIN:0):hiAt(j)>=HMAX){if(!quiet)toast(k?'これより低くは、ほれません':'これより高くは、つめません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if(!k&&treeNextHigh(j,hiAt(j)+1)){if(!quiet)toast('木のとなりには、つめません');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、ほれません':'階段のうしろは、つめません');return false}return true}/* だんさスコップ：けずる・もる */
+  if(TERRA.has(id)){const k=id==='dig';if(k?hiAt(j)<=(id==='dig'?HMIN:0):hiAt(j)>=HMAX){if(!quiet)toast(k?'これより低くは、ほれません':'これより高くは、つめません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if(!k&&treeNextHigh(j,hiAt(j)+1)){if(!quiet)toast('木のそばには、つめません');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、ほれません':'階段のうしろは、つめません');return false}return true}/* だんさスコップ：けずる・もる */
   if(LADDERS.has(id)){if(ladderDir(j)<0){if(!quiet)toast('ハシゴは、がけの下の、うしろか左右が1だん高い所に置けます');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(STAIRS.has(id)){const d=SROT[stairRot(id,j)];if(!stairOK(j,d)){if(!quiet)toast('その向きには置けません');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
@@ -282,7 +282,8 @@ function pitFlood(j0){/* 地面より下の穴が、水（池・川。雲の海�
   (S.cnt||(S.cnt={})).pond=((S.cnt||{}).pond||0)+seen.size;/* ほって作った池のマス（ゆめボード） */const x=j0%W,y=(j0/W)|0;sfxAt('splash',x+.5,y+.5);dirty=true;recount();if(!S.flags.pitPond){S.flags.pitPond=1;toast('水がながれこんで、池になった','good')}return seen.size}
 const terraHave=id=>inv(PICKB.includes(id)?id:SOIL);/* つむブロックの、のこり */
 const CUBEMAT={blk_soil:'tsoil',blk_stone:'tstone',blk_brick:'tstone',blk_wood:'twood'};/* ブロックの材質の音 */
-function treeNextHigh(j,h){/* 木の左右と手前のマスを、木のマスより高くしない（木の絵が段差にかくれて切れる） */const x=j%W;return (x>0&&TREES.has(S.obj[j-1])&&hiAt(j-1)<h)||(x<W-1&&TREES.has(S.obj[j+1])&&hiAt(j+1)<h)||(j>=W&&TREES.has(S.obj[j-W])&&hiAt(j-W)<h)}
+function treeNextHigh(j,h){/* 木のまわり2マス（5×5）は、木のマスより高くしない（木の絵が段差にかくれて切れる） */const x=j%W,y=(j/W)|0;for(let dy=-TREER;dy<=TREER;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-TREER;dx<=TREER;dx++){const xx=x+dx;if((!dx&&!dy)||xx<0||xx>=W)continue;const n=yy*W+xx;if(TREES.has(S.obj[n])&&hiAt(n)<h)return true}}return false}
+const TREER=2;
 function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;const cb=PICKB.includes(id)?id:SOIL;
   if(up&&terraHave(cb)<1)return toast(BL[cb].name+'が足りません','warn');
   let got='';if(up){S.inv[cb]--;terraUp(j,cb);S.flags.fudeUp=1}else{got=terraTop(j);terraDown(j);S.flags.fudeDig=1}
