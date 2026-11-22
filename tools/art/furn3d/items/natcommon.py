@@ -294,11 +294,11 @@ SUN=(-float(np.cos(np.radians(SUNEL))*np.sin(np.radians(SUNAZ))),float(np.cos(np
 def sunscreen(elev):
     """SUN を、見おろし elev 度のカメラの、画面の 右・下・手前 の成分にする（tone5 の light）。画面の下＝(0,sin e,−cos e)・手前＝(0,cos e,sin e)"""
     e=np.radians(elev);L=np.array(SUN);return (float(L[0]),float(L[1]*np.sin(e)-L[2]*np.cos(e)),float(L[1]*np.cos(e)+L[2]*np.sin(e)))
-def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35,72,92),dw=0.12,rim=0.7,streak=(0.14,0.07),blur=1.4,vmin=45,light=(-0.6,-0.5,0.8),mask=None,thin=True,mix=0.0,under=None,pal=None,olc=None):
+def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35,72,92),dw=0.03,rim=0.7,rimhi=0.0,streak=(0.14,0.07),blur=1.4,vmin=45,light=(-0.6,-0.5,0.8),mask=None,thin=True,mix=0.0,under=None,pal=None,olc=None):
     """コワイノの絵のようなかげ（持ち主がきめた）：色は5つだけ（こいかげ・かげ・base・ハイライト・明るいハイライト）と輪郭。
     写したときの奥行き（oblique3d.LAST_ZB）から面の向きを出し、光（light：画面の左・下・手前の向き）とのなめらかな明るさを5だんにわける。だんのさかいめ（dw のはば）は、2色を市松もようのあみかけでまぜる。
     hi・sh：base から明るさ（100段階）を足す・引く数と、あざやかさを引く・足す数。ol：輪郭（base から）。cuts：だんのさかいめ（明るさの順の%）。
-    rim：ふちの内がわは、右下を暗く・左上を明るく（だんの数）。streak：木の皮のすじをのこす量（暗いすじ・明るいすじ。いちばん強い所の割合）。vmin：輪郭の明るさの下限。
+    rim：ふちの内がわの右下を暗くする（だんの数）。rimhi：左上を明るくする割合（0）。dw：市松のあみかけのはば（0.03、あみかけは最小限。持ち主がきめた）。streak：木の皮のすじをのこす量（暗いすじ・明るいすじ。いちばん強い所の割合）。vmin：輪郭の明るさの下限。
     mask：かえる所（絵の色 → True/False の関数。ほかの所はそのまま。木の幹と葉を、べつの色で2回かける）。thin：すじは細長い所だけ（False なら、まるい所も。葉の部品のさかいめ）。
     mix：写した絵の明るさ（ぼかしたもの）を、面の向きの明るさにまぜる割合（葉のつぶつぶの形をのこす）。under：(上にある物の色 → True/False, ドット数, だん数)：その物の下は、近いほど暗く（葉のかげ）。
     pal・olc：5色（暗い→明るい）と輪郭の色をじかにきめる（葉：かげは青みのある緑）"""
@@ -331,7 +331,7 @@ def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35
             sm=np.zeros_like(um);sm[dy:]=um[:-dy];dist[sm]=dy
         hit=inner&(dist<=n_);t[hit]-=k_*(1-(dist[hit]-1)/n_)
     pe=np.pad(edge,1);nb=lambda dy,dx:pe[1+dy:1+dy+H,1+dx:1+dx+W]
-    t[inner&(nb(0,1)|nb(1,0)|nb(1,1))]-=rim;t[inner&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~(nb(0,1)|nb(1,0)|nb(1,1))]+=rim*0.6
+    t[inner&(nb(0,1)|nb(1,0)|nb(1,1))]-=rim;t[inner&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~(nb(0,1)|nb(1,0)|nb(1,1))]+=rim*rimhi   # rimhi：線の左上がわを明るくする分。0（明るくしない。家具の furntone の RIMHI と同じ。持ち主がきめた）
     d=L-Lb;lv=np.floor(t+0.5);fr=t+0.5-lv   # fr：0.5 がだんのまん中、0 と 1 がさかいめ
     yy,xx=np.mgrid[0:H,0:W];ck=(xx+yy)%2==0
     lo=fr<dw;up=fr>1-dw;lv[lo&ck]-=1;lv[up&~ck]+=1   # さかいめは市松もようで、となりのだんとまぜる
