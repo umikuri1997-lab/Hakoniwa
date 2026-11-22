@@ -116,11 +116,12 @@ function genWorld(s,w){
   else{pond(OFF+8,OFF+10,5,3.6);pond(OFF+11.5,OFF+12.5,3,2.2);pond(OFF+62,OFF+60,6,3.6);pond(OFF+58.5,OFF+58,2.6,2);pond(OFF+60,OFF+8,3,2.4);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(CX+3.6,CY+6.6,1.2,.9);pond(10,30,4,3);pond(96,70,4.5,3);pond(40,98,3.5,2.6);pond(80,6,3,2.2)}/* 外がわにも池 */
   for(let pass=0;pass<2;pass++){const g=s.ground.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]===1)+(g[j+1]===1)+(g[j-W]===1)+(g[j+W]===1);if(g[j]===1&&n<=1)s.ground[j]=0;else if(g[j]!==1&&n>=3)s.ground[j]=1}}
   if(!K)for(let y=CY+12;y<H;y++)s.floor[y*W+CX]='path';/* 風：島の外（雲の海）へは、道をのばさない */
+  const VR=VL?new Float64Array(W*H).fill(-1):null;
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const i=y*W+x;if(s.ground[i]===1)continue;
     const dx=Math.max(Math.abs(x+.5-CX)-8,0),dy=Math.max(Math.abs(y+.5-CY)-8,0),out=Math.max(dx,dy);
     if(x===CX&&y>=CY+11&&!K)continue;
-    if(VL){valleyCell(s,x,y,i,R());continue}
+    if(VL){VR[i]=R();continue}/* 花の谷の自然の物は、段差を作ったあとに置く（valleyPlace） */
     const ox=x-OFF,oy=y-OFF,forest=V?(ox<14&&oy<16):(ox>54&&oy<24)||(ox<16&&oy>48);/* 森は、前からの土地の角から、外がわへつづく */
     const r=R();
     if(out<1.2){ // 基地の中：枯れ木と岩がちらばる
@@ -152,7 +153,7 @@ function genWorld(s,w){
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='crate'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='crate';s.floor[j]='floor'}put('crate');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：木箱は古い家の中と、村の北西に（コワイノは南から来るので） */
   if(VL)wildPurge(s);
   if(K)windGen(s,R);/* 風穴と古い風車（wind.js） */
-  genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
+  genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;if(VL){valleyPlace(s,VR);wildPurge(s)}/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */

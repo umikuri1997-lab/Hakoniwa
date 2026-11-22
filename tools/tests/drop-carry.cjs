@@ -29,6 +29,7 @@ const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0)
  S.obj[spare]='';
  /* しまう箱がないときは、そのまま */S.obj[free[0]]='';S.obj[free[free.length-1]]='';recount();const s1=S.sand||0;takeDrop({id:'sand',n:2,x,y},r);o.noBox=(S.sand||0)===s1+2;
  /* 御神木：4方向のとなりと、上の行に道が置ける。切り株の根もとと、物（スツール）は、ことわる */const j=S.sacredRoot,sx=j%W,sy=j/W|0,n=sacredSpan(),st=fieldStump(j);let ok=0,tot=0;
+ for(let b=-1;b<=n;b++)for(let a=-1;a<=n;a++){const k=(sy+b)*W+sx+a;if(S.floor[k]==='path')S.floor[k]=''}/* 新しいゲームの切り株のまわりの、あぜ道の輪（genWorld）は、はずしてからたしかめる（同じ道は、かさねて置けない） */
  for(let a=-1;a<=n;a++)for(const b of [-1,n]){tot++;if(canPlace('path',sx+a,sy+b,true))ok++}for(let b=0;b<n;b++)for(const a of [-1,n]){tot++;if(canPlace('path',sx+a,sy+b,true))ok++}
  o.around=ok+'/'+tot;o.topRows=[0,1,2,3].every(a=>canPlace('path',sx+a,sy,true))&&[0,3].every(a=>canPlace('path',sx+a,sy+1,true));o.stumpNo=SACREDBASE.every(d=>!canPlace('path',(st+d)%W,(st+d)/W|0,true));/* 切り株の絵の下の2×2は、だれも通らないので道もおけない */o.objNo=!canPlace('stool',sx,sy,true);o.near=FIELD_NEAR_R;
  return JSON.stringify(o)})()`)));
