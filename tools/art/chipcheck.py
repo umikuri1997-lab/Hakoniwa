@@ -12,8 +12,12 @@
   にた色      0組（色の差が10より小さい2色。まとめる）
   形          行ごとの左はし・右はしを出す（とちゅうで急にかわる段・とびだしを、数字で見つける）
   色の一覧    多い順に12色（描きなおすときの色は、ここからとる）
-めやすの数（NG にはしない。数が多ければ、印の所を8倍で見る。考え方は ink-studio の critic.js（MIT）から）：
+めやすの数（NG にはしない。数が多ければ、印の所を8倍で見る。考え方は ink-studio の critic.js（MIT、siliconjungle/shapeshift-labs-ink-studio）から）：
   ガタガタ    りんかく（形のふち）の段の長さが、となりの段と2ドット以上ちがう所（1・3・1のような段。2・2・2がきれい）。葉のでこぼこなど、わざとの形でも出る
+  線の角の1ドット  1ドットの線の段の内がわの角に、よけいな1ドットがあり、そこだけ線が2ドットの太さに見える所（線は、まわりよりこい色が6ドットいじょうつづく所）
+  ふちの中間色    こい色と明るい色のあいだに、1ドットはばの中間色が、ふちにそって3ドットいじょうならぶ所（バンディング。輪郭の2ドットはのぞく）
+  まわりが暗い影  輪郭のすぐ内がわが、光の向きに関係なく、ぐるっと暗い度合い（0〜1。1に近いほどピロー影）
+  ぶつぶつ        同じ色が3ドット以下のかたまりのわりあい（あみかけ・色のちらばりが多すぎないか）
   ちらつき    コマが2つより多いチップ（たてにならべたコマ・コマの一覧）で、まわり8つがかわらないのに1ドットだけかわる所のわりあい（動かない所の色がコマでゆれていないか）
 --cmp のとき：形の重なり（前とあとの形が、どれだけ同じか）90%より上"""
 import sys, os, signal
@@ -54,6 +58,86 @@ def flicker(frs):
         P = np.pad(ch, 1); nb = sum(P[1 + dy:1 + dy + ch.shape[0], 1 + dx:1 + dx + ch.shape[1]].astype(int) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
         n += int((ch & (nb == 0)).sum()); tot += int((A[..., 3] > 127).sum())
     return n, tot
+
+def lint4(a):
+    """ink-studio の critic.js（MIT）の lint の4つ（doubles・banding・pillow・noise）を、透明でない所でしらべる。
+    かえすのは（線の角の点の所, 線のドット数, ふちの中間色の所, まわりが暗い度合い, ぶつぶつのドット数, 絵のドット数）"""
+    H, W = a.shape[:2]; fg = a[..., 3] > 127; N = int(fg.sum())
+    C = (a[..., 0] << 16) | (a[..., 1] << 8) | a[..., 2]; L = a[..., :3] @ (.299, .587, .114) / 255
+    ok = lambda x, y: 0 <= x < W and 0 <= y < H and fg[y, x]
+    same = lambda x, y, u, v: ok(u, v) and C[y, x] == C[v, u]
+    # 線：まわりのちがう色（透明はのぞく）より、どれもこい色で、同じ色の2×2のかたまりにならず、同じ色が8方向に6ドットいじょうつづく所
+    def block(x, y):
+        return any(all(same(x, y, x + ax + dx, y + ay + dy) for dx in (0, 1) for dy in (0, 1)) for ax, ay in ((0, 0), (-1, 0), (0, -1), (-1, -1)))
+    dark = np.zeros((H, W), bool)
+    for y, x in zip(*np.where(fg)):
+        if block(x, y): continue
+        nb = [L[v, u] for u in (x - 1, x, x + 1) for v in (y - 1, y, y + 1) if (u, v) != (x, y) and ok(u, v) and C[v, u] != C[y, x]]
+        if len(nb) >= 2 and all(q - L[y, x] >= .06 for q in nb): dark[y, x] = True
+    line = np.zeros((H, W), bool); seen = np.zeros((H, W), bool)
+    for y0, x0 in zip(*np.where(dark)):
+        if seen[y0, x0]: continue
+        comp = [(x0, y0)]; seen[y0, x0] = True
+        for x, y in comp:
+            for u in (x - 1, x, x + 1):
+                for v in (y - 1, y, y + 1):
+                    if 0 <= u < W and 0 <= v < H and dark[v, u] and not seen[v, u] and C[v, u] == C[y, x]: seen[v, u] = True; comp.append((u, v))
+        if len(comp) >= 6:
+            for x, y in comp: line[y, x] = True
+    on = lambda x, y: 0 <= x < W and 0 <= y < H and line[y, x]
+    dbl = []
+    for y, x in zip(*np.where(line)):   # 段の内がわの角のドットで、線が両方の向きへつづく所（箱の角のように、まがって止まる所はのぞく）
+        for ax, ay in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+            if not (on(x + ax, y) and on(x, y + ay) and same(x, y, x + ax, y) and same(x, y, x, y + ay)): continue
+            goH = on(x + 2 * ax, y) or on(x + 2 * ax, y - ay); goV = on(x, y + 2 * ay) or on(x - ax, y + 2 * ay)
+            if goH and goV and not on(x - ax, y) and not on(x, y - ay): dbl.append((int(x), int(y))); break
+    # ふちの中間色：こい色と明るい色のあいだの1ドットはばの中間色が、ふちにそって3ドットいじょうつづく所（輪郭の2ドットはのぞく）
+    def band(x, y, dx, dy):
+        if not (ok(x, y) and ok(x - dx, y - dy) and ok(x + dx, y + dy)): return False
+        c, p, q = C[y, x], C[y - dy, x - dx], C[y + dy, x + dx]
+        if c == p or c == q or p == q: return False
+        l, lp, lq = L[y, x], L[y - dy, x - dx], L[y + dy, x + dx]
+        return lp < l < lq or lp > l > lq
+    # 透明からのドットの数（絵のわくの外も透明とみる）。はこにわの輪郭は、こい色と、なじむ色の2ドットなので、下では、はしの2ドットをのぞく
+    D = np.full((H, W), 10 ** 9); q = []
+    for y in range(H):
+        for x in range(W):
+            if not fg[y, x]: D[y, x] = 0; q.append((x, y))
+            elif x in (0, W - 1) or y in (0, H - 1): D[y, x] = 1; q.append((x, y))
+    for x, y in q:
+        for u, v in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if 0 <= u < W and 0 <= v < H and D[v, u] > D[y, x] + 1: D[v, u] = D[y, x] + 1; q.append((u, v))
+    bnd = []
+    for y, x in zip(*np.where(fg & (D > 2))):
+        for dx, dy, px, py in ((1, 0, 0, 1), (0, 1, 1, 0)):
+            if not band(x, y, dx, dy): continue
+            run = 1
+            for sg in (-1, 1):
+                for k in range(1, 4):
+                    if not band(x + sg * k * px, y + sg * k * py, dx, dy): break
+                    run += 1
+            if run >= 3: bnd.append((int(x), int(y))); break
+    # まわりが暗い影：輪郭のすぐ内がわ（はしから3ドットめ）の明るさを、ふちの向き（8つ）ごとに、中（はしから5ドットより内がわ）の明るさとくらべる
+    Dp = np.pad(D, 1, constant_values=0)
+    mid = L[fg & (D >= 5)]; rim = [[0., 0] for _ in range(8)]
+    for y, x in zip(*np.where(fg & (D == 3))):
+        gx = -(Dp[y + 1, x + 2] - Dp[y + 1, x]); gy = -(Dp[y + 2, x + 1] - Dp[y, x + 1])
+        if not gx and not gy: continue
+        k = (round(np.arctan2(gy, gx) / (2 * np.pi) * 8) + 8) % 8; rim[k][0] += L[y, x]; rim[k][1] += 1
+    midL = float(mid.mean()) if mid.size else 0.
+    rd = [max(0., midL - s / n) for s, n in rim if n > 4]
+    pil = min(rd) / max(rd) if len(rd) >= 4 and max(rd) > .02 else 0.
+    # ぶつぶつ：同じ色が上下左右につながる3ドット以下のかたまり
+    seen = np.zeros((H, W), bool); noisy = 0
+    for y0, x0 in zip(*np.where(fg)):
+        if seen[y0, x0]: continue
+        comp = [(x0, y0)]; seen[y0, x0] = True; i = 0
+        while i < len(comp) and len(comp) <= 4:
+            x, y = comp[i]; i += 1
+            for u, v in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if ok(u, v) and not seen[v, u] and C[v, u] == C[y, x]: seen[v, u] = True; comp.append((u, v))
+        if len(comp) <= 3: noisy += len(comp)
+    return dbl, int(line.sum()), bnd, pil, noisy, N
 
 def chip_imgs(ids):
     sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
@@ -116,6 +200,11 @@ def check(im, name=''):
         print('  色の一覧（にた色をまとめて、多い順） ' + ' '.join('#%02x%02x%02x(%d%%)' % (tuple(u[i]) + (round(cnt[i] * 100 / m.sum()),)) for i in o))
     jn, js, jp = jaggy_points(a)
     print('  ガタガタ %d／段 %d（めやす）%s' % (jn, js, '：' + ' '.join('%d,%d' % p for p in jp[:12]) if jp else ''))
+    dbl, ln, bnd, pil, noisy, nn = lint4(a); pt = lambda v: '：' + ' '.join('%d,%d' % p for p in v[:12]) if v else ''
+    print('  線の角の1ドット %d／線 %d ドット（めやす）%s' % (len(dbl), ln, pt(dbl)))
+    print('  ふちの中間色 %d（めやす）%s' % (len(bnd), pt(bnd)))
+    print('  まわりが暗い影 %.2f（めやす。0：ふちが暗いのは片がわだけ・1：ぐるっと暗い）' % pil)
+    print('  ぶつぶつ %.1f%%（%d ドット。めやす）' % (noisy * 100 / max(1, nn), noisy))
     frs = FR.get(name)
     if frs and len(frs) > 2:
         f = flicker(frs)

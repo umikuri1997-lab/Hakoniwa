@@ -66,7 +66,7 @@ function evOpenNow(id,quiet){if(!S||evOpened(id))return false;(S.evOpen||(S.evOp
 const EVOPENQ=[];let EVOPENT=0;
 function evOpenTick(){/* 1秒に1回：じょうけんでひらくイベント・ひらいた知らせを出す */if(!S||IS_STORY_REPLAY)return;
   for(const id in EVCOND){const D=EVENTS[id];if(!D||evOpened(id)||!evOn0(id))continue;let ok=false;try{ok=EVCOND[id]()}catch(e){}if(ok)evOpenNow(id)}
-  if(WD!==0)for(const e of EVSUB){if(evOpened(e.ev)||!evOn0(e.ev))continue;let ok=false;try{ok=e.at()&&e.ok()}catch(err){}if(ok)evOpenNow(e.ev)}/* 草原のほかの土地では、サブクエストのかわりに、そのじょうけんでひらく */
+  if(WD!==KUSA)for(const e of EVSUB){if(evOpened(e.ev)||!evOn0(e.ev))continue;let ok=false;try{ok=e.at()&&e.ok()}catch(err){}if(ok)evOpenNow(e.ev)}/* 草原のほかの土地では、サブクエストのかわりに、そのじょうけんでひらく */
   if(!EVOPENQ.length||GIFT_ACTIVE||!$('#dialog').hidden||sheet!=null||typeof calmNow==='function'&&calmNow())return;evOpenFx(EVOPENQ.splice(0))}
 function evOpenFx(ids){/* あたらしいイベントの知らせ：あたらしいレシピと同じ、ためて → はじけて → 1つずつぺたっ → ハンコ */ids=ids.filter(id=>EVENTS[id]);if(!ids.length)return;
   GIFT_ACTIVE=true;const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="あたらしいイベント"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi('star')+'</div><h2>あたらしいイベント！</h2><div class="idea-items"></div></div>');

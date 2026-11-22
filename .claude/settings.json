@@ -5,5 +5,18 @@
       "Bash(npx -y @typeonce/ritmo-tools:*)",
       "Bash(npx --yes @typeonce/ritmo-tools:*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-js.sh"
+          }
+        ]
+      }
+    ]
   }
 }

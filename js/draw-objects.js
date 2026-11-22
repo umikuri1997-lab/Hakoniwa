@@ -52,7 +52,7 @@ function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形�
   c.drawImage(sp,X,Y)}
 /* ドット絵（chips.js）：ある物は、プログラムの絵のかわりにこれを使う。1ドット＝ゲームの1（ぼかさない） */
 function drawChipFix(c,id,i){/* 動く部品より手前の本体（parts の fix）だけを、もう1回重ねる（縦のブランコに乗る子の手前） */const ch=chipOf(id,i);const src=ch&&(ch.src||ch);if(!src||!src.parts)return;const x=(i%W)*TS,y=((i/W)|0)*TS,q=src.g===64?.5:1;for(const p of src.parts){if(!p.fix)continue;const pm=partImg(p,id);if(pm.ok)c.drawImage(pm,x+p.ax*q,y+p.ay*q,p.w*q,p.h*q)}}
-function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='tower'&&WD===0&&C['story:tree'])return {...C['story:tree'],ax:C['story:tree'].ax+(sacredSpan()-4)*TS,ay:C['story:tree'].ay+(sacredSpan()-4)*TS*2};const L0=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1,L=id==='watch'?watchArt(L0):L0;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;
+function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='tower'&&WD===KUSA&&C['story:tree'])return {...C['story:tree'],ax:C['story:tree'].ax+(sacredSpan()-4)*TS,ay:C['story:tree'].ay+(sacredSpan()-4)*TS*2};const L0=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1,L=id==='watch'?watchArt(L0):L0;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;
   const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if((t===4&&r===3||t===3&&r===2)&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
@@ -117,7 +117,7 @@ const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','s
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||(FLOWERS.has(id)&&C['bud~f'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽。花の芽は花と同じだけ上の bud~f） */
   if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);return C['hedge:'+m]||null}/* 生け垣は、となりとのつながりの形で（tools/art/hedge/hedge_art.py） */
   if(id==='nebari')return C.nebari||C['weedc#1']||null;if(id==='hotaru')return C.berry||null;if(id==='drum')return C.taru||null;/* 仮の絵：合図の太鼓は、たるの絵 *//* 仮の絵：ねばり草はふんばり草、ほたるの草むらは茂みの絵（その上に、しずく・ほたるのドット） */
-  {const sx=WD===1?'~v':WD===WIND?'~k':WD===MIZU?'~m':WD===YAMI?'~y':'';if(sx==='~m'&&id==='deadtree'&&i!=null&&hash(i*131+7)<.4&&C['maple~m'])return C['maple~m'];/* 水の自然の木は、4わりがメープル */if(sx&&(id==='deadtree'||id==='tree')&&C[id+sx])return C[id+sx]}/* 火山はとんがりの木（~v）・風はアカシア（~k、tools/art/furn3d/items/nat_acacia.py） */
+  {const sx=WD===KAZAN?'~v':WD===WIND?'~k':WD===MIZU?'~m':WD===YAMI?'~y':'';if(sx==='~m'&&id==='deadtree'&&i!=null&&hash(i*131+7)<.4&&C['maple~m'])return C['maple~m'];/* 水の自然の木は、4わりがメープル */if(sx&&(id==='deadtree'||id==='tree')&&C[id+sx])return C[id+sx]}/* 火山はとんがりの木（~v）・風はアカシア（~k、tools/art/furn3d/items/nat_acacia.py） */
   if(id==='deadtree'&&!ICON&&i!=null&&S){const h=hash(i*7+3),ch=C['deadtree'+(DTV[Math.floor(h*DTV.length)])]||C.deadtree;if(!ch||h*6%1<.5)return ch;return ch._fl||(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw:TS})}/* 枯れ木：同じ木をまわした3つの絵（tools/art/furn3d/items/nat_deadtree.py）を、マスごとにえらび、半分は左右反対に *//* 火山：自然の木も植えた木も、とんがりの木（tools/art/furn3d/items/nat_cedar.py） */
   return C[id]||null}
 const TSUYAP=[[7,10],[22,6],[12,18],[26,16],[17,4]];
@@ -172,7 +172,7 @@ function drawObj0(c,id,x,y,i,g,now){
   if(typeof MZIDS!=='undefined'&&MZIDS.has(id)){mzDrawObj(c,id,x,y,i,now);return}if(typeof SHOPIDS!=='undefined'&&SHOPIDS.has(id)){shopDrawObj(c,id,x,y);return}/* 水のステージの物（mizube.js、コードのドット絵） */
   if(id==='kagenest'){drawNest(c,x,y,now||performance.now());return}if(id==='leafwall'){drawLeafWall(c,x,y,i,now);return}if(id==='pit'){drawPit(c,x,y,i);return}/* かげの巣・葉のかべ（defense.js、コードのドット絵） *//* 霧の中で見つける物 */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
-  if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
+  if(id==='tower'&&WD===KUSA){drawStoryTree(c,x,y,i,now,ICON);return;}
   if(STAIRS.has(id)){if(ICON||i==null)drawStair(c,id,x,y,0,y+3,y+29);else drawStairObj(c,i,id);return}/* 階段は、段差といっしょに cliffStrip で描く（ここはアイコンだけ） */
   if(CANOPY.has(id)){if(ICON||i==null){const ch=window.CHIPS&&CHIPS[id],bk=window.CHIPS&&CHIPS[id+':back'];if(bk)drawChip(c,bk,id,x,y,0,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;c.save();c.translate(x+3,y+11);c.scale(.4,.4);drawRoofItem(c,id,0,0);c.restore()}else drawRoofItem(c,id,x,y);return}/* ガゼボ・東屋（アイコンは小さく） */
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
@@ -462,10 +462,10 @@ function drawObj0(c,id,x,y,i,g,now){
     const rail=(x1,y1,x2,y2)=>{c.lineCap='round';c.strokeStyle=RD;c.lineWidth=3.2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=RC;c.lineWidth=2.2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=RL;c.lineWidth=.7;c.beginPath();c.moveTo(x1-.5,y1);c.lineTo(x2-.5,y2);c.stroke()};
     const rung=(x1,y1,x2,y2)=>{c.strokeStyle=RD;c.lineWidth=2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=bb?'#cfd683':'#cf9f66';c.lineWidth=1.1;c.beginPath();c.moveTo(x1,y1-.3);c.lineTo(x2,y2-.3);c.stroke()};
     const lad=(x1,x2,top,bot)=>{for(let yy=bot-4;yy>top+2;yy-=5)rung(x1+.5,yy,x2-.5,yy);rail(x1,top,x1,bot);rail(x2,top,x2,bot);if(bb)for(const xx of[x1,x2])for(let yy=bot-7;yy>top+1;yy-=10){c.fillStyle=RD;c.fillRect(xx-1.6,yy,3.2,1)}};/* まっすぐ立てたハシゴ（竹は節つき） */
-    {const ch=chipOf(id+(d===1&&!ICON?':sideL':d===3&&!ICON?':sideR':':front'));if(ch){if(d<=0&&!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,y-LIFT+1,15,LIFT)}/* がけにおちるかげ */if(ICON){c.save();c.translate(0,28)}const ok=drawChip(c,ch,id,x,y,now,i);if(ICON)c.restore();if(ok)break}}/* もらった絵：正面（がけの正面だけ）・よこ（がけのふちにそった細い線）。アイコンは正面を1マスに *//* 絵を読みこむまでは、コードの絵 */
-    if(d<=0||ICON){const top=ICON?y+2:y-LIFT-1,bot=ICON?y+TS-3:y+2;if(!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,top+2,15,bot-top-2)}/* がけにおちるかげ */lad(x+9,x+23,top,bot)}/* 正面：がけの正面だけ（下のマスにはみ出さない） */
+    {const ch=chipOf(id+(d===1&&!ICON?':sideL':d===3&&!ICON?':sideR':':front'));if(ch){if(d<=0&&!ICON){c.fillStyle='rgba(40,46,104,.16)';c.fillRect(x+10,y-LIFT+1,15,LIFT)}/* がけにおちるかげ */if(ICON){c.save();c.translate(0,28)}const ok=drawChip(c,ch,id,x,y,now,i);if(ICON)c.restore();if(ok)break}}/* もらった絵：正面（がけの正面だけ）・よこ（がけのふちにそった細い線）。アイコンは正面を1マスに *//* 絵を読みこむまでは、コードの絵 */
+    if(d<=0||ICON){const top=ICON?y+2:y-LIFT-1,bot=ICON?y+TS-3:y+2;if(!ICON){c.fillStyle='rgba(40,46,104,.16)';c.fillRect(x+10,top+2,15,bot-top-2)}/* がけにおちるかげ */lad(x+9,x+23,top,bot)}/* 正面：がけの正面だけ（下のマスにはみ出さない） */
     else{const x0=d===1?x+.5:x+TS-4.5,ya=y+8,yb=y+24;/* 横向き：がけのよこに立てかけたハシゴを真上から見た形。ほぼ一本の線（はばの向きに、がけのふちにそって）。両はしがレールの頭 */
-      c.fillStyle='rgba(40,30,20,.18)';c.fillRect(d===1?x0+4:x0-1.5,ya+1,1.5,yb-ya);/* かげ */
+      c.fillStyle='rgba(40,46,104,.18)';c.fillRect(d===1?x0+4:x0-1.5,ya+1,1.5,yb-ya);/* かげ */
       c.fillStyle=RD;c.fillRect(x0,ya,4,yb-ya);c.fillStyle=RC;c.fillRect(x0+.6,ya+.6,2.8,yb-ya-1.2);c.fillStyle=RL;c.fillRect(x0+.6,ya+.6,1,yb-ya-1.2);/* いちばん上の段（上から見ると、この線だけ見える） */
       for(const yy of[ya,yb-4]){c.fillStyle=RD;c.fillRect(x0-.5,yy,5,4);c.fillStyle=RC;c.fillRect(x0+.2,yy+.6,3.6,2.8);c.fillStyle=RL;c.fillRect(x0+.2,yy+.6,3.6,.8)}}/* レールの頭 */
     break}

@@ -1,7 +1,7 @@
 'use strict';
 /* 終盤の順番は、操作・自動再開・目標表示で同じ条件を使う。既読は会話の完了時だけ保存する。 */
 function grassEndingEvent(){
-  if(!S||WD!==0||S.free||S.cleared||!S.flags.finalWon||isNight()||S.qStory!=null)return null;
+  if(!S||WD!==KUSA||S.free||S.cleared||!S.flags.finalWon||isNight()||S.qStory!=null)return null;
   if(!S.sev?.e09&&((S.shards||0)>=3||(S.setSh||0)>=3))return SEV1.find(e=>e.k==='e09');
   return null;
 }
@@ -11,7 +11,7 @@ function grassEndingTalkLines(e){return e&&sevLines(e.L)}
 function startGrassEndingTalk(e){const L=grassEndingTalkLines(e);if(!L)return;TALKW=null;QUESTCLEARW=null;const owner=S,session=VILLAGE_SESSION;let once=0;
   dialog(L,()=>{if(once++||S!==owner||VILLAGE_SESSION!==session||(S.sev||{})[e.k])return;(S.sev||(S.sev={}))[e.k]=1;const P=S.sevP||[],i=P.indexOf(e.k);if(i>=0)P.splice(i,1);if(e.go)e.go();checkQuest()},null)}/* 最後まで見てから「見た」にする */
 function grassReunionBlockReason(){
-  if(WD!==0)return '';
+  if(WD!==KUSA)return '';
   if(isNight())return 'ヌシ様を迎えるのは、朝になってから';
   if(!S.flags.finalWon)return 'まず、御神木に集まる影を追いはらおう';
   if(!S.res.some(r=>r.name===POKO&&!r.hidden))return 'フタバがもどってから、いっしょにヌシ様を迎えよう';
@@ -22,7 +22,7 @@ function grassReunionBlockReason(){
 }
 const GRASS_REUNION_PENDING=new WeakMap();
 function scheduleGrassReunion(){
-  if(WD!==0||S.cleared||(S.setSh||0)<3||NUSHI_RUN||grassReunionBlockReason())return false;
+  if(WD!==KUSA||S.cleared||(S.setSh||0)<3||NUSHI_RUN||grassReunionBlockReason())return false;
   if(GIFT_ACTIVE||SPOT_POPS.some(e=>e.shard&&e.state===S))return false;/* かけらの知らせをとじてから */
   const old=GRASS_REUNION_PENDING.get(S);if(old?.session===VILLAGE_SESSION)return true;
   const owner=S,token={session:VILLAGE_SESSION};GRASS_REUNION_PENDING.set(owner,token);
@@ -47,7 +47,7 @@ function grassEndingGoal(){
   return {text:'ヌシのかけらを御神木へとどけよう',progress:'かけら '+Math.min(2,S.setSh||0)+'/2',how:(S.setSh||0)>=1?'御神木をタップして、ヌシのかけらをとどけよう。2つめの光がやどると、影の群れがやってくる':'御神木をタップして、ヌシのかけらをとどけよう'};
 }
 function grassEndingFocusTarget(){
-  if(WD!==0||!S.flags.finalWon)return null;
+  if(WD!==KUSA||!S.flags.finalWon)return null;
   const drop=(S.shards||0)<3&&S.drops?.find(d=>d.id==='shard');
   if(drop)return {x:drop.x+.5,y:drop.y+.5,w:1,h:1};
   const j=S.obj.indexOf('tower');return j<0?null:{x:storyTreeX(j),y:storyTreeY(j)-.3,w:sacredSpan(),h:sacredSpan()};
@@ -92,6 +92,6 @@ function startSacredQuiet(){
 
 /* 草原：ヌシのかけらの2つめをささげると、さいごの防衛がはじまる。ささげる前に、影がやってくることをたしかめる（はいで、ささげる。来る日はかえない） */
 let SHARDASK=false,SHARDOK=false;
-function shardWarnAsk(j){if(WD!==0||S.cleared||(S.setSh||0)!==1||finalDefenseBegun())return false;if(SHARDOK){SHARDOK=false;return false}if(SHARDASK)return true;
+function shardWarnAsk(j){if(WD!==KUSA||S.cleared||(S.setSh||0)!==1||finalDefenseBegun())return false;if(SHARDOK){SHARDOK=false;return false}if(SHARDASK)return true;
   const r=S.flags.finalReadyDay,soon=r!=null&&r<=dayNo()&&!isNight()&&S.res.length>=5&&S.res.some(q=>q.name===POKO)&&cnt('tower')>=1;/* finalCheck と同じ条件で、その日の夜に来るか */
   SHARDASK=true;const S0=S;askYesNo('ヌシのかけら',soon?'この光をささげると、御神木の力に、影たちが気づく。今夜にも、大きな影の群れがやってくる。ささげる？':'この光をささげると、御神木の力に、影たちが気づく。もうすぐ、大きな影の群れがやってくる。ささげる？',()=>{SHARDASK=false;if(S!==S0)return;SHARDOK=true;sacredTreeTap(j)},()=>{SHARDASK=false},'ささげる',1);return true}

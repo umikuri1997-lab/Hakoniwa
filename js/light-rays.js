@@ -15,7 +15,7 @@ function rayCache(i,kind){if(RAYCW!==VW||RAYCH!==VH){for(const c of RAYC.values(
   for(let y=0;y<len;y++){const fy=1-y/len,ly=Math.ceil(fy*4)/4;/* 長さの向きは4だんでうすく */const cx=ox+w/2+sl*y;
     for(let x=0;x<cw;x++){const q=Math.abs(x+.5-cx)/(w/2);if(q>=1)continue;const lx=q<.35?1:q<.7?.62:.3;/* よこは3だん（まん中ほどこい） */const p=(y*cw+x)*4;d[p]=K.c[0];d[p+1]=K.c[1];d[p+2]=K.c[2];d[p+3]=Math.round(255*lx*ly)}}
   g.putImageData(im,0,0);c._ox=ox;RAYC.set(key,c);return c}
-function rayBlocked(){return !S||S.rain||(typeof stormNow==='function'&&stormNow())||(typeof BOSSEVE!=='undefined'&&BOSSEVE)||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared}
+function rayBlocked(){return !S||S.rain||(typeof stormNow==='function'&&stormNow())||(typeof BOSSEVE!=='undefined'&&BOSSEVE)||WD===KUSA&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared}
 function rayNow(){/* いまの光：{kind,a}（出さないときは null） */if(rayBlocked())return null;const h=skyHour(),sm=(a,b)=>Math.max(0,Math.min(1,(h-a)/(b-a)));
   if(h>=5.5&&h<8){const a=sm(5.5,6.5)*(1-sm(7,8));/* 昼（8時〜15時半、hd2d.js の hdTint と同じ）には出さない */return a>0?{kind:'morn',a}:null}
   if(h>=15.5&&h<18.5){const a=sm(15.5,16.5)*(1-sm(17.5,18.5));return a>0?{kind:'eve',a}:null}

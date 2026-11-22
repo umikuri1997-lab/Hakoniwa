@@ -10,13 +10,13 @@ function routeFull(s){s=s||S;const r=s&&s.flags&&Array.isArray(s.flags.route)?s.
 const routePos=el=>routeFull().indexOf(el);
 let QROUTE='def',QORIG=null;
 function routeApply(){if(typeof QUESTS1==='undefined')return;if(!QORIG||QORIG.length!==QUESTS1.length&&QROUTE==='def')QORIG=QUESTS1.slice();
-  const key=S&&WD===0&&!S.free&&!IS_STORY_REPLAY?routeFull().join():'def';if(key===QROUTE&&QUESTS1.length===QORIG.length)return;
+  const key=S&&WD===KUSA&&!S.free&&!IS_STORY_REPLAY?routeFull().join():'def';if(key===QROUTE&&QUESTS1.length===QORIG.length)return;
   const ids=QORIG.map(q=>q.id),all=[...ROUTE_DEF.flatMap(e=>ROUTE_ARCS[e]),...ROUTE_BOSS],ix=all.map(id=>ids.indexOf(id));if(ix.some(i=>i<0))return;const a=Math.min(...ix),b=Math.max(...ix);if(b-a+1!==all.length)return;/* つづいてならんでいないときは、ならべかえない */
   const by=id=>QORIG[ids.indexOf(id)],R=key==='def'?ROUTE_DEF:routeFull(),mid=[...ROUTE_ARCS[R[0]],...ROUTE_ARCS[R[1]],...ROUTE_BOSS,...ROUTE_ARCS[R[2]]].map(by);
   QUESTS1.splice(0,QUESTS1.length,...QORIG.slice(0,a),...mid,...QORIG.slice(b+1));QROUTE=key}
 const ROUTE_NAME={fire:'火のせいれい',water:'水のせいれい',wind:'風のせいれい'},ROUTE_DESC={fire:'夜、村を守る。',water:'水やり・水くみをする。',wind:'落ちている物をひろう。遊ぶのが好き。'};
 let ROUTEPOP=null;
-function routeTick(){if(!S||WD!==0||S.free||IS_STORY_REPLAY||!Array.isArray(S.flags.route))return;routeApply();const r=S.flags.route;if(r.length>=3)return;
+function routeTick(){if(!S||WD!==KUSA||S.free||IS_STORY_REPLAY||!Array.isArray(S.flags.route))return;routeApply();const r=S.flags.route;if(r.length>=3)return;
   const slot=QUESTS1.findIndex(q=>q.id===ROUTE_ARCS[routeFull()[r.length]][0]);if(slot<0||S.quest<slot)return;/* その話の目標になったときに、えらぶ */
   if(r.length===2||S.quest>slot||S.qTalked){r.push(routeFull()[r.length]);if(r.length===2)r.push(routeFull()[2]);routeApply();dirty=true;return}/* 話を聞いたあと・前のならびのまま進んだ：いまのならびにきめる */
   const opts=r.length===0?ROUTE_DEF.slice():r[0]==='fire'?['water','wind']:['fire'];if(opts.length===1){r.push(opts[0]);r.push(ROUTE_DEF.find(e=>!r.includes(e)));routeApply();dirty=true;return}

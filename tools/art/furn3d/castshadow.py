@@ -11,7 +11,7 @@ sys.path.insert(0,ART);sys.path.insert(0,os.path.join(HERE,'items'));sys.path.in
 import numpy as np
 from PIL import Image,ImageDraw
 import furn3d as F,oblique3d as O,chips as CHP
-SHD=(46,54,30,100);SHL=(46,54,30,52)   # 影の2色（こい・うすい。うすさ/255）
+SHD=(40,46,104,100);SHL=(40,46,104,52)   # 影の2色（こい・うすい。うすさ/255）。青むらさき（日なたはあたたかく・かげは青く）
 BLUR=2.0   # ぼかし（ドット）
 BANDS=(0.21,0.24,0.585,0.615)   # ぼかしたこさのさかい：なし｜うすいのあみ｜うすい｜うすい・こいのあみ｜こい
 FLIPIDS={'deadtree'}   # ゲームで左右反対にも描く物

@@ -1,12 +1,12 @@
 'use strict';
 /* 草原の物語の木。tower は既存セーブの建物IDとして保ち、火山の台座とは表示・育て方を分ける。 */
-const storyTreeName=()=>WD===0?'御神木':'守護の台座';
+const storyTreeName=()=>WD===KUSA?'御神木':'守護の台座';
 const SACRED_PREVIEW=new WeakMap(),SACRED_SHOWN=new WeakMap(),SACRED_POSES=new WeakMap();
 const sacredSpan=()=>S?.sacredLegacy2?2:S?.sacredLegacy3?3:4;
 const sacredCells=(j,n=sacredSpan())=>Array.from({length:n*n},(_,i)=>j+(i/n|0)*W+i%n);
-const storyTreeX=j=>j%W+(WD===0?sacredSpan():2)/2;
+const storyTreeX=j=>j%W+(WD===KUSA?sacredSpan():2)/2;
 const STUMPBY=94;/* 御神木（切り株〜木）の根もとの高さ（絵の左上から、ゲームの点）。幹のまん中は4×4マスのまん中 */
-const storyTreeY=j=>(j/W|0)+(WD===0?sacredSpan()-1-(122-STUMPBY)/TS:1);/* 根もと（絵の y+STUMPBY）が base（storyTreeY*TS+26） */
+const storyTreeY=j=>(j/W|0)+(WD===KUSA?sacredSpan()-1-(122-STUMPBY)/TS:1);/* 根もと（絵の y+STUMPBY）が base（storyTreeY*TS+26） */
 function migrateSacredFootprint3(state){/* 御神木を4×4へ（前は2×2・3×3）。空きがなければ、いまの大きさのまま、あとで空いたら広げる */
   if(state.free||(state.world||0)!==0||state.flags.sacredFootprint4&&!state.sacredLegacy2&&!state.sacredLegacy3)return;const N=4,cur=state.sacredLegacy2?2:state.sacredLegacy3||!state.flags.sacredFootprint4&&state.flags.sacredFootprint3?3:2;
   const old=state.obj.indexOf('tower'),pending=state.obj.findIndex((o,j)=>o==='site'&&state.dyn[j]?.build==='tower'),origin=old>=0?old:pending>=0?pending:state.sacredRoot;
@@ -42,9 +42,9 @@ function tryExpandSacredLegacy(state){
   if(cells.some(k=>state.obj[k]&&k!==j&&!(state.obj[k]==='part'&&state.ref[k]===j)||state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)))return;
   migrateSacredFootprint3(state);
 }
-function sacredNoBuild(j,id){if(!S||WD!==0||S.free||S.sacredRoot==null)return false;const s=fieldStump(S.sacredRoot);if(id&&BL[id]&&BL[id].floor&&BL[id].kind==='block')return SACREDBASE.some(d=>s+d===j);/* 道・床は、木の根もとのマスだけことわる（木が育っても、上の絵が道にかかるだけ） */if(sacredReserved(j))return true;return Math.abs(j%W-s%W)<=1&&Math.abs((j/W|0)-(s/W|0))<=1}/* 切り株のまわり1マスにも、物を置かない */
+function sacredNoBuild(j,id){if(!S||WD!==KUSA||S.free||S.sacredRoot==null)return false;const s=fieldStump(S.sacredRoot);if(id&&BL[id]&&BL[id].floor&&BL[id].kind==='block')return SACREDBASE.some(d=>s+d===j);/* 道・床は、木の根もとのマスだけことわる（木が育っても、上の絵が道にかかるだけ） */if(sacredReserved(j))return true;return Math.abs(j%W-s%W)<=1&&Math.abs((j/W|0)-(s/W|0))<=1}/* 切り株のまわり1マスにも、物を置かない */
 const SACREDBASE=[0,-1,-W,-W-1];/* 切り株・木の根もと（fieldStump からのずれ）。幹は4×4のまん中なので、まん中の2×2。だれも通れない（STUMPB） */
-function sacredReserved(j){return !!S&&WD===0&&!S.free&&S.sacredRoot!=null&&sacredCells(S.sacredRoot).includes(j);}
+function sacredReserved(j){return !!S&&WD===KUSA&&!S.free&&S.sacredRoot!=null&&sacredCells(S.sacredRoot).includes(j);}
 const sacredQuestIndex=id=>QUESTS1.findIndex(q=>q.id===id||!!q.fieldParts&&q.fieldParts.includes(id));
 function sacredCompleted(id){const i=sacredQuestIndex(id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}
 function sacredRevealed(id){const i=sacredQuestIndex(id);return i>=0&&S.quest>i&&S.qStory!==i;}
@@ -67,7 +67,7 @@ function migrateSacredStory(state){
   state.flags.sacredStoryV1=1;
 }
 function growStoryTree(){
-  if(WD!==0||S.free||S.obj.includes('tower'))return true;
+  if(WD!==KUSA||S.free||S.obj.includes('tower'))return true;
   const j=S.sacredRoot;if(j==null||!sacredRootFits(j))return false;
   S.obj[j]='tower';for(const k of sacredCells(j).slice(1)){S.obj[k]='part';S.ref[k]=j;}S.hp[j]=BL.tower.hp;S.flags.shrine=true;
   S.flags.treeBlessed=true;noteQuestPlacement('tower',j);recount();dirty=true;burst(j,'plant','none');memo('grass','みんなで世話をした木が、御神木になった');return true;
@@ -82,7 +82,7 @@ function sacredSceneWalk(r,x,y,pose,arrived){
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!(S.res.includes(r)||r===GUEST)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
 function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（ふだんは起きない。場面を見ないまま育ったセーブのため）：村の時間を止め、カメラがよって、育つところを見せ、みんながよろこぶ。かけらでは木は育たない */
-  if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage();if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}{const sh=SACRED_SHOWN.get(S);if(sh&&sh.session===VILLAGE_SESSION&&sh.stage>=st){S.treeSeen=st;return;}}/* お話の場面で育つところを見せたときは、場面の外の育つ会話を出さない */
+  if(!S||WD!==KUSA||S.free||IS_STORY_REPLAY)return;const st=sacredStage();if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}{const sh=SACRED_SHOWN.get(S);if(sh&&sh.session===VILLAGE_SESSION&&sh.stage>=st){S.treeSeen=st;return;}}/* お話の場面で育つところを見せたときは、場面の外の育つ会話を出さない */
   if(st===S.treeSeen||sacredDirection()||!$('#dialog').hidden||isNight()||sheet!=null||performance.now()<SCENEHOLD||SHARD_OFFER&&SHARD_OFFER.state===S||SPOT_POPS.some(e=>e.state===S))return;
   const from=Math.floor(S.treeSeen);S.treeSeen=st;const ms=5200,g=sacredGeo(j,st),cx=storyTreeX(j),cy=storyTreeY(j);SCENEHOLD=performance.now()+ms+200;
   sacredStartEffect('growth',ms,{from,to:st});storyShot([[g.cx-70,g.top-8],[g.cx+70,g.base+16]],{limit:2.2,seconds:1.6,full:true});const d=sacredDirection();if(d)d.watch=true;
@@ -131,9 +131,9 @@ function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   if(stage>=1){c.strokeStyle='#779753';c.lineWidth=3;c.beginPath();c.moveTo(cx+9,cy-14);c.lineTo(cx+13,cy-28);c.stroke();c.fillStyle=stage===1?'#8cb46b':'#9ecf75';c.beginPath();c.ellipse(cx+14,cy-29,stage===1?3:3+6*unfold,stage===1?6:6-2*unfold,stage===1?.2:-1.3+.8*unfold,0,7);c.fill();}
   c.restore();
 }
-function drawSacredRoot(now){if(!S||WD!==0||S.free||S.sacredRoot==null||S.obj.includes('tower'))return;const j=S.sacredRoot;if(S.obj[j]==='site')return;drawStoryTree(ctx,(j%W)*TS,(j/W|0)*TS-liftOf(j),j,now);}
+function drawSacredRoot(now){if(!S||WD!==KUSA||S.free||S.sacredRoot==null||S.obj.includes('tower'))return;const j=S.sacredRoot;if(S.obj[j]==='site')return;drawStoryTree(ctx,(j%W)*TS,(j/W|0)*TS-liftOf(j),j,now);}
 const SACRED_QUIET=[
   ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……わたしにも、まだわからぬ。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','#teary|……うん。'],['N','#hush|……となり、座るねぇ。',1,'stree:sit'],['N','#hush|……。',1,'stree:sunny'],['F','#hush|……今日は、ここにいてもいい？'],['U','もちろんだ。']
 ];
 function sacredQuietScene(){return startSacredQuiet();}
-function drawSacredQuiet(now){if(WD===0&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}
+function drawSacredQuiet(now){if(WD===KUSA&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}

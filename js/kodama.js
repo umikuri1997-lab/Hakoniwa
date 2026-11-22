@@ -16,7 +16,7 @@ let KDMAP=null,KDMS=null,KDMN=-1;
 function kdAt(j){/* マス j にある、もりのこだまの所 */if(!S||!S.kd)return null;if(KDMS!==S||KDMN!==S.kd.length){KDMS=S;KDMN=S.kd.length;KDMAP=new Map();for(const e of S.kd){for(const k of kdCells(e))KDMAP.set(k,e);KDMAP.set(e.j,e)}}/* 輪のまん中も */return KDMAP.get(j)||null}
 function kdSpotOK(k,hi){if(k<0||k>=W*H)return false;const o=S.obj[k];return S.ground[k]===0&&(!o||WEEDS.has(o))&&!S.floor[k]&&!(S.rug&&S.rug[k])&&!(S.edge&&S.edge[k])&&!VILL[k]&&(S.hi?S.hi[k]||0:0)===hi&&!(typeof fogAt==='function'&&fogAt(k))&&!kdAt(k)}
 function kdNeed(e,hi){/* 置くのに空いている所：草むら・切り株はそのマスと上下左右、輪は3×3と、すきまの外がわ1マス（せいれいが立てる所） */const C=e.k==='ishi'||e.k==='hana'?[...KDRING.map(([dx,dy])=>e.j+dy*W+dx),e.j,e.gap+(e.gap-e.j)]:[e.j,e.j+1,e.j-1,e.j+W,e.j-W];return C.every(k=>kdSpotOK(k,hi))}
-function kdGenArea(a,G){/* エリア a に、3こになるまで置く（行けない所しかなければ、つぎの朝にまた） */if(!kdOn())return 0;S.kd=S.kd||[];if(Array.isArray(S.fog)&&WD===0&&S.fog[a])return 0;let have=S.kd.filter(e=>e.a===a).length;if(have>=KDPER)return 0;
+function kdGenArea(a,G){/* エリア a に、3こになるまで置く（行けない所しかなければ、つぎの朝にまた） */if(!kdOn())return 0;S.kd=S.kd||[];if(Array.isArray(S.fog)&&WD===KUSA&&S.fog[a])return 0;let have=S.kd.filter(e=>e.a===a).length;if(have>=KDPER)return 0;
   const x0=(a%AREAN)*AREAW,y0=((a/AREAN)|0)*AREAW,ks=Object.keys(KDK).filter(k=>!S.kd.some(e=>e.a===a&&e.k===k));for(let i=ks.length-1;i>0;i--){const q=(Math.random()*(i+1))|0;[ks[i],ks[q]]=[ks[q],ks[i]]}
   if(!G){const r0=S.res.find(q=>!q.hidden);G=r0?bfs(r0.x|0,r0.y|0):null}
   let put=0;for(const k of ks){if(have>=KDPER)break;for(let tr=0;tr<600;tr++){const x=x0+2+((Math.random()*(AREAW-4))|0),y=y0+2+((Math.random()*(AREAW-4))|0),j=y*W+x,hi=S.hi?S.hi[j]||0:0,e={id:0,k,a,j,st:0};

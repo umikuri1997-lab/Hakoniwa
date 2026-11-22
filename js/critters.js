@@ -27,7 +27,7 @@ function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,d
   if(k==='usagi')return day&&dry&&critOpen(j)&&REV.has(j);
   if(k==='harinezumi')return h>=17&&h<20&&critOpen(j)&&critNear(j,2,q=>o(q)==='berry'||o(q)==='hedge');
   if(k==='nezumi')return day&&critOpen(j)&&critNear(j,2,q=>BOXCAP[o(q)]!=null);
-  if(k==='mogura')return WD===2&&day&&critOpen(j)&&critNear(j,2,q=>o(q)==='farm');/* もぐらは土のステージだけ（持ち主のきめ） */
+  if(k==='mogura')return WD===TSUCHI&&day&&critOpen(j)&&critNear(j,2,q=>o(q)==='farm');/* もぐらは土のステージだけ（持ち主のきめ） */
   if(k==='katatsumuri')return S.rain&&h>=6&&h<20&&critOpen(j)&&critNear(j,1,q=>FLOWERS.has(o(q))||WEEDS.has(o(q)));
   if(k==='tentoumushi')return day&&dry&&critOpen(j)&&critNear(j,1,q=>FLOWERS.has(o(q)));
   if(k==='tonbo')return seasonNow()===2&&h>=9&&h<18&&dry&&waterJ(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]!==1&&walk(j+d));
