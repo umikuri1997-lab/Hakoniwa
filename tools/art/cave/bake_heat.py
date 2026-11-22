@@ -42,7 +42,7 @@ def main(name):
     co=np.array([v.co[:] for v in me.vertices])/SC;_,nn=cKDTree(co).query(Pu);W=Wm[nn]   # まとめたあとの点から、もとの点へ
     miss=(W.sum(1)==0).sum()
     if miss:   # ボーンヒートでとどかなかった点（はなれた小さな部品）は、いちばん近い、重みのある点と同じに
-        ok=W.sum(1)>0;bi=np.where(ok)[0];_,k=cKDTree(Pu[bi]).query(Pu[~ok]);W[~ok]=W[bi[k]]
+        ok=W.sum(1)>0;Dm=np.stack([br._segd(Pu[~ok],h_,t_) for _,_,h_,t_ in br.SKEL[name]],1);W[~ok]=0;W[np.where(~ok)[0],Dm.argmin(1)]=1   # いちばん近い骨に（近い点の重みをとると、はなれた部品がべつの手足の重みになる）
     os.makedirs(OUT,exist_ok=True);np.savez_compressed(os.path.join(OUT,name+'.npz'),W=W.astype(np.float32),n=n,names=np.array(names))
     print(name,'点',n,'重みのない点',int(miss))
 
