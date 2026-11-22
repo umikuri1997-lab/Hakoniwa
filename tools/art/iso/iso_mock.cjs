@@ -30,11 +30,11 @@ const ART=ARTD?Object.fromEntries([['statueb','statueb'],['statue','statue'],['s
  await page.screenshot({path:OUT+(START?'start-now.png':'now.png'),clip:START?{x:600-384,y:450-384,width:768,height:768}:{x:600-360,y:450-360,width:720,height:720}});
  await run(`(async()=>{window.ISOART={};const A=${JSON.stringify(ART)};for(const k in A){const im=new Image();im.src=A[k];await im.decode();ISOART[k]=im}})()`);
  /* クォータービューを描く（本物の描く処理は止め、#cv をそのまま使う） */
- const url=await run(`(()=>{render=function(){};const {X0,Y0,N}=ISO,K=2,IW=Math.round(TS*Math.SQRT2),IH=IW/2,WH=TS,now=performance.now();
+ const url=await run(`(()=>{render=function(){};const {X0,Y0,N}=ISO,K=2,IW=64,IH=48,WH=30,SX=IW/Math.SQRT2/TS,SY=30/(.8*TS),/* 1マスは128×96（ゲームの点で64×48）。高さ1マスは30点。いまの絵は、よこ SX・たて SY 倍にして立てる（仮） */now=performance.now();
   const G=document.createElement('canvas');G.width=N*TS;G.height=N*TS;gblit(G.getContext('2d'),X0*TS,Y0*TS,N*TS,N*TS,0,0,N*TS,N*TS);
-  const cw=N*IW+40,ch=N*IH+110+3*Math.round(IH*1.1),ox=cw/2,oy=90+3*Math.round(IH*1.1);cv.width=cw*K;cv.height=ch*K;const c=ctx;c.setTransform(1,0,0,1,0,0);c.fillStyle='#2f3b2a';c.fillRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;
+  const cw=N*IW+40,ch=N*IH+110+90,ox=cw/2,oy=90+90;cv.width=cw*K;cv.height=ch*K;const c=ctx;c.setTransform(1,0,0,1,0,0);c.fillStyle='#2f3b2a';c.fillRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;
   const iso=(gx,gy)=>[ox+(gx-gy)*IW/2,oy+(gx+gy)*IH/2];const HI0=3;
-  const HL=Math.round(IH*1.1),hv=(a,b)=>{const j=(Y0+b)*W+X0+a;return a<0||b<0||a>=N||b>=N?0:Math.max(0,hiAt(j))};/* 段1だんの高さ（ゲームの点） */
+  const HL=30,hv=(a,b)=>{const j=(Y0+b)*W+X0+a;return a<0||b<0||a>=N||b>=N?0:Math.max(0,hiAt(j))};/* 段1だんの高さ（ゲームの点） */
   /* 壁は箱、ほかの物は絵を立てる。x+y の小さい順（うしろから） */
   c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*oy);c.drawImage(G,0,0);/* 地面はまず1まいで（マスごとに切ると、さかいに線が出る） */
   const L=[];for(let b=0;b<N;b++)for(let a=0;a<N;a++)if(hv(a,b)>0||S.obj[(Y0+b)*W+X0+a]==='farm')L.push({d:a+b-.99,t:1,a,b,j:(Y0+b)*W+X0+a});if(S.sacredRoot!=null&&WD===0){const j=S.sacredRoot,a=j%W-X0,b=(j/W|0)-Y0;if(a>=0&&b>=0&&a<N&&b<N)L.push({d:a+b+4.3,a,b,o:'story',j,z:[4,4]})/* 切り株のまん中の順（まわりの4×4の手前にいる子は、切り株より手前） */}
@@ -51,14 +51,14 @@ const ART=ARTD?Object.fromEntries([['statueb','statueb'],['statue','statue'],['s
     c.save();c.beginPath();P.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.clip();c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*(oy-up));c.drawImage(G,0,0);
     if(S.obj[e.j]==='farm')try{drawObj(c,'farm',a*TS,b*TS,e.j,0,now)}catch(err){}c.restore()};
   for(const e of L){if(e.t){tile(e);continue}const up=hv(Math.floor(e.a),Math.floor(e.b))*HL;
-   if(e.r){const [px,py]=iso(e.a,e.b);c.setTransform(K,0,0,K,K*(px-e.r.x*TS),K*(py-up-e.r.y*TS));try{drawRes0(e.r,now)}catch(err){}continue}
+   if(e.r){const [px,py]=iso(e.a,e.b);c.setTransform(K*SX,0,0,K*SY,K*(px-SX*e.r.x*TS),K*(py-up-SY*e.r.y*TS));try{drawRes0(e.r,now)}catch(err){}continue}
    if(HOME_WALLS.has(e.o)){box(e.a,e.b,WH,'#f0d6a8','#d8b07c','#b88c58');continue}
    if(HOME_DOORS.has(e.o)){box(e.a,e.b,WH,'#f0d6a8','#d8b07c','#b88c58');const [x1,y1]=iso(e.a+.25,e.b+1),[x2,y2]=iso(e.a+.75,e.b+1);c.setTransform(1,0,0,1,0,0);c.fillStyle='#7a4a2a';c.beginPath();c.moveTo(x1*K,y1*K);c.lineTo(x2*K,y2*K);c.lineTo(x2*K,(y2-WH*.8)*K);c.lineTo(x1*K,(y1-WH*.8)*K);c.closePath();c.fill();continue}
    const IA=window.ISOART&&ISOART[e.o];if(IA){/* 3Dから写したクォータービューの絵：よこは、置く所のまん中。下のはしは、置く所の手前の角（切り株は、切り株のまわり） */
     let f=e.o==='story'?[e.a+2-1.2,e.b+2-1.2,2.4,2.4]:[e.a-1,e.b-1,3,2];const [mx]=iso(f[0]+f[2]/2,f[1]+f[3]/2),[,my]=iso(f[0]+f[2],f[1]+f[3]);
     c.setTransform(K,0,0,K,0,0);c.drawImage(IA,Math.round((mx-IA.width/4)*2)/2,Math.round((my-up-IA.height/2+2)*2)/2,IA.width/2,IA.height/2);continue}
    const {a,b,z}=e,[cx,cy]=iso(a+z[0]/2,b+z[1]/2),by=iso(a+z[0],b+z[1])[1],ob=[(X0+a+z[0]/2)*TS,(Y0+b+z[1])*TS];/* いまの絵の足もと（マスの下のはし）を、ひし形の下の角より少し上へ */
-   c.setTransform(K,0,0,K,K*(cx-ob[0]),K*(cy-up+(by-cy)*.55-ob[1]+TS*.12));try{if(e.o==='story')drawStoryTree(c,(X0+a)*TS,(Y0+b)*TS,e.j,now);else drawObj(c,e.o,(X0+a)*TS,(Y0+b)*TS,e.j,S.dyn[e.j]?S.dyn[e.j].g||0:0,now)}catch(err){}}
+   c.setTransform(K*SX,0,0,K*SY,K*(cx-SX*ob[0]),K*(cy-up+(by-cy)*.55-SY*ob[1]+SY*TS*.12));try{if(e.o==='story')drawStoryTree(c,(X0+a)*TS,(Y0+b)*TS,e.j,now);else drawObj(c,e.o,(X0+a)*TS,(Y0+b)*TS,e.j,S.dyn[e.j]?S.dyn[e.j].g||0:0,now)}catch(err){}}
   c.setTransform(1,0,0,1,0,0);/* なにもない所を切る */const D=c.getImageData(0,0,cv.width,cv.height).data,bg=[0x2f,0x3b,0x2a];let x0=cv.width,y0=cv.height,x1=0,y1=0;for(let y=0;y<cv.height;y+=2)for(let x=0;x<cv.width;x+=2){const q=(y*cv.width+x)*4;if(Math.abs(D[q]-bg[0])+Math.abs(D[q+1]-bg[1])+Math.abs(D[q+2]-bg[2])>6){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
   const M=24;x0=Math.max(0,x0-M);y0=Math.max(0,y0-M);x1=Math.min(cv.width,x1+M);y1=Math.min(cv.height,y1+M);const O=document.createElement('canvas');O.width=x1-x0;O.height=y1-y0;const oc=O.getContext('2d');oc.fillStyle='#2f3b2a';oc.fillRect(0,0,O.width,O.height);oc.drawImage(cv,-x0,-y0);return O.toDataURL('image/png')})()`);
  fs.writeFileSync(OUT+(START?'start-iso.png':'iso.png'),Buffer.from(url.split(',')[1],'base64'));

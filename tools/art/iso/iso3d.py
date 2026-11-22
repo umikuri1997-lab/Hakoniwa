@@ -1,6 +1,7 @@
 # ためし：神殿・こわれた神殿・御神木の切り株を、クォータービューの角度で3Dから写す（チップには入れない）。
-# 見え方：物を上から見て45度まわし（正面＝南が左下、東が右下を向く）、見おろし32度・遠近なし。
-#   地面の1マスは、はば√2・高さ√2/2 のひし形（2:1。iso_mock.cjs の地面と同じ）。高さは、いまと同じ1マス0.8。
+# 見え方：物を上から見て45度まわし（正面＝南が左下、東が右下を向く）、見おろし48.59度・遠近なし。
+#   地面の1マスは 128×96 のひし形（よこ:たて＝4:3。sin48.59＝0.75）。高さは、その角度のとおり（1マスの高さは、マスの1辺の cos48.59＝0.66）。
+#   1マスの1辺は 90.51 ドット（128/√2）で写す（ひし形のはばが128になる）。
 # 写し方・かげ・色は、いまの道具のまま（furn3d.py・sacred_tripo.py）。かえるのは、まわす角度と見おろしの角度だけ。
 # 使い方：python3 tools/art/iso/iso3d.py <出力フォルダ>
 import sys,os,math
@@ -9,7 +10,8 @@ for p in(ART,os.path.join(ART,'furn3d'),os.path.join(ART,'furn3d','items'),os.pa
 import numpy as np
 from PIL import Image
 import oblique3d as O
-ISOELEV,ISOKEEP,ISOANG=32.0,51.34,45.0   # tan(32)*0.8 ≒ 0.5：地面のたては、よこの半分。keep=51.34：高さは1マス0.8（いまのゲームと同じ）
+ISOELEV=math.degrees(math.asin(0.75));ISOANG=45.0;ISOS=128/math.sqrt(2)   # 地面のたては、よこの0.75
+ISOKEEP=math.degrees(math.acos(math.cos(math.radians(ISOELEV))*math.sin(math.radians(51.34))))   # persp の大きさ k を1にする角度（地面0.75・高さ0.66 の、ほんとうの見え方）
 _persp=O.persp
 def persp(elev=51.34,fov=40.0,frame=None,center=(0.5,0.65,0.3),full=False,keep=None):return _persp(ISOELEV,fov,None,center,False,ISOKEEP)
 O.persp=persp
@@ -26,6 +28,9 @@ def turn(self,k,foot=None):
     self.dc={pid:inv(f) for pid,f in dc0.items()}
 O.Scene.turn=turn
 import furn3d as F3
+_shot=F3.shot
+def shot(M,k,only=None,S_=64,filt=None,info=None):return _shot(M,k,only,ISOS,filt,info)
+F3.shot=shot
 def main(out):
     os.makedirs(out,exist_ok=True);res={}
     for iid in('statueb','statue'):
