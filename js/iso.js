@@ -44,13 +44,8 @@ function isoBox(c,x,y,lv,h,top,lf,rt){const s0=lv*IQD,s1=(lv*IQL+h)/(2*IQB),X=x*
   poly([[X-s1,Y+TS-s1],[X+TS-s1,Y+TS-s1],[X+TS-s0,Y+TS-s0],[X-s0,Y+TS-s0]],lf);
   poly([[X+TS-s1,Y-s1],[X+TS-s1,Y+TS-s1],[X+TS-s0,Y+TS-s0],[X+TS-s0,Y-s0]],rt);
   c.fillStyle=top;c.fillRect(X-s1,Y-s1,TS,TS)}
-/* 仮：高い段のマス：そのマスの地面（ひし形の区画の絵）を段の高さだけ上に描き、手前のとなりが低ければ、土の横の面（段差の絵は PR3） */
-function isoTile(c,x,y,now){const j=y*W+x,h=hiAt(j);if(h<=0)return;const k=dpr*cam.z,O=isoOff(k),hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,s=h*IQL;
-  const dl=h-hv(x,y+1),dr=h-hv(x+1,y);const poly=(P,f)=>{c.fillStyle=f;c.beginPath();P.forEach(([a,b],i)=>i?c.lineTo(a,b):c.moveTo(a,b));c.closePath();c.fill()};
-  c.save();c.setTransform(k,0,0,k,O[0],O[1]);/* 画面の向き（ゲームの点） */
-  if(dl>0){const s0=(h-dl)*IQL;poly([[ix-IQW/2,iy+IQH/2-s],[ix,iy+IQH-s],[ix,iy+IQH-s0],[ix-IQW/2,iy+IQH/2-s0]],'#9b9384')}
-  if(dr>0){const s0=(h-dr)*IQL;poly([[ix,iy+IQH-s],[ix+IQW/2,iy+IQH/2-s],[ix+IQW/2,iy+IQH/2-s0],[ix,iy+IQH-s0]],'#7d7568')}
-  igTile(c,x,y,ix,iy-s);c.restore()}
+/* 高い段のマス（iso-cliff.js）。c は地面の描き方のまま来るので、画面の向きにして描く */
+function isoTile(c,x,y){icScreen(c,()=>icBlock(c,x,y))}
 /* 物（左上のマス (x,y)、大きさ w×h）の、立てる絵の足もと：
    いまの絵の足もと（下のはしのまん中）を、ひし形のまん中と手前の角のあいだにおく（仮） */
 function objFoot(x,y,w,h,j){const lv=Math.max(0,hiAt(j)),t=.1375*(w+h)*TS,cx=(x+w/2)*TS,cy=(y+h/2)*TS;return{x,y,w,h,fx:(x+w/2)*TS,fy:(y+h)*TS-liftOf(j),px:isoX(cx+t,cy+t),py:isoY(cx+t,cy+t)+IQSY*TS*.12-lv*IQL}}
