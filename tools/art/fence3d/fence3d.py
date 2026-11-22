@@ -313,6 +313,7 @@ def render(P,xr=(0,1)):
                 sc.txo[q]=((0,0,0) if kind!='picket' else (org[0],org[1],0),(int(round(org[0]*4))*13+int(round(org[1]*8))*29) if kind=='picket' else 0,11);sc.txax[q]=np.array(ax,float)
     sc.texture(None);O.S=64
     ex=(xr[0]-0.5,xr[1]+0.5,-2.0,2.4);im=O.render_px(sc,O.game,ex,O.VIEW,k=0.80,lw=2,k2=0.90,merge=4)
+    import furntone;im=furntone.tone(im)   # かげは家具と同じ5色（furntone。持ち主がきめた）。見え方はゲームのマスと同じなので、光は画面の向きのまま
     a=np.array(im).copy();ids=O.LAST_IDS
     if ext_ids:   # 上のマスへのばした横木と、そのまわりの線を消す
         em=np.isin(ids,list(ext_ids));own=(ids>=0)&~em;nb=np.zeros_like(em);no=np.zeros_like(em)
