@@ -105,6 +105,8 @@ def cap_all(C, n=NCOL):
     G = {}
     for k in C:
         b = re.split(r'[:#]', k)[0]
+        if b == 'iso':   # クォータービューの絵（iso:<id>:… ・ iso:win:<id>:…）は、その id ごと
+            q = k.split('#')[0].split(':'); b = ':'.join(q[:3] if len(q) > 2 and q[1] == 'win' else q[:2])
         G.setdefault(k.split('#')[0] if b in SOLO else b, []).append(k)
     done = []
     for g, ks in G.items():

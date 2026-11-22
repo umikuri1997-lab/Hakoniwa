@@ -37,7 +37,7 @@ function iqWinDraw(c,i,hz,t,lv){const v=S.win&&S.win[i];if(!v||iqChip(c,'iso:win
 /* つながる物を1マス描く（o：そのマスの物、i：マス） */
 function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)|0,lv=Math.max(0,hiAt(i)),b=lv*IQL,m=iqMask(i,g),low=g==='h'&&iqFront(i),hz=!!(m&3)||!(m&12),door=HOME_DOORS.has(o)||GATE_IDS.has(o),
     op=door?(hz?doorOp(i,x*TS,y*TS,.9,2.1):doorOp(i,x*TS,y*TS,2.1,.9)):0,n=Math.min(3,Math.round(op*3));
-  if(iqChip(c,'iso:'+o+':'+(door?(hz?'h':'v'):m)+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv))return;/* ドアは向き（h よこ・v たて）と開いたコマ */
+  if(iqChip(c,'iso:'+o+':'+(door?(hz?'h':'v'):m)+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv)){if(g==='h'&&!door&&!low)iqWinDraw(c,i,hz,TS*.3,lv);return}/* ドアは向き（h よこ・v たて）と開いたコマ。壁の絵のときも、かけた物は上にかさねる */
   const col=iqCols(IQC[o]||'#c89a64'),dm=door?(hz?3:12):m;/* ドアは、つながりのむきにまっすぐ */
   if(g==='g'){iqArms(c,x,y,m,TS*.74,b,b+22,col);return}/* 生垣：こんもりした葉のかたまり（仮） */
   if(g==='f'){const pc=iqCols(IQC[o]||'#c69a62',.88),X=x*TS,Y=y*TS,ph=18,pt=TS*.09;/* 柵：柱と、2本の横木 */
