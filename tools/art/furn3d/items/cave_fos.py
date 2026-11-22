@@ -5,7 +5,7 @@ from blueprint import Part as P
 from common import *
 from natcommon import hullrock
 import math
-ID='cave_fos';GRAD=True;BOTTOM=60
+ID='cave_fos';TONE5=True;DITHER=0;BOTTOM=60
 VIEWS=[('cave:fos',0)]
 PAL=[(182,166,148),(160,144,128),(138,123,110),(116,102,92),(96,84,76)]   # 洞窟の岩の色（明るい→暗い）
 SHELL=(240,230,208);LINE=(196,176,150)
