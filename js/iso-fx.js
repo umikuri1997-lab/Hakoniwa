@@ -12,7 +12,7 @@ const IQRING=IQH/IQW*IQSX/IQSY;/* 地面の輪（たて:よこ）：ひし形の
 const IQFOGH=1.5,IQFOGN=8;/* 霧のあつみ（段の数）と、かさねる枚数 */
 /* マス j の段（0 より下は 0） */
 function isoLv(j){return j>=0&&j<W*H?Math.max(0,hiAt(j)):0}
-function isoLvAt(wx,wy){return isoLv(clamp(Math.floor(wy/TS),0,H-1)*W+clamp(Math.floor(wx/TS),0,W-1))}
+function isoLvAt(wx,wy){if(caveOn())return cvqLvAt(wx,wy);/* 洞窟（iso-cave.js） */return isoLv(clamp(Math.floor(wy/TS),0,H-1)*W+clamp(Math.floor(wx/TS),0,W-1))}
 /* 地面の描き方を、段 lv の高さに */
 function isoGroundLv(c,lv){groundTf(c,dpr*cam.z);if(lv)c.translate(-lv*IQD,-lv*IQD)}
 /* 地面の物を描くとき、せかいの点の y からひく高さ（クォータービューは0。段は isoGroundLv でつける） */
@@ -24,7 +24,7 @@ function cellFoot(j){return objFoot(j%W,(j/W)|0,1,1,j)}
 /* マス j の物として描く（いままでの見え方では、そのまま） */
 function isoCell(c,j,f){if(!isoOn())return f();isoStand(c,cellFoot(j),f)}
 /* せかいの地面の点 (gx,gy)（段の高さをひいていない点）を足もとにする */
-function gFoot(gx,gy){const j=clamp(Math.floor(gy/TS),0,H-1)*W+clamp(Math.floor(gx/TS),0,W-1),lv=isoLv(j);return{fx:gx,fy:gy-liftOf(j),px:isoX(gx,gy),py:isoY(gx,gy)-lv*IQL}}
+function gFoot(gx,gy){if(caveOn())return cvqPt(gx,gy);/* 洞窟（iso-cave.js） */const j=clamp(Math.floor(gy/TS),0,H-1)*W+clamp(Math.floor(gx/TS),0,W-1),lv=isoLv(j);return{fx:gx,fy:gy-liftOf(j),px:isoX(gx,gy),py:isoY(gx,gy)-lv*IQL}}
 /* 粒・エフェクトの足もと（うまれたときにきめて、うごいても、かえない） */
 function fxFoot(f){if(f.ax==null){f.ax=f.gx!=null?f.gx:f.x;f.ay=f.gy!=null?f.gy:f.y}return f.A||(f.A=gFoot(f.ax,f.ay))}
 function fxStandTf(c,k,f){const A=fxFoot(f);standTf(c,k,A.fx,A.fy,A.px,A.py)}

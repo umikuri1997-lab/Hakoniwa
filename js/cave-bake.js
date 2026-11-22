@@ -137,17 +137,17 @@ function cvBkDraw0(e,now){const D=EN[e.type],k=e.type,s=D.size,t=now/1000+e.id,h
   if(fl){ctx.globalAlpha=.6;R('#ffffff',-8,-30,16,30)}
   ctx.globalAlpha=1;if(e.hp<e.max&&!e.asleep){const w=18;P4('rgba(0,0,0,.5)',x-w/2,y-40*s-4,w,3);P4('#ff8a8a',x-w/2,y-40*s-4,Math.max(1,Math.round(w*e.hp/e.max)),3)}}
 /* あつい床のあと・こわい物（足もとの順に描く） */
-function cvBakeL(L,now){const C=CV;if(!C.sc)return;
-  for(const[j,u]of C.hotT){if(!C.seen[j])continue;L.push([-1,()=>{const p=.5+.5*Math.sin(now/300+j),ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS;ctx.globalAlpha=Math.min(1,(u-C.t)/3)*(.35+.3*p);P4('#ff5a20',ox+4,oy+8,24,16);P4('#ffb040',ox+10,oy+13,12,5);ctx.globalAlpha=1}])}
+function cvBakeL(add,now){/* add(マスx,マスy,地面にはりつくか,描く) */const C=CV;if(!C.sc)return;
+  for(const[j,u]of C.hotT){if(!C.seen[j])continue;add(cvX(j),cvY(j),1,()=>{const p=.5+.5*Math.sin(now/300+j),ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS;ctx.globalAlpha=Math.min(1,(u-C.t)/3)*(.35+.3*p);P4('#ff5a20',ox+4,oy+8,24,16);P4('#ffb040',ox+10,oy+13,12,5);ctx.globalAlpha=1})}
   for(const s of C.sc){if(!s.on)continue;
-    if(s.k==='esa'){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.9,()=>{if(s.rev&&cvBkChip(ctx,'bkesa#'+(s.bite?'a1':'a0'),ox+16,oy+30,1))return;if(s.rev){/* 正体：口をあけた黒いかげ */const b=s.bite?1:.8;P4('#0a0608',ox+2,oy+2,28*b,26*b);P4('#3a0a10',ox+6,oy+10,20*b,10*b);for(let i=0;i<5;i++)P4('#e8e0d0',ox+7+i*4,oy+10,2,3);P4('#ff6b8a',ox+9,oy+5,3,2);P4('#ff6b8a',ox+20,oy+5,3,2);return}
-      if(!cvChip(ctx,s.cr+'#'+(((now/250)|0)%2?'w0':'0'),ox,oy,now)){P4('#d8c8b0',ox+10,oy+16,12,10);P4('#d8c8b0',ox+12,oy+8,3,8)}/* かげがない（足もとに、かげを描かない） */}])}
-    if(s.k==='koe'&&s.vis>now){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.9,()=>{ctx.globalAlpha=.35*(s.vis-now)/1500;P4('#d8d0ff',ox+10,oy-14,12,40);P4('#d8d0ff',ox+8,oy-18,16,8);ctx.globalAlpha=1}])}
-    if(s.k==='te'&&C.seen[cvJ(s.x,s.y)]){const ox=s.x*TS,oy=(s.y+CVOY)*TS;L.push([s.y+CVOY+.95,()=>cvTeDraw(s,ox,oy,now)])}}}
+    if(s.k==='esa'){const ox=s.x*TS,oy=(s.y+CVOY)*TS;add(s.x,s.y,0,()=>{if(s.rev&&cvBkChip(ctx,'bkesa#'+(s.bite?'a1':'a0'),ox+16,oy+30,1))return;if(s.rev){/* 正体：口をあけた黒いかげ */const b=s.bite?1:.8;P4('#0a0608',ox+2,oy+2,28*b,26*b);P4('#3a0a10',ox+6,oy+10,20*b,10*b);for(let i=0;i<5;i++)P4('#e8e0d0',ox+7+i*4,oy+10,2,3);P4('#ff6b8a',ox+9,oy+5,3,2);P4('#ff6b8a',ox+20,oy+5,3,2);return}
+      if(!cvChip(ctx,s.cr+'#'+(((now/250)|0)%2?'w0':'0'),ox,oy,now)){P4('#d8c8b0',ox+10,oy+16,12,10);P4('#d8c8b0',ox+12,oy+8,3,8)}/* かげがない（足もとに、かげを描かない） */})}
+    if(s.k==='koe'&&s.vis>now){const ox=s.x*TS,oy=(s.y+CVOY)*TS;add(s.x,s.y,0,()=>{ctx.globalAlpha=.35*(s.vis-now)/1500;P4('#d8d0ff',ox+10,oy-14,12,40);P4('#d8d0ff',ox+8,oy-18,16,8);ctx.globalAlpha=1})}
+    if(s.k==='te'&&C.seen[cvJ(s.x,s.y)]){const ox=s.x*TS,oy=(s.y+CVOY)*TS;add(s.x,s.y,0,()=>cvTeDraw(s,ox,oy,now))}}}
 /* ほりつづける手：大穴からのびる、黒い大きな手（仮の絵） */
 function cvTeDraw(s,ox,oy,now){if(cvBkChip(ctx,'bkte#'+(s.st===1?'a0':s.st===2?'a1':'w'+(((now/400)|0)%4)),ox+16,oy+30,1,s.stun>0?.7:1))return;const up=s.st===1?Math.min(1,s.t/CVSC.te.wind):s.st===2?1-Math.min(1,s.t/1):0,t=now/1000,h=Math.round(30+up*40),wob=Math.round(Math.sin(t*1.3)*2),C=s.stun>0?'#3a3040':'#120e14';
   P4(C,ox+6+wob,oy+20-h,20,h+12);P4('#2a222c',ox+8+wob,oy+20-h,4,h+10);for(let i=0;i<4;i++){P4(C,ox+4+i*6+wob,oy+10-h-8-up*6,5,14+up*6);P4('#2a222c',ox+4+i*6+wob,oy+10-h-8-up*6,1,10)}
   P4(C,ox-2+wob,oy+14-h,6,10);if(Math.sin(t*5)>.5)P4('#85776a',ox+(Math.random()*30),oy+24,2,2)}
 /* 暗さの上：見はりの目 */
 function cvBakeGlow(now){const C=CV;if(!C.sc)return;for(const s of C.sc){if(!s.on||s.k!=='me')continue;const ox=cvX(s.j)*TS+10,oy=(cvY(s.j)+CVOY)*TS+10,bl=((now/1000+s.j)%4)<.15,g=Math.min(1,s.t/CVSC.me.gaze);if(bl)continue;
-  ctx.globalAlpha=.7+.3*g;P4('#fff6d0',ox,oy,3,2);P4('#fff6d0',ox+9,oy,3,2);P4(g>.6?'#ff6b6b':'#ffd860',ox+1,oy,1,2);P4(g>.6?'#ff6b6b':'#ffd860',ox+10,oy,1,2);ctx.globalAlpha=1}}
+  cvqAt(ctx,cvqObj(cvX(s.j),cvY(s.j),1,1),()=>{ctx.globalAlpha=.7+.3*g;P4('#fff6d0',ox,oy,3,2);P4('#fff6d0',ox+9,oy,3,2);P4(g>.6?'#ff6b6b':'#ffd860',ox+1,oy,1,2);P4(g>.6?'#ff6b6b':'#ffd860',ox+10,oy,1,2);ctx.globalAlpha=1})}}/* クォータービュー：そのマスに立てて */
