@@ -88,7 +88,7 @@ function drawFords(x0,y0,x1,y1){/* 浅瀬（仮の絵）：水の底の砂がす
     ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=.8;for(let k=0;k<2;k++){const ph=((now/2600+hash(j*29+k))%1),sx=px+6+hash(j*31+k)*20,sy=py+8+k*12+ph*4;ctx.globalAlpha=Math.sin(ph*Math.PI);ctx.beginPath();ctx.moveTo(sx-4,sy);ctx.quadraticCurveTo(sx,sy-1.6,sx+4,sy);ctx.stroke()}ctx.globalAlpha=1}}/* 石のあいだを流れるさざなみ（動くので毎コマ） */
 const WCK={s:null,c:new Map(),pt:null};/* 水面の区画（16×16マス）：水ぎわの陸の地面と水のふちの絵（上にかさねる）と、水の模様をぬる所の形。区画の地面が変わったときだけ作りなおす */
 function waterDirty(R){if(!R){for(const q of WCK.c.values())if(q&&q.o)q.o.width=q.o.height=0;WCK.c.clear();return}for(const r of R)for(let cy=Math.max(0,(r[1]-2)>>4);cy<=Math.min((H-1)>>4,(r[3]+2)>>4);cy++)for(let cx=Math.max(0,(r[0]-2)>>4);cx<=Math.min((W-1)>>4,(r[2]+2)>>4);cx++){const k=cy*64+cx,q=WCK.c.get(k);if(q&&q.o)q.o.width=q.o.height=0;WCK.c.delete(k)}}/* 下絵がかわった所の区画を作りなおす（R がなければ、ぜんぶ） */
-const WRND={s:12,t:.72,m:8};/* 池・川のふちを丸める：水のマスの形をぼかして（s：ぼかしのはば、世界のドット）、こさ t でくぎる。まっすぐなふちは、前の水のふちの絵と同じく、水のマスの7ドット内がわ。出た角は大きく、へこんだ角は少しだけ丸くなる。m：区画のまわりをしらべるはば（ふちの帯の5ドットより広く） */
+const WRND={s:20,t:.633,m:8};/* 池・川のふちを丸める：水のマスの形をぼかして（s：ぼかしのはば、世界のドット）、こさ t でくぎる。まっすぐなふちは、前の水のふちの絵と同じく、水のマスの7ドット内がわ。出た角は大きく、へこんだ角は少しだけ丸くなる。m：区画のまわりをしらべるはば（ふちの帯の5ドットより広く） */
 const WBANK=8,WBANKC=[[196,160,118],[178,144,106],[164,132,98],[150,120,90],[138,110,84],[126,101,78],[112,91,72],[96,80,66]],WBSH=4,WBSHA=[130,90,55,25],WBANKS=[132,108,84];/* 水面を岸より一段ひくく見せる：奥の岸の下の土の断面（上から8ドット、上ほど明るい）・その下の水のかげ（4ドット）・左右の岸の細い断面（仮の色） */
 const WBSUB=12,WBSUBA=170,WBSUBC=[30,78,110];/* 奥の岸の下の水：水の中の岩の断面が透けて見えるはば・こさ・まぜる水の色 */
 const WBEV=[150,115,75,35],WBEVL=[255,248,226],WBEVD=[58,64,44];/* 岸のふちの面とり：水から1〜4ドットのこさ・光の色・かげの色 */
@@ -123,7 +123,7 @@ let SKYTEX=null;function skyTex(){if(SKYTEX)return SKYTEX;const N=128,cv=documen
   for(const L of puffs)for(const[x,y,rx,ry]of L)oval(x-1,y-2,Math.max(2,rx-3),Math.max(1,ry-2),'#fbfeff');/* 上の明るい所 */
   SKYTEX=cv;return cv}
 const SKYFACE=[[108,92,66],[150,130,98],[126,108,80],[96,82,62]],SKYFH=13,SKYRIM=[104,122,84];/* 浮き島の手前のがけ（上から：土のかげ・岩・岩のかげ・うら）と、島のふちの線（仮の色） */
-const WCFR=5,WCFRN=25;/* 池のふちの、あれ地と草地のさかい：陸のあれ地のマスに草のふちがかかる はば（ドット）と、そのうねり */
+const WCFR=0,WCFRN=0;/* 池のふちの、あれ地と草地のさかい：陸のあれ地のマスに草のふちがかかる はば（ドット）と、そのうねり */
 function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水のマスの角：下絵には前の四角い水のふち（こい緑の線）がのこっているので、その所だけ、まわりの陸と同じ地面（あれ地か草地。マップの位置どおり）でぬりなおす */
   const M=WRND.m,gw=R.w,F=R.f,w=(X1-X0)*TS,h=(Y1-Y0)*TS,C=window.CHIPS,gt=chipImgs(C['tex:grass'],'ground')[0];let L=null,lg=null,id=null,L2=null,lg2=null,idg=null;
   const mk=()=>{L=TMPC();L.width=w;L.height=h;lg=L.getContext('2d');id=lg.createImageData(w,h)};
@@ -404,7 +404,7 @@ function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を�
   if(BLOCKV){/* ブロックの見え方：上の面も正面も、ブロックの絵だけ。となりあう同じブロックは、ひとつのかたまりにつなげ（あいだに線を引かない）、かたまりの外がわのふちだけ、ななめに面とりした光とかげ（ベベル）と1ドットの線 */
     const LN=(x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.fillRect(a,b,Math.max(SX(x+w)-a,1/kz),Math.max(SY(y2+h)-b,1/kz))},D1=.5,BV=1.5,HI='rgba(255,246,222,.3)',HI2='rgba(255,246,222,.15)',SH='rgba(40,28,18,.26)',SH2='rgba(40,28,18,.13)',AO=[.24,.14,.06],AOW=2,ao=(x,y2,w,dn)=>{for(let i=0;i<AO.length;i++){g.fillStyle='rgba(30,20,12,'+AO[i]+')';LN(x,dn?y2-(i+1)*AOW:y2+i*AOW,w,AOW)}};
     const CI=q=>{const c=(window.CHIPS||{})[q],m=c&&chipImgs(c,'cliff')[0];return m&&m.ok?m:null},RK=(q,x,y2,w,h,sh,sv)=>{const m=CI(q);if(!m)return false;DI(m,0,0,sh||m.width,sv||m.height,x,y2,w,h);return true};/* 前のがけの岩の絵（左右のはしの丸い岩・サイドと裏の細い岩の帯） */
-    const RO=8,PXD=new WeakMap(),pxOf=m=>{let d=PXD.get(m);if(!d){const c=document.createElement('canvas');c.width=m.width;c.height=m.height;const q=c.getContext('2d');q.drawImage(m,0,0);d={w:m.width,h:m.height,a:q.getImageData(0,0,m.width,m.height).data};c.width=c.height=0;PXD.set(m,d)}return d},
+    const RO=16,PXD=new WeakMap(),pxOf=m=>{let d=PXD.get(m);if(!d){const c=document.createElement('canvas');c.width=m.width;c.height=m.height;const q=c.getContext('2d');q.drawImage(m,0,0);d={w:m.width,h:m.height,a:q.getImageData(0,0,m.width,m.height).data};c.width=c.height=0;PXD.set(m,d)}return d},
       rcBand=(ox,oy,dx,dy,m,vert)=>{/* 丸い角の岩の帯：外の角 (ox,oy) から内へ (dx,dy)。半径 RO の外がわ3ドットを、帯の絵の色で、ドットの段々にぬる（vert：帯の絵がたて＝はばは列） */if(!m)return;const P=pxOf(m),cx=ox+dx*RO,cy=oy+dy*RO,L=vert?P.h:P.w;
         for(let u=0;u<RO;u+=.5)for(let v=0;v<RO;v+=.5){const px=ox+dx*(u+.25),py=oy+dy*(v+.25),d=Math.hypot(px-cx,py-cy);if(d>RO||d<RO-3)continue;const c=Math.min(5,Math.floor((RO-d)/3*6)),t=Math.atan2(Math.abs(py-cy),Math.abs(px-cx))/(Math.PI/2),r=Math.min(L-1,Math.floor(t*(L-1)*.25)),k=vert?(r*P.w+c)*4:(c*P.w+r)*4;if(P.a[k+3]<8)continue;g.fillStyle='rgba('+P.a[k]+','+P.a[k+1]+','+P.a[k+2]+','+(P.a[k+3]/255)+')';LN(dx>0?px-.25:px-.25,py-.25,.5,.5)}},
       rcClip=(x,y2,w,hh,cs)=>{/* 角を丸めた四角で切りとる（cs：[外の角x,y,内へdx,dy,半径]…）。丸は0.5ドットの段々 */g.save();g.beginPath();const pts=[[x,y2],[x+w,y2],[x+w,y2+hh],[x,y2+hh]];g.moveTo(SX(x),SY(y2));g.lineTo(SX(x+w),SY(y2));g.lineTo(SX(x+w),SY(y2+hh));g.lineTo(SX(x),SY(y2+hh));g.closePath();

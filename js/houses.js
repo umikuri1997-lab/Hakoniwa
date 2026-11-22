@@ -181,22 +181,30 @@ const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),..
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
+const GRR=12,GRT=.5,GRRIM=.07,GRSH=.06,GRWOB=1.6;/* 草地とあれ地のさかい（あつ森より）：草地のマスの形を、はば GRR ドットの箱でぼかして、こさ GRT でくぎる（角は丸く）。草地のふち GRRIM はこい緑、あれ地がわ GRSH はうすいかげ。GRWOB はさかいのうねり */
+function grassRound(sc,gt,X0,Y0,X1,Y1){/* 草地を、まわりのマスと高さ・水を見て、丸い形でしく。まわりがぜんぶ同じ（草地か、あれ地）のマスは、マスまるごと */
+  const G=k=>REV.has(k)&&S.ground[k]!==1,ok=(x,y)=>x>=0&&y>=0&&x<W&&y<H,w1=(u,a)=>a<0?Math.max(0,GRR-u)/(2*GRR):a>0?Math.max(0,u+GRR-TS)/(2*GRR):(Math.min(u+GRR,TS)-Math.max(u-GRR,0))/(2*GRR);
+  let T=null,tg=null;
+  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]===1)continue;const h0=hiAt(i),g0=G(i),px=x*TS,py=y*TS;let mix=false;const nb=[];
+    for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!ok(x+a,y+b))continue;const k=(y+b)*W+x+a;if(S.ground[k]===1||hiAt(k)!==h0)continue;/* 水・高さのちがうマスは見ない（がけのさかいは、まっすぐのまま） */const gg=G(k);nb.push([a,b,gg?1:0]);if(gg!==g0)mix=true}
+    if(!mix){if(g0)sc.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,px,py,TS,TS);continue}
+    if(!T){T=document.createElement('canvas');T.width=T.height=TS;tg=T.getContext('2d')}tg.clearRect(0,0,TS,TS);tg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,0,0,TS,TS);const id=tg.getImageData(0,0,TS,TS),d=id.data;
+    for(let v=0;v<TS;v++)for(let u=0;u<TS;u++){let n=0,m=0;for(const[a,b,gg]of nb){const wt=w1(u+.5,a)*w1(v+.5,b);m+=wt;n+=wt*gg}const f=(m?n/m:g0)+wNoise(px+u,py+v)*GRWOB,q=(v*TS+u)*4;
+      if(f>=GRT+GRRIM){continue}if(f>=GRT){d[q]=d[q]*.78|0;d[q+1]=d[q+1]*.84|0;d[q+2]=d[q+2]*.74|0;continue}/* 草地のふち：こい緑 */
+      if(f>=GRT-GRSH){d[q]=40;d[q+1]=46;d[q+2]=24;d[q+3]=38;continue}d[q+3]=0}/* あれ地がわ：草のかげ */
+    tg.putImageData(id,0,0);sc.drawImage(T,px,py)}
+  if(T)T.width=T.height=0}
 function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
   if(WD===0){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：224×224のテクスチャを、マップの位置どおりにしきつめる */
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
-  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%GRTEX,y%GRTEX,TS,TS,x,y,TS,TS)}
+  const gt=chipImgs(C['tex:grass'],'ground')[0];grassRound(sc,gt,X0,Y0,X1,Y1);
   {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
     const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%GRTEX,ry%GRTEX,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%DRTEX,ry%DRTEX,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
       const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
       if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
       if(!L&&!U&&x>0&&y>0&&land(i-W-1))put(i-W-1,px,py,h2,h2);if(!R&&!U&&x<W-1&&y>0&&land(i-W+1))put(i-W+1,px+h2,py,h2,h2);if(!L&&!D&&x>0&&y<H-1&&land(i+W-1))put(i+W-1,px,py+h2,h2,h2);if(!R&&!D&&x<W-1&&y<H-1&&land(i+W+1))put(i+W+1,px+h2,py+h2,h2,h2)}}
-  {/* 草とあれ地のさかい：あぜ道のふちと同じ。あれ地のマスの、草地がわのふちに、草のふちの絵（fringeg）をかさねる（となりの草地からはみ出す草）。ななめだけ草地の角には、角の絵 */
-    const G=k=>REV.has(k)&&S.ground[k]!==1/* 水のマスからは草をはみ出させない */,open=k=>!REV.has(k)&&S.ground[k]!==1;
-    for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(!open(i))continue;const hi0=hiAt(i),g=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&G(i+dy*W+dx)&&hiAt(i+dy*W+dx)===hi0,/* 高さのちがう草地からは、はみ出さない */u=g(0,-1),d=g(0,1),l=g(-1,0),r=g(1,0),px=x*TS,py=y*TS;
-      if(!(u||d||l||r||g(-1,-1)||g(1,-1)||g(1,1)||g(-1,1)))continue;const sh=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&hiAt(i+dy*W+dx)===hi0,m=4;sc.save();sc.beginPath();sc.rect(px-(sh(-1,0)?m:0),py-(sh(0,-1)?m:0),TS+(sh(-1,0)?m:0)+(sh(1,0)?m:0),TS+(sh(0,-1)?m:0)+(sh(0,1)?m:0));sc.clip();/* 草のふちの絵はマスの外へ少しはみ出すので、高さのちがうとなりのマスには出さない */
-      if(u)dc('fringeg:U',px,py,i);if(d)dc('fringeg:D',px,py,i);if(l)dc('fringeg:L',px,py,i);if(r)dc('fringeg:R',px,py,i);
-      if(!u&&!l&&g(-1,-1))dc('fringeg:c0',px,py,i);if(!u&&!r&&g(1,-1))dc('fringeg:c1',px,py,i);if(!d&&!r&&g(1,1))dc('fringeg:c2',px,py,i);if(!d&&!l&&g(-1,1))dc('fringeg:c3',px,py,i);sc.restore()}}}/* 草とあれ地のさかい */
+}/* 草とあれ地のさかいは grassRound（丸い形と草のふち） */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
 function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物を、マス(X0,Y0)〜(X1,Y1)のはんいだけ描く */const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};
