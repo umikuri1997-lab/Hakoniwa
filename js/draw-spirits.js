@@ -93,7 +93,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='stepBack'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.6));aN=aF=.2-1.3*v;lean2=-.09*v;frontArm=bothF=true}/* 一歩さがる */
   else if(A==='grabSleeve'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.45));aN=.3-1.3*v;aF=.2;lean2=.12*v;frontArm=true}/* そでをつかむ */
   else if(A==='fistClench'){aN=aF=.22+Math.sin(t*34)*.035;lean2=.05;sq=.03;frontArm=bothF=true}/* こぶしをにぎる */
-  else if(A==='bow'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneP||0)*1.15));aN=aF=.45;lean2=.34*v;frontArm=bothF=true}/* おじぎ */
+  else if(A==='ojigi'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneP||0)*1.15));aN=aF=.45;lean2=.34*v;frontArm=bothF=true}/* おじぎ（弓の bow とはべつ） */
   else if(A==='fan'){aN=-1.95+Math.sin(t*15)*.38;aF=.2;lean2=-.02;frontArm=true}/* 手であおぐ */
   else if(A==='armsCross'){aN=aF=-1.25;lean2=-.03;frontArm=bothF=true}/* うで組み */
   else if(A==='backToBack'){aN=aF=.3;lean2=-.07;frontArm=true}/* せなかあわせ */
@@ -643,7 +643,7 @@ const NSHEET={f:[[0,0,84,146,1,0,0],[86,0,84,150,1,0,0],[172,0,124,151,1,0,0],[2
 const NSHEET2={f:[[0,0,98,157,1,0,1],[100,0,98,163,1,1,1],[200,0,198,151,1,1,0],[400,0,126,155,1,0,0],[0,165,128,155,1,1,0],[130,165,132,154,1,1,-1],[264,165,124,159,1,-2,-2],[390,165,128,155,1,1,0],[0,326,126,155,1,1,1],[128,326,94,164,1,0,0],[224,326,104,163,1,1,0],[330,326,100,163,1,-2,-1],[432,326,106,164,1,1,0],[540,326,100,163,1,-1,-1],[0,492,108,163,1,1,0],[110,492,178,151,1,-1,0],[290,492,180,150,1,-1,0],[0,657,184,150,1,1,0],[186,657,180,150,1,-2,0],[368,657,188,151,1,2,0],[0,810,212,151,1,13,1]],img:new Image(),ok:false};NSHEET2.img.onload=()=>{NSHEET2.ok=true;dirty=true};NSHEET2.img.src='assets/g/c5892fedf5.webp';/* 火のヌシの絵（ならびは草原のヌシと同じ） */
 const NWALK={w:122,h:151,n:8,ms:130,img:new Image(),ok:false};NWALK.img.onload=()=>{NWALK.ok=true;dirty=true};NWALK.img.src='assets/g/14d78a1913.webp';/* 草原のヌシ様の横歩き（左向き、8コマ。tools/art/nushi/nushi_walk.py） */
 function drawNushi(now){
-  const n=S.nushi;if(!n)return;const FIRE=WD!==KUSA,SH=FIRE?NSHEET2:NSHEET;if(FIRE&&!SH.ok)return drawNushiOld(now);/* 火のヌシ */
+  const n=S.nushi;if(!n)return;const FIRE=WD===KAZAN,SH=FIRE?NSHEET2:NSHEET;if(FIRE&&!SH.ok)return drawNushiOld(now);/* 火のヌシ */
   const T=NSPR.top;if(!FIRE&&!T.ok)return;
   const px=n.x*TS,py=n.y*TS,f=n.face||1,mv=n.mv||0,K=.5,ph=now/150,st=Math.sin(ph)*mv*.3,bob=mv?Math.abs(Math.sin(ph))*-1.6:Math.sin(now/600)*.8;ctx.save();ctx.globalAlpha=n.app==null?1:n.app;const embrace=sacredEffect('embrace');if(embrace?.lord===n){const p=sacredEase((now-embrace.at)/900);ctx.translate(px,py);ctx.rotate((n.face<0?-.035:.035)*p);ctx.translate(-px,-py+3*p);}
   const g=ctx.createRadialGradient(px,py-60,8,px,py-60,100);g.addColorStop(0,FIRE?'rgba(255,200,140,.32)':'rgba(190,255,200,.32)');g.addColorStop(1,FIRE?'rgba(255,200,140,0)':'rgba(190,255,200,0)');ctx.fillStyle=g;ctx.fillRect(px-100,py-160,200,200);
