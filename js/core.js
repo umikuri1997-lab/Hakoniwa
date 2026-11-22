@@ -19,18 +19,6 @@ const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
 const FREE=6,YAMI=5;/* YAMI：闇のステージ（忘れられた神々の庭） *//* フリーモードのステージ番号 */
 let MZLANE=null;/* 舟の道のマス（mizube.js。道さがしで見るので、ここに置く） */
 const KUSA=0,KAZAN=1,TSUCHI=2;/* ステージの番号：草原・火山・土（番号をじかに書かない） */const MIZU=3;/* 水のステージ（霧のみずべの村）の番号。ならびは 草原0・火山1・土2・水3・風4 */
-/* ステージごとの値。ステージでかわる値は、ここに書く（WD===KAZAN?…:WD===WIND?… とつながない）。
-   weed 雑草の絵の番号・sx 自然の木の絵の名前のうしろ・wall 設計図の家の壁・fence 設計図の柵
-   fence2 全滅したときにもらう塀（おぼえていなければ fence）・mats その土地の素材（落とし物・流れ星・ふくろ）・writer 日記を書くせいれい */
-const STAGE=[];
-STAGE[KUSA]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 草原 */
-STAGE[KAZAN]={weed:1,sx:'~v',wall:'bamboowall',fence:'misugaki',fence2:'wall',mats:['wood','stone','bamboo','kuru','chiri'],writer:()=>HOMURA};/* 火山 */
-STAGE[TSUCHI]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 土（まだない。草原と同じ） */
-STAGE[MIZU]={weed:3,sx:'~m',wall:'timberwall',fence:'ashifence',fence2:'rankan',mats:['wood','stone','ashi','gama','maruishi'],writer:()=>POKO};/* 水 */
-STAGE[WIND]={weed:4,sx:'~k',wall:'canvaswall',fence:'ropefence',fence2:'parkfence',mats:['wood','stone','nabiki','houki','kumowata'],writer:()=>KAZANE};/* 風 */
-STAGE[YAMI]={weed:5,sx:'~y',wall:'mosswall',fence:'ibara',fence2:'kuzure',mats:['wood','stone','yotsuyu','kagekusa','kogi'],writer:()=>TOMORI};/* 闇 */
-STAGE[FREE]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>FA()};/* フリーモード（草原と同じ） */
-const stg=()=>STAGE[WD]||STAGE[KUSA];
 const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[MIZU]='hakoniwa-w4-v1';SAVE_KEYS[4]='hakoniwa-w5-v1';SAVE_KEYS[FREE]='hakoniwa-free-v2';const WIND=4/* 風のやんだ空の村（WORLD 5）のステージ番号 */,STAGES=[0,1,MIZU,WIND];/* いま遊べる、お話のステージ（土は、まだない。水は試作。闇は YAMI でべつに見る） */SAVE_KEYS[YAMI]='hakoniwa-w6-v1';/* ステージごとに別のセーブ */
 let WD=0;/* いまのステージ */
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return KV.getItem('hk-test')==='1'}catch(_){return false}})();
@@ -55,3 +43,15 @@ const ELEM_KEYS=Object.keys(ELEM).filter(k=>k!=='light');
 const VEINS={vcopper:'copper',viron:'iron',vobsid:'obsidian',vsilver:'silver',vgold:'gold'},VEIN_IDS=Object.keys(VEINS);/* 鉱脈：ほると鉱石 */
 const GNONE={atk:0,rch:0,hit:1,iv:1,hun:0,mv:0,flee:1,rec:1,fun:1,work:0,cap:0,xp:1,ns:1,light:0,fear:0,rain:0,refl:0,tburn:0,fburn:0,nob:0,glow:0,burn:0,kb:0,slow:0,stun:0,steal:0,aoe:0,side:0,job:{},crop:0,stone:0,dish:0,wcan:0,prng:0,grow:1,pw:0,ore:0};
 function yamiSkyHour(){return 0}function yamiTick(){}function yamiTap(){return false}function yamiDrawAdd(){}function yamiLights(){}function yamiLightAt(){return false}function yamiBirth(){}function yamiDark(){return .66}/* 闇のステージ（yami.js） */function gearStat(){return GNONE}function gJob(){return 1}function gearStrike(){}function gearHurt(){}function gearEnemyTick(){return false}function gearGlowNear(){return false}function gearMorning(){}function gearIdea(){}function mineOre(){return false}function placeVeins(){}function oreWakeTick(){}function oreWakeReset(){}function veinMorning(){}function vreqList(){return []}function oreMigrate(){}function smeltJob(){return false}function smeltWant(){return false}function smTick(){}function smPop(){}function smLit(){return false}function gearLightAt(){return false}function gearLights(){}function gearDropAll(){}function gearOffer(){return false}function gearFind(){}function towerVolley(){return 0}function ammoTotal(){return (S.inv.arrow||0)+(S.inv.arrow2||0)}function gearGive(){}function gearCount(){return 0}
+/* ステージごとの値。ステージでかわる値は、ここに書く（WD===KAZAN?…:WD===WIND?… とつながない）。
+   weed 雑草の絵の番号・sx 自然の木の絵の名前のうしろ・wall 設計図の家の壁・fence 設計図の柵
+   fence2 全滅したときにもらう塀（おぼえていなければ fence）・mats その土地の素材（落とし物・流れ星・ふくろ）・writer 日記を書くせいれい */
+const STAGE=[];
+STAGE[KUSA]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 草原 */
+STAGE[KAZAN]={weed:1,sx:'~v',wall:'bamboowall',fence:'misugaki',fence2:'wall',mats:['wood','stone','bamboo','kuru','chiri'],writer:()=>HOMURA};/* 火山 */
+STAGE[TSUCHI]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 土（まだない。草原と同じ） */
+STAGE[MIZU]={weed:3,sx:'~m',wall:'timberwall',fence:'ashifence',fence2:'rankan',mats:['wood','stone','ashi','gama','maruishi'],writer:()=>POKO};/* 水 */
+STAGE[WIND]={weed:4,sx:'~k',wall:'canvaswall',fence:'ropefence',fence2:'parkfence',mats:['wood','stone','nabiki','houki','kumowata'],writer:()=>KAZANE};/* 風 */
+STAGE[YAMI]={weed:5,sx:'~y',wall:'mosswall',fence:'ibara',fence2:'kuzure',mats:['wood','stone','yotsuyu','kagekusa','kogi'],writer:()=>TOMORI};/* 闇 */
+STAGE[FREE]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>FA()};/* フリーモード（草原と同じ） */
+const stg=()=>STAGE[WD]||STAGE[KUSA];
