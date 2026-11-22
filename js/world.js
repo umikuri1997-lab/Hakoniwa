@@ -401,5 +401,6 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   fix();
   for(let pass=0;pass<3;pass++)for(let lv=HMAX;lv>=1;lv--){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]>=lv)+(g[j+1]>=lv)+(g[j-W]>=lv)+(g[j+W]>=lv);if(g[j]>=lv&&n<2)h[j]=lv-1;else if(g[j]===lv-1&&n>=3&&ok(j))h[j]=lv}}/* ほそい所はけす、くぼみはうめる */
   fix();
-  s.hi=h}
+  s.hi=h;treeHighFix(s)}
+function treeHighFix(s){/* 木の左右・手前が木より高い所には、木を置かない（木の絵が段差にかくれる。ほる・つむの決まり treeNextHigh と同じ）。新しいゲームの地形を作ったあと（霧・お屋敷で高さがかわったあとも）によぶ */const h=s.hi;if(!h)return;for(let j=W;j<W*H-W;j++){if(!TREES.has(s.obj[j]))continue;const x=j%W,hh=h[j]|0;const ns=[x>0?j-1:-1,x<W-1?j+1:-1,j+W].filter(n=>n>=0&&(h[n]|0)>hh);if(!ns.length)continue;if(s.obj[j]==='deadtree'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}else for(const n of ns)h[n]=hh}}/* 枯れ木はけす。生きた木（拠点の森の木など）は、となりを木の高さまで下げる */
 function genLand(s,w){if(!valleyOn(s,w)&&w!==WIND)genRiver(s,w);/* 花の谷・風（島のあいだは雲の海）に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
