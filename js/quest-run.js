@@ -5,7 +5,7 @@ function checkQuest(){
   if(sacredQuietActive())return;
   if(S.flags.qsplitPend||S.flags.qsplitStory)questSplitResolve();
   storySummonNow();
-  if(WD===0&&!S.cleared&&(S.setSh||0)>=3&&!NUSHI_RUN&&sheet==null&&$('#dialog').hidden&&!DLGQ.length)scheduleGrassReunion();
+  if(WD===KUSA&&!S.cleared&&(S.setSh||0)>=3&&!NUSHI_RUN&&sheet==null&&$('#dialog').hidden&&!DLGQ.length)scheduleGrassReunion();
   if(S.free)freeTick();/* フリーモード：クリアで開く物など（free.js） */
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
@@ -94,7 +94,7 @@ function questGives(q,g){g=g||q.gives||{};
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;
     return after}
 /* 草原のかけら：村の想い・土地の復興・最後の防衛。それぞれ、もとから土地に残っていた力が応える */
-function giveShard(src){if(S.flags['sh_'+src])return;S.flags['sh_'+src]=true;S.shards=Math.min(3,(S.shards||0)+1);sfx('level');const nm=SHN(),c=WD===1?'':'（'+S.shards+'/3）';toast('「'+nm+'」を手に入れた！'+c,'good');logEv(nm+'を手に入れた');memo('power',nm+'を手に入れた'+c)}
+function giveShard(src){if(S.flags['sh_'+src])return;S.flags['sh_'+src]=true;S.shards=Math.min(3,(S.shards||0)+1);sfx('level');const nm=SHN(),c=WD===KAZAN?'':'（'+S.shards+'/3）';toast('「'+nm+'」を手に入れた！'+c,'good');logEv(nm+'を手に入れた');memo('power',nm+'を手に入れた'+c)}
 /* 吹き出しは、最初に話す人から出す */
 function spkOK(w){return w===GOD?godHere():!!w&&S.res.some(r=>r.name===w&&!r.hidden)}
 function firstSpk(lines,fb){const w=lines&&lines[0]&&lines[0][0];return spkOK(w)?w:fb}
@@ -109,7 +109,7 @@ function startTalk(){if(!$('#dialog').hidden)return;if(isNight())return toast('�
     let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory&&!(S.flags.qPassed&&S.flags.qPassed[sq.id]))S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ。古いセーブで、ならびをかえて前へもどした目標（qPassed）のお礼なら、いまの目標（畑）はとばさない */S.qStory=null;if(sq.field)sacredEndDirection();const after=questGives(sq);inspireQuest(sq,'clear');rewardPower(sq.reward??5);renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   {const e=grassEndingTalk();if(e)return startGrassEndingTalk(e)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;if(earthIntroQuest(q)&&!earthIntroSpeaker(q))return checkQuest();TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
-  if(q.field)sacredShot('care');let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.talk.done)q.talk.done();if(q.field)sacredEndDirection();if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
+  if(q.field)sacredShot('care');let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.talk.done)q.talk.done();if(q.field)sacredEndDirection();if(WD===KUSA&&q.id==='nushi')acceptFinalDefense();recount();
     for(const id of q.talk.learn||[])S.recipes[id]=true;
     const after=q.talk.gives?questGives(q,q.talk.gives):null;inspireQuest(q);/* クエストに使う物は、会話のあとでわたす */
     sfx('quest');renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
@@ -121,7 +121,7 @@ function mainTalkWaitText(q){/* メインの会話・お礼を待っていると
   if(!(S.qStory!=null||q.talk&&!S.qTalked))return '';if(isNight())return 'お話は、朝になってから';
   if(S.qStory==null&&S.tour){const g=S.res.find(r=>r.id===S.tour.g),w=S.res.find(r=>r.id===S.tour.w);if(g&&w)return g.name+'が、'+w.name+'に村をあんないしている'}/* あんないがおわってから、つぎのお話 */
   return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
-function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==0||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
+function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==KUSA||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
   const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「しらべる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
@@ -161,31 +161,31 @@ function gatherFree(k){const o=S.obj[k];return !o||!!(BL[o]&&BL[o].kind==='plant
 const GATHER_FAR=20,GATHER_WARPT=6000;/* 道のりが20マスより遠いか、6秒で着かないとき */
 function gatherWarp(r,TX,TY,spot,miss){const used=new Set(Object.entries(spot).filter(([id])=>id!=r.id).map(e=>e[1]));for(const q of S.res)if(q!==r)used.add((q.y|0)*W+(q.x|0));const G=bfs(TX|0,TY|0);let b=-1;for(const R of[5,8]){if(b>=0)break;let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||!gatherFree(k)||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>R)continue;const sc=d+(ky<TY+1?3:0);if(sc<bd){bd=sc;b=k}}}if(b<0)return;
   if(r.cing){cingBack(r)}spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);endAct(r);r.x=b%W+.5;r.y=((b/W)|0)+.5;spot[r.id]=b;miss[r.id]=0;spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('next');startAct(r,bfs(b%W,(b/W)|0),'nmeet',b,{run:true})}/* なかまのお迎えだけ：その場から消えて、集まる所の近くにあらわれる */
-function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason())return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
+function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===KUSA&&grassReunionBlockReason())return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
   checkQuest();renderQuest();const T=NUSHI_T[WD];
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
-  if(WD===0)sacredShot('care',S.res.filter(r=>Math.hypot(r.x-TX,r.y-TY)<6));else centerOn(TX*TS,(TY-1)*TS);
+  if(WD===KUSA)sacredShot('care',S.res.filter(r=>Math.hypot(r.x-TX,r.y-TY)<6));else centerOn(TX*TS,(TY-1)*TS);
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
   const gathered=()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
-    if(WD===0)sacredShot('group',S.res,1.5);towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD!==0)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
-    const pour=WD===0?S.res:[...S.res].sort((a,b)=>(a.name===HOMURA)-(b.name===HOMURA)),gap=WD===0?260:900;/* 火山：ひとりずつ手をあてて力をそそぎ、さいごにホムラが火だねをささげる */
-    if(WD!==0)volShot([[TX,TY-1]],S.res,2,1.4);
-    pour.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD!==0&&r.name===HOMURA){sacredScenePose(r,'storyOffer',2600,{side:true,face:r.face});volFx('hidane',2600,{x:TX,y:TY-.6,actor:r,fly:1800,to:true});}else sacredScenePose(r,'storyTouch',2200,{side:true,face:r.face,target:WD===0?tw:undefined});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*gap));
-    const t0=pour.length*gap+(WD===0?500:1600);
-    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===0?'#e5f5ba':'#fff3a0');if(WD!==0){volFx('heatPillar',4800,{x:TX,y:TY});volShot([[TX,TY-4],[TX,TY]],[],2,1.2);}if(WD!==0)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD!==0)flashScreen()},t0);
+    if(WD===KUSA)sacredShot('group',S.res,1.5);towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD!==KUSA)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
+    const pour=WD===KUSA?S.res:[...S.res].sort((a,b)=>(a.name===HOMURA)-(b.name===HOMURA)),gap=WD===KUSA?260:900;/* 火山：ひとりずつ手をあてて力をそそぎ、さいごにホムラが火だねをささげる */
+    if(WD!==KUSA)volShot([[TX,TY-1]],S.res,2,1.4);
+    pour.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD!==KUSA&&r.name===HOMURA){sacredScenePose(r,'storyOffer',2600,{side:true,face:r.face});volFx('hidane',2600,{x:TX,y:TY-.6,actor:r,fly:1800,to:true});}else sacredScenePose(r,'storyTouch',2200,{side:true,face:r.face,target:WD===KUSA?tw:undefined});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*gap));
+    const t0=pour.length*gap+(WD===KUSA?500:1600);
+    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===KUSA?'#e5f5ba':'#fff3a0');if(WD!==KUSA){volFx('heatPillar',4800,{x:TX,y:TY});volShot([[TX,TY-4],[TX,TY]],[],2,1.2);}if(WD!==KUSA)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD!==KUSA)flashScreen()},t0);
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
-      L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx(WD===0?'sacred':'bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    villageTimeout(()=>{for(let k=0;k<(WD===0?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD!==0)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===0?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===0)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
+      L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx(WD===KUSA?'sacred':'bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
+    villageTimeout(()=>{for(let k=0;k<(WD===KUSA?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD!==KUSA)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===KUSA?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===KUSA)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
       // ヌシ様が台座の上にあらわれる
-      S.nushi={x:WD===0?TX+2.2:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};const owner=S,session=VILLAGE_SESSION,lord=S.nushi,appearAt=performance.now();const reveal=now=>{if(S!==owner||VILLAGE_SESSION!==session||S.nushi!==lord)return;lord.app=Math.min(1,(now-appearAt)/1500);if(lord.app<1)requestAnimationFrame(reveal)};requestAnimationFrame(reveal);if(WD===0)sacredShot('reunion',S.res,1.7);/* あらわれたときは、守り神のほう（正面） */
-      spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD!==0)flashScreen();
+      S.nushi={x:WD===KUSA?TX+2.2:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};const owner=S,session=VILLAGE_SESSION,lord=S.nushi,appearAt=performance.now();const reveal=now=>{if(S!==owner||VILLAGE_SESSION!==session||S.nushi!==lord)return;lord.app=Math.min(1,(now-appearAt)/1500);if(lord.app<1)requestAnimationFrame(reveal)};requestAnimationFrame(reveal);if(WD===KUSA)sacredShot('reunion',S.res,1.7);/* あらわれたときは、守り神のほう（正面） */
+      spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD!==KUSA)flashScreen();
       villageTimeout(()=>dialog(T.nushi,()=>{
-        if(WD!==0){startClap();for(const r of S.res)r.bubble='👏';}if(WD!==0)for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
+        if(WD!==KUSA){startClap();for(const r of S.res)r.bubble='👏';}if(WD!==KUSA)for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
-          S.cleared=true;if(WD===0){S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;endClap();sacredEndDirection();dirty=true;}delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
-          clearSnap();reunionCalm();save();if(WD!==0)villageTimeout(()=>dialog(['#think hush|……この土地も、もとにもどったのう'],()=>reunionCalm(),T.last,GOD),1200);/* 評価の画面は出さない。村にもどって、しずかにながめられる（ふりかえりは思い出帳から） */
+          S.cleared=true;if(WD===KUSA){S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;endClap();sacredEndDirection();dirty=true;}delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
+          clearSnap();reunionCalm();save();if(WD!==KUSA)villageTimeout(()=>dialog(['#think hush|……この土地も、もとにもどったのう'],()=>reunionCalm(),T.last,GOD),1200);/* 評価の画面は出さない。村にもどって、しずかにながめられる（ふりかえりは思い出帳から） */
         });
       },null,T.name||'ヌシ様'),3200);
     }},t0+5200);
@@ -193,7 +193,7 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlock
   if(resume)gathered();else dialog(openF(T.open),gathered);
 }
 /* 火山の装置：話す子が装置へ歩いていき、手をあてる → 温泉に湯気がのぼって音 → みんながよろこぶ（実時間。終わるまで、つぎのセリフへ送らない） */
-function heatScene(k){if(WD!==1||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SHIZUKU,r=S.res.find(q=>q.name===who&&!q.hidden),h=S.res.find(q=>q.name===HOMURA&&!q.hidden),dj=k==='b'?D1:D2,owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session;
+function heatScene(k){if(WD!==KAZAN||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SHIZUKU,r=S.res.find(q=>q.name===who&&!q.hidden),h=S.res.find(q=>q.name===HOMURA&&!q.hidden),dj=k==='b'?D1:D2,owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session;
   const d=volDir();if(!d)return;const done=volTask(d,20000),dx=dj%W+.5,dy=(dj/W|0)+.5,[sx,sy]=HSPC[k];volShot([[dx,dy]],[r],2.2);
   const steam=(key,then)=>{const[x,y]=HSPC[key];volShot([[x,y]],[],2.2,1);sfx('wave');volFx('springWarm',2600,{x,y});volFx('steam',600000,{x,y});villageTimeout(then,1500);};
   const joy=()=>{for(const q of S.res)if(!q.hidden&&(q.name===HOMURA||q.name===SHIZUKU)){SACRED_POSES.delete(q);JUMP.set(q,performance.now());JOYU.set(q,performance.now()+1800)}sfx('good');volShot([[dx,dy]],[r,h].filter(Boolean),2.2,1);done(1200);};
@@ -260,7 +260,7 @@ const NPLAY=[[/* 草原：遊びにきた子と、ヌシ様の会話（0：遊�
   [[0,'ヌシ様、いっしょに火の粉を見よう！'],['U','うむ。ぱちぱちと、よく笑う火だ。']],
   [[0,'ヌシ様が帰ってきて、村があったかくなったね。'],['U','わたしではない。……おまえたちが、あたためてくれたのだ。']],
   [[0,'ヌシ様、おまつりの屋台、いっしょにまわろう！'],['U','#think|わたしが行くと、屋台がこげてしまうかもしれん。……遠くから見ているよ。']]]];
-function nushiTalk(){if(WD===0&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return sacredQuietScene();const n=S.nushi,nm=WD===1?'火山のヌシ':NUSHI1,k=WD===1?1:0;
+function nushiTalk(){if(WD===KUSA&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return sacredQuietScene();const n=S.nushi,nm=WD===KAZAN?'火山のヌシ':NUSHI1,k=WD===KAZAN?1:0;
   const r=n.pl&&S.res.find(q=>q.id===n.pl.id);if(r&&r.act&&r.act.type==='npl'&&r.act.stage==='do'){const P=NPLAY[k],L=P[(S.npc=(S.npc||0)+1)%P.length];return dialog(L.map(([w,t])=>w==='U'?[nm,t]:[r.name,chatTone(t,r)]))}/* 遊びにきた子がいれば、その子とヌシ様の会話 */
   if(isNight())return dialog([[nm,pick(NTALKN)]]);
   const T=NTALK[k];dialog([[nm,T[(S.ntk=(S.ntk||0)+1)%T.length]]])}/* 守り神に、ひとことずつ話す（順番にまわる） */
@@ -304,7 +304,7 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   const put0=(k,id)=>{if(!prev.has(k))prev.set(k,S.obj[k]);S.obj[k]=id;if(BL[id]&&BL[id].hp!=null)S.hp[k]=BL[id].hp};
   const FL=['clover','clover','bellf','salvia','lily'];
   for(let dy=-3;dy<=3;dy++)for(let dx=-4;dx<=4;dx++){if(clear(dx,dy))continue;const r=Math.abs(dx*31+dy*17)%10;if(r<5)put(dx,dy,FL[r%5])}/* 花 */
-  if(WD===0)for(const k of starterGapCells(S)){if(S.obj[k]==='')put0(k,'hwall')}/* 思い出の中では、いまの家のこわれた壁は、なおっている（家の下がわのかべのあな） */
+  if(WD===KUSA)for(const k of starterGapCells(S)){if(S.obj[k]==='')put0(k,'hwall')}/* 思い出の中では、いまの家のこわれた壁は、なおっている（家の下がわのかべのあな） */
   MEMRUN=true;const ss=Object.assign({},S.spotSeen||{});recount();dirty=true;const z0=cam.z;cam.z=1.5;centerOn(cx*TS,(cy-.8)*TS);
   const real=S.res.filter(r=>!r.hidden),keep=real.map(r=>[r,r.hidden]);real.forEach(r=>r.hidden=true);/* いまの子は、思い出のあいだ見せない */
   const mk=(name,dx,dy)=>{const g=mkRes({nid:-910},name,'wood',cx+dx,cy+dy);g.vr=mkVar(POKO,'wood');g.id=-910-EXTRA.length;return g};
@@ -328,10 +328,10 @@ let GUEST=null,GUESTRUN=false;
 /* ---------- 温泉宿のお客さん（火山）：草原のなかまが3日に1回とまりに来て、草原の花のたね・苗を売る。朝に来て、つぎの朝に帰る（夜は宿の中） ---------- */
 const VISITORS=[[POKO,'wood','#joy|温泉に入りに来たよ！ 草原の花のたねと苗、もってきたんだ。ほしいのある？'],[MINA,'earth','のんびりしに来たよぉ。草原の苗、いるかねぇ？']],VISIT_EVERY=3;
 let VISITOR=null;
-const visVol=()=>WD===1&&!S.free,visList=()=>S.free?freeVisitors():VISITORS;/* フリーモードは、旅のお客さん（free.js） */
+const visVol=()=>WD===KAZAN&&!S.free,visList=()=>S.free?freeVisitors():VISITORS;/* フリーモードは、旅のお客さん（free.js） */
 const visitOn=()=>(visVol()||!!S.free)&&!!S.st2&&S.st2.visit!=null&&S.st2.visit.day===dayNo();
 const visitHere=()=>visitOn()&&!isNight()&&!GUESTRUN&&!!visitor();
-function visitMorning(){if(S.free)return freeVisitMorning();if(WD!==1||!(S.flags.guestDone||S.cleared))return;const t=st2();if(t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0;t.visitN=n+1;t.visit={day:dayNo(),who:n%VISITORS.length};VISITOR=null;toast(VISITORS[t.visit.who][0]+'が、温泉宿にとまりに来た','good')}
+function visitMorning(){if(S.free)return freeVisitMorning();if(WD!==KAZAN||!(S.flags.guestDone||S.cleared))return;const t=st2();if(t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0;t.visitN=n+1;t.visit={day:dayNo(),who:n%VISITORS.length};VISITOR=null;toast(VISITORS[t.visit.who][0]+'が、温泉宿にとまりに来た','good')}
 function visitSpot(){const inn=innHouse();let base=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null)base=dj+W}if(base<0)base=STATUE>=0?STATUE+2*W:S.free&&OBOX>=0?OBOX+2*W:CY*W+CX;for(let r=0;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=base+dy*W+dx+1;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1)return k}return base}
 function visitor(){if(!visitOn())return null;const v=S.st2.visit;if(VISITOR&&VISITOR.vs===v&&VISITOR.st===S)return VISITOR;const p=visList()[v.who]||visList()[0],k=visitSpot();const g=mkRes({nid:-901},p[0],p[1],k%W+.5,(k/W|0)+.6);g.id=-901;g.hidden=false;g.face=1;g.vs=v;g.st=S;VISITOR=g;return g}
 function visitTap(wx,wy){if(!visitHere())return false;const g=visitor();if(Math.hypot(wx-g.x,wy-(g.y-.5))>1.1)return false;sfx('tbell');const p=visList()[S.st2.visit.who]||visList()[0];dialog([[p[0],p[2]]],()=>openSheet(S.free?'shop':'vshop'));return true}

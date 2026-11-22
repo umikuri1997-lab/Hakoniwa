@@ -108,7 +108,7 @@ function dlgLoop(now){if($('#dialog').hidden){DLGA.raf=0;dlgGestEnd();dlgAway(fa
     c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(120,203,44*(1-Math.min(.3,-hop/60)),8,0,0,7);c.fill();
     drawSpirit(c,DLGA.el,120,Math.round(200+hop+bob),1.74,1,{dot:1,t,vr:DLGA.vr,mood:md,crown:DLGA.crown,crownHand:DLGA.crownHand,handItem:DLGA.handItem,blink:(t%3.4)<.13,anim:dialogueSpiritAnim(DLGA.motion,talking,now-DLGA.lineT,DLGA.holdUntil-DLGA.lineT,DLGA.wave,reduced),walk:false,work:false,lean:DLGA.mood==='sad'||DLGA.mood==='teary'||DLGA.mood==='tear'?.12:0})}/* 立ち絵は、ゲームの中と同じドットの絵（dot）。1.74（=.87×2）で、絵の1ドットがキャンバスの2ドットにそろう */
   c.restore()}
-function shards3(){if(!S||S.cleared)return;if(WD===0&&grassReunionBlockReason())return false;/* かけらが3つそろった会話。さいごまで見てから、ヌシ様が帰ってくる（とちゅうでとじたら、つづきからでもう一度） */dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシが、帰ってくるぞい。']])(sevLines([['F','#hush|御神木が、光ってる……！',1,'glow'],['N','みんなの力が、ひとつにつながったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO)){S.flags.nushiDue=1;nushiReturns()}else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}})}
+function shards3(){if(!S||S.cleared)return;if(WD===KUSA&&grassReunionBlockReason())return false;/* かけらが3つそろった会話。さいごまで見てから、ヌシ様が帰ってくる（とちゅうでとじたら、つづきからでもう一度） */dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシが、帰ってくるぞい。']])(sevLines([['F','#hush|御神木が、光ってる……！',1,'glow'],['N','みんなの力が、ひとつにつながったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO)){S.flags.nushiDue=1;nushiReturns()}else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}})}
 function gameOver(){dialog(['せいれいたちが、みんな消えてしもうた…。土地もしずかになってしもうたのう。','もう一度、この土地に村をつくってみようかの。こんどは畑と食料を多めにな。'],()=>newGame(WD),'やりなおす',GOD)}/* いまのステージを、はじめから */
 
 let hudT=0;
@@ -205,11 +205,11 @@ function startPrologue(){
   pro.onclick=e=>{if(e.target.id==='proSkip')return;i++;if(i<PROS[WD].length)show();else end()};
   $('#proSkip').onclick=end;if(PROS[WD].length)show();else{$('#proWho').textContent='';$('#proText').textContent='';end()}/* プロローグのないステージ（風の土台）は、すぐ村へ */
 }
-const arriveF=()=>WD===0&&S.sacredRoot!=null&&S.res.find(r=>r.name===POKO);/* 草原のはじめは、カミサマと、切り株の前のフタバが入るように */
+const arriveF=()=>WD===KUSA&&S.sacredRoot!=null&&S.res.find(r=>r.name===POKO);/* 草原のはじめは、カミサマと、切り株の前のフタバが入るように */
 function arrive(){
   stageMusic();
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
   camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:arriveF()?(CX+arriveF().x)/2*TS:CX*TS,ty:arriveF()?(CY-3+arriveF().y-1)/2*TS:(CY-3)*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
-    setTimeout(()=>{started=true;showUI(true);{const f=WD===0&&S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}}/* 草原のはじめ：フタバは、すわってうとうと */const seen=()=>{for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}S.introSeen=true;save()},run=()=>{const L=(WD===FREE?INTROFL():INTROS[WD]).slice();if(!L.length)return seen();/* 着いてからの会話のないステージ（風の土台） */dialog(Object.assign(L,{skip:1}),seen)};/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
+    setTimeout(()=>{started=true;showUI(true);{const f=WD===KUSA&&S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}}/* 草原のはじめ：フタバは、すわってうとうと */const seen=()=>{for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}S.introSeen=true;save()},run=()=>{const L=(WD===FREE?INTROFL():INTROS[WD]).slice();if(!L.length)return seen();/* 着いてからの会話のないステージ（風の土台） */dialog(Object.assign(L,{skip:1}),seen)};/* さいごまで見てから「見た」に */if(WD===KUSA){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
 }

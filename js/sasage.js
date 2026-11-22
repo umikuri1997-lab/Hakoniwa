@@ -34,7 +34,7 @@ const SASA=[/* st：u どこでも・g 草原・v 火山。sea：その季節（
   {n:'てつのそなえ',st:'v',sea:3,need:{iiron:2,icopper:2},pt:30,t:'炉の火できたえた、かたい金物。'}];
 const SASAN=4,SASAALL=100;
 function sasaOn(){return !!(S&&STATUE>=0&&!(typeof MEMRUN!=='undefined'&&MEMRUN)&&!(typeof IS_STORY_REPLAY!=='undefined'&&IS_STORY_REPLAY))}
-function sasaPool(sea){const st=WD===0?'g':WD===1?'v':null;return SASA.map((b,i)=>i).filter(i=>(SASA[i].st==='u'||SASA[i].st===st)&&(sea==null||SASA[i].sea==null||SASA[i].sea===sea))}/* その土地で手に入る、その季節の束 */
+function sasaPool(sea){const st=WD===KUSA?'g':WD===KAZAN?'v':null;return SASA.map((b,i)=>i).filter(i=>(SASA[i].st==='u'||SASA[i].st===st)&&(sea==null||SASA[i].sea==null||SASA[i].sea===sea))}/* その土地で手に入る、その季節の束 */
 function sasaPick(k){/* 季節の番号 k から、その季節の束を4つえらぶ（同じ季節なら、いつも同じ） */const P=sasaPool(seasonOf(dayNo())),out=[];let s=k*7+WD*13;while(out.length<Math.min(SASAN,P.length)){const i=P[Math.floor(hash(s++)*P.length)%P.length];if(!out.includes(i))out.push(i)}return out}
 function sasaEnsure(){/* いまの季節のささげものがなければ作る。かわったら、たのんでいた分はやめる */if(!sasaOn())return null;const k=seasonKey();if(S.sasa&&S.sasa.k===k&&S.sasa.v===2)return S.sasa;
   if(S.sasa&&S.sasa.k===k){/* 束をかえる前のセーブ：とどけた物は箱へもどし、そろえた数はそのまま（同じ季節にパワーを2回もらわない） */const o=S.sasa,nd=o.L.filter(b=>b.done).length;for(const b of o.L)if(!b.done)for(const q in b.got||{})availAdd(q,b.got[q]);S.sasa={k,v:2,L:sasaPick(k).map((i,n)=>({i,got:{},done:n<nd?1:0})),all:o.all||0};S.sasaQ={};return S.sasa}
@@ -57,7 +57,7 @@ function sasaTick(){if(!sasaOn())return;const s=sasaEnsure();if(s&&s.L.some(b=>!
 const SASAMOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc'};
 function sasaIcURL(k){return isFK(k)?foodIc(k.slice(2)):ICONS[k]||(SASAMOBJ[k]&&BL[SASAMOBJ[k]]?iconURL(SASAMOBJ[k]):null)}
 const SASAHOLE={};
-function sasaHole(){/* くぼみの絵（28×28のドット。上と左がこいかげ・下と右が光の、彫りこんだみぞ。1ドット1.5px） */const w=WD===0?1:0;if(SASAHOLE[w])return SASAHOLE[w];
+function sasaHole(){/* くぼみの絵（28×28のドット。上と左がこいかげ・下と右が光の、彫りこんだみぞ。1ドット1.5px） */const w=WD===KUSA?1:0;if(SASAHOLE[w])return SASAHOLE[w];
   const c=document.createElement('canvas');c.width=c.height=28;const g=c.getContext('2d'),C=w?['#cfae7b','#a8743f','#bf9a64','#f3dfb5']:['#dccaa6','#b49a72','#c9b48c','#fbf3df'];
   for(let y=0;y<28;y++){const i=y===0||y===27?2:y===1||y===26?1:0;g.fillStyle=C[0];g.fillRect(i,y,28-i*2,1);
     g.fillStyle=y<2?C[1]:y===2?C[2]:y===27?C[3]:C[0];if(y<3||y===27)g.fillRect(i,y,28-i*2,1);

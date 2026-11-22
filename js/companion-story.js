@@ -20,7 +20,7 @@ function fieldView(q){/* いまの調べの名前を id に持つ、その依頼
 function fieldTapNeed(){const q=fieldStoryCurrent();if(!q||isNight())return null;const st=fieldStoryState(q.id);if(!st||st.auto||fieldStoryDone(q.id))return null;if(typeof fieldPrepNeed==='function'&&fieldPrepNeed(q.id))return null;const step=FIELD_STORIES[q.id]?.[st.step||0],j=step&&S.fieldSites?.[step.site];if(j==null)return null;if((step.cast||[step.who]).map(sevName).some(m=>!S.res.some(r=>r.name===m&&!r.hidden)))return null;return j}
 function fieldQuestProgress(parts){const id=parts.find(p=>!fieldStoryDone(p));if(!id)return '調べおわった';const prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(id);if(prep)return prep.label;let n=0,all=0;for(const p of parts){const L=FIELD_STORIES[p]||[];all+=L.length;n+=Math.min(L.length,fieldStoryState(p)?.step||0)}const st=FIELD_STORIES[id][fieldStoryState(id)?.step||0],miss=S.qTalked&&(st.cast||[st.who]).map(sevName).find(m=>!S.res.some(r=>r.name===m&&!r.hidden));if(!miss&&fieldTapNeed()!=null)return '切り株をタップして、調べよう　'+n+'/'+all;return st.label+'　'+n+'/'+all+(miss?'　'+miss+'がもどるのを待とう':S.qTalked&&isNight()?'　朝を待とう':'')}/* 調べは昼だけ・そろってから */
 function fieldStoryProgress(id){const n=fieldStoryState(id)?.step||0,L=FIELD_STORIES[id],prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(id);if(prep)return prep.label;if(L&&n<L.length&&fieldStoryCurrent()?.id===id&&fieldTapNeed()!=null)return '切り株をタップして、調べよう　'+n+'/'+L.length;return L&&n<L.length?L[n].label+'　'+n+'/'+L.length:'調べおわった';}
-function fieldStoryCurrent(){if(!S||WD!==0||S.free||S.cleared||S.qStory!=null||!S.qTalked)return null;const q=QUESTS[S.quest];return q?.field&&!(q.id==='tower'&&S.obj.includes('tower'))&&!fieldPartsDone(q)?fieldView(q):null;}
+function fieldStoryCurrent(){if(!S||WD!==KUSA||S.free||S.cleared||S.qStory!=null||!S.qTalked)return null;const q=QUESTS[S.quest];return q?.field&&!(q.id==='tower'&&S.obj.includes('tower'))&&!fieldPartsDone(q)?fieldView(q):null;}
 function fieldStoryActor(step){const name=sevName(step.who);return S.res.find(r=>r.name===name);}
 function fieldStorySpotOK(j){return j===S.sacredRoot?sacredRootFits(j):sacredRootFits(j);}
 function fieldStoryEnsure(id){
@@ -32,7 +32,7 @@ function fieldStoryEnsure(id){
 }
 /* 御神木の切り株の場所：草原のはじめから置いておく（新しいゲーム・切り株のない古いセーブ）。マップのまん中（幹がマップの中心）。ふさがっていれば、近くの歩いて行ける空いた所 */
 function sacredRootEnsure(r){
-  if(!S||WD!==0||S.free)return S&&S.sacredRoot;S.fieldSites||(S.fieldSites={});
+  if(!S||WD!==KUSA||S.free)return S&&S.sacredRoot;S.fieldSites||(S.fieldSites={});
   if(S.sacredRoot!=null){S.fieldSites.root=S.sacredRoot;return S.sacredRoot;}
   if(S.obj.includes('tower'))return null;
   const G=r?bfs(r.x|0,r.y|0):bfs(CX,CY+2),old=S.fieldSites.root,x=old!=null?old%W:CX-2,y=old!=null?(old/W|0):CY-2;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
@@ -49,7 +49,7 @@ function fieldMissNames(q){if(!q||!q.field||!FIELD_STORIES[q.id])return [];const
 const fieldActorReady=r=>!r.hidden&&!r.coffin&&!HOLD.has(r.id)&&!hungry(r)&&!r.meal&&!['eat','fetch','flee','faint','pray','bury'].includes(r.act?.type)&&!(r.act?.type==='sleep'&&isNight())&&!hostileNow(r);/* お話によばれたら、仕事・遊び・荷物はそのままで、すぐ向かう（おなかがすいた・ごはんを持っている子は、先に食べる） */
 // 会話の前から、その場にいる登場人物へ歩いて集まる。古い関数名は呼び出し元との互換のため保つ。
 const earthIntroQuest=q=>!!q&&q.field&&!(q.id==='tower'&&(cnt('tower')||statueSite('tower')));
-function earthIntroCurrent(){const q=S&&QUESTS[S.quest];return WD===0&&!S.free&&!S.cleared&&S.qStory==null&&!S.qTalked&&earthIntroQuest(q)&&q.talk.when()&&!S.tour&&!qMissing(q).length?q:null;}
+function earthIntroCurrent(){const q=S&&QUESTS[S.quest];return WD===KUSA&&!S.free&&!S.cleared&&S.qStory==null&&!S.qTalked&&earthIntroQuest(q)&&q.talk.when()&&!S.tour&&!qMissing(q).length?q:null;}
 function earthIntroValid(r,a){const q=earthIntroCurrent(),step=q&&FIELD_STORIES[q.id][0];return !!step&&q.id===a.fieldId&&fieldCast(step).includes(r)&&S.sacredRoot===a.obj&&fieldStorySpotOK(a.obj);}
 function earthIntroSpeaker(q){
   if(earthIntroCurrent()!==q||isNight())return null;fieldStoryEnsure(q.id);const step=FIELD_STORIES[q.id][0],group=fieldCast(step),lead=fieldStoryActor(step);

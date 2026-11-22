@@ -46,7 +46,7 @@ const WARMOBJ=new Set(['g_f_lamp','campfire','oven','torch','onsen','hotstone','
 const SEAFXT=['木のせいれいの能力1.2倍','火・水のせいれいの能力1.2倍・つかれのへり1.2倍','土のせいれいの能力1.2倍','移動速度0.8倍・おなかのへり1.2倍・風のせいれいの能力1.2倍・「コワイノ」の能力0.8倍'];
 const SEAWC=new WeakMap();
 function seaWarm(r){/* 冬の寒さがとどかない子：火のせいれい・あたたかい料理を食べた子（r.warmT）・あたたかい物や火のせいれいのまわり3マス（マスがかわるか、時計の数分ごとに調べなおす） */if(!r||r.elem==='fire'||r.warmT>S.t)return true;const j=(r.y|0)*W+(r.x|0);let c=SEAWC.get(r);if(c&&c.j===j&&Math.abs(S.t-c.t)<5)return c.v;
-  const x0=j%W,y0=(j/W)|0;let v=false;for(let y=y0-SEAWARMR;y<=y0+SEAWARMR&&!v;y++)for(let x=x0-SEAWARMR;x<=x0+SEAWARMR;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(WARMOBJ.has(typeAt(k))||WD===1&&S.ground[k]===1&&typeof hotW==='function'&&hotW(k)){v=true;break}}
+  const x0=j%W,y0=(j/W)|0;let v=false;for(let y=y0-SEAWARMR;y<=y0+SEAWARMR&&!v;y++)for(let x=x0-SEAWARMR;x<=x0+SEAWARMR;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(WARMOBJ.has(typeAt(k))||WD===KAZAN&&S.ground[k]===1&&typeof hotW==='function'&&hotW(k)){v=true;break}}
   if(!v)v=S.res.some(q=>q!==r&&!q.hidden&&q.elem==='fire'&&Math.max(Math.abs(q.x-r.x),Math.abs(q.y-r.y))<=SEAWARMR);SEAWC.set(r,{j,t:S.t,v});return v}
 function seaMul(r,k){/* 能力 k（work・move・sta）にかける季節の倍 */if(!S||!r)return 1;const s=seasonNow();let m=SEAEL[s].includes(r.elem)?SEAUP:1;if(s===3&&k==='move'&&!seaWarm(r))m*=SEACOLD;return m}
 function seaFood(k){/* 冬はあたたかい料理・夏はつめたい料理を、箱から先にとる */const ef=S&&FOODS[k]&&FOODS[k].ef;if(!ef)return 0;const s=seasonNow();return s===3&&ef.warm||s===1&&ef.cool?1:0}

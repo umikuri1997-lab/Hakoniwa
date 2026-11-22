@@ -128,7 +128,7 @@ function sacredOfferShard(j,done){
 const LAMPS_TAKEN=new WeakSet();/* あかりが、かけらになった村（お礼の会話の中。保存しない） */
 function omoiLampPos(j,i){const g=sacredGeo(j),k=Math.max(.5,g.h/120),ox=sacredStage()<4?16:0;/* 若い木の葉は、切り株の右よりにある */return [g.cx+ox+[-22,24,2][i%3]*k,g.top+g.h*[.4,.34,.2][i%3]]}
 function omoiCols(pk){const p=pk&&bondPair(pk);return p?[ELEM[p[0].elem].body,ELEM[p[1].elem].body]:['#fff0a8','#ffd1e8']}
-function omoiLampOn(){if(!S||WD!==0||S.free||typeof QUESTS==='undefined'||LAMPS_TAKEN.has(S))return false;const j=S.sacredRoot;return j!=null&&S.obj[j]==='tower'&&(QUESTS[S.quest]?.id==='omoi'||S.qStory!=null&&QUESTS[S.qStory]?.id==='omoi')}
+function omoiLampOn(){if(!S||WD!==KUSA||S.free||typeof QUESTS==='undefined'||LAMPS_TAKEN.has(S))return false;const j=S.sacredRoot;return j!=null&&S.obj[j]==='tower'&&(QUESTS[S.quest]?.id==='omoi'||S.qStory!=null&&QUESTS[S.qStory]?.id==='omoi')}
 function drawOmoiLamps(now){/* 枝にともった、想いのあかり（とどいた組の数だけ。かけらになるまで） */
   if(!omoiLampOn())return;const j=S.sacredRoot,L=(S.flags.omoiP||[]).slice(0,3).map(omoiCols),run=typeof OMOI_RUN!=='undefined'&&OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION?OMOI_RUN.lamp:null;
   if(run&&L.length<3)L.push(run);if(!L.length)return;ctx.save();ctx.imageSmoothingEnabled=false;

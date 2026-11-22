@@ -248,7 +248,7 @@ function titleSec(r,g){const d=el('<div class="stat" style="display:block"><span
   g.appendChild(d)}
 function tokuiMig(s){if(s.flags.tokui1)return;s.flags.tokui1=1;for(const q of[...(s.res||[]),...(s.buried||[]),...(s.lost||[])])if(q.vr&&!q.vr.tk)q.vr.tk=tokuiPick(q.elem)}/* 前のセーブのせいれいにも、はじめからの得意な仕事を1回だけ */
 /* 豪華なイベント（grand）：1季節に1回、みんなが出る。かかる物は人数によらず決まった数（D.set：食料・木材・竹・草・花・作物）。 */
-const EVGRASS=()=>WD===1?'kuru':'shina';
+const EVGRASS=()=>WD===KAZAN?'kuru':'shina';
 Object.assign(EVENTS,{
   undo:{n:'村の運動会',grand:1,d:'かけっこ・つなひき・玉入れを、赤と白の組にわかれてする。',sea:2,at:9,dur:90,pt:300,per:0,set:{food:40},gain:{work:1,move:1,sta:1,atk:5},gainTxt:'かった組　はたらく速さ・移動速度・スタミナ+2・攻撃力+10・まけた組　はたらく速さ・移動速度・スタミナ+1・攻撃力+5',talk:['#joy|がんばれー！','赤組、ファイト！','白組も、まけないよ！']},
   hana:{n:'花まつり',grand:1,stage:0,d:'花のアーチの下で、花かんむりをつけておどる。',sea:0,at:10,dur:60,pt:200,per:0,set:{flower:10},need:'flower30',gain:{},fx:'bloom',talk:['#joy|花かんむり、にあう？','いいにおい……。','春って、すてきだね。']},
