@@ -178,9 +178,9 @@ const SLTEX=new Map();function slopeTex(a,d){/* 坂の面のもようは、の�
   const t=stairTop(a,d),f=S.floor[t]||'',g=REV.has(t);let e=SLTEX.get(a);if(e&&e.t===t&&e.f===f&&e.g===g&&e.w===WD)return e.p;const C=window.CHIPS||{},mk=(ch,id)=>{if(!ch)return null;const cv=document.createElement('canvas');cv.width=cv.height=TS;drawChip(cv.getContext('2d'),ch,id,0,0,0);return cv};
   let src=f?mk(C[(f==='woodpath'?'floor':f==='brickfloor'?'brick':f==='stonefloor'?'stonefloor':f)+'#0'],f):g?(C['tex:grass']&&chipImgs(C['tex:grass'],'ground')[0]):WD===1?mk(C['groundr#0'],'ground'):(C['tex:dry']&&chipImgs(C['tex:dry'],'ground')[0]);
   if(!src||src.ok===false)return null;e={t,f,g,w:WD,p:document.createElement('canvas').getContext('2d').createPattern(src,'repeat')};SLTEX.set(a,e);return e.p}
-function soilFace(g,x,y,w,h,SX,SY){/* 土のブロックの正面（断面）：がけの岩の絵 cliff:block を、世界のマスどおりにしきつめる（読みこむまでは、乾いた地面の絵） */
+function soilFace(g,x,y,w,h,SX,SY,mid){/* 土のブロックの正面（断面）：がけの岩の絵 cliff:block を、世界のマスどおりにしきつめる（読みこむまでは、乾いた地面の絵） */
   const C=window.CHIPS||{},X=v=>SX?SX(v):v,Y=v=>SY?SY(v):v;g.save();g.beginPath();g.rect(X(x),Y(y),X(x+w)-X(x),Y(y+h)-Y(y));g.clip();
-  const cb=C['cliff:block'],ci=cb&&chipImgs(cb,'cliff')[0];if(ci&&ci.ok){for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS)g.drawImage(ci,0,0,64,64,X(xx),Y(yy),X(xx+TS)-X(xx),Y(yy+TS)-Y(yy))}/* 前の岩のがけの正面の絵（cliff:block、1マス×1だん） */
+  const cb=C[mid?'cliff:blockm':'cliff:block'],ci=cb&&chipImgs(cb,'cliff')[0];if(ci&&ci.ok){for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS)g.drawImage(ci,0,0,64,64,X(xx),Y(yy),X(xx+TS)-X(xx),Y(yy+TS)-Y(yy))}/* 前の岩のがけの正面の絵（cliff:block、1マス×1だん。上にブロックがつづくだんは、帯のない cliff:blockm で、たてにつながる） */
   else if(WD===0&&C['tex:dry']){for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS){const im=dryTex(xx,yy);if(im&&im.ok!==false)g.drawImage(im,((xx%DRTEX)+DRTEX)%DRTEX,((yy%DRTEX)+DRTEX)%DRTEX,TS,TS,X(xx),Y(yy),X(xx+TS)-X(xx),Y(yy+TS)-Y(yy))}}
   else{const r=WD===1?'r':'';for(let yy=Math.floor(y/TS)*TS;yy<y+h;yy+=TS)for(let xx=Math.floor(x/TS)*TS;xx<x+w;xx+=TS){const n=Math.abs((((yy/TS)|0)*W+((xx/TS)|0))),ch=C['ground'+r+'#'+((hash(n*7+1)*8)|0)];if(ch){g.save();g.translate(X(xx),Y(yy));g.scale((X(xx+TS)-X(xx))/TS,(Y(yy+TS)-Y(yy))/TS);drawChip(g,ch,'ground',0,0,0,n);g.restore()}}}
   g.restore()}
@@ -376,14 +376,14 @@ function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を�
     const LN=(x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.fillRect(a,b,Math.max(SX(x+w)-a,1/kz),Math.max(SY(y2+h)-b,1/kz))},D1=.5,BV=1.5,HI='rgba(255,246,222,.3)',HI2='rgba(255,246,222,.15)',SH='rgba(40,28,18,.26)',SH2='rgba(40,28,18,.13)',AO=[.24,.14,.06],AOW=2,ao=(x,y2,w,dn)=>{for(let i=0;i<AO.length;i++){g.fillStyle='rgba(30,20,12,'+AO[i]+')';LN(x,dn?y2-(i+1)*AOW:y2+i*AOW,w,AOW)}};
     const mat=(jj,l)=>l>hiAt(jj)||l<1?null:(cubeAt(jj,l)||SOIL),tri=(x1,y1,x2,y2,x3,y3)=>{g.beginPath();g.moveTo(SX(x1),SY(y1));g.lineTo(SX(x2),SY(y2));g.lineTo(SX(x3),SY(y3));g.closePath();g.fill()};
     if(!top)for(let i=0;i<keys.length;i++){if(!(keys[i]&2))continue;const k=R.x0+i,j=y*W+k,id=mat(j,lv);const fy=y*TS+TS-lv*LIFT,x0=k*TS;
-      if(id===SOIL)soilFace(g,x0,fy,TS,LIFT,SX,SY);else{const T=cubeTex(id);if(T)DI(T,0,0,64,64,x0,fy,TS,LIFT)}g.fillStyle='rgba(30,20,12,.38)';LN(x0,fy,TS,LIFT);/* 正面：土は、いまの乾いた地面の絵を世界の場所どおりに（となりとつながる）。上の面より一段暗く */
+      soilFace(g,x0,fy,TS,LIFT,SX,SY,lv<hiAt(j));g.fillStyle='rgba(30,20,12,.38)';LN(x0,fy,TS,LIFT);/* 正面（断面）：土も石も、がけの岩の絵（上にブロックがつづくだんは、帯のない絵でたてにつながる）。上の面より一段暗く */
       const up=lv<hiAt(j),dn=y<H-1&&hiAt(j+W)<lv-1,lft=!(keys[i]&4),rgt=!(keys[i]&8);/* 上・下・左右に、ブロックの正面がつづくか（素材がちがっても、ひとつのかたまり） */
       if(!up){g.fillStyle=HI;LN(x0,fy,TS,BV);g.fillStyle=HI2;LN(x0,fy+BV,TS,BV)}/* 上のふち：面とりの光 */
       if(!dn){ao(x0,fy+LIFT,TS,1);if(y<H-1&&hiAt(j+W)<=0)ao(x0,fy+LIFT,TS,0)}/* 下のふち：地面につく所に足もとのかげ（正面の下と、すぐ前の地面） */
       if(!lft){g.fillStyle=HI2;LN(x0,fy,BV,LIFT);}if(!rgt){g.fillStyle=SH;LN(x0+TS-BV,fy,BV,LIFT);g.fillStyle=SH2;LN(x0+TS-2*BV,fy,BV,LIFT);}/* 左は光・右はかげ（かたまりのはしだけ） */
       if(!up){if(!lft){g.fillStyle=HI;tri(x0,fy,x0+BV*2,fy,x0,fy+BV*2)}if(!rgt){g.fillStyle=SH;tri(x0+TS,fy,x0+TS-BV*2,fy,x0+TS,fy+BV*2)}}}/* 角：ななめの面とり */
     const h=top?LIFT:TS;for(let i=0;i<keys.length;i++){const k=R.x0+i;if(!ok(k))continue;const j=y*W+k,ty=y*TS-lv*LIFT,id=hiAt(j)===lv?cubeAt(j,lv):'',x0=k*TS;
-      if(id){const T=cubeTex(id);if(T)DI(T,0,0,64,h*2,x0,ty,TS,h)}else gblit(g,x0,y*TS,TS,h,SX(x0),SY(ty),SX(x0+TS)-SX(x0),SY(ty+h)-SY(ty),lod);g.fillStyle='rgba(255,250,232,.08)';LN(x0,ty,TS,h);/* 上の面：ブロックならその絵、土は地面の下絵（乾いた地面・草地・道・床）。正面より明るく */
+      if(id){const T=cubeTex(id);if(T)DI(T,0,0,64,h*2,x0,ty,TS,h)}else gblit(g,x0,y*TS,TS,h,SX(x0),SY(ty),SX(x0+TS)-SX(x0),SY(ty+h)-SY(ty),lod);g.fillStyle='rgba(255,250,232,'+Math.min(.36,.04+.04*lv)+')';LN(x0,ty,TS,h);/* 上の面：ブロックならその絵、土は地面の下絵（乾いた地面・草地・道・床）。正面より明るく、高いだんほど明るく */
       if(!top&&y>0&&hiAt(j-W)>lv)ao(x0,ty,TS,0);/* うしろが高い：かべの足もとのかげ */
       if(keys[i]&1){g.fillStyle=HI;LN(x0,ty,TS,BV);}if(keys[i]&4){g.fillStyle=HI2;LN(x0,ty,BV,h);}if(keys[i]&8){g.fillStyle=SH2;LN(x0+TS-BV,ty,BV,h);}/* 上の面のふち：うしろと左は光、右はかげ */
       if(!top&&(keys[i]&2)){g.fillStyle=HI;LN(x0,ty+TS-BV,TS,BV)}/* 手前のふち（正面とのさかい）：面とりの光 */
