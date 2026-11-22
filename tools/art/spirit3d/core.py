@@ -201,5 +201,8 @@ class Spirit:
                 X = X+px; Y = Y+py
                 if face == 1: X = -9*K+0.7*X; px = -9*K+0.7*px
                 dep = -28 if face == 0 else 28 if face == 2 else -10
-                out['wing%d' % i] = (put(X, Y, dep), np.tile(c, (7, 1)), pt(px, py, dep), ax, sg)
+                P0, c0, pv, a0 = put(X, Y, dep), np.tile(c, (7, 1)), pt(px, py, dep), ax
+                if ISOY and face in (0, 2):   # クォータービューのななめ：はねは、まうえから見た向きを45度もどして、正面・うしろの絵と同じ所に見せる（そのままだと、むこうのはねが体からはなれて見える）
+                    Rb = rz(-ISOY); P0, pv, a0 = P0@Rb.T, pv@Rb.T, a0@Rb.T
+                out['wing%d' % i] = (P0, c0, pv, a0, sg)
         self.cache[face] = out; return out
