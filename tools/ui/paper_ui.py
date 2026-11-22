@@ -1,7 +1,8 @@
 """紙のUIの絵（わく・依頼ボードの板・図鑑の本の背としおり）を作って、index.html の
 /* paper-ui:begin */ 〜 /* paper-ui:end */ のあいだに書きこむ。
   python3 tools/ui/paper_ui.py
-  python3 tools/ui/paper_ui.py --part paper_css,dlg_css   # その物の行だけを入れかえる（手で直した行をのこす）
+  python3 tools/ui/paper_ui.py --part paper_css,dlg_css   # その物の行だけを入れかえる
+index.html の paper-ui の中は、この道具の出力と同じ（手で直さない。直すときは、ここの関数を直す）。
 - 紙のわく：角は段々（4・2・1・1）、辺は1ドットずつゆるくでこぼこ（border-image の round でくりかえす）、いちばん下の行は紙のかげ。
 - 依頼ボードの板：よこの板が3まい（1まい8ドット）の、くりかえすドットの絵。
 - 図鑑：左の本の背（とじ糸つき）と、上からたれる、しおりのリボン。
@@ -514,19 +515,20 @@ def deco_css():
     tag = svg(wood_rows(), {'a': '#e6cb99', 'g': '#e2c693', 'D': '#dec18d', 'l': '#ead0a2', 'h': '#f4e1bd',
                             'w': '#b98a52', 'd': '#8a5a30', 'k': '#efd8ae', 'q': '#f8ead0', 's': SHADOW})  # 下の木札：パネルより少しこい、切りっぱなしの板
     pp = 'var(--pp)'
+    TB = ':is(#pauseBtn,#speedBtn,#skipBtn)'  # 一時停止・速さ・スキップのボタンも、なわでつるす（目標の札と同じ短いなわ）
     return '\n'.join([
         '/* 草原のかざり：下のバーは横木からつるした木札（なわ） */',
         f'body.wd0 #topUI .hud{{position:relative}}',
         f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
         f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*{len(BEAM[0])}) calc({pp}*{len(BEAM)}) repeat-x;image-rendering:pixelated;pointer-events:none}}',
         f'body.wd0 .dock button,body.wd0 .quest{{position:relative;overflow:visible}}',
-        f'body.wd0 .toast .trope::before,body.wd0 .toast .trope::after{{content:"";position:absolute;top:calc({pp}*-13);width:calc({pp}*2);height:calc({pp}*13);background:linear-gradient(#5e3d22 calc({pp}*2),transparent 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}body.wd0 .toast .trope::before{{left:22%}}body.wd0 .toast .trope::after{{right:22%}}',
+        f'body.wd0 .toast .trope::before,body.wd0 .toast .trope::after{{content:"";position:absolute;top:calc(var(--rl,calc({pp}*13))*-1);width:calc({pp}*2);height:var(--rl,calc({pp}*13));background:linear-gradient(#5e3d22 calc({pp}*2),transparent 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}body.wd0 .toast .trope::before{{left:22%}}body.wd0 .toast .trope::after{{right:22%;top:calc(var(--rr,calc({pp}*13))*-1);height:var(--rr,calc({pp}*13))}}',
         f'body.wd0 .dock button{{border:solid transparent!important;border-width:calc({pp}*3)!important;border-image:{tag} 5 5 6 5 fill/calc({pp}*5) calc({pp}*5) calc({pp}*6) round!important;background:none!important;color:#5e3d22!important;transform:none}}',
-        f'body.wd0 .dock button.on{{color:#4a2a12!important;filter:saturate(1.15) brightness(1.03);margin-top:calc({pp}*3);text-shadow:1.5px 0 0 rgba(140,90,40,.3),-1.5px 0 0 rgba(140,90,40,.3),0 1.5px 0 rgba(255,236,200,.7)}}',
+        f'body.wd0 .dock button.on{{color:#4a2a12!important;filter:saturate(1.15) brightness(1.03);margin-top:calc({pp}*3);text-shadow:0 1.5px 0 rgba(255,236,200,.7)}}',
         f'body.wd0 .dock button.on svg.pxi{{fill:#4a2a12!important}}',
-        f'body.wd0 .dock button::before,body.wd0 .dock button::after,body.wd0 .quest::before,body.wd0 .quest::after{{content:"";position:absolute;top:calc({pp}*-16);width:calc({pp}*2);height:calc({pp}*19);background:linear-gradient(transparent calc(100% - {pp}*2),#5e3d22 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none;z-index:1}}',
-        f'body.wd0 .dock button::before,body.wd0 .quest::before{{left:22%}}body.wd0 .dock button::after,body.wd0 .quest::after{{right:22%}}',
-        f'body.wd0 .quest::before,body.wd0 .quest::after{{top:calc({pp}*-8);height:calc({pp}*11)}}',
+        f'body.wd0 .dock button::before,body.wd0 .dock button::after,body.wd0 .quest::before,body.wd0 .quest::after,body.wd0 {TB}::before,body.wd0 {TB}::after{{content:"";position:absolute;top:calc({pp}*-16);width:calc({pp}*2);height:calc({pp}*19);background:linear-gradient(transparent calc(100% - {pp}*2),#5e3d22 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none;z-index:1}}',
+        f'body.wd0 .dock button::before,body.wd0 .quest::before,body.wd0 {TB}::before{{left:22%}}body.wd0 .dock button::after,body.wd0 .quest::after,body.wd0 {TB}::after{{right:22%}}',
+        f'body.wd0 .quest::before,body.wd0 .quest::after{{top:calc({pp}*-8);height:calc({pp}*11)}}body.wd0 {TB}{{position:relative;overflow:visible}}body.wd0 {TB}::before,body.wd0 {TB}::after{{top:calc({pp}*-8);height:calc({pp}*11)}}',
         f'body.wd0 .dock button.on::before,body.wd0 .dock button.on::after{{top:calc({pp}*-19);height:calc({pp}*22)}}',
     ])
 

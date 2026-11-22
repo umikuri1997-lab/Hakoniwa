@@ -1071,7 +1071,8 @@ function frame(t){var S2=SC,g=S2.SCN.getContext('2d'),now=performance.now();g.im
   if(d===S2.tree){/* 御神木のまわりの光のつぶ */var r=d.r;for(var k2=0;k2<9;k2++){var ph2=(t*.35+hsh(k2+9))%1,px=Math.round(r.x0+(r.x1-r.x0)*(.15+.7*hsh(k2)))&~1,py=Math.round(r.y0+(r.y1-r.y0)*(.2+.55*hsh(k2+3))-ph2*18)&~1;g.globalAlpha=Math.sin(ph2*Math.PI);g.fillStyle='#fff3b0';g.fillRect(px,py,2,2);g.fillStyle='rgba(255,236,150,.6)';g.fillRect(px-2,py,2,2);g.fillRect(px+2,py,2,2);g.fillRect(px,py-2,2,2);g.fillRect(px,py+2,2,2);g.globalAlpha=1}}});
  /* 夕方の光：全体にうすく、明かりのまわりに輪 */g.fillStyle='rgba(255,176,130,.07)';g.fillRect(0,0,S2.SW,S2.SH);var R=S2.gl.width/2;S2.lights.forEach(function(L,i){g.globalAlpha=.85+.15*Math.sin(t*6+i*2);g.drawImage(S2.gl,Math.round(L.x-R)&~1,Math.round(L.y-R)&~1);g.globalAlpha=1});
  q.setTransform(1,0,0,1,0,0);q.imageSmoothingEnabled=false;q.drawImage(S2.SCN,0,0,S2.SW*K,S2.SH*K)}
-function draw(){if(T.hidden||document.hidden)return;size();var t=(performance.now()-t0)/1000;
+function free(){/* タイトルをかくしているあいだは、タイトルの絵（場面・層・画面の大きさのキャンバス）を手ばなす（iPhone のキャンバスのメモリ。もどったら作りなおす） */if(SC){SC.L0.width=SC.L0.height=0;SC.SCN.width=SC.SCN.height=0;SC=null}if(cs&&cw){cs.width=cs.height=0;cw=ch=0}rb=0}
+function draw(){if(T.hidden){free();return}if(document.hidden)return;size();var t=(performance.now()-t0)/1000;
  if(q&&ready()){if(!SC||(rb<2&&t>(rb?4:1.5)+SC.t)){if(SC)rb++;SC=build();SC.t=t}cv.style.visibility='hidden';frame(t);return}
  PXSCENE(c,gw,gh,1,'title',t)}
 draw();setInterval(draw,125);addEventListener('resize',function(){SC=null;draw()})})();</script><style>#boot{display:none}html{background:var(--ground)!important}</style>
