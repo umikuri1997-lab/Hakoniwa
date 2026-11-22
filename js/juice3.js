@@ -127,13 +127,13 @@ function juiceFirstDraw(now){
     if(e<0)continue;
     if(e>J3FMS+J3FOUT){J3F.splice(i,1);continue}
     if(!f.s){f.s=1;j3FirstSnd()}
-    const x=Math.round((f.j%W+.5)*TS),lift=liftOf(f.j),y=Math.round(((f.j/W)|0)*TS-30-lift),out=Math.min(1,Math.max(0,(e-J3FMS)/J3FOUT)),t=e/1000;isoAtA(c,isoOn()?cellFoot(f.j):null);/* クォータービュー：そのマスに立てて */
+    const x=Math.round((f.j%W+.5)*TS),lift=liftOf(f.j),y=Math.round(((f.j/W)|0)*TS-30-lift),out=Math.min(1,Math.max(0,(e-J3FMS)/J3FOUT)),t=e/1000;isoAtA(c,cellFoot(f.j));/* クォータービュー：そのマスに立てて */
     /* 紙ふぶき（重さで落ちる）と、ひろがる星の十字 */
     for(const p of f.P){const u=Math.min(t,1.6),px=Math.round(x+p.vx*u),py=Math.round(y+8+p.vy*u+140*u*u);if(t>1.6)continue;c.globalAlpha=Math.max(0,1-t/1.6);c.fillStyle=p.c;c.fillRect(px,py,p.s,Math.floor(now/90+p.vx)%2?p.s:1)}
     if(e<700){const u=e/700,r=Math.round(8+u*44);c.globalAlpha=1-u;for(let k=0;k<10;k++){const a=k/10*6.283+.3,sx=Math.round(x+Math.cos(a)*r),sy=Math.round(y+6+Math.sin(a)*r*.6);c.fillStyle=k%2?'#fff6c8':'#ffd23f';c.fillRect(sx-2,sy,5,1);c.fillRect(sx,sy-2,1,5)}}
     for(let k=0;k<4;k++){const ph=((now/600)+k*.25)%1;if(e<300)break;c.globalAlpha=(1-ph)*(1-out);c.fillStyle='#fffbe0';const sx=Math.round(x-34+hash(k*17+f.j)*68),sy=Math.round(y+4-ph*18);c.fillRect(sx,sy,1,1);if(ph<.4){c.fillRect(sx-1,sy,3,1);c.fillRect(sx,sy-1,1,3)}}/* ふわっとのぼるきらめき */
     /* 文字：1字ずつ、ぽんとはねて出て、そろったら、ときどき波うつ */
-    const n=Z.length,W0=17,x0=x-Math.round(n*W0/2);if(isoOn())isoUITf(c,cellFoot(f.j),x,y);/* 字は、のばさずに */
+    const n=Z.length,W0=17,x0=x-Math.round(n*W0/2);isoUITf(c,cellFoot(f.j),x,y);/* 字は、のばさずに */
     for(let k=0;k<n;k++){const ek=e-k*70;if(ek<0)continue;const a=Math.min(1,ek/220),hop=ek<220?-Math.round(Math.sin(a*Math.PI)*12):ek<1400?0:-Math.round(Math.max(0,Math.sin((ek-1400)/160))*3);
       c.globalAlpha=(1-out)*Math.min(1,ek/80);c.drawImage(Z[k],x0+k*W0,y-10+hop-Math.round(out*8),22,24)}
   }
@@ -158,7 +158,7 @@ function juiceDreamDraw(now){if(!J3D.length)return;const c=ctx,sm=c.imageSmoothi
 const J3S=new Map(),J3SMS=700;
 function juiceSnowman(j,r){if(!j3OK())return;J3S.set(j,performance.now());j3U('fsnow',.4,3);j3U('fsnow',.3,0,.09);j3Ding(12,.12);/* 雪をふむ音（録音）でぽん */if(r&&!r.hidden)JOYU.set(r,performance.now()+1600)}
 function snowHop(j){const t=J3S.get(j);if(t==null)return 0;const e=performance.now()-t;if(e>J3SMS){J3S.delete(j);return 0}return [0,6,10,12,10,6,0,3,4,3,0,0][Math.min(11,Math.floor(e/60))]||0}
-function juiceSnowDraw(now){if(!J3S.size)return;const c=ctx;c.fillStyle='#ffffff';for(const[j,t]of J3S){const e=now-t;if(e<0||e>J3SMS)continue;const u=e/J3SMS,lift=typeof hiAt==='function'?liftOf(j):0,cx=(j%W+.5)*TS,cy=((j/W)|0)*TS+20-lift;isoAtA(c,isoOn()?cellFoot(j):null);
+function juiceSnowDraw(now){if(!J3S.size)return;const c=ctx;c.fillStyle='#ffffff';for(const[j,t]of J3S){const e=now-t;if(e<0||e>J3SMS)continue;const u=e/J3SMS,lift=typeof hiAt==='function'?liftOf(j):0,cx=(j%W+.5)*TS,cy=((j/W)|0)*TS+20-lift;isoAtA(c,cellFoot(j));
     c.globalAlpha=1-u;for(let k=0;k<10;k++){const an=-Math.PI*(k+.5)/10,r=8+u*22;c.fillRect(Math.round(cx+Math.cos(an)*r),Math.round(cy+Math.sin(an)*r*.7+u*u*16),2,2)}c.globalAlpha=1}isoBack(c)}
 
 /* ---------- 図鑑のバー（juiceZkBar）：つぎの節目までのわりあい。前にひらいたときの数から、いまの数へ、とろっとのびる ---------- */

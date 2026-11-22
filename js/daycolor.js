@@ -33,8 +33,3 @@ function dcNow(){/* いまの時刻の色（同じ時刻なら作りなおさな
 function dcLayer(k){return dcNow()[k]}
 function dcGround(){/* 地面の層：地面の下絵・水・地面の上の物（水たまりなど）を描いたあと、物より先に、画面ぜんたいにかけ算 */const m=dcLayer('g');DCG.armed=true;if(!m)return;
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=m;ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore()}
-function dcBlit(c,dx,dy,dw,dh){/* 物といっしょに描く地面の絵（がけ・坂の上の面）にも、地面と同じ色 */if(c!==ctx||!DCG.armed)return;const m=dcLayer('g');if(!m)return;const o=c.globalCompositeOperation;c.globalCompositeOperation='multiply';c.fillStyle=m;c.fillRect(dx,dy,dw,dh);c.globalCompositeOperation=o}
-function dcFill(k,P){/* 水・雲の海：その形だけにかけ算 */const m=dcLayer(k);if(!m)return;ctx.save();ctx.globalCompositeOperation='multiply';ctx.fillStyle=m;ctx.fill(P);ctx.restore()}
-function dcRoof(c,h,R,A){/* 屋根：屋根の形（1倍の細かさで1回作る）に色をぬって、かけ算 */const m=dcLayer('r');if(!m){if(R.dcm){R.dcm.width=R.dcm.height=0;R.dcm=null}return}
-  if(!R.dcm||R.dck!==m){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),k=R.dcm||document.createElement('canvas');if(k.width!==w||k.height!==hh){k.width=w;k.height=hh}const g=k.getContext('2d');g.globalCompositeOperation='source-over';g.clearRect(0,0,w,hh);g.imageSmoothingEnabled=true;g.drawImage(R.cv,0,0,w,hh);g.globalCompositeOperation='source-in';g.fillStyle=m;g.fillRect(0,0,w,hh);R.dcm=k;R.dck=m}
-  const o=c.globalCompositeOperation,s=c.imageSmoothingEnabled;c.globalCompositeOperation='multiply';c.imageSmoothingEnabled=false;c.globalAlpha=A;c.drawImage(R.dcm,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);c.globalCompositeOperation=o;c.imageSmoothingEnabled=s}

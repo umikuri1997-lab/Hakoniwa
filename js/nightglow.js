@@ -38,7 +38,7 @@ function ngOpen(id){const t=NGID.indexOf(id);if(t<0||!(S[id]>0))return;if(isNigh
   treasureReveal({ico:trIco(id),taps:FUKUROTAPS[t],tier:t,name:'夜のたからもの',done:'夜のたからものから出てきた',items,rays:1,beam:1,confetti:1,stamp:t>=1?'あたり':null,after:()=>{if(Object.keys(gifts).length)queueItemGift(gifts,'夜のたからものから！');if(sheet==='inv')renderSheet()}})}
 /* ---- 絵 ---- */
 function ngDraw(now){/* 夜の暗さより上に描く（光って見える）。2点のドットの四角だけ */if(!S||!S.ng||!S.ng.L.length||PHSNAP)return;
-  for(const g of S.ng.L){const j=g.y*W+g.x,cx=Math.round((g.x+.5)*TS),cy=Math.round((g.y+.5)*TS-(typeof hiAt==='function'?hiAt(j):0)*LIFT),ph=now/1000*2.4+g.x*.7+g.y*.3,p=.5+.5*Math.sin(ph),col=NGCOL[g.t];ctx.save();if(isoOn())standTf(ctx,dpr*cam.z,cx,cy,isoX((g.x+.5)*TS,(g.y+.5)*TS),isoY((g.x+.5)*TS,(g.y+.5)*TS)-isoLv(j)*IQL);/* クォータービュー：その所に立てて */
+  for(const g of S.ng.L){const j=g.y*W+g.x,cx=Math.round((g.x+.5)*TS),cy=Math.round((g.y+.5)*TS-(typeof hiAt==='function'?hiAt(j):0)*LIFT),ph=now/1000*2.4+g.x*.7+g.y*.3,p=.5+.5*Math.sin(ph),col=NGCOL[g.t];ctx.save();standTf(ctx,dpr*cam.z,cx,cy,isoX((g.x+.5)*TS,(g.y+.5)*TS),isoY((g.x+.5)*TS,(g.y+.5)*TS)-isoLv(j)*IQL);/* クォータービュー：その所に立てて */
     ctx.fillStyle=col;for(let k=g.t+1;k>=1;k--){ctx.globalAlpha=(.10+.10*p)/k;const s=4+k*4;ctx.fillRect(cx-s,cy-s,s*2,s*2)}/* まわりの光：遠いつぶほど、ひろい */
     ctx.globalAlpha=.75+.25*p;ctx.fillRect(cx-2,cy-2,4,4);ctx.globalAlpha=1;ctx.fillStyle='#fff';ctx.fillRect(cx-1,cy-1,2,2);
     if(g.t>=1){const a=ph*1.3;for(let i=0;i<g.t*2;i++){const q=a+i*Math.PI/g.t,rr=8+g.t*3;ctx.globalAlpha=.5+.5*Math.sin(ph*2+i);ctx.fillStyle=col;ctx.fillRect(Math.round(cx+Math.cos(q)*rr)-1,Math.round(cy+Math.sin(q)*rr*.6)-1,2,2)}ctx.globalAlpha=1}/* 中くらい・遠いつぶは、まわりを光のつぶがまわる */

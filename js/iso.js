@@ -10,7 +10,6 @@ const IQW=64,IQH=48,IQL=30;
 const IQA=IQW/2/TS,IQB=IQH/2/TS;/* せかいの点が1つ動くと、画面の点がいくつ動くか */
 const IQD=IQL/(2*IQB);/* 段1だんぶん上に見せるとき、せかいの点を左上（x・y とも）へずらす数 */
 const IQSX=IQW/Math.SQRT2/TS,IQSY=IQL/(.8*TS);/* 仮：いまの絵（ななめ見おろし）を立てるときの、よこ・たての大きさ（絵がそろうまで） */
-function isoOn(){return true}
 const isoX=(wx,wy)=>(wx-wy)*IQA,isoY=(wx,wy)=>(wx+wy)*IQB;
 function isoInv(ix,iy){const u=ix/IQA,v=iy/IQB;return{x:(u+v)/2,y:(v-u)/2}}
 const camCX=()=>cam.x+VW/cam.z/2,camCY=()=>cam.y+VH/cam.z/2;
@@ -22,7 +21,7 @@ function standTf(c,k,fx,fy,px,py){const O=isoOff(k);c.setTransform(k*IQSX,0,0,k*
 /* せかいの点 (wx,wy) を足もとにして、立てる形で描く（高さ lv だんの上） */
 function atPt(c,wx,wy,f,lv){c.save();standTf(c,dpr*cam.z,wx,wy,isoX(wx,wy),isoY(wx,wy)-(lv||0)*IQL);try{f()}finally{c.restore()}}
 /* 画面の点（CSS の px）とせかいの点 */
-function w2s(wx,wy,lv){if(!isoOn())return{x:(wx-cam.x)*cam.z,y:(wy-cam.y)*cam.z};const cx=camCX(),cy=camCY();return{x:VW/2+(isoX(wx,wy)-isoX(cx,cy))*cam.z,y:VH/2+(isoY(wx,wy)-(lv||0)*IQL-isoY(cx,cy))*cam.z}}
+function w2s(wx,wy,lv){const cx=camCX(),cy=camCY();return{x:VW/2+(isoX(wx,wy)-isoX(cx,cy))*cam.z,y:VH/2+(isoY(wx,wy)-(lv||0)*IQL-isoY(cx,cy))*cam.z}}
 function s2w(sx,sy){const cx=camCX(),cy=camCY();return isoInv(isoX(cx,cy)+(sx-VW/2)/cam.z,isoY(cx,cy)+(sy-VH/2)/cam.z)}
 /* せかいの点 (wx,wy) が、画面の (sx,sy) に来るように、カメラをおく */
 function camAt(wx,wy,sx,sy){const c=isoInv(isoX(wx,wy)-(sx-VW/2)/cam.z,isoY(wx,wy)-(sy-VH/2)/cam.z);cam.x=c.x-VW/cam.z/2;cam.y=c.y-VH/cam.z/2}
@@ -46,13 +45,13 @@ function objFootJ(j){const a=anc(j),o=S.obj[a];if(!o||!BL[o])return objFoot(a%W,
 /* せいれい・コワイノなど（足もとの点）の足もと。高さは liftDraw がつける */
 function ptFoot(wx,wy){return{fx:wx,fy:wy,px:isoX(wx,wy),py:isoY(wx,wy)}}
 /* 足もと A で立てて描いた物の、いままでの見え方でのタップの点（せかいの点）。lv：その物の段（タップのときは、絵が上に見える高さ） */
-function tapAt(A,lv){const T=TAPS;if(!T)return{x:0,y:0};if(!isoOn())return T.w;const cx=camCX(),cy=camCY(),px=VW/2+(A.px-isoX(cx,cy))*cam.z,py=VH/2+(A.py-(lv||0)*IQL-isoY(cx,cy))*cam.z;return{x:A.fx+(T.sx-px)/(cam.z*IQSX),y:A.fy+(T.sy-py)/(cam.z*IQSY)}}
+function tapAt(A,lv){const T=TAPS;if(!T)return{x:0,y:0};const cx=camCX(),cy=camCY(),px=VW/2+(A.px-isoX(cx,cy))*cam.z,py=VH/2+(A.py-(lv||0)*IQL-isoY(cx,cy))*cam.z;return{x:A.fx+(T.sx-px)/(cam.z*IQSX),y:A.fy+(T.sy-py)/(cam.z*IQSY)}}
 /* せいれいなど (fx,fy)（マス）のタップの点（その子のいるマスの段の高さで） */
-function tapPt(fx,fy){if(!isoOn())return TAPS?TAPS.w:{x:0,y:0};const j=clamp(Math.floor(fy),0,H-1)*W+clamp(Math.floor(fx),0,W-1);return tapAt(ptFoot(fx*TS,fy*TS),Math.max(0,hiAt(j)))}
-function tapObj(j){return isoOn()?tapAt(objFootJ(j)):TAPS?TAPS.w:{x:0,y:0}}
+function tapPt(fx,fy){const j=clamp(Math.floor(fy),0,H-1)*W+clamp(Math.floor(fx),0,W-1);return tapAt(ptFoot(fx*TS,fy*TS),Math.max(0,hiAt(j)))}
+function tapObj(j){return tapAt(objFootJ(j))}
 /* 地面にぬるマスのわく（高い段は、その高さに） */
-function qRect(c,x,y,w,h,j,stroke){if(isoOn()){const s=Math.max(0,hiAt(j))*IQD;stroke?c.strokeRect(x-s,y-s,w,h):c.fillRect(x-s,y-s,w,h)}else{const z=liftOf(j);stroke?c.strokeRect(x,y-z,w,h):c.fillRect(x,y-z,w,h)}}
+function qRect(c,x,y,w,h,j,stroke){const s=Math.max(0,hiAt(j))*IQD;stroke?c.strokeRect(x-s,y-s,w,h):c.fillRect(x-s,y-s,w,h)}
 /* 立てて描いた物の上の点（いままでの見え方のせかいの点 wx,wy）の、画面の点（CSS の px）。テスト・案内の指で使う */
-function standS(A,wx,wy,lv){if(!isoOn())return{x:(wx-cam.x)*cam.z,y:(wy-cam.y)*cam.z};const cx=camCX(),cy=camCY();return{x:VW/2+(A.px-isoX(cx,cy)+(wx-A.fx)*IQSX)*cam.z,y:VH/2+(A.py-(lv||0)*IQL-isoY(cx,cy)+(wy-A.fy)*IQSY)*cam.z}}
+function standS(A,wx,wy,lv){const cx=camCX(),cy=camCY();return{x:VW/2+(A.px-isoX(cx,cy)+(wx-A.fx)*IQSX)*cam.z,y:VH/2+(A.py-(lv||0)*IQL-isoY(cx,cy)+(wy-A.fy)*IQSY)*cam.z}}
 function objS(j,wx,wy){return standS(objFootJ(j),wx,wy)}
 function ptS(fx,fy,wx,wy){const j=clamp(Math.floor(fy),0,H-1)*W+clamp(Math.floor(fx),0,W-1);return standS(ptFoot(fx*TS,fy*TS),wx,wy,Math.max(0,hiAt(j)))}

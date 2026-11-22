@@ -25,7 +25,7 @@ function juiceHouse(h,now){if(JHS.length>4)return;let sx=0,sy=0,n=0;for(const j 
 function juiceHouseDraw(now){for(let i=JHS.length-1;i>=0;i--){const H=JHS[i],e=now-H.t0;if(e>JHOUSEMS+900){JHS.splice(i,1);continue}const P=2;
     const u=Math.min(1,e/JHOUSEMS),a0=u*Math.PI*2;
     for(const c of H.cells){let d=a0-c.a;if(d<0)continue;/* まだ光がとどいていない壁 */const fade=e>JHOUSEMS?1-(e-JHOUSEMS)/900:1,hot=Math.max(0,1-d/.9);ctx.globalAlpha=Math.max(0,(.10+.3*hot)*fade);ctx.fillStyle=hot>.5?'#fffbe6':'#ffe58a';
-      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?liftY((c.y|0)*W+(c.x|0)):0);if(isoOn())isoGroundLv(ctx,isoLv((c.y|0)*W+(c.x|0)));const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
+      const x=c.x*TS,y=c.y*TS;isoGroundLv(ctx,isoLv((c.y|0)*W+(c.x|0)));const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
     if(e>=JHOUSEMS&&!H.pop){H.pop=1;const x=H.cx*TS,y=(H.top-.6)*TS;fx.push({k:'ring',x,y,life:1,col:'rgba(255,240,180,.95)'});for(let k=0;k<14;k++){const a=-Math.PI*(k/13),sp=70+Math.random()*60;fx.push({k:'p',x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-50,life:.9+Math.random()*.3,col:['#ffe58a','#fffbe6','#f6a650','#8fd06a'][k%4],r:3})}jKnock(784,0,.6,.12);jKnock(1176,.06,.45,.1)}/* 家の上で、ぽん */}
   ctx.globalAlpha=1;isoBack(ctx)}
 
@@ -45,7 +45,7 @@ function waveR(now){if(!JWAVE)return-1;const e=now-JWAVE.t0;if(e>JWAVEMS+400){JW
 function waveSway(j,now){/* swayK から：光のなみがふれた木・花が、ぷるっとゆれる */if(!JWAVE)return 0;const R=waveR(now);if(R<0)return 0;const d=Math.hypot(j%W+.5-JWAVE.x,((j/W)|0)+.5-JWAVE.y),q=R-d;return q>0&&q<3?Math.sin(q*5)*.06*(1-q/3):0}
 function juiceWaveDraw(now){const R=waveR(now);if(R<0)return;const e=now-JWAVE.t0,fade=e>JWAVEMS?1-(e-JWAVEMS)/400:1,P=2,cx=JWAVE.x*TS,cy=JWAVE.y*TS,rr=R*TS,n=Math.max(24,Math.round(R*10));
   for(let b=0;b<3;b++){ctx.globalAlpha=Math.max(0,fade*(b?.32/b:.75));ctx.fillStyle=b?'#ffe58a':'#fffbe6';const r2=rr-b*10;if(r2<=0)continue;/* 光の輪は、ドットの点をならべる（だ円：見おろし） */
-    for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=cx+Math.cos(a)*r2,y=cy+Math.sin(a)*r2*(isoOn()?1:.62);/* クォータービュー：地面の円（ひし形の地面の描き方で、横長の形になる） */ctx.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P*(b?1:2),P)}}
+    for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=cx+Math.cos(a)*r2,y=cy+Math.sin(a)*r2;/* クォータービュー：地面の円（ひし形の地面の描き方で、横長の形になる） */ctx.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P*(b?1:2),P)}}
   ctx.globalAlpha=1}
 
 function juice2Frame(now){if(typeof juice3Frame==='function')juice3Frame(now);juiceHouseWatch(now);if(typeof zkMsTick==='function')zkMsTick(now);if(typeof orgelTick==='function')orgelTick(now)}

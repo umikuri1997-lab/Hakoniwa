@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 import chips
 
-SIZE = 224   # js/houses.js の GRTEX・DRTEX と同じ
+SIZE = 224   # js/houses.js の DRTEX と同じ
 
 def tex(name):
     im = Image.open(os.path.join(HERE, 'src', name + '.jpg')).convert('RGB')

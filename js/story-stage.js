@@ -125,7 +125,7 @@ function storyStageAdd(add,now){const d=sacredDirection();if(!d||!d.effects.size
 function volIsoAt(e){if(e.kind==='ashFall'||e.kind==='morning'){ctx.setTransform(dpr,0,0,dpr,0,0);return}if(e.actor){isoAt(ctx,e.actor.x*TS,e.actor.y*TS);return}if(e.x!=null)isoAt(ctx,e.x*TS,e.y*TS)}
 function drawStoryStage(now){
   if(!S||WD!==KAZAN)return;const d=sacredDirection();if(!d||!d.effects.size)return;ctx.save();
-  for(const [key,e]of d.effects){if((now-e.at)/e.ms>=1){d.effects.delete(key);continue;}if(!e.kind||VOL_GROUND.has(e.kind)||e.kind==='egg'&&!e.actor)continue;if(isoOn())volIsoAt(e);volDrawFx(e,now);}
+  for(const [key,e]of d.effects){if((now-e.at)/e.ms>=1){d.effects.delete(key);continue;}if(!e.kind||VOL_GROUND.has(e.kind)||e.kind==='egg'&&!e.actor)continue;volIsoAt(e);volDrawFx(e,now);}
   ctx.globalAlpha=1;ctx.restore();
 }
 function volDrawFx(e,now){{const T=(now-e.at)/1000,p=(now-e.at)/e.ms;if(p>=1||T<0)return;
@@ -138,7 +138,7 @@ function volDrawFx(e,now){{const T=(now-e.at)/1000,p=(now-e.at)/e.ms;if(p>=1||T<
     else if(e.kind==='waterRing'){const a=e.actor;if(!a)return;const q=sacredEase(p);volRing(a.x*TS,a.y*TS+8,8+q*16,(8+q*16)*.4,'#bfe8ff',(1-q)*.9,8);}
     else if(e.kind==='hidane'){const a=e.actor;if(!a)return;const[x0,y0]=volTileXY(e.x,e.y),hx=a.x*TS+(a.face||1)*8,hy=a.y*TS-24-uLift(a),q=sacredEase(Math.min(1,(now-e.at)/e.fly)),ax=e.to?hx:x0,ay=e.to?hy:y0-6,bx=e.to?x0:hx,by=e.to?y0-6:hy,x=ax+(bx-ax)*q,y=ay+(by-ay)*q-Math.sin(Math.PI*q)*26,f=Math.sin(T*9)>0?1:0;
       volDot(x-4,y-4,8,8,'#ffb347',.35);volDot(x-3,y-3-f,6,6,'#ff9a3a');volDot(x-2,y-2-f,4,4,'#ffd27a');volDot(x-1,y-1-f,2,2,'#fff3c0');}
-    else if(e.kind==='ashFall'){const IS=isoOn(),vx=IS?0:cam.x,vy=IS?0:cam.y,vw=IS?VW:VW/cam.z,vh=IS?VH:VH/cam.z,n=Math.min(e.n||30,40);
+    else if(e.kind==='ashFall'){const vx=0,vy=0,vw=VW,vh=VH,n=Math.min(e.n||30,40);
       for(let i=0;i<n;i++){const sp=16+(i%5)*5,x=vx+((i*0.6180339)%1)*vw+Math.sin(T+i)*6,y=vy+((T*sp+i*53)%vh);volDot(x,y,2,2,i%2?'#8f8a83':'#c9c3ba',.7*fade);}
       if(e.haze){const[x,y]=volTileXY(VOLJ%W+.5,OFF+1);for(let r=0;r<6;r++)volDot(x-150,y-60+r*14,300,8,'#8a8580',.08*fade);}}
     else if(e.kind==='campfire'){const[x,y]=volTileXY(e.x,e.y);volDot(x-6,y+2,12,2,'#6b4a33');for(let i=0;i<3;i++){const fh=5+((Math.sin(T*11+i*2)+1)*2|0);volDot(x-4+i*3,y+2-fh,3,fh,'#ff8a3a',fade);volDot(x-3+i*3,y+3-fh*.6,1,Math.max(1,fh*.6|0),'#ffe08a',fade);}}
@@ -151,7 +151,7 @@ function volDrawFx(e,now){{const T=(now-e.at)/1000,p=(now-e.at)/e.ms;if(p>=1||T<
     else if(e.kind==='yoganPulse'){const[x,y]=volTileXY(e.x,e.y),g=Math.min(1,(now-e.at)/e.grow);for(let k=0;k<3;k++){const q=(T*.8+k/3)%1,r=Math.round(6+q*22*g);ctx.globalAlpha=(1-q)*.8*fade;ctx.fillStyle=k%2?'#ff7a3a':'#ffd08a';ctx.fillRect(Math.round(x-r),Math.round(y-r*.5),r*2,1);ctx.fillRect(Math.round(x-r),Math.round(y+r*.5),r*2,1);ctx.fillRect(Math.round(x-r),Math.round(y-r*.5),1,r);ctx.fillRect(Math.round(x+r),Math.round(y-r*.5),1,r);}volDot(x-5,y-16,10,10,'#ffb347',.25*g*fade);}
     else if(e.kind==='heatPillar'){const[x,y]=volTileXY(e.x,e.y),hgt=Math.round(170*sacredEase(Math.min(1,p/.35))),out=Math.min(1,(1-p)*3);for(let r=0;r<hgt;r+=2){const w=10+((Math.sin(T*12+r*.3)+1)*2|0),a=(1-r/hgt)*.75*out;volDot(x-w/2,y-r,w,2,r%6<2?'#fff3c0':r%6<4?'#ffd08a':'#ffb347',a);}for(let i=0;i<8;i++){const ph=(T*.9+i/8)%1;volDot(x-14+((i*11)%28),y-ph*hgt,2,2,'#fff6c8',(1-ph)*out);}}
     else if(e.kind==='lanterns'){e.pts.forEach(([lx,ly],i)=>{const on=now-e.at-i*(e.step||0);if(on<0)return;const[x,y]=volTileXY(lx,ly),k=Math.min(1,on/300),fl=Math.sin(T*6+i)>0?1:0;volDot(x-6,y-26,12,12,'#ffcf7a',.25*k);volDot(x-2,y-24,4,1,'#5a3a2a');volDot(x-3,y-23,6,7,'#e25a3a');volDot(x-2,y-22,4,5,'#ffb36b',k);volDot(x-1,y-21,2,2+fl,'#fff0b8',k);volDot(x-2,y-16,4,1,'#5a3a2a');volDot(x,y-15,1,14,'#6b4a33');});}
-    else if(e.kind==='morning'){const IS=isoOn(),vx=IS?0:cam.x,vy=IS?0:cam.y,vw=IS?VW:VW/cam.z,vh=IS?VH:VH/cam.z,a=Math.sin(Math.PI*p);volDot(vx,vy,Math.ceil(vw)+2,Math.ceil(vh)+2,'#fff1c8',.22*a);for(let i=0;i<5;i++)volDot(vx+vw*(.15+i*.18),vy,6,Math.ceil(vh*.6),'#fff6dc',.12*a);}
+    else if(e.kind==='morning'){const vx=0,vy=0,vw=VW,vh=VH,a=Math.sin(Math.PI*p);volDot(vx,vy,Math.ceil(vw)+2,Math.ceil(vh)+2,'#fff1c8',.22*a);for(let i=0;i<5;i++)volDot(vx+vw*(.15+i*.18),vy,6,Math.ceil(vh*.6),'#fff6dc',.12*a);}
     else if(e.kind==='ashPile'){const[x,y]=volTileXY(e.x,e.y);volDot(x-8,y+3,16,3,'#8f8a83',.9*fade);volDot(x-5,y+1,10,2,'#b3ada4',.9*fade);volDot(x-2,y,4,1,'#cfc9c0',.9*fade);}
     else if(e.kind==='lightPat'){const a=e.actor;if(!a)return;const k=sacredEase(Math.min(1,T/1.2)),n=e.from,x0=n.x*TS,y0=n.y*TS-70,x1=a.x*TS,y1=a.y*TS-44-uLift(a)+Math.round(Math.sin(T*6)*2)*(k>=1?1:0),x=x0+(x1-x0)*k,y=y0+(y1-y0)*k;volDot(x-5,y-5,10,10,'#fff3c0',.3);volDot(x-3,y-3,6,6,'#ffe7a0',.85);volDot(x-1,y-1,2,2,'#ffffff');}
     else if(e.kind==='deviceTurn'){const[x,y]=volTileXY(e.x,e.y),q=sacredEase(Math.min(1,p/.7)),ang=Math.round(q*8)/8*Math.PI,cx=x,cy=y-22;for(let i=-4;i<=4;i++)volDot(cx+Math.cos(ang)*i*1.5,cy-Math.sin(ang)*i*1.5*.6,2,2,'#ffe08a',fade);const tx=cx+Math.cos(ang)*7,ty=cy-Math.sin(ang)*7*.6;volDot(tx-2,ty-2,4,4,'#ffb347',fade);}

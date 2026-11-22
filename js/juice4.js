@@ -67,7 +67,7 @@ function juiceFence(R,now){if(J4FENCE.length>3)return;const inn=new Set(R),edge=
   J4FENCE.push({cells,t0:now});for(let i=0;i<6;i++)j3Ding([0,4,7,12,16,19][i],i*J4FENCEMS/6000,.3);/* 光がまわるあいだ、鈴の音が上がっていく */
   if(typeof JOYU!=='undefined')for(const r of S.res){if(r.hidden||r.nap||r.act&&r.act.type==='sleep')continue;if(!inn.has((r.y|0)*W+(r.x|0))&&Math.hypot(r.x-cx,r.y-cy)>8)continue;JOYU.set(r,now+J4FENCEMS+1200);if(typeof JUMP!=='undefined')JUMP.set(r,now+J4FENCEMS)}}
 function juiceFenceDraw(now){const P=2,h=TS/2;for(let i=J4FENCE.length-1;i>=0;i--){const F=J4FENCE[i],e=now-F.t0;if(e>J4FENCEMS+800){J4FENCE.splice(i,1);continue}const a0=Math.min(1,e/J4FENCEMS)*Math.PI*2,fade=e>J4FENCEMS?1-(e-J4FENCEMS)/800:1;
-    for(const c of F.cells){const d=a0-c.a;if(d<0)continue;const hot=Math.max(0,1-d/.8),x=c.x*TS,y=isoOn()?c.y*TS:c.y*TS-j4Lift(c.x,c.y)-6;if(isoOn())isoGroundLv(ctx,isoLv((c.y|0)*W+(c.x|0)));/* クォータービュー：そのマスの地面に */
+    for(const c of F.cells){const d=a0-c.a;if(d<0)continue;const hot=Math.max(0,1-d/.8),x=c.x*TS,y=c.y*TS;isoGroundLv(ctx,isoLv((c.y|0)*W+(c.x|0)));/* クォータービュー：そのマスの地面に */
       ctx.globalAlpha=Math.max(0,(.12+.35*hot)*fade);ctx.fillStyle=hot>.5?'#fffbe6':'#ffe58a';ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);
       if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-P,y-h-2*P,2*P,2*P);ctx.fillRect(x-h,y-P,P,2*P);ctx.fillRect(x+h-P,y-P,P,2*P)}}}/* いまの所は、白い光のつぶ */
   ctx.globalAlpha=1}
@@ -78,7 +78,7 @@ function juiceMend(j,r){if(!j4OK()||J4MEND.length>4)return;const x=j%W,y=(j/W)|0
   j3U('twood',.3,0);j3Ding(12,J4MENDMS/1000,.3);j3Ding(19,J4MENDMS/1000+.06,.3);
   if(r&&typeof JOYU!=='undefined'&&!r.hidden){JOYU.set(r,now+J4MENDMS+900);if(typeof JUMP!=='undefined')JUMP.set(r,now+J4MENDMS)}}
 function juiceMendDraw(now){const P=2;for(let i=J4MEND.length-1;i>=0;i--){const m=J4MEND[i],e=now-m.t0;if(e>J4MENDMS+400){J4MEND.splice(i,1);continue}
-    const ISO=isoOn(),x0=m.x*TS,y0=ISO?m.y*TS:m.y*TS-m.lift-9,hh=ISO?TS:9+32;if(ISO)isoGroundLv(ctx,isoLv((m.y|0)*W+(m.x|0)));/* 壁の上の面から、巾木まで（クォータービューは、そのマスの地面に） */
+    const x0=m.x*TS,y0=m.y*TS,hh=TS;isoGroundLv(ctx,isoLv((m.y|0)*W+(m.x|0)));/* 壁の上の面から、巾木まで（クォータービューは、そのマスの地面に） */
     if(e<J4MENDMS){const u=e/J4MENDMS,bx=Math.round((x0-4+u*(TS+8))/P)*P;ctx.globalAlpha=.85;ctx.fillStyle='#fffbe6';ctx.fillRect(bx,y0,2*P,hh);ctx.globalAlpha=.4;ctx.fillStyle='#ffe58a';ctx.fillRect(bx-2*P,y0,2*P,hh)}/* 左から右へ、光の帯がはしる */
     else{ctx.globalAlpha=.35*(1-(e-J4MENDMS)/400);ctx.fillStyle='#fffbe6';ctx.fillRect(x0,y0,TS,hh)}}/* はしりおわると、壁ぜんたいが、ふわっと光ってきえる */
   ctx.globalAlpha=1}
@@ -88,7 +88,7 @@ function juiceWeb(j,side){if(!j4OK())return;const x=j%W,y=(j/W)|0,lift=j4Lift(x,
   for(let k=0;k<10&&J4THREAD.length<40;k++)J4THREAD.push({x:cx+(Math.random()-.5)*10,y:cy+(Math.random()-.5)*6,vx:(Math.random()-.5)*14,vy:-6-Math.random()*8,ph:Math.random()*6,t0:now,len:1400+Math.random()*600,w:k%3?1:2});/* 糸のきれはし：ふわふわ、ゆっくり落ちる */
   addFloatG(x+.5,y+.5,-1.5,'住み心地+5','#ffe58a');j3U('tcloth',.25,5);j3Ding(16,.15,.25);J4ST&&(J4ST.force=1)}
 function juiceThreadDraw(now,dt){const P=2;ctx.fillStyle='#fdfbf4';for(let i=J4THREAD.length-1;i>=0;i--){const t=J4THREAD[i],e=now-t.t0;if(e>t.len){J4THREAD.splice(i,1);continue}
-    isoAtA(ctx,isoOn()?fxFoot(t):null);t.vy=Math.min(t.vy+20*dt,14);t.x+=(t.vx+Math.sin(now/260+t.ph)*10)*dt;t.y+=t.vy*dt;ctx.globalAlpha=.85*(1-e/t.len);ctx.fillRect(Math.round(t.x/P)*P,Math.round(t.y/P)*P,P*t.w,P)}ctx.globalAlpha=1}
+    isoAtA(ctx,fxFoot(t));t.vy=Math.min(t.vy+20*dt,14);t.x+=(t.vx+Math.sin(now/260+t.ph)*10)*dt;t.y+=t.vy*dt;ctx.globalAlpha=.85*(1-e/t.len);ctx.fillRect(Math.round(t.x/P)*P,Math.round(t.y/P)*P,P*t.w,P)}ctx.globalAlpha=1}
 
 /* ---------- 6. ★がふえた ---------- */
 const J4STARP=['....o....','...o#o...','...###...','#########','.#######.','..#####..','..##.##..','.##...##.','.#.....#.'];

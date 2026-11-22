@@ -9,6 +9,6 @@
 /* せかいの向き → 画面の絵。back：うしろの絵か・side：よこを向いているか・f：よこの向き（1 東・−1 西）。かえすのは {back, f}（f：−1 で反転） */
 function isoFace(back,side,f){if(side)return{back:f<0,f:-1};return{back:!!back,f:1}}
 /* クォータービューの向きで描くか（地図の画面だけ。アイコン・図鑑・洞窟は、いままでの向き） */
-function isoFaceOK(c){return !ICON&&c===ctx&&isoOn()}
+function isoFaceOK(c){return !ICON&&c===ctx}
 /* 生き物（vw：'d' 正面・'u' うしろ・'' よこ、face：よこの向き）→ {vw, f}。クォータービューでないときは null */
 function isoVw(c,vw,face){if(!isoFaceOK(c))return null;const q=isoFace(vw==='u',!vw,face<0?-1:1);return{vw:q.back?'u':'d',f:q.f}}

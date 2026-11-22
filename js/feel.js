@@ -34,7 +34,6 @@ function snowCover(){return S&&S.snowA||0}
 const SNOWNS=7,SNOWNK=.55;
 function snowN(i){const x=i%W/SNOWNS,y=(i/W|0)/SNOWNS,ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,sm=t=>t*t*(3-2*t),v=(a,b)=>hash((iy+b)*977+(ix+a)*131+7),u=sm(fx),w=sm(fy);return(v(0,0)*(1-u)+v(1,0)*u)*(1-w)+(v(0,1)*(1-u)+v(1,1)*u)*w}
 function snowCell(i,fa){if(fa>=1)return 1;if(fa<=0)return 0;const c=(fa-SNOWNK*snowN(i))/(1-SNOWNK);return c<=0?0:c>=1?1:Math.ceil(c*8)/8}
-function waterSnowA(){const a=FEELC&&FEELC.snow||0;return a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0}/* 水ぎわの陸の雪（draw-world.js の waterShimmer）：地面の一面の雪と同じこさ *//* 0〜1：つもった雪（S.snowA） */
 function leafCover(){if(!S||seasonNow()!==2)return 0;return Math.min(1,.3+feelSeasonDay()*.15)}/* 秋：日がたつほど、たまる */
 function puddleLv(){if(!S)return 0;const h=hour();if(S.rain)return h<6?1:Math.min(1,.25+(h-6)/4);/* 雨の日：朝からふえる */
   if(S.wetD===dayNo()&&h>=6&&h<FEEL_DRYH)return 1-(h-6)/(FEEL_DRYH-6);return 0}/* 雨のつぎの日：昼にかけてかわく */
@@ -98,9 +97,9 @@ function feelPrep(now){snowTick();fireMeltTick();const h=hour(),k=seasonNow(),C=
 
 /* ---------- 地面の層（物・せいれいより下）。lifted：高い段のマスだけ（段差の絵のあとに描く） ---------- */
 function snowPat(c,A){if(!A.snowP){A.snowP=c.createPattern(A.snowT,'repeat');try{A.snowP.setTransform(new DOMMatrix([.5,0,0,.5,0,0]))}catch(e){}}return A.snowP}
-function feelRow(y,x0,x1,now,lifted,lv){/* lv：クォータービューで、その段のマスだけ（段の高さは、よぶ所が isoGroundLv でつける） */const ISO=isoOn();const C=FEELC,A=feelArt(),c=ctx,near=cam.z>=FARZ*1.6,snowA=C.snow>SNOWFULL0?Math.min(1,(C.snow-SNOWFULL0)/(1-SNOWFULL0)):0;let run=-1,runE=0,runY=0;
+function feelRow(y,x0,x1,now,lifted,lv){/* lv：クォータービューで、その段のマスだけ（段の高さは、よぶ所が isoGroundLv でつける） */const C=FEELC,A=feelArt(),c=ctx,near=cam.z>=FARZ*1.6,snowA=C.snow>SNOWFULL0?Math.min(1,(C.snow-SNOWFULL0)/(1-SNOWFULL0)):0;let run=-1,runE=0,runY=0;
   let runA=0;const snowFlush=()=>{if(run<0)return;c.globalAlpha=runA*.94;c.fillStyle=snowPat(c,A);c.fillRect(run,runY,runE-run,TS);c.globalAlpha=1;run=-1};
-  if(C.any)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const i=y*W+x,hi=hiAt(i);if(lifted?(ISO?hi!==lv:!hi):hi)continue;const gr=S.ground[i];if(fogAt(i))continue;const px=x*TS,py=y*TS-(ISO?0:hi*LIFT);
+  if(C.any)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const i=y*W+x,hi=hiAt(i);if(lifted?hi!==lv:hi)continue;const gr=S.ground[i];if(fogAt(i))continue;const px=x*TS,py=y*TS;
     if(gr===1){if(C.rain&&near&&S.obj[i]!=='bridge'&&hash(i*7+1)<.55){const ph=(now/1100+hash(i*3+2))%1;feelPut(c,A,A.rip[Math.min(3,(ph*4)|0)],px+4+hash(i*5)*10,py+8+hash(i*11)*12)}continue}/* 雨：水面の波紋 */
     const o=S.obj[i];if(snowA>0&&gr!==2&&!FEELIN.has(i)&&!RUGC.has(i)&&o!=='farm'&&!(o==='part'&&S.obj[S.ref[i]]==='farm')&&!feelMelt(i)){const f=S.floor[i];const ca=snowCell(i,snowA);if(ca>0&&(!f||f==='path'||f==='gravel'||f==='stone'||f==='brick')){if(run>=0&&(runE!==px||runY!==py||runA!==ca))snowFlush();if(run<0){run=px;runY=py;runA=ca}runE=px+TS}else snowFlush()}else snowFlush();/* 一面の雪：物の下・道の上も（家の中・床・畑・水・火のまわりはのぞく） */
     if(gr===2||o||FEELIN.has(i)||RUGC.has(i))continue;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')continue;/* 家の床・じゅうたんには出さない */
@@ -111,10 +110,10 @@ function feelRow(y,x0,x1,now,lifted,lv){/* lv：クォータービューで、�
     if(C.wet&&near&&hash(i*37+2)<(f?.3:.12)){const tw=Math.sin(now/(260+hash(i*7+5)*200)+hash(i*9)*40);if(tw>.6){c.globalAlpha=Math.min(1,(tw-.6)*3)*(f?.75:.5);c.fillStyle='#eef6ff';const dx=Math.round(px+3+hash(i*47)*24),dy=Math.round(py+5+hash(i*53)*22);c.fillRect(dx,dy,2,1);if(tw>.9)c.fillRect(dx+(hash(i*59)<.5?-1:2),dy,1,1);c.globalAlpha=1}}/* あらし：ぬれた地面・道のつや（光る点がまたたく） */
     if(C.dew>0&&near&&!f&&REV.has(i)&&hash(i*31+4)<.3){const tw=Math.sin(now/420+hash(i*7)*40);if(tw>.55){c.globalAlpha=C.dew*Math.min(1,(tw-.55)*4);c.fillStyle='#f6fdff';const dx=Math.round(px+4+hash(i*41)*24),dy=Math.round(py+6+hash(i*43)*22);c.fillRect(dx,dy,1,1);if(tw>.85){c.fillRect(dx-1,dy,3,1);c.fillRect(dx,dy-1,1,3)}c.globalAlpha=1}}}
   snowFlush();
-  for(const e of FEELEV){if(e.ry!==y||(lifted?(ISO?e.hi!==lv:!e.hi):e.hi))continue;const u=(now-e.t0)/e.life,ex=e.x*TS,ey=e.y*TS-(ISO?0:e.hi*LIFT);
+  for(const e of FEELEV){if(e.ry!==y||(lifted?e.hi!==lv:e.hi))continue;const u=(now-e.t0)/e.life,ex=e.x*TS,ey=e.y*TS;
     if(e.k==='rip'){c.globalAlpha=1-u*.4;feelPut(c,A,A.rip[Math.min(3,(u*4)|0)],ex-9,ey-4);c.globalAlpha=1}
     else if(e.k==='print'){if(C.snow<=0)continue;c.globalAlpha=u>.75?(1-u)*4:1;c.save();c.translate(ex,ey);if(e.f<0)c.scale(-1,1);feelPut(c,A,A.print,-4,-2);c.restore();c.globalAlpha=1}
-    else if(e.k==='kick'){if(ISO){const A=gFoot(ex,ey);isoStand(c,A,()=>feelKickDraw(c,e,now,A.fx,A.fy))}else feelKickDraw(c,e,now,ex,ey)}}}/* 足もとからとぶ粒は、立てて（クォータービュー） */
+    else if(e.k==='kick'){const A=gFoot(ex,ey);isoStand(c,A,()=>feelKickDraw(c,e,now,A.fx,A.fy))}}}/* 足もとからとぶ粒は、立てて（クォータービュー） */
 function feelKickAdd(km,x,y,hi,now,f,seed){/* 粒を1歩ぶん作る：粒ごとに、とぶ時間を先に出しておく */const P=[];let life=0;
   for(let n=0;n<km.n;n++){const s=seed*13+n*5,h=km.h[0]+(km.h[1]-km.h[0])*hash(s+1),sp=km.sp[0]+(km.sp[1]-km.sp[0])*hash(s+2),a=hash(s+3)*6.283,v0=Math.sqrt(2*FEELKG*h),ta=v0/FEELKG,tv=km.vt/FEELKG,dv=km.vt*km.vt/(2*FEELKG),tf=h<=dv?Math.sqrt(2*h/FEELKG):tv+(h-dv)/km.vt;
     P.push({vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.5,v0,ta,tf,ph:hash(s+4)*6.283,c:km.col[n%km.col.length]});life=Math.max(life,(ta+tf)*1000)}
@@ -123,8 +122,7 @@ function feelKickZ(p,t,km){/* 地面からの高さ：上がるあいだは重�
 function feelKickDraw(c,e,now,ex,ey){const t=(now-e.t0)/1000,km=e.km;for(const p of e.P){const T=p.ta+p.tf;if(t>=T)continue;const u=t/T,z=feelKickZ(p,t,km),dx=p.vx*t-e.f*km.drift*t+(km.fl?Math.sin(t*9+p.ph)*km.fl*Math.min(1,t*4):0),dy=p.vy*t-z;
   c.globalAlpha=u>.7?(1-u)/.3*.85:.85;c.fillStyle=p.c;c.fillRect(Math.round((ex+dx)*2)/2,Math.round((ey+dy)*2)/2,1,1)}c.globalAlpha=1}
 function feelGround(now,x0,y0,x1,y1){if(!S)return;feelPrep(now);if(!FEELC.any&&!FEELEV.length)return;const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)feelRow(y,x0,x1,now,0);ctx.imageSmoothingEnabled=sm}
-function feelLifted(add,x0,y0,x1,y1,now){if(!S||!S.hi||cam.z<FARZ||(!FEELC.any&&!FEELEV.length))return;for(let y=Math.max(0,y0);y<Math.min(H,y1);y++){let any=false;for(let x=Math.max(0,x0);x<Math.min(W,x1);x++)if(S.hi[y*W+x]){any=true;break}if(!any)continue;if(isoOn()){for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const lv=S.hi[y*W+x];if(lv>0)add(y,-1,null,()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;isoGroundLv(ctx,lv);feelRow(y,x,x+1,now,1,lv);ctx.imageSmoothingEnabled=sm},-1,false,x+y-.98)}continue}/* クォータービュー：マスごとに、その段の高さの地面に（そのマスの上の面 isoTile のすぐあと） */
-    add(y-1+.0006,-1,null,()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;feelRow(y,x0,x1,now,1);ctx.imageSmoothingEnabled=sm},-1)}}
+function feelLifted(add,x0,y0,x1,y1,now){if(!S||!S.hi||cam.z<FARZ||(!FEELC.any&&!FEELEV.length))return;for(let y=Math.max(0,y0);y<Math.min(H,y1);y++){let any=false;for(let x=Math.max(0,x0);x<Math.min(W,x1);x++)if(S.hi[y*W+x]){any=true;break}if(!any)continue;for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const lv=S.hi[y*W+x];if(lv>0)add(y,-1,null,()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;isoGroundLv(ctx,lv);feelRow(y,x,x+1,now,1,lv);ctx.imageSmoothingEnabled=sm},-1,false,x+y-.98)}}}/* マスごとに、その段の高さの地面に（そのマスの上の面 isoTile のすぐあと） */
 
 /* ---------- 木・岩の上の雪：チップの絵の、上のふちに白いドットをのせる（チップごとに1回だけ作る） ---------- */
 const FEELCAPS=new Set(['tree','ntree','fruit','deadtree','rock','boulder','berry','bamboo']);
@@ -143,20 +141,8 @@ function feelCapOK(o,i){if(FEELCAPS.has(o))return true;const b=BL[o];if(!b||!FEE
 function feelCap(c,o,i,x,y,g){const a=FEELC.snow;if(a<=0||!feelCapOK(o,i))return;if(feelMelt(i))return;const ch=TREES.has(o)?plantChip(o,i,g):chipOf(o,i);if(!ch)return;const src=ch.src||ch,cap=feelCapOf(src,o);if(!cap)return;
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.save();const g0=c.globalAlpha,fa=a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0;c.globalAlpha=g0*Math.min(1,a*2.5);if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}const put=im=>{if(src.g===64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay)};put(cap);if(fa>0&&cap._thick){c.globalAlpha=g0*fa;put(cap._thick)}c.restore();c.imageSmoothingEnabled=sm}
 /* 屋根の雪：屋根の形の中に、よこに長い雪のすじをちらす（家ごとに1回だけ作る。1マス32ドットの細かさ） */
-function feelRoof(c,h,R,A){const a=FEELC.snow;if(a<=0||!R||!R.cv||!R.cv.width)return;let sn=h._sn;if(!sn||sn.R!==R){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),t=document.createElement('canvas');t.width=w;t.height=hh;const g=t.getContext('2d'),sd=h.x0*7+h.y0*13;
-    {const n=Math.max(4,Math.round(w*hh/900));for(let k=0;k<n;k++){const bw=18+((hash(sd+k*7)*22)|0),bh=6+((hash(sd+k*11)*5)|0),bx=Math.round(hash(sd+k*13+1)*(w-bw)),by=Math.round(hash(sd+k*17+2)*(hh-bh));/* ふんわりした雪のかたまりを、屋根のあちこちに */
-      for(let y=0;y<bh;y++){const u=(y+.5)/bh*2-1,hw=Math.sqrt(Math.max(0,1-u*u))*bw/2,l=Math.round(bw/2-hw+(hash(sd+k*3+y*5)-.5)*3),r=Math.round(bw/2+hw+(hash(sd+k*5+y*7)-.5)*3);if(r<=l)continue;g.fillStyle=y>=bh-1?'#cfdef0':y<bh*.45?'#ffffff':'#f3f8ff';g.fillRect(bx+l,by+y,r-l,1)}}}
-    g.globalCompositeOperation='destination-in';g.drawImage(R.cv,0,0,w,hh);
-    const f=document.createElement('canvas');f.width=w;f.height=hh;const q=f.getContext('2d'),ST=feelArt().snowT;for(let y=0;y<hh;y+=32)for(let x=0;x<w;x+=32)q.drawImage(ST,0,0,64,64,x,y,32,32);/* 屋根いっぱいの雪（つもりきったとき） */
-    q.fillStyle='#cfdef0';for(let y=12;y<hh;y+=16)q.fillRect(0,y,w,1);/* 屋根の段のうすいかげ */q.globalCompositeOperation='destination-in';q.drawImage(R.cv,0,0,w,hh);sn=h._sn={R,cv:t,full:f}}
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const fa=a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0;
-  if(fa>0){c.globalAlpha=A*fa*.95;c.drawImage(sn.full,R.ox,R.oy)}c.globalAlpha=A*Math.min(1,a*2.5);c.drawImage(sn.cv,R.ox,R.oy);c.globalAlpha=A;c.imageSmoothingEnabled=sm}/* はじめは、かたまりがちらばり、つもるほど屋根ぜんたいが白くなる */
 
 /* 屋根のつや（あらしの日）：屋根の形の中に、ぬれて光る点をちらす（家ごとに1回だけ作る。あらしでない日は手ばなす） */
-function feelRoofWet(c,h,R,A){if(!FEELC.wet||!R||!R.cv||!R.cv.width){if(h._wt){h._wt.cv.width=h._wt.cv.height=0;h._wt=null}return}let wt=h._wt;if(!wt||wt.R!==R){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),t=document.createElement('canvas');t.width=w;t.height=hh;const g=t.getContext('2d'),sd=h.x0*11+h.y0*17;
-    const n=Math.max(6,Math.round(w*hh/260));g.fillStyle='#eef6ff';for(let k=0;k<n;k++){const x=Math.round(hash(sd+k*13+3)*(w-3)),y=Math.round(hash(sd+k*19+5)*(hh-1));g.fillRect(x,y,2+((hash(sd+k*7)*2)|0),1)}
-    g.globalCompositeOperation='destination-in';g.drawImage(R.cv,0,0,w,hh);wt=h._wt={R,cv:t}}
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.globalAlpha=A*(.35+.25*Math.sin(performance.now()/420+h.x0));c.drawImage(wt.cv,R.ox,R.oy);c.globalAlpha=A;c.imageSmoothingEnabled=sm}
 
 /* ---------- 雲のかげ（晴れた昼）：1まいの絵をくりかえして、ゆっくり流す ---------- */
 let FEELCL=null;
@@ -164,7 +150,7 @@ function feelCloudPat(c){if(FEELCL)return FEELCL;const N=128,t=document.createEl
   for(let n=0;n<5;n++){const cx=hash(n*71+3)*N,cy=hash(n*37+9)*N;for(let k=0;k<5;k++){const rx=9+hash(n*5+k)*10,ry=5+hash(n*9+k*3)*5,ex=cx+(hash(n*11+k*7)-.5)*26,ey=cy+(hash(n*13+k*5)-.5)*10;for(const ox of[-N,0,N])for(const oy of[-N,0,N]){g.beginPath();g.ellipse(ex+ox,ey+oy,rx,ry,0,0,7);g.fill()}}}
   return FEELCL=c.createPattern(t,'repeat')}
 function feelClouds(c,now,dk){if(!S||S.rain||dk>.05)return;const h=hour(),a=FEEL_CLOUD*Math.min(1,(h-7)/1,(17-h)/1);if(!(a>0))return;const K=7,ox=(now*.0055)%(128*K),oy=(now*.0012)%(128*K),vw=VW/cam.z,vh=VH/cam.z;
-  c.save();c.imageSmoothingEnabled=true;c.globalAlpha=a;c.globalCompositeOperation='multiply';c.fillStyle=feelCloudPat(c);c.translate(ox,oy);c.scale(K,K);{const IV=isoOn()?isoView():null,X=IV?IV.x0*TS:cam.x,Y=IV?IV.y0*TS:cam.y,Wd=IV?(IV.x1-IV.x0)*TS:vw,Hd=IV?(IV.y1-IV.y0)*TS+HMAX*IQD:vh;/* 地面にうつるかげ：クォータービューは、見えている地面ぜんぶ */c.fillRect((X-ox)/K-1,(Y-oy)/K-1,Wd/K+2,Hd/K+2)}c.restore()}
+  c.save();c.imageSmoothingEnabled=true;c.globalAlpha=a;c.globalCompositeOperation='multiply';c.fillStyle=feelCloudPat(c);c.translate(ox,oy);c.scale(K,K);{const IV=isoView(),X=IV.x0*TS,Y=IV.y0*TS,Wd=(IV.x1-IV.x0)*TS,Hd=(IV.y1-IV.y0)*TS+HMAX*IQD;/* 地面にうつるかげ：クォータービューは、見えている地面ぜんぶ */c.fillRect((X-ox)/K-1,(Y-oy)/K-1,Wd/K+2,Hd/K+2)}c.restore()}
 
 /* ---------- 木もれ日（晴れた昼）：葉のある木の落ち影の中に、あたたかい光のまだら ----------
    落ち影のチップ（:sh）の、こい所の内がわにだけ、光のつぶ（ドットの楕円）を置く。つぶの場所はチップの絵からきめて、チップごとに1回だけ
@@ -193,7 +179,7 @@ function komorebi(sh,o,x,y,i,now){if(!kmbLeafy(o))return;const a=kmbNow();if(!(a
 
 /* ---------- 冬の家の中のぬくもり：屋根をはずした家の中を、あたたかい色に（夜の暗さより下） ---------- */
 function feelWarm(c,x0,y0,x1,y1){if(!S||seasonNow()!==3||!HOUSES.length)return;c.save();c.globalCompositeOperation='soft-light';c.fillStyle='rgb(255,168,96)';
-  for(const h of HOUSES){if(h.y1<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;const A=roofAOf(h);if(A>=.98)continue;c.globalAlpha=.34*(1-A);for(const q of h.set){if(isoOn()){isoGroundLv(c,isoLv(q));c.fillRect((q%W)*TS,((q/W)|0)*TS,TS+.5,TS+.5);continue}const z=liftOf(q);c.fillRect((q%W)*TS,((q/W)|0)*TS-z,TS+.5,TS+.5)}}
+  for(const h of HOUSES){if(h.y1<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;const A=roofAOf(h);if(A>=.98)continue;c.globalAlpha=.34*(1-A);for(const q of h.set){isoGroundLv(c,isoLv(q));c.fillRect((q%W)*TS,((q/W)|0)*TS,TS+.5,TS+.5)}}
   c.restore()}
 
 /* ---------- 空気の層（物・せいれいより上、夜の暗さより下）：朝もや・白い息・かげろう・のきのしずく・雨のはね ---------- */
@@ -207,7 +193,7 @@ function feelAir(now,x0,y0,x1,y1){if(!S)return;const C=FEELC,A=feelArt(),c=ctx,s
       isoCell(c,i,()=>{for(let n=0;n<3;n++){const p=(now/2600+hash(i*3+n*5))%1,wx=x*TS+6+n*10+Math.sin(now/260+p*9+n*2)*1.5;c.globalAlpha=C.heat*.5*Math.sin(p*Math.PI);c.fillStyle='#fffdf0';for(let q=0;q<3;q++)c.fillRect(Math.round((wx+Math.sin(now/200+q*1.4+n)*1.2)*2)/2,Math.round((by-p*20-q*2)*2)/2,1,2)}})}c.globalAlpha=1}
   if(C.cold)for(const r of S.res){/* 白い息：冬と夜あけ、外で起きているせいれい */if(r.hidden||r.nap||r.x<x0-1||r.x>x1+1||r.y<y0-1||r.y>y1+1)continue;const a=r.act;if(a&&(a.type==='sleep'||a.type==='watchpost'||a.type==='bathe')&&a.stage==='do')continue;const i=(r.y|0)*W+(r.x|0);if(FEELIN.has(i))continue;
     const u=((now+hash((r.id|0)*37+11)*FEEL_BREATH)%FEEL_BREATH)/1100;if(u>=1)continue;const f=r.face<0?-1:1,bx=r.x*TS+f*(13+u*7)-(f<0?3:0),by=r.y*TS-8-liftOf(i)-u*5,P=v=>Math.round(v*2)/2;c.fillStyle='#ffffff';/* 口のよこから出て、ふくらみながら上へきえる（ドット3つ） */
-    const br=()=>{c.globalAlpha=(1-u)*.95;c.fillRect(P(bx),P(by),2.5+u*2,2.5+u*1.5);c.globalAlpha=(1-u)*.8;c.fillRect(P(bx+f*(3.5+u*3)),P(by-2.5-u*2),2+u*3,2+u*2.5);if(u>.2){c.globalAlpha=(1-u)*.6;c.fillRect(P(bx+f*(1.5+u*8)),P(by-5.5-u*4),2+u*2.5,2+u*2)}c.globalAlpha=1};if(isoOn())isoStand(c,gFoot(r.x*TS,r.y*TS),br);else br()}/* クォータービューは、その子の足もとに立てて */
+    const br=()=>{c.globalAlpha=(1-u)*.95;c.fillRect(P(bx),P(by),2.5+u*2,2.5+u*1.5);c.globalAlpha=(1-u)*.8;c.fillRect(P(bx+f*(3.5+u*3)),P(by-2.5-u*2),2+u*3,2+u*2.5);if(u>.2){c.globalAlpha=(1-u)*.6;c.fillRect(P(bx+f*(1.5+u*8)),P(by-5.5-u*4),2+u*2.5,2+u*2)}c.globalAlpha=1};isoStand(c,gFoot(r.x*TS,r.y*TS),br)}/* クォータービューは、その子の足もとに立てて */
   if(C.mist>0&&cam.z>=FARZ){/* 朝もや：水べに、うすい白いもやが、ゆっくり流れる */const s=A.mist;
     for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0-2);x<Math.min(W,x1+2);x++){const i=y*W+x;if(!waterJ(i)||hash(i*19+3)>.3)continue;if(fogAt(i))continue;const dx=Math.sin(now/5200+hash(i*7)*6.283)*14,dy=Math.sin(now/3300+hash(i*11)*6.283)*2;c.globalAlpha=C.mist*(.45+.25*Math.sin(now/2600+hash(i*5)*6.283));isoCell(c,i,()=>feelPut(c,A,s,x*TS-14+dx,y*TS+4+dy-liftOf(i)))}c.globalAlpha=1}
   c.imageSmoothingEnabled=sm}

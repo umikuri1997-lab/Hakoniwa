@@ -133,47 +133,7 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))&&!decayed(j)||HOME_
 const OPENH=new Set(),ROOFS=new Map(),hKey=h=>h.x0+','+h.y0;
 function roofAOf(h){const k=hKey(h);let v=ROOFS.get(k);if(!v){v={a:OPENH.has(k)?0:1};ROOFS.set(k,v)}return v.a}/* 描くときは読むだけ。すけぐあいは stepLooks で進める */
 const ROOFCOL={red:{h:6,s:.42,n:'赤'},blue:{h:212,s:.36,n:'青'},green:{h:105,s:.32,n:'緑'},brown:{h:24,s:.38,n:'こげ茶'}};/* 屋根の色：色あい（0〜360）とあざやかさ。明るさは、もとの絵のまま */
-function roofTint(c,cv,P){c.save();c.setTransform(1,0,0,1,0,0);const d=c.getImageData(0,0,cv.width,cv.height),p=d.data,H=P.h/360;
-  const f=(q,t,v)=>{if(v<0)v+=1;if(v>1)v-=1;return v<1/6?q+(t-q)*6*v:v<1/2?t:v<2/3?q+(t-q)*(2/3-v)*6:q};
-  for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const r=p[i]/255,g=p[i+1]/255,b=p[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,s=P.s*(1-Math.abs(2*l-1)*.6);/* 明るい所・暗い所は、あざやかさを少しおさえる */
-    const t=l<.5?l*(1+s):l+s-l*s,q=2*l-t;p[i]=f(q,t,H+1/3)*255;p[i+1]=f(q,t,H)*255;p[i+2]=f(q,t,H-1/3)*255}
-  c.putImageData(d,0,0);c.restore()}
-function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使い回す（形がかわるまで） */
-  let minx=W,maxx=0,miny=H,maxy=0;for(const j of h.set){const x=j%W,y=(j/W)|0;minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y)}
-  const ox=minx*TS-3,oy=miny*TS-16,w=(maxx-minx+1)*TS+6,hh=(maxy-miny+1)*TS+26;
-  const cv=document.createElement('canvas');cv.width=Math.ceil(w*sc);cv.height=Math.ceil(hh*sc);const c=cv.getContext('2d');c.setTransform(sc,0,0,sc,-ox*sc,-oy*sc);
-  {const A=1;
-    const top=new Map(),bot=new Map();for(const j of h.set){const x=j%W,y=(j/W)|0;if(!top.has(x)||top.get(x)>y)top.set(x,y);if(!bot.has(x)||bot.get(x)<y)bot.set(x,y)}
-    let tx=-1,ty=H;const ys=Math.min(...top.values()),ye=Math.max(...bot.values()),nR=ye-ys+1;const rY=nR<=3?ys*TS+3:nR<=6?(ye-3)*TS+TS/2:(ys+Math.floor((nR-1)/2)-1)*TS+TS/2;/* 棟：3マス以下は一番上の端、6マス以下は下から4マス目、それより大きいと中心のひとつ上 */
-    for(const[x,y0]of top){const y1=bot.get(x),px=x*TS,lx=top.has(x-1)?px-.6:px+1,rx=top.has(x+1)?px+TS+.6:px+TS-1,/* となりの列と少し重ねて、すき間の線を出さない */t=y0*TS-11,b=y1*TS+1;if(y0<ty||(y0===ty&&x>tx)){ty=y0;tx=x}
-
-      // 赤茶の瓦。横の列ごとに半分ずらした四角い瓦
-      const KW=WD===KAZAN;/* 火山のふもとは、黒い瓦。丸がわらを、たてにならべる */
-      c.fillStyle=KW?'#2b2c32':'#a06058';c.fillRect(lx,t,rx-lx,b-t);
-      c.save();c.beginPath();c.rect(lx,t,rx-lx,b-t);c.clip();
-      if(KW){const CW=8,RH=9;for(let col=Math.floor(lx/CW)-1;col*CW<rx+CW;col++){const xx=col*CW;c.fillStyle='#3d3f48';c.fillRect(xx+1,t,CW-3,b-t);c.fillStyle='rgba(175,182,200,.3)';c.fillRect(xx+1.6,t,1.2,b-t);c.fillStyle='rgba(0,0,0,.4)';c.fillRect(xx+CW-2.2,t,1.2,b-t)}
-        for(let row=Math.floor(t/RH);row*RH<b+RH;row++){const yy=row*RH;c.fillStyle='rgba(0,0,0,.45)';c.fillRect(lx,yy+RH-1.2,rx-lx,1.2);for(let col=Math.floor(lx/CW)-1;col*CW<rx+CW;col++){c.fillStyle='rgba(210,215,230,.22)';c.fillRect(col*CW+1.6,yy+.8,CW-4.4,1)}}}
-      else{const RH=11,SW=14;for(let row=Math.floor(t/RH)-1;row<=Math.ceil(b/RH);row++){const yy=row*RH,off=row%2?SW/2:0;
-        for(let k=-1;k<4;k++){const col=Math.floor((px-off)/SW)+k,xx=col*SW+off;c.fillStyle=(hash(col*97+row*13)<.5)?'#a86858':'#9c5e52';c.fillRect(xx+.6,yy+.6,SW-1.2,RH-1.6);c.fillStyle='rgba(205,140,120,.4)';c.fillRect(xx+1.5,yy+1.2,SW-3,1.4);c.fillStyle='rgba(110,55,45,.35)';c.fillRect(xx+SW-1.4,yy+1,1,RH-2.5)}
-        c.fillStyle='#7f463e';c.fillRect(lx,yy+RH-1,rx-lx,1.2)}}
-      if(rY>t+6&&rY<b-6){c.fillStyle='rgba(60,20,15,.2)';c.fillRect(lx,rY,rx-lx,b-rY);c.fillStyle='rgba(255,225,205,.08)';c.fillRect(lx,t,rx-lx,rY-t);/* 棟より手前の面は少し暗く */}
-      c.restore();c.fillStyle=KW?'#1d1e23':'#6e3a30';c.fillRect(lx,b-3,rx-lx,3);c.fillStyle='rgba(0,0,0,.16)';c.fillRect(lx,b,rx-lx,3);/* のき */
-      if(rY>t+6&&rY<b-6){c.fillStyle='rgba(0,0,0,.25)';c.fillRect(lx,rY+5,rx-lx,3);c.fillStyle=KW?'#22232a':'#6e3830';c.fillRect(lx,rY-5,rx-lx,10);c.fillStyle=KW?'#5a5d68':'#b06c5e';c.fillRect(lx,rY-5,rx-lx,3);for(let q=Math.floor(lx/9);q*9<rx;q++){const qx=q*9;if(qx>=lx&&qx<rx-1){c.fillStyle='rgba(50,20,15,.55)';c.fillRect(qx,rY-5,1.2,10)}}/* 棟がわら */}
-      
-      if(!top.has(x-1)){c.fillStyle=(KW?'rgba(15,15,20,.6)':'rgba(110,55,45,.55)');c.fillRect(lx,t,1.5,b-t)}if(!top.has(x+1)){c.fillStyle=(KW?'rgba(15,15,20,.6)':'rgba(110,55,45,.55)');c.fillRect(rx-1.5,t,1.5,b-t)}
-      {c.fillStyle='rgba(255,220,200,.18)';c.fillRect(lx,t,rx-lx,1.5)}}
-    let chim=null;if(tx>=0){const xr=Math.max(...top.keys()),ccx=top.has(xr-1)?xr-1:xr,yb=bot.get(ccx),ccy=yb-1>top.get(ccx)?yb-1:yb,cx=ccx*TS+TS-10,cy=ccy*TS+8;/* 屋根の右下から、1マスずつ内がわ */chim={cx,cy}}
-    {const rc=S&&S.roofCol&&S.roofCol[hKey(h)],P=rc&&ROOFCOL[rc];if(P)roofTint(c,cv,P)}/* 屋根の色（村レベル13から、家をタップしてえらぶ） */
-    return{cv,ox,oy,sc,chim}}}
-function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
-  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);dcRoof(c,h,R,A);/* 屋根の層の色（daycolor.js） */c.globalAlpha=A;if(typeof feelRoof==='function')feelRoof(c,h,R,A);if(typeof feelRoofWet==='function')feelRoofWet(c,h,R,A);/* 冬：屋根の雪 */
-    if(!R.chim||eo)continue;const cx=R.chim.cx,cy=R.chim.cy;
-    c.fillStyle='#8f8f8f';c.fillRect(cx-7,cy-10,14,18);
-    for(let r=0;r<3;r++)for(let k=0;k<2;k++){c.fillStyle=(r+k)%2?'#b8b8b8':'#acacac';c.fillRect(cx-6+k*6.5+(r%2?-2:0),cy-9+r*5.6,6,4.8)}
-    c.fillStyle='#9c9c9c';c.fillRect(cx-8.5,cy-14,17,5);c.fillStyle='#3a3a3a';c.fillRect(cx-5,cy-13,10,2.5);
-    {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
-  c.restore()}
-const GRTEX=224,DRTEX=224;/* 草地・あれ地のテクスチャの大きさ（tex:grass・tex:dry。tools/art/ground/ground_tex.py の SIZE） */
+const DRTEX=224;/* 草地・あれ地のテクスチャの大きさ（tex:grass・tex:dry。tools/art/ground/ground_tex.py の SIZE） */
 const DRYT={i:null,v:[]};function dryTex(px,py){/* 草原のあれ地（224×224でつながるテクスチャ）：224ドットの区画の列ごとに左右、行ごとに上下を、ばらばらに反転して、くりかえしを見えにくくする。反転したさかいは、かがみうつしでつながる（90度まわすと、さかいでひびが切れるので、まわさない） */
   const im=chipImgs(window.CHIPS['tex:dry'],'ground')[0];if(!im.ok)return im;if(DRYT.i!==im){DRYT.i=im;DRYT.v=[im];for(let f=1;f<4;f++){const c=document.createElement('canvas');c.width=c.height=DRTEX;const g=c.getContext('2d');g.translate(f&1?DRTEX:0,f&2?DRTEX:0);g.scale(f&1?-1:1,f&2?-1:1);g.drawImage(im,0,0,DRTEX,DRTEX);DRYT.v.push(c)}}
   const bx=Math.floor(px/DRTEX),by=Math.floor(py/DRTEX);return DRYT.v[(hash(bx*131+17)<.5?1:0)|(hash(by*137+29)<.5?2:0)]}
@@ -181,51 +141,10 @@ const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),..
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
-const GRR=12,GRT=.5,GRRIM=.07,GRSH=.06,GRWOB=1.6;/* 草地とあれ地のさかい（あつ森より）：草地のマスの形を、はば GRR ドットの箱でぼかして、こさ GRT でくぎる（角は丸く）。草地のふち GRRIM はこい緑、あれ地がわ GRSH はうすいかげ。GRWOB はさかいのうねり */
-function grassRound(sc,gt,X0,Y0,X1,Y1){/* 草地を、まわりのマスと高さ・水を見て、丸い形でしく。まわりがぜんぶ同じ（草地か、あれ地）のマスは、マスまるごと */
-  const G=k=>REV.has(k)&&S.ground[k]!==1,ok=(x,y)=>x>=0&&y>=0&&x<W&&y<H,w1=(u,a)=>a<0?Math.max(0,GRR-u)/(2*GRR):a>0?Math.max(0,u+GRR-TS)/(2*GRR):(Math.min(u+GRR,TS)-Math.max(u-GRR,0))/(2*GRR);
-  let T=null,tg=null;
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]===1)continue;const h0=hiAt(i),g0=G(i),px=x*TS,py=y*TS;let mix=false;const nb=[];
-    for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!ok(x+a,y+b))continue;const k=(y+b)*W+x+a;if(S.ground[k]===1||hiAt(k)!==h0)continue;/* 水・高さのちがうマスは見ない（がけのさかいは、まっすぐのまま） */const gg=G(k);nb.push([a,b,gg?1:0]);if(gg!==g0)mix=true}
-    if(!mix){if(g0)sc.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,px,py,TS,TS);continue}
-    if(!T){T=document.createElement('canvas');T.width=T.height=TS;tg=T.getContext('2d')}tg.clearRect(0,0,TS,TS);tg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,0,0,TS,TS);const id=tg.getImageData(0,0,TS,TS),d=id.data;
-    for(let v=0;v<TS;v++)for(let u=0;u<TS;u++){let n=0,m=0;for(const[a,b,gg]of nb){const wt=w1(u+.5,a)*w1(v+.5,b);m+=wt;n+=wt*gg}const f=(m?n/m:g0)+wNoise(px+u,py+v)*GRWOB,q=(v*TS+u)*4;
-      if(f>=GRT+GRRIM){continue}if(f>=GRT){d[q]=d[q]*.78|0;d[q+1]=d[q+1]*.84|0;d[q+2]=d[q+2]*.74|0;continue}/* 草地のふち：こい緑 */
-      if(f>=GRT-GRSH){d[q]=40;d[q+1]=46;d[q+2]=24;d[q+3]=38;continue}d[q+3]=0}/* あれ地がわ：草のかげ */
-    tg.putImageData(id,0,0);sc.drawImage(T,px,py)}
-  if(T)T.width=T.height=0}
-function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===KAZAN?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
-  if(WD===KUSA){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：224×224のテクスチャを、マップの位置どおりにしきつめる */
-  else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
-  const gt=chipImgs(C['tex:grass'],'ground')[0];grassRound(sc,gt,X0,Y0,X1,Y1);
-  {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
-    const land=k=>S.ground[k]===0,dpt0=WD===KUSA?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%GRTEX,ry%GRTEX,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%DRTEX,ry%DRTEX,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
-    for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
-      const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
-      if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
-      if(!L&&!U&&x>0&&y>0&&land(i-W-1))put(i-W-1,px,py,h2,h2);if(!R&&!U&&x<W-1&&y>0&&land(i-W+1))put(i-W+1,px+h2,py,h2,h2);if(!L&&!D&&x>0&&y<H-1&&land(i+W-1))put(i+W-1,px,py+h2,h2,h2);if(!R&&!D&&x<W-1&&y<H-1&&land(i+W+1))put(i+W+1,px+h2,py+h2,h2,h2)}}
-}/* 草とあれ地のさかいは grassRound（丸い形と草のふち） */
+const GRT=.5,GRRIM=.07,GRSH=.06
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
-function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;if(isoOn())isoGroundLv(ctx,isoLv(j));/* クォータービュー：その段の高さの地面に */drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}if(isoOn())groundTf(ctx,dpr*cam.z)}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
-function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物を、マス(X0,Y0)〜(X1,Y1)のはんいだけ描く */const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};
-  if(groundChipsOK())drawGroundChips(sc,X0,Y0,X1,Y1);else{
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;drawBarren(sc,i,x*TS,y*TS)}
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(REV.has(i))drawGrass(sc,i,x*TS,y*TS)}
-  for(const i of REV)if(inR(i))drawGrassBoundary(sc,i,i%W*TS,((i/W)|0)*TS)}
-  // 色むら：マス単位ではなく、なめらかにぼかした明暗を重ねる
-  {let nc=NOISEC;if(!nc||nc.width!==W||nc.height!==H){nc=NOISEC=document.createElement('canvas');nc.width=W;nc.height=H;const nx=nc.getContext('2d'),im=nx.createImageData(W,H);
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=0,n=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;v+=hash((yy*W+xx)*31+7);n++}v=v/n-.5;
-      const k=(y*W+x)*4;if(v>0){im.data[k]=255;im.data[k+1]=250;im.data[k+2]=220}else{im.data[k]=40;im.data[k+1]=55;im.data[k+2]=20}im.data[k+3]=Math.min(255,Math.abs(v)*2*70)}
-    nx.putImageData(im,0,0)}sc.save();sc.imageSmoothingEnabled=true;sc.imageSmoothingQuality='high';sc.drawImage(nc,-TS/2,-TS/2,(W+1)*TS,(H+1)*TS);sc.restore()}
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]!==1&&S.floor[i]&&!((HOME_WALLS.has(S.obj[i])||HOME_DOORS.has(S.obj[i]))&&!ROADF.has(S.floor[i])))drawFloor(sc,S.floor[i],x*TS,y*TS,i);/* 壁の下の床は、家の中がわだけ（wallMargで描く） */if(HOME_DOORS.has(S.obj[i])||HOME_WALLS.has(S.obj[i]))wallMarg(sc,i,x*TS,y*TS)}/* 壁・ドアの下の床（家の中がわ）も、地面の下絵に描く（毎コマ描くと、下絵とのさかいめに線が出る） */
-  drawWaterAll(sc,X0,Y0,X1,Y1);
-  // 固定物も、アニメーションする物と同じ足元の奥行きで並べる。
-  const fixed=[];
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o)||!(FLAT.has(o)||BL[o].floor)||FLAT.has(o)&&RUGC.has(i))continue;/* 地面にやきつけるのは、平らな物だけ（ラグの上の物は、ラグといっしょに毎コマ）。立っている物は毎コマ、足もとの順に描く */fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
-  fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);
-  for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
-}
-let SSIG=null,SSIG_S=null,SSIG_G='',NOISEC=null;
+function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;isoGroundLv(ctx,isoLv(j));/* クォータービュー：その段の高さの地面に */drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}groundTf(ctx,dpr*cam.z)}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
+let SSIG=null,SSIG_S=null,SSIG_G='';
 function staticSig(){/* マスごとに、地面の絵にかかわる中身を文字にしておく（前とくらべて、変わったマスだけ描き直すため） */const hs=new Set();for(const h of HOUSES)for(const j of h.set)hs.add(j);const M=WD===KAZAN&&S.st2?sprMap():null,sg=new Array(W*H);
   for(let i=0;i<W*H;i++){const o=S.obj[i],st=o&&BL[o]&&!(BL[o].dyn||BL[o].anim||TREES.has(o));sg[i]=o+'|'+(S.ref[i]??'')+'|'+S.ground[i]+'|'+(S.floor[i]||'')+'|'+(REV.has(i)?1:0)+(hs.has(i)?1:0)+(ashed(i)?1:0)+(M&&S.ground[i]===1&&springOn(M[i])?1:0)+(S.trapCd&&S.trapCd[i]>S.t?1:0)+'|'+(st&&S.dyn[i]?JSON.stringify(S.dyn[i]):'')+'|'+((S.win||{})[i]||'')+'|'+((S.rot||{})[i]||'')+'|'+(RUGC.has(i)?RUGC.get(i)+S.rug[RUGC.get(i)]+((S.rugRot||{})[RUGC.get(i)]||''):'')+'|'+(S.hp['L'+i]||'')}
   return sg}

@@ -33,10 +33,8 @@ function storyShot(points,o={}){
   // 会話欄を避けた、上側の見える範囲に収める。縦長・横長どちらでも同じ構図を保つ。
   const side=VW>VH&&VH<500;$('#dialog').classList.toggle('sacred-side',side);
   const panel=$('#dialog .dlg'),rect=panel?.getBoundingClientRect(),panelH=rect?.height||200,safeTop=side?(IS_STORY_REPLAY?16:76):76,dialogueTop=!$('#dialog').hidden&&rect?.height?rect.top:VH-Math.max(200,panelH)-90,safeBottom=side?VH-60:o.full?VH-110:Math.min(VH-56,Math.max(safeTop+100,dialogueTop-110)),height=safeBottom-safeTop,safeLeft=side?16:28,safeRight=side?VW*.54-12:VW-28;
-  let z,tx,ty;if(isoOn()){/* クォータービュー：画面の上でのはばで収める */const I=points.map(p=>[isoX(p[0],p[1]),isoY(p[0],p[1])]),il=Math.min(...I.map(p=>p[0])),ir=Math.max(...I.map(p=>p[0])),it=Math.min(...I.map(p=>p[1])),ib=Math.max(...I.map(p=>p[1]));
+  let z,tx,ty;{/* 画面の上でのはばで収める */const I=points.map(p=>[isoX(p[0],p[1]),isoY(p[0],p[1])]),il=Math.min(...I.map(p=>p[0])),ir=Math.max(...I.map(p=>p[0])),it=Math.min(...I.map(p=>p[1])),ib=Math.max(...I.map(p=>p[1]));
     z=Math.max(minZ(),Math.min(limit,(safeRight-safeLeft)/(ir-il+36),height/(ib-it+28)));const c=isoInv((il+ir)/2+(VW/2-(safeLeft+safeRight)/2)/z,(it+ib)/2+(VH/2-(safeTop+safeBottom)/2)/z);tx=c.x;ty=c.y}
-  else{z=Math.max(minZ(),Math.min(limit,(safeRight-safeLeft)/(right-left+36),height/(bottom-top+28)));
-  tx=(left+right)/2+(VW/2-(safeLeft+safeRight)/2)/z;ty=(top+bottom)/2+(VH/2-(safeTop+safeBottom)/2)/z}
   camAnim={fz:cam.z,tz:z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:seconds,sacred:true};
   d.shot={mode:o.mode||'points',full:!!o.full,cast:o.cast||[],points:points.map(p=>p.slice()),limit,left,right,top,bottom,z,safeTop,safeBottom};return d.shot;
 }

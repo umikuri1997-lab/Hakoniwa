@@ -147,8 +147,9 @@ def capture_old():
       return ((t^t>>>14)>>>0)/4294967296}}
     const W=1,H=1,TS=32,LIFT=0,S={},WNS=S,WN={dir:[1],br:[1]};
     const windOn=()=>true, hash=()=>0;
+    const isoLv=()=>0,isoGroundLv=()=>{},groundTf=()=>{},dpr=1,cam={z:1};
     """
-    source += world[world.index('let SKYTEX=null'):world.index('function waterCorner')]
+    source += world[world.index('let SKYTEX=null'):world.index('\n',world.index('const SKYFACE='))+1]
     source += wind[wind.index('function drawWindGround'):wind.index('    /* 風のすじ：')]
     source += """
     }}

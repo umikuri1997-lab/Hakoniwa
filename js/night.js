@@ -206,15 +206,15 @@ const SPKCOL=[['#fff6d8','#ffd84a','#ff9a4a'],['#ffffff','#d6b8ff','#9a7ae0']];/
 /* 数字と火花を描く（夜の暗さより上。せかいの座標） */
 function drawBattleFx(now){if(!DMGN.length&&!SPKS.length)return;const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   while(SPKS.length&&now-SPKS[0].t0>300)SPKS.shift();
-  const ISO=isoOn(),T=ISO?ctx.getTransform():null,at=f=>{if(ISO)fxStandTf(ctx,dpr*cam.z,f)};/* クォータービュー：当たった子の足もとに立てて（iso-fx.js） */
+  const T=ctx.getTransform(),at=f=>fxStandTf(ctx,dpr*cam.z,f);/* クォータービュー：当たった子の足もとに立てて（iso-fx.js） */
   for(const s of SPKS){const a=now-s.t0;if(a<0||a>300)continue;const q=a/300,C=SPKCOL[s.en?0:1];at(s);
     if(a<90){ctx.fillStyle=C[0];const L=a<45?8:5;ctx.fillRect(Math.round(s.x)-1,Math.round(s.y)-L,2,L*2);ctx.fillRect(Math.round(s.x)-L,Math.round(s.y)-1,L*2,2)}/* 当たった所の十字の光 */
     for(let i=0;i<7;i++){const an=(i/7)*6.283+s.sd*.37+i*.9,d=(6+((s.sd>>i)&3)*3)*(1-Math.pow(1-q,2))+4,g=q*q*8;ctx.fillStyle=C[i%3];ctx.globalAlpha=q<.6?1:1-(q-.6)/.4;ctx.fillRect(Math.round(s.x+Math.cos(an)*d)-1,Math.round(s.y+Math.sin(an)*d*.7+g)-1,2,2)}ctx.globalAlpha=1}
   while(DMGN.length&&now-DMGN[0].t0>900)DMGN.shift();const A=dgAtlas();
-  for(const d of DMGN){const a=now-d.t0;if(a<0||a>900)continue;if(ISO)isoUITf(ctx,fxFoot(d),d.x,d.y);/* 数は、のばさずに */const u=d.big?3:2,sc=a<80?.6+.7*a/80:a<180?1.3-.3*(a-80)/100:1,k=u*sc;
+  for(const d of DMGN){const a=now-d.t0;if(a<0||a>900)continue;isoUITf(ctx,fxFoot(d),d.x,d.y);/* 数は、のばさずに */const u=d.big?3:2,sc=a<80?.6+.7*a/80:a<180?1.3-.3*(a-80)/100:1,k=u*sc;
     const up=a<180?16*(1-Math.pow(1-a/180,2)):a<320?16-5*(a-180)/140:11+7*(a-320)/580,str=String(d.n),w=str.length*6*k+k,x0=d.x+d.dir*5*Math.min(1,a/320)-w/2,y0=d.y-up-9*k;
     ctx.globalAlpha=a<620?1:Math.max(0,1-(a-620)/280);for(let i=0;i<str.length;i++)ctx.drawImage(A,(+str[i])*7,d.row*9,7,9,x0+i*6*k,y0,7*k,9*k)}
-  ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm;if(T)ctx.setTransform(T)}
+  ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm;ctx.setTransform(T)}
 const SHAKEC={s:['shk2',200],m:['shk3',350],l:['shk',500]},SHAKER={s:1,m:2,l:3};let SHAKEN={r:0,t:0};
 function shakeScreen(lv){/* 画面のゆれ。lv：'s' 小・'m' 中・'l' 大（なし＝大）。ゆれているあいだは、小さいゆれで上書きしない。うごきをへらす設定では、ゆらさない */lv=SHAKEC[lv]?lv:'l';if(typeof uiReduced==='function'&&uiReduced())return;const now=performance.now();if(now<SHAKEN.t&&SHAKEN.r>SHAKER[lv])return;const v=$('#cv');if(!v)return;const[c,ms]=SHAKEC[lv];v.classList.remove('shk','shk2','shk3');void v.offsetWidth;v.classList.add(c);SHAKEN={r:SHAKER[lv],t:now+ms};setTimeout(()=>v.classList.remove(c),ms+50)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'「コワイノ」があつまった、大きな影が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きな「コワイノ」'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きな「コワイノ」'}};

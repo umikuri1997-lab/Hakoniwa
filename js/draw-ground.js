@@ -3,40 +3,20 @@
 /* ---------- 描画 ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
-const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ちぢめたときだけ、くわしい区画から作り、ちぢめるのをやめて GHALFT コマたったら手ばなす（ghalf・ghalfFree）。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
+const GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ちぢめたときだけ、くわしい区画から作り、ちぢめるのをやめて GHALFT コマたったら手ばなす（ghalf・ghalfFree）。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
 const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
-function gq(cx,cy){const k=cy*64+cx;let q=GRD.c.get(k);if(!q){q={f:null,l:null,u:0,st:false};GRD.c.set(k,q)}return q}
-function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわり4マス・下へ6マスもいっしょに描いて、区画の中だけをのこす：となりのマスからはみ出す平らな物・水のふち・草のふち）。半分の細かさの絵も、ここから作る */const t0=performance.now(),X0=cx*GCS,Y0=cy*GCS,X1=Math.min(W,X0+GCS)-1,Y1=Math.min(H,Y0+GCS)-1,w=(X1-X0+1)*TS+2*GPAD,h=(Y1-Y0+1)*TS+2*GPAD;
-  const c=q.f||document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,h);g.setTransform(1,0,0,1,GPAD-X0*TS,GPAD-Y0*TS);drawStaticArea(g,Math.max(0,X0-4),Math.max(0,Y0-4),Math.min(W-1,X1+4),Math.min(H-1,Y1+6));g.setTransform(1,0,0,1,0,0);
-  if(q.l){q.l.width=q.l.height=0;q.l=null}/* 半分の絵は、ちぢめたときに、くわしい絵から作る（ghalf） */
-  q.f=c;q.st=false;q.u=RFN;q.v=++GRD.n;/* 作りなおしの番号（遠くの絵が、新しくするかを見る） */GRD.bt+=performance.now()-t0;
-  let n=0;for(const v of GRD.c.values())if(v.f)n++;if(n>GFULL){const L=[...GRD.c.values()].filter(v=>v.f&&v.u<RFN-1).sort((a,b)=>a.u-b.u);for(const v of L){if(n<=GFULL)break;v.f.width=v.f.height=0;v.f=null;n--}}/* くわしい区画が多すぎたら、しばらく使っていない区画からすてる（半分の絵はのこす） */}
 function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()}],NX=(W-1)>>4,NY=(H-1)>>4;
-  if(isoOn()){igJobs(L);L.push(()=>{GRD.any=true});return {s:S,L,i:0}}/* クォータービュー：ひし形の地面の区画だけ（段差は PR3） */
-  for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q)});L.push(()=>{GRD.any=true});
-  if(WD!==KAZAN&&waterChipsOK())for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>waterChunk(cx,cy));
-  if(S.hi&&cliffChipsOK()){CPRE=S;const RW=cliffRuns(),keys=new Set();for(const[y,R0]of RW)for(const R of R0)for(let k=R.x0;k<=R.x1;k++)keys.add(cliffKey(k,y,R.lv));for(const K of [2,1])for(const k of keys)L.push(()=>cliffPart(k,K))}
-  if(S.hi&&cliffChipsOK())for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{if(!farOK(cx,cy))farBuild(cx,cy)});/* 遠くの絵（拡大が小さいとき）も、先に作っておく */
+  igJobs(L);L.push(()=>{GRD.any=true});/* ひし形の地面の区画 */
   return {s:S,L,i:0}}
 const STAGEMS=180;/* 読みこみ中、1コマにマップを作る時間（ミリ秒。長いほど、コマのあいだのむだがへって速い。%の出かたは、ゆっくりになる） */
 function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<STAGEMS){try{J.L[J.i]()}catch(e){frameErr('preload',e)}J.i++}if(J.i>=J.L.length){GRD.job=null;GRD.pre=J.s;tmpFree()}}
 function assetPct(){/* 絵の読みこみの進みぐあい（0〜1）。マップチップのアトラス（大きい絵）で半分、ほかの絵で半分 */let n=0,d=0,cn=0;const cp=(window.CHIPA||[]).length;for(let k=0;k<cp;k++){const a=chipPage(k);if(a.ok||a.bad)cn++}for(const k in ICI){const im=ICI[k];d++;if(im.ok||im.bad||im.complete)n++}for(const k in ART){const a=ART[k];d++;if(a.ok||a.bad)n++}return ((cp?cn/cp:1)+(d?n/d:1))/2}
 function loadPct(){/* 読みこみの%：絵の読みこみが30%、マップを作るのが70% */const J=GRD.job;return Math.min(99,Math.floor(J&&J.s===S?30+70*J.i/J.L.length:30*assetPct()))}
-function assetsOK(){/* 絵がぜんぶ読みこめたか（マップチップのアトラス・アイコン・そのほかの絵） */for(let n=0;n<(window.CHIPA||[]).length;n++){const a=chipPage(n);if(!a.ok&&!a.bad)return false}for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===KAZAN||waterChipsOK())&&cliffChipsOK()}
+function assetsOK(){/* 絵がぜんぶ読みこめたか（マップチップのアトラス・アイコン・そのほかの絵） */for(let n=0;n<(window.CHIPA||[]).length;n++){const a=chipPage(n);if(!a.ok&&!a.bad)return false}for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===KAZAN||waterChipsOK())}
 const stageReady=()=>GRD.pre===S;/* マップ全体を作りおわったか。おわるまで、マップを見せず、時間も止める */
 function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:15px';document.body.appendChild(d)}if(!d.querySelector('#ldTxt')){d.style.flexDirection='column';d.style.gap='6px';d.innerHTML='<canvas id="ldWalk" width="320" height="150" style="width:160px;height:75px;image-rendering:pixelated"></canvas><span id="ldTxt"></span>'}/* 歩くせいれいと、読みこみの文 */if(on){d.querySelector('#ldTxt').textContent='マップを読みこみ中… '+loadPct()+'%';if(typeof ldWalk==='function')ldWalk(d.querySelector('#ldWalk'))}d.hidden=!on;return d}
-function gget(cx,cy){/* 区画のくわしい絵（なければ・古ければ、すぐ作る） */if(GRD.s!==S)gclear();const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q);q.u=RFN;return q.f}
 const GHALFT=600;/* ちぢめるのをやめてから、半分の絵を手ばなすまでのコマ（約10秒） */
-function ghalf(q,force){/* 区画の半分の細かさの絵。なければ、くわしい絵をちぢめて作る（1コマ GBUD ミリ秒まで。こえたら null：くわしい絵をちぢめて描く） */if(q.l)return q.l;if(!q.f||!force&&GRD.bt>=GBUD)return null;const t0=performance.now(),l=document.createElement('canvas');l.width=Math.ceil(q.f.width/2);l.height=Math.ceil(q.f.height/2);const gl=l.getContext('2d');gl.imageSmoothingEnabled=true;gl.imageSmoothingQuality='high';gl.drawImage(q.f,0,0,l.width,l.height);q.l=l;GRD.bt+=performance.now()-t0;return l}
-function ghalfFree(){/* ちぢめていないあいだ、半分の絵を手ばなす（くわしい絵をすてた区画の分は、のこす） */if(GLOD){GRD.lu=RFN;return}if(RFN-(GRD.lu||0)<GHALFT)return;for(const v of GRD.c.values())if(v.l&&v.f){v.l.width=v.l.height=0;v.l=null}GRD.lu=RFN}
 function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false;if(typeof farClear==='function')farClear();if(typeof igClear==='function')igClear()}
-function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh) を、c の (dx,dy,dw,dh) へ描く（区画をまたいでもよい）。lod：半分の細かさの絵を使う */const kx=dw/sw,ky=dh/sh;
-  for(let cy=Math.max(0,Math.floor(sy/GPX));cy<=Math.min((H-1)>>4,Math.floor((sy+sh-.001)/GPX));cy++)for(let cx=Math.max(0,Math.floor(sx/GPX));cx<=Math.min((W-1)>>4,Math.floor((sx+sw-.001)/GPX));cx++){
-    const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
-    const q=GRD.s===S&&GRD.c.get(cy*64+cx);if(!q)continue;let im=lod?(ghalf(q)||q.f):(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;q.u=RFN;/* できていない区画はとばす（つぎのコマ以降に、見えている区画から作る）。くわしい絵をすてた区画は、半分の絵で */
-    const e1=a===ox&&a>sx?GPAD:0,e2=a2===ox+GPX&&a2<sx+sw?GPAD:0,f1=b===oy&&b>sy?GPAD:0,f2=b2===oy+GPX&&b2<sy+sh?GPAD:0,A=a-e1,B=b-f1,A2=a2+e2,B2=b2+f2;/* 区画のさかいでは、のりしろの分だけ、となりの区画にかさねて描く（Safari は切りとった所のはしを透明とまぜるので、さかいめに線が出る） */
-    c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}
-  dcBlit(c,dx,dy,dw,dh)}/* 物といっしょに描く地面の絵にも、地面の層の色（daycolor.js） */
 let dirty=true,STATICFULL=false,ICON=false,VIG=null;
 function artLoaded(){for(const q in iconCache)delete iconCache[q];STATICFULL=true;dirty=true}/* 絵が読みこまれたら、次に描くときに1回だけ地面を全部描きなおす */
 
@@ -78,61 +58,6 @@ function chipFoot(ch,im){if(ch._ft!==undefined)return ch._ft;if(!im||!im.ok)retu
     for(let y=h-1;y>=0&&bot<0;y--)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){bot=y;break}
     if(top>=0){const y1=Math.floor(bot-(bot-top+1)*.3);let l=w,rr=-1;for(let y=Math.max(0,y1);y<=bot;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){if(x<l)l=x;if(x>rr)rr=x}if(rr>=l)r={l,r:rr+1}}}catch(e){r=null}
   ch._ft=r;return r}
-function drawBarren(c,i,x,y){
-  const h=hash(i);
-  c.fillStyle=WD===KAZAN?'#a39280':'#b3a37c';c.fillRect(x,y,TS,TS);/* 火山のふもとは灰まじりの土 */
-  c.fillStyle='rgba(90,70,40,.18)';c.fillRect(x+hash(i*3)*26,y+hash(i*5)*26,4,3);
-  c.fillStyle='rgba(255,245,220,.18)';c.fillRect(x+hash(i*7)*28,y+hash(i*11)*28,3,2);
-  if(h<.22){c.strokeStyle='rgba(80,60,35,.35)';c.lineWidth=1;c.beginPath();const sx=x+4+h*40,sy=y+6+hash(i*13)*16;c.moveTo(sx,sy);c.lineTo(sx+5,sy+4);c.lineTo(sx+3,sy+9);c.moveTo(sx+5,sy+4);c.lineTo(sx+10,sy+3);c.stroke()}
-  if(h>.9){c.fillStyle='#8a7d62';c.beginPath();c.ellipse(x+20,y+22,3,2,0,0,7);c.fill()}
-}
-function drawGrass(c,i,x,y){
-  const h=hash(i);
-  // マスごとの角丸や別々のグラデーションをやめ、世界全体で色をつなぐ。
-  const g=c.createLinearGradient(0,0,W*TS,H*TS);g.addColorStop(0,'#a9ce7b');g.addColorStop(.48,'#9fc571');g.addColorStop(1,'#91b966');c.fillStyle=g;c.fillRect(x,y,TS,TS);
-  // 草地にやわらかな色むらと、葉の重なりを足す
-  if(h<.62){const a=x+5+hash(i*11)*20,b=y+6+hash(i*13)*20,rad=4+hash(i*17)*4;c.fillStyle=h<.24?'rgba(122,170,83,.12)':'rgba(226,231,151,.13)';c.beginPath();c.ellipse(a,b,rad,2.5+hash(i*19)*2,-.35,0,7);c.fill()}
-  if(hash(i*7)<.68){const a=x+7+hash(i*11)*17,b=y+8+hash(i*13)*16;c.fillStyle=hash(i*31)<.5?'#8cb262':'#91b568';c.beginPath();c.ellipse(a,b,1.5,3.2,-.45,0,7);c.ellipse(a+2.8,b-.5,1.5,3.1,.45,0,7);c.ellipse(a+1.4,b-2,1.2,3.5,0,0,7);c.fill();c.strokeStyle='rgba(224,239,171,.36)';c.lineWidth=.65;c.beginPath();c.moveTo(a+1.4,b+1);c.lineTo(a+1.4,b-4);c.stroke()}
-  if(h<.09){circ(c,x+8+hash(i*23)*16,y+8+hash(i*29)*16,1.5,h<.035?'#fff3f7':'#ffe27a')}
-}
-function grassBoundaryEdges(i){if(!REV.has(i)||S.ground[i]>=1)return [];const gx=i%W,gy=(i/W)|0;return [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]].filter(([dx,dy])=>gx+dx>=0&&gy+dy>=0&&gx+dx<W&&gy+dy<H&&!REV.has(i+dy*W+dx)&&S.ground[i+dy*W+dx]<1&&hiAt(i+dy*W+dx)===hiAt(i))}/* 高さのちがうとなりには、草のふちをのばさない（がけの上と下で、草地がまざらない） */
-function grassBoundaryCorners(i){
-  const gx=i%W,gy=(i/W)|0,hi0=hiAt(i),at=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]<1&&(hiAt(y*W+x)!==hi0?REV.has(i):REV.has(y*W+x)),corners=[/* 高さのちがうマスは、自分と同じとみなす */
-    {cells:[[gx-1,gy-1],[gx,gy-1],[gx-1,gy],[gx,gy]],x:gx*TS,y:gy*TS},
-    {cells:[[gx,gy-1],[gx+1,gy-1],[gx,gy],[gx+1,gy]],x:(gx+1)*TS,y:gy*TS},
-    {cells:[[gx,gy],[gx+1,gy],[gx,gy+1],[gx+1,gy+1]],x:(gx+1)*TS,y:(gy+1)*TS},
-    {cells:[[gx-1,gy],[gx,gy],[gx-1,gy+1],[gx,gy+1]],x:gx*TS,y:(gy+1)*TS}
-  ],out=[];
-  for(const q of corners){if(q.cells.some(([x,y])=>x<0||y<0||x>=W||y>=H||S.ground[y*W+x]>=1))continue;/* 水のマスがまじる角には、草とあれ地の角の絵をおかない（水のそばに土の丸い穴ができるので） */const mask=q.cells.map(([x,y])=>at(x,y)),n=mask.filter(Boolean).length,diagonal=n===2&&mask[0]===mask[3]&&mask[1]===mask[2];if((n!==1&&n!==3&&!diagonal)||!mask.includes(true))continue;const owner=Math.min(...q.cells.filter((_,k)=>mask[k]).map(([x,y])=>y*W+x));if(owner===i)out.push([q.x,q.y])}
-  return out
-}
-function drawGrassBoundary(c,i,x,y){for(const [dx,dy,side] of grassBoundaryEdges(i)){c.save();c.translate(x+(side===1||side===2?TS:0),y+(side>=2?TS:0));c.rotate(side*Math.PI/2);const gx=i%W,gy=(i/W)|0,axis=side===0||side===2?0:1,line=axis?gx+(side===1?1:0):gy+(side===2?1:0),seed=i*137+side*29,world=p=>(axis?gy*TS+p:gx*TS+p),noise=p=>{const z=world(p)/16,a=Math.floor(z),f=z-a,t=f*f*(3-2*f),key=line*7919+axis*104729;return(hash(key+a*374761393)*2-1)*(1-t)+(hash(key+(a+1)*374761393)*2-1)*t},wave=p=>noise(p)*2.6+Math.sin(world(p)*.1+line*1.7)*.55+Math.sin(world(p)*.25+line*2.3)*.2,barren=WD===KAZAN?'#a39280':'#b3a37c';c.fillStyle=barren;c.beginPath();c.moveTo(3,-17);c.lineTo(TS-3,-17);c.quadraticCurveTo(TS+1,-10,TS-3,wave(TS-3));for(let p=TS-3;p>=3;p-=2)c.lineTo(p,wave(p));c.quadraticCurveTo(-1,-10,3,-17);c.closePath();c.fill();for(let k=0;k<20;k++){const v=hash(seed*31+k*71),pos=k*1.7-1+hash(seed+k*37)*1.8,depth=2+v*4.3;c.fillStyle=k%4?'#9dc26e':'#8cb262';c.beginPath();c.ellipse(pos,wave(pos)+.6,2+hash(seed+k*17)*1.6,depth*.7,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(pos-1.7,wave(pos));c.quadraticCurveTo(pos-1.7,wave(pos)+depth*.6,pos+(v-.5)*3,wave(pos)+depth+1.5);c.quadraticCurveTo(pos+1.9,wave(pos)+depth*.4,pos+1.7,wave(pos));c.closePath();c.fill()}c.restore()}const radius=4.5;c.fillStyle=WD===KAZAN?'#a39280':'#b3a37c';for(const [cx,cy] of grassBoundaryCorners(i)){c.beginPath();c.arc(x+cx-i%W*TS,y+cy-((i/W)|0)*TS,radius,0,Math.PI*2);c.fill()}}
-function drawWaterAll(c,X0=0,Y0=0,X1=W-1,Y1=H-1){
-  const isW0=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,h=TS/2;/* 浅瀬も水として描く（石は毎コマ上に描く） */let isW=isW0;
-  const blob=(r)=>{c.beginPath();for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!isW(x,y))continue;const cx=x*TS+h,cy=y*TS+h;
-      const rr=r+hash(y*W+x)*3.5-.5,rb=r-1;c.moveTo(cx+rr,cy);c.arc(cx,cy,rr,0,7);
-      if(isW(x+1,y))c.rect(cx,cy-rb,TS,rb*2);if(isW(x,y+1))c.rect(cx-rb,cy,rb*2,TS);
-      if(isW(x+1,y)&&isW(x,y+1)&&isW(x+1,y+1))c.rect(cx,cy,TS,TS)}c.fill();
-    c.beginPath();for(let y=0;y<H-1;y++)for(let x=0;x<W-1;x++){const n=isW(x,y)+isW(x+1,y)+isW(x,y+1)+isW(x+1,y+1);if(n!==3)continue;const px=(x+1)*TS,py=(y+1)*TS;c.moveTo(px+r*.9,py);c.arc(px,py,r*.9,0,7)}
-    c.fill()};
-  const VW2=WD===KAZAN;
-  if(waterChipsOK()){/* ドット絵：マスの角ごとに、まわり4マスの水のあるなし（16通り）で形をえらぶ */
-    const C=window.CHIPS,dc=(k,x,y)=>{const ch=C[k];if(ch)drawChip(c,ch,'water',x,y,0)};
-    const corners=(f,k,d=dc)=>{for(let y=Y0;y<=Y1+1;y++)for(let x=X0;x<=X1+1;x++){const b=(f(x-1,y-1)?1:0)|(f(x,y-1)?2:0)|(f(x-1,y)?4:0)|(f(x,y)?8:0);if(b)d(k+':'+b,x*TS,y*TS)}};
-    /* 水のふちに、となりの地面をうつす処理はしない（水の下は草地の絵） */
-
-    if(!VW2){const t=document.createElement('canvas'),BAND=12,pti=chipImgs(C['tex:water'],'water')[0];for(let b0=Y0;b0<=Y1;b0+=BAND){const b1=Math.min(Y1,b0+BAND-1);t.width=(X1-X0+1)*TS;t.height=(b1-b0+1)*TS;const tc=t.getContext('2d');tc.setTransform(1,0,0,1,-X0*TS,-b0*TS);const dm=(k,x,y)=>{const ch=C[k];if(ch)drawChip(tc,ch,'water',x,y,0)};for(let y=b0;y<=b1+1;y++)for(let x=X0;x<=X1+1;x++){const b=(isW0(x-1,y-1)?1:0)|(isW0(x,y-1)?2:0)|(isW0(x-1,y)?4:0)|(isW0(x,y)?8:0);if(b)dm('waterm:'+b,x*TS,y*TS)}tc.globalCompositeOperation='source-in';tc.fillStyle=tc.createPattern(pti,'repeat');tc.fillRect(X0*TS,b0*TS,(X1-X0+1)*TS,(b1-b0+1)*TS);{const SM=skyM();if(SM){tc.globalCompositeOperation='source-atop';tc.fillStyle=tc.createPattern(skyTex(),'repeat');for(let y=b0;y<=b1;y++)for(let x=X0;x<=X1;x++)if(x>=0&&y>=0&&x<W&&y<H&&SM[y*W+x])tc.fillRect(x*TS,y*TS,TS,TS)}}/* 風：雲の海のマスは、下絵も雲 */c.drawImage(t,X0*TS,b0*TS)}t.width=t.height=0}/* 水面：水の形（waterm）の中だけに、128×128の水のテクスチャをしきつめる */
-    if(VW2)corners(isW0,'waterr');/* 草原の水のふちは、毎コマの水面（waterChunk の丸めたふちと帯）だけ。前の四角いふちの絵を下絵にのこすと、まわりの草のもようがそこだけかわって、さかいに線が出る */
-    if(VW2&&S.st2){const M=sprMap();corners((x,y)=>isW0(x,y)&&springOn(M[y*W+x]),'waterh')}/* よみがえった温泉だけ、乳白色の湯 */
-    if(VW2)for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){if(!isW0(x,y))continue;const i=y*W+x,x0=isW0(x-1,y)?2:12,x1=isW0(x+1,y)?18:8,y0=isW0(x,y-1)?4:14,y1=isW0(x,y+1)?28:18;dc('wave#'+((hash(i*5+2)*4)|0),x*TS+x0+hash(i)*Math.max(0,x1-x0)|0,y*TS+y0+hash(i*3)*Math.max(0,y1-y0)|0)}/* さざなみ（水のふちは水の内がわにあるので、ふちにかからない所に） */
-    return}
-  c.fillStyle=VW2?'#bdb3a2':'#9fc470';blob(h+8);
-  c.fillStyle=VW2?'#a69b88':'#86ad5f';blob(h+5);
-  c.fillStyle=VW2?'#7d9fb0':'#4fa6dd';blob(h+3);
-  c.fillStyle='rgba(255,255,255,.28)';blob(h+3-1.5);c.fillStyle=VW2?'#8fb0bf':'#5db4ea';blob(h+1);
-  if(VW2&&S.st2){const M=sprMap();isW=(x,y)=>isW0(x,y)&&springOn(M[y*W+x]);c.fillStyle='#7fcfcf';blob(h+3);c.fillStyle='rgba(255,255,255,.28)';blob(h+1.5);c.fillStyle='#9fe0dc';blob(h+1);isW=isW0}/* よみがえった温泉だけ、乳白色の湯 */
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!isW(x,y))continue;const i=y*W+x,px=x*TS,py=y*TS;c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=1.3;c.beginPath();const wx=px+6+hash(i)*10,wy=py+10+hash(i*3)*12;c.moveTo(wx,wy);c.quadraticCurveTo(wx+3,wy-2.5,wx+6,wy);c.quadraticCurveTo(wx+9,wy+2.5,wx+12,wy);c.stroke()}
-}
 const CSPR={"mugi2":{"w":73,"h":80,"src":"assets/g/19488f6512.webp"},"imo2":{"w":89,"h":80,"src":"assets/g/ac0f2df624.webp"},"mugi1":{"w":40,"h":36,"src":"assets/g/96c4019f1f.webp"},"imo1":{"w":51,"h":36,"src":"assets/g/fed730d1aa.webp"},"mugi":{"w":80,"h":90,"src":"assets/g/9fd1173dcf.webp"},"tomato":{"w":84,"h":76,"src":"assets/g/c905ee98dd.webp"},"imo":{"w":98,"h":90,"src":"assets/g/ec2d14bb42.webp"},"sprout":{"w":42,"h":40,"src":"assets/g/0d994d8d66.webp"}};
 for(const k in CSPR){const g=CSPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1};g.img.src=g.src}
 function drawCrop(c,k,x,y,g,big){const s=Math.min(1,g/100),st=g>=100?3:s>=.6?2:s>0?1:0;
