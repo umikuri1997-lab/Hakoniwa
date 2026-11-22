@@ -93,6 +93,8 @@ const WBANK=8,WBANKC=[[196,160,118],[178,144,106],[164,132,98],[150,120,90],[138
 const WBSUB=12,WBSUBA=170,WBSUBC=[30,78,110];/* 奥の岸の下の水：水の中の岩の断面が透けて見えるはば・こさ・まぜる水の色 */
 const WBEV=[150,115,75,35],WBEVL=[255,248,226],WBEVD=[58,64,44];/* 岸のふちの面とり：水から1〜4ドットのこさ・光の色・かげの色 */
 const WBAND=[[67,139,164],[117,151,82],[141,174,92],[152,183,98]],WBANDA=[255,130,82,35];/* 水のふちの色：水がわの1ドット（0）と、陸がわの水からの道のり1〜3ドット（草地 tex:grass の色に合わせた）。陸がわは外ほどうすく（WBANDA）して、まわりの地面につなげる */
+const WNZ=[[12,.035],[6,.012]];/* 水のふちのゆらぎ：こさのくぎりを、世界の場所できまるなめらかなノイズ（[マスめのはば, 大きさ]）でずらす。ふちが1〜3ドット、でこぼこする */
+function wNoise(x,y){let s=0;for(const[g,a]of WNZ){const gx=Math.floor(x/g),gy=Math.floor(y/g),fx=x/g-gx,fy=y/g-gy,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),h=(i,j)=>hash(((i*73856093)^(j*19349663)^(g*83492791))>>>0)-.5;s+=a*((h(gx,gy)*(1-u)+h(gx+1,gy)*u)*(1-v)+(h(gx,gy+1)*(1-u)+h(gx+1,gy+1)*u)*v)*2}return s}
 let WKER=null;function wKer(){/* ぼかし（箱のぼかしを3回）の、マス1つぶん（TSドット）のおもみの表：u ドットはなれた所に、マスがどれだけきくか */if(WKER)return WKER;const r=Math.round((Math.sqrt(4*WRND.s*WRND.s+1)-1)/2),R3=3*r;let k=[1];for(let p=0;p<3;p++){const o=new Array(k.length+2*r).fill(0);for(let i=0;i<k.length;i++)for(let j=0;j<=2*r;j++)o[i+j]+=k[i]/(2*r+1);k=o}
   const C=new Float64Array(2*R3+TS);for(let u=-R3;u<=R3+TS-1;u++){/* マスの左はしから u ドットの所のおもみ＝K(u-TS+1)〜K(u) の合計 */let v=0;for(let q=u-TS+1;q<=u;q++)if(q>=-R3&&q<=R3)v+=k[q+R3];C[u+R3]=v}WKER={R3,C};return WKER}
 function waterRound(X0,Y0,X1,Y1,isW){/* 区画（とまわり m）の水の形 f（1＝水）と、陸の、水からの道のり d（1ドット＝世界の1ドット）。水の形はマスの形なので、ぼかしはマスごとのおもみの表（wKer）で足すだけ。まわりがぜんぶ水か、ぜんぶ陸のマス（ut：1か0。まざるマスは －1）は、ぼかしても同じなので計算しない */
@@ -105,7 +107,7 @@ function waterRound(X0,Y0,X1,Y1,isW){/* 区画（とまわり m）の水の形 f
     for(let tx=0;tx<ntx;tx++){const xa=Math.max(0,(tx0+tx)*TS-ox),xb=Math.min(w,(tx0+tx+1)*TS-ox),u=ut[ty*ntx+tx],i0=y*w;
       if(u>=0){if(u){f.fill(1,i0+xa,i0+xb);d.fill(0,i0+xa,i0+xb)}continue}
       if(!rd){rd=true;for(let t=0;t<nb;t++){let v=0;for(let k=0;k<N;k++){const q=Y.wv[y*N+k];if(q&&isW(bx0+t,a+k))v+=q}row[t]=v}}/* その行に、マスの列ごとに、たての重みをかけておく */
-      for(let x=xa;x<xb;x++){const b=X.t0[x]-bx0;let v=0;for(let k=0;k<N;k++)v+=X.wv[x*N+k]*row[b+k];if(v>WRND.t){f[i0+x]=1;d[i0+x]=0}}
+      for(let x=xa;x<xb;x++){const b=X.t0[x]-bx0;let v=0;for(let k=0;k<N;k++)v+=X.wv[x*N+k]*row[b+k];if(v>WRND.t+wNoise(ox+x,oy+y)){f[i0+x]=1;d[i0+x]=0}}
       if(r.length&&r[r.length-1]===xa)r[r.length-1]=xb;else r.push(xa,xb)}
     rg.push(r)}
   const S2=Math.SQRT2;/* 水からの道のり（2回でしらべる）。まざるマスの所だけ（まわりがぜんぶ陸なら、水はとおい） */
