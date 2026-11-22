@@ -14,8 +14,8 @@ const assert=require('node:assert/strict');
     sasaPop();const bs=[...document.querySelectorAll('.sasab button')];out.btns=bs.length;out.lack1=bs[1].classList.contains('lack');
     bs[1].click();out.q1=JSON.stringify(S.sasaQ);bs[0].click();out.q=JSON.stringify(S.sasaQ);out.rsv=(S.rsv||{}).eda||0;
     const t=document.querySelector('.pxcard .t').textContent;out.title=t;document.querySelectorAll('.pxcard').forEach(c=>c.closest('div[style*="fixed"]').remove());
-    const pt0=S.pt;let i=0;for(;i<200000&&!S.sasa.L[0].done;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;if(hour()>=19||hour()<7)S.t=(Math.floor(S.t/1440)+1)*1440+7*60;stepWorld(.1);if(!document.querySelector('#dialog').hidden)document.querySelector('#dialog').hidden=true;if(seasonKey()!==k)break}
-    out.steps=i;out.done=S.sasa.L[0].done;out.got=JSON.stringify(S.sasa.L[0].got);out.pt=S.pt-pt0;out.left=S.sasaQ?Object.keys(S.sasaQ).length:0;out.carry=!!f.sasa;
+    const ap=addPt;addPt=()=>{};/* つりなど、ほかのパワーは数えない */const pt0=S.pt;let i=0;for(;i<200000&&!S.sasa.L[0].done;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;if(hour()>=19||hour()<7)S.t=(Math.floor(S.t/1440)+1)*1440+7*60;stepWorld(.1);if(!document.querySelector('#dialog').hidden)document.querySelector('#dialog').hidden=true;if(seasonKey()!==k)break}
+    out.steps=i;out.done=S.sasa.L[0].done;out.got=JSON.stringify(S.sasa.L[0].got);out.pt=S.pt-pt0;addPt=ap;out.left=S.sasaQ?Object.keys(S.sasaQ).length:0;out.carry=!!f.sasa;
     S.sasa.L=[{i:I('ふゆのたくわえ'),got:{},done:0}];S.fs.imo=(S.fs.imo||0)+10;S.fs.komugiko=(S.fs.komugiko||0)+5;syncFood();boxSync();out.fq=sasaAsk(S.sasa.L[0]);let m=0;for(;m<200000&&!S.sasa.L[0].done;m++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;if(hour()>=19||hour()<7)S.t=(Math.floor(S.t/1440)+1)*1440+7*60;stepWorld(.1);if(!document.querySelector('#dialog').hidden)document.querySelector('#dialog').hidden=true}
     out.fdone=S.sasa.L[0].done;out.fgot=JSON.stringify(S.sasa.L[0].got);
     S.sasaQ={eda:3};S.t+=1440*SEASONDAYS;sasaEnsure();out.k2=S.sasa.k!==k;out.q2=Object.keys(S.sasaQ).length;out.L2=S.sasa.L.every(b=>!b.done);

@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
   const r=JSON.parse(await run(`(async()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.t=1440*3+9*60;
     const wait=(f,ms)=>new Promise(res=>{const t0=performance.now();const tk=()=>{if(f()||performance.now()-t0>ms)return res(f());setTimeout(tk,50)};tk()});
-    const f=S.res[0],out={};const a={id:901,k:'hane',h:-1,stray:1,x:f.x+3,y:f.y,face:1,wt:0};S.ani.push(a);
+    const f=S.res[0],out={};S.recipes=S.recipes||{};S.recipes.coop=true;/* 小屋をおぼえていないと、はじめのタップは小屋のひらめき（strayIdea）になる */const a={id:901,k:'hane',h:-1,stray:1,x:f.x+3,y:f.y,face:1,wt:0};S.ani.push(a);
     const z0=cam.z,c0=[cam.x+VW/cam.z/2,cam.y+VH/cam.z/2];
     aniPop(a);out.meet=!!AMEET;out.paused=paused();out.noPopYet=!document.querySelector('.pxcard');
     let q=false;out.card=await wait(()=>{q=q||SCN.some(e=>e.k==='aniq');return !!document.querySelector('.anim-meet')},6000);out.zoomed=cam.z>z0;out.q=q||SCN.some(e=>e.k==='aniq');/* 「？」は、カードが出る前に消えることがあるので、待っているあいだに出たかを見る */
