@@ -2,18 +2,22 @@
 
 /* ---------- カメラ・入力 ---------- */
 const ZMAX=3,ZRUB=.1,ZBACKS=.2;let ZBACK=null;/* ズームのはしの手ごたえ（下の zoomRubber） */
-function minZ(){return Math.max(.3,Math.min(VW/(W*TS),VH/(H*TS)))}
+function minZ(){return isoOn()?Math.max(.3,Math.min(VW/((W+H)*IQW/2),VH/((W+H)*IQH/2))):Math.max(.3,Math.min(VW/(W*TS),VH/(H*TS)))}
 function clampCam(look){if(typeof caveOn==='function'&&caveOn())return caveClamp(look);/* 洞窟のあいだは、カメラはパーティを追う（cave.js） */
   {const rb=ZBACK||gest&&gest.type==='pinch';cam.z=clamp(cam.z,minZ()*(rb?1-ZRUB:1),rb?ZMAX*(1+ZRUB):ZMAX)}/* ピンチ中・もどるあいだだけ、はしをこえてよい */
   const vw=VW/cam.z,vh=VH/cam.z;
+  if(isoOn()){/* クォータービュー：画面のまん中のせかいの点を、マップの中にとどめる（オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に） */const cx=clamp(camCX(),0,W*TS),cy=clamp(camCY(),0,H*TS+(performance.now()<(window.BOSSCAM||0)?4*TS:0));cam.x=cx-vw/2;cam.y=cy-vh/2;return}
   cam.x=vw>=W*TS?(W*TS-vw)/2:clamp(cam.x,-40,W*TS-vw+40);
   cam.y=vh>=H*TS?(H*TS-vh)/2:clamp(cam.y,-80,H*TS-vh+(performance.now()<(window.BOSSCAM||0)?vh/2+120:120));/* オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に */
 }
 function resize(){dpr=Math.min(window.devicePixelRatio||1,1.25);/* 発熱対策で解像度をおさえる */VW=innerWidth;VH=innerHeight;cv.width=VW*dpr|0;cv.height=VH*dpr|0;cv.style.width=VW+'px';cv.style.height=VH+'px';clampCam();sacredResizeShot()}
 function panTo(wx,wy){if(camAnim&&camAnim.done)return;/* 演出のカメラ（おわりの処理つき）は、上書きしない */camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:wx,ty:wy,t:0,dur:.6}}/* 話しかけた子を、画面の中央へ */
 function centerOn(wx,wy){cam.x=wx-VW/cam.z/2;cam.y=wy-VH/cam.z/2;clampCam()}
-const homeZ=()=>Math.max(minZ(),Math.min(2.2,VW/(13*TS)));
-const toWorld=(sx,sy)=>({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
+const homeZ=()=>Math.max(minZ(),isoOn()?Math.min(1.8,VW/(13*TS)*.82):Math.min(2.2,VW/(13*TS)));/* クォータービューは、ひし形のマスがいままでの四角のマスと同じくらいの数だけ見える大きさ（ひし形1つの広さは、四角の1.5倍） */
+const toWorld=(sx,sy)=>isoOn()?s2w(sx,sy):({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
+/* カメラをうごかす（洞窟は、いままでの見え方） */
+function camPan(cx0,cy0,dx,dy){cam.x=cx0;cam.y=cy0;if(isoOn())camShift(dx,dy);else{cam.x-=dx/cam.z;cam.y-=dy/cam.z}}
+function camKeep(w,sx,sy){if(isoOn())camAt(w.x,w.y,sx,sy);else{cam.x=w.x-sx/cam.z;cam.y=w.y-sy/cam.z}}/* せかいの点 w を、画面の (sx,sy) に */
 
 let mode='look',sel='farm',selStamp=null;
 let CVR=null,CVRT=0;function cvRect(){const t=performance.now();if(!CVR||t-CVRT>250){CVR=cv.getBoundingClientRect();CVRT=t}return CVR}/* 画面がずれた（文字を打ったあとページがスクロールしたまま など）ときも、キャンバスの上の場所でタップをはかる */
@@ -30,29 +34,29 @@ cv.addEventListener('pointerdown',e=>{
 });
 cv.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});if(!gest)return;
-  if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=zoomRubber(gest.z*d/gest.d);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;gest.mx=mx;gest.my=my;cam.x=gest.mid.x-mx/cam.z;cam.y=gest.mid.y-my/cam.z;clampCam(1);return}
+  if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=zoomRubber(gest.z*d/gest.d);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;gest.mx=mx;gest.my=my;camKeep(gest.mid,mx,my);clampCam(1);return}
   const dx=cX(e)-gest.sx,dy=cY(e)-gest.sy;
   if(gest.type==='maybe'&&Math.hypot(dx,dy)>8){
     const k=BL[sel]&&BL[sel].kind;
     if(gest.grab)gest.type='grab';/* 置く前の家具の絵をつまんで、ずらす */
-    else if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=toWorld(gest.sx,gest.sy),t0=tapLv(w0.x,w0.y);leafAdd(Math.floor((w0.y+(t0?t0*LIFT:0))/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
-    else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=toWorld(gest.sx,gest.sy);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
+    else if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=tapW(gest.sx,gest.sy);leafAdd(Math.floor(w0.y/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
+    else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=tapW(gest.sx,gest.sy);gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
     else{gest.type='pan';pickCancel()}}
   if(gest.type==='grab'){grabMove(cX(e),cY(e));return}
-  if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */cam.x=gest.cx-dx/cam.z;cam.y=gest.cy-dy/cam.z;clampCam(1);const t=performance.now(),V=gest.vs||(gest.vs=[]);V.push({t,x:cX(e),y:cY(e)});while(V.length>2&&t-V[0].t>FLINGWIN)V.shift()}/* 指の速さ（はなしたときの慣性） */
-  if(gest.type==='leaf'){const w=toWorld(cX(e),cY(e)),tl=tapLv(w.x,w.y);leafAdd(Math.floor((w.y+(tl?tl*LIFT:0))/TS)*W+Math.floor(w.x/TS));return}
-  if(gest.type==='rect'){let w=toWorld(cX(e),cY(e));{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
+  if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */camPan(gest.cx,gest.cy,dx,dy);clampCam(1);const t=performance.now(),V=gest.vs||(gest.vs=[]);V.push({t,x:cX(e),y:cY(e)});while(V.length>2&&t-V[0].t>FLINGWIN)V.shift()}/* 指の速さ（はなしたときの慣性） */
+  if(gest.type==='leaf'){const w=tapW(cX(e),cY(e));leafAdd(Math.floor(w.y/TS)*W+Math.floor(w.x/TS));return}
+  if(gest.type==='rect'){const w=tapW(cX(e),cY(e));selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
 });
 /* 地図の慣性：はなしたときの指の速さで、すこしすべってから止まる（画面の点／秒。FLINGK は1秒でのこる速さのわりあいの対数） */
 let FLING=null;const FLINGWIN=90,FLINGMIN=180,FLINGMAX=2600,FLINGK=5.5,FLINGSTOP=40;
 function flingStart(V){FLING=null;if(!V||V.length<2||typeof uiReduced==='function'&&uiReduced())return;const a=V[0],b=V[V.length-1],dt=b.t-a.t;if(dt<16||performance.now()-b.t>60)return;/* 止めてからはなしたら、すべらない */let vx=(b.x-a.x)/dt*1000,vy=(b.y-a.y)/dt*1000;const v=Math.hypot(vx,vy);if(v<FLINGMIN)return;if(v>FLINGMAX){vx*=FLINGMAX/v;vy*=FLINGMAX/v}FLING={vx,vy}}
-function flingTick(rdt){zoomBackTick(rdt);const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y,ex=cam.x-F.vx*rdt/cam.z,ey=cam.y-F.vy*rdt/cam.z;cam.x=ex;cam.y=ey;clampCam(1);if(Math.abs(cam.x-ex)>.01)F.vx=0;if(Math.abs(cam.y-ey)>.01)F.vy=0;/* はしについたら、その向きは止める */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
+function flingTick(rdt){zoomBackTick(rdt);const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y;camPan(cam.x,cam.y,F.vx*rdt,F.vy*rdt);const ex=cam.x,ey=cam.y;clampCam(1);if(isoOn()){if(Math.abs(cam.x-ex)>.01||Math.abs(cam.y-ey)>.01){FLING=null;return}}else{if(Math.abs(cam.x-ex)>.01)F.vx=0;if(Math.abs(cam.y-ey)>.01)F.vy=0}/* はしについたら、その向きは止める（クォータービューは、止める） */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
 /* ズームのはし：いちばん大きく・小さくしたあとも、少しだけ（ZRUB）手ごたえをのこしてのび、はなすと ZBACKS 秒でもどる */
 function zoomRubber(z){const mn=minZ();if(z>ZMAX)return ZMAX*(1+ZRUB*(1-1/(1+Math.log(z/ZMAX)*3)));if(z<mn)return mn*(1-ZRUB*(1-1/(1+Math.log(mn/z)*3)));return z}
-function zoomSettle(mx,my){const mn=minZ(),to=clamp(cam.z,mn,ZMAX);if(Math.abs(to-cam.z)<1e-4){clampCam(1);return}if(mx==null){mx=VW/2;my=VH/2}if(typeof uiReduced==='function'&&uiReduced()){const w=toWorld(mx,my);cam.z=to;cam.x=w.x-mx/cam.z;cam.y=w.y-my/cam.z;clampCam(1);return}ZBACK={fz:cam.z,tz:to,t:0,mx,my,w:toWorld(mx,my)}}
-function zoomBackTick(rdt){const B=ZBACK;if(!B)return;if(!S||camAnim||ptrs.size>=2){ZBACK=null;return}B.t+=rdt;const k=Math.min(1,B.t/ZBACKS),e=1-Math.pow(1-k,3);cam.z=B.fz+(B.tz-B.fz)*e;cam.x=B.w.x-B.mx/cam.z;cam.y=B.w.y-B.my/cam.z;clampCam(1);if(k>=1)ZBACK=null}
+function zoomSettle(mx,my){const mn=minZ(),to=clamp(cam.z,mn,ZMAX);if(Math.abs(to-cam.z)<1e-4){clampCam(1);return}if(mx==null){mx=VW/2;my=VH/2}if(typeof uiReduced==='function'&&uiReduced()){const w=toWorld(mx,my);cam.z=to;camKeep(w,mx,my);clampCam(1);return}ZBACK={fz:cam.z,tz:to,t:0,mx,my,w:toWorld(mx,my)}}
+function zoomBackTick(rdt){const B=ZBACK;if(!B)return;if(!S||camAnim||ptrs.size>=2){ZBACK=null;return}B.t+=rdt;const k=Math.min(1,B.t/ZBACKS),e=1-Math.pow(1-k,3);cam.z=B.fz+(B.tz-B.fz)*e;camKeep(B.w,B.mx,B.my);clampCam(1);if(k>=1)ZBACK=null}
 /* 置く前の家具の絵（pending）を、指でつまんでマスごとにずらす */
-function grabTile(sx,sy){const w=toWorld(sx,sy),tl=tapLv(w.x,w.y);return{x:Math.floor(w.x/TS),y:Math.floor((w.y+(tl?tl*LIFT:0))/TS)}}
+function grabTile(sx,sy){const w=tapW(sx,sy);return{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}
 function grabAt(sx,sy){const p=pending;if(mode!=='build'||!p||p.kind!=='one'||p.id==='statue')return null;const z=szR(p.id,PLROTS[p.id]||0)||[1,1],t=grabTile(sx,sy),ox=t.x-p.x,oy=t.y-p.y;return ox>=0&&oy>=0&&ox<z[0]&&oy<z[1]?{ox,oy}:null}
 function grabMove(sx,sy){const p=pending,g=gest&&gest.grab;if(!p||p.kind!=='one'||!g)return;const t=grabTile(sx,sy),nx=clamp(t.x-g.ox,0,W-1),ny=clamp(t.y-g.oy,0,H-1);if(nx===p.x&&ny===p.y)return;p.x=nx;p.y=ny;p.ok=canPlace(p.id,nx,ny,true);confirmOne();sfx('notch');dirty=true}
 function endPtr(e){
@@ -67,10 +71,12 @@ function endPtr(e){
   if(ptrs.size===1){const p=[...ptrs.values()][0];gest={type:'pan',sx:p.x,sy:p.y,cx:cam.x,cy:cam.y}}else if(!ptrs.size)gest=null;
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
-cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;FLING=null;const w=toWorld(cX(e),cY(e));cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-cX(e)/cam.z;cam.y=w.y-cY(e)/cam.z;clampCam(1)},{passive:false});
+cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;FLING=null;const w=toWorld(cX(e),cY(e));cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);camKeep(w,cX(e),cY(e));clampCam(1)},{passive:false});
 
 const bubHit=(r,w)=>r.bubX!=null&&Math.abs(r.bubX-w.x)<33&&Math.abs(r.bubY-w.y)<33;/* 描いた吹き出しをタップ（遊具の上で遊ぶ子は、描く場所がr.x,r.yとずれる） */
 const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
+/* タップした画面の点の、見えている（高い段もふくめた）マスのせかいの点 */
+function tapW(sx,sy){let w=toWorld(sx,sy);if(isoOn())return liftW(w);const tl=tapLv(w.x,w.y);return tl?{x:w.x,y:w.y+tl*LIFT,lv:tl}:w}
 function tapLv(wx,wy){if(!S||!S.hi)return 0;const tx=Math.floor(wx/TS);if(tx<0||tx>=W)return 0;for(let lv=HMAX;lv>=1;lv--){const ty=Math.floor((wy+lv*LIFT)/TS);if(ty>=0&&ty<H&&hiAt(ty*W+tx)===lv)return lv}return 0}/* タップした所に見えている、いちばん手前の高い段 */
 const ENBOX={};/* コワイノの絵のはば（向き・形ごとに1回はかって、数字だけとっておく） */
 function enemyBox(e){const D=EN[e.type],z=D.size*2,v=EV.get(e)||{f:1,back:false},key=e.type+(v.back?'b':'f')+v.f+z;let b=ENBOX[key];
@@ -81,11 +87,11 @@ function enemyBox(e){const D=EN[e.type],z=D.size*2,v=EV.get(e)||{f:1,back:false}
   return b}
 function enemyAtTap(wx,wy){/* 守りの光：コワイノの絵が描いてある所ぜんぶ（＋指のぶん）をあたりにする。重なったら手前（下）の子、同じならタップに近い子 */
   const M=6/Math.min(1,cam.z)+2;let best=null,bs=-1e9;
-  for(const e of S.enemies){if(!e.spawned||e.dead)continue;const b=enemyBox(e),px=e.x*TS,py=e.y*TS+8-uLift(e);
+  const ISO=isoOn()&&TAPS;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const b=enemyBox(e),px=e.x*TS,py=e.y*TS+8-(ISO?uLift(e)*IQL/LIFT/IQSY:uLift(e));if(ISO){const q=tapAt(ptFoot(px,e.y*TS));wx=q.x;wy=q.y}/* クォータービュー：その子を立てて描いた絵の上の点 */
     if(wx<px+b.l-M||wx>px+b.r+M||wy<py+b.t-M||wy>py+b.b+M)continue;
     const sc=e.y*1000-Math.hypot(wx-px,wy-(py+(b.t+b.b)/2))*.01;if(sc>bs){bs=sc;best=e}}
   return best}
-function sacredTapHit(b,px,py){/* 御神木・切り株の、タップをひろう所（切り株の絵のわく。育った木は根もと）。b は左上のマス。根もと（storyTreeX・storyTreeY+26）から、切り株の絵のわく（左35・右40・上79・下2 の点） */const dx=px*TS-storyTreeX(b)*TS,dy=py*TS-(storyTreeY(b)*TS+26);return dx>=-35&&dx<40&&dy>=-79&&dy<2||typeof omoiBubHit==='function'&&omoiBubHit(px,py)}/* 青いふきだしも */
+function sacredTapHit(b,px,py){if(isoOn()&&TAPS){const n=typeof sacredSpan==='function'?sacredSpan():4,q=tapAt(objFoot(b%W,(b/W)|0,n,n,b));px=q.x/TS;py=q.y/TS}/* クォータービュー：立てて描いた切り株の絵の上の点 *//* 御神木・切り株の、タップをひろう所（切り株の絵のわく。育った木は根もと）。b は左上のマス。根もと（storyTreeX・storyTreeY+26）から、切り株の絵のわく（左35・右40・上79・下2 の点） */const dx=px*TS-storyTreeX(b)*TS,dy=py*TS-(storyTreeY(b)*TS+26);return dx>=-35&&dx<40&&dy>=-79&&dy<2||typeof omoiBubHit==='function'&&omoiBubHit(px,py)}/* 青いふきだしも */
 function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどける・目標のじょうけんを見る */
   const av=(S.shards||0)-(S.setSh||0);
   if(av>0&&(S.setSh||0)>=2){
@@ -109,9 +115,9 @@ function tapSnd(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return;const g=ty*W+tx,j=anc(
   let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(skyJ(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else k=footMat(tx+.5,ty+.5)||'fsoil'}/* 地面・床：その場所の足音の録音 */
   if(!k)return;const t0=performance.now();TAPPEND=t0;setTimeout(()=>{if(TAPPEND===t0){TAPPEND=0;if(TAPMAT<t0)sfx(k)}},0)}/* ほかの物の音（神殿・宝箱など）が同じタップで鳴ったら、そちらだけ */
 function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,sy);/* 洞窟の探検（cave.js） */if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap(sx,sy))return;if(typeof letterTap==='function'&&letterTap(sx,sy))return;/* とどいた手紙のふうとう *//* 流れ星そのものをタップしたら、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* しらべるでタップしたところに、葉（火山は火の粉）が舞う */
-  let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */if(mode==='look'&&yamiTap(w0.x/TS,w0.y/TS,tx,ty))return;if(mode==='look'&&typeof ngTap==='function'&&ngTap(tx,ty))return;if(mode==='look'&&typeof hapTap==='function'&&hapTap(tx,ty))return;/* ときどき起きるできごと（happen.js） *//* 夜のたからさがし：光るつぶ（nightglow.js） *//* 闇のステージ：ヨリ・夜の仕事のあと（yami.js） */
+  const w0=toWorld(sx,sy),w=tapW(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);TAPS={sx,sy,w};/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */if(mode==='look'&&yamiTap(w0.x/TS,w0.y/TS,tx,ty))return;if(mode==='look'&&typeof ngTap==='function'&&ngTap(tx,ty))return;if(mode==='look'&&typeof hapTap==='function'&&hapTap(tx,ty))return;/* ときどき起きるできごと（happen.js） *//* 夜のたからさがし：光るつぶ（nightglow.js） *//* 闇のステージ：ヨリ・夜の仕事のあと（yami.js） */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
-  if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
+  if(LEAFARM){LEAFDRAG=[];leafAdd(ty*W+tx);const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
   if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
@@ -121,26 +127,26 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(fieldStoryTap(tx,ty,w.x/TS,w.y/TS))return;
     const en=enemyAtTap(w0.x,w0.y);
     if(en){sfx('tfoe');tgtShow(en);/* ねらっている物へ点線（support.js） */return toast(EN[en.type].name+'（体力 '+Math.max(0,Math.ceil(en.hp))+'/'+(en.max||EN[en.type].hp)+'）')}/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから。「しらべる」では、名前と体力を出す（何も起きないタップにしない） */
-    {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tbell');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
-    if(visitTap(w.x/TS,w.y/TS))return;/* 温泉宿のお客さん */
-    if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(SUBW[GOD])return subTalk(SUBW[GOD]);if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
-    if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){sfx('tbell');return nushiTalk()}/* ヌシ様と話す */
-    if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&Math.hypot(w.x/TS-storyTreeX(tw),w.y/TS-(storyTreeY(tw)-.4))<1.4){sfx(WD===KUSA?'tsacred':'tstone');return openSheet('travel')}}/* クリア後は、台座から次の土地へ */
-    if(sumHit(w.x/TS,w.y/TS))return doSummon();
-    if(TALKW===GOD&&mainStoryBubbleReady()&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return startTalk();
-    if(SUBW[GOD]&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return subTalk(SUBW[GOD]);
-    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&mainStoryBubbleReady(tr)&&(Math.hypot(tr.x-w.x/TS,(tapY(tr)-1)-w.y/TS)<1.4||bubHit(tr,w))){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
-    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr)return sevTalk(SEVW[tr.name])}
-    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
-    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(tapY(r)-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
-    {const cr=typeof critTap==='function'&&critTap(w0.x/TS,w0.y/TS);/* 生き物は critTap が自分で高さ（uLift）をひくので、高さをもどす前の場所 */if(cr&&(!best||cr.d<bd)){critPoke(cr.c,w.x/TS,w.y/TS);return}}/* 小さな生き物：せいれいより近ければ、その場で反応して、図鑑に入る */
+    {const st=festStalls().find(t=>{const q=tapPt(t.x+.5,t.y+.5-4/TS);return Math.abs(q.x/TS-(t.x+.5))<1.3&&q.y/TS>t.y-2.6&&q.y/TS<t.y+1});if(st){sfx('tbell');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
+    if(typeof visitHere==='function'&&visitHere()){const g=visitor(),q=tapPt(g.x,g.y);if(visitTap(q.x/TS,q.y/TS))return}/* 温泉宿のお客さん */
+    const gq=godHere()?tapPt(godX(),godY()):null;if(godHere()&&Math.hypot(gq.x/TS-godX(),gq.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(SUBW[GOD])return subTalk(SUBW[GOD]);if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
+    if(S.nushi&&(q=>Math.hypot(q.x/TS-S.nushi.x,q.y/TS-(S.nushi.y-.6))<1.4)(tapPt(S.nushi.x,S.nushi.y))){sfx('tbell');return nushiTalk()}/* ヌシ様と話す */
+    if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&(q=>Math.hypot(q.x/TS-storyTreeX(tw),q.y/TS-(storyTreeY(tw)-.4))<1.4)(tapObj(tw))){sfx(WD===KUSA?'tsacred':'tstone');return openSheet('travel')}}/* クリア後は、台座から次の土地へ */
+    if(STATUE>=0&&(q=>sumHit(q.x/TS,q.y/TS))(tapObj(STATUE)))return doSummon();
+    if(TALKW===GOD&&mainStoryBubbleReady()&&godHere()&&Math.hypot(gq.x/TS-godX(),gq.y/TS-(godY()-1.6))<1.2)return startTalk();
+    if(SUBW[GOD]&&godHere()&&Math.hypot(gq.x/TS-godX(),gq.y/TS-(godY()-1.6))<1.2)return subTalk(SUBW[GOD]);
+    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&mainStoryBubbleReady(tr)&&(q=>Math.hypot(tr.x-q.x/TS,(tapY(tr)-1)-q.y/TS)<1.4||bubHit(tr,q))(tapPt(tr.x,tr.y))){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
+    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(r.x-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr)return sevTalk(SEVW[tr.name])}
+    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(r.x-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
+    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const q=tapPt(r.x,r.y),d=Math.hypot(r.x-q.x/TS,(tapY(r)-.5)-q.y/TS);if(d<bd){bd=d;best=r}}
+    {const cr=typeof critTap==='function'&&(isoOn()?CRIT.map(c=>{const q=tapAt(ptFoot(c.x*TS,c.y*TS));const r=critTap(q.x/TS,q.y/TS);return r&&r.c===c?r:null}).filter(Boolean).sort((a,b)=>a.d-b.d)[0]:critTap(w0.x/TS,w0.y/TS));/* 生き物は critTap が自分で高さ（uLift）をひくので、高さをもどす前の場所 */if(cr&&(!best||cr.d<bd)){critPoke(cr.c,w.x/TS,w.y/TS);return}}/* 小さな生き物：せいれいより近ければ、その場で反応して、図鑑に入る */
     if(best&&best.act&&best.act.type==='outing'&&best.act.stage==='do'&&typeof outingTalk==='function'&&outingTalk(best))return;/* おでかけ中の2人：会話を見る（outing.js） */
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const ti=best.act.topic,C=CHATS[ti];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c)).replace(/@G/g,goneTalkName()||'あの子')]}),()=>{if(C.wave){A.waveU=B.waveU=S.t+4}if(C.mem)bondMemNote(A,B,ti)})}}/* なかよしの雑談は、さいごまで見たら思い出になる（消えたときに話す） *//* おしゃべり中の子をタップすると、会話が見られる */
-    if(!best){const an=typeof aniAtTap==='function'&&aniAtTap(w.x/TS,w.y/TS);if(an){sfx('tani');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
+    if(!best){const an=typeof aniAtTap==='function'&&(isoOn()?(S.ani||[]).map(a=>{const q=tapPt(a.x,a.y);return aniAtTap(q.x/TS,q.y/TS)}).find(a=>a):aniAtTap(w.x/TS,w.y/TS));if(an){sfx('tani');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);if(typeof tapReact==='function')tapReact(best);/* タップした子が、こちらを見て、ぴょん（draw-spirits.js） */return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
     tapSnd(tx,ty);
-    if(RUINT>=0&&S.obj[RUINT]==='statueb'){const px=w.x/TS-RUINT%W,py=w.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
+    if(RUINT>=0&&S.obj[RUINT]==='statueb'){const q=tapObj(RUINT),px=q.x/TS-RUINT%W,py=q.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
     if(typeof mzTap==='function'&&mzTap(tx,ty))return;/* 水のステージ：霧・水門・宝箱・船着き場・水路 */
     if(typeof fogTap==='function'&&fogTap(tx,ty))return;/* 霧の所・霧の中で見つけた物 */
     if(typeof kdTap==='function'&&kdTap(tx,ty))return;/* もりのこだまの見つかる所 */
@@ -148,7 +154,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const kg=WD===KUSA&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1/* かげのあとは、家の中にあっても調べられる */,hi=kg?-1:HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
     if(WD===KUSA&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null&&sacredTapHit(b,w.x/TS,w.y/TS)){sfx('tsacred');return rt>=0?sacredTreeTap(rt):openSheet('clear')}}/* 御神木・切り株：切り株（育った木は根もと）の絵の所だけをタップすると、じょうけんを見る（葉の所・4×4のほかのマスはひろわない） */
-    if(BOARD>=0){const bx=(w.x/TS-BOARD%W),by=(w.y/TS-(BOARD/W|0));if(bx>=-.15&&bx<2.15&&by>=-.9&&by<.95){sfx('twood');return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる')}}/* 依頼ボード：絵（2マスはば・上へはみ出す）のどこをタップしても */
+    if(BOARD>=0){const q=tapObj(BOARD),bx=(q.x/TS-BOARD%W),by=(q.y/TS-(BOARD/W|0));if(bx>=-.15&&bx<2.15&&by>=-.9&&by<.95){sfx('twood');return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる')}}/* 依頼ボード：絵（2マスはば・上へはみ出す）のどこをタップしても */
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===KUSA&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===KAZAN&&S.st2){const g=ty*W+tx;

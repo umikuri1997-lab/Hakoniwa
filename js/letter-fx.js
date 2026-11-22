@@ -25,7 +25,7 @@ function letterPostArrive(who){/* 朝に手紙がとどいた：小鳥がとど�
 function letterCanFly(){return started&&S&&sheet==null&&$('#dialog').hidden&&NEWRES==null&&!GIFT_ACTIVE&&!(camAnim&&camAnim.done)}
 function letterBirdStart(now){const T=letterSpot();if(!T){LPEND=null;return}const vw=VW/cam.z,vh=VH/cam.z;
   LBIRD={t0:now,T,who:LPEND,fx:T.x-vw*.55,fz:vh*.5,ox:T.x+vw*.55,oz:vh*.55,drop:0};LPEND=null;
-  const sx=(T.x-cam.x)*cam.z,sy=(T.y-cam.y)*cam.z;if(sx<VW*.15||sx>VW*.85||sy<VH*.2||sy>VH*.8)panTo(T.x,T.y);/* 見えないときは、おそなえ箱へカメラをよせる */
+  const p=w2s(T.x,T.y),sx=p.x,sy=p.y;if(sx<VW*.15||sx>VW*.85||sy<VH*.2||sy>VH*.8)panTo(T.x,T.y);/* 見えないときは、おそなえ箱へカメラをよせる */
   sfxAt('cv_bird',T.x/TS,T.y/TS)}
 function letterBirdDraw(g,now){const B=LBIRD,t=now-B.t0,T=B.T,C=window.CHIPS;let x,z,fl=1;
   if(t<LBIRD_IN){const k=t/LBIRD_IN,e=1-Math.pow(1-k,3);x=B.fx+(T.x-B.fx)*e;z=B.fz+(30-B.fz)*e+Math.sin(k*Math.PI*3)*6*(1-k)}
