@@ -228,7 +228,7 @@ function frame(now){
   followTick(rdt);/* 見守る */
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
-  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();if(typeof gfShowTick==='function')gfShowTick();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();windTick();oreWakeTick();if(typeof aniBirthTick==='function')aniBirthTick();if(typeof starWishTick==='function')starWishTick()}
+  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();if(typeof gfShowTick==='function')gfShowTick();showSpotPop();reflectNoteTick();windTick();oreWakeTick();if(typeof aniBirthTick==='function')aniBirthTick();if(typeof starWishTick==='function')starWishTick()}
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
   if(typeof caveOn==='function'&&caveOn()){try{caveFrame(prdt,now)}catch(e){frameErr('cave',e)}}/* 洞窟の探検（cave.js） */
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
