@@ -539,7 +539,7 @@ function render(now){RFN++;hdFrame();DCG.armed=false;
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'&&o!=='yudekago'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(HDOORS.has(o))add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-liftOf(i),i);ctx._doorBack=0},i);/* ドアの奥の面 */
-    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>hdCastStretch(x*TS+TS/2,y*TS-liftOf(i)+TS*.8,()=>drawChip(ctx,sh,o,x*TS,y*TS-liftOf(i),0,i)),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる） */
+    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>hdCastStretch(x*TS+TS/2,y*TS-liftOf(i)+TS*.8,()=>{drawChip(ctx,sh,o,x*TS,y*TS-liftOf(i),0,i);komorebi(sh,o,x*TS,y*TS-liftOf(i),i,now)}),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる）。葉のある木は、落ち影の中に木もれ日（feel.js） */
     if(o==='wbench'){const c=wbCells(i);for(const [k,yd] of [[c.b,0],[c.y,1]]){const kx=k%W,ky=(k/W)|0;add(objectDepth(o,k),1,null,()=>sideClip(k,()=>dropIn(ctx,i,kx*TS,ky*TS-liftOf(k),now,()=>yd?drawWbYard(ctx,i,kx*TS,ky*TS-liftOf(k),now):drawObj(ctx,o,kx*TS,ky*TS-liftOf(k),i,0,now),o)),k)}continue}/* 作業台：作業台と材料置き場を、それぞれのマスの順に */
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>dropIn(ctx,i,x*TS,y*TS-liftOf(i),now,()=>{const g=S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0;drawObj(ctx,o,x*TS,y*TS-liftOf(i),i,g,now);feelCap(ctx,o,i,x*TS,y*TS-liftOf(i),g)/* 冬：木・岩の上の雪 */},o)),i)}
   drawWebs(add,vis);/* クモの巣 */
