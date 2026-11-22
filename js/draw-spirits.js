@@ -345,6 +345,7 @@ function drawSpiritOL(c,el,x,y,s,f,o){const T=c.getTransform(),k=Math.hypot(T.a,
 function guestDraw(c,x,y,s,f,o){/* 食堂のお客さん（旅の外套、GPT の H-7）：正面・右・うしろの絵。左は右の反転。足もとが x,y */const k=o.back?'guest>2':(o.turn||0)>.5?'guest>1':'guest',ch=window.CHIPS&&CHIPS[k];if(!ch)return false;const im=chipImgs(ch,k)[0];if(!im.ok)return false;
   const q=s/.87,bob=o.walk?Math.round(Math.abs(Math.sin((o.t||0)*9))*2):0,fl=k==='guest>1'&&f<0;c.save();c.translate(x,y-bob);if(fl)c.scale(-1,1);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,ch.ax*q,ch.ay*q,ch.w*q,ch.h*q);c.imageSmoothingEnabled=sm;c.restore();return true}
 function drawSpirit(c,el,x,y,s,f,o){
+  if(isoFaceOK(c)){const q=isoFace(o.back,(o.turn||0)>.5,f<0?-1:1);o.back=q.back;o.turn=0;o.hturn=0;f=q.f}/* クォータービュー：前ななめ・うしろななめの2つの絵と、左右の反転（iso-face.js） */
   if(o.guest&&guestDraw(c,x,y,s,f,o))return;
   if(o.dot&&drawSpiritOL(c,el,x,y,s,f,o))return;
   const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE;
