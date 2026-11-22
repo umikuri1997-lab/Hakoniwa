@@ -12,6 +12,7 @@ function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわ�
   q.f=c;q.st=false;q.u=RFN;q.v=++GRD.n;/* 作りなおしの番号（遠くの絵が、新しくするかを見る） */GRD.bt+=performance.now()-t0;
   let n=0;for(const v of GRD.c.values())if(v.f)n++;if(n>GFULL){const L=[...GRD.c.values()].filter(v=>v.f&&v.u<RFN-1).sort((a,b)=>a.u-b.u);for(const v of L){if(n<=GFULL)break;v.f.width=v.f.height=0;v.f=null;n--}}/* くわしい区画が多すぎたら、しばらく使っていない区画からすてる（半分の絵はのこす） */}
 function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()}],NX=(W-1)>>4,NY=(H-1)>>4;
+  if(isoOn()){igJobs(L);L.push(()=>{GRD.any=true});return {s:S,L,i:0}}/* クォータービュー：ひし形の地面の区画だけ（段差は PR3） */
   for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q)});L.push(()=>{GRD.any=true});
   if(WD!==KAZAN&&waterChipsOK())for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>waterChunk(cx,cy));
   if(S.hi&&cliffChipsOK()){CPRE=S;const RW=cliffRuns(),keys=new Set();for(const[y,R0]of RW)for(const R of R0)for(let k=R.x0;k<=R.x1;k++)keys.add(cliffKey(k,y,R.lv));for(const K of [2,1])for(const k of keys)L.push(()=>cliffPart(k,K))}
@@ -28,7 +29,7 @@ function gget(cx,cy){/* 区画のくわしい絵（なければ・古ければ�
 const GHALFT=600;/* ちぢめるのをやめてから、半分の絵を手ばなすまでのコマ（約10秒） */
 function ghalf(q,force){/* 区画の半分の細かさの絵。なければ、くわしい絵をちぢめて作る（1コマ GBUD ミリ秒まで。こえたら null：くわしい絵をちぢめて描く） */if(q.l)return q.l;if(!q.f||!force&&GRD.bt>=GBUD)return null;const t0=performance.now(),l=document.createElement('canvas');l.width=Math.ceil(q.f.width/2);l.height=Math.ceil(q.f.height/2);const gl=l.getContext('2d');gl.imageSmoothingEnabled=true;gl.imageSmoothingQuality='high';gl.drawImage(q.f,0,0,l.width,l.height);q.l=l;GRD.bt+=performance.now()-t0;return l}
 function ghalfFree(){/* ちぢめていないあいだ、半分の絵を手ばなす（くわしい絵をすてた区画の分は、のこす） */if(GLOD){GRD.lu=RFN;return}if(RFN-(GRD.lu||0)<GHALFT)return;for(const v of GRD.c.values())if(v.l&&v.f){v.l.width=v.l.height=0;v.l=null}GRD.lu=RFN}
-function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false;if(typeof farClear==='function')farClear()}
+function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false;if(typeof farClear==='function')farClear();if(typeof igClear==='function')igClear()}
 function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh) を、c の (dx,dy,dw,dh) へ描く（区画をまたいでもよい）。lod：半分の細かさの絵を使う */const kx=dw/sw,ky=dh/sh;
   for(let cy=Math.max(0,Math.floor(sy/GPX));cy<=Math.min((H-1)>>4,Math.floor((sy+sh-.001)/GPX));cy++)for(let cx=Math.max(0,Math.floor(sx/GPX));cx<=Math.min((W-1)>>4,Math.floor((sx+sw-.001)/GPX));cx++){
     const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
