@@ -1,15 +1,15 @@
 # STATE
 
 ## いまのタスク
-作業の進め方の決まりを CLAUDE.md に足す（STATE.md・チャットの切りかえ・画像の解析はサブエージェント・フォークしない）。
+音・3Dの道具を入れる（librosa・Openverse・blender-skills の4つ）。
 
 ## OKをもらったこと
-- 4つの決まりを CLAUDE.md の「進め方」に入れる。
-- STATE.md はリポジトリのいちばん上に1つ。タスクのPRといっしょに書きかえる。
+- blender-skills は、core・character-rigging・animation・stylized-npr の4つだけ。
+- librosa は、環境のセットアップで毎回入れる。
 
 ## きまったこと
-- STATE.md は40行まで。区切りごとに書きかえる。
-- 新しいセッションは STATE.md を読んで、ゼロから始める。
+- Openverse は `tools/sound/openverse.py` でさがす（環境に api.openverse.org を足した）。
+- どれもゲームの中では動かさない。
 
 ## のこりの作業
 - なし（このPRをマージしたらおわり）。
