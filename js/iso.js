@@ -37,13 +37,6 @@ let TAPS=null;/* いまのタップ（画面の点と、地面のせかいの点
 function isoView(){const P=[s2w(0,0),s2w(VW,0),s2w(0,VH),s2w(VW,VH)],xs=P.map(p=>p.x/TS),ys=P.map(p=>p.y/TS);return{x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}}
 /* マス (x,y) が画面に入るか（m：まわりのゆとり、画面の点） */
 function isoCellVis(x,y,m){const cx=camCX(),cy=camCY(),ix=(isoX((x+.5)*TS,(y+.5)*TS)-isoX(cx,cy))*cam.z,iy=(isoY((x+.5)*TS,(y+.5)*TS)-isoY(cx,cy))*cam.z,M=m*cam.z;return ix>-VW/2-M&&ix<VW/2+M&&iy>-VH/2-M-IQL*4*cam.z&&iy<VH/2+M+IQH*cam.z}
-/* 仮：家の壁・ドアは、箱（上の面・手前左の面・手前右の面）。地面の描き方（groundTf）のまま描く */
-const IQWH=30;
-function isoBox(c,x,y,lv,h,top,lf,rt){const s0=lv*IQD,s1=(lv*IQL+h)/(2*IQB),X=x*TS,Y=y*TS;
-  const poly=(P,f)=>{c.fillStyle=f;c.beginPath();P.forEach(([a,b],i)=>i?c.lineTo(a,b):c.moveTo(a,b));c.closePath();c.fill()};
-  poly([[X-s1,Y+TS-s1],[X+TS-s1,Y+TS-s1],[X+TS-s0,Y+TS-s0],[X-s0,Y+TS-s0]],lf);
-  poly([[X+TS-s1,Y-s1],[X+TS-s1,Y+TS-s1],[X+TS-s0,Y+TS-s0],[X+TS-s0,Y-s0]],rt);
-  c.fillStyle=top;c.fillRect(X-s1,Y-s1,TS,TS)}
 /* 高い段のマス（iso-cliff.js）。c は地面の描き方のまま来るので、画面の向きにして描く */
 function isoTile(c,x,y){icScreen(c,()=>icBlock(c,x,y))}
 /* 物（左上のマス (x,y)、大きさ w×h）の、立てる絵の足もと：
@@ -59,8 +52,6 @@ function tapPt(fx,fy){if(!isoOn())return TAPS?TAPS.w:{x:0,y:0};const j=clamp(Mat
 function tapObj(j){return isoOn()?tapAt(objFootJ(j)):TAPS?TAPS.w:{x:0,y:0}}
 /* 地面にぬるマスのわく（高い段は、その高さに） */
 function qRect(c,x,y,w,h,j,stroke){if(isoOn()){const s=Math.max(0,hiAt(j))*IQD;stroke?c.strokeRect(x-s,y-s,w,h):c.fillRect(x-s,y-s,w,h)}else{const z=liftOf(j);stroke?c.strokeRect(x,y-z,w,h):c.fillRect(x,y-z,w,h)}}
-/* 仮：ドアの箱の、手前左の面のとびら */
-function isoBoxDoor(c,x,y,lv){const s0=lv*IQD,s1=(lv*IQL+IQWH*.8)/(2*IQB),X=x*TS,Y=y*TS+TS;c.beginPath();c.moveTo(X+TS*.25-s0,Y-s0);c.lineTo(X+TS*.75-s0,Y-s0);c.lineTo(X+TS*.75-s1,Y-s1);c.lineTo(X+TS*.25-s1,Y-s1);c.closePath();c.fill()}
 /* 立てて描いた物の上の点（いままでの見え方のせかいの点 wx,wy）の、画面の点（CSS の px）。テスト・案内の指で使う */
 function standS(A,wx,wy,lv){if(!isoOn())return{x:(wx-cam.x)*cam.z,y:(wy-cam.y)*cam.z};const cx=camCX(),cy=camCY();return{x:VW/2+(A.px-isoX(cx,cy)+(wx-A.fx)*IQSX)*cam.z,y:VH/2+(A.py-(lv||0)*IQL-isoY(cx,cy)+(wy-A.fy)*IQSY)*cam.z}}
 function objS(j,wx,wy){return standS(objFootJ(j),wx,wy)}
