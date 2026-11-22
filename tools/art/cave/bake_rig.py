@@ -151,7 +151,9 @@ def weights(name,V,F):
             _,cc_=connected_components(G,directed=False);cn_=np.bincount(cc_);big=cn_[cc_]>=SMALLP*n
             if (~big).any() and big.any():   # 小さなはなれた部品（爪の先・かざり）は、いちばん近い大きな部品の点と同じ重み（ボーンヒートは、はなれた小さな部品の重みがずれる）
                 from scipy.spatial import cKDTree
-                bi=np.where(big)[0];_,nn_=cKDTree(Pu[bi]).query(Pu[~big]);W[~big]=W[bi[nn_]]
+                bi=np.where(big)[0];kt=cKDTree(Pu[bi])
+                for c in np.unique(cc_[~big]):   # 部品ごとまるごと、いちばん近くでふれている大きな部品の点の重みに（点ごとにちがう重みだと、部品がちぎれる）
+                    m=cc_==c;dd,nn_=kt.query(Pu[m]);W[m]=W[bi[nn_[dd.argmin()]]]
             if name in CAPE:   # かたにのった物（かたの氷）は、部品ごと、さこつにつける（上うでにつくと、うでを上げたとき、いっしょに上がる）
                 zlo,zhi,nmin=CAPE[name];ixb={B[i][0]:i for i in range(nb)}
                 for c in np.unique(cc_):
@@ -164,6 +166,7 @@ def weights(name,V,F):
         for c in np.unique(comp):
             m=comp==c;sw=W[m].sum(0);b=int(sw.argmax())
             if sw[b]>=.7*sw.sum():W[m]=0;W[m,b]=1
+        if Wh is not None:Wh=W.copy()
     for nm_,r_ in ARMR.get(name,{}).items():   # かたの氷などの下にある上うで：骨のまわり r_ の中で、かたの関節より下の点は、上うでにつける（さこつにとられて、うでを上げると上うでがのこる）
         b=[i for i in range(nb) if B[i][0]==nm_][0];m=(D[:,b]<r_)&(Pu[:,2]<B[b][2][2]);W[m]=0;W[m,b]=1
         for _ in range(2):W[m]=(.5*W+.5*(A@W)/deg[:,None])[m]
