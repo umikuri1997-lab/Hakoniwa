@@ -173,7 +173,7 @@ const KMBF=4,KMBMS=700,KMBLV=[1,.7,.3,.7];/* コマの数・1コマの長さ（�
 const KMBA=.62,KMBCOL=[255,238,184];/* つぶのこさ（いちばん明るいコマ）・色 */
 const KMBDARK=90,KMBIN=3,KMBN=[3,10],KMBAREA=260;/* こい所のうすさ（/255）・ふちから内がわへのドット・つぶの数（少ない・多い）・つぶ1こあたりのこい所のドット数 */
 const KMBSZ=[[6,4],[4,3],[8,5],[5,3]];/* つぶの大きさ（ドット。はば・高さ） */
-function kmbLeafy(o){if(WD===YAMI)return false;if(o==='tree'||o==='ntree'||o==='fruit')return true;return o==='deadtree'&&(WD===1||WD===WIND||WD===MIZU)}/* 葉のある木だけ（枯れ木・闇の枯れたオークはなし。火山・風・水の自然の木は葉がある） */
+function kmbLeafy(o){if(WD===YAMI)return false;if(o==='tree'||o==='ntree'||o==='fruit')return true;return o==='deadtree'&&(WD===KAZAN||WD===WIND||WD===MIZU)}/* 葉のある木だけ（枯れ木・闇の枯れたオークはなし。火山・風・水の自然の木は葉がある） */
 function kmbNow(){if(!S||S.rain||(typeof stormNow==='function'&&stormNow()))return 0;const h=hour();return Math.max(0,Math.min(1,(h-7)/1,(17-h)/1))}/* 晴れた昼だけ（朝・夕方はゆっくり出入り） */
 function kmbArt(sh,o){const src=sh.src||sh;if(src._kmb!==undefined)return src._kmb;const im=chipImgs(src,o)[0];if(!im||!im.ok)return null;
   const w=im.width,h=im.height,d=im.getContext('2d').getImageData(0,0,w,h).data,dark=(x,y)=>x>=0&&y>=0&&x<w&&y<h&&d[(y*w+x)*4+3]>=KMBDARK,P=[];

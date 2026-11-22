@@ -168,24 +168,24 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===KUSA&&grassReunionBl
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
   const gathered=()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
-    if(WD===KUSA)sacredShot('group',S.res,1.5);towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD!==KUSA)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
+    if(WD===KUSA)sacredShot('group',S.res,1.5);towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD===KAZAN)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
     const pour=WD===KUSA?S.res:[...S.res].sort((a,b)=>(a.name===HOMURA)-(b.name===HOMURA)),gap=WD===KUSA?260:900;/* 火山：ひとりずつ手をあてて力をそそぎ、さいごにホムラが火だねをささげる */
-    if(WD!==KUSA)volShot([[TX,TY-1]],S.res,2,1.4);
-    pour.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD!==KUSA&&r.name===HOMURA){sacredScenePose(r,'storyOffer',2600,{side:true,face:r.face});volFx('hidane',2600,{x:TX,y:TY-.6,actor:r,fly:1800,to:true});}else sacredScenePose(r,'storyTouch',2200,{side:true,face:r.face,target:WD===KUSA?tw:undefined});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*gap));
+    if(WD===KAZAN)volShot([[TX,TY-1]],S.res,2,1.4);
+    pour.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD===KAZAN&&r.name===HOMURA){sacredScenePose(r,'storyOffer',2600,{side:true,face:r.face});volFx('hidane',2600,{x:TX,y:TY-.6,actor:r,fly:1800,to:true});}else sacredScenePose(r,'storyTouch',2200,{side:true,face:r.face,target:WD===KUSA?tw:undefined});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*gap));
     const t0=pour.length*gap+(WD===KUSA?500:1600);
-    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===KUSA?'#e5f5ba':'#fff3a0');if(WD!==KUSA){volFx('heatPillar',4800,{x:TX,y:TY});volShot([[TX,TY-4],[TX,TY]],[],2,1.2);}if(WD!==KUSA)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD!==KUSA)flashScreen()},t0);
+    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===KUSA?'#e5f5ba':'#fff3a0');if(WD===KAZAN){volFx('heatPillar',4800,{x:TX,y:TY});volShot([[TX,TY-4],[TX,TY]],[],2,1.2);}if(WD===KAZAN)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD===KAZAN)flashScreen()},t0);
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx(WD===KUSA?'sacred':'bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    villageTimeout(()=>{for(let k=0;k<(WD===KUSA?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD!==KUSA)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===KUSA?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===KUSA)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
+    villageTimeout(()=>{for(let k=0;k<(WD===KUSA?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD===KAZAN)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===KUSA?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===KUSA)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
       // ヌシ様が台座の上にあらわれる
       S.nushi={x:WD===KUSA?TX+2.2:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};const owner=S,session=VILLAGE_SESSION,lord=S.nushi,appearAt=performance.now();const reveal=now=>{if(S!==owner||VILLAGE_SESSION!==session||S.nushi!==lord)return;lord.app=Math.min(1,(now-appearAt)/1500);if(lord.app<1)requestAnimationFrame(reveal)};requestAnimationFrame(reveal);if(WD===KUSA)sacredShot('reunion',S.res,1.7);/* あらわれたときは、守り神のほう（正面） */
-      spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD!==KUSA)flashScreen();
+      spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD===KAZAN)flashScreen();
       villageTimeout(()=>dialog(T.nushi,()=>{
-        if(WD!==KUSA){startClap();for(const r of S.res)r.bubble='👏';}if(WD!==KUSA)for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
+        if(WD===KAZAN){startClap();for(const r of S.res)r.bubble='👏';}if(WD===KAZAN)for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
           S.cleared=true;if(WD===KUSA){S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;endClap();sacredEndDirection();dirty=true;}delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
-          clearSnap();reunionCalm();save();if(WD!==KUSA)villageTimeout(()=>dialog(['#think hush|……この土地も、もとにもどったのう'],()=>reunionCalm(),T.last,GOD),1200);/* 評価の画面は出さない。村にもどって、しずかにながめられる（ふりかえりは思い出帳から） */
+          clearSnap();reunionCalm();save();if(WD===KAZAN)villageTimeout(()=>dialog(['#think hush|……この土地も、もとにもどったのう'],()=>reunionCalm(),T.last,GOD),1200);/* 評価の画面は出さない。村にもどって、しずかにながめられる（ふりかえりは思い出帳から） */
         });
       },null,T.name||'ヌシ様'),3200);
     }},t0+5200);
