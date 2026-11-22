@@ -19,6 +19,18 @@ const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
 const FREE=6,YAMI=5;/* YAMI：闇のステージ（忘れられた神々の庭） *//* フリーモードのステージ番号 */
 let MZLANE=null;/* 舟の道のマス（mizube.js。道さがしで見るので、ここに置く） */
 const KUSA=0,KAZAN=1,TSUCHI=2;/* ステージの番号：草原・火山・土（番号をじかに書かない） */const MIZU=3;/* 水のステージ（霧のみずべの村）の番号。ならびは 草原0・火山1・土2・水3・風4 */
+/* ステージごとの値。ステージでかわる値は、ここに書く（WD===KAZAN?…:WD===WIND?… とつながない）。
+   weed 雑草の絵の番号・sx 自然の木の絵の名前のうしろ・wall 設計図の家の壁・fence 設計図の柵
+   fence2 全滅したときにもらう塀（おぼえていなければ fence）・mats その土地の素材（落とし物・流れ星・ふくろ）・writer 日記を書くせいれい */
+const STAGE=[];
+STAGE[KUSA]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 草原 */
+STAGE[KAZAN]={weed:1,sx:'~v',wall:'bamboowall',fence:'misugaki',fence2:'wall',mats:['wood','stone','bamboo','kuru','chiri'],writer:()=>HOMURA};/* 火山 */
+STAGE[TSUCHI]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 土（まだない。草原と同じ） */
+STAGE[MIZU]={weed:3,sx:'~m',wall:'timberwall',fence:'ashifence',fence2:'rankan',mats:['wood','stone','ashi','gama','maruishi'],writer:()=>POKO};/* 水 */
+STAGE[WIND]={weed:4,sx:'~k',wall:'canvaswall',fence:'ropefence',fence2:'parkfence',mats:['wood','stone','nabiki','houki','kumowata'],writer:()=>KAZANE};/* 風 */
+STAGE[YAMI]={weed:5,sx:'~y',wall:'mosswall',fence:'ibara',fence2:'kuzure',mats:['wood','stone','yotsuyu','kagekusa','kogi'],writer:()=>TOMORI};/* 闇 */
+STAGE[FREE]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>FA()};/* フリーモード（草原と同じ） */
+const stg=()=>STAGE[WD]||STAGE[KUSA];
 const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[MIZU]='hakoniwa-w4-v1';SAVE_KEYS[4]='hakoniwa-w5-v1';SAVE_KEYS[FREE]='hakoniwa-free-v2';const WIND=4/* 風のやんだ空の村（WORLD 5）のステージ番号 */,STAGES=[0,1,MIZU,WIND];/* いま遊べる、お話のステージ（土は、まだない。水は試作。闇は YAMI でべつに見る） */SAVE_KEYS[YAMI]='hakoniwa-w6-v1';/* ステージごとに別のセーブ */
 let WD=0;/* いまのステージ */
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return KV.getItem('hk-test')==='1'}catch(_){return false}})();

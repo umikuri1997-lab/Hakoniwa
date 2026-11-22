@@ -300,7 +300,7 @@ function playDirectStoryEvent(e,L){
   if(e.k==='e15'&&f&&!IS_STORY_REPLAY)return guardPowerUp(e,L,f,owner,session);
   const result=e.vis?visionFX(e.vis,run):run();if(IS_STORY_REPLAY&&e.k==='e15')sacredShot('battle',S.res);return result;
 }
-function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={}),ending=grassEndingEvent();if(sevBusy()||!ending&&(S.sevQuietUntil||0)>S.t)return;
+function checkSev(){if(WD!==KUSA||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={}),ending=grassEndingEvent();if(sevBusy()||!ending&&(S.sevQuietUntil||0)>S.t)return;
   const Q=S.sevQ||(S.sevQ=[]);while(Q.length){const k=Q[0],e=SEV1.find(x=>x.k===k);const L=e&&sevLines(e.L);if(!L){Q.shift();continue}return dialog(L,()=>{D[k]=1;const i=Q.indexOf(k);if(i>=0)Q.splice(i,1);if(/^b_/.test(k))S.flags.kizunaTold=1})}/* 会話を最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
   if(ending){const lines=sevLines(ending.L);if(!lines)return;if(ending.k==='e16g')return playDirectStoryEvent(ending,lines);return;}/* 最後のかけらの話は、メインの会話（checkQuest・storywait）で出す */
   const h=hour(),day=h>=6&&h<21;
@@ -363,7 +363,7 @@ function deathTalkMate(r,m){/* なかよしの子が話す：おどろき → �
   if(m2){if(G0){const NN=NH||m.name===MINA;L.push(NN?[MINA,'#think|……ふつうの子はねぇ、消えると、自然にかえるんだよぉ。自分の力だけでは、もどってこられないんだぁ。']:[GOD,'#think|……ふつうのせいれいは、消えると自然にかえる。自分の力だけでは、もどってこられんのじゃ。'],NN?[MINA,'#think|……あのねぇ。オオカゲが持ってる「めぶきのしずく」っていう、いのちの力があったら、またあえるかもしれないんだぁ。']:[GOD,'#think|……じゃが、オオカゲがためこんだ「めぶきのしずく」があれば、もう一度あえるかもしれん。あきらめるのは、まだ早いぞい。'])}
     else{const D=DEATHL2[elemKey(m)];if(D)L.push([m.name,D(n)[1]])}}
   return L.concat([T('#cry|……'+n+'のこと、ずっと、わすれないよ。')])}
-function deathTalk0(r){const mt=bestMate(r);if(mt&&!mt.hidden&&S.res.includes(mt))return deathTalkMate(r,mt);/* なかよしの子がいれば、その子が話す */if(WD)return null;const F=S.flags,n=r.name,tell=k=>{const t=!F.deathTold;F.deathTold=true;return t?[[GOD,'この土地に深くなじんだせいれいは、消えても土地とのつながりが残る。それをたどって、また帰ってこられるんじゃ。']].concat(HOWK(n)):[]};
+function deathTalk0(r){const mt=bestMate(r);if(mt&&!mt.hidden&&S.res.includes(mt))return deathTalkMate(r,mt);/* なかよしの子がいれば、その子が話す */if(WD!==KUSA)return null;const F=S.flags,n=r.name,tell=k=>{const t=!F.deathTold;F.deathTold=true;return t?[[GOD,'この土地に深くなじんだせいれいは、消えても土地とのつながりが残る。それをたどって、また帰ってこられるんじゃ。']].concat(HOWK(n)):[]};
   if(n===POKO&&!F.lostF){const L=sevLines([['N','#worry hush|……フタバ、いなくなっちゃったねぇ。',1],['N','フタバは、この土地にすっかりなじんでるからねぇ。消えても、土や草とのつながりが残ってるんだぁ。それをたどって、帰ってこられるよぉ。',1],['N','ぼくがいるからねぇ。フタバが帰ってくるまで、いっしょに村を守ろうねぇ。',1],['H','#sigh|あいつ、最後までだれかを守ろうとしてたぜ。',1],['M','神殿に力を集めましょう。また会えるはずです。',1],['K','帰ってきたら、ちゃんと迎えてあげよう。',1]]);if(!L)return null;F.lostF=1;F.deathTold=true;return L.concat(HOWK(n))}
   if(!sevHere('F'))return null;
   if(n===MINA&&!F.lostN){F.lostN=1;F.deathTold=true;return sevLines([['F','#think hush|……ノドカ？ ねえ、ノドカ！'],['F','#think|……いつもみたいに、「だいじょうぶだよぉ」って言ってよ……。'],['F','#think|……やだよ。ぼく、またひとりになるの……？'],['G',GVOICE()+'フタバ。ノドカは、この土地に深くなじんでおる。土地とのつながりをたどって、神殿から帰ってこられるんじゃ。'],['G',backWhen(MINA)+'ノドカは、きっともどってくるぞい。'],['F',backFirst(MINA)?'#think|……ほんと？ じゃあ、ぼく……明日まで待ってる。':'#think|……ほんと？ じゃあ、ぼく……帰ってくるまで待ってる。']])}
@@ -376,7 +376,7 @@ function deathTalk0(r){const mt=bestMate(r);if(mt&&!mt.hidden&&S.res.includes(mt
     if(m2)L.push(NH?[MINA,'#think|……あのねぇ。オオカゲが持ってる「めぶきのしずく」っていう、いのちの力があったら、またあえるかもしれないんだぁ。']:[GOD,'#think|……そうじゃ、フタバ。オオカゲがためこんだ「めぶきのしずく」があれば、もう一度あえるかもしれん。あきらめるのは、まだ早いぞい。'])
     L.push([POKO,'#think|……みんな、ちゃんとごはんを食べて、休もうね。']);return L}
   return null}
-function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags;if(n===POKO&&F.nushiWait&&!S.cleared){F.nushiWait=0;F.nushiDue=1;villageTimeout(()=>{if(!S.cleared)nushiReturns()},7000)}/* フタバがもどってから、ヌシ様がくる */
+function sevBack(n){if(WD!==KUSA||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags;if(n===POKO&&F.nushiWait&&!S.cleared){F.nushiWait=0;F.nushiDue=1;villageTimeout(()=>{if(!S.cleared)nushiReturns()},7000)}/* フタバがもどってから、ヌシ様がくる */
   if(n===MINA&&F.lostN&&!F.backN){F.backN=1;Q.push('b_N')}else if(n===POKO&&F.lostF&&!F.backF){F.backF=1;Q.push('b_F')}else if(n===keyName('fire')&&F.lostH&&!F.backH){F.backH=1;Q.push('b_H')}}
 /* フタバの「こもれびのまもり」：出撃しているフタバのまわり3マス（GUARDR）で、「コワイノ」にねらわれている、たたかう子を葉っぱで守る（受けるダメージ半分） */
 const GUARDR=3;
@@ -385,7 +385,7 @@ function atkFX(r,en){fxSpr(ATKFX[r.elem]||'slash',en.x*TS,en.y*TS-6,null,en.x>=r
 function atkSfx(r){sfxAt(ATKFX[r.elem]?'atk_'+r.elem:'hit',r.x,r.y)}/* 攻撃の音も属性ごと */
 function leafFX(t){fxSpr('leafguard',t.x*TS,t.y*TS)}
 const faceTo2=(f,t)=>{f.face=t.x>=f.x?1:-1};
-function guardTick(){const fin=WD===KUSA&&!!(S.ns&&S.ns.final)&&isNight();if(WD||!(S.flags.guard||fin)||!S.enemies.length)return;const f=S.res.find(r=>r.name===POKO);if(!f||(f.act&&f.act.type==='faint')||f.hunger<125)return;
+function guardTick(){const fin=WD===KUSA&&!!(S.ns&&S.ns.final)&&isNight();if(WD!==KUSA||!(S.flags.guard||fin)||!S.enemies.length)return;const f=S.res.find(r=>r.name===POKO);if(!f||(f.act&&f.act.type==='faint')||f.hunger<125)return;
   if(f.gw){if(S.t<f.gw.t)return;const t=f.gw.tg;f.gw=null;if(S.res.includes(t)&&!t.hidden&&(t.shU||0)<=S.t){t.shU=S.t+40;if(typeof dyGuard==='function')dyGuard(f);/* ゆうべのかつやくの、守った数 */if(fin)f.shU=S.t+40;f.gcd=S.t+75;leafFX(t);leafFX(f);if(qNow('guardUse'))S.flags.guardUsed=1;/* メインの「こもれびのまもり」：受けてから守った *//* ふだんは、守るのは火の子1人だけ */if(fin)for(const u of S.res){if(u===t||u===f||u.hidden||Math.hypot(u.x-t.x,u.y-t.y)>3)continue;u.shU=S.t+40;leafFX(u)}/* 最後の夜：守る子のまわり3マスの子もまとめて守る */addFloat(f.x,f.y-1,'こもれびのまもり！','#5fbf3f');sfx('bush');if(fin&&!S.flags.finF){S.flags.finF=1;S.flags.guard=true;}/* セリフは、ヨルノオオカゲが来たときのお話（e15）で言う */}return}/* ひとふりしてから発動 */
   if((f.gcd||0)>S.t)return;
   let best=null;const hk=keyName('fire');if(!fighter(f))return;/* 出撃しているフタバだけ（見張り台・家の中からは使わない） */for(const t of S.res){if(t===f||t.hidden||(!fighter(t)&&!fin)||(t.shU||0)>S.t||Math.hypot(t.x-f.x,t.y-f.y)>GUARDR)continue;if(!S.enemies.some(e=>!e.dead&&Math.hypot(e.x-t.x,e.y-t.y)<2.6))continue;const p=t.name===hk?0:1;if(!best||p<best[0])best=[p,t]}
