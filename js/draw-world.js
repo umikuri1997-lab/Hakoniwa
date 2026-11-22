@@ -123,6 +123,7 @@ let SKYTEX=null;function skyTex(){if(SKYTEX)return SKYTEX;const N=128,cv=documen
   for(const L of puffs)for(const[x,y,rx,ry]of L)oval(x-1,y-2,Math.max(2,rx-3),Math.max(1,ry-2),'#fbfeff');/* 上の明るい所 */
   SKYTEX=cv;return cv}
 const SKYFACE=[[108,92,66],[150,130,98],[126,108,80],[96,82,62]],SKYFH=13,SKYRIM=[104,122,84];/* 浮き島の手前のがけ（上から：土のかげ・岩・岩のかげ・うら）と、島のふちの線（仮の色） */
+const WCFR=5,WCFRN=25;/* 池のふちの、あれ地と草地のさかい：陸のあれ地のマスに草のふちがかかる はば（ドット）と、そのうねり */
 function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水のマスの角：下絵には前の四角い水のふち（こい緑の線）がのこっているので、その所だけ、まわりの陸と同じ地面（あれ地か草地。マップの位置どおり）でぬりなおす */
   const M=WRND.m,gw=R.w,F=R.f,w=(X1-X0)*TS,h=(Y1-Y0)*TS,C=window.CHIPS,gt=chipImgs(C['tex:grass'],'ground')[0];let L=null,lg=null,id=null,L2=null,lg2=null,idg=null;
   const mk=()=>{L=TMPC();L.width=w;L.height=h;lg=L.getContext('2d');id=lg.createImageData(w,h)};
@@ -130,7 +131,8 @@ function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水の�
     const nb=[];for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b||isW(tx+a,ty+b))continue;nb.push([a,b,REV.has((ty+b)*W+tx+a)])}/* まわりの陸のマス */
     if(!nb.length)continue;
     for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++){if(F[(y+M)*gw+x+M])continue;any=true;if(!L)mk();const q=(y*w+x)*4;id.data[q+3]=255;
-      const rx=x-xa,ry=y-ya;let bd=1e9,g=false;for(const[a,b,gg]of nb){const dx=a<0?rx:a>0?TS-1-rx:0,dy=b<0?ry:b>0?TS-1-ry:0,d=dx*dx+dy*dy;if(d<bd){bd=d;g=gg}}/* そのドットにいちばん近い陸のマスが草地なら草地（となりがあれ地と草地のとき、マスまるごと片方にしない） */
+      const rx=x-xa,ry=y-ya;let g=null;{const i0=(y+M)*gw+x+M,D=R.d,gx=D[i0+1]-D[i0-1],gy=D[i0+gw]-D[i0-gw],gl=Math.hypot(gx,gy);if(gl>1e-6){const ux=gx/gl,uy=gy/gl,wx=tx*TS+rx+.5,wy=ty*TS+ry+.5;for(let t=1;t<=TS*2;t++){const cx=Math.floor((wx+ux*t)/TS),cy=Math.floor((wy+uy*t)/TS);if(cx===tx&&cy===ty)continue;if(!isW(cx,cy)){const j=cy*W+cx;g=REV.has(j);if(!g){const qx=wx+ux*t-cx*TS,qy=wy+uy*t-cy*TS,fr=WCFR+wNoise(wx,wy)*WCFRN,gn=(a,b)=>{const nx=cx+a,ny=cy+b;return nx>=0&&ny>=0&&nx<W&&ny<H&&!isW(nx,ny)&&REV.has(ny*W+nx)};if(gn(1,0)&&TS-qx<fr||gn(-1,0)&&qx<fr||gn(0,1)&&TS-qy<fr||gn(0,-1)&&qy<fr)g=true}}break}}}/* あれ地のマスでも、となりの草地とのさかいから WCFR ドットは、草のふち（fringeg）がかかるので草地にする（陸のさかいの線とそろえる） *//* 水からはなれる向きへすすんで、はじめに入る陸のマスの地面（陸の草地とあれ地のさかいの線が、そのまま水ぎわまでつづく） */
+      if(g===null){let bd=1e9;for(const[a,b,gg]of nb){const dx=a<0?rx:a>0?TS-1-rx:0,dy=b<0?ry:b>0?TS-1-ry:0,d=dx*dx+dy*dy;if(d<bd){bd=d;g=gg}}}/* 向きがきまらないときは、いちばん近い陸のマス */
       if(g){anyG=true;if(!L2){L2=TMPC();L2.width=w;L2.height=h;lg2=L2.getContext('2d');idg=lg2.createImageData(w,h)}idg.data[q+3]=255}}
     if(!any)continue;const px=tx*TS,py=ty*TS;lg.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,xa,ya,TS,TS);if(anyG&&gt.ok)lg2.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,xa,ya,TS,TS)}
   if(L&&L2){const m2=TMPC();m2.width=w;m2.height=h;m2.getContext('2d').putImageData(idg,0,0);lg2.globalCompositeOperation='destination-in';lg2.drawImage(m2,0,0);lg.drawImage(L2,0,0);m2.width=m2.height=0}if(L2)L2.width=L2.height=0;
