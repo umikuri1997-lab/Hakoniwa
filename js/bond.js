@@ -9,7 +9,7 @@ const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
 function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kind!=='qr'&&qrPair(a,b))return;/* けんかの日は、なかよしがふえない */if(kind)(S.bondDid||(S.bondDid={}))[bondKey(a,b)]=kind;/* 2人でさいごにしたこと（消えたときの思い出） */const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
-  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('heart',a.name+'と'+b.name+'がなかよしになった');if(typeof letterQ==='function'){const w=pick([a,b]);const o=w===a?b:a;letterQ(w,'mate',{m:o.name},o.elem)}/* なかよしになったことを、手紙に */logEv(a.name+'と'+b.name+'がなかよしになった');{const pop={bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S};if(typeof juiceBondHeart==='function'){juiceBondHeart(a,b,BOND_TALK);villageTimeout(()=>SPOT_POPS.push(pop),J3HEARTMS+J3POPMS)}else SPOT_POPS.push(pop)}/* ハートがはじけてから、ポップアップ */omoiNote(a,b,false)}
+  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloatG(x.x,x.y,-1.4,'なかよし！');memo('heart',a.name+'と'+b.name+'がなかよしになった');if(typeof letterQ==='function'){const w=pick([a,b]);const o=w===a?b:a;letterQ(w,'mate',{m:o.name},o.elem)}/* なかよしになったことを、手紙に */logEv(a.name+'と'+b.name+'がなかよしになった');{const pop={bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S};if(typeof juiceBondHeart==='function'){juiceBondHeart(a,b,BOND_TALK);villageTimeout(()=>SPOT_POPS.push(pop),J3HEARTMS+J3POPMS)}else SPOT_POPS.push(pop)}/* ハートがはじけてから、ポップアップ */omoiNote(a,b,false)}
   else if(v0<BOND_PLAY&&v>=BOND_PLAY){omoiNote(a,b,true);if(typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_PLAY)}
   if(v0<BOND_MAX&&v>=BOND_MAX&&typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_MAX)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
@@ -50,7 +50,7 @@ function omoiScene(j){
   let n=0,begun=false;const arrive=()=>{if(++n<2||begun)return;begun=true;care()};
   const care=()=>{if(!alive())return stop();if(isNight())return stop('御神木へ行くのは、朝になってから');for(const r of pr)hold(r);const view=[[storyTreeX(j)*TS-40,sacredTopY(j)+20],[storyTreeX(j)*TS+40,storyTreeY(j)*TS-liftOf(j)],...pr.flatMap(r=>[[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)]])];storyShot(view,{limit:2.4,seconds:1.2,full:true});
     const one=(r,at,then)=>villageTimeout(()=>{if(!alive())return stop();const c=OMOI_CARE[r.elem]||OMOI_CARE.wood;sacredScenePose(r,c[0],2200,{side:true,target:j,face:r.face});sacredStartEffect(c[1],2200,{actor:r});sfx(r.elem==='water'?'wave':'bush');
-      if(r.elem==='wood')for(let i=0;i<10;i++)villageTimeout(()=>fx.push({k:'p',x:r.x*TS+r.face*8,y:r.y*TS-26-uLift(r),vx:r.face*(30+Math.random()*30),vy:-20-Math.random()*30,life:1,col:i%2?'#f6c6d6':'#fff2f6',r:2}),400+i*80);/* 花びら */
+      if(r.elem==='wood')for(let i=0;i<10;i++)villageTimeout(()=>fx.push({k:'p',x:r.x*TS+r.face*8,y:r.y*TS-26-uLift(r),gy:r.y*TS,vx:r.face*(30+Math.random()*30),vy:-20-Math.random()*30,life:1,col:i%2?'#f6c6d6':'#fff2f6',r:2}),400+i*80);/* 花びら */
       if(then)villageTimeout(then,2300)},at);
     SCENEHOLD=performance.now()+9500;/* 2人の光が、あかりになるまで、村の時間を止める */
     one(A,500);one(B,1300,()=>{if(!alive())return stop();const idx=Math.min(2,omoiN());/* 2人の想いが、ひとつの光になって、枝のあかりになる */
@@ -65,7 +65,7 @@ function omoiScene(j){
   return true}
 function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==KUSA||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}
 function omoiBubOn(){/* 御神木の青いふきだしが出ている（出ていれば、そのマス） */if(!S||WD!==KUSA||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return -1;const j=S.sacredRoot;return j==null||S.obj[j]!=='tower'?-1:j}
-function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */const j=omoiBubOn();if(j<0)return;talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now)}
+function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */const j=omoiBubOn();if(j<0)return;ctx.save();isoAtA(ctx,treeFoot());talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now);ctx.restore()}/* クォータービュー：切り株を足もとに立てて */
 function omoiBubHit(wx,wy){/* 青いふきだし（talkBub：はば45・高さ42、根もとの上 63〜21 の点）をタップした */const j=omoiBubOn();if(j<0)return false;const px=storyTreeX(j)*TS,by=sacredTopY(j)+34;return Math.abs(wx*TS-px)<=26&&wy*TS>=by-68&&wy*TS<=by-14}
 function sacredTopY(j,st){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあい（st。なければ、いま）で絵がかわる */const a=window.CHIPS&&CHIPS[SACRED_ART[Math.floor(st==null?sacredStage():st)]];return (j/W|0)*TS+(sacredSpan()-4)*TS-liftOf(j)+(a?a.ay/2:-60)}
 /* いちばんなかよしの子（村にいる子だけ）。{q,v} */
@@ -276,7 +276,7 @@ function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i
   const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;if(!back&&(S.qMem||{})[k])back='#joy|もう、けんかしても、すぐ仲なおりしようね。';
   if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
   L.push(T(q,back,3),T(m,'#joy big|……うん！ おかえり、$！',4));return L}
-function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
+function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS);addFloatG(r.x,r.y,-1.3,'おかえり！','#ffd6e6')}
   sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');if(typeof letterQ==='function')letterQ(q,'back',{m:m.name});memo('leaf',m.name+'と'+q.name+'が、また会えた')}
 function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
   const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
@@ -311,7 +311,7 @@ function qrMakeTalk(g,a){const Q=S.qr;if(!Q)return;const t=S.res.find(x=>x.id===
   const T=(r,s,i)=>[r.name,chatTone(s,r,i).replace(/@W/g,Q.w?BL[Q.w].name:'遊び家具').replace(/\$/g,(r===g?t:g).name)],ga=g.id===Q.a,owner=S,k=bondKey(g,t);
   faceTo(g,(t.y|0)*W+(t.x|0));t.face=g.x>=t.x?1:-1;if(a.food){S.fs[a.food]=Math.max(0,(S.fs[a.food]||0)-1);syncFood()}
   const L=[T(g,a.food?'#sigh give|……これ、$の好きな'+FOODS[a.food].name+'。……あげる。':'#sigh give|……これ、$に、つんできたんだ。',0),T(g,ga?'……きのうは、言いすぎた。ごめんね。':QR_SORRY[Q.why],1),T(t,ga?'#teary|……ぼくも、ごめんね。……ありがとう。':'#teary|……ぼくも、言いすぎた。ごめん。',2),T(g,'#joy|……じゃあ、仲なおり、だね。',3)];
-  dialog(L,()=>{if(S!==owner)return;a.fin=1;if(t.act&&t.act.type==='qwait')t.act.fin=1;const now=performance.now();for(const r of[g,t]){JUMP.set(r,now);JOYU.set(r,now+2500);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');
+  dialog(L,()=>{if(S!==owner)return;a.fin=1;if(t.act&&t.act.type==='qwait')t.act.fin=1;const now=performance.now();for(const r of[g,t]){JUMP.set(r,now);JOYU.set(r,now+2500);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS)}sfx('good');
     (S.qMem||(S.qMem={}))[k]={why:Q.why,w:Q.w,d:dayNo()};delete S.qr;bondAdd(g,t,3,'qr');memo('heart',g.name+'と'+t.name+'が仲なおりした');if(typeof letterQ==='function'){const w=pick([g,t]);letterQ(w,'make',{m:(w===g?t:g).name})}/* 仲なおりの手紙 */logEv(g.name+'と'+t.name+'が仲なおりした')})}
 /* よみがえったあとの日常：お墓まいりの花を2人で見にいき、よみがえった子がお礼の花を植える（revisit）。RE_DAYS 日のあいだ、いっしょに遊ぶ・ごはん・となりで寝る（reWith） */
 const RE_DAYS=3;
@@ -326,7 +326,7 @@ function revisitTick(day){const R=S.rvq;if(!R||!day||S.t<R.t||hour()<7||hour()>=
 function revisitTalk(q,m,a){const e=goneEntry(q.name)||{},n=(e.fl||[]).filter(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout').length,T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/\$/g,(r===m?q:m).name)],owner=S,end=()=>{for(const r of[q,m])if(r.act&&r.act.type==='rvisit')r.act.fin=1};
   dialog([T(q,'#surprise|……この花、もしかして……？',0),T(m,n>1?'……うん。$がいないあいだ、ここに植えにきてたんだ。':'……うん。$がいないあいだに、ここに植えたんだ。',1),T(q,'#teary|……ありがとう。……じゃあ、こんどは、ぼくが植えるね。',2)],()=>{if(S!==owner)return;
     const sp=mournSpot({elem:m.elem,j:a.obj});if(sp){faceTo(q,sp.k);S.obj[sp.k]=sp.id;(S.bud||(S.bud={}))[sp.k]=callDay()+1;recount();plantSparkle(sp.k,sp.id);(e.fl||(e.fl=[])).push(sp.k)}
-    villageTimeout(()=>{if(S!==owner)return;dialog([T(m,'#joy|……ならんで咲いたら、きっと、きれいだね。',3)],()=>{if(S!==owner)return;const now=performance.now();for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+2500);fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');bondAdd(q,m,2,'tour');memo('grass',q.name+'が、'+m.name+'にお礼の花を植えた');end()})},1600)})}
+    villageTimeout(()=>{if(S!==owner)return;dialog([T(m,'#joy|……ならんで咲いたら、きっと、きれいだね。',3)],()=>{if(S!==owner)return;const now=performance.now();for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+2500);fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS)}sfx('good');bondAdd(q,m,2,'tour');memo('grass',q.name+'が、'+m.name+'にお礼の花を植えた');end()})},1600)})}
 /* さいごのひとこと（消える子が、なかよしの子へ。なかよしがいなければ、みんなへ）。$M はなかよしの名前 */
 const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hush|……$M、ありがとう……。たのしかった、よ……。','#teary hush|……$M……また、あそぼうね……。'],
  earth:['#teary hush|……$M……ごめんねぇ……。','#teary hush|……$M……ありがとねぇ……。','#teary hush|……ちょっと、ねむいなぁ……。$M……またねぇ……。'],
@@ -346,7 +346,7 @@ function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)ret
   if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<250||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj)||nigate(f.elem,o.what)||!useFor(o.obj,f))return false;
   const G=bfs(f.x|0,f.y|0),mine=r.act&&r.act.stand;let st=-1;if(o.what==='swing'){if(G.dist[o.obj]>=0)st=o.obj}else st=nearest(G,k=>k!==mine&&walk(k)&&adjOf(k,t=>anc(t)===o.obj)>=0,45);if(st<0)return false;
   r.bdInv=S.t+120;endAct(f);startAct(f,G,'play',st,Object.assign({},o,{fun:p.fun,inv:r.id}));
-  addFloat(r.x,r.y-1.4,'いっしょにあそぼう！');f.bubble='♪';return true}
+  addFloatG(r.x,r.y,-1.4,'いっしょにあそぼう！');f.bubble='♪';return true}
 
 /* ---------- 村をあんないする（えらぶ場面 guide でえらばれた子が、新しい子をつれて村をまわる） ----------
    S.tour={g:あんないする子のid,w:ついていく子のid,i:いまの場所,at:はじめた時刻}。場所は 畑・箱・池・家・切り株・神殿 のうち、ある物だけ。

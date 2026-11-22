@@ -164,7 +164,7 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
       if(typeof juiceDiaryCount==='function')q.go=juiceDiaryCount(pg,secW&&pg.contains(secW)?secW:null,true);PT.push(q)}}
   dyFillPh(new Map([[e.d,{sec:day,e}]]));
   if(anim)setTimeout(()=>dyWrite(body),420);/* 朝の日記：文を、書く音といっしょに、ちょっとずつ出す */
-  if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
+  if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloatG(r.x,r.y,-1.4,'がんばった！','#ffe7a8')}}}
 /* 書いているように、文を1字ずつ出す（場所は先にとってある：字は見えないだけ）。「、」「。」と行のおわりで、ひと息。書く音（持ち主の音）を数字ごとに。タップで、すぐさいごまで */
 const DYWMS=25,DYWPAUSE=100,DYWLINE=150,DYAUTOMS=900;/* 1字・「、」「。」のあと・行のおわり（ミリ秒）。わかれた点のページを自動でめくるまでの間 */
 function dyWrite(root){const L=[...root.querySelectorAll('.dyTx')].filter(p=>!p.dataset.w&&p.textContent);if(!L.length)return;const st=S;

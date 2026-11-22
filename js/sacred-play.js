@@ -93,7 +93,7 @@ function sacredPlayWin(){const P=SPLAY;if(!P)return;sacredPlayClose();if(P.owner
 /* うまくできたときのごほうび（その出番で1回だけ。思い出帳ではなし） */
 function sacredPlayBonus(P){const b=playDef(P.id)?.bonus;if(!b||IS_STORY_REPLAY)return;const F=S.flags.playWon||(S.flags.playWon={});if(F[P.id])return;F[P.id]=true;dirty=true;
   if(b.word)addFloat(P.wx!=null?P.wx:P.cx/TS,P.wy!=null?P.wy:P.cy/TS-1.6,b.word,'#fff3c4');/* 木のようすが、うれしそうにかわる（物はもらわない） */
-  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;funAdd(r,b.fun,b.why||'tree');addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
+  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;funAdd(r,b.fun,b.why||'tree');addFloatG(r.x,r.y,-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
 /* しっぱい：数えて、3回でおわり（つぎの日に、もう一度） */
 function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('next');(P.fail||P.done)()}
 function sacredPlayClose(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();sacredPlayPopFree()}
@@ -189,7 +189,7 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
     if(!P.open){const d=pa[P.reach];glow(d.x,d.y-1,7,P.hold?.25:.4+.2*Math.sin(t*5),'150,210,255');if(!mgs('drop',d.x,d.y-3)){PXG.fillStyle='#4f93c0';pxDisk(d.x,d.y-1,2);PXG.fillStyle='#7fc4ec';pxDisk(d.x,d.y-2,1);PXG.fillStyle='#ffffff';PXG.fillRect(PXR(d.x)-1,PXR(d.y)-3,1,1)}}/* しずく */
     if(P.fall&&now-P.fall.t<600){const u=(now-P.fall.t)/600;if(!mgs('drop',P.fall.x,P.fall.y+u*u*30)){PXG.fillStyle='#7fc4ec';pxDisk(P.fall.x,P.fall.y+u*u*30,1)}}}
   if(P.type==='swipe'){const sw=P.sway&&now-P.sway<900?Math.sin((now-P.sway)/90)*(1-(now-P.sway)/900)*4:0,gu=P.gust&&now-P.gust<600?Math.sin((now-P.gust)/30)*3:0;pxLeaf(P.cx,P.cy-24,(sw+gu)*.08,'#8fdc6a','#5f9e3f');const d=P.down;if(d){PXG.fillStyle='rgba(255,255,255,.6)';pxLine(d.x,d.y,d.last.x,d.last.y,2)}}
-  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14)}sfx('chime');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
+  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14,null,0,r.y*TS)}sfx('chime');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
     PXG.fillStyle='rgba(255,246,200,.75)';for(let i=0;i<P.got;i++){const r=P.order[i];if(!r)continue;pxLine(r.x*TS,r.y*TS-12,P.cx,P.cy-6,2);glow(r.x*TS,r.y*TS-12,10,.45);mgs('spark'+((mgFrame(4,140)+i)%4),r.x*TS,r.y*TS-14)}/* 力をおくった子から、切り株へ光の線 */
     glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){PXG.fillStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';pxRing(P.cx,P.cy-6,PXR(20+2*Math.sin(t*4)),2)}/* 長おしする所に、光の輪 */
     if(P.got)mgs('spark'+mgFrame(4,120),P.cx,P.cy-10);if(P.holding){const f=P.prog-P.got;PXG.fillStyle='#fff6c8';pxRing(P.cx,P.cy-6,20,3,f)}}

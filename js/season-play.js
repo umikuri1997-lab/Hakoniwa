@@ -31,7 +31,7 @@ function goSeasonPlay(r,G){if(!S||IS_STORY_REPLAY||r.splayT>S.t||Math.random()>=
   if(k==='kama'){const L=S.kama||(S.kama=[]);if(L.length>=KAMAMAX)L.shift();L.push({j:c-W,g:0})}
   S.splayD=S.splayD&&S.splayD.d===d?{d,n:S.splayD.n+1}:{d,n:1};const id=(S.splayId=(S.splayId||0)+1);
   who.forEach((q,i)=>{q.splayT=S.t+SPLAYCD;if(q!==r){endAct(q);q.act=null;q.path=[]}startAct(q,q===r?G:bfs(q.x|0,q.y|0),'splay',sp[i],{k,c,i,g:id,dur:SPLAYDUR,ids:who.map(x=>x.id)})});
-  addFloat(r.x,r.y-1.4,SPLAYN[k]+'しよう！','#fff3d6');return true}
+  addFloatG(r.x,r.y,-1.4,SPLAYN[k]+'しよう！','#fff3d6');return true}
 function splayMates(a){return (a.ids||[]).map(id=>S.res.find(q=>q.id===id)).filter(q=>q&&q.act&&q.act.type==='splay'&&q.act.g===a.g)}
 /* 水切りの石をなげる：はねる回数 n（1〜5）。石は水の上を、だんだん短く・低くはねて、さいごにしずむ（kiriFx） */
 function kiriThrow(r,a,M){const d=kiriDir(a.c);if(d<0)return;const[dx,dy]=SPDIR[d],u=Math.random(),n=u<.15?1:u<.4?2:u<.7?3:u<.9?4:5;
@@ -44,7 +44,7 @@ function kiriPos(s,now){/* 石の場所と、さいごまでいったか */let t
 function kiriTick(now){for(let i=SPLAYFX.length-1;i>=0;i--){const s=SPLAYFX[i];if(s.st!==S){SPLAYFX.splice(i,1);continue}
     if(s.k==='rip'){if(now-s.t0>s.dur)SPLAYFX.splice(i,1);continue}
     const p=kiriPos(s,now);if(p.touch!==s.lt){s.lt=p.touch;if(p.touch>=0){const j=((p.y/TS)|0)*W+((p.x/TS)|0);if(!waterJ(j)){s.done=1}else{SPLAYFX.push({k:'rip',x:p.x,y:p.y,t0:now,dur:p.end?900:600,big:!!p.end,st:S});sfxAt('twater',p.x/TS,p.y/TS)}}}/* 水にふれたら波紋。水がなくなったら、そこでおわり */
-    if(p.end||s.done){SPLAYFX.splice(i,1);const r=S.res.find(q=>q.id===s.rid),n=s.done?Math.max(0,p.touch):s.n;if(!r)continue;addFloat(r.x,r.y-1.4,n+'かい！','#fff3d6');
+    if(p.end||s.done){SPLAYFX.splice(i,1);const r=S.res.find(q=>q.id===s.rid),n=s.done?Math.max(0,p.touch):s.n;if(!r)continue;addFloatG(r.x,r.y,-1.4,n+'かい！','#fff3d6');
       if(n>=4){JUMP.set(r,now);r.bubble='😆';for(const id of s.ids){const q=S.res.find(z=>z.id===id);if(q&&q!==r)JOYU.set(q,now+1400)}}/* よくはねたら、みんなでよろこぶ */
       else if(n<=1)r.bubble='💦'}}}
 ACT.splay={start(r,a){if(a.k==='mizu')a.k='kiri';/* 前のセーブの水あそび */const cx=a.c%W+.5;if(Math.abs(cx-r.x)>.1)r.face=cx>r.x?1:-1;a.beat=0;
@@ -56,10 +56,10 @@ ACT.splay={start(r,a){if(a.k==='mizu')a.k='kiri';/* 前のセーブの水あそ�
     if(a.k==='kama'&&a.t>a.dur-KAMAPEEK){const kx=cx;if(Math.abs(kx-r.x)>.1)r.face=kx>r.x?1:-1}/* できたら、みんなで、かまくらをのぞく */
     if(ph===a.beat)return;a.beat=ph;
     if(a.k==='snowball'){const o=M.filter(q=>q!==r&&Math.sign(q.x-cx)!==Math.sign(r.x-cx))[0]||M.find(q=>q!==r);if(!o)return;r.face=o.x>r.x?1:-1;if(ph%2)return;
-      const T=.7,tx=o.x*TS,ty=(o.y-.4)*TS,g=260,vx=(tx-px)/T,vy=((ty-(py-14))-.5*g*T*T)/T;fx.push({k:'p',x:px,y:py-14,vx,vy,g,nd:1,life:T*1.4,col:'#ffffff',r:4});/* 雪玉は、ねらった子にとどく */
-      villageTimeout(()=>{if(!S.res.includes(o))return;for(let i=0;i<8;i++){const q=Math.random()*6.28;fx.push({k:'p',x:o.x*TS,y:(o.y-.4)*TS,vx:Math.cos(q)*50,vy:Math.sin(q)*45-40,life:.5,col:i%2?'#ffffff':'#dde8f6',r:2})}
+      const T=.7,tx=o.x*TS,ty=(o.y-.4)*TS,g=260,vx=(tx-px)/T,vy=((ty-(py-14))-.5*g*T*T)/T;fx.push({k:'p',x:px,y:py-14,gy:py,vx,vy,g,nd:1,life:T*1.4,col:'#ffffff',r:4});/* 雪玉は、ねらった子にとどく */
+      villageTimeout(()=>{if(!S.res.includes(o))return;for(let i=0;i<8;i++){const q=Math.random()*6.28;fx.push({k:'p',x:o.x*TS,y:(o.y-.4)*TS,gy:o.y*TS,vx:Math.cos(q)*50,vy:Math.sin(q)*45-40,life:.5,col:i%2?'#ffffff':'#dde8f6',r:2})}
         JUMP.set(o,performance.now());o.bubble=Math.random()<.5?'😆':'💦';sfxAt('fsnow',o.x,o.y)},T*1000);sfxAt('fsnow',r.x,r.y)}/* 当たった子は、かならず、はねる */
-    else if(a.k==='kama'){if(a.t>a.dur-KAMAPEEK)return;const m=(S.kama||[]).find(q=>q.j===a.c-W);if(m)m.g=Math.max(m.g,Math.min(3,Math.floor(a.t/((a.dur-KAMAPEEK)/4))));for(let i=0;i<3;i++)fx.push({k:'p',x:cx*TS+(Math.random()-.5)*20,y:(cy-.6)*TS,vx:(Math.random()-.5)*40,vy:-60-Math.random()*30,life:.5,col:'#ffffff',r:2});sfxAt('fsnow',r.x,r.y)}
+    else if(a.k==='kama'){if(a.t>a.dur-KAMAPEEK)return;const m=(S.kama||[]).find(q=>q.j===a.c-W);if(m)m.g=Math.max(m.g,Math.min(3,Math.floor(a.t/((a.dur-KAMAPEEK)/4))));for(let i=0;i<3;i++)fx.push({k:'p',x:cx*TS+(Math.random()-.5)*20,y:(cy-.6)*TS,gy:cy*TS,vx:(Math.random()-.5)*40,vy:-60-Math.random()*30,life:.5,col:'#ffffff',r:2});sfxAt('fsnow',r.x,r.y)}
     else if(a.k==='kiri'){if(ph%2)kiriThrow(r,a,M)}/* すくって、なげる */
     else if(a.k==='hanami'){if(a.i===ph%M.length)JOYU.set(r,performance.now()+900)}/* ときどき、だれかが花を見上げてよろこぶ */
     else if(a.k==='leaf'){if(a.t<a.dur*.5){for(let i=0;i<3;i++){const q=Math.random()*6.28,R=18+Math.random()*10;fx.push({k:'p',x:cx*TS+Math.cos(q)*R,y:cy*TS+Math.sin(q)*R*.5,vx:-Math.cos(q)*R*1.2,vy:-20,g:60,life:.7,col:LEAFC[i%4],r:2})}sfxAt('tgrass',r.x,r.y);return}/* はじめは、落ち葉をあつめて山にする */
@@ -70,7 +70,7 @@ ACT.splay={start(r,a){if(a.k==='mizu')a.k='kiri';/* 前のセーブの水あそ�
     if(a.k==='kama'){const m=(S.kama||[]).find(q=>q.j===a.c-W);if(m)m.g=3}}};
 ACT_LBL.splay='季節の遊びをしている';IDLE_ACTS.push('splay');
 const LEAFC=['#e98a3a','#d4632e','#f2c14e','#b8562a'];
-function hanamiPetal(cx,cy){fx.push({k:'p',x:cx*TS+(Math.random()-.5)*72,y:(cy-1.7)*TS+(Math.random()-.5)*12,vx:(Math.random()-.5)*10+6,vy:4,g:12,vt:16,sw:16,ph:Math.random()*6,life:3.2,col:Math.random()<.5?'#ffd3e6':'#ffb4d0',r:2})}/* 花びらは、ひらひら、ゆっくり落ちる */
+function hanamiPetal(cx,cy){fx.push({k:'p',x:cx*TS+(Math.random()-.5)*72,y:(cy-1.7)*TS+(Math.random()-.5)*12,gy:cy*TS,vx:(Math.random()-.5)*10+6,vy:4,g:12,vt:16,sw:16,ph:Math.random()*6,life:3.2,col:Math.random()<.5?'#ffd3e6':'#ffb4d0',r:2})}/* 花びらは、ひらひら、ゆっくり落ちる */
 function splayAnim(r){const a=r.act;if(!a||a.stage!=='do')return'';const ph=Math.floor((a.t+a.i*1.3)/2.4);
   if(a.k==='snowball')return ph%2?'qstone':'raise';/* 雪をすくって、なげる */
   if(a.k==='kama')return a.t>a.dur-KAMAPEEK?(a.t>a.dur-KAMAPEEK/2?'talkjoy':'point'):'qstone';/* できたら、指さして、よろこぶ */

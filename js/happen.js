@@ -67,27 +67,27 @@ function hapDance(r,G){/* goWander から：ひまなせいれいが、きのこ
   const s=hapInner(h.j).find(k=>G.dist[k]>=0&&walk(k)&&free('hd'+k,1));if(s==null)return false;startAct(r,G,'hdance',s,{key:'hd'+s,obj:h.j,dur:KINODUR});return true}
 const hapFace=(r,j)=>{r.face=j%W+.5>=r.x?1:-1};
 ACT.hkabu={start(r,a){const h=hapNow('kabu');if(!h||h.ph==='end')return false;hapFace(r,a.obj);r.bubble=''},
-  tick(r,a){const h=hapNow('kabu');if(!h)return;if(h.ph==='wait'){const here=S.res.filter(q=>q.act&&q.act.type==='hkabu'&&q.act.stage==='do'),need=Math.min(KABUMAX,S.res.filter(q=>!q.hidden).length);if(here.length>=need){h.ph='pull';h.p0=S.t;HAPFX={k:'pull',t0:performance.now()};for(const q of here)addFloat(q.x,q.y-1.6,'せーの！','#fff3b0');sfxAt('bush',r.x,r.y)}}
+  tick(r,a){const h=hapNow('kabu');if(!h)return;if(h.ph==='wait'){const here=S.res.filter(q=>q.act&&q.act.type==='hkabu'&&q.act.stage==='do'),need=Math.min(KABUMAX,S.res.filter(q=>!q.hidden).length);if(here.length>=need){h.ph='pull';h.p0=S.t;HAPFX={k:'pull',t0:performance.now()};for(const q of here)addFloatG(q.x,q.y,-1.6,'せーの！','#fff3b0');sfxAt('bush',r.x,r.y)}}
     else if(h.ph==='pull'&&S.t-h.p0>=KABUPULL)hapPull();},
   done(r,a){const h=hapNow('kabu');return !h||h.ph==='end'||h.ph==='pop'&&S.t-h.p1>=KABUFALL},
   end(r,a){const h=hapNow('kabu');if(h&&h.ph==='pop'){JUMP.set(r,performance.now());if(S.res.every(q=>!(q.act&&q.act.type==='hkabu')||q===r))h.ph='end'}}};
 function hapPull(){const h=hapNow('kabu');if(!h||h.ph!=='pull')return;const j=h.j,d=S.dyn[j],P=S.res.filter(q=>q.act&&q.act.type==='hkabu'&&q.act.stage==='do');h.ph='pop';h.p1=S.t;
   const k=h.crop&&FOODS[h.crop]?h.crop:'mugi';if(d){d.g=0;d.sown=false;d.crop=null;d.fb=0;delete d.ts;delete d.dry;delete d.stolen}if(CROPS[k])S.cseed[k]=cseed(k)+1;
   let left=KABUN;P.forEach((q,i)=>{const n=Math.min(Math.ceil(left/(P.length-i)),roomN(q));if(n>0){addCarry(q,k,n);left-=n}});if(left>0)dropAt(j%W+.5,((j/W)|0)+.5,'food:'+k,left);
-  HAPFX={k:'pop',t0:performance.now(),j,crop:k};for(const q of P){JUMP.set(q,performance.now());addFloat(q.x,q.y-1.6,'ぬけた！','#fff3b0')}
+  HAPFX={k:'pop',t0:performance.now(),j,crop:k};for(const q of P){JUMP.set(q,performance.now());addFloatG(q.x,q.y,-1.6,'ぬけた！','#fff3b0')}
   sfxAt('harvdone',j%W+.5,(j/W)|0);if(typeof juiceBreak==='function')juiceBreak(j,'crop',P[0]);if(typeof shakeScreen==='function')shakeScreen('s');if(typeof juiceCheer==='function')juiceCheer('hap');
   toast('大きな'+FOODS[k].name+'がぬけた：'+FOODS[k].name+'×'+KABUN,'good');memo('grass','大きな'+FOODS[k].name+'を、みんなでぬいた');logEv('大きな作物をぬいた');dirty=true}
 ACT.hhina={start(r,a){const h=hapNow('hina');if(!h||h.ph!=='wait')return false;hapFace(r,a.obj);r.bubble='❗'},done:(r,a)=>a.t>=2||!hapNow('hina')||hapNow('hina').ph!=='wait',
-  end(r,a){const h=hapNow('hina');if(!h||h.ph!=='wait'||a.t<2)return;h.ph='held';h.who=r.id;sfxAt('good',r.x,r.y);addFloat(r.x,r.y-1.8,'よしよし','#fff3b0');dirty=true}};
+  end(r,a){const h=hapNow('hina');if(!h||h.ph!=='wait'||a.t<2)return;h.ph='held';h.who=r.id;sfxAt('good',r.x,r.y);addFloatG(r.x,r.y,-1.8,'よしよし','#fff3b0');dirty=true}};
 ACT.hnest={start(r,a){const h=hapNow('hina');if(!h||h.ph!=='held'||h.who!==r.id)return false;hapFace(r,a.obj);r.bubble=''},done:(r,a)=>a.t>=3||!hapNow('hina')||hapNow('hina').ph!=='held',
-  end(r,a){const h=hapNow('hina');if(!h||h.ph!=='held'||a.t<3)return;h.ph='nest';h.who=null;JUMP.set(r,performance.now());addFloat(r.x,r.y-1.8,'おうちだよ','#fff3b0');sfxAt('good',r.x,r.y);toast(r.name+'が、ヒナを木へとどけた','good');memo('heart','まいごのヒナを、木へとどけた');logEv('まいごのヒナをとどけた');dirty=true}};
+  end(r,a){const h=hapNow('hina');if(!h||h.ph!=='held'||a.t<3)return;h.ph='nest';h.who=null;JUMP.set(r,performance.now());addFloatG(r.x,r.y,-1.8,'おうちだよ','#fff3b0');sfxAt('good',r.x,r.y);toast(r.name+'が、ヒナを木へとどけた','good');memo('heart','まいごのヒナを、木へとどけた');logEv('まいごのヒナをとどけた');dirty=true}};
 ACT.hkin={start(r,a){const h=hapNow('kin');if(!h||h.ph==='end'||!hapTreeOf(a.obj))return false;hapFace(r,a.obj);r.bubble='🧺';sfxAt('bush',r.x,r.y)},tick(r,a,dt){if(typeof work==='function')work(r,dt)},done:(r,a)=>a.t>=KINT||!hapNow('kin')||hapNow('kin').ph==='end',
   end(r,a){const h=hapNow('kin');if(!h||h.ph==='end'||a.t<KINT)return;h.ph='end';const j=a.obj,n=Math.min(KINAPPLE,roomN(r));if(n>0)addCarry(r,'apple',n);if(KINAPPLE>n)dropAt(r.x,r.y,'food:apple',KINAPPLE-n);
     let gt='';if(Math.random()<KINGIFT&&typeof GIFTDROP!=='undefined'&&GIFTDROP.length){const g=pick(GIFTDROP);if(!(itemBoxOK()&&addItem(r,g,1)))giveItem(g,1);gt='・'+BL[g].name}
     sfxAt('harvdone',r.x,r.y);if(typeof juiceGlowAt==='function')juiceGlowAt(j%W+.5,((j/W)|0)+.2,gt?2:1);if(typeof juiceBreak==='function')juiceBreak(j,'crop',r);JUMP.set(r,performance.now());
     toast(r.name+'が、きんいろの実をとった：りんご×'+KINAPPLE+gt,'good');memo('apple','きんいろの実をとった');logEv('きんいろの実をとった');dirty=true}};
 ACT.hdance={start(r,a){const h=hapNow('kino');if(!h||h.ph!=='on')return false;r.bubble='🎵'},done:(r,a)=>a.t>=a.dur||!hapNow('kino')||hapNow('kino').ph!=='on',
-  end(r,a){const h=hapNow('kino');if(!h||a.t<a.dur)return;h.dn[r.id]=1;funAdd(r,KINOFUN,'hap');addFloat(r.x,r.y-1.6,'たのしい！','#ffd6f0');sfxAt('good',r.x,r.y);dirty=true}};
+  end(r,a){const h=hapNow('kino');if(!h||a.t<a.dur)return;h.dn[r.id]=1;funAdd(r,KINOFUN,'hap');addFloatG(r.x,r.y,-1.6,'たのしい！','#ffd6f0');sfxAt('good',r.x,r.y);dirty=true}};
 Object.assign(ACT_LBL,{hkabu:'大きな作物をひっぱる',hhina:'ヒナをむかえに行く',hnest:'ヒナを木へとどける',hkin:'きんいろの実をとる',hdance:'きのこの輪でおどる'});
 if(typeof FUNW!=='undefined')FUNW.hap='きのこの輪でおどった';
 function hapAnim(r){const t=r.act&&r.act.type;if(t==='hkabu'){const h=hapNow('kabu');return h&&h.ph==='pull'?'weed':h&&h.ph==='pop'?'sitfront':'talkthink'}if(t==='hhina')return'pickdrop';if(t==='hnest')return'raise';if(t==='hkin')return'pluck';if(t==='hdance')return'dance';return''}

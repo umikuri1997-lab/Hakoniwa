@@ -117,7 +117,7 @@ function sacredTreeMotion(now){
 function sacredStone(c,x,y,warm=0){const art=window.CHIPS?.['story:stone'];if(art&&drawChip(c,art,'story:stone',Math.round(x),Math.round(y),performance.now()))return;c.fillStyle=warm?'#cbb69b':'#b9b6aa';c.fillRect(Math.round(x-4),Math.round(y-2),8,4);c.fillStyle=warm?'#e5cdb0':'#d7d3c6';c.fillRect(Math.round(x-3),Math.round(y-3),6,2);}
 function drawSacredCare(now){
   if(!S||WD!==KUSA||S.sacredRoot==null)return;const j=S.sacredRoot,x=storyTreeX(j)*TS,y=(storyTreeY(j)+.5)*TS-liftOf(j);
-  const d=sacredDirection();if(!d)return;ctx.save();ctx.lineCap='round';
+  const d=sacredDirection();if(!d)return;ctx.save();isoAtA(ctx,treeFoot());/* クォータービュー：切り株を足もとに立てて */ctx.lineCap='round';
   for(const [kind,e]of d.effects){const p=Math.max(0,Math.min(1,(now-e.at)/e.ms));if(p>=1)continue;const a=e.actor,sx=a?a.x*TS:x,sy=a?a.y*TS-(kind==='stone'?8:16)-uLift(a):y;
     if(kind==='stone'){if(e.warming&&p<.3){ctx.fillStyle='#edbd8b';ctx.beginPath();ctx.moveTo(sx+8,sy+4);ctx.quadraticCurveTo(sx+6,sy-3,sx+12,sy-7);ctx.quadraticCurveTo(sx+11,sy-1,sx+15,sy+4);ctx.fill();}const q=sacredEase((p-.3)/.6);sacredStone(ctx,sx+(x+17-sx)*q,sy+(y+4-sy)*q-Math.sin(Math.PI*q)*7,1);}
     if(kind==='soil'||kind==='cover'){for(let i=0;i<4;i++){const q=(p+i*.16)%1;ctx.fillStyle=kind==='soil'?'#c5aa82':'#d7c891';ctx.fillRect(x-17+i*9+q*3,y+7-q*5,kind==='soil'?3:5,2);}}

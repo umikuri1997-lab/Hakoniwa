@@ -18,7 +18,7 @@ ACT.tdig={start(r,a){if(S.tx!==a.obj)return false;r.bubble='';if(a.stand!==a.obj
   end(r,a){if(S.tx!==a.obj||a.t<TDIGT)return;S.tx=null;if(typeof vrecAdd==='function')vrecAdd('treasure');burst(a.obj,'furn','furnPlace');if(typeof juiceGlowAt==='function')juiceGlowAt(a.obj%W+.5,((a.obj/W)|0)+.6,2);/* 光の柱と、とびだす光 */sfx('seed');addSpiritXp(1,r);
     const got=['ふしぎなふくろ'];if(!(itemBoxOK()&&addItem(r,'fukuro',1)))dropAt(r.x,r.y,'fukuro',1);
     if(typeof bpNext==='function'&&bpNext()&&Math.random()<.3){bpGiveNext(null);got.push('設計図')}else{const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);got.push(BL[id].name);if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1)}}
-    toast(r.name+'が宝をほりあてた：'+got.join('・'),'good');addFloat(r.x,r.y-1.8,'宝！','#ffe08a');logEv('宝をほりあてた');recount();dirty=true}};
+    toast(r.name+'が宝をほりあてた：'+got.join('・'),'good');addFloatG(r.x,r.y,-1.8,'宝！','#ffe08a');logEv('宝をほりあてた');recount();dirty=true}};
 ACT_LBL.tdig='宝をほっている';
 /* ふしぎなふくろ：あけると出てくる物（[確率, 物]） */
 function fukuroRoll(){const q=Math.random();
@@ -43,4 +43,4 @@ const TRCOL={mapPc:'#ecdcb4',tmap:'#ecdcb4',fukuro:'#c9a6e0'};
 const trIco=k=>ICONS[k]||pixURL('tr:'+k,TRPIX[k],TRCOL[k]);/* もらった絵（tools/art/icons32）があれば、それ */
 for(const k in TRPIX){if(ICONS[k])continue;ICONS[k]=trIco(k);const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
 function drawTreasure(now){/* 宝の場所の×の印（2点のドット） */if(S.tx==null)return;const j=S.tx,x=(j%W)*TS,y=((j/W)|0)*TS-liftOf(j),b=Math.sin(now/300)*.5+.5;
-  ctx.fillStyle='rgba(120,80,40,.25)';ctx.fillRect(x+8,y+20,16,6);ctx.fillStyle='rgba(196,72,52,'+(.75+b*.25)+')';for(let i=0;i<6;i++){ctx.fillRect(x+10+i*2,y+11+i*2,2,2);ctx.fillRect(x+20-i*2,y+11+i*2,2,2)}}
+  isoCell(ctx,j,()=>{ctx.fillStyle='rgba(120,80,40,.25)';ctx.fillRect(x+8,y+20,16,6);ctx.fillStyle='rgba(196,72,52,'+(.75+b*.25)+')';for(let i=0;i<6;i++){ctx.fillRect(x+10+i*2,y+11+i*2,2,2);ctx.fillRect(x+20-i*2,y+11+i*2,2,2)}})}/* クォータービュー：そのマスに立てて */

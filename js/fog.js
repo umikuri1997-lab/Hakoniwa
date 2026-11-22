@@ -131,7 +131,7 @@ function fogWant(r){return fogFree(r)&&fogReqFor(r)>=0}
 function fogJob(r,G){const j=fogReqFor(r);if(j<0)return false;const o=S.obj[j],ad=k=>k===j&&o==='nushiprint'||[1,-1,W,-W].some(d=>k+d===j&&Math.abs(k%W-j%W)<=1),st=nearest(G,k=>ad(k)&&walk(k),9999);if(st<0)return false;startAct(r,G,o==='fogbox'?'fogopen':'foglook',st,{key:'o'+j,obj:j});return true}
 const fogDone=j=>{S.fogReq=(S.fogReq||[]).filter(k=>k!==j)};
 ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');if(typeof juiceGlowAt==='function')juiceGlowAt(a.obj%W+.5,((a.obj/W)|0)+.6,2);/* 光の柱 */
-  const id=typeof fogChestItem==='function'?fogChestItem():pick(FURN.filter(id=>giftPoolOK(id)));if(id&&BL[id]){(S.flags.chestGot||(S.flags.chestGot={}))[id]=1;sfx('seed');addFloat(r.x,r.y-1.8,BL[id].name);JUMP.set(r,performance.now());
+  const id=typeof fogChestItem==='function'?fogChestItem():pick(FURN.filter(id=>giftPoolOK(id)));if(id&&BL[id]){(S.flags.chestGot||(S.flags.chestGot={}))[id]=1;sfx('seed');addFloatG(r.x,r.y,-1.8,BL[id].name);JUMP.set(r,performance.now());
     if(BL[id].kind==='gear')giveItem(id,1);else if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1);/* 家具は、箱へはこんでから、もちものに入る */
     if(typeof treasureReveal==='function'&&sheet==null)treasureReveal({ico:iconURL('fogbox'),taps:3,tier:2,name:'古い宝箱',done:r.name+'が宝箱をあけた',items:[{img:iconURL(id),nm:BL[id].name}]});else toast(r.name+'が宝箱から「'+BL[id].name+'」をみつけた','good')}
   addSpiritXp(1,r);recount();dirty=true}};/* 中身は、宝箱だけの家具か、特別なそうび。タップしてあける（reveal.js） */
@@ -185,7 +185,7 @@ function printStar(cx,cy,a,n){/* ドットの星（2点のます目）：まん�
   ctx.globalAlpha=a*.9;ctx.fillStyle='#e0a03a';for(const[dx,dy]of B)ctx.fillRect(cx-2+dx,cy-2+dy,4,4);
   ctx.globalAlpha=a;for(const[dx,dy]of B){ctx.fillStyle=dx||dy?(Math.abs(dx)+Math.abs(dy)>=6?'#fff2b0':'#ffe27a'):'#fffbe6';ctx.fillRect(cx-1+dx,cy-1+dy,2,2)}}
 function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとのまわりで、ドットの星がいくつもまたたき、光のつぶがたちのぼる（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
-  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-liftOf(f.j);ctx.save();
+  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-liftOf(f.j);ctx.save();if(isoOn()){const A=inFog?fogTopFoot((f.j%W+.5)*TS,((f.j/W)|0)*TS+12):cellFoot(f.j);standTf(ctx,dpr*cam.z,inFog?x0:A.fx,inFog?y0:A.fy,A.px,A.py)}/* クォータービュー：足あとに立てて（霧の中は、霧の上） */
     for(let m=0;m<3;m++){const q=(now/1600+m/3+f.j*.13)%1,px=x0+Math.round(Math.sin(q*6.3+m*2)*3)+(m-1)*7,py=y0-Math.round(q*26);ctx.globalAlpha=Math.sin(Math.PI*q)*.85;ctx.fillStyle=m%2?'#fff6c8':'#d8f3c0';ctx.fillRect(px-1,py-1,2,2)}/* 足あとから、光のつぶがたちのぼる */
     for(const[dx,dy,o]of PRINT_STARS){const q=(now/1100+o+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.1)continue;printStar(x0+dx,y0+dy,a,a>.85?3:a>.5?2:1)}
     ctx.restore()}}
@@ -198,11 +198,11 @@ function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().leng
 function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SESSION||!S.res.includes(P.r))return;const r=P.r,d=sacredDirection(true);if(!d)return;const now=performance.now();
   if(c==='point'){const nx=printNext(P.j);if(nx<0)return;const tx=nx%W+.5,ty=((nx/W)|0)+.5,dist=Math.hypot(tx-r.x,ty-r.y)||1,u=Math.min(dist,6)/dist,ex=r.x+(tx-r.x)*u,ey=r.y+(ty-r.y)*u;
     r.face=tx>=r.x?1:-1;sacredScenePose(r,'point',600000,{side:true,face:r.face});sfx('twood');
-    for(let i=1;i<=12;i++)villageTimeout(()=>{const q=i/12,px=r.x+(ex-r.x)*q,py=r.y+(ey-r.y)*q;fx.push({k:'p',x:px*TS,y:py*TS-8-liftOf((py|0)*W+(px|0)),vx:0,vy:-18,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})},300+i*90);/* 光の点々が、つぎの足あとのほうへ */
+    for(let i=1;i<=12;i++)villageTimeout(()=>{const q=i/12,px=r.x+(ex-r.x)*q,py=r.y+(ey-r.y)*q;fx.push({k:'p',x:px*TS,y:py*TS-8-liftOf((py|0)*W+(px|0)),gy:py*TS,vx:0,vy:-18,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})},300+i*90);/* 光の点々が、つぎの足あとのほうへ */
     {const fx0=P.j%W+.5,fy0=((P.j/W)|0)+.5,L=Math.hypot(ex-fx0,ey-fy0),n=Math.max(4,Math.min(9,Math.round(L/.7))),pts=[];for(let i=1;i<=n;i++)pts.push([fx0+(ex-fx0)*i/n,fy0+(ey-fy0)*i/n]);hoofTrail(pts,230,1500,700);hoofBlooms(fx0,fy0,6,300)}/* むかしヌシ様が歩いた、光るひづめのあとが、1歩ずつあらわれては消える。足あとのまわりに、光の花 */
     storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[ex*TS-22,ey*TS-34],[ex*TS+22,ey*TS+12]],{limit:2.2,seconds:1.3});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.point)}
   if(c==='glow'){const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=liftOf(P.j);r.face=x>=r.x?1:-1;sacredScenePose(r,'kneel',600000,{side:true,face:r.face});sfx('shard');
-    for(let i=0;i<22;i++)villageTimeout(()=>fx.push({k:'p',x:(x+(Math.random()-.5)*.8)*TS,y:y*TS-lift,vx:(Math.random()-.5)*30,vy:-60-Math.random()*50,life:1,col:i%3?'#fff6c8':'#bfe8ff',r:2+(i%2)}),i*70);/* 足あとから、光がたちのぼる */
+    for(let i=0;i<22;i++)villageTimeout(()=>fx.push({k:'p',x:(x+(Math.random()-.5)*.8)*TS,y:y*TS-lift,gy:y*TS,vx:(Math.random()-.5)*30,vy:-60-Math.random()*50,life:1,col:i%3?'#fff6c8':'#bfe8ff',r:2+(i%2)}),i*70);/* 足あとから、光がたちのぼる */
     storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[x*TS-22,y*TS-40-lift],[x*TS+22,y*TS+12-lift]],{limit:2.6,seconds:1.1});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.glow)}
   if(c==='circle'){/* 光るひづめのあとが、足あとから出て、フタバのまわりをひとまわりし、すぐそばで止まる（見えないヌシ様が、よってくる） */const x=P.j%W+.5,y=((P.j/W)|0)+.5,a0=Math.atan2((y-r.y)/.7,x-r.x),R=1.25,pts=[[x,y]];
     for(let i=0;i<=10;i++){const a=a0+i/10*Math.PI*2;pts.push([r.x+Math.cos(a)*R,r.y+Math.sin(a)*R*.7])}hoofTrail(pts,300,1700,200);
@@ -211,9 +211,9 @@ function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SES
   if(c==='pat'){/* 頭の葉が、なでられたように、ふわっとゆれる */const hx=r.x*TS,hy=r.y*TS-40-uLift(r);scnAdd('glow',2200,{x:hx,y:hy,r:14});scnAdd('ring',900,{x:hx,y:hy,r0:3,r1:16,col:'#fff6c8',a:.8},300);
     for(let i=0;i<4;i++)scnAdd('leaf',1600,{x:hx+(i-1.5)*5,y:hy-2,vy:14,sway:4,ph:i*1.7,col:i%2?'#9ecf75':'#c8f5a0'},400+i*160);villageTimeout(()=>JUMP.set(r,performance.now()),350);sfx('pat');d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.pat)}
   if(c==='take'){/* 光が足あとからうきあがって、フタバの両手へ。とどいたら、手の中でふわっと光る */const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=liftOf(P.j);r.face=x>=r.x?1:-1;SACRED_POSES.delete(r);sacredScenePose(r,'storyOffer',600000,{side:true,face:r.face});
-    const hand=()=>[r.x*TS+r.face*7,r.y*TS-26-uLift(r)];for(let i=0;i<16;i++)villageTimeout(()=>{const [hx,hy]=hand(),q=i/16,sx=x*TS,sy=y*TS-6-lift;fx.push({k:'p',x:sx+(hx-sx)*q,y:sy+(hy-sy)*q-Math.sin(Math.PI*q)*14,vx:0,vy:-6,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})},200+i*60);
+    const hand=()=>[r.x*TS+r.face*7,r.y*TS-26-uLift(r)];for(let i=0;i<16;i++)villageTimeout(()=>{const [hx,hy]=hand(),q=i/16,sx=x*TS,sy=y*TS-6-lift;fx.push({k:'p',x:sx+(hx-sx)*q,y:sy+(hy-sy)*q-Math.sin(Math.PI*q)*14,gy:(y+(r.y-y)*q)*TS,vx:0,vy:-6,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})},200+i*60);
     scnAdd('gem',1300,{x:x*TS,y:y*TS-10-lift,rise:10});villageTimeout(()=>{const [hx,hy]=hand();scnAdd('orb',800,{x0:x*TS,y0:y*TS-20-lift,x1:hx,y1:hy-8,arc:14,col:'#fff0a8',n:3});scnAdd('gem',2400,{actor:r,dx:r.face*7,dy:-34},750)},500);/* 光があつまって、かけらになり、手の上へ */
-    villageTimeout(()=>{const [hx,hy]=hand();sfx('shard');for(let i=0;i<14;i++){const a=i/14*Math.PI*2;fx.push({k:'p',x:hx,y:hy,vx:Math.cos(a)*40,vy:Math.sin(a)*40-20,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})}},1300);
+    villageTimeout(()=>{const [hx,hy]=hand();sfx('shard');for(let i=0;i<14;i++){const a=i/14*Math.PI*2;fx.push({k:'p',x:hx,y:hy,gy:r.y*TS,vx:Math.cos(a)*40,vy:Math.sin(a)*40-20,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})}},1300);
     d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.take)}}
 ACT_LBL.fogopen='宝箱をあけている';ACT_LBL.foglook='ヌシ様のあしあとを見ている';
 /* クモの巣（S.web：マス→0 左の角・1 右の角）：お屋敷の中だけ。プレイヤーはこわせない。「しらべる」でタップすると、せいれいがそうじする（S.webq）。家の中の1つで住み心地-5（houseComfort） */
@@ -221,7 +221,7 @@ function webTap(tx,ty){if(!S.web)return false;let j=ty*W+tx;if(S.web[j]==null&&S
 function webReqFor(r){if(isNight()||!S.webq||!S.web)return -1;for(const k in S.webq){const j=+k;if(S.web[j]==null){delete S.webq[k];continue}if(free('b'+j,1))return j}return -1}
 const webWant=r=>fogFree(r)&&webReqFor(r)>=0;
 function webJob(r,G){const j=webReqFor(r);if(j<0)return false;const st=walk(j)&&!S.obj[j]&&G.dist[j]>=0?j:nearest(G,k=>[1,-1,W].some(d=>k===j+d)&&walk(k)&&!S.obj[k],9999);/* クモの巣の下に立つ（ふさがっていれば、となり） */if(st<0)return false;startAct(r,G,'sweep',st,{key:'b'+j,obj:j});return true}
-ACT.sweep={start(r,a){if(!S.web||S.web[a.obj]==null)return false;r.bubble='';if((r.x|0)!==a.obj%W)r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=2,end(r,a){if(S.webq)delete S.webq[a.obj];if(!S.web||S.web[a.obj]==null)return;S.flags.sweepN=(S.flags.sweepN||0)+1;/* はらった数（イベントをひらくサブクエスト） */if(typeof juiceWeb==='function')juiceWeb(a.obj,S.web[a.obj]);/* 糸がちる（juice4.js） */delete S.web[a.obj];burst(a.obj,'block');sfxAt('tap',r.x,r.y);addFloat(r.x,r.y-1.6,'ぴかぴか');addSpiritXp(1,r);dirty=true}};
+ACT.sweep={start(r,a){if(!S.web||S.web[a.obj]==null)return false;r.bubble='';if((r.x|0)!==a.obj%W)r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=2,end(r,a){if(S.webq)delete S.webq[a.obj];if(!S.web||S.web[a.obj]==null)return;S.flags.sweepN=(S.flags.sweepN||0)+1;/* はらった数（イベントをひらくサブクエスト） */if(typeof juiceWeb==='function')juiceWeb(a.obj,S.web[a.obj]);/* 糸がちる（juice4.js） */delete S.web[a.obj];burst(a.obj,'block');sfxAt('tap',r.x,r.y);addFloatG(r.x,r.y,-1.6,'ぴかぴか');addSpiritXp(1,r);dirty=true}};
 ACT_LBL.sweep='クモの巣をそうじしている';
 const WEBDAY=.1,WEBMAX=3;/* 毎朝、家ごとに10%で、クモの巣が1つふえる（1つの家に3つまで） */
 function webMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;findHouses();for(const h of HOUSES){let n=0;for(const j of h.inside)if(S.web&&S.web[j]!=null)n++;if(n>=WEBMAX||Math.random()>=WEBDAY)continue;
@@ -259,7 +259,7 @@ function fogPaint(cx0,cy0,cx1,cy1,now){/* 霧の絵の一部（ドットの範�
 function drawFog(ctx,x0,y0,x1,y1,now){/* 霧をかく（夜の暗さより下）。毎コマは、見えている所を1まいの絵からうつすだけ。うすれていくマスのまわりだけ、作りなおす */if(!fogOn())return;fogAt(0);if(FOGPS!==S||FOGPV!==(S.fogV||0)&&!FOGT.size){FOGPS=S;FOGPV=S.fogV||0;FOGT.clear();fogPaint(0,0,W*FOG_CELL,W*FOG_CELL,now)}
   if(FOGT.size){let a0=W,b0=H,a1=-1,b1=-1;for(const[k,t0]of FOGT){const x=k%W,y=(k/W)|0;if(x<a0)a0=x;if(x>a1)a1=x;if(y<b0)b0=y;if(y>b1)b1=y;if(now-t0>=FOG_FADE)FOGT.delete(k)}const m=3;fogPaint((a0-m)*FOG_CELL,(b0-m)*FOG_CELL,(a1+m+1)*FOG_CELL,(b1+m+1)*FOG_CELL,now);if(!FOGT.size)FOGPV=S.fogV||0}
   if(!S.fog.some(v=>v)&&!FOGT.size)return;const X0=Math.max(0,x0-1),Y0=Math.max(0,y0-1),X1=Math.min(W,x1+1),Y1=Math.min(H,y1+2);if(X1<=X0||Y1<=Y0)return;
-  ctx.imageSmoothingEnabled=false;ctx.drawImage(FOGC,X0*FOG_CELL,Y0*FOG_CELL,(X1-X0)*FOG_CELL,(Y1-Y0)*FOG_CELL,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);ctx.imageSmoothingEnabled=true}
+  ctx.imageSmoothingEnabled=false;const dr=()=>ctx.drawImage(FOGC,X0*FOG_CELL,Y0*FOG_CELL,(X1-X0)*FOG_CELL,(Y1-Y0)*FOG_CELL,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);if(isoOn())isoFogDraw(ctx,dr);else dr();ctx.imageSmoothingEnabled=true}/* クォータービュー：霧は、あつみのある形（地面から IQFOGH だんまで。iso-fx.js） */
 
 /* 霧の中の手がかり：晴れた所から6マス（FOG_HINTR）にある、まだ霧の中の見つける物の所に、しゅるいごとのしるしを、霧の上にうすく出す（drawFogHints）。
    お屋敷：屋根の先と煙突の影・泉：水色のきらめき・ヌシ様のあしあと：青い光のつぶがたちのぼる・宝箱：うすい影・古い家のあと：くずれた小さな屋根の影。どれも2点のドット。晴れたら消える（霧の中の物だけ描く） */
@@ -271,7 +271,7 @@ function fhPx(c,col,x,y,w,h){c.fillStyle=col;c.fillRect(Math.round(x/2)*2,Math.r
 function fhStar(c,x,y,n,core,arm){fhPx(c,core,x-1,y-1,1,1);for(let k=1;k<=n;k++){fhPx(c,arm,x-1,y-1-k*2,1,1);fhPx(c,arm,x-1,y-1+k*2,1,1);fhPx(c,arm,x-1-k*2,y-1,1,1);fhPx(c,arm,x-1+k*2,y-1,1,1)}}
 function drawFogHints(c,x0,y0,x1,y1,now){if(!fogOn()||!S.fogF||!S.fog.some(v=>v))return;
   for(const f of S.fogF){if(fogOut(f)||f.done||!fogAt(f.j)||!fogHintNear(f))continue;if(f.t==='print'&&printOn())continue;/* あしあとをたどる依頼のあいだは、その印（drawPrintMarks）だけ */
-    const[bx,by,bw,bh]=fogHintBox(f);if(bx+bw<x0-1||bx>x1+1||by+bh<y0-1||by>y1+2)continue;const cx=(bx+bw/2)*TS,cy=(by+bh/2)*TS,ph=(now/2400+f.j*.173)%1,pul=.7+.3*Math.sin(ph*Math.PI*2);c.save();
+    const[bx,by,bw,bh]=fogHintBox(f);if(bx+bw<x0-1||bx>x1+1||by+bh<y0-1||by>y1+2)continue;const cx=(bx+bw/2)*TS,cy=(by+bh/2)*TS,ph=(now/2400+f.j*.173)%1,pul=.7+.3*Math.sin(ph*Math.PI*2);c.save();if(isoOn()){const A=fogTopFoot(cx,cy);standTf(c,dpr*cam.z,cx,cy,A.px,A.py)}/* クォータービュー：霧の上の面に、立てて */
     if(f.t==='mansion'){c.globalAlpha=FOGHINT_A*pul;const col='#7d778c',top=by*TS+10;for(let k=0;k<12;k++)fhPx(c,col,cx-2-k*2,top+k*2,1+k*2,1);fhPx(c,col,cx-24,top+24,24,3);fhPx(c,col,cx+10,top+2,3,7);/* 屋根の先と煙突 */
       for(let m=0;m<4;m++){const q=(now/2600+m/4)%1;c.globalAlpha=FOGHINT_A*pul*Math.sin(Math.PI*q);fhPx(c,'#a59fb1',cx+12+Math.round(Math.sin(q*6.3)*2),top-2-q*28,2,2)}}/* 煙突のけむり */
     else if(f.t==='spring'){for(let m=0;m<5;m++){const q=(now/1400+m/5+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.15)continue;c.globalAlpha=FOGHINT_A*a;fhStar(c,cx+[-16,12,-4,18,2][m],cy+[-6,-14,10,6,-2][m],a>.75?2:1,'#ffffff','#5fbde6')}}/* 水色のきらめき */

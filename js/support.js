@@ -17,7 +17,7 @@ function supportTick(){SUPA.clear();if(!S||IS_STORY_REPLAY||!isNight()||!S.enemi
       if(n>(SUPA.get(a)||0))SUPA.set(a,n);if(n>(SUPA.get(b)||0))SUPA.set(b,n);supFx(a,b)}}
   escTick()}
 function supFx(a,b){const ns=S.ns;if(!ns)return;const K=ns.sup||(ns.sup={}),pk=bondKey(a,b);if(K[pk])return;K[pk]=1;/* 1晩に1回、2人がならんだときだけ */
-  for(const r of[a,b])fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat((a.x+b.x)/2,Math.min(a.y,b.y)-1.4,'なかよしの力','#ffb3c8')}
+  for(const r of[a,b])fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS);addFloat((a.x+b.x)/2,Math.min(a.y,b.y)-1.4,'なかよしの力','#ffb3c8')}
 
 /* ---- 助けてにげる ---- */
 const resById=id=>S.res.find(q=>q.id===id);
@@ -27,7 +27,7 @@ function escTick(){
     if(!w||!isNight()||h.hunger<250||S.t-(a.t0||S.t)>ESCMAX||w.act&&w.act.type==='faint'){escEnd(h,w);continue}
     const there=w.hidden||!!w.act&&w.act.stage==='do'&&(w.act.type==='flee'||!!w.act.run);
     if(!there&&!escWard(w)){escEnd(h,w);continue}/* にげるのをやめた */
-    if(there&&Math.hypot(h.x-w.x,h.y-w.y)<=ESCR+.5){if(!a.ok){a.ok=1;bondAdd(h,w,ESCBOND,'save');if(typeof dyGuard==='function')dyGuard(h);/* ゆうべのかつやくの、守った数 */toast(h.name+'が'+w.name+'をつれて、にげた','good');for(const r of[h,w])fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}escEnd(h,w)}}
+    if(there&&Math.hypot(h.x-w.x,h.y-w.y)<=ESCR+.5){if(!a.ok){a.ok=1;bondAdd(h,w,ESCBOND,'save');if(typeof dyGuard==='function')dyGuard(h);/* ゆうべのかつやくの、守った数 */toast(h.name+'が'+w.name+'をつれて、にげた','good');for(const r of[h,w])fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS)}escEnd(h,w)}}
   if(!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee))return;
   for(const w of S.res){if(!escWard(w))continue;if(w.escBy!=null){const h=resById(w.escBy);if(h&&h.act&&h.act.type==='escort'&&h.act.who===w.id)continue;w.escBy=null}
     if(!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-w.x,e.y-w.y)<7))continue;
@@ -50,10 +50,10 @@ function tgtPoint(e){const t=e.tg;if(t==null)return null;
   if(t==='sc')return tgtCell(e.sg);if(t==='tw')return tgtCell(S.obj.indexOf('tower'));
   if(/^[asd]\d+$/.test(t))return tgtCell(+t.slice(1));return null}
 function drawTgtLine(now){const L=TGTL;if(!L)return;const e=L.e;if(L.S!==S||now>L.until||!e||e.dead||!e.spawned||!(S.enemies||[]).includes(e)){TGTL=null;return}
-  const p=tgtPoint(e);if(!p)return;const hz=j=>j>=0&&j<W*H?liftOf(j):0,x0=e.x*TS,y0=e.y*TS-hz((e.y|0)*W+(e.x|0))+10,x1=p.x*TS,y1=p.y*TS-hz(p.j)-2;/* 足もとから足もとへ（顔にかけない） */
-  const d=Math.hypot(x1-x0,y1-y0);if(d<8)return;const a=Math.min(1,(L.until-now)/500),sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.globalAlpha=a;
+  const p=tgtPoint(e);if(!p)return;const ISO=isoOn(),hz=j=>j>=0&&j<W*H?liftOf(j):0,P0=ISO?isoSP(e.x*TS,e.y*TS):null,P1=ISO?isoSP(p.x*TS,p.y*TS):null,x0=ISO?P0.x:e.x*TS,y0=ISO?P0.y:e.y*TS-hz((e.y|0)*W+(e.x|0))+10,x1=ISO?P1.x:p.x*TS,y1=ISO?P1.y:p.y*TS-hz(p.j)-2;if(ISO){ctx.save();isoScreenTf(ctx)}/* クォータービュー：足もとから足もとへ、画面の向きで *//* 足もとから足もとへ（顔にかけない） */
+  const d=Math.hypot(x1-x0,y1-y0);if(d<8){if(ISO)ctx.restore();return}const a=Math.min(1,(L.until-now)/500),sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.globalAlpha=a;
   const ph=Math.floor(now/120)%3,n=Math.floor(d/6);/* 2ドットの点を6ドットおき。コワイノからねらう物へ、ながれる */
   for(let i=1;i<n;i++){if((i+3-ph)%3===0)continue;const q=i/n,x=Math.round(x0+(x1-x0)*q),y=Math.round(y0+(y1-y0)*q);ctx.fillStyle='#5a1f2a';ctx.fillRect(x-1,y,3,2);ctx.fillStyle='#ff8a8a';ctx.fillRect(x-1,y-1,2,2)}
   const X=Math.round(x1),Y=Math.round(y1),b=Math.floor(now/250)%2,RX=11+b,RY=5+b;/* ねらう物の足もとの、四すみのかぎ（下に1ドットのかげ） */
   for(const[col,oy]of[['#5a1f2a',1],['#ff8a8a',0]]){ctx.fillStyle=col;for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const cx=X+sx*RX,cy=Y+sy*RY+oy;ctx.fillRect(sx<0?cx:cx-2,cy,3,1);ctx.fillRect(cx,sy<0?cy:cy-2,1,3)}}
-  ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm}
+  ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm;if(ISO)ctx.restore()}

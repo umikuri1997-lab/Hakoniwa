@@ -26,7 +26,7 @@ function ngJob(r,G){/* 夜の見回りのかわりに、たのまれたつぶを
   if(best<0)return false;const st=G.dist[best]>=0?best:adjOf(best,k=>G.dist[k]>=0&&walk(k));startAct(r,G,'ngget',st,{key:'ng'+best,obj:best});return true}
 ACT.ngget={start(r,a){if(!ngAt(a.obj))return false;r.bubble='';if(a.stand!==a.obj)r.face=(a.obj%W+.5)<r.x?-1:1},tick(r,a,dt){a.h=(a.h||0)+dt;if(a.h>=1){a.h=0;spawnFX(a.obj%W+.5,((a.obj/W)|0)+.5,NGCOL[(ngAt(a.obj)||{t:0}).t])}},done:(r,a)=>a.t>=NGT||!ngAt(a.obj),
   end(r,a){const g=ngAt(a.obj);if(!g||a.t<NGT)return;S.ng.L.splice(S.ng.L.indexOf(g),1);const id=NGID[g.t];if(!(itemBoxOK()&&addItem(r,id,1)))trStow(id,1);
-    if(typeof juiceGlowAt==='function')juiceGlowAt(g.x+.5,g.y+.6,g.t);sfx('seed');addFloat(r.x,r.y-1.8,'たからもの！',NGCOL[g.t]);toast(r.name+'が「夜のたからもの」をひろった','good');logEv('夜のたからものをひろった');dirty=true}};
+    if(typeof juiceGlowAt==='function')juiceGlowAt(g.x+.5,g.y+.6,g.t);sfx('seed');addFloatG(r.x,r.y,-1.8,'たからもの！',NGCOL[g.t]);toast(r.name+'が「夜のたからもの」をひろった','good');logEv('夜のたからものをひろった');dirty=true}};
 ACT_LBL.ngget='光るつぶをひろいに行く';
 /* ---- あける ---- */
 function ngRoll(t){/* [物,数] */if(t===0){const L=stg().mats;return['mat:'+pick(L),NGMAT]}if(t===1)return Math.random()<.5?['mapPc',1]:[pick(GIFTDROP),1];return['fukuro',1]}
@@ -38,11 +38,11 @@ function ngOpen(id){const t=NGID.indexOf(id);if(t<0||!(S[id]>0))return;if(isNigh
   treasureReveal({ico:trIco(id),taps:FUKUROTAPS[t],tier:t,name:'夜のたからもの',done:'夜のたからものから出てきた',items,rays:1,beam:1,confetti:1,stamp:t>=1?'あたり':null,after:()=>{if(Object.keys(gifts).length)queueItemGift(gifts,'夜のたからものから！');if(sheet==='inv')renderSheet()}})}
 /* ---- 絵 ---- */
 function ngDraw(now){/* 夜の暗さより上に描く（光って見える）。2点のドットの四角だけ */if(!S||!S.ng||!S.ng.L.length||PHSNAP)return;
-  for(const g of S.ng.L){const j=g.y*W+g.x,cx=Math.round((g.x+.5)*TS),cy=Math.round((g.y+.5)*TS-(typeof hiAt==='function'?hiAt(j):0)*LIFT),ph=now/1000*2.4+g.x*.7+g.y*.3,p=.5+.5*Math.sin(ph),col=NGCOL[g.t];
+  for(const g of S.ng.L){const j=g.y*W+g.x,cx=Math.round((g.x+.5)*TS),cy=Math.round((g.y+.5)*TS-(typeof hiAt==='function'?hiAt(j):0)*LIFT),ph=now/1000*2.4+g.x*.7+g.y*.3,p=.5+.5*Math.sin(ph),col=NGCOL[g.t];ctx.save();if(isoOn())standTf(ctx,dpr*cam.z,cx,cy,isoX((g.x+.5)*TS,(g.y+.5)*TS),isoY((g.x+.5)*TS,(g.y+.5)*TS)-isoLv(j)*IQL);/* クォータービュー：その所に立てて */
     ctx.fillStyle=col;for(let k=g.t+1;k>=1;k--){ctx.globalAlpha=(.10+.10*p)/k;const s=4+k*4;ctx.fillRect(cx-s,cy-s,s*2,s*2)}/* まわりの光：遠いつぶほど、ひろい */
     ctx.globalAlpha=.75+.25*p;ctx.fillRect(cx-2,cy-2,4,4);ctx.globalAlpha=1;ctx.fillStyle='#fff';ctx.fillRect(cx-1,cy-1,2,2);
     if(g.t>=1){const a=ph*1.3;for(let i=0;i<g.t*2;i++){const q=a+i*Math.PI/g.t,rr=8+g.t*3;ctx.globalAlpha=.5+.5*Math.sin(ph*2+i);ctx.fillStyle=col;ctx.fillRect(Math.round(cx+Math.cos(q)*rr)-1,Math.round(cy+Math.sin(q)*rr*.6)-1,2,2)}ctx.globalAlpha=1}/* 中くらい・遠いつぶは、まわりを光のつぶがまわる */
-    if(g.tk){const b=Math.round(Math.sin(ph*1.5)*2);ctx.fillStyle=col;ctx.globalAlpha=.9;ctx.fillRect(cx-1,cy-16+b,2,4);ctx.fillRect(cx-3,cy-14+b,6,2);ctx.globalAlpha=1}}/* たのんだつぶには、上に小さな矢じるし */}
+    if(g.tk){const b=Math.round(Math.sin(ph*1.5)*2);ctx.fillStyle=col;ctx.globalAlpha=.9;ctx.fillRect(cx-1,cy-16+b,2,4);ctx.fillRect(cx-3,cy-14+b,6,2);ctx.globalAlpha=1}ctx.restore()}/* たのんだつぶには、上に小さな矢じるし */}
 /* もちものの絵：光る石（宝の地図と同じ16×16のドット） */
 TRPIX.ng0=TRPIX.ng1=TRPIX.ng2=['................','................','.......ww.......','......owwo......','.....ohwmmo.....','....ohhmmmmo....','...ohhmmmmmdo...','...ohmmmmmmdo...','...ohmmmmmmdo...','...ommmmmmmdo...','....ommmmmddo...','.....omdddddo...','......oooooo....','................','................','................'];
 TRCOL.ng0=NGCOL[0];TRCOL.ng1=NGCOL[1];TRCOL.ng2=NGCOL[2];

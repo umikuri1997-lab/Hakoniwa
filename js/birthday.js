@@ -30,7 +30,7 @@ function bdayStart(E,L,G){/* 集まる所：その子のベッドのそば（家
   E.slot={};const ord=[r,...L.filter(q=>q!==r)];ord.forEach((q,i)=>{if(SL[i]!=null)E.slot[q.id]=SL[i]});const j=E.slot[r.id];E.c=[j%W+.5,((j/W)|0)+.5];return true}
 function bdayDrop(E,why){/* その年は、やめる */S.ev=E.next||null;E.ph=null;for(const r of S.res)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}const r=bdayChild(E);if(why&&r)toast(r.name+'のお誕生日会は、'+why,'warn')}
 const BDGIFT={wood:'花たば',earth:'まるい石',fire:'あたたかいパン',water:'きれいな貝',wind:'鳥の羽'};
-function bdayGifts(E,P){/* 会がはじまったら、来た子が1人ずつ、わたす（見た目だけ） */const r=bdayChild(E);if(!r)return;let i=0;for(const q of P){if(q===r)continue;const k=i++;villageTimeout(()=>{if(!S.ev||S.ev!==E||!S.res.includes(q)||!S.res.includes(r))return;q.face=r.x<q.x?-1:1;JUMP.set(q,performance.now());addFloat(q.x,q.y-1.5,BDGIFT[q.elem]+'をどうぞ','#fff3d6');villageTimeout(()=>{if(!S.res.includes(r))return;JUMP.set(r,performance.now());JOYU.set(r,performance.now()+1600);fxSpr('hearts',r.x*TS,(r.y-.7)*TS)},700)},1200+k*1800)}}
+function bdayGifts(E,P){/* 会がはじまったら、来た子が1人ずつ、わたす（見た目だけ） */const r=bdayChild(E);if(!r)return;let i=0;for(const q of P){if(q===r)continue;const k=i++;villageTimeout(()=>{if(!S.ev||S.ev!==E||!S.res.includes(q)||!S.res.includes(r))return;q.face=r.x<q.x?-1:1;JUMP.set(q,performance.now());addFloatG(q.x,q.y,-1.5,BDGIFT[q.elem]+'をどうぞ','#fff3d6');villageTimeout(()=>{if(!S.res.includes(r))return;JUMP.set(r,performance.now());JOYU.set(r,performance.now()+1600);fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS)},700)},1200+k*1800)}}
 function bdayEnd(E,P){const r=bdayChild(E);if(!r||!S.res.includes(r))return;r.fun=Math.min(100,r.fun+BDAYFUN);for(const q of P)if(q!==r)bondAdd(r,q,BDAYBOND);
   memo('',r.name+'の誕生日を、みんなでお祝いした');letterQ(r,'bday');villageTimeout(()=>{if(S.res.includes(r))JOYU.set(r,performance.now()+3500)},400)}
 /* 前の日のないしょ話（ピンクの会話） */
@@ -51,8 +51,8 @@ function bdayPop(r){const P=pxPop('おいわいをえらぶ'),g=el('<div class="
     c.onclick=()=>{if(!(S.fs[k]>0)||!S.res.includes(r)||(r.care||{}).bday===dayNo()){P.close();return}S.fs[k]--;syncFood();(r.care||(r.care={})).bday=dayNo();P.close();closeSheet();bdayGot(r,k)};g.appendChild(c)}}
 function bdayGot(r,k){/* うけとって、よろこぶ。好みがわかる */const v=foodLike(r,k),now=performance.now();r.fun=Math.min(100,r.fun+BDAYPOP[v]);
   if(v===3)prefKnow(r,'fd');else if(!(r.fk&&r.fk[k]!=null)){(r.fk||(r.fk={}))[k]=v;if(v!==1)toast(r.name+'の、'+FLNAME[v]+'な食べ物がわかった','good')}
-  if(v===0){r.bubble='💦';addFloat(r.x,r.y-1.6,'あ、ありがとう…','#c9d6e8');sfxAt('pat',r.x,r.y)}
-  else{JUMP.set(r,now);JOYU.set(r,now+(v>=2?4000:2400));r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.6,v===3?'だいすき！ ありがとう！':v===2?'わあ、うれしい！':'ありがとう！','#ffd7e8');sfx(v>=2?'good':'tap')}
-  addFloat(r.x,r.y-2.3,'たのしさ+'+BDAYPOP[v],'#ffe7a8');memo('',r.name+'に、誕生日のおいわいをわたした');dirty=true}
+  if(v===0){r.bubble='💦';addFloatG(r.x,r.y,-1.6,'あ、ありがとう…','#c9d6e8');sfxAt('pat',r.x,r.y)}
+  else{JUMP.set(r,now);JOYU.set(r,now+(v>=2?4000:2400));r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS);addFloatG(r.x,r.y,-1.6,v===3?'だいすき！ ありがとう！':v===2?'わあ、うれしい！':'ありがとう！','#ffd7e8');sfx(v>=2?'good':'tap')}
+  addFloatG(r.x,r.y,-2.3,'たのしさ+'+BDAYPOP[v],'#ffe7a8');memo('',r.name+'に、誕生日のおいわいをわたした');dirty=true}
 /* お礼の手紙 */
 LETTERK.bday='誕生日';
