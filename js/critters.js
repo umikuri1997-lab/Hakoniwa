@@ -121,12 +121,12 @@ function critFrame(c,now){const m=CK[c.k].m,br=Math.floor(now/600+c.id)%2?'1':'0
   if(c.act>0)return CRITE[Math.floor((1.6-c.act)/.2)%4];
   if(m==='walk')return c.mv?'w'+(Math.floor(c.ph)%4):br;
   if(c.pre>0)return 'w0';if(c.jt!=null)return c.jt<.2?'w1':'w2';if(c.land>0)return 'w3';return br}
-function critChip(c,now){const C=window.CHIPS;if(!C)return null;
+function critChip(c,now,vw){if(vw===undefined)vw=c.vw;const C=window.CHIPS;if(!C)return null;
   if(c.k==='fly'){const op=Math.floor(now/120+c.id)%2===0;return C['critfly:'+(c.ci||0)+'#'+(op?0:1)]}
   if(c.k==='bird')return C[c.fl?'critbird#f'+(Math.floor(now/90)%2):'critbird#0'];
-  const n='crit'+(CK[c.k].ch||c.k)+'#',f=critFrame(c,now);return c.vw&&C[n+c.vw+f]||C[n+f]||C[n+'0']}
+  const n='crit'+(CK[c.k].ch||c.k)+'#',f=critFrame(c,now);return vw&&C[n+vw+f]||C[n+f]||C[n+'0']}
 const CRITSHZ=40;/* とぶ高さ（ゲームの点）がこれくらいで、かげがいちばん小さく */
-function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
+function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),I=isoVw(g,CK[c.k].vw?c.vw||'':'',c.face),f=I?I.f:c.face<0?-1:1,ch=critChip(c,now,I&&CK[c.k].vw?I.vw:undefined),/* クォータービュー：ななめの向き（iso-face.js） */sw=CK[c.k].sw;
   const al=critAlpha(c);if(al<=0)return;const im=ch?chipImgs(ch,'crit'+c.k)[0]:null,ft=im&&im.ok?chipFoot(ch,im):null,zk=Math.max(.45,1-Math.max(0,z)/CRITSHZ);/* かげ：足もとのはばのドットのだ円。高くとぶほど小さく・うすく */
   if(ft){const l=ft.l+ch.ax,r=ft.r+ch.ax,m=(l+r)/4,hw=((r-l)/4*.85+.5)*zk;dotShadow(g,x+Math.round(f*m),y,hw,Math.max(1,hw*.32),al*zk,1)}else dotShadow(g,x,y,(sw>>1)*zk,1,al*zk,1);
   if(!ch||!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
