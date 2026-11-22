@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
     S.res=[];recount();const C=window.CHIPS;
     const mk=(k,x,y)=>({id:CRITID++,k,x,y,hx:x,hy:y,z:0,vx:0,vy:0,face:1,t:0,life:9999,hop:0,fl:0,ci:0,act:0,ph:0,wait:0});
     /* うさぎ：上下へはねたときは、正面・うしろの絵。横へはねたときは横の絵 */
-    {const c=mk('usagi',CX+.5,CY+.6);CRIT=[c];let vert=0,ok=0,side=0,sideOk=0,bad=[];
+    {const c=mk('usagi',CX+5.5,CY+5.6);CRIT=[c];let vert=0,ok=0,side=0,sideOk=0,bad=[];
       for(let i=0;i<6000;i++){const x0=c.x,y0=c.y;critTick(.05);const dx=c.x-x0,dy=c.y-y0;if(c.jt==null||c.jt<.1)continue;/* 向きは1コマあとにかわる */
         const ch=critChip(c,performance.now());
         if(Math.abs(dy)>Math.abs(dx)*2){vert++;if(c.vw===(dy>0?'d':'u')&&ch&&ch===(C['critusagi#'+c.vw+critFrame(c,performance.now())]))ok++;else if(bad.length<3)bad.push([dx,dy,c.vw])}
@@ -17,9 +17,9 @@ const assert=require('node:assert/strict');
     /* 正面・うしろの絵が、どの地面の生き物にもある */out.noView=CRITKINDS.filter(k=>CK[k].vw).filter(k=>{const n='crit'+(CK[k].ch||k)+'#';return !C[n+'d0']||!C[n+'u0']||!C[n+'dw1']||!C[n+'uw1']});
     out.aniNoView=['hane','moko','tsuno'].filter(k=>!C['ani:'+k+'#dw0']||!C['ani:'+k+'#uw0']||!C['ani:'+k+'#de0']||!C['ani:'+k+'#uj1']);
     /* 小鳥：はねる向きは、左右からななめ25度まで */
-    {const c=mk('bird',CX+.5,CY+.6);CRIT=[c];let n=0,maxA=0;for(let i=0;i<6000;i++){const x0=c.x,y0=c.y;critTick(.05);const dx=c.x-x0,dy=c.y-y0;if(Math.hypot(dx,dy)>1e-4){n++;maxA=Math.max(maxA,Math.atan2(Math.abs(dy),Math.abs(dx)))}}out.bird={n,maxA}}
+    {const c=mk('bird',CX+5.5,CY+5.6);CRIT=[c];let n=0,maxA=0;for(let i=0;i<6000;i++){const x0=c.x,y0=c.y;critTick(.05);const dx=c.x-x0,dy=c.y-y0;if(Math.hypot(dx,dy)>1e-4){n++;maxA=Math.max(maxA,Math.atan2(Math.abs(dy),Math.abs(dx)))}}out.bird={n,maxA}}
     /* はねる向きがつづく（となりのはねると、向きがあまりかわらない） */
-    {const c=mk('risu',CX+.5,CY+.6);CRIT=[c];const H=[];for(let i=0;i<8000;i++){const p=c.jt;critTick(.05);if(p==null&&c.jt!=null)H.push(Math.atan2(c.ny-c.jy,c.nx-c.jx))}
+    {const c=mk('risu',CX+5.5,CY+5.6);CRIT=[c];const H=[];for(let i=0;i<8000;i++){const p=c.jt;critTick(.05);if(p==null&&c.jt!=null)H.push(Math.atan2(c.ny-c.jy,c.nx-c.jx))}
       let keep=0;for(let i=1;i<H.length;i++){let d=Math.abs(H[i]-H[i-1]);d=Math.min(d,Math.PI*2-d);if(d<.6)keep++}out.risu={hops:H.length,keep}}
     /* 飼う生き物：ななめ下の所へ。マス目の道でも、かどを切って、ななめに歩く */
     {const a={id:1,k:'moko',h:-1,x:CX+.5,y:CY+.6,face:1,wt:0};S.ani=[a];const to=(CY+5)*W+CX+5;a.path=aniPath(a,to,null);let diag=0,st=0,vw={};

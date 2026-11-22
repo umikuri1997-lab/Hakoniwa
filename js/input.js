@@ -2,22 +2,20 @@
 
 /* ---------- カメラ・入力 ---------- */
 const ZMAX=3,ZRUB=.1,ZBACKS=.2;let ZBACK=null;/* ズームのはしの手ごたえ（下の zoomRubber） */
-function minZ(){return isoOn()?Math.max(.3,Math.min(VW/((W+H)*IQW/2),VH/((W+H)*IQH/2))):Math.max(.3,Math.min(VW/(W*TS),VH/(H*TS)))}
+function minZ(){return Math.max(.3,Math.min(VW/((W+H)*IQW/2),VH/((W+H)*IQH/2)))}
 function clampCam(look){if(typeof caveOn==='function'&&caveOn())return caveClamp(look);/* 洞窟のあいだは、カメラはパーティを追う（cave.js） */
   {const rb=ZBACK||gest&&gest.type==='pinch';cam.z=clamp(cam.z,minZ()*(rb?1-ZRUB:1),rb?ZMAX*(1+ZRUB):ZMAX)}/* ピンチ中・もどるあいだだけ、はしをこえてよい */
   const vw=VW/cam.z,vh=VH/cam.z;
-  if(isoOn()){/* クォータービュー：画面のまん中のせかいの点を、マップの中にとどめる（オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に） */const cx=clamp(camCX(),0,W*TS),cy=clamp(camCY(),0,H*TS+(performance.now()<(window.BOSSCAM||0)?4*TS:0));cam.x=cx-vw/2;cam.y=cy-vh/2;return}
-  cam.x=vw>=W*TS?(W*TS-vw)/2:clamp(cam.x,-40,W*TS-vw+40);
-  cam.y=vh>=H*TS?(H*TS-vh)/2:clamp(cam.y,-80,H*TS-vh+(performance.now()<(window.BOSSCAM||0)?vh/2+120:120));/* オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に */
+  /* 画面のまん中のせかいの点を、マップの中にとどめる（オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に） */const cx=clamp(camCX(),0,W*TS),cy=clamp(camCY(),0,H*TS+(performance.now()<(window.BOSSCAM||0)?4*TS:0));cam.x=cx-vw/2;cam.y=cy-vh/2;
 }
 function resize(){dpr=Math.min(window.devicePixelRatio||1,1.25);/* 発熱対策で解像度をおさえる */VW=innerWidth;VH=innerHeight;cv.width=VW*dpr|0;cv.height=VH*dpr|0;cv.style.width=VW+'px';cv.style.height=VH+'px';clampCam();sacredResizeShot()}
 function panTo(wx,wy){if(camAnim&&camAnim.done)return;/* 演出のカメラ（おわりの処理つき）は、上書きしない */camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:wx,ty:wy,t:0,dur:.6}}/* 話しかけた子を、画面の中央へ */
 function centerOn(wx,wy){cam.x=wx-VW/cam.z/2;cam.y=wy-VH/cam.z/2;clampCam()}
-const homeZ=()=>Math.max(minZ(),isoOn()?Math.min(1.8,VW/(13*TS)*.82):Math.min(2.2,VW/(13*TS)));/* クォータービューは、ひし形のマスがいままでの四角のマスと同じくらいの数だけ見える大きさ（ひし形1つの広さは、四角の1.5倍） */
-const toWorld=(sx,sy)=>isoOn()?s2w(sx,sy):({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
-/* カメラをうごかす（洞窟は、いままでの見え方） */
-function camPan(cx0,cy0,dx,dy){cam.x=cx0;cam.y=cy0;if(isoOn())camShift(dx,dy);else{cam.x-=dx/cam.z;cam.y-=dy/cam.z}}
-function camKeep(w,sx,sy){if(isoOn())camAt(w.x,w.y,sx,sy);else{cam.x=w.x-sx/cam.z;cam.y=w.y-sy/cam.z}}/* せかいの点 w を、画面の (sx,sy) に */
+const homeZ=()=>Math.max(minZ(),Math.min(1.8,VW/(13*TS)*.82));/* ひし形のマスがいままでの四角のマスと同じくらいの数だけ見える大きさ（ひし形1つの広さは、四角の1.5倍） */
+const toWorld=(sx,sy)=>s2w(sx,sy);
+/* カメラをうごかす */
+function camPan(cx0,cy0,dx,dy){cam.x=cx0;cam.y=cy0;camShift(dx,dy)}
+function camKeep(w,sx,sy){camAt(w.x,w.y,sx,sy)}/* せかいの点 w を、画面の (sx,sy) に */
 
 let mode='look',sel='farm',selStamp=null;
 let CVR=null,CVRT=0;function cvRect(){const t=performance.now();if(!CVR||t-CVRT>250){CVR=cv.getBoundingClientRect();CVRT=t}return CVR}/* 画面がずれた（文字を打ったあとページがスクロールしたまま など）ときも、キャンバスの上の場所でタップをはかる */
@@ -50,7 +48,7 @@ cv.addEventListener('pointermove',e=>{
 /* 地図の慣性：はなしたときの指の速さで、すこしすべってから止まる（画面の点／秒。FLINGK は1秒でのこる速さのわりあいの対数） */
 let FLING=null;const FLINGWIN=90,FLINGMIN=180,FLINGMAX=2600,FLINGK=5.5,FLINGSTOP=40;
 function flingStart(V){FLING=null;if(!V||V.length<2||typeof uiReduced==='function'&&uiReduced())return;const a=V[0],b=V[V.length-1],dt=b.t-a.t;if(dt<16||performance.now()-b.t>60)return;/* 止めてからはなしたら、すべらない */let vx=(b.x-a.x)/dt*1000,vy=(b.y-a.y)/dt*1000;const v=Math.hypot(vx,vy);if(v<FLINGMIN)return;if(v>FLINGMAX){vx*=FLINGMAX/v;vy*=FLINGMAX/v}FLING={vx,vy}}
-function flingTick(rdt){zoomBackTick(rdt);const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y;camPan(cam.x,cam.y,F.vx*rdt,F.vy*rdt);const ex=cam.x,ey=cam.y;clampCam(1);if(isoOn()){if(Math.abs(cam.x-ex)>.01||Math.abs(cam.y-ey)>.01){FLING=null;return}}else{if(Math.abs(cam.x-ex)>.01)F.vx=0;if(Math.abs(cam.y-ey)>.01)F.vy=0}/* はしについたら、その向きは止める（クォータービューは、止める） */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
+function flingTick(rdt){zoomBackTick(rdt);const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y;camPan(cam.x,cam.y,F.vx*rdt,F.vy*rdt);const ex=cam.x,ey=cam.y;clampCam(1);if(Math.abs(cam.x-ex)>.01||Math.abs(cam.y-ey)>.01){FLING=null;return}/* はしについたら、止める */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
 /* ズームのはし：いちばん大きく・小さくしたあとも、少しだけ（ZRUB）手ごたえをのこしてのび、はなすと ZBACKS 秒でもどる */
 function zoomRubber(z){const mn=minZ();if(z>ZMAX)return ZMAX*(1+ZRUB*(1-1/(1+Math.log(z/ZMAX)*3)));if(z<mn)return mn*(1-ZRUB*(1-1/(1+Math.log(mn/z)*3)));return z}
 function zoomSettle(mx,my){const mn=minZ(),to=clamp(cam.z,mn,ZMAX);if(Math.abs(to-cam.z)<1e-4){clampCam(1);return}if(mx==null){mx=VW/2;my=VH/2}if(typeof uiReduced==='function'&&uiReduced()){const w=toWorld(mx,my);cam.z=to;camKeep(w,mx,my);clampCam(1);return}ZBACK={fz:cam.z,tz:to,t:0,mx,my,w:toWorld(mx,my)}}
@@ -76,8 +74,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;FLING=null
 const bubHit=(r,w)=>r.bubX!=null&&Math.abs(r.bubX-w.x)<33&&Math.abs(r.bubY-w.y)<33;/* 描いた吹き出しをタップ（遊具の上で遊ぶ子は、描く場所がr.x,r.yとずれる） */
 const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
 /* タップした画面の点の、見えている（高い段もふくめた）マスのせかいの点 */
-function tapW(sx,sy){let w=toWorld(sx,sy);if(isoOn())return liftW(w);const tl=tapLv(w.x,w.y);return tl?{x:w.x,y:w.y+tl*LIFT,lv:tl}:w}
-function tapLv(wx,wy){if(!S||!S.hi)return 0;const tx=Math.floor(wx/TS);if(tx<0||tx>=W)return 0;for(let lv=HMAX;lv>=1;lv--){const ty=Math.floor((wy+lv*LIFT)/TS);if(ty>=0&&ty<H&&hiAt(ty*W+tx)===lv)return lv}return 0}/* タップした所に見えている、いちばん手前の高い段 */
+function tapW(sx,sy){return liftW(toWorld(sx,sy))}
 const ENBOX={};/* コワイノの絵のはば（向き・形ごとに1回はかって、数字だけとっておく） */
 function enemyBox(e){const D=EN[e.type],z=D.size*2,v=EV.get(e)||{f:1,back:false},key=e.type+(v.back?'b':'f')+v.f+z;let b=ENBOX[key];
   if(!b){const R=36*z,ww=Math.ceil(R*2),hh=Math.ceil(R*2.2),c=document.createElement('canvas');c.width=ww;c.height=hh;const g=c.getContext('2d');/* 描くときと同じ場所（px=R, py+8=R*1.7） */
@@ -87,11 +84,11 @@ function enemyBox(e){const D=EN[e.type],z=D.size*2,v=EV.get(e)||{f:1,back:false}
   return b}
 function enemyAtTap(wx,wy){/* 守りの光：コワイノの絵が描いてある所ぜんぶ（＋指のぶん）をあたりにする。重なったら手前（下）の子、同じならタップに近い子 */
   const M=6/Math.min(1,cam.z)+2;let best=null,bs=-1e9;
-  const ISO=isoOn()&&TAPS;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const b=enemyBox(e),px=e.x*TS,py=e.y*TS+8-(ISO?uLift(e)*IQL/LIFT/IQSY:uLift(e));if(ISO){const q=tapAt(ptFoot(px,e.y*TS));wx=q.x;wy=q.y}/* クォータービュー：その子を立てて描いた絵の上の点 */
+  const ISO=TAPS;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const b=enemyBox(e),px=e.x*TS,py=e.y*TS+8-(ISO?uLift(e)*IQL/LIFT/IQSY:uLift(e));if(ISO){const q=tapAt(ptFoot(px,e.y*TS));wx=q.x;wy=q.y}/* クォータービュー：その子を立てて描いた絵の上の点 */
     if(wx<px+b.l-M||wx>px+b.r+M||wy<py+b.t-M||wy>py+b.b+M)continue;
     const sc=e.y*1000-Math.hypot(wx-px,wy-(py+(b.t+b.b)/2))*.01;if(sc>bs){bs=sc;best=e}}
   return best}
-function sacredTapHit(b,px,py){if(isoOn()&&TAPS){const n=typeof sacredSpan==='function'?sacredSpan():4,q=tapAt(objFoot(b%W,(b/W)|0,n,n,b));px=q.x/TS;py=q.y/TS}/* クォータービュー：立てて描いた切り株の絵の上の点 *//* 御神木・切り株の、タップをひろう所（切り株の絵のわく。育った木は根もと）。b は左上のマス。根もと（storyTreeX・storyTreeY+26）から、切り株の絵のわく（左35・右40・上79・下2 の点） */const dx=px*TS-storyTreeX(b)*TS,dy=py*TS-(storyTreeY(b)*TS+26);return dx>=-35&&dx<40&&dy>=-79&&dy<2||typeof omoiBubHit==='function'&&omoiBubHit(px,py)}/* 青いふきだしも */
+function sacredTapHit(b,px,py){if(TAPS){const n=typeof sacredSpan==='function'?sacredSpan():4,q=tapAt(objFoot(b%W,(b/W)|0,n,n,b));px=q.x/TS;py=q.y/TS}/* クォータービュー：立てて描いた切り株の絵の上の点 *//* 御神木・切り株の、タップをひろう所（切り株の絵のわく。育った木は根もと）。b は左上のマス。根もと（storyTreeX・storyTreeY+26）から、切り株の絵のわく（左35・右40・上79・下2 の点） */const dx=px*TS-storyTreeX(b)*TS,dy=py*TS-(storyTreeY(b)*TS+26);return dx>=-35&&dx<40&&dy>=-79&&dy<2||typeof omoiBubHit==='function'&&omoiBubHit(px,py)}/* 青いふきだしも */
 function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどける・目標のじょうけんを見る */
   const av=(S.shards||0)-(S.setSh||0);
   if(av>0&&(S.setSh||0)>=2){
@@ -139,10 +136,10 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(r.x-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr)return sevTalk(SEVW[tr.name])}
     {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(r.x-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
     let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const q=tapPt(r.x,r.y),d=Math.hypot(r.x-q.x/TS,(tapY(r)-.5)-q.y/TS);if(d<bd){bd=d;best=r}}
-    {const cr=typeof critTap==='function'&&(isoOn()?CRIT.map(c=>{const q=tapAt(ptFoot(c.x*TS,c.y*TS));const r=critTap(q.x/TS,q.y/TS);return r&&r.c===c?r:null}).filter(Boolean).sort((a,b)=>a.d-b.d)[0]:critTap(w0.x/TS,w0.y/TS));/* 生き物は critTap が自分で高さ（uLift）をひくので、高さをもどす前の場所 */if(cr&&(!best||cr.d<bd)){critPoke(cr.c,w.x/TS,w.y/TS);return}}/* 小さな生き物：せいれいより近ければ、その場で反応して、図鑑に入る */
+    {const cr=typeof critTap==='function'&&(TAPS?CRIT.map(c=>{const q=tapAt(ptFoot(c.x*TS,c.y*TS));const r=critTap(q.x/TS,q.y/TS);return r&&r.c===c?r:null}).filter(Boolean).sort((a,b)=>a.d-b.d)[0]:critTap(w0.x/TS,w0.y/TS));/* 生き物は critTap が自分で高さ（uLift）をひくので、高さをもどす前の場所 */if(cr&&(!best||cr.d<bd)){critPoke(cr.c,w.x/TS,w.y/TS);return}}/* 小さな生き物：せいれいより近ければ、その場で反応して、図鑑に入る */
     if(best&&best.act&&best.act.type==='outing'&&best.act.stage==='do'&&typeof outingTalk==='function'&&outingTalk(best))return;/* おでかけ中の2人：会話を見る（outing.js） */
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const ti=best.act.topic,C=CHATS[ti];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c)).replace(/@G/g,goneTalkName()||'あの子')]}),()=>{if(C.wave){A.waveU=B.waveU=S.t+4}if(C.mem)bondMemNote(A,B,ti)})}}/* なかよしの雑談は、さいごまで見たら思い出になる（消えたときに話す） *//* おしゃべり中の子をタップすると、会話が見られる */
-    if(!best){const an=typeof aniAtTap==='function'&&(isoOn()?(S.ani||[]).map(a=>{const q=tapPt(a.x,a.y);return aniAtTap(q.x/TS,q.y/TS)}).find(a=>a):aniAtTap(w.x/TS,w.y/TS));if(an){sfx('tani');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
+    if(!best){const an=typeof aniAtTap==='function'&&(TAPS?(S.ani||[]).map(a=>{const q=tapPt(a.x,a.y);return aniAtTap(q.x/TS,q.y/TS)}).find(a=>a):aniAtTap(w.x/TS,w.y/TS));if(an){sfx('tani');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);if(typeof tapReact==='function')tapReact(best);/* タップした子が、こちらを見て、ぴょん（draw-spirits.js） */return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
     tapSnd(tx,ty);

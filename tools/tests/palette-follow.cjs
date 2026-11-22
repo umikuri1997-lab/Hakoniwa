@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
   assert.equal(P.picked.sel,P.lightId);assert.equal(P.picked.palOpen,false,'picking still shrinks the palette');
   console.log('Palette: tags, recent order, empty note, tools only in all, picking works');
   /* 見守る */
-  await run(`(()=>{PALF='all';setMode('look');const r=S.res[0];endAct(r);r.x=CX+12.5;r.y=CY+6.5;cam.z=1.5;centerOn(CX*TS,CY*TS);resTab=2;openSheet('res',r.id);})()`);
+  await run(`(()=>{PALF='all';setMode('look');TUTPAN=S;/* はじめの目標のカメラ（神殿へ）を出さない */const r=S.res[0];endAct(r);r.x=CX+12.5;r.y=CY+6.5;cam.z=1.5;centerOn(CX*TS,CY*TS);resTab=2;openSheet('res',r.id);})()`);
   const btn=await run(`[...document.querySelectorAll('#sheetBody button')].some(b=>b.textContent==='見守る')`);assert.ok(btn,'button on the spirit sheet');
   await run(`[...document.querySelectorAll('#sheetBody button')].find(b=>b.textContent==='見守る').click()`);
   const f0=JSON.parse(await run(`JSON.stringify({on:followActive(),sheet,tag:document.querySelector('#followTag')?.textContent||'',act:S.res[0].act&&S.res[0].act.type})`));

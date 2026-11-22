@@ -16,13 +16,12 @@ function isoLvAt(wx,wy){if(caveOn())return cvqLvAt(wx,wy);/* 洞窟（iso-cave.j
 /* 地面の描き方を、段 lv の高さに */
 function isoGroundLv(c,lv){groundTf(c,dpr*cam.z);if(lv)c.translate(-lv*IQD,-lv*IQD)}
 /* 地面の物を描くとき、せかいの点の y からひく高さ（クォータービューは0。段は isoGroundLv でつける） */
-function liftY(j){return isoOn()?0:liftOf(j)}
 /* 足もと A で立てて描く（おわったら、もとの描き方にもどす） */
 function isoStand(c,A,f){c.save();standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py);try{f()}finally{c.restore()}}
 /* マス j に立つ物（1マス）の足もと */
 function cellFoot(j){return objFoot(j%W,(j/W)|0,1,1,j)}
-/* マス j の物として描く（いままでの見え方では、そのまま） */
-function isoCell(c,j,f){if(!isoOn())return f();isoStand(c,cellFoot(j),f)}
+/* マス j の物として、そのマスの足もとに立てて描く */
+function isoCell(c,j,f){isoStand(c,cellFoot(j),f)}
 /* せかいの地面の点 (gx,gy)（段の高さをひいていない点）を足もとにする */
 function gFoot(gx,gy){if(caveOn())return cvqPt(gx,gy);/* 洞窟（iso-cave.js） */const j=clamp(Math.floor(gy/TS),0,H-1)*W+clamp(Math.floor(gx/TS),0,W-1),lv=isoLv(j);return{fx:gx,fy:gy-liftOf(j),px:isoX(gx,gy),py:isoY(gx,gy)-lv*IQL}}
 /* 粒・エフェクトの足もと（うまれたときにきめて、うごいても、かえない） */
@@ -35,7 +34,7 @@ function isoFogDraw(c,draw){for(let n=0;n<IQFOGN;n++){isoGroundLv(c,IQFOGH*n/(IQ
 /* 霧の上に出す手がかりの、足もと（霧の上の面の高さ） */
 function fogTopFoot(gx,gy){const A=gFoot(gx,gy);A.py-=IQFOGH*IQL;return A}
 /* 画面の左上の、地図の上の場所（CSS の px。雨・霧の夜の絵・雲のかげを、地図といっしょに動かすとき） */
-function camScr(){if(!isoOn())return[cam.x*cam.z,cam.y*cam.z];const cx=camCX(),cy=camCY();return[(isoX(cx,cy)-VW/cam.z/2)*cam.z,(isoY(cx,cy)-VH/cam.z/2)*cam.z]}
+function camScr(){const cx=camCX(),cy=camCY();return[(isoX(cx,cy)-VW/cam.z/2)*cam.z,(isoY(cx,cy)-VH/cam.z/2)*cam.z]}
 /* ほった穴（地面より下、クォータービュー）：ひし形の口の中に、おくの2つのかべ（北・西。こちらを向く）と、深さのぶん下がった底。
    底は、そのマスの地面の絵を下へずらして、深いほど暗く。c は地面の描き方で来る（画面の向きにして、もどす） */
 function isoPits(c,x0,y0,x1,y1){if(!S.hi)return;c.save();isoScreenTf(c);
@@ -52,13 +51,13 @@ function isoLitPool(c,j,R,R0){const A=objFootJ(j),a=anc(j);isoGroundLv(c,isoLv(a
 /* 字・数・ゲージなど（のばすと、ドットの字がゆがむ物）：足もと A で立てたときの点 (wx,wy) の所に、のばさずに描く（ゲームの点の大きさ） */
 function isoUITf(c,A,wx,wy){const k=dpr*cam.z,O=isoOff(k),px=A.px+(wx-A.fx)*IQSX,py=A.py+(wy-A.fy)*IQSY;c.setTransform(k,0,0,k,O[0]+k*(px-wx),O[1]+k*(py-wy))}
 /* 場面の光などを、足もとの点 (wx,wy)（地面の点）で立てる。save しないので、ループの中で毎回よび、おわったら isoBack でもどす */
-function isoAt(c,wx,wy){if(!isoOn())return;const A=gFoot(wx,wy);standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py)}
-function isoAtA(c,A){if(isoOn()&&A)standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py)}
-function isoBack(c){if(isoOn())groundTf(c,dpr*cam.z)}
+function isoAt(c,wx,wy){const A=gFoot(wx,wy);standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py)}
+function isoAtA(c,A){if(A)standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py)}
+function isoBack(c){groundTf(c,dpr*cam.z)}
 /* 御神木の場面の光：切り株（4×4）を足もとに */
 function treeFoot(){const j=S&&S.sacredRoot;if(j==null)return null;const n=typeof sacredSpan==='function'?sacredSpan():4;return objFoot(j%W,(j/W)|0,n,n,j)}
 /* 字・ふだ（のばさない）：地面の点 (gx,gy) から立てた所の (wx,wy) に */
-function isoUIAt(c,gx,gy,wx,wy){if(isoOn())isoUITf(c,gFoot(gx,gy),wx,wy)}
+function isoUIAt(c,gx,gy,wx,wy){isoUITf(c,gFoot(gx,gy),wx,wy)}
 /* 落ち影（いままでの見え方で写した、地面の上の影の絵）を、クォータービューの地面に描く。
    影の根もと（マスの (x+.5, y+.8)）が、立てた物の足もと（objFoot の画面の点）にくるように、地面の上でずらす。f は、いままでの点で描く */
 function isoCastAt(c,i,f){const a=anc(i),A=objFootJ(i),lv=isoLv(a),G=isoInv(A.px,A.py+lv*IQL),x=a%W,y=(a/W)|0;isoGroundLv(c,lv);c.translate(G.x-(x+.5)*TS,G.y-(y+.8)*TS);f()}

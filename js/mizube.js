@@ -173,8 +173,8 @@ function mzDrawObj(c,id,x,y,i,now){now=now||performance.now();const P=(col,a,b,w
 function mzGateWater(c,x,y,now){/* ひらいた水門の、戸の下を流れる水（石の柱のあいだ） */const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);P('#6fbfe0',8,14,16,18);const t=((now/160)|0)%6;for(let k=0;k<3;k++)P('#d7f1f8',10+k*5,14+((t+k*2)%6)*3,2,4)}
 function mzBoatDraw(px,py,cargo){/* 小舟（3Dから写したチップ mzboat・荷をつんだ mzboat:c。まん中が px,py。ないときはコードの仮の絵） */const ch=window.CHIPS&&CHIPS[cargo?'mzboat:c':'mzboat'];if(ch&&drawChip(ctx,ch,'mzboat',px,py))return;mzPx(ctx,'#6b4526',px-12,py+2,24,2);mzPx(ctx,'#a8743f',px-12,py-4,24,6);mzPx(ctx,'#c99a62',px-12,py-4,24,2);mzPx(ctx,'#a8743f',px+12,py-2,2,4);mzPx(ctx,'#a8743f',px-14,py-2,2,4);if(cargo){mzPx(ctx,'#b08a4a',px-4,py-10,8,6);mzPx(ctx,'#d8b26a',px-4,py-10,8,2)}}
 function mzRaftDraw(px,py){const ch=window.CHIPS&&CHIPS.mzraftb;if(ch&&drawChip(ctx,ch,'mzraftb',px,py))return;/* いかだ（チップ mzraftb） */mzPx(ctx,'#b08552',px-10,py+2,20,4);mzPx(ctx,'#c49a66',px-10,py-2,20,4);mzPx(ctx,'#d9b684',px-10,py-2,20,2)}
-function mzRowDraw(y,x0,x1,now){const M=S.mz,t=(now/260)|0,ISO=isoOn();/* クォータービュー：1マスずつ（x0..x1 は1マス）、その段の高さの地面に。段をおちる水は、画面の向きで */
-  for(let x=Math.max(0,x0);x<Math.min(W,x1+1);x++){const j=y*W+x,hh=hiAt(j),X=x*TS,Y=y*TS-(ISO?0:hh*LIFT),g=S.ground[j];if(ISO)isoGroundLv(ctx,Math.max(0,hh));
+function mzRowDraw(y,x0,x1,now){const M=S.mz,t=(now/260)|0;/* 1マスずつ（x0..x1 は1マス）、その段の高さの地面に。段をおちる水は、画面の向きで */
+  for(let x=Math.max(0,x0);x<Math.min(W,x1+1);x++){const j=y*W+x,hh=hiAt(j),X=x*TS,Y=y*TS,g=S.ground[j];isoGroundLv(ctx,Math.max(0,hh));
     if(M.cn[j]){const wet=MZC.wet&&MZC.wet[j],con=n=>n>=0&&n<W*H&&(!!M.cn[n]||S.obj[n]==='mzgate'||S.obj[n]==='mzgateb');
       const cm=(x>0&&con(j-1)?1:0)|(x<W-1&&con(j+1)?2:0)|(con(j-W)?4:0)|(con(j+W)?8:0),cch=window.CHIPS&&CHIPS['mzcanal:'+(wet?'w':'d')+cm];/* 水路のチップ（H-6：つながる向き 左1・右2・上4・下8） */
       if(!(cch&&drawChip(ctx,cch,'mzcanal',X,Y,now))){mzPx(ctx,'#c9c4b4',X,Y,TS,TS);mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+4,TS-8,TS-8);
@@ -182,7 +182,7 @@ function mzRowDraw(y,x0,x1,now){const M=S.mz,t=(now/260)|0,ISO=isoOn();/* クォ
       mzPx(ctx,'#a39d8c',X,Y+TS-2,4,2);mzPx(ctx,'#a39d8c',X+TS-4,Y+TS-2,4,2)}
       if(wet&&M.ice&&M.ice[j]){mzPx(ctx,'#d9f1f7',X+4,Y+4,TS-8,TS-8);mzPx(ctx,'#ffffff',X+8,Y+10,10,2);mzPx(ctx,'#ffffff',X+16,Y+20,8,2)}
       else if(wet){const k=(t+x*3+y*5)%6;mzPx(ctx,'#bfe9f5',X+8+k*2,Y+8,6,2);mzPx(ctx,'#bfe9f5',X+18-k*2,Y+20,4,2);
-        const s=j+W;if(s<W*H&&M.cn[s]&&hiAt(s)<hh&&MZC.wet[s]&&ISO)mzFallIso(x,y,hh,hiAt(s),t);else if(s<W*H&&M.cn[s]&&hiAt(s)<hh&&MZC.wet[s]){const dh=(hh-hiAt(s))*LIFT;mzPx(ctx,'#9ad8ee',X+4,Y+TS,TS-8,dh);for(let k2=0;k2<3;k2++)mzPx(ctx,'#e6f7fb',X+8+k2*7,Y+TS+((t*4+k2*9)%Math.max(1,dh-4)),2,4)}}
+        const s=j+W;if(s<W*H&&M.cn[s]&&hiAt(s)<hh&&MZC.wet[s])mzFallIso(x,y,hh,hiAt(s),t)}
       else if(!cch){mzPx(ctx,'#7d766a',X+8,Y+10,4,2);mzPx(ctx,'#7d766a',X+20,Y+20,4,2)}}
     else if(hh>0&&(g===1||g===2)){const dry=n=>n<0||n>=W*H||!S.ground[n],pm=(x>0&&!dry(j-1)?1:0)|(x<W-1&&!dry(j+1)?2:0)|(!dry(j-W)?4:0)|(!dry(j+W)?8:0),pch=window.CHIPS&&CHIPS['mzpond:'+pm];/* 高い段の水（ため池）のふちのチップ（H-6） */
       if(pch&&drawChip(ctx,pch,'mzpond',X,Y,now)){const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);continue}
@@ -193,13 +193,12 @@ function mzFallIso(x,y,h0,h1,t){const a=isoSP(x*TS+4,(y+1)*TS),b=isoSP((x+1)*TS-
   ctx.fillStyle='#9ad8ee';ctx.beginPath();ctx.moveTo(a.x,a.y-u);ctx.lineTo(b.x,b.y-u);ctx.lineTo(b.x,b.y-u+dh);ctx.lineTo(a.x,a.y-u+dh);ctx.closePath();ctx.fill();
   ctx.fillStyle='#e6f7fb';for(let k=0;k<3;k++){const q=(k+.5)/3,px=Math.round(a.x+(b.x-a.x)*q),py=Math.round(a.y+(b.y-a.y)*q-u+((t*4+k*9)%Math.max(1,dh-4)));ctx.fillRect(px,py,2,4)}ctx.restore()}
 function mzRows(add,x0,y0,x1,y1,now){if(!mzOn())return;if(MZC.S!==S)mzRefresh();
-  if(isoOn()){const M=S.mz;for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if(M.cn[j]||hiAt(j)>0&&S.ground[j])add(y,-1,null,()=>mzRowDraw(y,x,x,now),-1,false,x+y-.97)}}/* クォータービュー：マスごとに（そのマスの上の面のすぐあと） */
-  else for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)add(y-1+.0007,-1,null,()=>mzRowDraw(y,x0-1,x1+1,now),-1);
+  {const M=S.mz;for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if(M.cn[j]||hiAt(j)>0&&S.ground[j])add(y,-1,null,()=>mzRowDraw(y,x,x,now),-1,false,x+y-.97)}}/* マスごとに（そのマスの上の面のすぐあと） */
   for(const C of MZC.comps){const B=S.mz.boats[C.key],n=C.route.length;if(!B||!n)continue;const i=Math.floor(B.d)%n,f=B.d-Math.floor(B.d),a=C.route[i],b=C.route[(i+1)%n],bx=(a%W+.5)*(1-f)+(b%W+.5)*f,by=(((a/W)|0)+.5)*(1-f)+(((b/W)|0)+.5)*f,L=liftOf(a);
-    add(by+.02,-1,null,()=>mzBoatDraw(bx*TS,by*TS-L+Math.round(Math.sin(now/500)),B.cg),-1,isoOn()?gFoot(bx*TS,by*TS):undefined)}/* クォータービュー：舟の足もとに立てて */
-  if(mzKanadeOn()){const p=mzKanadePos(now);if(p)add(p.y+.03,-1,null,()=>mzKanadeDraw(ctx,now),-1,isoOn()?gFoot(p.x*TS,p.y*TS):undefined)}/* 白い影（mizube-story.js） */
-  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(r.act&&r.act.type==='mzraft'&&r.act.stage!=='walk')add(r.y-.01,-1,null,()=>mzRaftDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4),-1,isoOn()?gFoot(r.x*TS,r.y*TS):undefined);
-    else if(MZLANE&&MZLANE[j]&&r.path&&r.path.length)add(r.y-.01,-1,null,()=>mzBoatDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4,0),-1,isoOn()?gFoot(r.x*TS,r.y*TS):undefined)}}
+    add(by+.02,-1,null,()=>mzBoatDraw(bx*TS,by*TS-L+Math.round(Math.sin(now/500)),B.cg),-1,gFoot(bx*TS,by*TS))}/* クォータービュー：舟の足もとに立てて */
+  if(mzKanadeOn()){const p=mzKanadePos(now);if(p)add(p.y+.03,-1,null,()=>mzKanadeDraw(ctx,now),-1,gFoot(p.x*TS,p.y*TS))}/* 白い影（mizube-story.js） */
+  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(r.act&&r.act.type==='mzraft'&&r.act.stage!=='walk')add(r.y-.01,-1,null,()=>mzRaftDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4),-1,gFoot(r.x*TS,r.y*TS));
+    else if(MZLANE&&MZLANE[j]&&r.path&&r.path.length)add(r.y-.01,-1,null,()=>mzBoatDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4,0),-1,gFoot(r.x*TS,r.y*TS))}}
 let MZF=null,MZFX=null,MZFV=-1,MZFS=null;
 function mzMistDraw(c,x0,y0,x1,y1){if(!mzOn())return;if(MZC.S!==S)mzRefresh();const n=W*4;
   if(MZFS!==S||MZFV!==MZC.mv){MZFS=S;MZFV=MZC.mv;if(!MZF){MZF=document.createElement('canvas');MZF.width=MZF.height=n;MZFX=MZF.getContext('2d')}const img=MZFX.createImageData(n,n),D=img.data,M=MZC.mist,N=fogNoise(),m=(x,y)=>x<0||y<0||x>=W||y>=H?1:M[y*W+x];
@@ -207,7 +206,7 @@ function mzMistDraw(c,x0,y0,x1,y1){if(!mzOn())return;if(MZC.S!==S)mzRefresh();co
       let o=a<=0?0:Math.min(1,a*1.3)*(.86+nz*.14);o=Math.round(o*10)/10;const q=(py*n+px)*4,s=nz>.55?1:0;D[q]=s?244:226;D[q+1]=s?246:232;D[q+2]=s?248:238;D[q+3]=o*250}
     MZFX.putImageData(img,0,0)}
   const X0=Math.max(0,x0-1),Y0=Math.max(0,y0-1),X1=Math.min(W,x1+1),Y1=Math.min(H,y1+2);if(X1<=X0||Y1<=Y0)return;
-  c.imageSmoothingEnabled=false;const dr=()=>c.drawImage(MZF,X0*4,Y0*4,(X1-X0)*4,(Y1-Y0)*4,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);if(isoOn())isoFogDraw(c,dr);else dr();c.imageSmoothingEnabled=true;/* クォータービュー：霧は、あつみのある形 */mzKiriMistDraw(c,performance.now())}
+  c.imageSmoothingEnabled=false;const dr=()=>c.drawImage(MZF,X0*4,Y0*4,(X1-X0)*4,(Y1-Y0)*4,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);isoFogDraw(c,dr);c.imageSmoothingEnabled=true;/* クォータービュー：霧は、あつみのある形 */mzKiriMistDraw(c,performance.now())}
 function mzToolIcon(g){/* 「水路をほる」のアイコン（72×72のキャンバスに、6のドット） */const P=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h)};P('#8cc35c',6,12,60,12);P('#c9c4b4',6,24,60,36);P('#6fbfe0',18,24,36,30);P('#bfe9f5',24,30,12,6);P('#bfe9f5',36,42,12,6);P('#a39d8c',6,54,12,6);P('#a39d8c',54,54,12,6)}
 
 /* ---- はじまりの会話と目標（お話は、まだない） ---- */

@@ -284,11 +284,11 @@ function rimStones(){const t=S.st2,M=sprMap();if(RIMN!==STATN||RIMS.s!==S){RIMN=
     for(const q of P)RIMS.push({x:Math.round(q[0]),y:Math.round(q[1]),v:(hash(q[0]*7+q[1]*13)*4)|0})}
   RIMS.sort((p,q)=>p.y-q.y);return RIMS}
 function drawOnsenRim(x0,x1,y0,y1,now){if(WD!==KAZAN||!S.st2)return;const C=window.CHIPS;if(!C||!C['rim:c0'])return;
-  for(const s of rimStones()){if(s.x<x0*TS-32||s.x>(x1+1)*TS+32||s.y<y0*TS-32||s.y>(y1+1)*TS+32)continue;if(isoOn())isoStand(ctx,gFoot(s.x+16,s.y+16),()=>drawChip(ctx,C['rim:c'+s.v],'rim',s.x,s.y,now));else drawChip(ctx,C['rim:c'+s.v],'rim',s.x,s.y,now)}}/* クォータービュー：石は、その所に立てて */
+  for(const s of rimStones()){if(s.x<x0*TS-32||s.x>(x1+1)*TS+32||s.y<y0*TS-32||s.y>(y1+1)*TS+32)continue;isoStand(ctx,gFoot(s.x+16,s.y+16),()=>drawChip(ctx,C['rim:c'+s.v],'rim',s.x,s.y,now))}}/* クォータービュー：石は、その所に立てて */
 function drawHeat(now){if(WD!==KAZAN||!S.st2)return;const c=ctx;c.save();for(const j of warmSet()){const x=(j%W)*TS,y=((j/W)|0)*TS,ph=((now/1600+j*.13)%1);c.fillStyle='rgba(255,170,90,'+(.35*(1-ph))+')';isoCell(c,j,()=>c.fillRect(Math.round(x+8+((j*7)%16)),Math.round(y+22-ph*16),3,3))}/* あたたかい畑：ゆらゆらと熱がのぼる */c.lineCap='round';c.lineJoin='round';
   for(const l of heatLines()){c.beginPath();l.p.forEach((q,i)=>i?c.lineTo(q[0]*TS,q[1]*TS):c.moveTo(q[0]*TS,q[1]*TS));c.setLineDash([]);c.strokeStyle='rgba(60,45,38,.35)';c.lineWidth=9;c.stroke();c.strokeStyle='#8f7b6c';c.lineWidth=5;c.stroke();
     if(l.on){c.strokeStyle='rgba(255,140,60,.95)';c.lineWidth=3.2;c.setLineDash([7,9]);c.lineDashOffset=-now/40;c.stroke();c.setLineDash([]);
-      if(l.smoke||l.leak){const e=l.smoke?l.p[l.p.length-1]:[CX+.5,OFF+9.5];const sm=()=>{for(let k=0;k<3;k++){const ph=((now/1800+k/3)%1);c.fillStyle='rgba(120,110,105,'+(.45*(1-ph))+')';c.beginPath();c.arc(e[0]*TS+Math.sin(now/600+k)*4,e[1]*TS-8-ph*30,5+ph*9,0,7);c.fill()}};if(isoOn())isoStand(c,gFoot(e[0]*TS,e[1]*TS),sm);else sm()}}}/* けむりは、立てて */
+      if(l.smoke||l.leak){const e=l.smoke?l.p[l.p.length-1]:[CX+.5,OFF+9.5];const sm=()=>{for(let k=0;k<3;k++){const ph=((now/1800+k/3)%1);c.fillStyle='rgba(120,110,105,'+(.45*(1-ph))+')';c.beginPath();c.arc(e[0]*TS+Math.sin(now/600+k)*4,e[1]*TS-8-ph*30,5+ph*9,0,7);c.fill()}};isoStand(c,gFoot(e[0]*TS,e[1]*TS),sm)}}}/* けむりは、立てて */
   c.restore()}
 
 /* ---------- ヘルパー ---------- */
@@ -356,8 +356,6 @@ function stairOf(k){/* k が階段のマスなら、階段の本体（高いほ�
 const stairOut=(j,d)=>j+SDIR[d][1]*W+SDIR[d][0],stairTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];/* 階段は1×2：本体のマスと、その先の低いほうのマス。本体のうしろが、のぼった先の高いマス */
 function stairLink(a,b){/* bが階段の本体で、aがそのうしろの高いマス（のぼった先） */if(!STAIRS.has(S.obj[b]))return false;const d=stairDir(b);return d>=0&&stairTop(b,d)===a}
 
-let CLV=1;/* いま絵を作っている段（1〜3）。がけの絵の関数は、この段より高いか同じマスを「高いマス」とみる */
-let TOPF=null;function topAt(j){return TOPF?TOPF(j):hiAt(j)>=CLV}/* TOPF：段差の部品を作るあいだだけ、まわりのマスの高さをまねる *//* 「上の面がある」（CLV の段で） */
 const HMAX=8,HMIN=-2;/* 段差は8だんまで（ほる・つむ）。地面より2だん下まで、ほれる */
 function cliff2(a,b){return Math.abs(hiAt(a)-hiAt(b))>1}/* 2だん以上ちがう所（飼う生き物のかこい） */
 function cliffUp(a,b){return hiAt(b)-hiAt(a)>1}/* a から b へ：2だん以上のぼれない（とびおりるのは、何だんでもできる。落下ダメージ fall.js） */

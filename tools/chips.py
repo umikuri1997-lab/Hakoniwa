@@ -5,6 +5,7 @@
   python3 tools/chips.py pack chips_src.json     # JSON → アトラスの絵（ロスレス WebP）と chips.js
   python3 tools/chips.py replace replace.json    # マップチップ工房の「さしかえた絵」（絵・位置・大きさ）の JSON を入れて、作りなおす
   python3 tools/chips.py kobo <工房のファイルのフォルダ> [id...]
+  python3 tools/chips.py kobo-sync <工房のファイルのフォルダ> [names.json]  # 工房を、いまの chips.js にそろえる（ないチップを足し、なくなったチップをけす）
   python3 tools/chips.py kobo-extra <工房のファイルのフォルダ> <kobo_extra.js の出力.json>  # チップでない絵（ヌシ様・アイテムなど）のジャンルを書く  # 工房の g/*.json の、かわったチップだけを書きかえる
 
 chips.js は、絵の場所だけを持つ：window.CHIPA=[アトラスのファイル]、window.CHIPS={id:{ax,ay,w,h,...,f:[[ページ,x,y,w,h],...]}}。
@@ -219,6 +220,56 @@ def kobo(dirp, *keys):
     json.dump(idx, open(os.path.join(dirp, 'index.json'), 'w', encoding='utf8'), ensure_ascii=False, separators=(',', ':'))
     print('公開しなおすファイル: index.json', ' '.join(changed))
 
+def kobo_sync(dirp, namesf=None):
+    """工房を、いまの chips.js にそろえる：工房にないチップをぜんぶ足し（グループがなければ「そのほか」のジャンルに、そのチップの id の頭でグループを作る）、
+    ゲームからなくなったチップをけす。namesf（{id: 名前}、ゲームの BL の名前）があれば index.json の names も書きかえる。工房の g/*.json はぜんぶ、さきにおとしておく。"""
+    head, A, C = load_js()
+    idx = json.load(open(os.path.join(dirp, 'index.json'), encoding='utf8'))
+    have = {q for g in idx['genres'] for _, L in g['groups'] for q in L}
+    EX = set(EXTRA_GENRES)   # チップでない絵のジャンル（kobo-extra）は、さわらない
+    gone = {q for g in idx['genres'] if g['id'] not in EX for _, L in g['groups'] for q in L} - set(C)
+    for g in idx['genres']:
+        if g['id'] in EX: continue
+        for G in g['groups']: G[1][:] = [q for q in G[1] if q not in gone]
+        g['groups'] = [G for G in g['groups'] if G[1]]
+    other = next((g for g in idx['genres'] if g['id'] == 'other'), idx['genres'][-1])
+    new = sorted(set(C) - have)
+    for q in new:
+        b = re.split(r'[>:#@~.]', q)[0]; placed = False
+        for g in idx['genres']:
+            grp = max((G for G in g['groups'] if G[0] == b or q.startswith(G[0]) and q[len(G[0]):][:1] in '>:#@~.'), key=lambda G: len(G[0]), default=None)
+            if grp: grp[1].append(q); placed = True; break
+        if not placed:
+            grp = next((G for G in other['groups'] if G[0] == b), None)
+            if not grp: grp = [b, []]; other['groups'].append(grp)
+            grp[1].append(q)
+    for g in idx['genres']:
+        if g['id'] not in EX: g['count'] = sum(len(L) for _, L in g['groups'])
+    if namesf: idx['names'].update(json.load(open(namesf, encoding='utf8')))
+    json.dump(idx, open(os.path.join(dirp, 'index.json'), 'w', encoding='utf8'), ensure_ascii=False, separators=(',', ':'))
+    # g/*.json：けした物をのぞき、足した物を書く（kobo と同じ書き方）
+    pages = [Image.open(os.path.join(ROOT, a)).convert('RGBA') for a in (A or [])]
+    def uri(r):
+        n, x, y, w, h = r; return to_uri(pages[n].crop((x, y, x + w, y + h)))
+    newset = set(new)
+    for g in idx['genres']:
+        if g['id'] in EX: continue
+        gp = os.path.join(dirp, g['file'])
+        gj = json.load(open(gp, encoding='utf8')) if os.path.exists(gp) else {'chips': {}}
+        ks = [q for _, L in g['groups'] for q in L]
+        ch = False
+        for q in list(gj['chips']):
+            if q in gone: del gj['chips'][q]; ch = True
+        for q in ks:
+            if q in newset:
+                c = json.loads(json.dumps(C[q])); c['f'] = [uri(r) for r in c['f']]
+                for p in c.get('parts', []) or []: p['f'] = [uri(r) for r in p['f']]
+                gj['chips'][q] = c; ch = True
+        if ch:
+            json.dump(gj, open(gp, 'w', encoding='utf8'), ensure_ascii=False, separators=(',', ':')); g['bytes'] = os.path.getsize(gp); print(g['file'])
+    json.dump(idx, open(os.path.join(dirp, 'index.json'), 'w', encoding='utf8'), ensure_ascii=False, separators=(',', ':'))
+    print('足した', len(new), 'けした', len(gone))
+
 EXTRA_GENRES = {'nushi': 'ヌシ様', 'items': 'アイテム', 'codeart': 'コードで描く物', 'progart': 'プログラムの絵', 'bubble': 'ふきだしのアイコン'}
 
 EXTRA_GROUPS = {'nushi': '草原のヌシ様', 'nushi2': '火のヌシ様', 'nushi_old': '草原のヌシ様（前の絵）', 'mat': '素材', 'food': '食べ物', 'gear': 'そうび', 'ammo': '矢', 'seed': 'たね',
@@ -248,4 +299,4 @@ def kobo_extra(dirp, extf):
     print('公開しなおすファイル: index.json', ' '.join(changed))
 
 if __name__ == '__main__':
-    {'unpack': unpack, 'pack': pack, 'replace': replace, 'kobo': kobo, 'kobo-extra': kobo_extra}[sys.argv[1]](*sys.argv[2:])
+    {'unpack': unpack, 'pack': pack, 'replace': replace, 'kobo': kobo, 'kobo-sync': kobo_sync, 'kobo-extra': kobo_extra}[sys.argv[1]](*sys.argv[2:])

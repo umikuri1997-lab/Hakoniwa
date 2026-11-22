@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 /* むらのちから・守り神の枝（攻撃のわざは5段・こもれびのまもりは10段・ステージごと）：パワーで強化すると、まもりの光のチャージ・威力・とめる時間・範囲と、こもれびのまもりがかわる。古いセーブは村レベルのチャージより長くならない。5段をこえた前のセーブは5段にして、こえた分のパワーをもどす。ダメージは光が地面にとどいたとき（glHit） */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.ltEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.ltEval);
 await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
-const out=await page.evaluate(()=>ltEval(`(()=>{const o={};S=newState(0);setWorld(0);S.enemies=[];S.pt=5000;
+const out=await page.evaluate(()=>ltEval(`(()=>{const o={};DMGVAR=0;/* ダメージのぶれなし */S=newState(0);setWorld(0);S.enemies=[];S.pt=5000;
  const mk=t=>({id:S.nid++,type:t,x:50.5,y:50.5,hp:999,max:999,spawned:true,path:[],atk:0,stun:0,flash:0});
  let e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);o.before=999-e.hp;glHit(50,50,gupOf('rng').v[gupLv('rng')],e);o.base={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
  o.noMoney=(S.pt=50,gupBuy('pow'));S.pt=100000;

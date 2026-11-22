@@ -17,7 +17,7 @@ const CK={fly:{m:'fly',sw:8,w:10},/* ちょうの同時に出る数は、その�
   mitsubachi:{m:'fly',sw:5},tonbo:{m:'hover',sw:6,w:10,n:2},hotaru:{m:'drift',sw:4}};
 const CRITKINDS=Object.keys(CK),CRITW=CRITKINDS.reduce((t,k)=>t+(CK[k].w||1),0);
 function critPick(){let r=Math.random()*CRITW;for(const k of CRITKINDS){r-=CK[k].w||1;if(r<0)return k}return CRITKINDS[CRITKINDS.length-1]}
-function critView(){if(isoOn()){const v=isoView();return[v.x0,v.y0,v.x1,v.y1]}const z=cam.z||1;return [cam.x/TS,cam.y/TS,(cam.x+VW/z)/TS,(cam.y+VH/z)/TS]}
+function critView(){const v=isoView();return[v.x0,v.y0,v.x1,v.y1]}
 const critOpen=j=>walk(j)&&!S.obj[j]&&!S.floor[j]&&S.ground[j]!==1;/* 地面の空いたマス */
 function critNear(j,r,f){const x0=j%W,y0=(j/W)|0;for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(x<0||y<0||x>=W||y>=H||(x===x0&&y===y0))continue;if(f(y*W+x))return true}return false}
 function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,dry=!S.rain,o=q=>S.obj[q];
@@ -133,7 +133,7 @@ function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */
 function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const pq=c.pk?(now-c.pk)/(CRITPK*1000):1,pb=pq>=0&&pq<1?Math.sin(pq*Math.PI):0,a=Math.max(.55+.45*Math.sin(now/520+c.id*1.7),pb)*critAlpha(c);if(a<.15)continue;/* タップすると、ぽっと明るく（pb） */
   const x=Math.round(c.x*TS)-(c.face<0?-2:2),y=Math.round(c.y*TS-(c.z||0))-4;/* お尻の黄色の所（チップ crithotaru のまん中） */
-  const dr=()=>liftDraw(uLift(c),()=>{g.globalAlpha=a*.3;g.fillStyle='#d6f27a';g.fillRect(x-2,y-1,4,3);g.fillRect(x-1,y-2,2,5);if(pb>.05){g.globalAlpha=pb*.22;g.fillRect(x-4,y-2,8,5);g.fillRect(x-3,y-3,6,7);g.fillRect(x-2,y-4,4,9)}g.globalAlpha=a;g.fillStyle='#f2ffa8';g.fillRect(x-1,y,2,1);g.globalAlpha=1});if(isoOn())isoStand(g,ptFoot(c.x*TS,c.y*TS),dr);else dr()}}/* クォータービュー：ほたるの足もとに立てて */
+  const dr=()=>liftDraw(uLift(c),()=>{g.globalAlpha=a*.3;g.fillStyle='#d6f27a';g.fillRect(x-2,y-1,4,3);g.fillRect(x-1,y-2,2,5);if(pb>.05){g.globalAlpha=pb*.22;g.fillRect(x-4,y-2,8,5);g.fillRect(x-3,y-3,6,7);g.fillRect(x-2,y-4,4,9)}g.globalAlpha=a;g.fillStyle='#f2ffa8';g.fillRect(x-1,y,2,1);g.globalAlpha=1});isoStand(g,ptFoot(c.x*TS,c.y*TS),dr)}}/* クォータービュー：ほたるの足もとに立てて */
 /* せいれいが見つけて、見る・追いかける */
 function goCritter(r,G){if(!CRIT.length)return false;let best=null,bd=1e9;for(const c of CRIT){if(c.fl||c.go)continue;const d=Math.hypot(c.x-r.x,c.y-r.y);if(d<7&&d<bd){bd=d;best=c}}if(!best)return false;
   const cj=(best.y|0)*W+(best.x|0),st=nearest(G,j=>walk(j)&&!S.obj[j]&&Math.abs(j%W-cj%W)<=2&&Math.abs(((j/W)|0)-((cj/W)|0))<=1&&j!==cj&&!(TAKEN&&TAKEN.has(j)),14);if(st<0)return false;

@@ -26,7 +26,7 @@ const assert=require('node:assert/strict');
   await run(`closeSheet();openSheet('menu')`);const rows=+await run(`document.querySelectorAll('#sheetBody .urow').length`);assert.ok(rows>=3,'rows: '+rows);assert.equal(+await run(`document.querySelectorAll('#sheetBody .mtile.urow').length`),0,'meadow menu tiles use the tile stagger');
   await page.waitForTimeout(1200);assert.equal(+await run(`document.querySelectorAll('#sheetBody .urow').length`),0,'the class goes away');console.log('UI touch: rows are placed one by one ('+rows+')');
   /* 5. ±の長おし：だんだん速くかわる。はなしたときの1回はかぞえない */
-  await run(`closeSheet();window.NCLK=0;const o=document.createElement('div');o.id='tstep';o.style.cssText='position:fixed;left:200px;top:200px;z-index:99';o.innerHTML='<button class="btn p">＋</button>';o.firstChild.onclick=()=>{sfx('notch');NCLK++};document.body.appendChild(o)`);await page.waitForTimeout(300);
+  await run(`closeSheet();cam.z=homeZ();centerOn(CX*TS,CY*TS);/* いちばんちぢめた画面は描くのが重く、くりかえしのタイマーがおくれる */window.NCLK=0;const o=document.createElement('div');o.id='tstep';o.style.cssText='position:fixed;left:200px;top:200px;z-index:99';o.innerHTML='<button class="btn p">＋</button>';o.firstChild.onclick=()=>{sfx('notch');NCLK++};document.body.appendChild(o)`);await page.waitForTimeout(300);
   const pb=await page.$('.btn.p');const bx=await pb.boundingBox();
     await run(`REC.length=0`);await page.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await page.mouse.down();await page.waitForTimeout(1300);await page.mouse.up();await page.waitForTimeout(100);
   const n=+await run(`NCLK`);assert.ok(n>=4,'repeats: '+n);await page.waitForTimeout(50);assert.equal(+await run(`NCLK`),n,'the click after letting go does not count');

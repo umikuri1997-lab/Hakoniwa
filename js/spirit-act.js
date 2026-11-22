@@ -94,7 +94,7 @@ function drawRangeOne(o,j,x,y,strong){const R=rangeOf(o,j);if(!R)return;const co
   else{ctx.fillStyle='rgba('+col+','+(strong?.22:.1)+')';ctx.beginPath();ctx.arc(cx,cy,R.r*TS,0,7);ctx.fill();ctx.strokeStyle='rgba('+col+','+(strong?.95:.55)+')';ctx.lineWidth=strong?2:1.5;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([])}
   ctx.restore()}
 function drawRanges(now){
-  if(mode==='build'){const IV=isoOn()?isoView():null,x0=IV?Math.floor(IV.x0)-7:Math.floor(cam.x/TS)-7,y0=IV?Math.floor(IV.y0)-7:Math.floor(cam.y/TS)-7,x1=IV?Math.ceil(IV.x1)+7:Math.ceil((cam.x+VW/cam.z)/TS)+7,y1=IV?Math.ceil(IV.y1)+7:Math.ceil((cam.y+VH/cam.z)/TS)+7;/* 見えているマス（クォータービューは、画面の四すみから） */
+  if(mode==='build'){const IV=isoView(),x0=Math.floor(IV.x0)-7,y0=Math.floor(IV.y0)-7,x1=Math.ceil(IV.x1)+7,y1=Math.ceil(IV.y1)+7;/* 見えているマス（画面の四すみから） */
     const U={};// 同じ種類のマス範囲はまとめて1つの形にする
     for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x,o=S.obj[j];if(!o)continue;const R=rangeOf(o,j);if(!R||R.k==='watch')continue;// 射程は「しらべる」でタップしたときだけ
       if(R.cells){const st=U[R.k]||(U[R.k]=new Set()),r=R.cells;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!R.sq&&dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)st.add(ny*W+nx)}}else drawRangeOne(o,j,x,y,false)}

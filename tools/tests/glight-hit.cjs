@@ -2,7 +2,7 @@
    ダメージ・とめる・木や岩のゲージ・素材が落ちるのは、当たってから（glHit）。地図のどこをタップしても落ちる。近くのせいれいはおどろいて、はねる */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
-  await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;`);await page.waitForTimeout(2500);/* 読みこみのあとの重い仕事がおわるまで。村の時間は止める（コワイノが動かない） */
+  await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;cam.z=2;`);await page.waitForTimeout(2500);/* cam.z=2：ちぢめた画面は描くのが重く、タイマーがおくれる *//* 読みこみのあとの重い仕事がおわるまで。村の時間は止める（コワイノが動かない） */
   /* 画面のゆれ（skillFx）がよばれた時刻を、ゲームの中ではかる（テストの往復の待ちを入れない） */
   await run(`window.__fx=0;const f0=skillFx;skillFx=k=>{if(!__fx)__fx=performance.now();f0(k)};window.__t0=performance.now();lightSnd(CX,CY)`);
   await page.waitForFunction(()=>sacredEval('__fx>0'),{},{timeout:3000,polling:10});

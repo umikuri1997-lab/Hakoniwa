@@ -1,10 +1,9 @@
 /* 時間の色（昼と夜の色の表）：時刻ごとに、層ごとの色の変わり方をきめる。色をかえたいときは、この表の数字だけを書きかえる。
    層：
    - dk   夜の暗さの色（画面ぜんたい。物・がけの正面はこれだけ）。こさは darkness() のまま。あかりの所はけずる（draw-world.js の DMK）
-   - g    地面（下絵・がけや坂の上の面・水ぎわの陸）。物より先に、かけ算でかさねる（dcGround・gblit）
-   - w    水（池・川）。地面の色の上に、さらにかけ算
-   - s    雲の海（風のステージ）。地面の色の上に、さらにかけ算
-   - r    屋根。かけ算（drawRoofs）
+   - g    地面（ひし形の地面の区画）。物より先に、かけ算でかさねる（dcGround）
+   - w    水（池・川）。水面を流すときにかけ算（iso-ground.js の igShimmer）
+   - s 雲の海・r 屋根：ひし形にしたあと、まだ使っていない（前の見え方の色。かけ算）
    - win  窓のあかりの強さ（1がふつう）
    - glow 時間の光（HD-2D の入りのときだけ。soft-light、hd2d.js の hdTint）
    色は [赤,緑,青,こさ]。かけ算の層は、こさ0で何もしない。こさ1でその色をそのままかける。時刻のあいだは、なめらかにつなぐ。 */
@@ -20,7 +19,7 @@ const DAYC=[
   {h:19.3,dk:[42,36,104], g:[150,150,224,.32],w:[96,104,150,.36],s:[140,140,210,.32],r:[150,140,212,.3], win:1,glow:[255,150,72,.25]},/* ブルーアワー：まわりは寒色、窓はあたたかく */
   {h:21,  dk:[20,24,70],  g:[140,150,215,.3], w:[74,76,96,.45], s:[104,112,170,.36],r:[120,120,190,.3], win:1},/* 夜 */
   {h:24,  dk:[12,16,50],  g:[120,130,200,.35],w:[70,72,92,.5],  s:[96,104,160,.4], r:[110,110,180,.35],win:1.15}];
-const DC={h:-1,v:null},DCG={armed:false};/* armed：地面の色をかさねたあと（それより後に描く地面の絵だけ、gblit でかさねる） */
+const DC={h:-1,v:null};
 function dcMix(a,b,t,mul){/* 2つの色をつなぐ。かけ算の層は「かける色」（こさをとかした色）でつなぐ */
   if(mul){const m=c=>c?[255-c[3]*(255-c[0]),255-c[3]*(255-c[1]),255-c[3]*(255-c[2])]:[255,255,255],p=m(a),q=m(b);return p.map((v,i)=>v+(q[i]-v)*t)}
   if(!a&&!b)return null;const A=a||[b[0],b[1],b[2],0],B=b||[a[0],a[1],a[2],0];return A.map((v,i)=>v+(B[i]-v)*t)}
@@ -31,10 +30,5 @@ function dcNow(){/* いまの時刻の色（同じ時刻なら作りなおさな
   v.win=a.win+(b.win-a.win)*t;v.glow=dcMix(a.glow,b.glow,t);if(v.glow&&v.glow[3]<=.005)v.glow=null;
   return DC.v=v}
 function dcLayer(k){return dcNow()[k]}
-function dcGround(){/* 地面の層：地面の下絵・水・地面の上の物（水たまりなど）を描いたあと、物より先に、画面ぜんたいにかけ算 */const m=dcLayer('g');DCG.armed=true;if(!m)return;
+function dcGround(){/* 地面の層：地面の下絵・水・地面の上の物（水たまりなど）を描いたあと、物より先に、画面ぜんたいにかけ算 */const m=dcLayer('g');if(!m)return;
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=m;ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore()}
-function dcBlit(c,dx,dy,dw,dh){/* 物といっしょに描く地面の絵（がけ・坂の上の面）にも、地面と同じ色 */if(c!==ctx||!DCG.armed)return;const m=dcLayer('g');if(!m)return;const o=c.globalCompositeOperation;c.globalCompositeOperation='multiply';c.fillStyle=m;c.fillRect(dx,dy,dw,dh);c.globalCompositeOperation=o}
-function dcFill(k,P){/* 水・雲の海：その形だけにかけ算 */const m=dcLayer(k);if(!m)return;ctx.save();ctx.globalCompositeOperation='multiply';ctx.fillStyle=m;ctx.fill(P);ctx.restore()}
-function dcRoof(c,h,R,A){/* 屋根：屋根の形（1倍の細かさで1回作る）に色をぬって、かけ算 */const m=dcLayer('r');if(!m){if(R.dcm){R.dcm.width=R.dcm.height=0;R.dcm=null}return}
-  if(!R.dcm||R.dck!==m){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),k=R.dcm||document.createElement('canvas');if(k.width!==w||k.height!==hh){k.width=w;k.height=hh}const g=k.getContext('2d');g.globalCompositeOperation='source-over';g.clearRect(0,0,w,hh);g.imageSmoothingEnabled=true;g.drawImage(R.cv,0,0,w,hh);g.globalCompositeOperation='source-in';g.fillStyle=m;g.fillRect(0,0,w,hh);R.dcm=k;R.dck=m}
-  const o=c.globalCompositeOperation,s=c.imageSmoothingEnabled;c.globalCompositeOperation='multiply';c.imageSmoothingEnabled=false;c.globalAlpha=A;c.drawImage(R.dcm,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);c.globalCompositeOperation=o;c.imageSmoothingEnabled=s}

@@ -279,7 +279,7 @@ function evScreenDraw(now){if(!EVV.shine&&!EVV.met.length&&!EVV.pet.length&&!EVV
   if(EVV.flash){const a=(now-EVV.flash)/350;if(a>1)EVV.flash=0;else{c.globalAlpha=(1-a)*.55;c.fillStyle='#ffffff';c.fillRect(0,0,VW,VH);c.globalAlpha=1}}
   c.setTransform(T)}
 /* 地面の層：体そうのお立ち台 */
-function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS),dr=()=>{pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)};if(isoOn())isoStand(ctx,{fx:x,fy:y,px:isoX(x,y),py:isoY(x,y)-isoLv((r.y|0)*W+(r.x|0))*IQL},dr);else dr()}/* クォータービュー：その子の足もとに立てて */
+function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS),dr=()=>{pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)};isoStand(ctx,{fx:x,fy:y,px:isoX(x,y),py:isoY(x,y)-isoLv((r.y|0)*W+(r.x|0))*IQL},dr)}/* クォータービュー：その子の足もとに立てて */
 /* ---------- 文をつなぐ（読みこむときに1回）：手紙・雑談・日記 ---------- */
 LETTERK.ev='イベントのこと';/* イベントの手紙の文は letter-data.js の LETTERD.ev（イベント→属性→5通、1通まるごと） */
 if(typeof EVCHAT!=='undefined')for(const id of Object.keys(EVCHAT).sort())for(const ch of EVCHAT[id])CHATS.push(Object.assign(ch,{evc:1,ok:(r,p)=>evMemBoth(r,p,id)}));/* CHATS の番号はセーブに入るので、うしろに足すだけ（id の名前の順） */

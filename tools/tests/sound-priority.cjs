@@ -14,8 +14,9 @@ const out=await run(`(async()=>{const o={};const wait=ms=>new Promise(r=>setTime
  /* 大事でない音では下げない */
  await wait(900);sfx('tap');await wait(60);o.tap=lowG.gain.value;
  /* 大事な音で半分にして、もどす */
- sfx('ehit');await wait(80);o.duck=lowG.gain.value;o.duckAmb=ambD.gain.value;await wait(900);o.back=lowG.gain.value;
- sfx('quest');await wait(80);o.quest=lowG.gain.value;
+ const aw=d=>{const a=AC.currentTime,p=performance.now();while(AC.currentTime<a+d&&performance.now()-p<2000){}};/* 音の時計でまつ（setTimeout は、重いコマでおくれる） */
+ sfx('ehit');aw(.07);o.duck=lowG.gain.value;o.duckAmb=ambD.gain.value;aw(.9);o.back=lowG.gain.value;
+ sfx('quest');aw(.07);o.quest=lowG.gain.value;
  return o})()`);
 console.log(out);
 assert.ok(out.bus,'うしろの音と場所の音の出口がある');

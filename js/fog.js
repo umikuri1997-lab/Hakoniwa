@@ -185,7 +185,7 @@ function printStar(cx,cy,a,n){/* ドットの星（2点のます目）：まん�
   ctx.globalAlpha=a*.9;ctx.fillStyle='#e0a03a';for(const[dx,dy]of B)ctx.fillRect(cx-2+dx,cy-2+dy,4,4);
   ctx.globalAlpha=a;for(const[dx,dy]of B){ctx.fillStyle=dx||dy?(Math.abs(dx)+Math.abs(dy)>=6?'#fff2b0':'#ffe27a'):'#fffbe6';ctx.fillRect(cx-1+dx,cy-1+dy,2,2)}}
 function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとのまわりで、ドットの星がいくつもまたたき、光のつぶがたちのぼる（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
-  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-liftOf(f.j);ctx.save();if(isoOn()){const A=inFog?fogTopFoot((f.j%W+.5)*TS,((f.j/W)|0)*TS+12):cellFoot(f.j);standTf(ctx,dpr*cam.z,inFog?x0:A.fx,inFog?y0:A.fy,A.px,A.py)}/* クォータービュー：足あとに立てて（霧の中は、霧の上） */
+  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-liftOf(f.j);ctx.save();{const A=inFog?fogTopFoot((f.j%W+.5)*TS,((f.j/W)|0)*TS+12):cellFoot(f.j);standTf(ctx,dpr*cam.z,inFog?x0:A.fx,inFog?y0:A.fy,A.px,A.py)}/* クォータービュー：足あとに立てて（霧の中は、霧の上） */
     for(let m=0;m<3;m++){const q=(now/1600+m/3+f.j*.13)%1,px=x0+Math.round(Math.sin(q*6.3+m*2)*3)+(m-1)*7,py=y0-Math.round(q*26);ctx.globalAlpha=Math.sin(Math.PI*q)*.85;ctx.fillStyle=m%2?'#fff6c8':'#d8f3c0';ctx.fillRect(px-1,py-1,2,2)}/* 足あとから、光のつぶがたちのぼる */
     for(const[dx,dy,o]of PRINT_STARS){const q=(now/1100+o+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.1)continue;printStar(x0+dx,y0+dy,a,a>.85?3:a>.5?2:1)}
     ctx.restore()}}
@@ -259,7 +259,7 @@ function fogPaint(cx0,cy0,cx1,cy1,now){/* 霧の絵の一部（ドットの範�
 function drawFog(ctx,x0,y0,x1,y1,now){/* 霧をかく（夜の暗さより下）。毎コマは、見えている所を1まいの絵からうつすだけ。うすれていくマスのまわりだけ、作りなおす */if(!fogOn())return;fogAt(0);if(FOGPS!==S||FOGPV!==(S.fogV||0)&&!FOGT.size){FOGPS=S;FOGPV=S.fogV||0;FOGT.clear();fogPaint(0,0,W*FOG_CELL,W*FOG_CELL,now)}
   if(FOGT.size){let a0=W,b0=H,a1=-1,b1=-1;for(const[k,t0]of FOGT){const x=k%W,y=(k/W)|0;if(x<a0)a0=x;if(x>a1)a1=x;if(y<b0)b0=y;if(y>b1)b1=y;if(now-t0>=FOG_FADE)FOGT.delete(k)}const m=3;fogPaint((a0-m)*FOG_CELL,(b0-m)*FOG_CELL,(a1+m+1)*FOG_CELL,(b1+m+1)*FOG_CELL,now);if(!FOGT.size)FOGPV=S.fogV||0}
   if(!S.fog.some(v=>v)&&!FOGT.size)return;const X0=Math.max(0,x0-1),Y0=Math.max(0,y0-1),X1=Math.min(W,x1+1),Y1=Math.min(H,y1+2);if(X1<=X0||Y1<=Y0)return;
-  ctx.imageSmoothingEnabled=false;const dr=()=>ctx.drawImage(FOGC,X0*FOG_CELL,Y0*FOG_CELL,(X1-X0)*FOG_CELL,(Y1-Y0)*FOG_CELL,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);if(isoOn())isoFogDraw(ctx,dr);else dr();ctx.imageSmoothingEnabled=true}/* クォータービュー：霧は、あつみのある形（地面から IQFOGH だんまで。iso-fx.js） */
+  ctx.imageSmoothingEnabled=false;const dr=()=>ctx.drawImage(FOGC,X0*FOG_CELL,Y0*FOG_CELL,(X1-X0)*FOG_CELL,(Y1-Y0)*FOG_CELL,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);isoFogDraw(ctx,dr);ctx.imageSmoothingEnabled=true}/* クォータービュー：霧は、あつみのある形（地面から IQFOGH だんまで。iso-fx.js） */
 
 /* 霧の中の手がかり：晴れた所から6マス（FOG_HINTR）にある、まだ霧の中の見つける物の所に、しゅるいごとのしるしを、霧の上にうすく出す（drawFogHints）。
    お屋敷：屋根の先と煙突の影・泉：水色のきらめき・ヌシ様のあしあと：青い光のつぶがたちのぼる・宝箱：うすい影・古い家のあと：くずれた小さな屋根の影。どれも2点のドット。晴れたら消える（霧の中の物だけ描く） */
@@ -271,7 +271,7 @@ function fhPx(c,col,x,y,w,h){c.fillStyle=col;c.fillRect(Math.round(x/2)*2,Math.r
 function fhStar(c,x,y,n,core,arm){fhPx(c,core,x-1,y-1,1,1);for(let k=1;k<=n;k++){fhPx(c,arm,x-1,y-1-k*2,1,1);fhPx(c,arm,x-1,y-1+k*2,1,1);fhPx(c,arm,x-1-k*2,y-1,1,1);fhPx(c,arm,x-1+k*2,y-1,1,1)}}
 function drawFogHints(c,x0,y0,x1,y1,now){if(!fogOn()||!S.fogF||!S.fog.some(v=>v))return;
   for(const f of S.fogF){if(fogOut(f)||f.done||!fogAt(f.j)||!fogHintNear(f))continue;if(f.t==='print'&&printOn())continue;/* あしあとをたどる依頼のあいだは、その印（drawPrintMarks）だけ */
-    const[bx,by,bw,bh]=fogHintBox(f);if(bx+bw<x0-1||bx>x1+1||by+bh<y0-1||by>y1+2)continue;const cx=(bx+bw/2)*TS,cy=(by+bh/2)*TS,ph=(now/2400+f.j*.173)%1,pul=.7+.3*Math.sin(ph*Math.PI*2);c.save();if(isoOn()){const A=fogTopFoot(cx,cy);standTf(c,dpr*cam.z,cx,cy,A.px,A.py)}/* クォータービュー：霧の上の面に、立てて */
+    const[bx,by,bw,bh]=fogHintBox(f);if(bx+bw<x0-1||bx>x1+1||by+bh<y0-1||by>y1+2)continue;const cx=(bx+bw/2)*TS,cy=(by+bh/2)*TS,ph=(now/2400+f.j*.173)%1,pul=.7+.3*Math.sin(ph*Math.PI*2);c.save();{const A=fogTopFoot(cx,cy);standTf(c,dpr*cam.z,cx,cy,A.px,A.py)}/* クォータービュー：霧の上の面に、立てて */
     if(f.t==='mansion'){c.globalAlpha=FOGHINT_A*pul;const col='#7d778c',top=by*TS+10;for(let k=0;k<12;k++)fhPx(c,col,cx-2-k*2,top+k*2,1+k*2,1);fhPx(c,col,cx-24,top+24,24,3);fhPx(c,col,cx+10,top+2,3,7);/* 屋根の先と煙突 */
       for(let m=0;m<4;m++){const q=(now/2600+m/4)%1;c.globalAlpha=FOGHINT_A*pul*Math.sin(Math.PI*q);fhPx(c,'#a59fb1',cx+12+Math.round(Math.sin(q*6.3)*2),top-2-q*28,2,2)}}/* 煙突のけむり */
     else if(f.t==='spring'){for(let m=0;m<5;m++){const q=(now/1400+m/5+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.15)continue;c.globalAlpha=FOGHINT_A*a;fhStar(c,cx+[-16,12,-4,18,2][m],cy+[-6,-14,10,6,-2][m],a>.75?2:1,'#ffffff','#5fbde6')}}/* 水色のきらめき */

@@ -125,17 +125,17 @@ function windRidePose(r,a,now){if(!RIDES.has(a.what))return null;const j=a.obj,X
   return{x:PX(cx+cs*20),y:PY(Y+48+sn*7)-Math.abs(Math.sin(A*2+k))*3,z:Y/TS+(sn>0?2.06:1.4)}}
 /* ---------- 絵（コードの仮のドット絵。1ドット＝世界の1ドット） ---------- */
 function windCover(k,now){/* しずんだ島の雲のこさ（0〜1）。うかんだ島は、雲がわれるあいだだけ */if(!S.wind.up[k])return 1;const T=WRISE.get(S.wind),t=T&&T.get(k);if(t==null)return 0;if(t===Infinity)return 1;const p=(now-t)/WINDRISE;if(p>=1){T.delete(k);return 0}return 1-p}
-const WCOVP=new WeakMap(),WCOVPI=new WeakMap();
-function drawWindCover(c,x0,y0,x1,y1,now){/* しずんだ島：島の形に、雲をかぶせる（夜の暗さより下。うっすら島が見える） */if(!windOn())return;const I=windIsles(S),ISO=isoOn(),PM=ISO?WCOVPI:WCOVP;let P=PM.get(S);
-  if(!P){P=[null];for(let k=1;k<=I.n;k++)P.push(new Path2D());for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=I.id[y*W+x];if(!k)continue;if(ISO){P[k].rect(x*TS,y*TS,TS,TS);continue}/* クォータービュー：地面の形だけ（高さは、かさねて描く） */const up=y>0&&I.id[(y-1)*W+x]===k?0:44+(S.hi?S.hi[y*W+x]|0:0)*LIFT,dn=y<H-1&&I.id[(y+1)*W+x]===k?0:22;P[k].rect(x*TS,y*TS-up,TS,TS+up+dn)}PM.set(S,P)}
+const WCOVPI=new WeakMap();
+function drawWindCover(c,x0,y0,x1,y1,now){/* しずんだ島：島の形に、雲をかぶせる（夜の暗さより下。うっすら島が見える） */if(!windOn())return;const I=windIsles(S),PM=WCOVPI;let P=PM.get(S);
+  if(!P){P=[null];for(let k=1;k<=I.n;k++)P.push(new Path2D());for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=I.id[y*W+x];if(!k)continue;P[k].rect(x*TS,y*TS,TS,TS)/* 地面の形だけ（高さは、かさねて描く） */}PM.set(S,P)}
   const pt=c.createPattern(skyTex(),'repeat');pt.setTransform(new DOMMatrix().translate(Math.floor(now/1000*3)%128,0));
-  for(let k=1;k<=I.n;k++){if(k===I.mid)continue;const a=windCover(k,now);if(a<=0)continue;if(I.cx[k]<x0-30||I.cx[k]>x1+30||I.cy[k]<y0-30||I.cy[k]>y1+30)continue;c.save();c.globalAlpha=.88*a;c.fillStyle=pt;if(ISO){c.globalAlpha=1-Math.pow(1-.88*a,1/IQFOGN);isoFogDraw(c,()=>c.fill(P[k]))}else c.fill(P[k]);c.restore()}}/* クォータービュー：雲は、あつみのある形（霧と同じ） */
+  for(let k=1;k<=I.n;k++){if(k===I.mid)continue;const a=windCover(k,now);if(a<=0)continue;if(I.cx[k]<x0-30||I.cx[k]>x1+30||I.cy[k]<y0-30||I.cy[k]>y1+30)continue;c.save();c.globalAlpha=.88*a;c.fillStyle=pt;c.globalAlpha=1-Math.pow(1-.88*a,1/IQFOGN);isoFogDraw(c,()=>c.fill(P[k]));c.restore()}}/* クォータービュー：雲は、あつみのある形（霧と同じ） */
 function drawWindGround(c,x0,y0,x1,y1,now){/* 地面の高さの絵：雲の橋と、風のすじ（物・せいれいより下） */if(!windOn()||!WN||WNS!==S)return;const t=now/1000;
-  for(let y=Math.max(0,y0-1);y<Math.min(H,y1+1);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x,d=WN.dir[j];if(d<0)continue;const ISO=isoOn(),px=x*TS,py=y*TS-(ISO?0:(S.hi?S.hi[j]|0:0)*LIFT),hz=d===1||d===3;if(ISO)isoGroundLv(c,isoLv(j));/* クォータービュー：その段の高さの地面に */
+  for(let y=Math.max(0,y0-1);y<Math.min(H,y1+1);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x,d=WN.dir[j];if(d<0)continue;const px=x*TS,py=y*TS,hz=d===1||d===3;isoGroundLv(c,isoLv(j));/* その段の高さの地面に */
     if(WN.br[j]){/* 雲の橋：白い雲の道 */c.fillStyle='#a5d2e8';if(hz)c.fillRect(px,py+9,TS,18);else c.fillRect(px+7,py,18,TS);c.fillStyle='#f4fbfd';if(hz){c.fillRect(px,py+6,TS,18);for(let q=0;q<4;q++)c.fillRect(px+q*8+((j+q)&1)*2,py+4+((q+j)&1),6,3)}else{c.fillRect(px+7,py,18,TS);for(let q=0;q<4;q++)c.fillRect(px+5+((q+j)&1),py+q*8+((j+q)&1)*2,3,6)}c.fillStyle='#ffffff';if(hz)c.fillRect(px,py+9,TS,4);else c.fillRect(px+10,py,4,TS)}
     /* 風のすじ：風の向きへ流れる、白い短い線 */for(let q=0;q<3;q++){const ph=((t*1.4+hash(j*7+q*31))%1),off=Math.floor(ph*TS),sd=5+((hash(j*13+q*5)*20)|0),col=WN.br[j]?['rgba(120,180,212,.95)','rgba(165,210,232,.9)']:['rgba(255,255,255,.95)','rgba(214,240,250,.8)'];
       for(let s=0;s<2;s++){c.fillStyle=col[s];const a=s?-8:0,len=s?8:4;/* あたまは白く、うしろは、うすい尾 */
-        if(d===1)c.fillRect(px+off+a,py+sd,len,2);else if(d===3)c.fillRect(px+TS-off-len-a,py+sd,len,2);else if(d===0)c.fillRect(px+sd,py+off+a,2,len);else c.fillRect(px+sd,py+TS-off-len-a,2,len)}}}if(isoOn())groundTf(c,dpr*cam.z)}
+        if(d===1)c.fillRect(px+off+a,py+sd,len,2);else if(d===3)c.fillRect(px+TS-off-len-a,py+sd,len,2);else if(d===0)c.fillRect(px+sd,py+off+a,2,len);else c.fillRect(px+sd,py+TS-off-len-a,2,len)}}}groundTf(c,dpr*cam.z)}
 function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};
   if(RIDES.has(id)||RIDEB[id]){drawRide(c,RIDEB[id]||id,!!RIDEB[id],x,y,i,now,R);return}
   if(id==='oldmill'){drawObj(c,'windmill',x,y,i,g,now);return}/* 古い風車：風があたっているときだけ、まわる */
