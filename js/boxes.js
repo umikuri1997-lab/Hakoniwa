@@ -107,3 +107,16 @@ function boxMigrate(s){/* 食料箱・素材箱を木箱にまとめ、箱ごと
   for(const Q of[s.cmpQ,s.smQ])for(const j in Q||{})for(const k in Q[j])s.mat[k]=(s.mat[k]||0)+Q[j][k];for(const k in s.otakiQ||{})s.mat[k]=(s.mat[k]||0)+s.otakiQ[k];/* 前は、たのんだときにへらしていた：箱にもどして、とっておく */
   s.box={};s.pile={};s.rsv={}}
 function roomKey(key){/* この物を、あといくつしまえるか */let n=0;for(const j of BOXL)n+=boxRoom(j,key);return n}
+/* ---------- どの箱に入っているか（もちものでタップした物の、箱ごとの数。「見る」でその箱へカメラをうつして光らせる） ---------- */
+function boxWhere(key){const L=[];for(const j of BOXL){const n=boxHas(j,key);if(n>0)L.push([j,n])}L.sort((a,b)=>b[1]-a[1]);const p=boxHas(PILE,key);return{L,p}}
+function boxLook(j){/* 箱 j へカメラをうつし、点線のかこみで光らせる（スポットのかこみと同じ絵 SPOTFX） */let x0=W,y0=H,x1=0,y1=0;const cx=j%W,cy=(j/W)|0;
+  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(k===j||anc(k)===j){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}}
+  if(x0>x1){x0=x1=cx;y0=y1=cy}panTo((x0+x1+1)/2*TS,(y0+y1+1)/2*TS-hiAt(j)*LIFT);SPOTFX.push({x0,y0,x1,y1,t0:performance.now(),h:hiAt(j)});if(SPOTFX.length>6)SPOTFX.shift();dirty=true}
+function boxWhereSec(key,close){/* ポップアップの中の一覧：「木箱　3こ　［見る］」。神殿のまえの物は「見る」なし */const s=el('<div class="bwhere" style="margin:0 0 10px"></div>'),{L,p}=boxWhere(key);
+  const line=(nm,n,j)=>{const r=el('<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px"><span class="nm" style="flex:1"></span><b class="bn"></b></div>');r.querySelector('.nm').textContent=nm;r.querySelector('.bn').textContent=n+'こ';
+    if(j!=null){const b=el('<button class="btn">見る</button>');b.onclick=()=>{sfx('tap');close();if(typeof closeSheet==='function')closeSheet();boxLook(j)};r.appendChild(b)}s.appendChild(r)};
+  for(const[j,n]of L){const t=boxTypeAt(j);line((BL[t]||{}).name||t,n,j)}if(p>0)line('神殿のまえ',p,null);
+  if(!L.length&&!(p>0)){const q=el('<p class="note" style="margin:0"></p>');q.textContent='箱には入っていません';s.appendChild(q)}return s}
+function boxWherePop(key,title,img,desc){/* 素材（フリーモード）・食べ物をタップしたときのポップアップ */const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><div style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><img alt="" style="width:48px;height:48px;image-rendering:pixelated"><b class="t" style="font-size:15px"></b></div><p class="note n" style="margin:0 0 10px"></p><div class="w"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button></div></div></div>');
+  const close=()=>o.remove();const im=o.querySelector('img');if(img)im.src=img;else im.remove();o.querySelector('.t').textContent=title;const n=o.querySelector('.n');if(desc)n.textContent=desc;else n.remove();
+  o.querySelector('.w').appendChild(boxWhereSec(key,close));o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};document.body.appendChild(o)}
