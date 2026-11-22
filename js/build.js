@@ -74,7 +74,7 @@ function canPlace1(id,x,y,quiet){
   if(S.ground[j]===1){if(!quiet)toast(skyJ(j)?'雲の上には置けません':'水の上には置けません');return false}
   if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
   if(id==='suisha'&&![j-1,j+1,j-W,j+W].some(n=>n>=0&&n<W*H&&waterJ(n)&&(n%W===x||((n/W)|0)===y))){if(!quiet)toast('水車は、水のとなりにだけ建てられます');return false}
-  if(TERRA.has(id)){const k=id==='dig';if(k?hiAt(j)<=(id==='dig'?HMIN:0):hiAt(j)>=HMAX){if(!quiet)toast(k?'これより低くは、ほれません':'これより高くは、つめません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if(!k&&treeNextHigh(j,hiAt(j)+1)){if(!quiet)toast('木や岩のそばには、つめません');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、ほれません':'階段のうしろは、つめません');return false}return true}/* だんさスコップ：けずる・もる */
+  if(TERRA.has(id)){const k=id==='dig';if(k?hiAt(j)<=(id==='dig'?HMIN:0):hiAt(j)>=HMAX){if(!quiet)toast(k?'これより低くは、ほれません':'これより高くは、つめません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if(!k&&treeNextHigh(j,hiAt(j)+1)){if(!quiet)toast('木や岩のそばには、つめません');return false}if(flatNear(j,hiAt(j)+(k?-1:1))){if(!quiet)toast(k?'茂みや竹のそばは、ほれません':'茂みや竹のそばには、つめません');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、ほれません':'階段のうしろは、つめません');return false}return true}/* だんさスコップ：けずる・もる */
   if(LADDERS.has(id)){if(ladderDir(j)<0){if(!quiet)toast('ハシゴは、がけの下の、うしろか左右が1だん高い所に置けます');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(STAIRS.has(id)){const d=SROT[stairRot(id,j)];if(!stairOK(j,d)){if(!quiet)toast('その向きには置けません');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
@@ -284,6 +284,9 @@ const terraHave=id=>inv(PICKB.includes(id)?id:SOIL);/* つむブロックの、�
 const CUBEMAT={blk_soil:'tsoil',blk_stone:'tstone',blk_brick:'tstone',blk_wood:'twood'};/* ブロックの材質の音 */
 function treeNextHigh(j,h){/* 木のまわり2マス（5×5）・岩のまわり1マス（3×3）は、その物のマスより高くしない（絵が段差にかくれて切れる） */const x=j%W,y=(j/W)|0;for(let dy=-TREER;dy<=TREER;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-TREER;dx<=TREER;dx++){const xx=x+dx;if((!dx&&!dy)||xx<0||xx>=W)continue;const n=yy*W+xx,r=hiRad(S.obj[n]);if(r&&Math.max(Math.abs(dx),Math.abs(dy))<=r&&hiAt(n)<h)return true}}return false}
 const TREER=2,ROCKR=1,HIROCK=new Set(['rock','boulder']);
+const FLATR=new Set(['berry','bamboo','takenoko']);/* 茂み・竹：まわり1マス（3×3）は、その物と同じ高さ（高くも低くもしない） */
+function flatNear(j,h){/* マス j を高さ h にすると、まわり1マスの茂み・竹と高さがちがうか */const x=j%W,y=(j/W)|0;for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if((!dx&&!dy)||xx<0||xx>=W)continue;const n=yy*W+xx;if(FLATR.has(S.obj[n])&&hiAt(n)!==h)return true}}return false}
+function flatAt(j){/* まわり1マスが、みんなマス j と同じ高さか（たけのこの生える所） */const x=j%W,y=(j/W)|0,h=hiAt(j);for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=H)return false;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=W)return false;if(hiAt(yy*W+xx)!==h)return false}}return true}
 function hiRad(id){/* まわりを高くできないはば：木2・岩1・ほかは0 */return TREES.has(id)?TREER:HIROCK.has(id)?ROCKR:0}
 function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;const cb=PICKB.includes(id)?id:SOIL;
   if(up&&terraHave(cb)<1)return toast(BL[cb].name+'が足りません','warn');
