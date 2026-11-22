@@ -310,7 +310,7 @@ let PICKSEL=SOIL,PICKH=null;/* 筆の下の列でえらんでいる物・長お�
 const pickHave=k=>inv(k);
 function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?2000:t===SOIL?1000:t==='blk_brick'||t==='blk_wood'?1500:2000}/* ほるのにかかる時間（ミリ秒）：土1秒・レンガと木1.5秒・石と地面より下2秒 */
 const PICKTAP=250;/* これより短くはなしたら、つむ */
-function pickCell(sx,sy){let w=toWorld(sx,sy);const tl=tapLv(w.x,w.y);const x=Math.floor(w.x/TS),y=Math.floor((w.y+tl*LIFT)/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
+function pickCell(sx,sy){const w=tapW(sx,sy),x=Math.floor(w.x/TS),y=Math.floor(w.y/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
 function pickDown(sx,sy){if(!fudeHas())return;const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
 function pickTick(now){const P=PICKH;if(!P||P.done)return;const a=now-P.t0;if(a<PICKTAP)return;if(!P.dig){if(nightLock()){PICKH=null;return toast('夜のあいだは、ほれません')}if(!canPlace('dig',P.x,P.y)){PICKH=null;return}P.dig=true;P.need=pickMs(P.j)}
   const k=Math.floor(a/250);if(k>P.n){P.n=k;sfxAt('fudedig',P.x+.5,P.y+.5);spawnFX(P.x+.5,P.y+.6,'#b89a72');spawnFX(P.x+.2+hash(P.j+k)*.6,P.y+.3+hash(P.j*7+k)*.5,'#fff0b8')}/* ほっているあいだ、少しずつ土と光のつぶがとぶ */

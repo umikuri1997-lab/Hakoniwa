@@ -17,7 +17,7 @@ const CK={fly:{m:'fly',sw:8,w:10},/* ちょうの同時に出る数は、その�
   mitsubachi:{m:'fly',sw:5},tonbo:{m:'hover',sw:6,w:10,n:2},hotaru:{m:'drift',sw:4}};
 const CRITKINDS=Object.keys(CK),CRITW=CRITKINDS.reduce((t,k)=>t+(CK[k].w||1),0);
 function critPick(){let r=Math.random()*CRITW;for(const k of CRITKINDS){r-=CK[k].w||1;if(r<0)return k}return CRITKINDS[CRITKINDS.length-1]}
-function critView(){const z=cam.z||1;return [cam.x/TS,cam.y/TS,(cam.x+VW/z)/TS,(cam.y+VH/z)/TS]}
+function critView(){if(isoOn()){const v=isoView();return[v.x0,v.y0,v.x1,v.y1]}const z=cam.z||1;return [cam.x/TS,cam.y/TS,(cam.x+VW/z)/TS,(cam.y+VH/z)/TS]}
 const critOpen=j=>walk(j)&&!S.obj[j]&&!S.floor[j]&&S.ground[j]!==1;/* 地面の空いたマス */
 function critNear(j,r,f){const x0=j%W,y0=(j/W)|0;for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(x<0||y<0||x>=W||y>=H||(x===x0&&y===y0))continue;if(f(y*W+x))return true}return false}
 function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,dry=!S.rain,o=q=>S.obj[q];

@@ -11,7 +11,7 @@ S.ground[(CY+3)*W+CX-6]=1;S.floor[(CY+3)*W+CX-2]='stone';S.res=[];S.seeds=[];S.d
 await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const o=await run(`(async()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');CRIT=[];const out={};
   const log=[];const sfx0=sfx;sfx=k=>{const n=performance.now();if(!(k==='open'&&(n-TAPMAT<120||TAPPEND&&n-TAPPEND<120)))log.push(k);return sfx0(k)};/* open は、物の音のあるタップでは sfx の中で止まる（同じ条件） */
-  const scr=(x,y)=>({sx:(x*TS-cam.x)*cam.z,sy:(y*TS-cam.y)*cam.z});
+  const scr=(x,y)=>{const j=Math.floor(y)*W+Math.floor(x),q=w2s(x*TS,y*TS,Math.max(0,hiAt(j)));return{sx:q.x,sy:q.y}};/* マスの点 → 画面の点（見えている段の高さで） */
   const tap=async(x,y)=>{log.length=0;closeSheet();const q=scr(CX+x+.5,CY+y+.6);onTap(q.sx,q.sy);await new Promise(r=>setTimeout(r,20));closeSheet();return log.filter(k=>k!=='close'&&k!=='tap'&&k!=='dust').join(',')};
   for(const [n,x,y] of [['chair',-6,-4],['bed',-4,-4],['flower',-2,-4],['rock',0,-4],['tree',2,-4],['farm',4,-4],['wall',6,-4],['fence',-6,0],['joro',-4,0],['ground',2,3],['water',-6,3],['stonefloor',-2,3]])out[n]=await tap(x,y);
   out.mat=['statue','statueb','altar','tower','takenoko','pouf','curtain','dtable','stonegate'].map(id=>BL[id]?id+':'+tapMatOf(id):id+':-').join(' ');
