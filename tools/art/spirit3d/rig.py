@@ -177,7 +177,7 @@ def shoot(sp, face, p):
             if vis and 'face' in names:   # 写した絵で、そのまん中が顔の上か（ずきんのふちの上なら、かくす）
                 r1, c1 = int(np.floor(Y[0]-EXT[2])), int(np.floor(X[0]-EXT[0]))
                 if not (0 <= r1 < H1 and 0 <= c1 < W1 and ids[r1, c1] == names.index('face')): vis = 0
-            A['eye'] += [round(float(X[0]), 2), round(float(Y[0]), 2), round(float(a), 3), round(float(b), 3), round(float(c), 3), round(float(dd), 3), vis]
+            A['eye'] += [round(float(X[0]), 1), round(float(Y[0]), 1), round(float(a), 2), round(float(b), 2), round(float(c), 2), round(float(dd), 2), vis]
     for k, v in anc.items():
         if k not in ('eye', 'eye0', 'ti', 'mir', 'eyeq'): A[k] = scr(v)
     return img, over, A
