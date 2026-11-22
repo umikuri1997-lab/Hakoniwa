@@ -86,7 +86,7 @@ function juiceMendDraw(now){const P=2;for(let i=J4MEND.length-1;i>=0;i--){const 
 /* ---------- 5. クモの巣をはらった ---------- */
 function juiceWeb(j,side){if(!j4OK())return;const x=j%W,y=(j/W)|0,lift=j4Lift(x,y),cx=(x+(side?.8:.2))*TS,cy=(y+.15)*TS-lift,now=performance.now();
   for(let k=0;k<10&&J4THREAD.length<40;k++)J4THREAD.push({x:cx+(Math.random()-.5)*10,y:cy+(Math.random()-.5)*6,vx:(Math.random()-.5)*14,vy:-6-Math.random()*8,ph:Math.random()*6,t0:now,len:1400+Math.random()*600,w:k%3?1:2});/* 糸のきれはし：ふわふわ、ゆっくり落ちる */
-  addFloat(x+.5,y-1,'住み心地+5','#ffe58a');j3U('tcloth',.25,5);j3Ding(16,.15,.25);J4ST&&(J4ST.force=1)}
+  addFloatG(x+.5,y+.5,-1.5,'住み心地+5','#ffe58a');j3U('tcloth',.25,5);j3Ding(16,.15,.25);J4ST&&(J4ST.force=1)}
 function juiceThreadDraw(now,dt){const P=2;ctx.fillStyle='#fdfbf4';for(let i=J4THREAD.length-1;i>=0;i--){const t=J4THREAD[i],e=now-t.t0;if(e>t.len){J4THREAD.splice(i,1);continue}
     isoAtA(ctx,isoOn()?fxFoot(t):null);t.vy=Math.min(t.vy+20*dt,14);t.x+=(t.vx+Math.sin(now/260+t.ph)*10)*dt;t.y+=t.vy*dt;ctx.globalAlpha=.85*(1-e/t.len);ctx.fillRect(Math.round(t.x/P)*P,Math.round(t.y/P)*P,P*t.w,P)}ctx.globalAlpha=1}
 

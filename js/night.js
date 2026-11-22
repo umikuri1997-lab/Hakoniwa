@@ -389,7 +389,7 @@ function defeat(e,msg,r,by){if(e.dead)return;if(typeof mzKiriDefeat==='function'
   if(D.boss&&Math.random()<.25)dropAt(e.x,e.y,'mebuki');/* 25%で「めぶきのしずく」（カミサマからは買えない） */
   if(e.loot){for(const id in e.loot)dropAt(e.x,e.y,id,e.loot[id]);if(S.ns)for(const g of e.lootN||[]){const i=S.ns.lost.indexOf(g);if(i>=0)S.ns.lost.splice(i,1)}toast('カゲドロボウが、ぬすんだ物を落とした','good');e.loot=null}/* カゲドロボウをたおすと、ぬすんだ物を落とす（せいれいがひろって箱へ） */
   for(const[id,n,pr]of dropRolls(e.type))if(Math.random()<pr)dropAt(e.x,e.y,id,n);/* 落とし物は1つずつ、べつべつにくじを引く（いくつも落とすことがある） */
-  S.pt+=n;S.totalPt+=n;{const ex=e.x,ey=e.y,tx=(msg||D.name+'を追いはらった！')+' パワー+'+n;if(typeof JPTPEND!=='undefined'){JPTPEND+=n;setTimeout(()=>{JPTPEND=Math.max(0,JPTPEND-n)},dKO)}/* 上の数は、粒が飛ぶまでふやさない */villageTimeout(()=>{addFloat(ex,ey-1,'+'+n,'#ecdcbc');if(typeof juiceFly==='function')juiceFly(ex,ey,'pt',n);toast(tx,'good')},dKO)}/* 追いはらいは表示どおり。当たって白く止まったあとに出す */
+  S.pt+=n;S.totalPt+=n;{const ex=e.x,ey=e.y,tx=(msg||D.name+'を追いはらった！')+' パワー+'+n;if(typeof JPTPEND!=='undefined'){JPTPEND+=n;setTimeout(()=>{JPTPEND=Math.max(0,JPTPEND-n)},dKO)}/* 上の数は、粒が飛ぶまでふやさない */villageTimeout(()=>{addFloatG(ex,ey,-1,'+'+n,'#ecdcbc');if(typeof juiceFly==='function')juiceFly(ex,ey,'pt',n);toast(tx,'good')},dKO)}/* 追いはらいは表示どおり。当たって白く止まったあとに出す */
 }
 /* おとしもの：「コワイノ」がたまに落とす。昼にせいれいが拾う */
 const DROPS=[['mat:wood',3],['mat:stone',3],['sand',1]];/* sand：やすらぎの砂（コワイノの落とし物だけで手に入る） */

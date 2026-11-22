@@ -146,7 +146,7 @@ function place(id,x,y){
   }
   if(undoStack.length>30)undoStack.shift();
   if(typeof fieldBuildNote==='function')fieldBuildNote(id,j);/* 御神木の調べのために作った物 */
-  S.placed[id]=(S.placed[id]||0)+1;if(S.placed[id]===1&&typeof juiceFirst==='function')juiceFirst(j,id);/* はじめて置いた家具：シール（juice3.js） */recount();if(BOXCAP[id]&&S.obj[j]===id)boxUnstash(j,id);/* 前にこわした同じ家具の中身を、この箱へ */if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
+  S.placed[id]=(S.placed[id]||0)+1;if(S.placed[id]===1&&typeof juiceFirst==='function')juiceFirst(j,id);/* はじめて置いた家具：シール（juice3.js） */recount();if(BOXCAP[id]&&S.obj[j]===id)boxUnstash(j,id);/* 前にこわした同じ家具の中身を、この箱へ */if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloatG(j%W+.5,(j/W|0)+.5,-.8,'つりスポット！');renderPalette();checkQuest();
   if(HDOORS.has(id)){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j))){omo('house');setTimeout(()=>toast('家ができた！','good'),400)}}/* ドアを置いたら、家になったかを知らせる */
 }
 function undo(){

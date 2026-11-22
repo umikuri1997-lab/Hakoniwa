@@ -43,7 +43,7 @@ function cupHold(){const E=S&&S.ev;return !!CUPV.cd&&performance.now()-CUPV.cd<C
 function cupLive(E,P){/* 1秒ごと（cupTick から）：ミニゲームをはじめる・いまの1位の実況・声援 */
   const now=performance.now();if(!CUPV.cd)CUPV.cd=now-CUPCD;/* 読みこみなおしたあとは、合図なし */
   if(!CUPV.mg&&!E.mgDone&&E.cheer!=null&&now-CUPV.cd>=CUPCD){E.mgDone=1;const r=P.find(q=>q.id===E.cheer);if(r)cupMGOpen(E,r)}
-  if(now>CUPV.leadT&&E.id!=='cup1'){CUPV.leadT=now+6000;const R=cupRanks(E,P),r=P.find(q=>q.id===R[0]);if(r&&r.id!==CUPV.lead&&(E.id==='cup0'?r.x>E.tk.x+1:(E.sc[r.id]||0)>0)){CUPV.lead=r.id;addFloat(E.c[0],E.c[1]-2.6,'いま、'+r.name+'が1位！','#ffe58a');sfx('tink')}}
+  if(now>CUPV.leadT&&E.id!=='cup1'){CUPV.leadT=now+6000;const R=cupRanks(E,P),r=P.find(q=>q.id===R[0]);if(r&&r.id!==CUPV.lead&&(E.id==='cup0'?r.x>E.tk.x+1:(E.sc[r.id]||0)>0)){CUPV.lead=r.id;addFloatG(E.c[0],E.c[1],-2.6,'いま、'+r.name+'が1位！','#ffe58a');sfx('tink')}}
   if(now>CUPV.cheerT){CUPV.cheerT=now+3500+Math.random()*3000;const w=S.res.filter(q=>!q.hidden&&!P.includes(q)&&Math.hypot(q.x-E.c[0],q.y-E.c[1])<9).concat(E.id==='cup1'?P.filter(q=>!(E.pairs||[]).some(p=>p.includes(q.id))):[]);const q=pick(w);if(q){addFloatG(q.x,q.y,-1.5,pick(['がんばれー！','いけいけー！','すごいすごい！','ファイトー！']),'#fff3d6');JUMP.set(q,now);sfx('clap')}}}
 /* ---------- ミニゲーム（応援）：大会ごとにちがう遊び。10秒。うまくできたほど E.ck（0〜1） ---------- */
 const MGW=120,MGH=56;
