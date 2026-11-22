@@ -225,7 +225,7 @@ function frame(now){
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */
   if(CAMW&&CAMW!==camAnim){const w=CAMW;CAMW=null;if(!w.fin&&w.done){w.fin=1;try{w.done()}catch(e){frameErr('cam',e)}}}/* おわりの処理つきのカメラが、とちゅうでほかの動きに上書きされたら、おわりの処理だけはする（しないと、演出がおわらず、ゲームが止まったままになる） */if(camAnim&&camAnim.done)CAMW=camAnim;
   if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const a=camAnim,d=a.done;camAnim=null;a.fin=1;if(d)d()}}
-  followTick(rdt);/* 見守る */
+  followTick(rdt);/* 見守る */flingTick(rdt);/* 地図の慣性（input.js） */
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
   if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();if(typeof gfShowTick==='function')gfShowTick();showSpotPop();reflectNoteTick();windTick();oreWakeTick();if(typeof aniBirthTick==='function')aniBirthTick();if(typeof starWishTick==='function')starWishTick()}
@@ -254,9 +254,9 @@ addEventListener('resize',resize);
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{});if(ev!=='pointerdown')audioUnlock()},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
-$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;LEAFARM=false;dockSync();if(on)toast('光を落とす所をタップ')});/* 守りの光は、もう一度ボタンをおすか、しらべる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
-$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('こもれびのまもりは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;LEAFARM=false;if(AREAARM)toast('光をはなつ場所をタップ')});
-$('#leafBtn').addEventListener('click',e=>{e.stopPropagation();const L=leafLeft();if(L>0)return toast('葉のかべは、あと'+Math.ceil(L/DAYLEN)+'分');if(S.pt<LEAFPT)return toast(lackPt(LEAFPT),'warn');sfx('tap');LEAFARM=!LEAFARM;LIGHTARM=false;AREAARM=false;dockSync();if(LEAFARM)toast('葉のかべを生やす所をなぞる')});/* 葉のかべ（defense.js） */
+$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return skillDeny('#guardStatus'),toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;LEAFARM=false;dockSync();if(on)toast('光を落とす所をタップ')});/* 守りの光は、もう一度ボタンをおすか、しらべる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
+$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return skillDeny('#areaBtn'),toast('こもれびのまもりは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return skillDeny('#areaBtn'),toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;LEAFARM=false;if(AREAARM)toast('光をはなつ場所をタップ')});
+$('#leafBtn').addEventListener('click',e=>{e.stopPropagation();const L=leafLeft();if(L>0)return skillDeny('#leafBtn'),toast('葉のかべは、あと'+Math.ceil(L/DAYLEN)+'分');if(S.pt<LEAFPT)return skillDeny('#leafBtn'),toast(lackPt(LEAFPT),'warn');sfx('tap');LEAFARM=!LEAFARM;LIGHTARM=false;AREAARM=false;dockSync();if(LEAFARM)toast('葉のかべを生やす所をなぞる')});/* 葉のかべ（defense.js） */
 $('#skipBtn').addEventListener('click',()=>{if(!canSkip())return;sfx('tap');SKIP=true;$('#skipBtn').hidden=true;toast('朝まで休もう……','good')});
 let RLVR=null;
 function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const o=$('#rlv'),a=rStat(r,q.from),b=rStat(r,q.to);

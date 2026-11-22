@@ -516,6 +516,7 @@ const BLANKY=12;function drawBlanket(c,px,fy){const x0=Math.round(px)-15,y0=Math
 const LEAFHAT=['....ggg.....','..gglllgg...','.gllllllggg.','gldllllllllg','.ggggggggggg','......b.....'];/* 雨の日の葉っぱ（1ドット=せかいの2）。g ふち・l 葉・d すじ・b 茎 */
 function drawLeafHat(c,px,fy,d){const C={g:'#5e9a3e',l:'#8fcf6a',d:'#6fae52',b:'#7a5a3a'},x0=Math.round(px)-12,y0=Math.round(fy)-HATY;for(let y=0;y<LEAFHAT.length;y++)for(let x=0;x<12;x++){const ch=LEAFHAT[y][d>0?x:11-x];if(C[ch]){c.fillStyle=C[ch];c.fillRect(x0+x*2,y0+y*2,2,2)}}}
 const spCrownOn=r=>!!r.crownT||r.crown!=null&&typeof callDay==='function'&&r.crown===callDay();/* 花かんむりをつけている（もらった日の、つぎの朝6時まで。思い出の場面の子は crownT） */
+const TAPR=new WeakMap(),TAPRMS=420,TAPHOP=7,TAPNOD=2,TAPFREE=new Set(['wander','idle']);function tapReact(r){if(r)TAPR.set(r,performance.now())}function tapHop(r,now){const t=TAPR.get(r),d=t==null?-1:now-t;if(d>=TAPRMS){TAPR.delete(r);return null}if(d<0)return null;const free=!r.act||r.act.stage!=='do'||TAPFREE.has(r.act.type);return{free,y:Math.sin(Math.PI*d/TAPRMS)*(free?TAPHOP:TAPNOD)}}/* タップした子の反応（見た目だけ。ミリ秒・ゲームの点） */
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.nap||r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act&&r.act.obj!=null&&BEDSET.has(S.obj[r.act.obj])&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&BENCHES.has(S.obj[r.act.obj])?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
@@ -541,6 +542,7 @@ function drawRes0(r,now){
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
   const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:at==='plant'&&r.act.wade&&S.ground[(r.y|0)*W+(r.x|0)]===1?1:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 池のまんなかへハスを植えにいく：水の中はおよぐ（下半分が水にかくれ、まわりに波紋） *//* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */{const sit=!walking&&r.act&&r.act.stage==='do'&&(benchJ>=0||SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]));if(sit)SEATLAST.set(r,{x:px,y:py,t:now});const m=SEATMV.get(r);if(m){const k=(now-m.t0)/SEATMVMS;if(k>=1||k<0)SEATMV.delete(r);else{const e=k*k*(3-2*k),hop=Math.sin(Math.PI*k)*7;px=m.x+(px-m.x)*e;py=m.y+(py-m.y)*e-hop}}}/* すわる家具に、となりのマスから乗る・おりる（SEATMV） */const seated=!walking&&r.act&&r.act.stage==='do'&&SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]);/* いすにすわっているときは、かげを出さない */if(sj<0&&!wade&&!toyR(r)&&!seated)shadow(ctx,px,py+8,flSl?20:12,3.6);/* 横になって寝るときは、ながいかげ */
+  if(!sleeping&&!walking){const h=tapHop(r,now);if(h){if(h.free){v.back=false;v.turn=0}py-=h.y}}/* タップされた：ひまな子はこちらを向いて、ぴょん。仕事・遊びのとちゅうの子は、手を止めずに小さくうなずく（tapReact） */
   const lvR=rLv(r);
   const tt=now/1000+r.id*1.7,fy=py+9-bob;
   ctx.save();// 発熱対策：ぼかし影はなし
