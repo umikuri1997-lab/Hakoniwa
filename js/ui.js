@@ -726,7 +726,7 @@ function renderSheet(){
         else ds.querySelector('.rows').appendChild(rowEl('・あしたの朝から','毎朝、2つの目標が出る'));
         body.appendChild(ds)}
       const f=el('<div class="sec"><h3>やりこみ</h3><div class="rows"></div></div>');for(const g of [...freeHere().filter(g=>!(S.freeDone||{})[g.k]),...freeHere().filter(g=>(S.freeDone||{})[g.k])]){const ok=!!(S.freeDone||{})[g.k],r=rowEl((ok?'✓ ':'・')+g.t,ok?'たっせい':'いま '+g.now()+'　ごほうび パワー+'+g.rw);if(ok)r.classList.add('done');f.querySelector('.rows').appendChild(r)}body.appendChild(f);
-      if(WD!==FREE){const tr=el('<div class="sec"><h3>「コワイノ」の試練</h3><p class="note">ふだんより多く、強い「コワイノ」と、オオカゲがいっしょにやってくる夜。ぜんぶ追いはらうと、パワー+60と「めぶきのしずく」。</p></div>');
+      if(WD!==FREE){const tr=el('<div class="sec"><h3>「コワイノ」の試練</h3><p class="note">強い「コワイノ」の群れと、オオカゲがいっしょにやってくる夜。ぜんぶ追いはらうと、パワー+60と「めぶきのしずく」。</p></div>');
       const b=el('<button class="btn pri" style="width:100%"></button>');b.textContent=S.trial?'今夜、試練の夜がくる':'今夜、試練をうける';b.disabled=!!S.trial||isNight();b.onclick=()=>{S.trial=true;sfx('night');toast('今夜は「コワイノの試練」','warn');renderSheet()};tr.appendChild(b);
       tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr)}/* フリーモードに、コワイノは来ない */subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
     }else if(sheetArg==='goal'){if(mainStoryFocusTarget()){const b=el('<button class="btn pri" style="width:100%">お話・調査の場所へ</button>');b.onclick=focusMainStoryPlace;body.appendChild(b);}subSec(body,true);
