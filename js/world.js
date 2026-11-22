@@ -1,15 +1,15 @@
 'use strict';
-function setWorld(w){WD=w||0;QUESTS=QL[WD];KEYRES=KEYS[WD];BL.tower=WD===0?TOWER_TREE:TOWER_STONE;if(typeof iconCache!=='undefined')delete iconCache.tower;soupFilter()}
+function setWorld(w){WD=w||0;QUESTS=QL[WD];KEYRES=KEYS[WD];BL.tower=WD===KUSA?TOWER_TREE:TOWER_STONE;if(typeof iconCache!=='undefined')delete iconCache.tower;soupFilter()}
 function soupFilter(){}/* 料理の表はどのステージも同じ（作れる家具がちがう） */
 // 守護の台座を建てるための条件
-const TOWER_MAT=()=>WD===1?{wood:150,stone:75}:{};
-function towerConds(){if(WD===1)return clearConds();return [
+const TOWER_MAT=()=>WD===KAZAN?{wood:150,stone:75}:{};
+function towerConds(){if(WD===KAZAN)return clearConds();return [
   ['5つの属性のせいれいがそろう（いま'+ELEM_KEYS.filter(k=>elemCount(k)>=1).length+'/5）',ELEM_KEYS.every(k=>elemCount(k)>=1)],
   ['切り株に声を届け、ヌシ様の返事を聞く',!!S.flags.nushiAlive]];}
-const SHN=()=>WD===1?'ヌシ様の火だね':'ヌシのかけら';/* 火山のヌシ様は熱をうばわれたので、かけらではなく火だね */
+const SHN=()=>WD===KAZAN?'ヌシ様の火だね':'ヌシのかけら';/* 火山のヌシ様は熱をうばわれたので、かけらではなく火だね */
 const shLeft=()=>Math.max(0,(S.shards||0)-(S.usedSh||0));/* 火山のふもと：まだ使っていないかけらの数（装置と台座にはめると減る） */
 const towerReady=()=>towerConds().every(c=>c[1]);
-function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','noren'].filter(nearSp).length;return [
+function clearConds(){if(WD===KAZAN){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','noren'].filter(nearSp).length;return [
   ['温泉3か所をよみがえらせる（いま'+n+'）',n>=3],
   ['ヒノオオカゲを追いはらい、奥の装置を直す',!!S.flags.hinoDown&&!!(S.st2&&S.st2.d2fix)],
   ['温泉のそばに、ベンチ・水おけ・のれん（いま'+fac+'/3）',fac>=3],
@@ -95,7 +95,7 @@ const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat
 const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'ハヤテ':{key:true,tr:'hayaashi',pk:'wind',h:10,l:.02,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.16},'カザネ':{key:true,tr:'nebari',pk:'wind',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.1},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ミオ':{key:true,tr:'nebari',h:-10,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'カガリ':{key:true,tr:'',pk:'fireA',h:4,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1,D=()=>pick(VRDEV);const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:D(),eat:Math.round((1+R()*.2)*100)/100,pow:D(),sta:D(),iv:3,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}
 function mkRes(s,name,elem,x,y,like){
-  return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:400,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&!nigate(elem,k))),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:Object.assign(mkVar(name,elem),{tk:tokuiPick(elem)})};/* tk：はじめからの得意な仕事（events.js） */
+  return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:400,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===WIND)&&!nigate(elem,k))),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:Object.assign(mkVar(name,elem),{tk:tokuiPick(elem)})};/* tk：はじめからの得意な仕事（events.js） */
 }
 
 function genWorld(s,w){
@@ -163,7 +163,7 @@ const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-
 const ASHT=new Set(['oven','bench','takebench','tub','sink','campfire','hotstone']);
 const NATK=['rock','vcopper','viron','vobsid','vsilver','vgold','deadtree','ntree','berry','bamboo','takenoko'];
 const festOn=()=>!!S&&VOLK()&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
-function festStart(){S.festN=(S.festN||0)+1;/* おまつりをひらいた回数 */const L=WD===1?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'#surprise|わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
+function festStart(){S.festN=(S.festN||0)+1;/* おまつりをひらいた回数 */const L=WD===KAZAN?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'#surprise|わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
 function festBegin(){S.festAtQ=QUESTS[S.quest]&&QUESTS[S.quest].id;/* どのクエストのときにひらいたか（前にひらいたおまつりは、クエストの数に入れない） */for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！ 屋台がならんでいる','good');festStart()}/* おまつりの朝：せいれいの半分が、屋台の店番をする */
 function festGift(){if(S.festDay==null||S.festDay>=dayNo()||S.festGot===S.festDay)return;S.festGot=S.festDay;const fl=['salvia','lotus','lily','clover','bellf'].filter(id=>S.unlocked[id]);/* おまつりのおみやげ：はじめはちょうちん。あとは、ちょうちんか、おぼえた花のたね5つ */
   if(!S.flags.festGift1||!fl.length||Math.random()<.4){S.flags.festGift1=1;giveItem('chochin',1);toast('おまつりのおみやげ：おまつりのちょうちん','good')}else{const id=pick(fl);giveItem(id,5);toast('おまつりのおみやげ：'+BL[id].name+'のたね5つ','good')}renderPalette()}
@@ -171,7 +171,7 @@ const FESTC={k:null,L:[]};function festPoles(){const r=12,k=WD+':'+r;if(FESTC.k!
 function drawFestPole(x,y,now){if(!FESTA.ok)return;const h=hour(),on=h>=18||h<6,f=FESTA.F[on?'pole_on':'pole_off'],x0=x*TS+16-7,y0=y*TS+30-f[3];shadow(ctx,x*TS+16,y*TS+29,6,2);
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(FESTA.img,f[0],f[1],f[2],f[3],x0,y0,f[2],f[3]);ctx.imageSmoothingEnabled=sm;
   if(on){const lx=x0+17,ly=y0+20,g=ctx.createRadialGradient(lx,ly,1,lx,ly,14);g.addColorStop(0,'rgba(255,190,110,.35)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(lx-14,ly-14,28,28)}}/* 夕方からちょうちんがともる */
-/* おまつり（屋台・ちょうちん）は火山だけ（festOn の WD===1）。草原にはない */const STALLM={wood:{nm:'りんごあめ',e:'🍭',col:'#d8452f',L:[['f','ringoame',15]]},fire:{nm:'たこ焼き・焼きそば',e:'🐙',col:'#e07a2a',L:[['f','takoyaki',20],['f','yakisoba',20]]},water:{nm:'かき氷',e:'🍧',col:'#4a8fd8',L:[['f','kakigori',15],['mebuki',400]]},earth:{nm:'ポテト',e:'🍠',col:'#9a6a3a',L:[['f','yakiimo',15]]},wind:{nm:'わたあめ・わなげ',e:'🍬',col:'#3aa88a',L:[['f','wataame',15],['chochin',60]]}};/* せいれいの屋台：店番の子の属性で、売る物がかわる。['f',食べ物,パワー]は5つ。木材・石材は売らない */
+/* おまつり（屋台・ちょうちん）は火山だけ（festOn の WD===KAZAN）。草原にはない */const STALLM={wood:{nm:'りんごあめ',e:'🍭',col:'#d8452f',L:[['f','ringoame',15]]},fire:{nm:'たこ焼き・焼きそば',e:'🐙',col:'#e07a2a',L:[['f','takoyaki',20],['f','yakisoba',20]]},water:{nm:'かき氷',e:'🍧',col:'#4a8fd8',L:[['f','kakigori',15],['mebuki',400]]},earth:{nm:'ポテト',e:'🍠',col:'#9a6a3a',L:[['f','yakiimo',15]]},wind:{nm:'わたあめ・わなげ',e:'🍬',col:'#3aa88a',L:[['f','wataame',15],['chochin',60]]}};/* せいれいの屋台：店番の子の属性で、売る物がかわる。['f',食べ物,パワー]は5つ。木材・石材は売らない */
 const STALLSAY=['いらっしゃい！','どれにする？','できたてだよ！','おまつりだから、とくべつだよ！'];
 function festStalls(){if(!festOn()||festBase()<0||hour()<7)return [];const sh=Math.min(4,Math.floor((hour()-7)/3)),k=dayNo()+':'+sh;if(S.fst&&S.fst.k===k)return S.fst.L;/* 3時間ごとに店番が交代 */
   const R=S.res.filter(r=>!r.hidden),n=Math.floor(R.length/2),r0=12,y=CY-r0-1,P=[];
@@ -190,13 +190,13 @@ function festAct(r,G){if(festBase()<0)return false;const h=hour(),ib=k=>VILL[k];
   if(x<.72&&trySocial(r,G))return true;/* おまつりのおしゃべり */
   const j=festSpot(G,k=>ib(k)&&Math.hypot(k%W+.5-r.x,((k/W)|0)+.5-r.y)>=4,30);if(j>=0){startAct(r,G,'fwalk',j);if(r.fsnack&&Math.random()<.6)r.bubble=r.fsnack;return true}/* 村の中を、ぶらぶら見てまわる */
   return false}
-for(const id in STAGEONLY)Object.defineProperty(BL[id],'offerOnly',{get:()=>WD!==STAGEONLY[id]&&!grec(id),configurable:true});/* ステージの物は、そのステージで作れる。ほかのステージでは、おぼえるまではおそなえだけ */for(const id in BL){const b=BL[id];if(b.mat1||b.mat3||b.mat4||b.mat5){const m0=b.mat;b.mat0=m0;Object.defineProperty(b,'mat',{get:()=>WD===1&&b.mat1?b.mat1:WD>1&&b['mat'+WD]?b['mat'+WD]:m0,configurable:true})}}/* mat1：火山・mat3：水・mat4：風・mat5：闇での素材（実数で書いてある）。mat0：ほかのステージの素材（matHere がステージにかかわらず読む） */
+for(const id in STAGEONLY)Object.defineProperty(BL[id],'offerOnly',{get:()=>WD!==STAGEONLY[id]&&!grec(id),configurable:true});/* ステージの物は、そのステージで作れる。ほかのステージでは、おぼえるまではおそなえだけ */for(const id in BL){const b=BL[id];if(b.mat1||b.mat3||b.mat4||b.mat5){const m0=b.mat;b.mat0=m0;Object.defineProperty(b,'mat',{get:()=>WD===KAZAN&&b.mat1?b.mat1:WD>1&&b['mat'+WD]?b['mat'+WD]:m0,configurable:true})}}/* mat1：火山・mat3：水・mat4：風・mat5：闇での素材（実数で書いてある）。mat0：ほかのステージの素材（matHere がステージにかかわらず読む） */
 const FLAM=new Set(Object.keys(BL).filter(id=>id!=='hwall'&&id!=='door'&&id!=='yozoradoor'&&(()=>{const b=BL[id],m=b.mat||{};return (b.kind==='furn'||b.kind==='block'||b.kind==='build')&&(m.wood>0||m.bamboo>0)&&!m.stone&&!b.natural&&id!=='torch'&&id!=='candle'})()));/* 火山のふもとで燃える物：木材だけで作る家具・柵・壁など（たいまつ・ろうそくは、もともと火がついている物なのでのぞく） */
-const burnHp=o=>BL[o].hp||10,fireAt=j=>WD===1&&!!S.st2&&!!S.st2.fire&&S.st2.fire[j]!=null;/* じょうぶさのない家具は、燃えるときだけ10とする */
-function ignite(j){if(WD!==1||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))return;const F=S.st2.fire||(S.st2.fire={});if(F[j]!=null)return;F[j]=S.t;toast(BL[o].name+'が燃えている！','warn');sfxAt('cookfire',j%W+.5,(j/W)|0)}
-function fireTick(dt){if(WD!==1||!S.st2||!S.st2.fire)return;const F=S.st2.fire;for(const k in F){const j=+k,o=S.obj[j];if(!FLAM.has(o)){delete F[k];continue}S.hp[j]=(S.hp[j]??burnHp(o))-dt/15;/* 燃えているあいだ、15分ごとにじょうぶさが1へる */
+const burnHp=o=>BL[o].hp||10,fireAt=j=>WD===KAZAN&&!!S.st2&&!!S.st2.fire&&S.st2.fire[j]!=null;/* じょうぶさのない家具は、燃えるときだけ10とする */
+function ignite(j){if(WD!==KAZAN||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))return;const F=S.st2.fire||(S.st2.fire={});if(F[j]!=null)return;F[j]=S.t;toast(BL[o].name+'が燃えている！','warn');sfxAt('cookfire',j%W+.5,(j/W)|0)}
+function fireTick(dt){if(WD!==KAZAN||!S.st2||!S.st2.fire)return;const F=S.st2.fire;for(const k in F){const j=+k,o=S.obj[j];if(!FLAM.has(o)){delete F[k];continue}S.hp[j]=(S.hp[j]??burnHp(o))-dt/15;/* 燃えているあいだ、15分ごとにじょうぶさが1へる */
   if(S.hp[j]<=0){(S.broken||(S.broken=[])).push({j,id:o,L:S.hp['L'+j],rot:rotAt(j)});delete F[k];sfxAt('wbreak',j%W+.5,(j/W)|0);clearObj(j);recount();dirty=true;toast(BL[o].name+'が燃えてこわれた','warn')}}}
-function sparkTick(){if(WD!==1||!S.st2||isNight()||elemCount('water')<1||Math.random()>=.05)return;/* 火の粉：昼のあいだ、1時間に5%（水の子が来てから） */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(FLAM.has(o)&&!fireAt(j)&&VILL[j]&&!HOUSES.some(h=>h.inside.has(j)))L.push(j)}if(!L.length)return;const j=L[(Math.random()*L.length)|0];
+function sparkTick(){if(WD!==KAZAN||!S.st2||isNight()||elemCount('water')<1||Math.random()>=.05)return;/* 火の粉：昼のあいだ、1時間に5%（水の子が来てから） */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(FLAM.has(o)&&!fireAt(j)&&VILL[j]&&!HOUSES.some(h=>h.inside.has(j)))L.push(j)}if(!L.length)return;const j=L[(Math.random()*L.length)|0];
   fxSpr('cinder',(j%W+.5)*TS,((j/W)|0)*TS+24);ignite(j)}/* 家の中の物には、火の粉はとどかない */
 /* 奥の装置のまわりの大岩（BVOL）は、かたくて、たたいてもくだけない。まもりの光で熱すると赤くなり（S.st2.hot：マス→さめる時刻 S.t）、赤いあいだに、せいれいが水をかけると、われる（quench）。
    水をかけるのは水のせいれい（村にいなければ、だれでも）。赤いあいだは時計の2時間（ROCKHOT） */
@@ -206,20 +206,20 @@ function takenokoPop(j){const d=S.dyn[j]||(S.dyn[j]={g:100,age:0}),left=Math.max
 function takenokoKeepDraw(c,x,y){c.save();c.fillStyle='#6fae4a';c.fillRect(x+15,y+9,2,4);c.fillRect(x+13,y+10,2,2);c.fillRect(x+17,y+10,2,2);c.fillStyle='#a9d77a';c.fillRect(x+15,y+9,1,2);c.restore()}/* そだてる印：先に小さな葉 */
 const yuN=()=>['a','b','c'].filter(k=>S.st2&&S.st2.yuS&&S.st2.yuS[k]).length;/* 湯めぐり：だれかが入った温泉の数 */
 const ROCKHOT=120;
-const rockHard=j=>WD===1&&!S.free&&S.obj[j]==='boulder'&&BVOL.includes(j);
+const rockHard=j=>WD===KAZAN&&!S.free&&S.obj[j]==='boulder'&&BVOL.includes(j);
 const rockHot=j=>rockHard(j)&&!!(S.st2&&S.st2.hot&&S.st2.hot[j]>S.t);
 function rockHeat(j){const t=st2();(t.hot||(t.hot={}))[j]=S.t+ROCKHOT;const x=j%W,y=(j/W)|0;burstAt(x+.5,y+.5,'furn');sfxAt('cookfire',x,y);dirty=true}
-function goQuench(r,G){if(WD!==1||!S.st2||!S.st2.hot||isNight())return false;if(r.elem!=='water'&&S.res.some(q=>q.elem==='water'&&!q.hidden&&!q.coffin))return false;const ks=BVOL.filter(j=>rockHot(j)&&free('hot'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(k);const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=adjOf(j,hit);startAct(r,G,'quench',j,{key:'hot'+t,obj:t,run:true});return true}
+function goQuench(r,G){if(WD!==KAZAN||!S.st2||!S.st2.hot||isNight())return false;if(r.elem!=='water'&&S.res.some(q=>q.elem==='water'&&!q.hidden&&!q.coffin))return false;const ks=BVOL.filter(j=>rockHot(j)&&free('hot'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(k);const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=adjOf(j,hit);startAct(r,G,'quench',j,{key:'hot'+t,obj:t,run:true});return true}
 function rockCrack(j){const t=st2();if(t.hot)delete t.hot[j];delete S.hp['n'+j];const x=j%W,y=(j/W)|0;fxSpr('rockbreak',(x+.5)*TS,(y+.8)*TS);sfxAt('pour',x,y);for(let i=0;i<8;i++)fx.push({k:'p',x:(x+.2+Math.random()*.6)*TS,y:(y+.4)*TS,vx:(Math.random()-.5)*12,vy:-22-Math.random()*16,life:1.1,col:'#ffffff',r:2});/* 湯気 */if(typeof juiceBreak==='function')juiceBreak(j,'stone');clearObj(j);burst(j,'block');recount();checkQuest()}
 function rockHotDraw(c,x,y,now){const f=(Math.sin(now/260)+1)/2;c.save();c.globalAlpha=.45+.3*f;c.fillStyle='#ff7a3a';for(const[a,b,w,h]of[[13,11,2,3],[14,14,2,3],[16,17,2,3],[15,20,2,4],[18,19,4,2],[22,21,3,2],[8,17,3,2],[6,19,2,3]])c.fillRect(x+a,y+b,w,h);c.globalAlpha=.6+.3*f;c.fillStyle='#ffd27a';for(const[a,b]of[[14,13],[16,18],[20,20],[8,18]])c.fillRect(x+a,y+b,1,1);c.restore()}
-function goDouse(r,G){if(WD!==1||!S.st2||!S.st2.fire||isNight())return false;const ks=Object.keys(S.st2.fire).map(Number).filter(j=>free('fire'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(anc(k));const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=anc(adjOf(j,hit));startAct(r,G,'douse',j,{key:'fire'+t,obj:t,run:true});return true}/* 水の子は、昼のあいだ、燃えている物を消しにいく */
+function goDouse(r,G){if(WD!==KAZAN||!S.st2||!S.st2.fire||isNight())return false;const ks=Object.keys(S.st2.fire).map(Number).filter(j=>free('fire'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(anc(k));const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=anc(adjOf(j,hit));startAct(r,G,'douse',j,{key:'fire'+t,obj:t,run:true});return true}/* 水の子は、昼のあいだ、燃えている物を消しにいく */
 function drawFire1(j,now){{const o=S.obj[j];if(!o)return;const z=szAt(o,j)||[1,1],x=(j%W)*TS,y=((j/W)|0)*TS,n=z[0]*2,b=y+TS*z[1]-8;
   for(let m=0;m<n;m++){const fx=Math.round(x+6+m*(TS*z[0]-12)/Math.max(1,n-1)),h=Math.round(9+Math.sin(now/110+m*1.7+j)*3+(m%2?2:0));ctx.fillStyle='#d8431c';ctx.fillRect(fx-3,b-h,6,h);ctx.fillStyle='#ff9a2e';ctx.fillRect(fx-2,b-h+3,4,h-3);ctx.fillStyle='#fff1a8';ctx.fillRect(fx-1,b-Math.round(h*.45),2,Math.round(h*.45))}
   const sm=(now/1400+j*.37)%1;ctx.fillStyle='rgba(90,80,78,'+(.45*(1-sm))+')';ctx.fillRect(Math.round(x+TS*z[0]/2-3+Math.sin(now/500+j)*3),Math.round(b-16-sm*22),6,6)}}/* 燃えている物：ドットのほのおと、けむり（物を描いたすぐあとに重ねる） */
 const burnt=q=>{const o=S.obj[q];return FLAM.has(o)&&!breakable(o)&&!DEFS.has(o)&&S.hp[q]!=null&&!fireAt(q)};/* 燃えて、じょうぶさがへった家具 */
 function st2(){return S.st2||(S.st2={sp:{a:0,b:0,c:0},d1:1,d2:1,d2fix:0,hvb:{},ash:{},ashKills:0,bw:[]})}
-const ashed=j=>WD===1&&!!S.st2&&S.st2.ash[j]>S.t;
-function springOn(k){if(WD!==1||!k)return false;if(S.st2&&S.st2.frz&&S.st2.frz[k])return false;/* 最後の夜に冷やされた温泉 */if(k==='a')return !!S.flags.onsen;const t=S.st2;if(!t||!t.sp[k])return false;if(t.hvb[D1])return false;if(k==='c'&&t.hvb[D2])return false;return true}
+const ashed=j=>WD===KAZAN&&!!S.st2&&S.st2.ash[j]>S.t;
+function springOn(k){if(WD!==KAZAN||!k)return false;if(S.st2&&S.st2.frz&&S.st2.frz[k])return false;/* 最後の夜に冷やされた温泉 */if(k==='a')return !!S.flags.onsen;const t=S.st2;if(!t||!t.sp[k])return false;if(t.hvb[D1])return false;if(k==='c'&&t.hvb[D2])return false;return true}
 const SPEDGE=new Map();function springEdge(k){const M=sprMap();let c=SPEDGE.get(M);if(!c){c={};SPEDGE.clear();SPEDGE.set(M,c)}if(!c[k]){const L=[];for(let j=0;j<W*H;j++){if(M[j]!==k)continue;for(const q of[j-1,j+1,j-W,j+W])if(q>=0&&q<W*H&&walk(q)&&!L.includes(q))L.push(q)}c[k]=L}return c[k]}/* 温泉のふち（歩けるマス） */
 const springN=()=>['a','b','c'].filter(springOn).length;
 const springDone=()=>(S.flags.onsen?1:0)+(S.st2&&S.st2.sp.b?1:0)+(S.st2&&S.st2.sp.c?1:0);
@@ -230,19 +230,19 @@ function sprMap(){if(SPRS===S&&SPRM)return SPRM;SPRS=S;SPRM=new Array(W*H).fill(
     let best='',bd=4;for(const key in HSPC){const[cx,cy]=HSPC[key];for(const k of comp){const d=Math.hypot(k%W+.5-cx,((k/W)|0)+.5-cy);if(d<bd){bd=d;best=key}}}
     if(best)for(const k of comp)SPRM[k]=best}
   return SPRM}
-const hotW=j=>WD===1&&S.ground[j]===1&&springOn(sprMap()[j]);
+const hotW=j=>WD===KAZAN&&S.ground[j]===1&&springOn(sprMap()[j]);
 function nearHot(j,r){const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;if(hotW(yy*W+xx))return true}return false}
 const nearSp=id=>S.obj.some((o,j)=>(id==='bench'?BENCHES.has(o):o===id)&&nearHot(j,4));/* ベンチは竹のベンチもふくむ *//* 温泉のそば（4マス以内） */
 const FLOWERS2=['clover','bellf','salvia','lily','lotus'];
 /* 冷たい温泉を調べよう：調べた水たまり（西 b・奥 c）。前のセーブの true は、調べおわったことにする。sprLast は、さいごに調べた温泉（vol:touchH でホムラが歩いていく所） */
 function sprLookN(){const f=S.flags.sprLook;if(f===true)return 2;return f&&typeof f==='object'?(f.b?1:0)+(f.c?1:0):0}
-function sprLookTap(k){if(WD!==1)return;const f=S.flags.sprLook;if(f===true)return;const o=f&&typeof f==='object'?f:(S.flags.sprLook={});if(k==='a'||o[k])return;o[k]=1;S.flags.sprLast=k;checkQuest()}
+function sprLookTap(k){if(WD!==KAZAN)return;const f=S.flags.sprLook;if(f===true)return;const o=f&&typeof f==='object'?f:(S.flags.sprLook={});if(k==='a'||o[k])return;o[k]=1;S.flags.sprLast=k;checkQuest()}
 function spNear(ids,k){if(!springOn(k))return 0;const M=sprMap();let n=0;for(let j=0;j<W*H;j++){if(!ids.includes(S.obj[j])||isBud(j))continue;/* 花は、さいてから数える */const x=j%W,y=(j/W)|0;let ok=false;for(let dy=-4;dy<=4&&!ok;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(S.ground[q]===1&&M[q]===k){ok=true;break}}if(ok)n++}return n}/* その温泉のそば（4マス以内）にある数 */
 const tkGot=()=>{const t=st2();return Math.max(0,(t.tkGot||0)-(t.tkBase||0))};/* たけのこのクエスト：うけてから、せいれいがとった、たけのこの数 */
-function takenokoSpawn(n){/* 村に近い竹のとなりに、たけのこを生やす（すでに生えている分もかぞえる） */if(WD!==1)return;let have=0;for(let j=0;j<W*H;j++)if(S.obj[j]==='takenoko')have++;const c=[];for(let j=0;j<W*H;j++){if(S.obj[j]!=='bamboo')continue;const x=j%W;for(const k of[j-1,j+1,j-W,j+W])if(k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&!S.obj[k]&&!S.floor[k]&&S.ground[k]===0&&!RFC.has(k)&&flatAt(k)&&!c.some(q=>q[1]===k))c.push([Math.hypot(k%W-CX,((k/W)|0)-CY),k])}c.sort((a,b)=>a[0]-b[0]);for(const[,k]of c){if(have>=n)break;S.obj[k]='takenoko';S.dyn[k]={g:100,age:0};have++}recount();dirty=true}
+function takenokoSpawn(n){/* 村に近い竹のとなりに、たけのこを生やす（すでに生えている分もかぞえる） */if(WD!==KAZAN)return;let have=0;for(let j=0;j<W*H;j++)if(S.obj[j]==='takenoko')have++;const c=[];for(let j=0;j<W*H;j++){if(S.obj[j]!=='bamboo')continue;const x=j%W;for(const k of[j-1,j+1,j-W,j+W])if(k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&!S.obj[k]&&!S.floor[k]&&S.ground[k]===0&&!RFC.has(k)&&flatAt(k)&&!c.some(q=>q[1]===k))c.push([Math.hypot(k%W-CX,((k/W)|0)-CY),k])}c.sort((a,b)=>a[0]-b[0]);for(const[,k]of c){if(have>=n)break;S.obj[k]='takenoko';S.dyn[k]={g:100,age:0};have++}recount();dirty=true}
 function takenokoStart(){const t=st2();t.tkBase=t.tkGot||0;takenokoSpawn(3)}/* たけのこのクエストをうけたとき：数えはじめを決めて、近くに生やす */
-function yoganHeatN(){/* 熱が流れている熱の道から3マス以内にある、ようがん台の数 */if(WD!==1||!S.st2)return 0;const L=heatLines().filter(l=>l.on&&!l.smoke);let n=0;for(let j=0;j<W*H;j++){if(S.obj[j]!=='yogan')continue;const x=j%W+1,y=((j/W)|0)+1;const sd=(a,b)=>Math.max(Math.max(Math.min(a[0],b[0])-x,0,x-Math.max(a[0],b[0])),Math.max(Math.min(a[1],b[1])-y,0,y-Math.max(a[1],b[1])));if(L.some(l=>l.p.some((q,i)=>i&&sd(l.p[i-1],q)<=3)))n++}return n}
-function innHouse(){/* 温泉宿：あたたかい温泉のそばの家で、家から4マス以内に露天ぶろがある */if(WD!==1)return null;const ons=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='onsen')ons.push(j);if(!ons.length)return null;for(const h of HOUSES){const ins=[...h.inside];if(!ins.some(j=>nearHot(j,6)))continue;const cells=h.set?[...h.set]:ins;for(const o of ons){const ox=o%W,oy=(o/W)|0;if(cells.some(j=>{const x=j%W,y=(j/W)|0;return Math.max(Math.max(ox-x,0,x-(ox+1)),Math.max(oy-y,0,y-(oy+1)))<=4}))return {h,onsen:o}}}return null}
+function yoganHeatN(){/* 熱が流れている熱の道から3マス以内にある、ようがん台の数 */if(WD!==KAZAN||!S.st2)return 0;const L=heatLines().filter(l=>l.on&&!l.smoke);let n=0;for(let j=0;j<W*H;j++){if(S.obj[j]!=='yogan')continue;const x=j%W+1,y=((j/W)|0)+1;const sd=(a,b)=>Math.max(Math.max(Math.min(a[0],b[0])-x,0,x-Math.max(a[0],b[0])),Math.max(Math.min(a[1],b[1])-y,0,y-Math.max(a[1],b[1])));if(L.some(l=>l.p.some((q,i)=>i&&sd(l.p[i-1],q)<=3)))n++}return n}
+function innHouse(){/* 温泉宿：あたたかい温泉のそばの家で、家から4マス以内に露天ぶろがある */if(WD!==KAZAN)return null;const ons=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='onsen')ons.push(j);if(!ons.length)return null;for(const h of HOUSES){const ins=[...h.inside];if(!ins.some(j=>nearHot(j,6)))continue;const cells=h.set?[...h.set]:ins;for(const o of ons){const ox=o%W,oy=(o/W)|0;if(cells.some(j=>{const x=j%W,y=(j/W)|0;return Math.max(Math.max(ox-x,0,x-(ox+1)),Math.max(oy-y,0,y-(oy+1)))<=4}))return {h,onsen:o}}}return null}
 function st2Place(s){
   const stash=j=>{const o=s.obj[j];if(o&&o!=='part'&&BL[o]&&BL[o].kind&&!BL[o].natural)s.inv[o]=(s.inv[o]||0)+1;if(o)for(const k in s.ref)if(s.ref[k]===j){s.obj[k]='';delete s.ref[k]}if(s.obj[j]==='part'){const a=s.ref[j];if(a!=null&&s.obj[a])stash(a)}s.obj[j]='';delete s.dyn[j];delete s.ref[j];s.ground[j]=0};
   for(let y=OFF;y<=OFF+6;y++)for(let x=CX-3;x<=CX+3;x++)stash(y*W+x);
@@ -254,7 +254,7 @@ function st2Place(s){
   s.st2={sp:{a:0,b:0,c:0},d1:1,d2:1,d2fix:0,hvb:{},ash:{},ashKills:0,bw}}
 function springFX(k){const[cx,cy]=HSPC[k];sfx('level');toast(SPN[k]+'に、あたたかい湯がもどった！','good');logEv(SPN[k]+'がよみがえった');memo('sun',SPN[k]+'がよみがえった');
   fxSpr('spring',cx*TS,cy*TS);}
-function st2Tick(){if(WD!==1||!S.st2)return;const t=S.st2;
+function st2Tick(){if(WD!==KAZAN||!S.st2)return;const t=S.st2;
   if(!t.sp.b&&t.d1===0&&t.bw.every(j=>S.obj[j]!=='boulder')&&!t.hvb[D1]){t.sp.b=1;dirty=true;springFX('b');checkQuest()}
   if(!t.sp.c&&t.d1===1&&t.d2fix&&t.d2===0&&CRACKS.every(j=>S.obj[j]!=='crack')&&!t.hvb[D1]&&!t.hvb[D2]){t.sp.c=1;dirty=true;springFX('c');checkQuest()}
   for(const k in t.ash)if(t.ash[k]<=S.t||!S.obj[k])delete t.ash[k]}
@@ -265,9 +265,9 @@ function heatLines(){const t=S.st2,ok=k=>!t.hvb[k],L=[],h1=ok(D1),cr=CRACKS.ever
   L.push({p:[[CX-3.5,OFF+9.5],[CX+5.5,OFF+9.5],[CX+5.5,CY-17.5]],on:h1&&t.d1===1,leak:!cr});
   L.push({p:[[CX+5.5,CY-17.5],[CX+1.5,CY-17.5],[CX+1.5,HSPC.c[1]-1.4]],on:h2&&t.d2===0});
   L.push({p:[[CX+5.5,CY-17.5],[CX+8.5,CY-17.5]],on:h2&&t.d2===1,smoke:1});return L}
-let WARMK='',WARM=new Set();function warmSet(){/* 熱の道（熱が流れている線）から3マス以内の畑は、あたたかい畑 */if(WD!==1||!S.st2)return WARM;const t=S.st2,k=[t.d1,t.d2,t.d2fix,JSON.stringify(t.hvb),CRACKS.map(j=>S.obj[j]==='crack'?1:0).join(''),counts.farm||0,S===WARM.s].join('|');if(k===WARMK)return WARM;WARMK=k;WARM=new Set();WARM.s=S;const L=heatLines().filter(l=>l.on);for(let j=0;j<W*H;j++){if(S.obj[j]!=='farm')continue;const x=j%W+.5,y=((j/W)|0)+.5;const sd=(a,b)=>Math.max(Math.max(Math.min(a[0],b[0])-x,0,x-Math.max(a[0],b[0])),Math.max(Math.min(a[1],b[1])-y,0,y-Math.max(a[1],b[1])));if(L.some(l=>l.p.some((q,i)=>i&&sd(l.p[i-1],q)<=3)))WARM.add(j)}return WARM}
+let WARMK='',WARM=new Set();function warmSet(){/* 熱の道（熱が流れている線）から3マス以内の畑は、あたたかい畑 */if(WD!==KAZAN||!S.st2)return WARM;const t=S.st2,k=[t.d1,t.d2,t.d2fix,JSON.stringify(t.hvb),CRACKS.map(j=>S.obj[j]==='crack'?1:0).join(''),counts.farm||0,S===WARM.s].join('|');if(k===WARMK)return WARM;WARMK=k;WARM=new Set();WARM.s=S;const L=heatLines().filter(l=>l.on);for(let j=0;j<W*H;j++){if(S.obj[j]!=='farm')continue;const x=j%W+.5,y=((j/W)|0)+.5;const sd=(a,b)=>Math.max(Math.max(Math.min(a[0],b[0])-x,0,x-Math.max(a[0],b[0])),Math.max(Math.min(a[1],b[1])-y,0,y-Math.max(a[1],b[1])));if(L.some(l=>l.p.some((q,i)=>i&&sd(l.p[i-1],q)<=3)))WARM.add(j)}return WARM}
 let HGK='',HGP=[];function heatPts(){/* 熱が流れている熱の道の上に、1マスごとの点（夜の光） */const t=S.st2,k=[S===HGP.s,t.d1,t.d2,t.d2fix,JSON.stringify(t.hvb),CRACKS.map(j=>S.obj[j]==='crack'?1:0).join(''),S.flags.onsen?1:0].join('|');if(k===HGK)return HGP;HGK=k;HGP=[];HGP.s=S;for(const l of heatLines()){if(!l.on)continue;for(let i=1;i<l.p.length;i++){const a=l.p[i-1],b=l.p[i],n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])));for(let s=i===1?0:1;s<=n;s++)HGP.push([a[0]+(b[0]-a[0])*s/n,a[1]+(b[1]-a[1])*s/n])}}return HGP}
-function heatGlow(c,x0,x1,y0,y1,cut){/* cut：暗さをけずる。0：あたたかい色をほんの少し */if(WD!==1||!S.st2)return;const R=cut?30:22;c.save();if(cut)c.globalAlpha=.5;else c.globalAlpha*=.8;for(const[x,y]of heatPts()){if(x<x0-2||x>x1+2||y<y0-2||y>y1+2)continue;c.drawImage(lightSpr(R),x*TS-R,y*TS-R,R*2,R*2)}c.restore()}
+function heatGlow(c,x0,x1,y0,y1,cut){/* cut：暗さをけずる。0：あたたかい色をほんの少し */if(WD!==KAZAN||!S.st2)return;const R=cut?30:22;c.save();if(cut)c.globalAlpha=.5;else c.globalAlpha*=.8;for(const[x,y]of heatPts()){if(x<x0-2||x>x1+2||y<y0-2||y>y1+2)continue;c.drawImage(lightSpr(R),x*TS-R,y*TS-R,R*2,R*2)}c.restore()}
 /* よみがえった温泉の石組み：水のマスの形を、角を丸めたなめらかな形（あけしめ：けずってからふくらませ、ふくらませてからけずる。半径 RIMR）にして、そのふちに石（rim:c0〜3）を1こずつならべる。石が、水のマスの角をかくすので、温泉が丸く見える。温泉の水・よみがえりがかわったときだけ作りなおす */
 const RIMR=16,RIMG=2,RIMSP=11;/* 丸める半径・しらべる細かさ・石の間かく（世界のドット） */
 let RIMK='',RIMS=[],RIMN=-1,RIMW='';
@@ -282,9 +282,9 @@ function rimStones(){const t=S.st2,M=sprMap();if(RIMN!==STATN||RIMS.s!==S){RIMN=
     const P=[];for(const q of B)if(!P.some(p=>Math.hypot(p[0]-q[0],p[1]-q[1])<RIMSP))P.push(q);
     for(const q of P)RIMS.push({x:Math.round(q[0]),y:Math.round(q[1]),v:(hash(q[0]*7+q[1]*13)*4)|0})}
   RIMS.sort((p,q)=>p.y-q.y);return RIMS}
-function drawOnsenRim(x0,x1,y0,y1,now){if(WD!==1||!S.st2)return;const C=window.CHIPS;if(!C||!C['rim:c0'])return;
+function drawOnsenRim(x0,x1,y0,y1,now){if(WD!==KAZAN||!S.st2)return;const C=window.CHIPS;if(!C||!C['rim:c0'])return;
   for(const s of rimStones()){if(s.x<x0*TS-32||s.x>(x1+1)*TS+32||s.y<y0*TS-32||s.y>(y1+1)*TS+32)continue;drawChip(ctx,C['rim:c'+s.v],'rim',s.x,s.y,now)}}
-function drawHeat(now){if(WD!==1||!S.st2)return;const c=ctx;c.save();for(const j of warmSet()){const x=(j%W)*TS,y=((j/W)|0)*TS,ph=((now/1600+j*.13)%1);c.fillStyle='rgba(255,170,90,'+(.35*(1-ph))+')';c.fillRect(Math.round(x+8+((j*7)%16)),Math.round(y+22-ph*16),3,3)}/* あたたかい畑：ゆらゆらと熱がのぼる */c.lineCap='round';c.lineJoin='round';
+function drawHeat(now){if(WD!==KAZAN||!S.st2)return;const c=ctx;c.save();for(const j of warmSet()){const x=(j%W)*TS,y=((j/W)|0)*TS,ph=((now/1600+j*.13)%1);c.fillStyle='rgba(255,170,90,'+(.35*(1-ph))+')';c.fillRect(Math.round(x+8+((j*7)%16)),Math.round(y+22-ph*16),3,3)}/* あたたかい畑：ゆらゆらと熱がのぼる */c.lineCap='round';c.lineJoin='round';
   for(const l of heatLines()){c.beginPath();l.p.forEach((q,i)=>i?c.lineTo(q[0]*TS,q[1]*TS):c.moveTo(q[0]*TS,q[1]*TS));c.setLineDash([]);c.strokeStyle='rgba(60,45,38,.35)';c.lineWidth=9;c.stroke();c.strokeStyle='#8f7b6c';c.lineWidth=5;c.stroke();
     if(l.on){c.strokeStyle='rgba(255,140,60,.95)';c.lineWidth=3.2;c.setLineDash([7,9]);c.lineDashOffset=-now/40;c.stroke();c.setLineDash([]);
       if(l.smoke||l.leak){const e=l.smoke?l.p[l.p.length-1]:[CX+.5,OFF+9.5];for(let k=0;k<3;k++){const ph=((now/1800+k/3)%1);c.fillStyle='rgba(120,110,105,'+(.45*(1-ph))+')';c.beginPath();c.arc(e[0]*TS+Math.sin(now/600+k)*4,e[1]*TS-8-ph*30,5+ph*9,0,7);c.fill()}}}}
@@ -302,10 +302,10 @@ function foeAt(e,r){/* コワイノ e が、せいれい r の3マス以内か�
 function nearRes(e){return e.hitT!=null&&S.t-e.hitT<5||S.res.some(r=>foeAt(e,r))||foeHitsFire(e)||foeStealing(e)}
 function foeStealing(e){return e.stealKey!=null&&S.t-(e.busyT??-1e9)<1}/* 箱・畑からぬすんでいる（カゲドロボウ） */
 function sortieOn(){return !!(S&&(S.free||S.flags&&S.flags.sortie))}/* 出撃（サブクエスト sortie を受けたら、えらべる。草原でおぼえたら、ほかのステージでも） */
-function sortieGuard(r){return !!r&&!WD&&!!S&&r.name===POKO&&!!(S.flags&&S.flags.guard)}/* こもれびのまもりをおぼえたフタバは、出撃をえらべる（はじめは出撃する） */
+function sortieGuard(r){return !!r&&WD===KUSA&&!!S&&r.name===POKO&&!!(S.flags&&S.flags.guard)}/* こもれびのまもりをおぼえたフタバは、出撃をえらべる（はじめは出撃する） */
 function sortieOK(r){return r.elem!=='light'&&r.elem!=='dark'&&(sortieOn()||sortieGuard(r))}/* 光・闇のせいれいは、たたかわない */
 function sortieDef(r){return r.elem==='fire'||sortieGuard(r)}/* はじめの出撃：火のせいれいと、こもれびのまもりをおぼえたフタバ */
-function fighter(r){if(!r)return false;if(r.name===POKO&&!WD&&S.ns&&S.ns.final&&isNight())return true;/* 草原のさいごの夜は、フタバはかならず出撃 */if(!sortieOK(r))return r.elem==='fire';return r.sortie==null?sortieDef(r):r.sortie===true}/* 夜にコワイノと近接でたたかう子。r.sortie：えらんだ出撃（なければ sortieDef） */
+function fighter(r){if(!r)return false;if(r.name===POKO&&WD===KUSA&&S.ns&&S.ns.final&&isNight())return true;/* 草原のさいごの夜は、フタバはかならず出撃 */if(!sortieOK(r))return r.elem==='fire';return r.sortie==null?sortieDef(r):r.sortie===true}/* 夜にコワイノと近接でたたかう子。r.sortie：えらんだ出撃（なければ sortieDef） */
 function foeHitsFire(e){if(typeof e.tg!=='number')return false;const q=S.res.find(q=>q.id===e.tg);return !!q&&fighter(q)&&!q.hidden&&Math.hypot(q.x-e.x,q.y-e.y)<((EN[e.type]||{}).rng||1)+.5}/* 火のせいれいをたたいているコワイノ（とどかない所からでも、火のせいれいが近よって攻撃する） *//* だれかの3マス以内・だれかのいる家に来たコワイノと、塀・壁・建物をこうげきしているコワイノ（火の子がむかえうつ） */
 const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return S.ref[j];if(S.obj[j]==='site2')for(const k of[j-1,j+1,j-W])if(S.obj[k]==='site')return k;return j};/* 古いセーブの神殿の足場にも対応 */
 const typeAt=j=>S.obj[anc(j)];
@@ -316,7 +316,7 @@ const BEDHX=31,BEDHY=-1,BEDVY=8.5,BEDHS=.85;const BEDXY={g_k_bed:[[32,5],[31,41]
 const ROTN=id=>ROTS[id]===5?4:ROTS[id]===4?4:ROTS[id]===3?3:ROTS[id]?2:1,ROTL={5:[,'手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],3:['前','右','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥。0は古いセーブだけ） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
-const szR=(id,rot)=>{const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:id==='tower'&&WD===0&&S?.sacredLegacy3?[3,3]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1||ROTS[id]===3&&rot>=1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
+const szR=(id,rot)=>{const z=id==='tower'&&WD===KUSA&&S?.sacredLegacy2?[2,2]:id==='tower'&&WD===KUSA&&S?.sacredLegacy3?[3,3]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1||ROTS[id]===3&&rot>=1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
 const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
 const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
 let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */

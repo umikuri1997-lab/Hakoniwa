@@ -17,7 +17,7 @@ const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
 const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
-const gearCanUp=id=>{const s=BL[id].g.s;return WD!==0&&(s==='w'||s==='a')};
+const gearCanUp=id=>{const s=BL[id].g.s;return WD!==KUSA&&(s==='w'||s==='a')};
 const GUPATK=[0,10,20,30],GUPHUN=[0,10,20,30];/* 武器の強化 +0〜+3 でふえる攻撃・防具の強化でへる、たたかれたときのおなかのへり */const GUPN=[1,2,3];/* 強化 +1・+2・+3 にいる素材の数 */const GUPPC=50;/* +3 のパワー */
 function gearList(){return S.gear||(S.gear=[])}
 function gearCount(id){let n=0;for(const q of gearList())if(q.id===id)n++;for(const r of S.res)for(const k of GSLOTK)if(r.gear&&r.gear[k]&&r.gear[k].id===id)n++;return n}
@@ -85,7 +85,7 @@ function gearFind(r,title){const id=gearRand(title==='つりあげた！');gearG
 function gearOffer(r){const L=GEAR_IDS.filter(id=>BL[id].g.sp);const id=pick(L);gearGive(id,1);toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');queueItemGift({[id]:1},'うけとった！');return true}
 /* 鉱脈・岩をほったときの鉱石（火山） */
 function oreNear(j){const x=j%W,y=(j/W)|0;return CRACKS.some(c=>Math.hypot(c%W-x,((c/W)|0)-y)<=10)}
-function mineOre(r,j,tgt){if(VEINS[tgt]){const k=VEINS[tgt],n=oreHit()+gearStat(r).ore;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n;return true}/* 鉱脈：1回で oreHit こ（持てる数をこえても、すてない） */if(WD!==1||tgt!=='rock'||!oreOn('sulfur')||!oreNear(j))return false;const q=Math.random();if(q<.03)addMat(r,'crystal',1);else if(q<.13)addMat(r,'sulfur',1);return false}/* ひびわれのそば：硫黄10%・赤い水晶3%（ひびわれをうめたあと） */
+function mineOre(r,j,tgt){if(VEINS[tgt]){const k=VEINS[tgt],n=oreHit()+gearStat(r).ore;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n;return true}/* 鉱脈：1回で oreHit こ（持てる数をこえても、すてない） */if(WD!==KAZAN||tgt!=='rock'||!oreOn('sulfur')||!oreNear(j))return false;const q=Math.random();if(q<.03)addMat(r,'crystal',1);else if(q<.13)addMat(r,'sulfur',1);return false}/* ひびわれのそば：硫黄10%・赤い水晶3%（ひびわれをうめたあと） */
 /* 鉱脈のしゅるいは、マスで決まる（まん中の7マスはのぞく）。目をさますまでは、ふつうの岩 */
 function veinKindAt(j){const x=j%W,y=(j/W)|0;if(Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7)return '';const h=hash(j*131+57);return h<.10?'vcopper':h<.16?'viron':h<.20?'vobsid':h<.23?'vsilver':h<.24?'vgold':''}
 /* 火山の岩のうち、ores の鉱石の鉱脈になるマスを、鉱脈にする（生えなおしをまっている岩も）。かえたマスをかえす */
@@ -101,7 +101,7 @@ const OREWAKE=[
   {q:'hinoookage',ore:['gold'],day:4,hit:2,txt:'金の鉱脈が、見つかるようになった',say:[[SHIZUKU,'#joy|ヌシ様の熱が、山の奥まで……。金色のつぶが、うかんでいます。']]}];
 const VEIN_W={vcopper:10,viron:6,vobsid:4,vsilver:3,vgold:1},VEIN_GROW_MAX=40;/* 毎朝ふえる鉱脈のしゅるいの出やすさ。毎朝ふえた鉱脈は、マップに40本まで */
 const oreStage=()=>(S&&S.st2&&S.st2.ore)||0;/* 目をさました段階（0〜6） */
-function oreStageNow(){if(!S||WD!==1||S.free)return 0;let k=0;while(k<OREWAKE.length&&qDone(OREWAKE[k].q))k++;return k}/* お話の進みで、目をさましていてよい段階 */
+function oreStageNow(){if(!S||WD!==KAZAN||S.free)return 0;let k=0;while(k<OREWAKE.length&&qDone(OREWAKE[k].q))k++;return k}/* お話の進みで、目をさましていてよい段階 */
 function oreOn(ore){const k=oreStage();for(let i=0;i<k;i++)if(OREWAKE[i].ore.includes(ore))return true;return false}
 function oreHit(){const k=oreStage();return k?OREWAKE[k-1].hit:1}
 function oreAwaken(k){const t=S.st2||(S.st2={});const w=OREWAKE[k-1];t.ore=k;const L=placeVeins(S,w.ore);if(L.length)recount();dirty=true;return L}
@@ -109,7 +109,7 @@ function oreAwaken(k){const t=S.st2||(S.st2={});const w=OREWAKE[k-1];t.ore=k;con
 function oreMigrate(s){const t=s.st2||(s.st2={});const k=oreStageNow();t.ore=k;const ores=OREWAKE.slice(0,k).flatMap(w=>w.ore),on=v=>ores.includes(VEINS[v]);for(let j=0;j<W*H;j++){const v=s.obj[j];if(VEINS[v]&&!on(v))s.obj[j]='rock'}for(const g of s.regrow||[])if(VEINS[g.id]&&!on(g.id))g.id='rock';if(k)placeVeins(s,ores)}
 /* 目をさましたときの演出：村の時間を止め、カメラが鉱脈へ行き、鉱脈が光って、大きな知らせ。もとの所へもどってから、ひとこと */
 let OREWAKEON=false,OREWAKECAM=null;/* OREWAKECAM：演出のカメラの動き。村を切りかえたら、これもかたづける */
-function oreWakeTick(){if(OREWAKEON||!S||WD!==1||S.free||GIFT_ACTIVE||camAnim||!stageReady())return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;if(oreStage()>=oreStageNow())return;
+function oreWakeTick(){if(OREWAKEON||!S||WD!==KAZAN||S.free||GIFT_ACTIVE||camAnim||!stageReady())return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;if(oreStage()>=oreStageNow())return;
   const k=oreStage()+1,w=OREWAKE[k-1],L=oreAwaken(k),owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION;
   const dc=a=>Math.hypot(a%W-CX,((a/W)|0)-CY),tj=w.ore.includes('sulfur')?CRACKS[2]:L.slice().sort((a,b)=>dc(a)-dc(b))[0];
   OREWAKEON=true;GIFT_ACTIVE=true;const back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2};
@@ -138,7 +138,7 @@ function gearIdea(material,crafted,carried=0){
   const ore=VOLK()&&GEAR_ORES.some(k=>acquired(k)>0);
   for(const id of GEAR_IDS){
     const b=BL[id],g=b.g;
-    if(g.sp||!b.mat||(g.gr||g.wd?WD!==(g.gr?0:g.wd):!b.idea&&WD!==1))continue;/* 草原の物（gr）・風の物（wd）は、その土地だけ */
+    if(g.sp||!b.mat||(g.gr||g.wd?WD!==(g.gr?0:g.wd):!b.idea&&WD!==KAZAN))continue;/* 草原の物（gr）・風の物（wd）は、その土地だけ */
     const primary=source(b.idea||gearMain(id));
     const gear=g.s==='w'||g.s==='a';
     const key=primary+':'+g.s;
@@ -187,7 +187,7 @@ function gearUpBtn(q,after){if(!gearCanUp(q.id)||(q.lv||0)>=3){const t=el('<span
 function gearRow(q,sub){const r=rowEl(gearName(q),'',gearIcon(q.id));r.querySelector('small').textContent=sub||BL[q.id].desc;r.style.alignItems='center';return r}
 function gearSheet(body,r){const sec=el('<div class="sec"></div>');
   for(const k of GSLOTK){const q=r.gear&&r.gear[k];const h=el('<b style="display:block;margin-top:6px"></b>');h.textContent=GSLOT[k];sec.appendChild(h);
-    if(q){const row=gearRow(q);const ob=el('<button class="btn">はずす</button>');ob.onclick=()=>{sfx('tap');gearOff(r,k);renderSheet()};if(WD!==0)row.appendChild(gearUpBtn(q,renderSheet));row.appendChild(ob);sec.appendChild(row)}
+    if(q){const row=gearRow(q);const ob=el('<button class="btn">はずす</button>');ob.onclick=()=>{sfx('tap');gearOff(r,k);renderSheet()};if(WD!==KUSA)row.appendChild(gearUpBtn(q,renderSheet));row.appendChild(ob);sec.appendChild(row)}
     else{const p=el('<p class="note" style="margin:2px 0"></p>');p.textContent=k==='w'&&r.elem!=='fire'?'武器は火のせいれいだけ':'なし';sec.appendChild(p)}
     gearList().forEach((g2,i)=>{if(gearSlot(BL[g2.id].g)!==k||gearOK(r,g2.id))return;const row=gearRow(g2),b=el('<button class="btn pri">つける</button>');b.onclick=()=>{if(gearEquip(r,i))renderSheet()};row.appendChild(b);sec.appendChild(row)})}
   if(!gearList().length&&!GSLOTK.some(k=>r.gear&&r.gear[k])){const p=el('<p class="note"></p>');p.textContent='そうびは、ありません';sec.appendChild(p)}
@@ -197,7 +197,7 @@ let BOARDTAB=null;
 function gearBoardHead(id,prev){if(!BOARDTAB){BOARDTAB={};for(const[t,ids]of CRAFT_TABS)for(const i of ids)if(!BOARDTAB[i])BOARDTAB[i]=t}
   const key=i=>{const g=BL[i].g,s=g&&gearSlot(g);return s&&s!=='ar'?'g:'+s:'t:'+(BOARDTAB[i]||'')},k=key(id);if(prev&&key(prev)===k)return null;
   const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=k.startsWith('g:')?GSLOT[k.slice(2)]:k.slice(2);return h}
-function gearBoardUp(box){if(WD===0)return;const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
+function gearBoardUp(box){if(WD===KUSA)return;const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
 /* もちもの：そうび */
 function gearInv(body){const L=gearList();if(!L.length)return;const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:8px"></b>');hd.textContent='そうび';g.appendChild(hd);for(const q of L){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');b.querySelector('img').src=gearIcon(q.id);b.querySelector('.nm').textContent=gearName(q);b.querySelector('.ct').textContent=GSLOT[BL[q.id].g.s];g.appendChild(b)}body.appendChild(g)}
 /* ---------- 炉（smelter、2×2の建物）：鉱石2こで延べ棒1こ ----------

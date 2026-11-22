@@ -58,7 +58,7 @@ const DEATHL={wood:n=>[n+'が…！','…でも、だいじょうぶ。',backWhe
  fireB:n=>[n+'#danger|！ …くそっ、やられちまったか。','しょげてる場合じゃねえ。',backWhen(n)+n+'は、きっともどってくるぜ。','新しいなかまより先に、'+n+'がもどってくる。待ってろよ。'],
  water:n=>[n+'が…消えてしまいました。','落ち着いてください。',backWhen(n)+n+'は、きっともどってきます。','新しいなかまより先に、'+n+'がもどってくるはずです。'],
  wind:n=>[n+'が…風に消えてしまった。','フッ……だいじょうぶさ。',backWhen(n)+n+'は、きっともどってくるよ。','新しいなかまより先に、'+n+'がもどってくる。気長に待とう。']};
-function elemKey(r){if(KEYVR[r.name]&&KEYVR[r.name].pk)return KEYVR[r.name].pk;let h=0;for(const ch of r.name)h=(h*17+ch.charCodeAt(0))>>>0;return r.elem==='fire'?(WD===0?'fireB':h%2?'fireA':'fireB'):r.elem==='wind'?'wind':r.elem}/* 火のせいれいは名前で、あねご／あにき。風のせいれいは1つ（キザで自由人） */
+function elemKey(r){if(KEYVR[r.name]&&KEYVR[r.name].pk)return KEYVR[r.name].pk;let h=0;for(const ch of r.name)h=(h*17+ch.charCodeAt(0))>>>0;return r.elem==='fire'?(WD===KUSA?'fireB':h%2?'fireA':'fireB'):r.elem==='wind'?'wind':r.elem}/* 火のせいれいは名前で、あねご／あにき。風のせいれいは1つ（キザで自由人） */
 function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray'))return 'さみしいなぁ…';/* お墓へ向かう・埋葬するあいだ、タップしたときのひとこと */
   if(r.hunger<150)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
@@ -148,7 +148,7 @@ function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使
     for(const[x,y0]of top){const y1=bot.get(x),px=x*TS,lx=top.has(x-1)?px-.6:px+1,rx=top.has(x+1)?px+TS+.6:px+TS-1,/* となりの列と少し重ねて、すき間の線を出さない */t=y0*TS-11,b=y1*TS+1;if(y0<ty||(y0===ty&&x>tx)){ty=y0;tx=x}
 
       // 赤茶の瓦。横の列ごとに半分ずらした四角い瓦
-      const KW=WD===1;/* 火山のふもとは、黒い瓦。丸がわらを、たてにならべる */
+      const KW=WD===KAZAN;/* 火山のふもとは、黒い瓦。丸がわらを、たてにならべる */
       c.fillStyle=KW?'#2b2c32':'#a06058';c.fillRect(lx,t,rx-lx,b-t);
       c.save();c.beginPath();c.rect(lx,t,rx-lx,b-t);c.clip();
       if(KW){const CW=8,RH=9;for(let col=Math.floor(lx/CW)-1;col*CW<rx+CW;col++){const xx=col*CW;c.fillStyle='#3d3f48';c.fillRect(xx+1,t,CW-3,b-t);c.fillStyle='rgba(175,182,200,.3)';c.fillRect(xx+1.6,t,1.2,b-t);c.fillStyle='rgba(0,0,0,.4)';c.fillRect(xx+CW-2.2,t,1.2,b-t)}
@@ -194,12 +194,12 @@ function grassRound(sc,gt,X0,Y0,X1,Y1){/* 草地を、まわりのマスと高�
       if(f>=GRT-GRSH){d[q]=40;d[q+1]=46;d[q+2]=24;d[q+3]=38;continue}d[q+3]=0}/* あれ地がわ：草のかげ */
     tg.putImageData(id,0,0);sc.drawImage(T,px,py)}
   if(T)T.width=T.height=0}
-function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
-  if(WD===0){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：224×224のテクスチャを、マップの位置どおりにしきつめる */
+function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===KAZAN?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
+  if(WD===KUSA){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：224×224のテクスチャを、マップの位置どおりにしきつめる */
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
   const gt=chipImgs(C['tex:grass'],'ground')[0];grassRound(sc,gt,X0,Y0,X1,Y1);
   {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
-    const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%GRTEX,ry%GRTEX,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%DRTEX,ry%DRTEX,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
+    const land=k=>S.ground[k]===0,dpt0=WD===KUSA?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%GRTEX,ry%GRTEX,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%DRTEX,ry%DRTEX,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
       const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
       if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
@@ -226,7 +226,7 @@ function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物�
   for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
 }
 let SSIG=null,SSIG_S=null,SSIG_G='',NOISEC=null;
-function staticSig(){/* マスごとに、地面の絵にかかわる中身を文字にしておく（前とくらべて、変わったマスだけ描き直すため） */const hs=new Set();for(const h of HOUSES)for(const j of h.set)hs.add(j);const M=WD===1&&S.st2?sprMap():null,sg=new Array(W*H);
+function staticSig(){/* マスごとに、地面の絵にかかわる中身を文字にしておく（前とくらべて、変わったマスだけ描き直すため） */const hs=new Set();for(const h of HOUSES)for(const j of h.set)hs.add(j);const M=WD===KAZAN&&S.st2?sprMap():null,sg=new Array(W*H);
   for(let i=0;i<W*H;i++){const o=S.obj[i],st=o&&BL[o]&&!(BL[o].dyn||BL[o].anim||TREES.has(o));sg[i]=o+'|'+(S.ref[i]??'')+'|'+S.ground[i]+'|'+(S.floor[i]||'')+'|'+(REV.has(i)?1:0)+(hs.has(i)?1:0)+(ashed(i)?1:0)+(M&&S.ground[i]===1&&springOn(M[i])?1:0)+(S.trapCd&&S.trapCd[i]>S.t?1:0)+'|'+(st&&S.dyn[i]?JSON.stringify(S.dyn[i]):'')+'|'+((S.win||{})[i]||'')+'|'+((S.rot||{})[i]||'')+'|'+(RUGC.has(i)?RUGC.get(i)+S.rug[RUGC.get(i)]+((S.rugRot||{})[RUGC.get(i)]||''):'')+'|'+(S.hp['L'+i]||'')}
   return sg}
 let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたときの行の範囲（段差の絵は、そこだけ作りなおす） */function rebuildStatic(full){STATN++;STDIRTY=null;findHouses();

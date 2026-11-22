@@ -41,7 +41,7 @@ function wildDraw(add,vis,ctx,now){/* 奥行きの順に、ほかの物といっ
 let FTS=null,FTV=0;
 function freeTier(){/* クリアした土地の番号（0：草原まで・1：火山まで）。村を開いたときに1回しらべる */if(FTS===S&&S)return FTV;FTS=S;let c=false;try{const d=typeof LIVE!=='undefined'&&LIVE[1];if(d)c=!!d.cleared;else{const t=KV.getItem(SAVE_KEYS[1]);c=!!(t&&JSON.parse(t).cleared)}}catch(e){}FTV=c?1:0;return FTV}
 function WT(){return WD===FREE?freeTier():WD}/* その土地までの物が使える */
-function VOLK(){return WD===1||WD===FREE&&freeTier()>=1}/* 火山のしくみ（鉱脈・そうび・おまつり）が使える */
+function VOLK(){return WD===KAZAN||WD===FREE&&freeTier()>=1}/* 火山のしくみ（鉱脈・そうび・おまつり）が使える */
 function noTemple(){return STATUE<0&&!(S&&S.free)}/* 神殿がまだない（フリーモードは、神殿なしで何でもできる） */
 function festBase(){return STATUE>=0?STATUE:S&&S.free?OBOX:-1}
 const freeElems=()=>freeTier()>=1?['wood','earth','fire','water']:['wood','earth'];

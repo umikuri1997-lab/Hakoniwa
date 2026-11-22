@@ -25,7 +25,7 @@ function sawdust(x,y,n,w){if(uiReduced())return;sfx('dust');let box=document.get
     UIFX.parts.push({d,x:x+(Math.random()-.5)*(w||0),y,vx:(Math.random()-.5)*1.6,vy:-.4-Math.random()*.9,t:0,dust:1,ph:i})}
   if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 /* 地図をタップしたところに、小さな葉（火山は火の粉）。1粒は1ドット（1.5px）のます目にそろえて動かす */
-function tapFx(x,y){if(uiReduced())return;const fire=WD===1,n=fire?6:5;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
+function tapFx(x,y){if(uiReduced())return;const fire=WD===KAZAN,n=fire?6:5;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
   const cols=fire?['#f2a43a','#f7d067','#e0663a']:['#6aa857','#8fca6b','#4f8a40'];
   for(let i=0;i<n&&UIFX.parts.length<30;i++){const d=document.createElement('i'),sz=(fire?(i%3?1:2):(i%2?2:3))*1.5;d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
     const a=Math.PI*2*i/n+Math.random()*.6,sp=1+Math.random()*1.4;UIFX.parts.push({d,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(fire?1.8:1.2),t:0,fire,ph:i})}

@@ -96,7 +96,7 @@ function mainStoryFocusTarget(){
   const report=S.qStory!=null,q=QUESTS[report?S.qStory:S.quest];if(!q)return null;
   if(q.id==='nushi'&&S.qTalked){const target=grassEndingFocusTarget();if(target)return target;}
   if(TALKW===GOD&&godHere()&&mainStoryBubbleReady())return{x:godX(),y:godY()-.8,w:3,h:3};
-  if(!report&&WD===0&&q.id==='statue'&&typeof RUINT!=='undefined'&&RUINT>=0&&S.obj[RUINT]==='statueb'){const z=BL.statueb.sz||[1,1];return{x:RUINT%W+z[0]/2,y:(RUINT/W|0)+z[1]/2-.5,w:z[0],h:z[1]}}/* はじめの目標：こわれた神殿の場所へ */
+  if(!report&&WD===KUSA&&q.id==='statue'&&typeof RUINT!=='undefined'&&RUINT>=0&&S.obj[RUINT]==='statueb'){const z=BL.statueb.sz||[1,1];return{x:RUINT%W+z[0]/2,y:(RUINT/W|0)+z[1]/2-.5,w:z[0],h:z[1]}}/* はじめの目標：こわれた神殿の場所へ */
   if(q.field){
     if(!report&&(!S.qTalked&&!earthIntroCurrent()||S.qTalked&&!fieldStoryCurrent()))return null;
     fieldStoryEnsure(fieldActiveId(q));const j=S.sacredRoot;
