@@ -1,7 +1,7 @@
 'use strict';
 function treePlanted(){let n=cnt('tree')+cnt('fruit');for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='sprout'&&S.dyn[j]&&(S.dyn[j].plant==='tree'||S.dyn[j].plant==='fruit'))n++}return n}/* 木・果樹（苗もふくむ）。花の芽はかぞえない */
 const kcOK=(c,r,p)=>!WD&&sevName(c.kc[0])===r.name&&(c.kc[1]==='*'?!isKey(p.name):sevName(c.kc[1])===p.name);
-const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18,kClr=()=>!!S.cleared,kRuin=d=>()=>(S.fogF||[]).some(f=>f.t==='ruin'&&!!f.done===!!d&&!(S.fog&&S.fog[f.a]));/* 晴れた所に、古い家のあとがある（d：もう家にもどった） */
+const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18,kClr=()=>!!S.cleared,kRuin=d=>()=>(S.fogF||[]).some(f=>f.t==='ruin'&&!!f.done===!!d&&!!f.set);/* 晴れた所に、古い家のあとがある（d：もう家にもどった） */
 /* せいれいどうしのおしゃべり。0が話しかけた子、1が相手。「しらべる」でタップすると読める。「コワイノ」のお話は、はっきりは言わず、聞いていると正体が少しずつわかる（STORY.md） */
 const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、el：その属性の子だけ、mate：なかよしだけ、ok：出る条件。セーブに番号が入るので、順番を変えない */
  Object.assign([[0,'ねえ、さっき柵のむこうで、なにか光ってなかった？'],[1,'見た見た！ きらきらってしてた。'],[0,'なんだろう…。さわったら、いいことあるのかな。']],{ok:()=>['fence','misugaki','logfence','bamboofence','wall'].some(id=>cnt(id)>0)}),
