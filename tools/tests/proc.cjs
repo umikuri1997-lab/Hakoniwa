@@ -39,7 +39,7 @@ const assert=require('node:assert/strict');
   /* 水車：水のとなりだけ。まわり5マスは、ひとりでに動き、できた物はせいれいが箱へ */
   const ws=JSON.parse(await run(`(()=>{const w=(${lj})+W*6+2;S.obj[w]='';S.obj[w+1]='';S.ground[w+1]=1;
     const dry=(${lj})+W*2;const okDry=canPlace('suisha',dry%W,(dry/W)|0,true),okWet=canPlace('suisha',w%W,(w/W)|0,true);
-    S.obj[w]='suisha';let lm=-1;for(const d of[-W*2,W*2,-2,-W*3,W*3,-3,-W,W,-1])if(S.obj[w+d]===''&&S.ground[w+d]===0&&!(S.fog&&S.fog[w+d])&&adjOf(w+d,k=>walk(k))>=0){lm=w+d;break}S.obj[lm]='loom';recount();
+    S.obj[w]='suisha';let lm=-1;for(const d of[-W*2,W*2,-2,-W*3,W*3,-3,-W,W,-1])if(S.obj[w+d]===''&&S.ground[w+d]===0&&!(S.fog&&S.fog[w+d])&&adjOf(w+d,k=>walk(k))>=0){S.obj[w+d]='loom';const ok=workCells(w+d).every(k=>!S.obj[k]&&!S.ground[k]&&walk(k));S.obj[w+d]='';if(ok){lm=w+d;break}}/* 作業するマス（はたおり機の前）が空いている所（workCells・workOK） */S.obj[lm]='loom';recount();
     const a=S.res[0];S.prIn={[lm]:{kasa:6}};const t0=S.t;let n=0,auto=false;for(;n<20000&&(S.mat.nuno||0)<4;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if((S.prOut||{})[lm])auto=true;if(a.act&&a.act.type==='proc'&&a.act.obj===lm)return JSON.stringify({bad:'spirit wove at waterwheel'})}
     return JSON.stringify({okDry,okWet,near:suiOn(lm),auto,nuno:S.mat.nuno||0,out:Object.keys(S.prOut||{}).length,lm})})()`));
   console.log(JSON.stringify(ws));
@@ -59,6 +59,6 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(wsim));assert.equal(wsim.got,2,'わた毛4こで布2こ');assert.equal(wsim.wool,1);assert.equal(wsim.left,0);
   /* はじめのベッドの目標 */
   const bq=JSON.parse(await run(`(()=>{const q=QUESTS.find(q=>q.id==='bed');return JSON.stringify({gives:q.talk.gives,prog:typeof q.prog==='function'?q.prog():''})})()`));
-  assert.deepEqual(bq.gives,{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}});assert.ok(/^はたおり機 1\/1・布 1\/1・ベッド 0\/1$/.test(bq.prog),bq.prog);
+  assert.deepEqual(bq.gives,{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}});assert.equal(bq.prog,'手順 3/4 依頼ボードでベッドをたのむ','布ができたら、いまの手順だけを番号つきで（bedStep）');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -55,7 +55,7 @@ const assert=require('node:assert/strict');
   /* おぼえていない物の入った設計図は、もらえない */
   const g=JSON.parse(await run(`(()=>{const sv=S.recipes;S.recipes={};const a=Object.keys(BPS).filter(bpCanGet);S.recipes=sv;return JSON.stringify({a,ok:a.every(k=>BPS[k].furn.every(f=>BL[f[2]].kind!=='furn'))})})()`));console.log('no recipes:',g.a);assert.ok(g.ok,'only furniture-free blueprints without recipes');
   /* 家でない設計図を、さいごまで建てる */
-  const nh=JSON.parse(await run(`(()=>{const f=S.res[0];S.lv=15;S.feat.plant=true;S.flags.watchLearned=true;for(const id in BL){const b=BL[id];if(b.kind==='furn')S.recipes[id]=true;if(b.kind==='block')S.unlocked[id]=true;if(ATTRFL.has(id))S.unlocked[id]=true}
+  const nh=JSON.parse(await run(`(()=>{const f=S.res[0];S.lv=15;S.feat.plant=true;S.flags.watchLearned=true;for(const id in BL){const b=BL[id];if(b.kind==='furn')S.recipes[id]=true;if(b.kind==='block')S.unlocked[id]=true;if(ATTRFL.has(id))S.unlocked[id]=true}for(const id of LVPICK)LP().got[id]=1;/* 村レベルでえらんでおぼえる物（lvpick.js）も、えらんだことにする */
     const out={can:Object.keys(BPS).filter(bpCanGet).length,miss:Object.keys(BPS).filter(k=>!bpCanGet(k)).map(k=>k+':'+bpPieces(k).filter(p=>!bpKnown(p[2],p[3])).map(p=>p[3]).join('/'))};const tests=['kadan','sakuhatake','toride','kouen'],X=(f.x|0)-14,Y=(f.y|0)+10;
     const clear=(x,y)=>{const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';if(S.edge)delete S.edge[j];S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.fog)S.fog[j]=0};
     for(let y=Y-1;y<Y+8;y++)for(let x=X-1;x<X+34;x++)clear(x,y);recount();S.mat.wood=(S.mat.wood||0)+300;S.mat.stone=(S.mat.stone||0)+300;S.mat.shina=(S.mat.shina||0)+40;S.mat.funba=(S.mat.funba||0)+40;S.mat.eda=(S.mat.eda||0)+40;S.pt+=500;boxSync();
