@@ -136,4 +136,4 @@ const SACRED_QUIET=[
   ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……わたしにも、まだわからぬ。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','#teary|……うん。'],['N','#hush|……となり、座るねぇ。',1,'stree:sit'],['N','#hush|……。',1,'stree:sunny'],['F','#hush|……今日は、ここにいてもいい？'],['U','もちろんだ。']
 ];
 function sacredQuietScene(){return startSacredQuiet();}
-function drawSacredQuiet(now){if(WD===KUSA&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}
+function drawSacredQuiet(now){if(WD===KUSA&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){ctx.save();isoAt(ctx,S.nushi.x*TS,S.nushi.y*TS);talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');ctx.restore()}}

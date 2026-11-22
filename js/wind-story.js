@@ -83,5 +83,4 @@ function drawWindNushi(c,now){if(!windOn()||S.free)return;const b=WV.bird;if(!b&
   let x,y,al=1;const fl=Math.sin(now/260)*.5+.5;
   if(b&&!S.flags.windEnd){const t=(now-b.t0)/1000;if(t<3){const p=t/3;x=b.sx*TS;y=b.sy*TS+80-p*160;al=Math.min(1,p*1.6)}else{const p=Math.min(1,(t-3)/2.4),e=p*p*(3-2*p);x=(b.sx+(b.hx-b.sx)*e)*TS;y=(b.sy-5+(b.hy-b.sy+5)*e)*TS-80*(1-e)+Math.sin(now/900)*6}}
   else{const [gx,gy]=windEndFrom(),a=now/9000;x=(gx+Math.cos(a)*7)*TS;y=(gy+1+Math.sin(a)*4)*TS;al=.85}
-  const fr='fly'+(Math.floor(now/(WNSPR.ms||100))%16),fx=WV.bx!=null&&x<WV.bx-.01;WV.bx=x;if(wnDraw(c,fr,x,y,al,fx))return;/* はばたき16コマ。左へとぶときは反転 */
-  windBird(c,x,y,fl,al)}
+  const fr='fly'+(Math.floor(now/(WNSPR.ms||100))%16),fx=WV.bx!=null&&x<WV.bx-.01;WV.bx=x;c.save();isoAt(c,x,y);/* クォータービュー：その所に立てて */if(!wnDraw(c,fr,x,y,al,fx))windBird(c,x,y,fl,al);c.restore()}/* はばたき16コマ。左へとぶときは反転 */

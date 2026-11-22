@@ -337,7 +337,7 @@ function yamiFail(why){const Y=yamiState(),t=yamiTomori(),S0=S,ev=hour()<6?dayNo
   dialog([[TOMORI,why==='dawn'?'#sad|……朝に、なっちゃった。':'#scared|……っ！'],[GOD,'#worry|影が、おびえて、行ってしもうた……。'],[GOD,'また、夜があつまるのを待とう。3日もすれば、もう一度来るじゃろう。']],()=>{if(S!==S0)return;renderQuest();save()},null,TOMORI);renderQuest();save()}
 function yamiSafe(r){if(r.name!==TOMORI)return false;const Y=yamiState();return !(Y.ph==='meet'||Y.ph==='go')}/* トモリは、コワイノにねらわれない・たたかれない。さいごの夜（大きな影をむかえに行く〜ゆりかごへ）だけは、ねらわれる */
 function yamiHitRes(e,r){const Y=yamiState();if(r.name!==TOMORI||!(Y.ph==='meet'||Y.ph==='go'))return false;/* さいごの夜のトモリ：おなかはへらない。3回たたかれたら、やりなおし */
-  r.hurt=40;Y.hits=(Y.hits||0)+1;sfxAt('bonk',r.x,r.y);if(typeof shakeScreen==='function')shakeScreen('m');addFloat(r.x,r.y-1.4,'あぶない！','#ffd2cc');renderQuest();if(Y.hits>=YHITMAX&&$('#dialog').hidden)yamiFail('hit');return true}
+  r.hurt=40;Y.hits=(Y.hits||0)+1;sfxAt('bonk',r.x,r.y);if(typeof shakeScreen==='function')shakeScreen('m');addFloatG(r.x,r.y,-1.4,'あぶない！','#ffd2cc');renderQuest();if(Y.hits>=YHITMAX&&$('#dialog').hidden)yamiFail('hit');return true}
 function yamiShadowStep(dt){const sh=YSH,Y=yamiState(),t=yamiTomori();if(!sh||!t)return;sh.a=Math.min(1,(performance.now()-sh.t0)/1500);
   if(Y.ph==='meet'){const tg=sh.mj+W,tx=tg%W+.5,ty=((tg/W)|0)+.5;if(!sh.G||sh.G.tg!==tg){sh.G=bfs(tg%W,(tg/W)|0,true);sh.G.tg=tg}
     const d=Math.hypot(tx-sh.x,ty-sh.y);if(d>.1){const G=sh.G,cx=sh.x|0,cy=sh.y|0;let nx=tx,ny=ty;const cd=G.dist[cy*W+cx];if(cd>1){let bj=-1,bv=cd;for(const[ax,ay]of[[1,0],[-1,0],[0,1],[0,-1]]){const k=(cy+ay)*W+cx+ax;if(G.dist[k]>=0&&G.dist[k]<bv){bv=G.dist[k];bj=k}}if(bj>=0){nx=bj%W+.5;ny=((bj/W)|0)+.5}}

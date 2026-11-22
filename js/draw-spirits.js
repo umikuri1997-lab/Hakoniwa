@@ -603,7 +603,7 @@ let GODOUT=false;/* お見送りのあと、カミサマが光になって消え
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT&&!S.free;/* フリーモードに、カミサマは出ない */
 /* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
 const BUBR=[];let BUBF=-1;
-function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<45&&Math.abs(b[1]-by)<40.5);if(!hit)break;by-=42.75}return by}
+function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}const T=ctx.getTransform(),ka=Math.abs(T.a)||1,kd=Math.abs(T.d)||1,sx=T.a*px+T.e;for(let k=0;k<3;k++){const sy=T.d*by+T.f,hit=BUBR.some(b=>Math.abs(b[0]-sx)<45*ka&&Math.abs(b[1]-sy)<40.5*kd);if(!hit)break;by-=42.75}return by}/* 画面の上の場所でくらべる（クォータービューは、子ごとに描き方がちがう） */
 function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.length;c.fillStyle=col;c.fillRect(x,y+k*d,w,h-2*k*d);for(let i=0;i<k;i++){const a=ins[i]*d;c.fillRect(x+a,y+i*d,w-2*a,d);c.fillRect(x+a,y+h-(i+1)*d,w-2*a,d)}}
 function pxBub(c,cx,top,w,h,fill,line,tl){{const T0=c.getTransform(),k=Math.min(1,homeZ()*dpr/Math.abs(T0.a||1));if(k<1){top+=h*(1-k);w*=k;h*=k}}/* 画面を大きくしても、ふきだしは、ふだんの大きさより大きくしない（しっぽの先はそのまま） *//* ドットのふきだし：段々の角と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝ゲームの半分の点、画面の整数ピクセル） */
   const T=c.getTransform(),kk=Math.min(1,homeZ()*dpr/Math.abs(T.a||1)),D=Math.max(1,Math.round(T.a*kk)),e=Math.max(1,Math.round(T.a*kk/2)),n=Math.round(w*T.a/e/2),m=Math.round(h*T.a/e),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*e;w=(2*n+1)*e;h=m*e;/* 1ドット e は、ゲームの半分の点（画面の整数ピクセル） */
@@ -611,7 +611,7 @@ function pxBub(c,cx,top,w,h,fill,line,tl){{const T0=c.getTransform(),k=Math.min(
   const cxp=tx+e/2,R=(i,hw)=>c.fillRect(cxp-e/2-hw*e,y+h+i*e,(2*hw+1)*e,e),rows=Math.max(3,Math.round((tl||6.75)*T.a*kk/e)),HW=i=>rows-1-i;
   c.fillStyle=line;for(let i=0;i<rows;i++)R(i,HW(i));c.fillStyle=fill;for(let i=-1;i<rows-1;i++)R(i,HW(i)-1)/* しっぽ：1行に1ドットずつ細くなる、45度の段々（線は1ドット、先は1ドット）。中の色で、わくの下の線をあける */
   c.restore();const M=Math.min(w,h);return {x:cxp,y:y+h/2,s:M-7*D,f:M-2*e}}/* f：わくの内がわの大きさ *//* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
-function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=45,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-63,bw,42,col||'#9fdcff','#fff');
+function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}{const T=ctx.getTransform();BUBR.push([T.a*px+T.e,T.d*by+T.f])}const bw=45,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-63,bw,42,col||'#9fdcff','#fff');
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1f5f86';const q=Math.max(2,Math.round(B.s/6));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(B.x-q/2)+d*q*2,Math.round(B.y-q/2),q,q);ctx.restore()}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
 function drawHanabi(now){const dt=Math.min(.05,Math.max(0,(now-(HB.t||now))/1000));HB.t=now;const h=hour();

@@ -110,7 +110,7 @@ function evTick(){const E=S&&S.ev;if(!E||typeof MEMRUN!=='undefined'&&MEMRUN)ret
   if(E.ph==='do'){if(E.id==='soji')for(const r of P)if(r.act&&['weed','pickdrop','sweep','evt'].includes(r.act.type))E.got[r.id]=1;
     if(E.id==='takara'&&E.tr.every(t=>t.got)){if(typeof evShowClimax!=='function')return evEnd();if(!E.cx)return evShowClimax(E,P);if(S.t-E.cxS>=3)return evEnd();return}
     if(E.legs&&S.t-E.t0>=D.dur/E.legs.length&&E.leg<E.legs.length-1){E.leg++;for(const r of P)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}if(!evLegSlots(E,P,bfs(P[0].x|0,P[0].y|0)))return evEnd();E.ph='go';E.t0=S.t;E.at={};return}
-    if(S.t-E.t0>=(E.legs?D.dur/E.legs.length:D.dur)){if(E.id==='ensoku'){E.ph='back';E.t0=S.t;for(const r of P){if(Math.random()<.5&&matTot()+matN(r)<matCap()){addMat(r,'eda',1);/* しまう所があるときだけ */addFloat(r.x,r.y-1.5,'枝をみつけた','#fff3d6')}if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}}return}return evEnd()}return}
+    if(S.t-E.t0>=(E.legs?D.dur/E.legs.length:D.dur)){if(E.id==='ensoku'){E.ph='back';E.t0=S.t;for(const r of P){if(Math.random()<.5&&matTot()+matN(r)<matCap()){addMat(r,'eda',1);/* しまう所があるときだけ */addFloatG(r.x,r.y,-1.5,'枝をみつけた','#fff3d6')}if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}}return}return evEnd()}return}
   if(E.ph==='back'){for(const r of P)if(r.act&&r.act.type==='evt'&&r.act.back&&r.act.stage==='do'&&!E.backed.includes(r.id))E.backed.push(r.id);if(P.every(r=>E.backed.includes(r.id))||S.t-E.t0>EVWAIT*2)evEnd()}}
 function evEnd(){const E=S.ev,D=EVENTS[E.id];if(E.tr)for(const t of E.tr)if(!t.got&&t.k)S.mat[t.k]=(S.mat[t.k]||0)+1;/* 見つからなかった物は、箱にもどす */const P=E.who.map(id=>S.res.find(r=>r.id===id)).filter(r=>evHere(r)&&(E.id!=='soji'||E.got[r.id])&&(E.id!=='ensoku'||E.backed.includes(r.id)||E.at[r.id]));
   if(typeof freeEvEnd==='function')freeEvEnd(E.id,P);/* フリーモードのお話（free.js） */
@@ -122,7 +122,7 @@ function evEnd(){const E=S.ev,D=EVENTS[E.id];if(E.tr)for(const t of E.tr)if(!t.g
   P.forEach((r,i)=>{const T=r.est||(r.est={}),up=[];let G2=E.id==='takara'?{cap:1}:D.cup?{[D.stat]:D.rank[cupPlace(E,R,r.id)]}:E.id==='undo'&&E.team[r.id]===(E.win[0]>=E.win[1]?0:1)?{work:2,move:2,sta:2,atk:10}:D.gain;if(okP){G2=Object.assign({},G2);for(const k in G2)G2[k]+=EVPLAY[k]||0}const fn=show?(D.fun||10)+(okP?EVPLAYFUN:0):0;if(show)funAdd(r,fn,'ev');else if(D.fun)funAdd(r,D.fun,'ev');for(const k in G2){const v=Math.min(EVCAP[k],(T[k]||0)+G2[k]),d=v-(T[k]||0);T[k]=v;if(d>0)up.push(EVSTN[k]+'+'+d)}r.estV=(r.estV||0)+1;
     if(E.id==='gochi'||E.id==='shukaku'||E.id==='utage')r.hunger=hMax(r);if(E.id==='utage')r.energy=100;if(!show)funAdd(r,10,'ev');
     if(show){const L=[up.length?up.join('・'):'たのしかった！','たのしさ+'+fn];if(X[r.id])L.push(X[r.id]);tags.push({r,L});return}
-    villageTimeout(()=>{if(!S.res.includes(r))return;JUMP.set(r,performance.now());addFloat(r.x,r.y-1.6,up.length?up.join('・'):'たのしかった！','#ffe7a8')},300+i*350)});
+    villageTimeout(()=>{if(!S.res.includes(r))return;JUMP.set(r,performance.now());addFloatG(r.x,r.y,-1.6,up.length?up.join('・'):'たのしかった！','#ffe7a8')},300+i*350)});
   if(show){evAfter(E,P);evShowEnd(E,tags)}
   if(D.cup){const nm=id=>(S.res.find(q=>q.id===id)||{}).name||'',top=[0,1,2].map(i=>P.filter(r=>cupPlace(E,R,r.id)===i).map(r=>r.name).join('・')).map((n,i)=>n?(i+1)+'位 '+n:'').filter(Boolean);memo('',D.n+'：'+top.join('　'));toast(D.n+'　'+top.join('　'),'good');sfx('level');if(typeof cupAward==='function'){cupLoot(E,P);cupAward(E,P,R)}/* 作った物・とれた物と、表彰台（cup.js） */
     P.filter(r=>cupPlace(E,R,r.id)===0).forEach(r=>villageTimeout(()=>{if(S.res.includes(r))JOYU.set(r,performance.now()+4000)},200));return}
@@ -137,14 +137,14 @@ function evAct(r,G){const E=S&&S.ev;if(!E||!E.ph||isNight()||r.hidden||!E.who.in
   if(E.id==='takara'&&E.ph==='do'){const left=E.tr.filter(t=>!t.got);let k=-1;const hn=left.find(t=>t.j===E.hint);if(left.length&&Math.random()<(hn?.85:.5)){const t=hn||pick(left);k=nearest(G,j=>Math.abs(j%W-t.j%W)<=1&&Math.abs(((j/W)|0)-((t.j/W)|0))<=1&&walk(j),60)}if(k<0)k=nearest(G,j=>VILL[j]&&walk(j)&&!S.obj[j]&&!S.ground[j]&&Math.hypot(j%W+.5-E.c[0],((j/W)|0)+.5-E.c[1])<=10&&Math.random()<.04,40);startAct(r,G,'evt',k>=0?k:(r.y|0)*W+(r.x|0),{seek:1});return true}
   const j=E.slot&&E.slot[r.id];if(j==null)return false;const k=evStand(r,G,j);if(k<0)return false;startAct(r,G,'evt',k,{});return true}
 function evLegSlots(E,L,G){const c=E.legs[E.leg];E.c=c;const SL=evSlots(G,c[0],c[1],L.length,4);E.slot={};L.forEach((r,i)=>{if(SL[i]!=null)E.slot[r.id]=SL[i]});return SL.length>0}
-function evSeekEnd(r){const E=S.ev;if(!E||!E.tr)return;const t=E.tr.find(t=>!t.got&&Math.abs(t.j%W+.5-r.x)<=1.6&&Math.abs(((t.j/W)|0)+.5-r.y)<=1.6);if(!t)return;t.got=1;E.find[r.id]=(E.find[r.id]||0)+1;if(t.k)addMat(r,t.k,1);JUMP.set(r,performance.now());spawnFX(t.j%W+.5,((t.j/W)|0)+.5,'#ffe08a');addFloat(r.x,r.y-1.6,(t.k?MATN[t.k]+'を':'たからを')+'みつけた！','#ffe7a8');sfx('good')}
+function evSeekEnd(r){const E=S.ev;if(!E||!E.tr)return;const t=E.tr.find(t=>!t.got&&Math.abs(t.j%W+.5-r.x)<=1.6&&Math.abs(((t.j/W)|0)+.5-r.y)<=1.6);if(!t)return;t.got=1;E.find[r.id]=(E.find[r.id]||0)+1;if(t.k)addMat(r,t.k,1);JUMP.set(r,performance.now());spawnFX(t.j%W+.5,((t.j/W)|0)+.5,'#ffe08a');addFloatG(r.x,r.y,-1.6,(t.k?MATN[t.k]+'を':'たからを')+'みつけた！','#ffe7a8');sfx('good')}
 const evDish=E=>{const f=(E.paid&&E.paid.food)||[];const k=f.length?pick(f):'apple';return(FOODS[k]||FOODS.apple).e};
 ACT.evt={start(r,a){const E=S.ev;r.bubble='';if(!E)return false;a.ev=E.id;if(E.id==='gochi'&&E.tab&&E.tab[r.id]!=null){const c=(r.y|0)*W+(r.x|0),t=E.tab[r.id];for(const d of[-W,-1,1,W])if(anc(c+d)===t||c+d===t){a.tdir=d;break}a.e=evDish(E)}else if(E.id==='cha'||E.id==='utage'||E.id==='pikunikku')a.e=evDish(E);else if(E.id==='shukaku')a.e=FOODS[pick(EVCROP)].e;
     if(E.id==='cup1'&&E.pairs){const p=E.pairs.find(q=>q.includes(r.id));if(p){r.face=p[0]===r.id?1:-1;return}}if(E.id==='cup0'||E.id==='cup3'||E.id==='undo'&&UNDOSEG[E.seg]==='race'){r.face=1;return}if(E.tg&&E.tg[r.id]!=null){const t=E.tg[r.id];r.face=t%W+.5>=r.x?1:-1;return}/* 木・水・岩のほうを向く */if(E.id==='undo'&&UNDOSEG[E.seg]==='tug'){r.face=E.team[r.id]?-1:1;return}
     if(a.tdir==null&&!a.back&&!a.seek){const u=E.id==='yomi'&&E.reader!=null&&E.reader!==r.id?(()=>{const q=S.res.find(o=>o.id===E.reader);return q?[q.x,q.y]:null})():(E.unit&&E.unit[r.id])||E.c;if(u&&Math.abs(u[0]-r.x)>.2)r.face=u[0]<r.x?-1:1}},
   tick(r,a,dt){const E=S.ev;if(!E||a.back||a.sweep)return;if(E.ph!=='do'){a.h=0;return}if(E.id==='hana')r.crown=callDay();/* 花まつり：花かんむりをつけて（つぎの朝6時まで） */funAdd(r,.2*dt,'ev');a.h=(a.h||0)+dt;
     if(E.id==='oni')evOniMove(r,a,dt);if(EVENTS[E.id].cup)cupMove(r,a,dt);if(E.id==='undo')undoMove(r,a,dt);
-    if(a.h>=9){a.h=0;if(Math.random()<.35){const L=EVENTS[E.id].talk;addFloat(r.x,r.y-1.5,pickFresh('ev:'+E.id,L).replace(/^#[a-z]+\|/,''),'#fff3d6')}if(E.id!=='gochi'&&E.id!=='oni'&&!EVENTS[E.id].cup&&Math.random()<.4)JUMP.set(r,performance.now())}},
+    if(a.h>=9){a.h=0;if(Math.random()<.35){const L=EVENTS[E.id].talk;addFloatG(r.x,r.y,-1.5,pickFresh('ev:'+E.id,L).replace(/^#[a-z]+\|/,''),'#fff3d6')}if(E.id!=='gochi'&&E.id!=='oni'&&!EVENTS[E.id].cup&&Math.random()<.4)JUMP.set(r,performance.now())}},
   done(r,a){const E=S.ev;if(!E||!E.ph)return true;if(a.seek)return a.t>=6||E.ph!=='do';if(E.id==='takara')return E.ph!=='go';/* たから探し：そろったら、さがしに歩きだす */if(a.sweep)return a.t>=(a.dur||15)||E.ph!=='do';if(a.back)return a.t>=6;return E.ph==='back'},
   end(r,a){if(a.seek&&a.stage==='do'&&a.t>=6)evSeekEnd(r)}};
 function evAnim(r){const a=r.act,E=S&&S.ev;if(!a||!E)return 'talk';if(a.sweep)return 'sweep';if(a.back)return 'wave';if(E.ph!=='do')return 'talk';{const p=typeof evShowPose==='function'&&!a.seek?evShowPose(r):null;if(p)return p}
@@ -205,7 +205,7 @@ function cupRound(E,G){/* すもう：のこっている子を2人ずつ、ひ�
   const watch=E.who.filter(id=>!E.pairs.some(p=>p.includes(id))),WS=evSlots(G,cx,cy+2.5,watch.length,4,j=>!Object.values(E.slot).includes(j));watch.forEach((id,i)=>{if(WS[i]!=null)E.slot[id]=WS[i]});return true}
 function cupBout(E,P){/* 勝ち負け：攻撃力+0〜30（水のせいれいも勝てる） */const S2=id=>{const r=P.find(q=>q.id===id);return r?rStat(r,rLv(r)).atk+Math.random()*30+(E.cheer===id?CHEERK.cup1*(E.ck||0):0):0};/* 応援がうまくいった子は、強さ+30まで（cup.js） */const win=[];for(const[a,b]of E.pairs){const wa=S2(a)>=S2(b);win.push(wa?a:b);E.loss.push({id:wa?b:a,rd:E.rd})}
   const rest=E.bk.filter(id=>!E.pairs.some(p=>p.includes(id)));E.bk=win.concat(rest);E.rd++;
-  for(const p of E.pairs){const w=P.find(q=>q.id===win[E.pairs.indexOf(p)]);if(w){JUMP.set(w,performance.now());addFloat(w.x,w.y-1.6,'かった！','#ffe7a8')}}}
+  for(const p of E.pairs){const w=P.find(q=>q.id===win[E.pairs.indexOf(p)]);if(w){JUMP.set(w,performance.now());addFloatG(w.x,w.y,-1.6,'かった！','#ffe7a8')}}}
 function cupRanks(E,P){/* 1位から順の id。のこりは「出ただけ」 */
   if(E.id==='cup1'){const champ=E.bk[0],R=[champ];const L=E.loss.slice().sort((a,b)=>b.rd-a.rd);for(const l of L)R.push(l.id);return R}
   if(E.id==='cup0'){const fin=E.order.slice(),rest=P.filter(r=>!fin.includes(r.id)).sort((a,b)=>b.x-a.x).map(r=>r.id);return fin.concat(rest)}
@@ -216,8 +216,8 @@ function cupTick(E,P,dt){const D=EVENTS[E.id];/* 1秒ごと：すもうの勝負
   if(E.id==='cup0'&&P.every(r=>E.order.includes(r.id)))return evEnd();
   if(S.t-E.t0>=D.dur)return evEnd()}
 function cupMove(r,a,dt){const E=S.ev;/* 毎コマ：走る・はこぶ・作る */if(cupHold())return;
-  if(E.id==='cup0'){if(E.order.includes(r.id))return;const end=E.tk.x+E.tk.len-.5,v=dt*.55*rMul(r,'move')*(.85+.3*Math.random())*cupBoost(E,r.id);r.face=1;r.x=Math.min(end,r.x+v);if(r.x>=end){E.order.push(r.id);addFloat(r.x,r.y-1.5,E.order.length+'着！','#ffe7a8');JUMP.set(r,performance.now())}return}
-  if(E.id==='cup3'){const x0=E.tk.x+.5,x1=E.tk.x+E.tk.len-.5;if(a.dir==null)a.dir=1;const v=dt*.45*rMul(r,'move')*cupBoost(E,r.id);r.face=a.dir;r.x+=a.dir*v;if(a.dir>0&&r.x>=x1){r.x=x1;a.dir=-1;E.sc[r.id]=(E.sc[r.id]||0)+capOf(r);addFloat(r.x,r.y-1.5,'+'+capOf(r),'#ffe7a8')}else if(a.dir<0&&r.x<=x0){r.x=x0;a.dir=1}return}
+  if(E.id==='cup0'){if(E.order.includes(r.id))return;const end=E.tk.x+E.tk.len-.5,v=dt*.55*rMul(r,'move')*(.85+.3*Math.random())*cupBoost(E,r.id);r.face=1;r.x=Math.min(end,r.x+v);if(r.x>=end){E.order.push(r.id);addFloatG(r.x,r.y,-1.5,E.order.length+'着！','#ffe7a8');JUMP.set(r,performance.now())}return}
+  if(E.id==='cup3'){const x0=E.tk.x+.5,x1=E.tk.x+E.tk.len-.5;if(a.dir==null)a.dir=1;const v=dt*.45*rMul(r,'move')*cupBoost(E,r.id);r.face=a.dir;r.x+=a.dir*v;if(a.dir>0&&r.x>=x1){r.x=x1;a.dir=-1;E.sc[r.id]=(E.sc[r.id]||0)+capOf(r);addFloatG(r.x,r.y,-1.5,'+'+capOf(r),'#ffe7a8')}else if(a.dir<0&&r.x<=x0){r.x=x0;a.dir=1}return}
   if(E.id==='cup2'||EVENTS[E.id].cup&&+E.id.slice(3)>=4)cupWork(r,a,dt)}/* 作る・料理・切る・つる・ほる（cup.js） */
 /* 得意な仕事（★）：仕事は TOKUI の6つ。せいれいごとに、はじめから★1の仕事が1〜2つ（r.vr.tk、tokuiPick）。同じ仕事をした回数（r.jc）が TKN の数で★1・2・3（はじめから★1の仕事も、100回で★2）。
    その仕事は、はたらく速さ+★の数（TKUP、gJob が titleMul でたす）。前のセーブの称号（r.ttl）は★2。木を切る・石をほるをえらぶとき、★の多いほうを先にする（goWork） */
@@ -233,7 +233,7 @@ function tokuiList(r){return Object.keys(TOKUI).map(k=>[k,tokuiLv(r,k)]).filter(
 const tokuiStars=n=>{let h='';for(let i=0;i<TKMAX;i++)h+=pxi(i<n?'star':'stare','tks'+(i<n?'':' off'));return h};/* ドットの星のアイコン（★の字は絵文字のフォントになる） */
 function tokuiHtml(r){const L=tokuiList(r);return L.length?L.map(([k,n])=>'<span style="white-space:nowrap">'+TOKUI[k].n+tokuiStars(n)+'</span>').join('　'):'まだない'}
 function titleNote(r,a){const k=TJOB[a&&a.type];if(!k||!r||IS_STORY_REPLAY||a.stage!=='do')return;const l0=tokuiLv(r,k),C=r.jc||(r.jc={});C[k]=(C[k]||0)+1;const l1=tokuiLv(r,k);if(l1<=l0)return;
-  memo('',r.name+'の「'+TOKUI[k].n+'」の得意が'+l1+'になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'：「'+TOKUI[k].n+'」の得意 '+l1,'good');JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-2.1,TOKUI[k].n,'#ffe7a8');tokuiStarFx(r,l1);sfx('level')},400)}
+  memo('',r.name+'の「'+TOKUI[k].n+'」の得意が'+l1+'になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'：「'+TOKUI[k].n+'」の得意 '+l1,'good');JOYU.set(r,performance.now()+3000);addFloatG(r.x,r.y,-2.1,TOKUI[k].n,'#ffe7a8');tokuiStarFx(r,l1);sfx('level')},400)}
 /* 得意の★が上がった：頭の上に★のならび（TKMAX こ）。前からの★がならんでから、あたらしい★がはねて光る（見た目と音だけ。実時間） */
 const TKFXMS=3000,TKPATH={};
 function tokuiStarFx(r,n){if(!r||r.hidden||typeof scnAdd!=='function')return;scnAdd('tkstar',TKFXMS,{r,n});const x=r.x*TS+(n-1-(TKMAX-1)/2)*14,y=r.y*TS-uLift(r)-52;scnAdd('ring',700,{x,y,r0:4,r1:20,col:'#ffe7a8'},700);scnAdd('glow',1200,{x,y,r:14,col:'#fff6c8'},700);setTimeout(()=>{if(S&&S.res.includes(r))sfx('good')},700)}
@@ -284,7 +284,7 @@ function undoTick(E,P){const sg=UNDOSEG[E.seg],seg=30;
   let w;if(sg==='race'){const pt=[0,0];E.order.forEach((id,i)=>pt[E.team[id]]+=P.length-i);w=pt[0]>=pt[1]?0:1}else{for(const r of P){const st=rStat(r,rLv(r));E.sc[E.team[r.id]]+=(sg==='tug'?st.atk+st.cap*5+Math.random()*40:st.work+Math.random()*8)}w=E.sc[0]>=E.sc[1]?0:1}
   E.win[w]++;toast(UNDON[sg]+'は、'+(w?'白組':'赤組')+'のかち！','good');sfx('good');for(const r of P)if(E.team[r.id]===w)JUMP.set(r,performance.now()+Math.random()*300);
   if(E.seg>=UNDOSEG.length-1)return evEnd();E.seg++;for(const r of P)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}if(!undoSlots(E,P,bfs(P[0].x|0,P[0].y|0)))return evEnd();E.ph='go';E.t0=S.t;E.at={}}
-function undoMove(r,a,dt){const E=S.ev;if(UNDOSEG[E.seg]!=='race'||E.order.includes(r.id))return;const end=E.tk.x+E.tk.len-.5;r.face=1;r.x=Math.min(end,r.x+dt*.55*rMul(r,'move')*(.85+.3*Math.random()));if(r.x>=end){E.order.push(r.id);addFloat(r.x,r.y-1.5,E.order.length+'着！','#ffe7a8')}}
+function undoMove(r,a,dt){const E=S.ev;if(UNDOSEG[E.seg]!=='race'||E.order.includes(r.id))return;const end=E.tk.x+E.tk.len-.5;r.face=1;r.x=Math.min(end,r.x+dt*.55*rMul(r,'move')*(.85+.3*Math.random()));if(r.x>=end){E.order.push(r.id);addFloatG(r.x,r.y,-1.5,E.order.length+'着！','#ffe7a8')}}
 function grandFx(E,P){/* 1秒ごとの見せ場：花びら・火の粉・ランタンの光（小さなエフェクト） */if(E.ph!=='do')return;if(E.id==='hanabi')return hanabiFx(E);const n=E.id==='himatsuri'?'embers':E.id==='hana'||E.id==='lantern'?'twinkle':null;if(!n||Math.random()<.5)return;const r=pick(P);if(!r)return;
   if(E.id==='lantern'){for(let k=0;k<3;k++)villageTimeout(()=>fxSpr(n,r.x*TS,(r.y-1.2-k*1.1)*TS),k*300)}else fxSpr(n,(r.x+(Math.random()-.5)*2)*TS,(r.y-.4)*TS)}
 const HANABIC=['#ff8a9a','#8ac8ff','#ffd86a','#c49cff','#9ef0b0','#ffb070'];

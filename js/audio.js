@@ -482,8 +482,8 @@ function dayChimeTick(){if(!S||!started){CHIMEH=null;return}const h=hour();if(CH
   g.gain.setValueCurveAtTime(cout,t+(b.duration-fadeOut),fadeOut-.02);
   src.connect(g);g.connect(sfxG);src.start(t)}/* 和音なので、高さはゆらさない */
 setInterval(dayChimeTick,200);
-function sfxPos(x,y){/* マップの場所の音の大きさ・左右・こもり（{v,p,l}）。聞こえないほど遠ければ null */const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),R=Math.max(vw,vh)*.8,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return null;
-  const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=(x*TS-(cam.x+vw/2))/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */
+function sfxPos(x,y){/* マップの場所の音の大きさ・左右・こもり（{v,p,l}）。聞こえないほど遠ければ null */const vw=VW/cam.z,vh=VH/cam.z,q=w2s(x*TS,y*TS),qx=(q.x-VW/2)/cam.z,qy=(q.y-VH/2)/cam.z,d=Math.hypot(qx,qy),R=Math.max(vw,vh)*.8/* 画面の上の道のり（クォータービューも） */,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return null;
+  const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=qx/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */
   return{v:v*(.85+.15*zr),p:Math.max(-.75,Math.min(.75,dx*.75)),l:Math.min(18000,1100*Math.pow(15,v)*zr)}}/* 画面の左の音は左から。遠いほどこもる */
 function sfxAt(k,x,y,m=1){if(!S)return;{const g=k.startsWith('ea_')?'ea_':k;/* 食べる音は、だれが食べていても、まとめて EATGAP 秒に1回（何人も食べていると、ずっと口の音になる） */if(SFXGAP[g]){const n=performance.now()/1000;if(n-(SFXLAST[g]||0)<SFXGAP[g])return;SFXLAST[g]=n}}const q=sfxPos(x,y);if(!q)return;
   SFXV=q.v*m;SFXP=q.p;SFXL=q.l;

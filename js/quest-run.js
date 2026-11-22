@@ -177,7 +177,7 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===KUSA&&grassReunionBl
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx(WD===KUSA?'sacred':'bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    villageTimeout(()=>{for(let k=0;k<(WD===KUSA?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD===KAZAN)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===KUSA?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===KUSA)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
+    villageTimeout(()=>{for(let k=0;k<(WD===KUSA?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD===KAZAN)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,gy:TY*TS,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===KUSA?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===KUSA)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
       // ヌシ様が台座の上にあらわれる
       S.nushi={x:WD===KUSA?TX+2.2:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};const owner=S,session=VILLAGE_SESSION,lord=S.nushi,appearAt=performance.now();const reveal=now=>{if(S!==owner||VILLAGE_SESSION!==session||S.nushi!==lord)return;lord.app=Math.min(1,(now-appearAt)/1500);if(lord.app<1)requestAnimationFrame(reveal)};requestAnimationFrame(reveal);if(WD===KUSA)sacredShot('reunion',S.res,1.7);/* あらわれたときは、守り神のほう（正面） */
       spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD===KAZAN)flashScreen();
@@ -208,12 +208,12 @@ let KITE=null;/* たこあげ：{r,at,state,session}。会話がとじたら消�
 function stageKite(name){if(!S)return;const r=S.res.find(q=>q.name===name&&!q.hidden);if(!r)return;r.face=r.face||1;sacredScenePose(r,'point',60000,{side:true,face:r.face});KITE={r,at:performance.now(),state:S,session:VILLAGE_SESSION};sfx('wave');STAGEWAIT=performance.now()+2600}/* 糸をもって、たこを空へ（2.6秒あがりきるまで、つぎへ送らない） */
 function drawKite(now){const k=KITE;if(!k)return;if(k.state!==S||k.session!==VILLAGE_SESSION||!S.res.includes(k.r)||$('#dialog').hidden&&now-k.at>1500){if(k.r)SACRED_POSES.delete(k.r);KITE=null;return}
   const r=k.r,f=r.face||1,hx=r.x*TS+f*7,hy=r.y*TS-26-liftOf((r.y|0)*W+(r.x|0)),q=Math.min(1,(now-k.at)/2600),e=1-(1-q)*(1-q),T=now/1000,kx=hx+f*(10+36*e)+Math.sin(T*1.3)*4*e,ky=hy-8-92*e+Math.sin(T*2.1)*3*e;
-  ctx.save();for(let i=1;i<24;i++){const u=i/24,sx=hx+(kx-hx)*u,sy=hy+(ky-hy)*u+Math.sin(Math.PI*u)*6*e;volDot(sx,sy,1,1,'#f4ead6',.9)}/* 糸：少したるむ */
+  ctx.save();isoAt(ctx,r.x*TS,r.y*TS);/* クォータービュー：たこをあげる子の足もとに立てて */for(let i=1;i<24;i++){const u=i/24,sx=hx+(kx-hx)*u,sy=hy+(ky-hy)*u+Math.sin(Math.PI*u)*6*e;volDot(sx,sy,1,1,'#f4ead6',.9)}/* 糸：少したるむ */
   const x0=Math.round(kx),y0=Math.round(ky),W2=[1,3,5,7,9,7,5,3,1];const u=2;W2.forEach((w,i)=>{const h=(w-1)/2;for(let c=-h;c<=h;c++)volDot(x0+c*u,y0+(i-5)*u,u,u,c<0?(i<4?'#ff9f8f':'#f5806f'):(i<4?'#ffd98a':'#f4c26a'))});volDot(x0,y0-5*u,u,9*u,'#fff3d6',.9);volDot(x0-4*u,y0-u,9*u,u,'#fff3d6',.9);/* ひしがたのたこ（1ドット＝2） */
   for(let i=0;i<6;i++){const ty=y0+4*u+i*3*u,tx=x0+Math.round(Math.sin(T*4+i*.8)*2)*u;volDot(tx,ty,u,2*u,'#f4ead6',.9);if(i%2)volDot(tx-u,ty+u,3*u,u,i%4===1?'#8fd3ff':'#ffb3c7')}/* しっぽとリボン */
   ctx.globalAlpha=1;ctx.restore()}
 function stageGive(from,to){/* 会話の「わたす」：from が to のほうを向いて、両手でさしだす */if(!S)return;const f=S.res.find(q=>q.name===from&&!q.hidden),n=S.res.find(q=>q.name===to&&!q.hidden);if(!f||!n)return;const now=performance.now();
-  f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
+  f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,gy:n.y*TS,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
 function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
   if(c==='give')stageGive(POKO,MINA);
   else{n.face=f.x>=n.x?1:-1;f.face=n.face;sacredScenePose(n,'storyTouch',1300,{side:true,face:n.face});villageTimeout(()=>{JUMP.set(f,performance.now());JOYU.set(f,performance.now()+1500);sfx('wave')},450);STAGEWAIT=now+1300}}
@@ -292,7 +292,7 @@ function dreamCue(c){const D=DREAMC;if(!D||D.S!==S||!EXTRA.length)return;const{F
     F.face=-1;dreamLook(F,F,'talkshock',1600,now+700);STAGEWAIT=Math.max(STAGEWAIT,now+1000);return}
   if(c==='put'){/* そっと頭にのせる：フタバは頭をさげ、のったら、はなが舞う */sacredSetPose(Wv,{anim:'crownput',at:now,duration:60000,side:true,face:1,crownHand:true});dreamLook(F,F,'crownbow',1500,now);
     setTimeout(()=>{if(!EXTRA.length)return;F.crownT=1;sacredSetPose(Wv,{anim:'storyListen',at:performance.now(),duration:60000,side:true,face:1});dreamLook(F,F,'talkchest');sfx('bush');
-      for(let k=0;k<14;k++)fx.push({k:'p',x:F.x*TS+(Math.random()-.5)*20,y:F.y*TS-34,vx:(Math.random()-.5)*28,vy:-18-Math.random()*14,life:1.1,col:CROWNF[k%4],r:2})},1200);STAGEWAIT=Math.max(STAGEWAIT,now+1700);return}
+      for(let k=0;k<14;k++)fx.push({k:'p',x:F.x*TS+(Math.random()-.5)*20,y:F.y*TS-34,gy:F.y*TS,vx:(Math.random()-.5)*28,vy:-18-Math.random()*14,life:1.1,col:CROWNF[k%4],r:2})},1200);STAGEWAIT=Math.max(STAGEWAIT,now+1700);return}
   if(c==='clap'){EXTRA.slice(2).forEach((g,i)=>setTimeout(()=>{if(!EXTRA.length)return;dreamLook(g,F,'clap',1600)},i*150));return}
   if(c==='joy'){dreamLook(F,F,'talkjoy');JUMP.set(F,now);return}}
 let EXTRA=[],MEMRUN=false;/* 場面だけに出る子（むかしのきょうだいなど。セーブしない） */
@@ -311,7 +311,7 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   const F=mk(POKO,0,.4);EXTRA=[F,mk('？',-1.3,-.2),mk('？',1.3,-.2),mk('？',-1.6,1.2),mk('？',1.6,1.2)];EXTRA.forEach(g=>{g.face=g.x<cx?1:-1});F.face=1;EXTRA.forEach(g=>dreamLook(g,F));
   tapOr(600,()=>{if(!EXTRA.length)return;const Wv=EXTRA[1],now0=performance.now();F.face=-1;DREAMC={F,Wv,all:EXTRA.slice(),S:S};/* 花をあむ子（左のきょうだい）。ほかの子は、のぞきこんで待つ */
   sacredSetPose(Wv,{anim:'weave',at:now0,duration:60000,side:true,face:1,crownHand:true,crownN:2});EXTRA.slice(2).forEach(g=>dreamLook(g,F,'lnod',2800,now0));sacredSetPose(F,{anim:'storyListen',at:now0,duration:60000,side:true,face:-1});
-  for(let k=1;k<=6;k++)setTimeout(()=>{const p=SACRED_POSES.get(Wv);if(!EXTRA.length||!p||p.anim!=='weave')return;p.crownN=2+k;fx.push({k:'p',x:Wv.x*TS+6,y:Wv.y*TS-16,vx:(Math.random()-.5)*10,vy:-12,life:.8,col:CROWNF[k%4],r:2})},k*400);/* 花を1つずつ、あんでいく */
+  for(let k=1;k<=6;k++)setTimeout(()=>{const p=SACRED_POSES.get(Wv);if(!EXTRA.length||!p||p.anim!=='weave')return;p.crownN=2+k;fx.push({k:'p',x:Wv.x*TS+6,y:Wv.y*TS-16,gy:Wv.y*TS,vx:(Math.random()-.5)*10,vy:-12,life:.8,col:CROWNF[k%4],r:2})},k*400);/* 花を1つずつ、あんでいく */
   tapOr(2900,()=>{if(!EXTRA.length)return;sacredSetPose(Wv,{anim:'crownup',at:performance.now(),duration:60000,side:true,face:1,crownHand:true});JUMP.set(Wv,performance.now());sfx('bush');
    dialog(Object.assign([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！',0,'dream:walk'],[POKO,'#heart|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。',0,'dream:put'],['？','その花かんむり、フタバによく似合ってるね。',0,'dream:clap'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[POKO,'#joy|うんっ！ ずっと、ずーっとね！',0,'dream:joy']],{skip:1}),()=>{DREAMC=null;
     EXTRA.forEach((g,i)=>setTimeout(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
