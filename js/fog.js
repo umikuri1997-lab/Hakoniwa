@@ -15,7 +15,7 @@ function fcBits(){if(FCBS!==S||FCBT!==(S.fogc||'')){FCBS=S;FCBT=S.fogc||'';FCB=n
 function fcSave(){const B=FCB,n=Math.ceil(W*H/6);let t='';for(let i=0;i<n;i++){let v=0;for(let b=0;b<6;b++)if(B[i*6+b])v|=1<<b;t+=FCA[v]}S.fogc=t.replace(/A+$/,'');FCBT=S.fogc}
 const fogOut=f=>!!(f.out||f.set);/* 見つける物が霧から出た（古い家のあと・お屋敷は建った set） */
 function fogItemCells(f){const[x,y,w,h]=fogHintBox(f),L=[];for(let b=0;b<h;b++)for(let a=0;a<w;a++)if(x+a<W&&y+b<H)L.push((y+b)*W+x+a);return L}
-function fogOn(){return !!S&&WD===0&&!S.free&&Array.isArray(S.fog)}
+function fogOn(){return !!S&&WD===KUSA&&!S.free&&Array.isArray(S.fog)}
 function fogBuild(){FOGS=S;FOGV=S.fogV||0;const B=fcBits();FOGM=new Uint8Array(W*H);for(let j=0;j<W*H;j++)FOGM[j]=S.fog[areaOf(j)]&&!B[j]?1:0;
   for(const f of S.fogF||[]){if(fogOut(f))continue;const C=fogItemCells(f);if(C.some(k=>FOGM[k]))for(const k of C)if(S.fog[areaOf(k)])FOGM[k]=1}}/* 見つける物は、そのマスがぜんぶ晴れるまで、霧の中（半分だけ見えない） */
 function fogAt(j){if(WD===WIND)return windSunk(j);/* 風：雲にしずんだ島（wind.js） */if(WD===MIZU)return !!S&&!!S.mz&&mzMistAt(j);/* 水のステージの霧は、マスごと（mizube.js） */if(!fogOn())return false;if(FOGS!==S||FOGV!==(S.fogV||0))fogBuild();return FOGM[j]===1}
@@ -146,7 +146,7 @@ const PRINT_TRACE=[
  [[POKO,'#think|ヌシ様のあしあと……。もういちど、よく見てみるね。'],[POKO,'……あっ。つま先が、あっちを向いてる。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']],
  [[POKO,'ここにも、あしあと。……さっきより、ふかいね。'],[POKO,'#think|つぎは、あっちだ。','print:point']],
  [[POKO,'#think|ここで、あしあとが止まってる……。'],[POKO,'#surprise|あしあとの中が、ぽうっと光ってる……！','print:glow'],[POKO,'#surprise|……え？ 光るあしあとが、ぼくのまわりを、歩いてる……。','print:circle'],[POKO,'#teary|……いま、頭の葉っぱが、ふわってした。……なでて、くれたの？','print:pat'],[POKO,'……あったかい。','print:take']]];
-function printOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='lv5'&&S.qTalked&&S.qStory==null}
+function printOn(){return !!S&&WD===KUSA&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='lv5'&&S.qTalked&&S.qStory==null}
 const printT=()=>S&&S.flags.printT||[],printTraced=j=>printT().includes(j),printN=()=>Math.min(PRINT_N,printT().length);
 const printList=()=>(S.fogF||[]).filter(f=>f.t==='print'&&S.obj[f.j]==='nushiprint');
 function printWhy(){/* のこりのあしあとが、どれも霧の中なら、そう出す */const L=printList().filter(f=>!printTraced(f.j));return L.length&&L.every(f=>fogAt(f.j))?'のこりのあしあとは霧の中':''}

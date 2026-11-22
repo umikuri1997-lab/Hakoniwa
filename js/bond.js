@@ -14,7 +14,7 @@ function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kin
   if(v0<BOND_MAX&&v>=BOND_MAX&&typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_MAX)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
 /* 草原のメイン「なかよしの想い」（omoi）：なかよしの組を数える（S.flags.omoiP）。依頼を受ける前から、なかよしの組も、御神木へ行く組になる（omoiSeed：なかよしの数の大きい組から、3組まで） */
-function omoiOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='omoi'&&S.qTalked&&S.qStory==null}
+function omoiOn(){return !!S&&WD===KUSA&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='omoi'&&S.qTalked&&S.qStory==null}
 function omoiN(){return (S&&S.flags.omoiP||[]).length}
 function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.omoiP=[]),Q=S.flags.omoiW||(S.flags.omoiW=[]),k=bondKey(a,b);if(L.length+Q.length>=3||L.includes(k)||Q.includes(k))return;
   Q.push(k);sfx('bush');toast(a.name+'と'+b.name+'が、御神木に会いにいきたそう','good');renderQuest();dirty=true}/* 数えるのは、2人が御神木へ行く場面を見おえてから（omoiScene） */
@@ -63,8 +63,8 @@ function omoiScene(j){
   for(const [r,dx] of [[A,-1.5],[B,1.5]])if(!sacredSceneWalk(r,tx+dx,by+1,{avoid:taken},arrive)){stop(r.name+'が、御神木まで行けません');return true}/* 行けないときは、はじめない（待っている組のまま） */
   villageTimeout(()=>{if(begun||OMOI_RUN!==run)return;if(pr.every(near)){n=2;arrive()}else stop('御神木に、ふたりがそろいませんでした')},Math.max(20000,2000+Math.max(...pr.map(r=>(r.path||[]).length))*900));/* 歩くのをじゃまされたら、遠くのまま始めずに、やめる（待つ時間は道のりに合わせる） */
   return true}
-function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==0||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}
-function omoiBubOn(){/* 御神木の青いふきだしが出ている（出ていれば、そのマス） */if(!S||WD!==0||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return -1;const j=S.sacredRoot;return j==null||S.obj[j]!=='tower'?-1:j}
+function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==KUSA||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}
+function omoiBubOn(){/* 御神木の青いふきだしが出ている（出ていれば、そのマス） */if(!S||WD!==KUSA||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return -1;const j=S.sacredRoot;return j==null||S.obj[j]!=='tower'?-1:j}
 function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */const j=omoiBubOn();if(j<0)return;talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now)}
 function omoiBubHit(wx,wy){/* 青いふきだし（talkBub：はば45・高さ42、根もとの上 63〜21 の点）をタップした */const j=omoiBubOn();if(j<0)return false;const px=storyTreeX(j)*TS,by=sacredTopY(j)+34;return Math.abs(wx*TS-px)<=26&&wy*TS>=by-68&&wy*TS<=by-14}
 function sacredTopY(j,st){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあい（st。なければ、いま）で絵がかわる */const a=window.CHIPS&&CHIPS[SACRED_ART[Math.floor(st==null?sacredStage():st)]];return (j/W|0)*TS+(sacredSpan()-4)*TS-liftOf(j)+(a?a.ay/2:-60)}
@@ -175,7 +175,7 @@ function bondLines(pk,st){st=st||1;const p=bondPair(pk);if(!p)return [];const [a
 /* ピンクの会話（SEV1）に、なかよし30・60・100になった組の会話を足す。キーは「bd_a_b」「bd2_a_b」「bd3_a_b」 */
 function bondSevEntry(pk,st){st=st||1;const B=BOND_ST[st],k=B.k+pk;if(SEV1.some(e=>e.k===k))return;SEV1.push({k,bd:pk,bst:st,at(){const p=bondPair(this.bd);return !!p&&bondOf(p[0],p[1])>=B.v&&(st===1||!!(S.sev||{})[BOND_ST[st-1].k+this.bd])&&!p[0].hidden&&!p[1].hidden&&S.qStory==null},get L(){return bondLines(this.bd,this.bst)}})}
 function bondTalkTick(){if(!S||!S.bond)return;const D=S.sev||{};for(const pk in S.bond)for(let st=1;st<=3;st++){const B=BOND_ST[st];if(S.bond[pk]<B.v)break;if(!D[B.k+pk]){bondSevEntry(pk,st);break}}
-  if(!WD||sevBusy()||isNight()||(S.sevQuietUntil||0)>S.t)return;/* 草原は checkSev が出す。ほかの土地は、なかよしの会話だけここで出す */
+  if(WD===KUSA||sevBusy()||isNight()||(S.sevQuietUntil||0)>S.t)return;/* 草原は checkSev が出す。ほかの土地は、なかよしの会話だけここで出す */
   const P=S.sevP||(S.sevP=[]),M=S.sevMiss||{};if(!P.some(k=>/^bd\d?_/.test(k)))for(const e of SEV1){if(!e.bd||D[e.k]||M[e.k]||P.includes(e.k)||!e.at())continue;const L=sevLines(e.L);if(L&&L.length&&sevAllHere(e)){P.push(e.k);break}}
   sevBub()}
 

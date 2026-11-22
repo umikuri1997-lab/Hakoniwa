@@ -14,7 +14,7 @@ function towerMod(j,st){const p=wpathOf(j);return Object.assign({},st,{range:Mat
 const fireTrapDmg=()=>wxRain()?20:40,gustDist=()=>nightWx()==='kaze'?9:6,waterStunMul=()=>wxRain()?1.5:1;
 /* ---------- ヨロイカゲ・ヒカリカゲ ---------- */
 function armorMul(e,o){if(EN[e.type]&&EN[e.type].fireRes&&o&&o.dt==='fire')return .5;/* ホテリカゲ：火は半分 */if(!EN[e.type]||!EN[e.type].armor)return 1;const t=o&&o.dt;return t==='arrow'?.5:t==='fire'||t==='poison'||t==='burn'?2:1}
-function defWave(list,alv){/* 草原：はじめてオオカゲを追いはらったあと、かげの巣1つでコカゲ+2。平均レベル7から、ヨロイカゲがまじる */if(WD!==0||S.free||!((S.bossKills||0)>0))return;{const n=nestCount();for(let i=0;i<n*NESTADD;i++)list.push('basic')}seasonFoes(list);/* 季節のコワイノ */if(alv<7)return;for(let i=0;i<list.length;i++)if(list[i]==='basic'&&i%7===6)list[i]='armor'}
+function defWave(list,alv){/* 草原：はじめてオオカゲを追いはらったあと、かげの巣1つでコカゲ+2。平均レベル7から、ヨロイカゲがまじる */if(WD!==KUSA||S.free||!((S.bossKills||0)>0))return;{const n=nestCount();for(let i=0;i<n*NESTADD;i++)list.push('basic')}seasonFoes(list);/* 季節のコワイノ */if(alv<7)return;for(let i=0;i<list.length;i++)if(list[i]==='basic'&&i%7===6)list[i]='armor'}
 function shinyAdd(){/* ヒカリカゲ：波の夜に、まれに1ぴき */if(Math.random()>=SHINYP)return 0;const hp=EN.shiny.hp;S.enemies.push({id:S.nid++,type:'shiny',x:0,y:0,hp,max:hp,delay:WAVES[1]+20,side:Math.random()<.5?'w':'e',shiny:1,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});return 1}
 function shinyTick(e){if(!e.shiny||e.flee)return false;if(e.sx0==null){e.sx0=e.x;S.flags.shinySeen=1;toast('ヒカリカゲがあらわれた！','good')}if(Math.abs(e.x-e.sx0)>5&&(e.x<1.5||e.x>W-1.5||(fogOn()&&(fogAt((e.y|0)*W+Math.min(W-1,(e.x|0)+1))||fogAt((e.y|0)*W+Math.max(0,(e.x|0)-1)))))){e.dead=true;toast('ヒカリカゲは、行ってしまった');return false}return true}
 function shinyGoal(e){/* 来たのと反対のはしへ（行けるいちばん近い所） */const s=e.side==='w'?'e':'w',G=bfsE(e.x|0,e.y|0,40,e.sd||(e.sd=(Math.random()*1e9)|0));let b=-1,bd=1e9;for(let y=0;y<H;y++){const x=sideEdge(y,s);if(x<0)continue;const q=y*W+x;if(G.dist[q]<0)continue;if(G.dist[q]<bd){bd=G.dist[q];b=q}}return b}
@@ -31,7 +31,7 @@ function vetKill(j){if(j==null||S.obj[j]!=='watch')return;const d=S.dyn[j]||(S.d
    朝に30%で、晴れた所の村の外に1つ（3つまで）。1つで、その夜のコワイノ+2。「しらべる」でタップすると、昼にせいれいがこわしにいく（S.dyn[j].nq）。こわすと、やすらぎの砂。 */
 const NESTP=.3,NESTMAX=3,NESTADD=2,NESTT=30;
 function nestCount(){let n=0;for(let j=0;j<W*H;j++)if(S.obj[j]==='kagenest')n++;return n}
-function nestMorning(){if(WD!==0||S.free||!((S.bossKills||0)>0)||Math.random()>=NESTP)return;if(nestCount()>=NESTMAX)return;const R=spawnReach(),C=[];
+function nestMorning(){if(WD!==KUSA||S.free||!((S.bossKills||0)>0)||Math.random()>=NESTP)return;if(nestCount()>=NESTMAX)return;const R=spawnReach(),C=[];
   for(let j=0;j<W*H;j++){if(S.obj[j]||VILL[j]||S.ground[j]!==0||!walk(j)||R[j]<0||(fogOn()&&fogAt(j))||S.floor&&S.floor[j])continue;C.push(j)}
   if(!C.length)return;const j=C[(Math.random()*C.length)|0];S.obj[j]='kagenest';dirty=true;try{recount()}catch(e){}toast('村の外に、かげの巣ができた','warn')}
 function nestTap(j){if(S.obj[j]!=='kagenest')return false;(S.dyn[j]||(S.dyn[j]={})).nq=1;sfx('tfoe');toast('かげの巣：せいれいがこわしにいく');return true}

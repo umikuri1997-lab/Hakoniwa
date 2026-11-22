@@ -36,7 +36,7 @@ function reflectMemories(){const M=(S.memo||[]).filter(([,,t])=>t&&!/^村レベ�
 function reflectIntro(){const d=clearDayOf(),now=dayNo(),nm=S.vname?'「'+S.vname+'」は、':'',L=[];
   L.push(nm+(d<=30?'みじかい日々のなかで、みんなで力をあわせて、村を守りきった。':d<=50?'ひとつずつ、くらしをかさねながら、村を守りきった。':'ゆっくりと時間をかけて、くらしといっしょに育った村。'));
   if(now>d+1)L.push('ヌシ様が帰ってきてから、'+(now-d)+'日がたった。');return L}
-function reflectEnd(){return WD===1?'火山のふもとに、あたたかい湯気と、にぎやかな声がもどった。':'草原に、花と、なかまの笑い声がもどった。'}
+function reflectEnd(){return WD===KAZAN?'火山のふもとに、あたたかい湯気と、にぎやかな声がもどった。':'草原に、花と、なかまの笑い声がもどった。'}
 function reflectBody(T,body){T.textContent='村のふりかえり';const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk);
   const P=t=>{const p=el('<p class="story"></p>');p.textContent=t;return p};
   for(const t of reflectIntro())body.appendChild(P(t));

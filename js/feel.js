@@ -91,7 +91,7 @@ function feelPrep(now){snowTick();fireMeltTick();const h=hour(),k=seasonNow(),C=
   C.heat=k===1&&!S.rain&&h>=11&&h<15.5?Math.min(1,(h-11)/.5,(15.5-h)/.5):0;C.cold=k===3||(k!==1&&h>=4.5&&h<7);
   C.any=C.snow>0||C.leaf>0||C.pud>0||C.dew>0||C.rain||C.wet;
   if(FEELK!==counts){FEELK=counts;FEELTREE=new Set();FEELMELT=new Set();/* 木のまわり・火のまわりのマス（recount のたびに作りなおす） */
-    for(let j=0;j<W*H;j++){const o=S.obj[j];if(!o||!TREES.has(o)||o==='deadtree'&&WD!==1)continue;const x=j%W,y=(j/W)|0;for(let dy=-2;dy<=2;dy++)for(let dx=-3;dx<=3;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H)FEELTREE.add(Y*W+X)}}
+    for(let j=0;j<W*H;j++){const o=S.obj[j];if(!o||!TREES.has(o)||o==='deadtree'&&WD!==KAZAN)continue;const x=j%W,y=(j/W)|0;for(let dy=-2;dy<=2;dy++)for(let dx=-3;dx<=3;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H)FEELTREE.add(Y*W+X)}}
     for(const j of LITP){if(!FEELFLAME[S.obj[j]]||FEELNOMELT.has(S.obj[j]))continue;/* 神殿・見張り台のあかりは、地面の雪をとかさない */const x=j%W,y=(j/W)|0;for(let dy=-FEEL_MELT;dy<=FEEL_MELT;dy++)for(let dx=-FEEL_MELT;dx<=FEEL_MELT;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H)FEELMELT.add(Y*W+X)}}}
   if(FEELHK!==HOUSES){FEELHK=HOUSES;FEELIN=new Set();for(const hh of HOUSES)for(const q of hh.set)FEELIN.add(q)}
   for(let i=FEELEV.length-1;i>=0;i--)if(now-FEELEV[i].t0>FEELEV[i].life)FEELEV.splice(i,1)}
@@ -242,7 +242,7 @@ function feelBuf(k){const sr=AC.sampleRate,n=Math.floor(sr*3),b=AC.createBuffer(
   const X=Math.floor(sr*.08);for(let i=0;i<X;i++){const u=i/X;d[i]=d[i]*u+d[n-X+i]*(1-u)}/* つなぎ目をならす */return b}
 function feelAmbWant(){const want={stream:0,pond:0,onsen:0,fire:0,leaves:0,semi:0};if(!S||!started||!SND.sfx||!$('#title').hidden||!$('#maps').hidden||typeof stageReady==='function'&&!stageReady())return want;
   const vw=VW/cam.z,vh=VH/cam.z,cx=(cam.x+vw/2)/TS,cy=(cam.y+vh/2)/TS,zk=Math.max(.35,Math.min(1.3,cam.z/homeZ())),R=8;const wk={river:0,pond:0,onsen:0};let tn=0;
-  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,dd=Math.hypot(dx,dy);if(dd>R)continue;if(fogAt(i))continue;if(waterJ(i))wk[typeof waterKind==='function'?waterKind(i):'river']+=1-dd/R;/* 川・池・温泉で、ちがう音 */else{const o=S.obj[i];if(o&&TREES.has(o)&&(o!=='deadtree'||WD===1))tn+=1-dd/R}}
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,dd=Math.hypot(dx,dy);if(dd>R)continue;if(fogAt(i))continue;if(waterJ(i))wk[typeof waterKind==='function'?waterKind(i):'river']+=1-dd/R;/* 川・池・温泉で、ちがう音 */else{const o=S.obj[i];if(o&&TREES.has(o)&&(o!=='deadtree'||WD===KAZAN))tn+=1-dd/R}}
   want.stream=Math.min(1,wk.river/14)*.8*zk;want.pond=Math.min(1,wk.pond/14)*.3*zk;want.onsen=Math.min(1,wk.onsen/14)*.3*zk;/* 池・温泉は、かなり小さく（持ち主がきめた） */want.leaves=Math.min(1,tn/5)*(typeof stormNow==='function'&&stormNow()?.9:S.rain?.5:.3)*zk;
   let fv=0;for(const j of LITP){const o=S.obj[j];if(o!=='campfire'&&o!=='torch')continue;const d=Math.hypot(j%W+.5-cx,((j/W)|0)+.5-cy);if(d<6)fv=Math.max(fv,Math.pow(1-d/6,1.5))}want.fire=fv*.8*zk;
   {const h=hour();if(seasonNow()===1&&!S.rain&&h>=9&&h<17)want.semi=(.12+Math.min(1,tn/3)*.2)*Math.min(1,(h-9)/1,(17-h)/1)}
@@ -255,5 +255,5 @@ function feelFrame(now){/* 1コマに1回（main.js）。村の時間が進ん�
 const FEEL_WARMP=.35,FEEL_SHADEP=.35;
 function feelRest(r,G){const k=seasonNow(),h=hour(),free=j=>walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j));
   if(k===3&&!(r.quirkT>S.t)&&Math.random()<FEEL_WARMP){/* 冬：たき火・たいまつに手をかざす（火のせいれいのしぐさと同じ動き） */const ok=j=>{const t=typeAt(j);return t==='campfire'||t==='torch'||t==='oven'};const st=nearest(G,j=>free(j)&&(j%W>=1&&ok(j-1)||j%W<W-1&&ok(j+1)),14);if(st>=0){const tg=st%W>=1&&ok(st-1)?st-1:st+1;r.quirkT=S.t+QUIRKCD;startAct(r,G,'quirk',st,{k:'warm',tg,dur:QUIRKDUR});return true}}
-  if(k===1&&!S.rain&&h>=11&&h<15.5&&!(r.shadeT>S.t)&&Math.random()<FEEL_SHADEP){/* 夏の昼：木かげか水べにすわって、すずむ */const cool=j=>waterJ(j)||TREES.has(typeAt(j))&&!(typeAt(j)==='deadtree'&&WD!==1);const st=nearest(G,j=>free(j)&&!S.floor[j]&&!roomOf(j)&&(j%W>=1&&cool(j-1)||j%W<W-1&&cool(j+1)),14);if(st>=0){r.shadeT=S.t+180;startAct(r,G,'sunset',st===(r.y|0)*W+(r.x|0)?-1:st,{dur:36,shade:1});return true}}
+  if(k===1&&!S.rain&&h>=11&&h<15.5&&!(r.shadeT>S.t)&&Math.random()<FEEL_SHADEP){/* 夏の昼：木かげか水べにすわって、すずむ */const cool=j=>waterJ(j)||TREES.has(typeAt(j))&&!(typeAt(j)==='deadtree'&&WD!==KAZAN);const st=nearest(G,j=>free(j)&&!S.floor[j]&&!roomOf(j)&&(j%W>=1&&cool(j-1)||j%W<W-1&&cool(j+1)),14);if(st>=0){r.shadeT=S.t+180;startAct(r,G,'sunset',st===(r.y|0)*W+(r.x|0)?-1:st,{dur:36,shade:1});return true}}
   return false}

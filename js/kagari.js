@@ -10,10 +10,10 @@ const KGRH0=17.5,KGRH1=19.5;/* ホムラがあかりをともしにいく時刻 
 const KGRDUR=30;/* あかりのそばで道の先を見ている長さ（村の時間） */
 const KGRIVH0=20,KGRIVH1=22.5;/* 幕間・さいごの場面の時刻（夜のはじめ） */
 let KGRRUN=null,KGRIV=null;const KGRLIT={v:null,S:null};let KGRT=0;
-function kgrOn(){return !!S&&WD===1&&!S.free&&!IS_STORY_REPLAY&&!MEMRUN&&!!S.st2}
+function kgrOn(){return !!S&&WD===KAZAN&&!S.free&&!IS_STORY_REPLAY&&!MEMRUN&&!!S.st2}
 function kgrQi(id){return QUESTS.findIndex(q=>q.id===id)}
 function kgrLampJ(){const j=S&&S.st2&&S.st2.lamp;return j!=null&&S.obj[j]==='kaeribi'?j:-1}
-function kgrLit(){return !!S&&WD===1&&!!S.st2&&(!!S.flags.kagariCame||S.st2.lampD===callDay())}
+function kgrLit(){return !!S&&WD===KAZAN&&!!S.st2&&(!!S.flags.kagariCame||S.st2.lampD===callDay())}
 function kgrLampTxt(){return S.flags.kagariCame?'かえり道のあかり：まだ帰っていない、なかまのためのあかり':'かえり道のあかり：ホムラが、まいばん夕方にともしている'}
 function kgrLampNeed(){return kgrOn()&&S.quest>=1&&(!!S.flags.kagariCame||S.quest<=kgrQi('kagari'))}
 function kgrLampPlace(){/* 村の南の入り口：まん中の少し南の、空いた地面 */

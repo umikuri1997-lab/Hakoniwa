@@ -813,7 +813,7 @@ function migrateOmoiIns(state,pre){
 }
 /* まとめた目標のとちゅうから読みこんだとき：できている目標をとばして、はじめのできていない目標へ。まとめた会話でもらった物は、もう一度わたさない */
 function questSplitResolve(){
-  const F=S.flags;if(WD!==0||S.free)return;
+  const F=S.flags;if(WD!==KUSA||S.free)return;
   const pv=i=>{const q=QUESTS1[i];if(q.pre&&!F['pre0_'+i]){F['pre0_'+i]=true;questGives(q,q.pre)}const g=q.gives||{};questGives(q,Object.assign({},g,{msg:null}));inspireQuest(q,'clear')};
   const gl=i=>!!(QUESTS1[i].gives||{}).godLeave;
   if(F.qsplitStory){const m=QS_SPLIT[F.qsplitStory].map(qsIx);delete F.qsplitStory;const t=m.find(gl)??m[m.length-1];for(const i of m)if(i!==t)pv(i);S.qStory=t}
