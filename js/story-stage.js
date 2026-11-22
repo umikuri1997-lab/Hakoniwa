@@ -51,7 +51,7 @@ function volBeat(c){
     volWalk(h,tx,ty+1,{},()=>{volFace(h,tx);volPose(h,'kneelHeat',600000,{});volFx('springWarm',3200,{x:sx,y:sy});volFx('steam',600000,{x:sx,y:sy});volFx('ember',3600,{x:tx,y:ty});sfx('wave');volShot([[sx,sy]],[h],2.4,1);done(2000);});break;}
   case 'hidane':{if(!h)break;const[sx,sy]=HSPC.a;volFx('hidane',600000,{x:sx,y:sy,actor:h,fly:2200});volFace(h,sx);volPose(h,'hold',600000,{});volShot([[sx,sy]],[h],2.4,1);villageTimeout(()=>sfx('shard'),1900);volHold(2300);break;}
   case 'summonRing':{if(!s)break;volFx('waterRing',1800,{actor:s});sfx('wave');volShot([],[s,h],2.4,1);volHold(1200);break;}
-  case 'meet':{if(!h||!s)break;const done=volTask(d,30000);volWalk(h,s.x,s.y,{side:true},()=>{volFace(h,s.x);volFace(s,h.x);volPose(h,'wave',1200,{});volPose(s,'bow',1600,{});volShot([],[h,s],2.4,1);done(1500);});break;}
+  case 'meet':{if(!h||!s)break;const done=volTask(d,30000);volWalk(h,s.x,s.y,{side:true},()=>{volFace(h,s.x);volFace(s,h.x);volPose(h,'wave',1200,{});volPose(s,'ojigi',1600,{});volShot([],[h,s],2.4,1);done(1500);});break;}
   case 'fanS':{if(!s)break;if(h)volFace(s,h.x);volPose(s,'fan',600000,{});volHold(900);break;}
   case 'jumpBoth':{for(const r of[h,s])if(r){SACRED_POSES.delete(r);JUMP.set(r,now);JOYU.set(r,now+1400);}volHold(900);break;}
   case 'traceRock':{if(!s)break;const bw=st2().bw||[],j=bw.find(k=>S.obj[k]==='boulder')??bw[0];if(j==null)break;const[x,y]=volXY(j),done=volTask(d,30000);volShot([[x,y]],[s]);

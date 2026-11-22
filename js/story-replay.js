@@ -74,14 +74,14 @@ function prepareStoryReplay(run,payload){
   USERPAUSE=true;NOSAVE=true;started=true;window.__noIdle=true;
   for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])$(id).hidden=true;showUI(true);cam.z=homeZ();centerOn(storyTreeX(S.sacredRoot)*TS,storyTreeY(S.sacredRoot)*TS);
   const style=document.createElement('style');style.textContent='#topUI,#botUI,#helpPop,#hand,#idle{display:none!important}#cv{pointer-events:none}';document.head.appendChild(style);
-  const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running)nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
+  const nativeCheckQuest=checkQuest;window.checkQuest=()=>{if(run.running)nativeCheckQuest();};window.checkLevel=()=>{};window.checkSev=()=>{};window.finalCheck=()=>{};window.updTut=()=>{};window.showItemGift=()=>{};window.showSpotPop=()=>{};window.openSheet=()=>{};
   replayControls(run);
 }
 function replayLockUI(run){
   USERPAUSE=true;NOSAVE=true;started=true;window.__noIdle=true;
   for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])$(id).hidden=true;showUI(true);
   const style=document.createElement('style');style.textContent='#topUI,#botUI,#helpPop,#hand,#idle{display:none!important}#cv{pointer-events:none}';document.head.appendChild(style);
-  const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running&&run.episode.kind!=='vol'&&run.episode.kind!=='gintro')nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
+  const nativeCheckQuest=checkQuest;window.checkQuest=()=>{if(run.running&&run.episode.kind!=='vol'&&run.episode.kind!=='gintro')nativeCheckQuest();};window.checkLevel=()=>{};window.checkSev=()=>{};window.finalCheck=()=>{};window.updTut=()=>{};window.showItemGift=()=>{};window.showSpotPop=()=>{};window.openSheet=()=>{};
   replayControls(run);
 }
 /* 草原のはじめの村：新しい草原の一時データ。本編と同じく、カミサマが着いて、フタバはすわってうとうと */

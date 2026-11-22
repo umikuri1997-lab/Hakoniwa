@@ -93,7 +93,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='stepBack'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.6));aN=aF=.2-1.3*v;lean2=-.09*v;frontArm=bothF=true}/* 一歩さがる */
   else if(A==='grabSleeve'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.45));aN=.3-1.3*v;aF=.2;lean2=.12*v;frontArm=true}/* そでをつかむ */
   else if(A==='fistClench'){aN=aF=.22+Math.sin(t*34)*.035;lean2=.05;sq=.03;frontArm=bothF=true}/* こぶしをにぎる */
-  else if(A==='bow'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneP||0)*1.15));aN=aF=.45;lean2=.34*v;frontArm=bothF=true}/* おじぎ */
+  else if(A==='ojigi'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneP||0)*1.15));aN=aF=.45;lean2=.34*v;frontArm=bothF=true}/* おじぎ（弓の bow とはべつ） */
   else if(A==='fan'){aN=-1.95+Math.sin(t*15)*.38;aF=.2;lean2=-.02;frontArm=true}/* 手であおぐ */
   else if(A==='armsCross'){aN=aF=-1.25;lean2=-.03;frontArm=bothF=true}/* うで組み */
   else if(A==='backToBack'){aN=aF=.3;lean2=-.07;frontArm=true}/* せなかあわせ */
