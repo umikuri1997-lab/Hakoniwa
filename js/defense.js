@@ -21,7 +21,7 @@ function shinyGoal(e){/* 来たのと反対のはしへ（行けるいちばん�
 function shinyDrop(e){if(!e.shiny)return;const id=Math.random()<.5?'sand':'fukuro';dropAt(e.x,e.y,id,1);toast('ヒカリカゲが、'+(id==='sand'?'やすらぎの砂':'ふしぎなふくろ')+'を落とした！','good')}
 /* ---------- コワイノの弱点（属性） ----------
    弱点の属性で攻撃すると、ダメージ1.5倍。水（ダメージなし）は、止める時間1.5倍。見張り台は上に立つせいれい、たたかうせいれいは自分の属性（hurtEn の o.el）。 */
-const WEAK={hana:'fire',hoteri:'water',ochiba:'wind',yuki:'fire',fast:'earth',brute:'wind',breaker:'water',trapper:'fire',thief:'wood',rockc:'water',armor:'water',ash:'water'},WEAKMUL=1.5;
+const WEAK={hana:'fire',hoteri:'water',ochiba:'wind',yuki:'fire',fast:'earth',brute:'wind',breaker:'water',trapper:'fire',thief:'wood',rockc:'water',armor:'water',ash:'water'},WEAKMUL=1.5,WEAKKN=10;/* 図鑑に弱点が出るのは、そのコワイノを WEAKKN ひき追いはらってから */
 const weakMul=(e,o)=>o&&o.el&&WEAK[e.type]===o.el?WEAKMUL:1,weakStun=(e,el)=>WEAK[e.type]===el?WEAKMUL:1;
 /* ---------- ベテランの見張り台：追いはらった数（S.dyn[j].vk）で威力が少し上がる ---------- */
 const VETN=[50,200,500],VETD=[2,4,6];
