@@ -83,15 +83,15 @@ function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=type
   for(const[r,e]of GOSOL){const live=now-e.seen<250&&r.act===e.a&&boxAct(r),q=live&&buf?sfxPos(e.x,e.y):null;if(q)L.push([e,q]);else if(!live){boxLoopStop(e,t);GOSOL.delete(r)}/* 音を止めてから表からけす（止めずにけすと、鳴りつづける） */}
   L.sort((a,b)=>b[1].v-a[1].v);const on=new Set(L.slice(0,BOXLOOPN).map(p=>p[0]));
   for(const[r,e]of GOSOL){if(!on.has(e)&&e.src)boxLoopStop(e,t)}if(!buf)return;
-  for(const[e,q]of L){if(!on.has(e))continue;if(!e.src){const g=AC.createGain(),f=AC.createBiquadFilter();g.gain.value=0;f.type='lowpass';f.Q.value=.5;let h=g;if(AC.createStereoPanner){e.p=AC.createStereoPanner();g.connect(e.p);h=e.p}else e.p=null;h.connect(f);f.connect(sfxG);Object.assign(e,{src:{gr:[]},g,f,nt:t,lo:null})}
+  for(const[e,q]of L){if(!on.has(e))continue;if(!e.src){const g=AC.createGain(),f=AC.createBiquadFilter();g.gain.value=0;f.type='lowpass';f.Q.value=.5;let h=g;if(AC.createStereoPanner){e.p=AC.createStereoPanner();g.connect(e.p);h=e.p}else e.p=null;h.connect(f);f.connect(lowG||sfxG);Object.assign(e,{src:{gr:[]},g,f,nt:t,lo:null})}
     while(e.nt<t+.3)boxGrain(e,buf);/* 0.1秒ごとによばれるので、0.3秒先まで用意しておく */
     e.g.gain.setTargetAtTime(q.v*BOXLOOPV,t,.08);if(e.p)e.p.pan.setTargetAtTime(q.p,t,.08);e.f.frequency.setTargetAtTime(q.l,t,.08)}}
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
 const POURU=new WeakMap();/* 水やり：1回3秒の音（pourl）を、おわる0.4秒まえに、つぎをかさねて、とぎれずにつづける */
-function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);sfxAt('pourl',r.x,r.y)}
+function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);sfxLow('pourl',r.x,r.y)}
 function workBeat(r,nm,t,p){if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
-  for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);const nat=(nm==='chop'||nm==='mine')&&r.act&&r.act.obj!=null;if(nat&&typeof natJolt==='function')natJolt(r.act.obj,(r.act.obj%W+.5)>=r.x?1:-1);/* 木・岩は、たたくたびに、たたかれた向きへゆれる。木くず・石のかけらも毎回 */if(fx&&(nat||Math.random()<.5)){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
+  for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxLow(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);const nat=(nm==='chop'||nm==='mine')&&r.act&&r.act.obj!=null;if(nat&&typeof natJolt==='function')natJolt(r.act.obj,(r.act.obj%W+.5)>=r.x?1:-1);/* 木・岩は、たたくたびに、たたかれた向きへゆれる。木くず・石のかけらも毎回 */if(fx&&(nat||Math.random()<.5)){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
 /* できあがり：1回だけ、ぽん・きらきら */
 function workShowStart(r,a){a.sh=0;r.bubble='';/* 頭の上の物とかさならないように */sfxAt('workdone',r.x,r.y);fxSpr('twinkle',r.x*TS,(r.y-.9)*TS)}
 

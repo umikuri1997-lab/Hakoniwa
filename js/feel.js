@@ -193,7 +193,7 @@ function feelSurf(i){/* そのマスの足もとの材質 */const g=S.ground[i];
   if(FEELC.snow>.4&&!FEELIN.has(i)&&!feelMelt(i))return 'snow';return REV.has(i)?'grass':'dry'}
 let FEELSND=0;
 function feelStepSnd(k,x,y,alt,follow){if(typeof AC==='undefined'||!AC||!SND.sfx||AC.state!=='running'||typeof sfxG==='undefined'||!sfxG)return;const now=performance.now();if(now-FEELSND<110)return;const q=sfxPos(x,y);if(!q||(!follow&&q.v<.5))return;/* 画面のまん中に近い子と、見守っている子だけ */
-  if(typeof SKIP!=='undefined'&&SKIP||S.speed>2)return;FEELSND=now;const t=AC.currentTime,g=AC.createGain();g.gain.value=q.v*(follow?1.25:1)*1.6;let o=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;g.connect(pn);o=pn}o.connect(sfxG);const r=(alt?1.06:.95)*(.95+Math.random()*.1);
+  if(typeof SKIP!=='undefined'&&SKIP||S.speed>2)return;FEELSND=now;const t=AC.currentTime,g=AC.createGain();g.gain.value=q.v*(follow?1.25:1)*1.6;let o=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;g.connect(pn);o=pn}o.connect(lowG||sfxG);const r=(alt?1.06:.95)*(.95+Math.random()*.1);
   if(k==='grass'){rustle(t,.07,.04,g,2500*r,1500*r,.9)}
   else if(k==='dry'||k==='soil'){rustle(t,.06,.045,g,820*r,460*r,1.1);knock(105*r,t,.03,g,.05)}
   else if(k==='wood'){knock(250*r,t,.07,g,.07);rustle(t,.03,.012,g,1800,1300,1)}
