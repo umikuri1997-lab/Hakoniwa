@@ -18,8 +18,8 @@ const assert=require('node:assert/strict');
   assert.equal(b.mist,false,'4 cells from the water are clear');assert.equal(b.mist2,true,'9 cells away is still mist');
   console.log('Mizube: one open gate wets 40 canal cells and clears the mist 4 cells around');
   /* 3. 水は、高いほうへは流れない */
-  const c=await J(`(()=>{const P=__P;for(let k=40;k<45;k++)delete S.mz.cn[P[k]];let i=10;while(hiAt(P[i+1])===2)i++;const low=P[i+1]+2,up=P[i]+2;for(const k of[low-1,low,up]){S.obj[k]='';S.mz.cn[k]=1}recount();/* up は、低い low からしかつながらない */return {hl:hiAt(low),hu:hiAt(up),wl:MZC.wet[low],wu:MZC.wet[up]}})()`);
-  assert.equal(c.hl,1);assert.equal(c.hu,2);assert.equal(c.wl,1,'the branch on the lower step is wet');assert.equal(c.wu,0,'water does not climb to the higher step');
+  const c=await J(`(()=>{const P=__P;for(let k=40;k<45;k++)delete S.mz.cn[P[k]];let i=10;while(hiAt(P[i+1])===2)i++;const low=P[i+1]+2,up=P[i]+2;const h=hiAt(P[i+1]);for(const k of[low-1,low,up]){S.obj[k]='';S.mz.cn[k]=1}S.hi[low-1]=S.hi[low]=h;S.hi[up]=h+1;recount();/* up は、低い low からしかつながらない。わき道の高さは、まわりの地形によらないように、ここできめる */return {hp:h,hl:hiAt(low),hu:hiAt(up),wl:MZC.wet[low],wu:MZC.wet[up]}})()`);
+  assert.equal(c.hl,c.hp);assert.equal(c.hu,c.hp+1);assert.equal(c.wl,1,'the branch on the lower step is wet');assert.equal(c.wu,0,'water does not climb to the higher step');
   console.log('Mizube: water does not flow uphill');
   /* 4. 船着き場2つが水でつながると小舟が行き来し、荷をはこぶ */
   const d=await J(`(()=>{const a=__P[28]+1,b=__P[33]+1;for(const j of[a,b,a+1,b+1]){S.obj[j]='';S.floor[j]='';delete S.dyn[j]}S.obj[a]='dock';S.obj[b]='dock';S.obj[a+1]='crate';S.obj[b+1]='crate';recount();
