@@ -30,9 +30,9 @@ const fs=require('fs');const OUT=(process.argv[2]||'.').replace(/\/?$/,'/');fs.m
   const G=document.createElement('canvas');G.width=N*TS;G.height=N*TS;gblit(G.getContext('2d'),X0*TS,Y0*TS,N*TS,N*TS,0,0,N*TS,N*TS);
   const cw=N*IW+40,ch=N*IH+110,ox=cw/2,oy=90;cv.width=cw*K;cv.height=ch*K;const c=ctx;c.setTransform(1,0,0,1,0,0);c.fillStyle='#2f3b2a';c.fillRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;
   const iso=(gx,gy)=>[ox+(gx-gy)*IW/2,oy+(gx+gy)*IH/2];
-  c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*oy);c.drawImage(G,0,0);
+  c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*oy);c.drawImage(G,0,0);for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a;if(S.obj[j]==='farm')try{drawObj(c,'farm',a*TS,b*TS,j,0,now)}catch(err){}}/* 畑の土は、地面といっしょに45度まわす */
   /* 壁は箱、ほかの物は絵を立てる。x+y の小さい順（うしろから） */
-  const L=[];for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a,o=S.obj[j];if(!o||o==='part'||o==='farm'||!BL[o]||BL[o].floor)continue;/* 畑は地面の下絵に入っている */const z=BL[o].sz||[1,1];L.push({d:a+z[0]-1+b+z[1]-1+.5,a,b,o,j,z})}
+  const L=[];for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a,o=S.obj[j];if(!o||o==='part'||o==='farm'||!BL[o]||BL[o].floor)continue;/* 畑は地面といっしょに描いた */const z=BL[o].sz||[1,1];L.push({d:a+z[0]-1+b+z[1]-1+.5,a,b,o,j,z})}
   for(const r of S.res){const a=r.x-X0,b=r.y-Y0;if(a>=0&&b>=0&&a<N&&b<N)L.push({d:a+b-.5,r,a,b})}
   L.sort((p,q)=>p.d-q.d);
   const box=(a,b,h,top,lf,rt)=>{const P=[iso(a,b),iso(a+1,b),iso(a+1,b+1),iso(a,b+1)].map(([x,y])=>[x*K,y*K]),U=P.map(([x,y])=>[x,y-h*K]);c.setTransform(1,0,0,1,0,0);
