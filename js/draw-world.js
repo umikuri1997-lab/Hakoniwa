@@ -127,11 +127,12 @@ function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水の�
     if(!any)continue;let gr=0,dr=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b||isW(tx+a,ty+b))continue;const j=(ty+b)*W+tx+a;if(REV.has(j))gr++;else dr++}/* まわりの陸が草地か、あれ地か */
     const px=tx*TS,py=ty*TS;if(gr>dr&&gt.ok)lg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,xa,ya,TS,TS);else lg.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,xa,ya,TS,TS)}
   if(!L)return;if(NOISEC){lg.save();lg.imageSmoothingEnabled=true;lg.imageSmoothingQuality='high';{const kx=NOISEC.width/((W+1)*TS),ky=NOISEC.height/((H+1)*TS),sx=(X0*TS+TS/2)*kx,sy=(Y0*TS+TS/2)*ky;lg.drawImage(NOISEC,sx-1,sy-1,w*kx+2,h*ky+2,-1/kx,-1/ky,w+2/kx,h+2/ky)}lg.restore()}/* 区画の所だけを切りとって描く（マップぜんたいの大きさで描くと重い） *//* 下絵と同じ色むら（drawStaticArea）もかさねる。ないと、ぬりなおした所だけ明るくなって、まわりの草とのさかいに線が出る */const m=TMPC();m.width=w;m.height=h;m.getContext('2d').putImageData(id,0,0);lg.globalCompositeOperation='destination-in';lg.drawImage(m,0,0);g.drawImage(L,0,0);L.width=L.height=m.width=m.height=0}
+let BANKA=null;function bankArt(){/* 池・川の岸の断面の色：がけの正面の岩の絵（cliff:block）のドット。左右の細い断面は、その岩の色の平均を少し暗く。絵がまだなら null（前の土の色） */if(BANKA)return BANKA;const C=window.CHIPS||{},cb=C['cliff:block'],ci=cb&&chipImgs(cb,'cliff')[0];if(!ci||!ci.ok||ci.width<64||ci.height<64)return null;const d=ci.getContext('2d').getImageData(0,0,64,64).data;let r=0,g=0,b=0,n=0;for(let q=16*64*4;q<d.length;q+=4)if(d[q+3]>128){r+=d[q];g+=d[q+1];b+=d[q+2];n++}if(!n)return null;BANKA={d,s:[r/n*.85|0,g/n*.85|0,b/n*.85|0]};return BANKA}
 function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);{const g0=GRD.c.get(k);if(GRD.s!==S||!g0||!g0.f||g0.st)return null}/* 地面の区画（くわしい絵）ができてから作る */const C=window.CHIPS,X0=cx*16,Y0=cy*16,X1=Math.min(W,X0+16),Y1=Math.min(H,Y0+16),isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,near=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isW(x+dx,y+dy))return true;return false};
   const SM=skyM(),isS=(x,y)=>!!SM&&x>=0&&y>=0&&x<W&&y<H&&SM[y*W+x]===1,nearS=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isS(x+dx,y+dy))return true;return false};let PS=null;if(SM)for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!nearS(x,y)){x++;continue}let e=x;while(e+1<X1&&nearS(e+1,y))e++;PS=PS||new Path2D();PS.rect(x*TS,y*TS,(e-x+1)*TS,TS);x=e+1}}/* 風：雲の模様をぬる所（雲の海のマスと、そのまわり1マス） */
   const P=new Path2D();let any=false;for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!near(x,y)){x++;continue}let e=x;while(e+1<X1&&near(e+1,y))e++;P.rect(x*TS,y*TS,(e-x+1)*TS,TS);any=true;x=e+1}}/* 水の模様をぬる所：水のマスと、そのまわり1マス */
   if(!any){WCK.c.set(k,null);return null}
-  const w=(X1-X0)*TS,h=(Y1-Y0)*TS,R=waterRound(X0,Y0,X1,Y1,isW),M=WRND.m,gw=R.w,F=R.f,D=R.d,o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
+  const BK=bankArt(),w=(X1-X0)*TS,h=(Y1-Y0)*TS,R=waterRound(X0,Y0,X1,Y1,isW),M=WRND.m,gw=R.w,F=R.f,D=R.d,o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
   const m=TMPC();m.width=w;m.height=h;const gm=m.getContext('2d'),mi=gm.createImageData(w,h),e=TMPC();e.width=w;e.height=h;const ge=e.getContext('2d'),ei=ge.createImageData(w,h),md=mi.data,ed=ei.data;
   const full=[];for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){const u=R.ut(tx,ty),xa=(tx-X0)*TS,ya=(ty-Y0)*TS;if(u===0)continue;/* まわりがぜんぶ陸のマスは、ふちも水もない */
     const sk=SM&&nearS(tx,ty);if(u>0&&!sk){full.push(xa,ya);continue}/* まわりがぜんぶ水のマスは、ドットごとに見ないで、あとで四角でぬる（読みこみを速く） */
@@ -141,9 +142,9 @@ function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);
           if(k){ed[p]=96;ed[p+1]=150;ed[p+2]=184;ed[p+3]=[120,96,72,48,24][k-fh-1];continue}
           if(!F[i-1]||!F[i+1]||!F[i+gw]){ed[p]=SKYRIM[0];ed[p+1]=SKYRIM[1];ed[p+2]=SKYRIM[2];ed[p+3]=255}}continue}
       if(F[i]&&u<0){md[p+3]=255;let k=0;for(let q=1;q<=WBANK+WBSH&&(y+M-q)>=0;q++)if(!F[i-q*gw]){k=q;break}/* 水面は岸より一段ひくい：奥の岸の下に土の断面、その下の水にかげ */
-        if(k&&k<=WBANK){c=WBANKC[k-1];ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}
+        if(k&&k<=WBANK){c=WBANKC[k-1];if(BK){const q=((((k-1)*2)*64)+((((X0*TS+x)*2)%64)+64)%64)*4;if(BK.d[q+3]>128)c=[BK.d[q],BK.d[q+1],BK.d[q+2]]}ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}/* 奥の岸の断面：がけの正面の岩の絵（cliff:block の上の帯から）を、世界のマスどおりに */
         if(k){ed[p]=24;ed[p+1]=52;ed[p+2]=70;ed[p+3]=WBSHA[k-WBANK-1];continue}
-        if(!F[i-1]||!F[i+1]||!F[i-2]||!F[i+2]){c=WBANKS;ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=(!F[i-1]||!F[i+1])?230:150;continue}/* 左右の岸：細い断面（2ドット） */
+        if(!F[i-1]||!F[i+1]||!F[i-2]||!F[i+2]){c=BK?BK.s:WBANKS;ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=(!F[i-1]||!F[i+1])?230:150;continue}/* 左右の岸：細い断面（2ドット） */
         if(!F[i+gw])c=WBAND[0];if(c){ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255}continue}
       if(F[i]){md[p+3]=255;if(u<0&&(!F[i-1]||!F[i+1]||!F[i-gw]||!F[i+gw]))c=WBAND[0]}/* 水：陸にとなる1ドットは、こい水の線 */
       else{const dd=D[i],k=Math.round(dd);let a=0;if(k>=1&&k<WBAND.length&&REV.has(ty*W+tx)){c=WBAND[k];a=WBANDA[k]/255}/* 陸：水からの道のりで、ふちの草の帯 */
