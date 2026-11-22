@@ -1,6 +1,6 @@
 # 水の木（メープル maple~m）：トリポのメープル（nat_maple.glb、tools/art/nature3d/tree_prep.py で作る）。ゆうやけ色の葉。作り方は風の木（nat_acacia.py）と同じ。
 from natcommon import nat,deep,flat,leafballs,post_clean,barktexdecal,tone5,sunscreen
-ID='maple~m';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.0;BOTTOM=56
+ID='maple~m';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.0;BOTTOM=112;SCALE=2
 VIEWS=[('maple~m',0)]
 BARK=deep((170,120,92));H=1.8
 TONES=[(252,206,104),(248,180,92),(240,154,84),(226,130,78),(208,110,74)]   # メープルの葉（ゆうやけ色）

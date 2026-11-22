@@ -23,7 +23,7 @@ def shadow(M,k,L,mirror,chip):
     G=T-T[...,2:3]/L[2]*L;G[...,2]=0   # 光の向きに、地面の平面へうつす
     px=lambda g:((P(g)[0]-E[0])*S_-bb[0]+chip['ax'],(P(g)[1]-E[2])*S_-bb[3]+chip['ay']+chip['h'])   # チップと同じ場所（g64のドット、マスの左上から）
     Q=np.array([[px(g) for g in t] for t in G])
-    if mirror:Q[...,0]=64-Q[...,0]   # ゲームの反対の絵は、マスのはば（64）の中で反対にする
+    if mirror:Q[...,0]=64*getattr(M,'SCALE',1)-Q[...,0]   # ゲームの反対の絵は、マスのはば（64）の中で反対にする
     x0,y0=int(np.floor(Q[...,0].min()))-1,int(np.floor(Q[...,1].min()))-1;x1,y1=int(np.ceil(Q[...,0].max()))+1,int(np.ceil(Q[...,1].max()))+1
     m=Image.new('L',(x1-x0,y1-y0),0);d=ImageDraw.Draw(m)
     for t in Q:d.polygon([(a-x0,b-y0) for a,b in t],fill=255)

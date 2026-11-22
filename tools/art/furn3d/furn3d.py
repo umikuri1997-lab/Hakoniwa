@@ -6,6 +6,7 @@
 # items/<id>.py に書く物：
 #   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく）・うすいかげだけの部品は p.soft1=True・サテンの布（つやのある布）は p.satin=True・石の部品は p.stone=True（石のテクスチャ）・木の皮のテクスチャは p.barktex=True（根など、log でない形の皮）・べつのテクスチャをはる部品は p.texobj=oblique3d.Tex(...)・しっくいの部品は p.plaster=True（しっくいのテクスチャ）・金属の板は p.mtex=True（金属のテクスチャ）・レンガの部品は p.brick=True（こまかい、ざらざらしたテクスチャ）・光る部品（火・あかりのガラス）は p.glow=True（かげをつけない）・面のもようは p.decal=f(x,y,z)→色・ひくいドームなど、なだらかなふくらみは p.curve=True（かげのグラデーションを出す）・輪郭線をうすくする部品は p.olk=0.86（もとの色にかける数）)・EXTRA(sc)（Part で書けない形。なければ書かない）
 #   VIEWS=[(チップの名前, まわす数k), ...]（k：0前・1右・2後ろ・3左）・BOTTOM（絵の下のはし。g64のドット。いまのチップに合わせる）
+#   SCALE=n（n×nマスの物を、1マス64×nドットで写す。木・岩は2。BOTTOM も、その大きさで書く）
 #   SZ=(よこ,たて)（置くマスの数。2×1 の物は (2,1)。たてにした向きを、置いたマスから下へのびる所に写す）
 #   FRAMES=n（うごく絵のコマの数。PARTS・EXTRA は M.FR（0〜n−1）を見て、動く所だけかえる）
 #   PFIRE=[(cx,cy,z0,高さ,根もとの半径,粒の数,seed), ...]（粒の火とけむり。FRAMES のコマでループする。本体は1回だけ写す）
@@ -52,6 +53,7 @@ def scene(M,k,only=None,filt=None,foot=None):
 TREET=([(-0.62,-0.56),(0.47,0.52),(0.60,0.66),(0.84,0.90)],[(-28,8),(-15,4),0,(10,-4),(19,-8)])   # 木の幹と同じかげ（natcommon.tone5）：色は5つ（こいかげ・かげ・もとの色・ハイライト2つ）、さかいめは あみ
 TREELIGHT=(-0.6,0.5,0.8)   # 光は左上・手前から（木・コワイノと同じ）
 def shot(M,k,only=None,S_=64,filt=None,info=None):
+    if S_==64:S_=64*getattr(M,'SCALE',1)   # SCALE=2：2×2マスの物（木・岩）。1マス128ドットで写す（チップは g64 のまま、絵が2倍）
     if getattr(M,'TREESHADE',False) and not getattr(M,'_ts',False):   # TREESHADE=True：木の幹と同じかげの付け方（料理の家具など）
         sv=(O.DITHER,O.DITHERT,O.LIGHT,O.GRAD);O.DITHER=1;O.DITHERT=getattr(M,'TREET',TREET);_l=np.array(TREELIGHT,float);O.LIGHT=_l/np.linalg.norm(_l);O.GRAD=True;M._ts=True
         try:return shot(M,k,only,S_,filt,info)

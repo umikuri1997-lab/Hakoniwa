@@ -316,8 +316,10 @@ const BEDHX=31,BEDHY=-1,BEDVY=8.5,BEDHS=.85;const BEDXY={g_k_bed:[[32,5],[31,41]
 const ROTN=id=>ROTS[id]===5?4:ROTS[id]===4?4:ROTS[id]===3?3:ROTS[id]?2:1,ROTL={5:[,'手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],3:['前','右','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥。0は古いセーブだけ） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
-const szR=(id,rot)=>{const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:id==='tower'&&WD===0&&S?.sacredLegacy3?[3,3]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1||ROTS[id]===3&&rot>=1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
-const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
+const NAT2=new Set(['tree','ntree','fruit','deadtree','rock','boulder']);/* 木・岩は2×2マス（左上のマスに物、のこり3マスは part）。まわりに空きがなかった古いセーブの物は1マスのまま（nat2At が false） */
+const nat2At=j=>j%W<W-1&&S.obj[j+1]==='part'&&S.ref[j+1]===j;
+const szR=(id,rot)=>{if(NAT2.has(id))return [2,2];const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:id==='tower'&&WD===0&&S?.sacredLegacy3?[3,3]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1||ROTS[id]===3&&rot>=1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
+const szAt=(id,j)=>NAT2.has(id)&&j!=null&&S.obj[j]===id?(nat2At(j)?[2,2]:[1,1]):szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
 const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
 let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */
 /* 作業する向きがきまっている家具（WORKF）：作業するマスは、その向きの前（向き0 前＝下・1 右・2 後ろ＝上・3 左）。2×2は前の2マス、作業台は台のマス（wbCells の b）の前。

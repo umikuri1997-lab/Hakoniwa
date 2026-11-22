@@ -1,7 +1,7 @@
 # 水の木（tree~m・deadtree~m）：トリポのオーク（nat_oak.glb、tools/art/nature3d/tree_prep.py で作る）。作り方は風の木（nat_acacia.py）と同じ。
 # まるく大きくひろがる、水べの村の木。植えた木も自然の木も、この形（自然の木は、うしろからの向き）。
 from natcommon import nat,deep,flat,leafballs,post_clean,barktexdecal,tone5,sunscreen
-ID='tree~m';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.0;BOTTOM=56
+ID='tree~m';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.0;BOTTOM=112;SCALE=2
 VIEWS=[('tree~m',0),('deadtree~m',2)]
 BARK=deep((176,124,92));H=1.9
 TONES=[(178,222,128),(156,208,112),(130,192,104),(108,174,100),(90,156,98)]   # オークの葉（ふかい緑）

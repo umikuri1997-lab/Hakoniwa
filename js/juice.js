@@ -47,17 +47,18 @@ function juiceBreak(j,kind,r){if(!juiceOK()||j==null||j<0)return;const B=JBRK[ki
 const TFALL=[],TFIDS=new Set(['tree','ntree','fruit','deadtree','bamboo']),TFTHUD=2.52,TFWOB=1.3,TFLIE=.6,TFOUT=.5,TFANG=Math.PI/2*.92;
 function treeFall(j,o,r){if(!juiceOK()||!TFIDS.has(o))return;const x=j%W,y=(j/W)|0,d=S.dyn[j],g=d?(d.g!=null?d.g:d.p):0,
     dir=r&&Math.abs(r.x-(x+.5))>.05?(r.x<x+.5?1:-1):(hash(j*7+dayNo())<.5?-1:1),red=typeof uiReduced==='function'&&uiReduced();
-  TFALL.push({j,o,g,px:x*TS,py:y*TS-(typeof hiAt==='function'?liftOf(j):0),dir,t0:performance.now(),dep:y+.5,thud:0,red,S});sfxAt('treefall',x+.5,y+.5)}
+  const nb=nat2At(j),lo=natLegOff(o,j);/* 2×2の木は2マスのまん中が根もと。1マスのままの古い木は、絵をずらす */
+  TFALL.push({j,o,g,nb,px:x*TS+(lo?lo[0]:0),py:y*TS-(typeof hiAt==='function'?liftOf(j):0)+(lo?lo[1]:0),dir,t0:performance.now(),dep:y+(nb?1.5:.5),thud:0,red,S});sfxAt('treefall',x+.5,y+.5)}
 function tfAng(f,s){if(f.red)return s<TFTHUD?0:f.dir*TFANG;/* うごきをへらす設定：ゆらさず、ドンでたおれた絵に */
   if(s<TFWOB){const k=s/TFWOB;return f.dir*(.012*k+.035*k*Math.sin(s*17))}/* ミシミシ：ゆれる */
   if(s<TFTHUD){const u=(s-TFWOB)/(TFTHUD-TFWOB);return f.dir*(.012+(TFANG-.012)*Math.pow(u,2.6))}/* だんだん速く、かたむく */
   const b=s-TFTHUD;return f.dir*(TFANG-(b<.28?.09*Math.sin(Math.PI*b/.28):0))}/* ドン：小さくはねる */
 function drawTreeFall(f,now){const s=(now-f.t0)/1000;if(s>=TFTHUD&&!f.thud){f.thud=1;tfThud(f)}
-  const a=s<TFTHUD+TFLIE?1:Math.max(0,1-(s-TFTHUD-TFLIE)/TFOUT);if(a<=0)return;const bx=f.px+TS/2,by=f.py+TS*.82;
+  const a=s<TFTHUD+TFLIE?1:Math.max(0,1-(s-TFTHUD-TFLIE)/TFOUT);if(a<=0)return;const bx=f.px+(f.nb?TS:TS/2),by=f.py+(f.nb?TS*1.75:TS*.82);
   ctx.save();ctx.globalAlpha*=a;ctx.translate(bx,by);ctx.rotate(tfAng(f,s));ctx.translate(-bx,-by);try{drawObj(ctx,f.o,f.px,f.py,f.j,f.g,now)}catch(e){}ctx.restore()}
-function tfThud(f){const B=JBRK.wood,L=TS*2.2;for(let i=0;i<14;i++){const q=Math.random(),x=f.px+TS/2+f.dir*q*L,y=f.py+TS*.8+(Math.random()-.5)*8,a=-Math.PI*(.15+.7*Math.random()),sp=40+Math.random()*70;
+function tfThud(f){const B=JBRK.wood,L=TS*(f.nb?4.4:2.2),cx=f.px+(f.nb?TS:TS/2),cy=f.py+(f.nb?TS*1.75:TS*.8);for(let i=0;i<14;i++){const q=Math.random(),x=cx+f.dir*q*L,y=cy+(Math.random()-.5)*8,a=-Math.PI*(.15+.7*Math.random()),sp=40+Math.random()*70;
     fx.push({k:'p',x,y,vx:Math.cos(a)*sp*(Math.random()<.5?-1:1),vy:Math.sin(a)*sp,life:.6+Math.random()*.4,col:B.c[(Math.random()*B.c.length)|0],r:3})}/* 地面についた所から、葉と木くず */
-  fx.push({k:'ring',x:f.px+TS/2+f.dir*L*.5,y:f.py+TS*.7,life:1,col:'rgba(225,205,165,.85)'});/* 土ぼこり */
+  fx.push({k:'ring',x:cx+f.dir*L*.5,y:cy-TS*.1,life:1,col:'rgba(225,205,165,.85)'});/* 土ぼこり */
   if(!f.red&&cam.z>=homeZ()*.7)juiceShake()}
 function treeFallTick(now){for(let i=TFALL.length-1;i>=0;i--){const f=TFALL[i];if((now-f.t0)/1000>TFTHUD+TFLIE+TFOUT||f.S!==S)TFALL.splice(i,1)}}/* 終わった・村がかわった */
 function juiceShake(){const now=performance.now();if(now-JSHAKE<JUICE_SHAKEGAP)return;if(typeof uiReduced==='function'&&uiReduced())return;JSHAKE=now;shakeScreen('s')}

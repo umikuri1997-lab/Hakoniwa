@@ -154,7 +154,7 @@ function toyPose0(r,now){const a=toyR(r);if(!a)return null;{const wp=windRidePos
 function spotW(i){const w=sideW(i);if(w>=0)return w;const y=i/W|0;if(y>0&&waterJ(i-W))return i-W;if(y+1<H&&waterJ(i+W))return i+W;return -1}/* 椅子のすぐとなり（上下左右）の水マス（なければ-1） */
 function fishW(j){return fSpot(j)?spotW(j):sideW(j)}/* 釣るときに見る水マス（釣りスポットは上下も） */
 function sideW(j){const x=j%W;if(x+1<W&&waterJ(j+1))return j+1;if(x>0&&waterJ(j-1))return j-1;return -1}/* 左右どちらかが水 */
-function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(fn(k))return k}return -1}
+function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;let k=ny*W+nx;if(S.obj[k]==='part'&&NAT2.has(S.obj[S.ref[k]]))k=S.ref[k];/* 2×2の木・岩は、どのマスのとなりからでも（左上のマスとして見る） */if(fn(k))return k}return -1}
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
 const NEEDT=[6,24,52,96,160,248,364,512,696,920,1188],NEEDF=[13,38,83,154,256,397,582,819,1114,1472,1901],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(q=>q.elem===el&&isKey(q.name)).length;return T[Math.min(T.length-1,elemCount(el)+dk)]};/* いなくなったキーキャラも数に入れる（ひとり分の力で2人呼べないように） */
 const reviveNeed=q=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(x=>x!==q&&x.elem===q.elem&&isKey(x.name)).length;return T[Math.min(T.length-1,elemCount(q.elem)+dk)]};/* めぶきのしずくでよみがえらせるのにいる、その属性の力 *//* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */

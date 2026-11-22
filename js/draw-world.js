@@ -37,7 +37,7 @@ const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;l
 const EOC=document.createElement('canvas'),EOS=document.createElement('canvas'),eox=EOC.getContext('2d'),eos=EOS.getContext('2d');
 function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
   for(let dy=0;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){const x=ex+dx,y=ey+dy;if(x<0||y<0||x>=W||y>=H)continue;const a=anc(y*W+x),o=S.obj[a];if(!o||o==='part'||FLAT.has(o)||!BL[o])continue;
-    const ay=(a/W)|0;if(ay<ey&&!(BL[o].sz&&ay+szAt(o,a)[1]-1>=ey))continue;const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
+    const ay=(a/W)|0;{const z=szAt(o,a);if(ay<ey&&!(z&&ay+z[1]-1>=ey))continue}const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
   for(const h of HOUSES)if(h.set.has(ey*W+ex)||h.set.has((ey+1)*W+ex))return true;return false}
 function enFace(e,v,now){/* 攻撃している相手のほうを向く：よこ（R・L）・うしろ（B）・正面（F）。歩いているあいだは、歩く向きのまま */const a=AIMV.get(e);if(!a||S.t-a.t>8||S.t<a.t||now-v.mv<200)return null;const dx=a.x-e.x,dy=a.y-e.y;if(Math.abs(dx)<.05&&Math.abs(dy)<.05)return null;return Math.abs(dx)>=Math.abs(dy)?(dx>0?'R':'L'):dy<0?'B':'F'}
 /* コワイノの体力ゲージ：へった分（白）を HPGHOLD ミリ秒のこしてから、1秒に HPGRATE（ゲージのわりあい）ずつちぢめる */
@@ -71,11 +71,11 @@ function siteKey(id){if(id==='statue')return'site:s3';if(id==='windmill')return'
 function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x0:-1,w:3,rows:1,hf:1.25};if(BIG2.has(id))return{x0:-.5,w:2,rows:1,hf:1.4};if(b.sz)return{x0:0,w:b.sz[0],rows:b.sz[1],hf:1};if(b.kind==='build')return{x0:-.2,w:1.4,rows:1,hf:1.1};return null}
 function objBox(o,j){if(STAIRS.has(o)){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x-TS-4,y-TS-30,x+2*TS+4,y+2*TS+4]}/* 階段は1×2で、どの向きにものびる */if(o==='site'&&S.dyn[j]){const ch=(window.CHIPS||{})[siteKey(S.dyn[j].build)];if(ch){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x+ch.ax/2-4,y+ch.ay/2-20,x+(ch.ax+ch.w)/2+4,y+(ch.ay+ch.h)/2+4]}}/* 足場の絵の大きさ（上は進みぐあいのバーのぶん） */
 const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
-  const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
+  const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=NAT2.has(o)?190:tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
 const FLAT=new Set(['rug1','rug2','hoshirug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
 function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o)||LADDERS.has(o))return y+.02;if(WEEDS.has(o))return y+.02;/* 雑草・きのこは、同じマスのせいれいより下 */if(o==='bridge')return y+.01;/* 橋は、上を歩く子より下 */if(STAIRS.has(o)){const d=stairDir(j);return (d===2||d===0?y-1:y)+.02}/* 階段・坂は、いちばん上の行（のぼった先の高いマスの行）のはじめ（上に立つせいれいより下） */if(HOME_DOORS.has(o)&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
-  return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
+  const z=o==='site'?b&&b.sz:szAt(o,j);return y+(z?z[1]:1)+(o==='obox'?.01:0);
 }
 
 const FORDS={s:null,n:-1,glow:null,st:new Map()};/* 浅瀬の絵：砂の光（どのマスも同じ1まい）と、マスごとの小石の絵（1回だけ作っておく） */
@@ -191,8 +191,8 @@ const WSNOW=new Map(),WSNOWMAX=16;
 function waterSnowOf(q){let e=WSNOW.get(q);if(e)return e;if(typeof feelArt!=='function')return null;const A=feelArt();if(!A||!A.snowT)return null;if(WSNOW.size>=WSNOWMAX){const k0=WSNOW.keys().next().value,c0=WSNOW.get(k0);c0.width=c0.height=0;WSNOW.delete(k0)}
   const cv=document.createElement('canvas');cv.width=q.o.width;cv.height=q.o.height;const g=cv.getContext('2d');g.drawImage(q.o,0,0);g.globalCompositeOperation='source-in';g.fillStyle=g.createPattern(A.snowT,'repeat');try{g.fillStyle.setTransform(new DOMMatrix([.5,0,0,.5,0,0]))}catch(err){}g.fillRect(0,0,cv.width,cv.height);WSNOW.set(q,cv);return cv}
 function waterSnowFree(){for(const c of WSNOW.values())c.width=c.height=0;WSNOW.clear()}
-function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
-  ctx.save();ctx.beginPath();ctx.rect(x*TS-200,y*TS-400,TS+400,600);if(L)ctx.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)ctx.rect((x+1)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);ctx.clip('evenodd');f();ctx.restore()}
+function sideClip(i,f,w){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない。w：物のよこのマスの数（2×2の木・岩は2） */w=w||1;const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-w&&hiAt(i+w)>h?hiAt(i+w):0;if(!L&&!R){f();return}
+  ctx.save();ctx.beginPath();ctx.rect(x*TS-200,y*TS-400,TS*w+400,600);if(L)ctx.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)ctx.rect((x+w)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);ctx.clip('evenodd');f();ctx.restore()}
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
 const WPLIFT=108;/* 見張り台の上に立つ高さ */const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
 function uLift(o){if(o&&o.act&&o.act.type==='watchpost'&&o.act.stage==='do'){const k=Math.min(1,o.act.cl||0);if(k<1)CLIMB.add(o);else CLIMB.delete(o);return (S.hi?liftOf(o.act.obj+W):0)+WPLIFT*k}/* 見張り台の上に立つ（ハシゴを少しずつのぼる） */if(o&&o.elem){CLIMB.delete(o);if(S&&LADDERS.has(S.obj[(o.y|0)*W+(o.x|0)])&&o.path&&o.path.length)CLIMB.add(o)}/* ハシゴの上を動いている子も、よじのぼる動き *//* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
@@ -539,9 +539,10 @@ function render(now){RFN++;hdFrame();DCG.armed=false;
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'&&o!=='yudekago'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(HDOORS.has(o))add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-liftOf(i),i);ctx._doorBack=0},i);/* ドアの奥の面 */
-    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>hdCastStretch(x*TS+TS/2,y*TS-liftOf(i)+TS*.8,()=>drawChip(ctx,sh,o,x*TS,y*TS-liftOf(i),0,i)),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる） */
+    const nb=NAT2.has(o)&&nat2At(i),lo=natLegOff(o,i),ox=x*TS+(lo?lo[0]:0),oy=y*TS-liftOf(i)+(lo?lo[1]:0);/* 2×2の木・岩（nb）。1マスのままの古い木・岩（lo）は、2×2の絵を1マスのまん中へずらす */
+    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>hdCastStretch(ox+(nb?TS:TS/2),oy+(nb?TS*1.75:TS*.8),()=>drawChip(ctx,sh,o,ox,oy,0,i)),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる） */
     if(o==='wbench'){const c=wbCells(i);for(const [k,yd] of [[c.b,0],[c.y,1]]){const kx=k%W,ky=(k/W)|0;add(objectDepth(o,k),1,null,()=>sideClip(k,()=>dropIn(ctx,i,kx*TS,ky*TS-liftOf(k),now,()=>yd?drawWbYard(ctx,i,kx*TS,ky*TS-liftOf(k),now):drawObj(ctx,o,kx*TS,ky*TS-liftOf(k),i,0,now),o)),k)}continue}/* 作業台：作業台と材料置き場を、それぞれのマスの順に */
-    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>dropIn(ctx,i,x*TS,y*TS-liftOf(i),now,()=>{const g=S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0;drawObj(ctx,o,x*TS,y*TS-liftOf(i),i,g,now);feelCap(ctx,o,i,x*TS,y*TS-liftOf(i),g)/* 冬：木・岩の上の雪 */},o)),i)}
+    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>dropIn(ctx,i,ox,oy,now,()=>{const g=S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0;drawObj(ctx,o,ox,oy,i,g,now);feelCap(ctx,o,i,ox,oy,g)/* 冬：木・岩の上の雪 */},o),nb?2:1),i)}
   drawWebs(add,vis);/* クモの巣 */
   for(const k in S.edge||{}){const j=+k,x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;add(objectDepth('bedge',j),0,null,()=>sideClip(j,()=>drawBedge(ctx,x*TS,y*TS-liftOf(j),j,false,now)),j);add(objectDepth('bedge',j),1.5,null,()=>sideClip(j,()=>drawBedge(ctx,x*TS,y*TS-liftOf(j),j,true,now)),j)}/* 花壇のふち：同じマスの花より手前 */
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!vis({x:x+1,y:y+1}))continue;add(y+2.06,3,[x*TS-14,y*TS-60,x*TS+80,y*TS+70],()=>drawRoofItem(ctx,id,x*TS,y*TS-liftOf(j)),j);{const bk=window.CHIPS&&CHIPS[id+':back'];if(bk)add(y,0,[x*TS-14,y*TS-60,x*TS+80,y*TS+70],()=>drawChip(ctx,bk,id,x*TS,y*TS-liftOf(j),0),j)}}/* うしろの柱は、その行のはじめ（せいれいや家具より下） *//* ガゼボ・東屋：家の屋根と同じ（2マスめの行のすぐ後）。下に置いた物・ベンチやいすにすわっている子（行+1.02〜1.05）より上 */

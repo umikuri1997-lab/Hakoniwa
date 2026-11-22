@@ -1,7 +1,7 @@
 # 風の木（tree~k・deadtree~k）：トリポのアカシア（nat_acacia.glb、tools/art/nature3d/acacia_prep.py で作る）。幹は木の皮のテクスチャ（barktexdecal）、葉は小さな葉の部品（natcommon.leafballs）。
 # かさのように平らにひろがる、風の島の木。植えた木も自然の木も、この絵（火山のとんがりの木と同じ形）。見おろしは4度（ほぼ正面）。かげはうすいトゥーン。
 from natcommon import nat,deep,flat,leafballs,post_clean,barktexdecal,tone5,sunscreen
-ID='tree~k';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.0;BOTTOM=56
+ID='tree~k';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.0;BOTTOM=112;SCALE=2
 VIEWS=[('tree~k',0),('deadtree~k',2)]   # 自然の木は、うしろからの向き（ちがう形に見える）
 BARK=deep((190,128,90));H=1.8
 TONES=[(204,228,118),(186,218,108),(162,204,100),(136,188,98),(112,172,98)]   # アカシアの葉（すこし黄みの明るい緑）

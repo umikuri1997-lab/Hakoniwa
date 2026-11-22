@@ -57,7 +57,7 @@ function canPlace0(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,
   if(CANOPY.has(id))return canRoof(x,y,quiet);
   if(id==='watch'&&watchNear(x,y)){if(!quiet)toast('見張り台は、5マスはなさないと置けません','warn');return false}
   if(id==='statue'&&!(canPlace('fence',x-1,y,quiet)&&canPlace('fence',x+1,y,quiet)&&canPlace('fence',x,y+1,quiet)))return false;
-  if(BL[id].sz){const F=fp(id,x,y);for(const[a,b]of F)if(!canPlace1(id,a,b,quiet))return false;if(F.some(([a,b])=>hiAt(b*W+a)!==hiAt(F[0][1]*W+F[0][0]))){if(!quiet)toast('段差をまたいでは置けません');return false}return true}
+  if(szR(id,PLROTS[id]||0)){const F=fp(id,x,y);for(const[a,b]of F)if(!canPlace1(id,a,b,quiet))return false;if(F.some(([a,b])=>hiAt(b*W+a)!==hiAt(F[0][1]*W+F[0][0]))){if(!quiet)toast('段差をまたいでは置けません');return false}return true}
   return canPlace1(id,x,y,quiet);
 }
 const WATCHGAP=5;function watchNear(x,y){/* 見張り台（建てている途中の物も）と、あいだが5マスより少ないか。2×2どうし、たて・よこ・ななめで数える */for(let k=0;k<S.obj.length;k++){if(S.obj[k]!=='watch'&&!(S.obj[k]==='site'&&S.dyn[k]&&S.dyn[k].build==='watch'))continue;const ax=k%W,ay=(k/W)|0,gx=Math.max(x-(ax+2),ax-(x+2)),gy=Math.max(y-(ay+2),ay-(y+2));if(Math.max(gx,gy)<WATCHGAP)return true}return false}
@@ -96,6 +96,10 @@ function setBlock(id,j){
 function swingWide(){/* ブランコが2マスはばになった：前のセーブのブランコは、右か左のあいたマスへひろげる。どちらもふさがっていたら、おそなえ箱にもどす */let back=0;const ok=k=>k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1;
   for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='swing')continue;const x=j%W;if(x<W-1&&ok(j+1)){S.obj[j+1]='part';S.ref[j+1]=j}else if(x>0&&ok(j-1)){S.obj[j-1]='swing';S.obj[j]='part';S.ref[j]=j-1;if(S.rot&&S.rot[j]!=null){S.rot[j-1]=S.rot[j];delete S.rot[j]}}else{clearObj(j);giveItem('swing',1,1);back++}}
   if(back)setTimeout(()=>toast('ブランコが2マスはばになったので、ひろげられないブランコを'+back+'つ、もちものにもどした'),1500)}
+function natFitAt(j){/* 木・岩を2×2マスに広げる（右・下・右下の3マスが、同じ高さの空いた地面のとき。雑草はぬく）。広げられたら true */const o=S.obj[j];if(!NAT2.has(o))return false;if(nat2At(j))return true;const x=j%W,y=(j/W)|0;if(x>=W-1||y>=H-1)return false;const h=hiAt(j),K=[j+1,j+W,j+W+1];
+  for(const k of K){const q=S.obj[k];if(q&&!WEEDS.has(q)||S.floor[k]||S.ground[k]!==0||hiAt(k)!==h||S.ref[k]!=null||S.edge&&S.edge[k]||S.res.some(r=>((r.y|0)*W+(r.x|0))===k))return false}
+  for(const k of K){if(S.obj[k]){S.obj[k]='';delete S.dyn[k]}S.obj[k]='part';S.ref[k]=j}return true}
+function natFit(fresh){/* 木・岩を2×2マスに。新しい村（fresh）は、広げられない自然の木（森の木・枯れ木）をなくす。古いセーブは、広げられない物は1マスのまま */for(let j=0;j<W*H;j++){const o=S.obj[j];if(!NAT2.has(o)||nat2At(j)||natFitAt(j))continue;if(fresh&&(o==='deadtree'||o==='ntree')){S.obj[j]='';delete S.dyn[j]}}}
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 /* 植える芽は、せいれいが歩いて行ける所だけ。池・川の上は、行ける岸から水の中をおよいでとどく所ならどこでも（plantWet：岸につながる水。せいれいの道 spirit-work.js の plant の wade と同じ決まり）。行けない所に置くと、植える予定の10この枠がうまったままになる */
 function plantDist(){const r=S.res.find(q=>!q.hidden)||S.res[0];return r?bfs(r.x|0,r.y|0).dist:null}
@@ -127,7 +131,7 @@ function place(id,x,y){
     if(b.kind==='plant'&&cnt('sprout')>=10)return toast('植える予定がいっぱいです');
     if(b.kind==='plant'&&!plantReach(plantDist(),j))return toast('せいれいが行けない場所です','warn');
     if(b.kind==='build'&&!TERRA.has(id)&&S.obj.reduce((n,o,k)=>n+(o==='site'&&!(S.dyn[k]&&S.dyn[k].bp!=null)?1:0),0)>=3)return toast('建てる予定がいっぱいです');
-    if(b.kind==='plant'){S.inv[id]--;S.obj[j]='sprout';S.dyn[j]={plant:id,p:0,userMound:true};undoStack.push({j,id,seed:1})}
+    if(b.kind==='plant'){S.inv[id]--;S.obj[j]='sprout';S.dyn[j]={plant:id,p:0,userMound:true};if(NAT2.has(id))setParts(id,j,'part');/* 木の苗：育つ2×2マスを先にとっておく */undoStack.push({j,id,seed:1})}
     else{S.pt-=pc;rsvAdd(bm);/* 素材は、とっておく（せいれいが箱から運ぶ） */S.obj[j]='site';S.dyn[j]={build:id,p:0,need:b.time,mat:bm?Object.assign({},bm):undefined,got:{}};undoStack.push({j,id,pc,mat:bm});
       if(LADDERS.has(id))(S.rot||(S.rot={}))[j]=ladderDir(j);/* ハシゴの向き */
       else if(STAIRS.has(id)){const v=stairRot(id,j),d=SROT[v];(S.rot||(S.rot={}))[j]=v;if(d){const o=stairOut(j,d);S.obj[o]='site2';S.ref[o]=j}}/* 階段：向きをきめて、低いほうのマスも足場に */

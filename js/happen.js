@@ -125,4 +125,4 @@ function hapDraw(add,vis,c,now){const h=hapNow();if(!h)return;const lf=j=>S.hi?l
     else if(F.k==='fall'){const p=Math.min(1,dt/1600);add(((j/W)|0)+1.1,2,null,()=>{c.save();c.globalAlpha=1-p;for(const[cx,cy]of HAPGOLD){hapPx(c,(j%W)*TS+cx-2,((j/W)|0)*TS-lf(j)+cy+p*30,2,2,'#f5c542')}c.restore()},j)}}}
 const HAPGOLD=[[2,-30],[26,-38],[40,-14],[12,-8],[-12,-16]];
 function hapGoldOn(c,x,y,i,now){/* きんいろの実：木の絵に、金の実のドットをのせる（drawObj から） */const h=hapNow('kin');if(!h||h.ph==='end'||h.j!==i)return;
-  HAPGOLD.forEach(([cx,cy],n)=>{const X=x+cx-3,Y=y+cy-3;hapPx(c,X,Y,3,3,'#f5c542');hapPx(c,X,Y+4,3,1,'#d39a26');hapPx(c,X,Y,1,1,'#fff6c2');if(Math.sin(now/300+n*1.7)>.85){hapPx(c,X+6,Y-4,1,1,'#fffbe0');hapPx(c,X+4,Y-6,1,1,'#fff6c2');hapPx(c,X+8,Y-6,1,1,'#fff6c2');hapPx(c,X+6,Y-8,1,1,'#fff6c2')}})}
+  HAPGOLD.forEach(([cx,cy],n)=>{const X=x+cx*2-3,Y=y+cy*2-3;/* 木の絵は2×2マス */hapPx(c,X,Y,3,3,'#f5c542');hapPx(c,X,Y+4,3,1,'#d39a26');hapPx(c,X,Y,1,1,'#fff6c2');if(Math.sin(now/300+n*1.7)>.85){hapPx(c,X+6,Y-4,1,1,'#fffbe0');hapPx(c,X+4,Y-6,1,1,'#fff6c2');hapPx(c,X+8,Y-6,1,1,'#fff6c2');hapPx(c,X+6,Y-8,1,1,'#fff6c2')}})}

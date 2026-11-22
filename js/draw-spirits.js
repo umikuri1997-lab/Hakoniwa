@@ -487,9 +487,10 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   return out}
 const NOFACE={'😊':'🎵','😌':'🎵','😆':'✨','😋':'🍴','😣':'💦','😩':'💤','😴':'💤','😭':'💧','😢':'💧','😨':'💦','😱':'❗','😵':'💫','😠':'💢','😤':'💢'};/* 吹き出しに顔の絵文字は出さない（かわりの絵） */
 let BUBQ=null;
-function objAbove(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5<r.y-.3&&Math.abs(j%W+.5-r.x)<.6}
-function objSide(r){const j=r.faceObj;if(j==null||j<0)return false;return Math.abs(((j/W)|0)+.5-r.y)<.6&&Math.abs(j%W+.5-r.x)>.4}/* よこ（左右）の物 */
-function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5>r.y+.3&&Math.abs(j%W+.5-r.x)<.6}/* 下にある木・岩は正面のまま */
+function objBox2(j){/* 物のマスのはんい [x0,y0,x1,y1]（2×2の木・岩は2マス） */const x=j%W,y=(j/W)|0,n=NAT2.has(S.obj[j])&&nat2At(j)?2:1;return [x,y,x+n,y+n]}
+function objAbove(r){const j=r.faceObj;if(j==null||j<0)return false;const b=objBox2(j);return b[3]-.5<r.y-.3&&r.x>b[0]-.1&&r.x<b[2]+.1}
+function objSide(r){const j=r.faceObj;if(j==null||j<0)return false;const b=objBox2(j);return r.y>b[1]-.1&&r.y<b[3]+.1&&(r.x<b[0]+.1||r.x>b[2]-.1)}/* よこ（左右）の物 */
+function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;const b=objBox2(j);return b[1]+.5>r.y+.3&&r.x>b[0]-.1&&r.x<b[2]+.1}/* 下にある木・岩は正面のまま */
 function drawRes(r,now){
   if(r.spawnT){const e=now-r.spawnT;if(e<450)return;if(e<1300){const k=e<900?(e-450)/450:1,sq=e<900?1:1+Math.sin((e-900)/400*Math.PI)*.18,px=r.x*TS,py=r.y*TS+9,rise=(1-k)*14;
     ctx.save();ctx.translate(px,py-rise);ctx.scale(k*(2-sq),k*sq);ctx.translate(-px,-py);drawRes0(r,now);ctx.restore();return}}
