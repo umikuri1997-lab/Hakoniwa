@@ -381,12 +381,15 @@ function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を�
       const up=lv<hiAt(j),dn=y<H-1&&hiAt(j+W)<lv-1,lft=!(keys[i]&4),rgt=!(keys[i]&8);/* 上・下・左右に、ブロックの正面がつづくか（素材がちがっても、ひとつのかたまり） */
       if(!up){g.fillStyle=HI;LN(x0,fy,TS,BV);g.fillStyle=HI2;LN(x0,fy+BV,TS,BV)}/* 上のふち：面とりの光 */
       if(!dn){ao(x0,fy+LIFT,TS,1);if(y<H-1&&hiAt(j+W)<=0)ao(x0,fy+LIFT,TS,0)}/* 下のふち：地面につく所に足もとのかげ（正面の下と、すぐ前の地面） */
-      const mm=up?'m':'';if(!lft&&!RK('cliff:bendL'+mm,x0-2,fy,3,LIFT)){g.fillStyle=HI2;LN(x0,fy,BV,LIFT)}if(!rgt&&!RK('cliff:bendR'+mm,x0+TS-1,fy,3,LIFT)){g.fillStyle=SH;LN(x0+TS-BV,fy,BV,LIFT);g.fillStyle=SH2;LN(x0+TS-2*BV,fy,BV,LIFT)}}/* 断面の左右のはし：前のがけの丸い岩のはし（3ドットはみ出す。角ばらない）。絵がまだなら面とり */
+      const mm=up?'m':'';if(!lft){g.fillStyle='rgba(30,20,12,.16)';LN(x0-4,fy,2,LIFT);if(!RK('cliff:bendL'+mm,x0-2,fy,3,LIFT)){g.fillStyle=HI2;LN(x0,fy,BV,LIFT)}}if(!rgt){g.fillStyle='rgba(30,20,12,.16)';LN(x0+TS+2,fy,2,LIFT);if(!RK('cliff:bendR'+mm,x0+TS-1,fy,3,LIFT)){g.fillStyle=SH;LN(x0+TS-BV,fy,BV,LIFT);g.fillStyle=SH2;LN(x0+TS-2*BV,fy,BV,LIFT)}}/* はしの外がわに、うすいかげ（奥の柱とべつだとわかる） */
+      if(!dn){RK('cliff:foot',x0,fy+LIFT,TS,3);if(!lft)RK('cliff:footL',x0-2,fy+LIFT,3,3);if(!rgt)RK('cliff:footR',x0+TS-1,fy+LIFT,3,3)}}/* 地面につく断面の下：前のがけの波うった岩のふち（3ドットはみ出す。はしは丸い） *//* 断面の左右のはし：前のがけの丸い岩のはし（3ドットはみ出す。角ばらない）。絵がまだなら面とり */
     const h=top?LIFT:TS;for(let i=0;i<keys.length;i++){const k=R.x0+i;if(!ok(k))continue;const j=y*W+k,ty=y*TS-lv*LIFT,id=hiAt(j)===lv?cubeAt(j,lv):'',x0=k*TS;
+      let cl=0;if(top){const hl=k>0&&hiAt(j-1)>lv,hr=k<W-1&&hiAt(j+1)>lv;if(hl||hr){cl=1;const xa=x0+(hl?4:0),xb=x0+TS-(hr?4:0);g.save();g.beginPath();g.rect(SX(xa),SY(ty-4),SX(xb)-SX(xa),SY(ty+h+4)-SY(ty-4));g.clip()}}/* もう1回描く上はしは、となりの高い柱のはしの丸い岩とかげ（4ドット）にかぶせない */
       if(id){const T=cubeTex(id);if(T)DI(T,0,0,64,h*2,x0,ty,TS,h)}else gblit(g,x0,y*TS,TS,h,SX(x0),SY(ty),SX(x0+TS)-SX(x0),SY(ty+h)-SY(ty),lod);g.fillStyle='rgba(255,250,232,'+Math.min(.36,.04+.04*lv)+')';LN(x0,ty,TS,h);/* 上の面：ブロックならその絵、土は地面の下絵（乾いた地面・草地・道・床）。正面より明るく、高いだんほど明るく */
       if(!top&&y>0&&hiAt(j-W)>lv)ao(x0,ty,TS,0);/* うしろが高い：かべの足もとのかげ */
       const dz=REV.has(j)&&!id?'':'~d';/* 岩の帯の内がわのふち：草地は緑・ほかは乾いた地面の色 */if((keys[i]&1)&&!RK('cliff:back'+dz,x0,ty-1.5,TS,3)){g.fillStyle=HI;LN(x0,ty,TS,BV)}if((keys[i]&4)&&!RK('cliff:sideL'+dz,x0-1.5,ty,3,h,6,h*2)){g.fillStyle=HI2;LN(x0,ty,BV,h)}if((keys[i]&8)&&!RK('cliff:sideR'+dz,x0+TS-1.5,ty,3,h,6,h*2)){g.fillStyle=SH2;LN(x0+TS-BV,ty,BV,h)}/* 上の面のふち：となり・うしろが低い所は、前のがけと同じ細い岩の帯（外へ1.5ドット、内へ1.5ドットかさねて、地面のふちの線をかくす） */
       {const m=CI('cliff:back'+dz);if(m&&(keys[i]&5)===5)DI(m,0,0,6,6,x0-1.5,ty-1.5,3,3);if(m&&(keys[i]&9)===9)DI(m,58,0,6,6,x0+TS-1.5,ty-1.5,3,3)}/* 外の角：裏の帯のはしの岩で、すきまなくうめる */
+      if(cl)g.restore();
       if(!top&&(keys[i]&2)){g.fillStyle=HI;LN(x0,ty+TS-BV,TS,BV)}/* 手前のふち（正面とのさかい）：面とりの光 */
       }
     return}
