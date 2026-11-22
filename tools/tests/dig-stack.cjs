@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.flags.fude=1;S.t=1440+600;`);
   const r=JSON.parse(await run(`(()=>{
-    const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j);let x0=-1,y0=-1;
+    const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&!treeNextHigh(j,99);let x0=-1,y0=-1;
     for(let y=CY-12;y<CY+12&&x0<0;y++)for(let x=CX-12;x<CX+12;x++){let g=1;for(let b=0;b<3&&g;b++)for(let a=0;a<4;a++){const j=(y+b)*W+x+a;if(!ok(j)||hiAt(j)!==hiAt(y*W+x))g=0}if(g){x0=x;y0=y;break}}
     const j=y0*W+x0,h0=hiAt(j);S.inv.blk_soil=0;
     S.hi[j]=Math.max(1,h0);const h1=hiAt(j);terraNow('dig',x0,y0);const dug=hiAt(j),t1=(S.drops||[]).filter(d=>d.id==='blk_soil'&&d.lt).reduce((n,d)=>n+d.n,0);S.drops=[];
@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
   assert.ok(r.shop,'ほる・つむにパワーはいらない');
   assert.equal(r.need,1000,'土は1秒');assert.equal(r.half,2,'とちゅうではなすと、ほらない');assert.equal(r.held,1,'長おしでほれた');assert.equal(r.tap,2,'タップでつむ');assert.ok(r.tool,'「おく」のどうぐに、かたちの筆');
   /* つむブロック：もちものからつむと、そのだんがブロックになり、ほるとブロックがもどる。依頼ボードで作れる */
-  const c=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j);let j=-1;for(let k=(CY-8)*W+CX-8;k<(CY+8)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+W)){j=k;break}const x=j%W,y=(j/W)|0,h0=hiAt(j);
+  const c=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&!treeNextHigh(j,99);let j=-1;for(let k=(CY-8)*W+CX-8;k<(CY+8)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+W)){j=k;break}const x=j%W,y=(j/W)|0,h0=hiAt(j);
     S.inv.blk_stone=3;S.inv.blk_soil=1;terraNow('blk_stone',x,y);terraNow('blk_soil',x,y);const o={h:hiAt(j)-h0,c1:cubeAt(j,h0+1),c2:cubeAt(j,h0+2),inv:S.inv.blk_stone,ico:iconURL('blk_stone').slice(0,10)};
     for(let i=0;i<3;i++)render(performance.now());S.drops=[];terraNow('dig',x,y);o.back=(S.drops.find(d=>d.lt)||{}).id;o.c2b=cubeAt(j,h0+2);o.vx=JSON.stringify(S.vx[j]);
     S.drops=[];terraNow('dig',x,y);o.back2=(S.drops.find(d=>d.lt)||{}).id;o.gone=!S.vx[j];
@@ -55,5 +55,7 @@ const assert=require('node:assert/strict');
   assert.equal(f.no,false,'草原は、もらうまで筆がない');assert.equal(f.noChip,false);assert.ok(f.at&&f.who,'神殿を直したら、カミサマのおねがい');assert.ok(f.yes&&f.ok);
   assert.equal(f.soil,5,'前の土は土のブロックに');assert.equal(f.mat,0);assert.equal(f.drop,'blk_soil');assert.equal(f.vxm,'["blk_stone","blk_stone","blk_stone"]','前のレンガ・木のブロックは石のブロックに');assert.equal(f.stb,3,'レンガ10こは石材3');assert.equal(f.wdb,2+2,'木材：レンガ2・木のブロック3こで2');assert.equal(f.inv3,0);
   assert.equal(f.tab,'["blk_stone"]','依頼ボードは石のブロックだけ');assert.equal(f.pickb,'["blk_soil","blk_stone"]','つめるのは土と石');
+  const tr=JSON.parse(await run(`(()=>{let bad=0;for(let j=W;j<W*H-W;j++){if(!TREES.has(S.obj[j]))continue;const h=hiAt(j);if(hiAt(j-1)>h||hiAt(j+1)>h||hiAt(j+W)>h)bad++}let k=-1;for(let j=(CY-20)*W;j<(CY+20)*W;j++)if(TREES.has(S.obj[j])&&!S.obj[j+1]&&!S.floor[j+1]&&!S.ground[j+1]&&!fogAt(j+1)&&hiAt(j+1)===hiAt(j)){k=j;break}S.inv.blk_soil=5;const b=hiAt(k+1);terraNow('blk_soil',(k+1)%W,((k+1)/W)|0);return JSON.stringify({bad,k,same:hiAt(k+1)===b})})()`));
+  assert.equal(tr.bad,0,'はじめの地形：木の左右・手前は木より高くない');assert.ok(tr.k>=0&&tr.same,'木のとなりには、つめない');
   assert.deepEqual(errors,[]);console.log('dig-stack: ok');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
