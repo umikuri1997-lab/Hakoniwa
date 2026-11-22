@@ -144,6 +144,7 @@ function genWorld(s,w){
   for(let d=1;d<=2+(G0?-ox:0);d++)s.floor[hy(CY-4)*W+CX-d]='path';/* 戸口から、まん中の道まで */
   for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=hy(y)*W+x;if(y===CY-2&&d>=3&&d<=5){if(G0)s.obj[j]='';continue}/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
   for(let d=1;d<=4;d++){const j=hy(CY-4)*W+CX+d;s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
+  if(G0){const gap=new Set([(CY)*W+CX-3,(CY-2)*W+CX+2,(CY+2)*W+CX-1,(CY-3)*W+CX-2]);for(let y=CY-3;y<=CY+2;y++)for(let x=CX-3;x<=CX+2;x++){const e=(y===CY-3||y===CY+2)+(x===CX-3||x===CX+2);if(!e||e===2)continue;const j=y*W+x;if(gap.has(j)||s.ground[j]||s.obj[j]==='ntree')continue;if(s.obj[j]&&HI_OK.has(s.obj[j]))s.obj[j]='';if(!s.obj[j])s.floor[j]='path'}}/* 草原：御神木の切り株をかこむ、あぜ道の輪（まわり1マス。角はまるく、ところどころとぎれる。南北のまん中の道とつながる） */
   if(G0)s.flags.home2=1;/* 家・畑・切り株の、まん中のならび（starterGapCells） */
   if(K){for(let d=3;d<=5;d++){const j=(CY-2)*W+hx(-d);s.obj[j]='canvaswall';s.floor[j]='';s.hp[j]=BL.canvaswall.hp}/* 風（土台）：家はこわれていない。木箱は、道の東に1つ */
     const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if(fr(k)&&fr(k-1)&&fr(k+1)){p=k;break}}if(p>=0)s.obj[p]='crate'}
