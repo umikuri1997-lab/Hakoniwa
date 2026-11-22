@@ -71,9 +71,22 @@ def posed(sp, face, p):
         P2 = (P-pv)@R.T+pv
         out[nm] = ((head if nm.startswith('wing') else body)(P2), C, 't')
     anchors['eye'] = head(EYEP[None])[0]; anchors['eye0'] = EYEP
+    if ISOEYE[0]:   # クォータービュー：左右の目を、顔の面の上の点（と、よこ・たてに少しずらした点）で持つ（shoot が画面の場所と、ちぢみ方にする）
+        anchors['eyeq'] = [head(eyesurf(sp, u0, v0)) for u0, v0 in ISOEYEUV]
     ref = rz(-math.pi/2).T@np.array([0, 1., 0])   # 横向き（右を向く）のときの、カメラの向き
     anchors['ti'] = ti; anchors['mir'] = bool(ti == 1 and v[0]*ref[0] < 0)   # 目の絵：0 正面・1 横・2 なし（うしろ）、横は左右反対か
     return out, anchors
+
+ISOEYE = [False]                     # build.py --iso がたてる
+ISOEYEUV = ((-9.0, -40.0), (9.0, -40.0), (-15.0, -35.0), (15.0, -35.0))   # 左・右の目、左・右のほっぺのまん中（絵の場所＝正面の画面の点。x はキャラの x、y は −z）。js の ISOEYEUV と同じ数
+def eyesurf(sp, u0, v0, d=2.0):
+    """顔の面（風は、ずきん）の、正面から見て (u, v) の所の点と、u・v を d ずらした所の点（いちばん手前の面）"""
+    P = sp.tex['face' if 'face' in sp.tex else 'hood'][0]; out = []
+    for u, v in ((u0, v0), (u0+d, v0), (u0, v0+d)):
+        m = (np.abs(P[:, 0]-u) < 0.8) & (np.abs(P[:, 2]+v) < 0.8)
+        y = P[m, 1].max() if m.any() else P[:, 1].max()
+        out.append([u, y, -v])
+    return np.array(out)
 
 def darker(c, k=0.72): return tuple(int(v*k) for v in c)
 
@@ -151,9 +164,20 @@ def shoot(sp, face, p):
     V0 = view(face, 0.0)
     def scr(P):
         X, Y, _ = V(np.asarray(P)[None]); return [round(float(X[0]), 2), round(float(Y[0]), 2)]
-    ex, ey = scr(anc['eye']); x0, y0, _ = view(anc['ti'] if anc['ti'] != face else face, 0.0)(anc['eye0'][None])   # 目の絵の向き（くるくるまわるときは、そのとき見える向き）の、止まっているときの場所から
+    ex, ey = scr(anc['eye']); x0, y0, _ = view(anc['ti'] if anc['ti'] != face else face, 0.0, False)(anc['eye0'][None])   # 目の絵の向き（くるくるまわるときは、そのとき見える向き）の、止まっているときの場所から
     if anc['mir']: x0 = -x0
     A = {'eye': [int(round(ex-x0[0])), int(round(ey-y0[0])), anc['ti'], 1 if anc['mir'] else 0], 'facing': bool(facing)}
+    if 'eyeq' in anc and anc['ti'] == 0:   # 左右の目：画面の場所・ちぢみ方（目の絵の1ドット → 画面）・見えるか
+        HI = [names.index(n) for n in names if n in HEAD]
+        for k, Q3 in enumerate(anc['eyeq']):
+            X, Y, Z = V(Q3); d = 2.0; a, b = (X[1]-X[0])/d, (Y[1]-Y[0])/d; c, dd = (X[2]-X[0])/d, (Y[2]-Y[0])/d
+            col = int(np.floor((X[0]-EXT[0])*SSN)); row = int(np.floor((Y[0]-EXT[2])*SSN)); vis = 1
+            if a*dd-b*c < (0.25 if k < 2 else 0.5): vis = 0   # 面がむこうを向いている（ほっぺは、ふちに近いと、かくす）
+            elif 0 <= row < Hd and 0 <= col < Wd and zb[row, col] > Z[0]+1.5 and idb[row, col] in HI and idb[row, col] not in [names.index(n) for n in ('face',) if n in names]: vis = 0   # ずきんのふちにかくれる
+            if vis and 'face' in names:   # 写した絵で、そのまん中が顔の上か（ずきんのふちの上なら、かくす）
+                r1, c1 = int(np.floor(Y[0]-EXT[2])), int(np.floor(X[0]-EXT[0]))
+                if not (0 <= r1 < H1 and 0 <= c1 < W1 and ids[r1, c1] == names.index('face')): vis = 0
+            A['eye'] += [round(float(X[0]), 1), round(float(Y[0]), 1), round(float(a), 2), round(float(b), 2), round(float(c), 2), round(float(dd), 2), vis]
     for k, v in anc.items():
-        if k not in ('eye', 'eye0', 'ti', 'mir'): A[k] = scr(v)
+        if k not in ('eye', 'eye0', 'ti', 'mir', 'eyeq'): A[k] = scr(v)
     return img, over, A

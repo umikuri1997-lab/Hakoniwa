@@ -30,6 +30,8 @@ def walk(w, face):
     return dict(z=bob, legz=bob*0.3, yaw=0.12*S(w), roll=0.07*S(w), legM=-0.5*S(w), legP=-0.5*S(w+PI), liftM=2.5*max(0, C(w)), liftP=2.5*max(0, C(w+PI)),
                 sN=sN, sF=sF, bN=down, bF=down, hy=0.07*S(w), hr=0.03*S(w), hp=0.025*C(2*w), top=0.12*S(w-0.6), topz=1.2*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
 M('walk', 8, 9/(2*PI), walk)
+# ---- 立つ（クォータービューの絵で、3Dの絵のない立ち姿のかわり。js の spMotion） ----
+M('stand', 4, 0.5, lambda w, face: breathe({}, w))
 
 # ---- 遊び家具 ----
 def sandbox(w, face):

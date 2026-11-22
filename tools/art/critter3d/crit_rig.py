@@ -78,7 +78,12 @@ C={
 VIEWD={'d':1,'u':-1}   # 正面（d：手前へ歩く）・うしろ（u：奥へ歩く）
 FRONT={'usagi':(70,-80),'risu':(53,-95),'harinezumi':(57,-110),'nezumi':(-12,132),'mogura':(65,-110),'katatsumuri':(57,-93),'tentoumushi':(55,-95),'kaeru':(50,-100)}
 # 横の絵から何度まわすと、正面（d）・うしろ（u）か。まっすぐより少し右（顔が見える、少しななめ。ゲームで左右反転する）。生き物ごとに絵を見てきめた（ねずみは、しっぽの玉が顔の前にくるので、横に近い）
-def vturn(name,vw):return FRONT[name][0 if vw=='d' else 1] if vw else 0
+def vturn(name,vw):
+    if not vw:return 0
+    a=FRONT[name][0 if vw=='d' else 1]
+    if os.environ.get('CRITISO'):   # クォータービュー：前ななめ（d：左下を向く）・うしろななめ（u：右上を向く）。正面・うしろの角度から、少しななめの15度をもどして45度まわす
+        s=1 if a>0 else -1;return a+60*s if vw=='d' else a-30*s
+    return a
 GROUND=tuple(FRONT)   # 地面を歩く・はねる物：正面・うしろの絵もある（上下へ動くとき、横を向いたまますべらないように）
 def paint(name):
     """blueprint の Part.paint にわたす関数：ポーズの前の点で、面の色をかえる（stripes：その色の面のうち、u が bands の中の面を ink に）"""

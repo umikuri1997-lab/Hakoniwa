@@ -48,18 +48,26 @@ def job(a, *, factory=None):
         for k in ('tipN', 'tipF'):
             if k in a: v = v+a[k]
         return [round(x, 1) for x in v]
+    for f in range(3):   # クォータービューの目・ほっぺの見える・見えないは、その向きのコマの多いほうにそろえる（コマごとに出たり消えたりしない）
+        E = [meta[(f, i)]['eye'] for i in range(n)]
+        for q in range(10, len(E[0]), 7):
+            if all(len(e) > q for e in E):
+                v = 1 if sum(e[q] for e in E)*2 > n else 0
+                for e in E: e[q] = v
     return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)]
 
 def main():
     args = sys.argv[1:]; dbg = None; ALL = ELS + list(LDELS); els = ALL
     if '--dbg' in args: i = args.index('--dbg'); dbg = args[i+1]; del args[i:i+2]; os.makedirs(dbg, exist_ok=True)
     if '--els' in args: i = args.index('--els'); els = args[i+1].split(','); del args[i:i+2]
-    add = None
+    add = None; iso = '--iso' in args
+    if iso:   # クォータービューの絵：js/spirit-motions-iso.js の SPMQ（正面の行が前ななめ・うしろの行がうしろななめ）
+        import core; core.ISOY = 3.141592653589793/4; rig.ISOEYE[0] = True; args.remove('--iso')
     if '--add' in args: i = args.index('--add'); add = args[i+1].split(','); els = add; del args[i:i+2]
     names = args or list(MOTIONS)
-    jsf = os.path.join(ROOT, 'js', 'spirit-motions.js'); old = {}
+    jsf = os.path.join(ROOT, 'js', 'spirit-motions-iso.js' if iso else 'spirit-motions.js'); VAR = 'SPMQ' if iso else 'SPM'; old = {}
     if os.path.exists(jsf):
-        m = re.search(r'const SPM=(\{.*\});', open(jsf, encoding='utf8').read(), re.S)
+        m = re.search(r'const '+VAR+r'=(\{.*\});', open(jsf, encoding='utf8').read(), re.S)
         if m: old = json.loads(m.group(1))
     used0 = {v for d in old.values() for v in d.get('s', {}).values()}
     new = {k: v for k, v in old.items() if k in MOTIONS and (add or k not in names)}
@@ -78,7 +86,7 @@ def main():
     for f in used0-used:   # どの動きも使わなくなった絵だけ消す
         if os.path.exists(os.path.join(ROOT, f)): os.remove(os.path.join(ROOT, f))
     body = json.dumps({k: new[k] for k in sorted(new)}, separators=(',', ':'), ensure_ascii=False)
-    open(jsf, 'w', encoding='utf8').write('/* せいれいの動き（3Dから写した絵）。tools/art/spirit3d/build.py が書く。手で書きかえない */\nconst SPM='+body+';\n')
+    open(jsf, 'w', encoding='utf8').write(('/* せいれいの動き（クォータービュー、3Dから写した絵）。tools/art/spirit3d/build.py --iso が書く。手で書きかえない */\nconst SPMQ=' if iso else '/* せいれいの動き（3Dから写した絵）。tools/art/spirit3d/build.py が書く。手で書きかえない */\nconst SPM=')+body+';\n')
 
 if __name__ == '__main__':
     main()
