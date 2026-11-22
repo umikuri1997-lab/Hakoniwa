@@ -1,0 +1,12 @@
+{
+  "name": "hakoniwa",
+  "private": true,
+  "description": "はこにわ：開発の道具（ゲームそのものは、ビルドなしでそのまま動く）",
+  "scripts": {
+    "lint": "node tools/lint.cjs"
+  },
+  "devDependencies": {
+    "eslint": "9.17.0",
+    "globals": "15.14.0"
+  }
+}
