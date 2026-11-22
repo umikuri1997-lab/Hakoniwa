@@ -139,7 +139,7 @@ const EVMG={
 function evHit(E,q){if(!E||S.ev!==E||!E.ph)return;const P=evPeople(E),r=pick(P),c=E.c||evTemple(),now=performance.now();
   const at=(n,x,y,col)=>fxSpr(n,x*TS,y*TS,col);
   switch(E.id){
-    case'taiso':case'ensoku':case'oni':case'soji':if(r){JUMP.set(r,now);at('twinkle',r.x,r.y-.6);if(E.id==='oni')addFloat(r.x,r.y-1.6,'タッチ！','#ffe7a8')}break;
+    case'taiso':case'ensoku':case'oni':case'soji':if(r){JUMP.set(r,now);at('twinkle',r.x,r.y-.6);if(E.id==='oni')addFloatG(r.x,r.y,-1.6,'タッチ！','#ffe7a8')}break;
     case'mizu':if(r)at('splash',r.x,r.y-.2);break;
     case'pikunikku':if(r)at('hearts',r.x,r.y-1);break;
     case'hana':if(r)at('petals',r.x,r.y-.5);break;
@@ -154,7 +154,7 @@ function evHit(E,q){if(!E||S.ev!==E||!E.ph)return;const P=evPeople(E),r=pick(P),
     case'gochi':E.dn=(E.dn||0)+1;sfx('plate');break;
     case'shukaku':E.pile=(E.pile||0)+1;break;
     case'utage':if(r){at('twinkle',r.x,r.y-1);JUMP.set(r,now)}break;
-    case'undo':if(r){JUMP.set(r,now);addFloat(r.x,r.y-1.6,'はいった！','#ffe7a8')}break;
+    case'undo':if(r){JUMP.set(r,now);addFloatG(r.x,r.y,-1.6,'はいった！','#ffe7a8')}break;
     case'yomi':E.pic=(E.pic||0)+1;break;
     case'takara':{const L=(E.tr||[]).filter(t=>!t.got);if(L.length){const t=pick(L);E.hint=t.j;at('twinkle',t.j%W+.5,((t.j/W)|0)+.3)}break}}}
 /* ---------- 1秒ごと（evTick から）：山場と、ときどきの粒 ---------- */
@@ -240,21 +240,22 @@ function evTag(c,x,y,L,a){c.font='10px PixelMplus10, sans-serif';const w=Math.ce
   c.textAlign='center';c.textBaseline='top';L.forEach((t,i)=>{c.fillStyle='#ecd2a4';c.fillText(t,Math.round(x),y0+4+i*12);c.fillStyle='#4a2a14';c.fillText(t,Math.round(x),y0+3+i*12)});return{x0,y0,w,h}}
 function evStamp(c,x,y,a){const s=a<1?1+(1-a)*.8:1,r=Math.round(6*s);c.save();c.globalAlpha=Math.min(1,a*2);pR(c,'#d04030',x-r,y-r+1,r*2,r*2-2);pR(c,'#d04030',x-r+1,y-r,r*2-2,r*2);pR(c,'#f4e9d2',x-r+2,y-r+2,r*2-4,r*2-4);pR(c,'#d04030',x-r+3,y-r+3,r*2-6,r*2-6);pR(c,'#f4e9d2',x-1,y-1,2,2);c.restore()}
 function evShowDraw(now){const E=S&&S.ev,c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const live=E&&E.ph&&evShowOn(E)&&EVV.id===E.id,A=EVV.end;
-  if((live&&E.ph!=='go'||A)&&EVV.box)evGarland(c,EVV.box,EVDECO[EVV.id]||'flag',EVV.t0,now);
-  if(live){const cc=E.c||evTemple(),e=now-EVV.t0;if(e>1300&&e<2700){const u=Math.min(1,(e-1300)/180);cupText(c,'せーの！',cc[0]*TS,(EVV.box.y0-2.4)*TS,2.2+(1-u)*1.4,Math.max(0,Math.min(1,(2700-e)/400)))}
-    evProps(c,E,evPeople(E),now);
-    if(EVV.clx&&EVV.cid===E.id){const ce=now-EVV.clx,tx=EVCLXTX[E.id];if(tx&&ce<2600){const u=Math.min(1,ce/160);cupText(c,tx,cc[0]*TS,(EVV.box.y0-2.6)*TS,2.4+(1-u)*1.2,Math.max(0,Math.min(1,(2600-ce)/500)))}evClimaxDraw(c,E,cc,ce,now)}}
-  if(A){const e=now-A.t0;A.tags.forEach((T,i)=>{const a=(e-500-i*450)/160;if(a<0||!S.res.includes(T.r))return;const b=evTag(c,T.r.x*TS,(T.r.y-1.45)*TS,T.L,Math.min(1,a));const sa=(e-500-i*450-220)/140;if(sa>0)evStamp(c,b.x0+b.w-2,b.y0+2,Math.min(1,sa))});
-    if(e>A.t1&&e<A.t1+3000)cupText(c,A.n+'、おしまい！',A.c[0]*TS,(A.c[1]-3.2)*TS,2,Math.max(0,Math.min(1,(A.t1+3000-e)/500)))}
+  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box)evGarland(c,EVV.box,EVDECO[EVV.id]||'flag',EVV.t0,now);
+  if(live){const cc=E.c||evTemple(),e=now-EVV.t0;if(e>1300&&e<2700){const u=Math.min(1,(e-1300)/180);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.4)*TS);cupText(c,'せーの！',cc[0]*TS,(EVV.box.y0-2.4)*TS,2.2+(1-u)*1.4,Math.max(0,Math.min(1,(2700-e)/400)))}
+    {const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evProps(c,E,evPeople(E),now);
+    if(EVV.clx&&EVV.cid===E.id){const ce=now-EVV.clx,tx=EVCLXTX[E.id];if(tx&&ce<2600){const u=Math.min(1,ce/160);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.6)*TS);cupText(c,tx,cc[0]*TS,(EVV.box.y0-2.6)*TS,2.4+(1-u)*1.2,Math.max(0,Math.min(1,(2600-ce)/500)))}{const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evClimaxDraw(c,E,cc,ce,now)}}
+  if(A){const e=now-A.t0;A.tags.forEach((T,i)=>{const a=(e-500-i*450)/160;if(a<0||!S.res.includes(T.r))return;isoUIAt(c,T.r.x*TS,T.r.y*TS,T.r.x*TS,(T.r.y-1.45)*TS);const b=evTag(c,T.r.x*TS,(T.r.y-1.45)*TS,T.L,Math.min(1,a));const sa=(e-500-i*450-220)/140;if(sa>0)evStamp(c,b.x0+b.w-2,b.y0+2,Math.min(1,sa))});
+    if(e>A.t1&&e<A.t1+3000){isoUIAt(c,A.c[0]*TS,A.c[1]*TS,A.c[0]*TS,(A.c[1]-3.2)*TS);cupText(c,A.n+'、おしまい！',A.c[0]*TS,(A.c[1]-3.2)*TS,2,Math.max(0,Math.min(1,(A.t1+3000-e)/500)))}}
+  if(EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}
   for(const R of EVV.rip){const a=(now-R.t)/700;if(a>1)continue;const r=Math.round((R.big?14:6)+a*(R.big?60:30)),x=Math.round(R.x*TS),y=Math.round(R.y*TS);c.globalAlpha=1-a;for(let k=0;k<16;k++){const an=k/16*Math.PI*2;pR(c,'#ffe9a8',x+Math.cos(an)*r,y+Math.sin(an)*r*.55,2,2)}c.globalAlpha=1}
   EVV.rip=EVV.rip.filter(R=>now-R.t<700);
   for(const L of EVV.lan){const a=(now-L.t)/1000;if(a<0)continue;const x=Math.round((L.x+Math.sin(a*1.3+L.s)*.25)*TS),y=Math.round((L.y-a*.7)*TS);c.globalAlpha=Math.max(0,Math.min(1,(9-a)/2));pR(c,'#ff8a5c',x-3,y-4,6,8);pR(c,'#ffe9a8',x-2,y-3,4,5);pR(c,'#7a4a2a',x-3,y+4,6,1);c.globalAlpha=1}
   EVV.lan=EVV.lan.filter(L=>now-L.t<9000);if(EVV.lan.length>40)EVV.lan.splice(0,EVV.lan.length-40);
-  c.imageSmoothingEnabled=sm;evScreenDraw(now)}
+  c.imageSmoothingEnabled=sm;isoBack(c);evScreenDraw(now)}
 let EVDISH=null;function evDishes(){if(!EVDISH){EVDISH=(typeof COOKD!=='undefined'?COOKD:[]).filter(d=>FOODS[d.id]&&!/^fsg/.test(d.id)&&!(d.f&&d.f.bad)).map(d=>d.id).slice(0,24);if(!EVDISH.length)EVDISH=['berry','apple']}return EVDISH}
 /* 小道具（する、のあいだ） */
 function evProps(c,E,P,now){const cc=E.c||evTemple(),X=cc[0]*TS,Y=cc[1]*TS;
-  if(E.id==='oni'&&P.length>1){const o=P[Math.floor((S.t-E.t0)/9)%P.length];if(o){const x=Math.round(o.x*TS),y=Math.round((o.y-1.55)*TS)+(Math.floor(now/300)%2);pR(c,'#d04030',x-3,y,6,4);pR(c,'#d04030',x-1,y-3,2,3);pR(c,'#ffe9a8',x-1,y+1,2,1)}if(EVV.oni!==o.id){if(EVV.oni!=null){addFloat(o.x,o.y-1.8,'タッチ！','#ffe7a8');sfx('pat')}EVV.oni=o.id}}
+  if(E.id==='oni'&&P.length>1){const o=P[Math.floor((S.t-E.t0)/9)%P.length];if(o){const x=Math.round(o.x*TS),y=Math.round((o.y-1.55)*TS)+(Math.floor(now/300)%2);pR(c,'#d04030',x-3,y,6,4);pR(c,'#d04030',x-1,y-3,2,3);pR(c,'#ffe9a8',x-1,y+1,2,1)}if(EVV.oni!==o.id){if(EVV.oni!=null){addFloatG(o.x,o.y,-1.8,'タッチ！','#ffe7a8');sfx('pat')}EVV.oni=o.id}}
   if(E.id==='yomi'&&E.reader!=null){const r=P.find(q=>q.id===E.reader);if(r){const x=Math.round(r.x*TS),y=Math.round((r.y-1.9)*TS),k=(Math.floor((S.t-E.t0)/6)+(E.pic||0))%4;pR(c,'#5c4a32',x-12,y-15,24,18);pR(c,'#fff6ea',x-11,y-14,22,16);pR(c,'#fff6ea',x-2,y+3,4,2);
     if(k===0){pR(c,'#7fb070',x-6,y-11,12,8);pR(c,'#8a5a32',x-1,y-3,2,4)}else if(k===1){pR(c,'#ffd86a',x-4,y-11,8,8);pR(c,'#fff6ea',x-1,y-12,6,6)}else if(k===2){pR(c,'#9a9aa0',x-6,y-8,12,7);pR(c,'#9a9aa0',x-4,y-11,2,3);pR(c,'#9a9aa0',x+2,y-11,2,3);pR(c,'#ff6a5c',x-1,y-12,2,2)}else{pR(c,'#7fc6ff',x-7,y-5,14,3);pR(c,'#ffffff',x-3,y-9,6,4)}}}
   if(E.id==='gochi'&&E.tab){const n=Math.min(12,(E.dn||0)+2)-(E.cx?Math.floor((S.t-E.cxS)/2):0),T=[...new Set(Object.values(E.tab))];let i=0;for(const t of T){for(const[x,y]of fp(S.obj[t],t%W,(t/W)|0))for(let k=0;k<2;k++,i++){if(i>=n)break;const DL=evDishes(),im=cupImg(DL[i%DL.length],'cup4');const px=x*TS+4+k*13,py=y*TS-8;pR(c,'#ffffff',px-1,py+10,14,3);if(im.complete&&im.naturalWidth){c.imageSmoothingEnabled=true;c.drawImage(im,px,py,12,12);c.imageSmoothingEnabled=false}else pR(c,'#ff8a5c',px+2,py+4,8,6)}}}
@@ -278,7 +279,7 @@ function evScreenDraw(now){if(!EVV.shine&&!EVV.met.length&&!EVV.pet.length&&!EVV
   if(EVV.flash){const a=(now-EVV.flash)/350;if(a>1)EVV.flash=0;else{c.globalAlpha=(1-a)*.55;c.fillStyle='#ffffff';c.fillRect(0,0,VW,VH);c.globalAlpha=1}}
   c.setTransform(T)}
 /* 地面の層：体そうのお立ち台 */
-function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS);pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)}
+function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS),dr=()=>{pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)};if(isoOn())isoStand(ctx,{fx:x,fy:y,px:isoX(x,y),py:isoY(x,y)-isoLv((r.y|0)*W+(r.x|0))*IQL},dr);else dr()}/* クォータービュー：その子の足もとに立てて */
 /* ---------- 文をつなぐ（読みこむときに1回）：手紙・雑談・日記 ---------- */
 LETTERK.ev='イベントのこと';/* イベントの手紙の文は letter-data.js の LETTERD.ev（イベント→属性→5通、1通まるごと） */
 if(typeof EVCHAT!=='undefined')for(const id of Object.keys(EVCHAT).sort())for(const ch of EVCHAT[id])CHATS.push(Object.assign(ch,{evc:1,ok:(r,p)=>evMemBoth(r,p,id)}));/* CHATS の番号はセーブに入るので、うしろに足すだけ（id の名前の順） */

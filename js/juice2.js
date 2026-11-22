@@ -25,9 +25,9 @@ function juiceHouse(h,now){if(JHS.length>4)return;let sx=0,sy=0,n=0;for(const j 
 function juiceHouseDraw(now){for(let i=JHS.length-1;i>=0;i--){const H=JHS[i],e=now-H.t0;if(e>JHOUSEMS+900){JHS.splice(i,1);continue}const P=2;
     const u=Math.min(1,e/JHOUSEMS),a0=u*Math.PI*2;
     for(const c of H.cells){let d=a0-c.a;if(d<0)continue;/* まだ光がとどいていない壁 */const fade=e>JHOUSEMS?1-(e-JHOUSEMS)/900:1,hot=Math.max(0,1-d/.9);ctx.globalAlpha=Math.max(0,(.10+.3*hot)*fade);ctx.fillStyle=hot>.5?'#fffbe6':'#ffe58a';
-      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?liftOf((c.y|0)*W+(c.x|0)):0);const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
+      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?liftY((c.y|0)*W+(c.x|0)):0);if(isoOn())isoGroundLv(ctx,isoLv((c.y|0)*W+(c.x|0)));const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
     if(e>=JHOUSEMS&&!H.pop){H.pop=1;const x=H.cx*TS,y=(H.top-.6)*TS;fx.push({k:'ring',x,y,life:1,col:'rgba(255,240,180,.95)'});for(let k=0;k<14;k++){const a=-Math.PI*(k/13),sp=70+Math.random()*60;fx.push({k:'p',x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-50,life:.9+Math.random()*.3,col:['#ffe58a','#fffbe6','#f6a650','#8fd06a'][k%4],r:3})}jKnock(784,0,.6,.12);jKnock(1176,.06,.45,.1)}/* 家の上で、ぽん */}
-  ctx.globalAlpha=1}
+  ctx.globalAlpha=1;isoBack(ctx)}
 
 /* ---------- 2. さいごの一撃のヒットストップ ---------- */
 function juiceStop(r,n0){/* juiceBreak から。n0：その一撃の前の fx の数（そのあとに入れた絵と粒を、一瞬とめる） */const now=performance.now(),w=now+JSTOPMS;for(let i=Math.max(0,n0);i<fx.length;i++){fx[i].w0=w;if(fx[i].k==='spr')fx[i].jit=1}if(r)JSTOPR.set(r,now)}
@@ -45,7 +45,7 @@ function waveR(now){if(!JWAVE)return-1;const e=now-JWAVE.t0;if(e>JWAVEMS+400){JW
 function waveSway(j,now){/* swayK から：光のなみがふれた木・花が、ぷるっとゆれる */if(!JWAVE)return 0;const R=waveR(now);if(R<0)return 0;const d=Math.hypot(j%W+.5-JWAVE.x,((j/W)|0)+.5-JWAVE.y),q=R-d;return q>0&&q<3?Math.sin(q*5)*.06*(1-q/3):0}
 function juiceWaveDraw(now){const R=waveR(now);if(R<0)return;const e=now-JWAVE.t0,fade=e>JWAVEMS?1-(e-JWAVEMS)/400:1,P=2,cx=JWAVE.x*TS,cy=JWAVE.y*TS,rr=R*TS,n=Math.max(24,Math.round(R*10));
   for(let b=0;b<3;b++){ctx.globalAlpha=Math.max(0,fade*(b?.32/b:.75));ctx.fillStyle=b?'#ffe58a':'#fffbe6';const r2=rr-b*10;if(r2<=0)continue;/* 光の輪は、ドットの点をならべる（だ円：見おろし） */
-    for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=cx+Math.cos(a)*r2,y=cy+Math.sin(a)*r2*.62;ctx.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P*(b?1:2),P)}}
+    for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=cx+Math.cos(a)*r2,y=cy+Math.sin(a)*r2*(isoOn()?1:.62);/* クォータービュー：地面の円（ひし形の地面の描き方で、横長の形になる） */ctx.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P*(b?1:2),P)}}
   ctx.globalAlpha=1}
 
 function juice2Frame(now){if(typeof juice3Frame==='function')juice3Frame(now);juiceHouseWatch(now);if(typeof zkMsTick==='function')zkMsTick(now);if(typeof orgelTick==='function')orgelTick(now)}
@@ -57,15 +57,15 @@ const JGLOW=[];const JGLOWMS=1800;const JGLOWC=[['#fffbe6','#e8f4ff'],['#ffe58a'
 function juiceGlowAt(x,y,tier,big){/* x,y：マス。tier：0〜2（よい物ほど金色）。big：大きなしぶき（つり） */if(!juice2OK()||JGLOW.length>6)return;const now=performance.now();JGLOW.push({x,y,t:tier|0,t0:now});const cx=x*TS,cy=y*TS;
   for(let k=0;k<(big?18:10);k++){const a=-Math.PI*(.1+.8*k/(big?17:9)),sp=60+Math.random()*80;fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,life:.8+Math.random()*.3,col:big&&k%2?'#cfeaff':JGLOWC[tier|0][k%2],r:3})}
   fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(255,240,180,.95)'});for(let i=0;i<3+tier;i++)jKnock(659*Math.pow(2,[0,4,7,12,16][i]/12),i*.08,.5)}
-function juiceGlowDraw(now){const P=2;for(let i=JGLOW.length-1;i>=0;i--){const g=JGLOW[i],e=now-g.t0;if(e>JGLOWMS){JGLOW.splice(i,1);continue}const u=e/JGLOWMS,a=u<.15?u/.15:1-(u-.15)/.85,cx=g.x*TS,cy=g.y*TS,C=JGLOWC[g.t],w=10+g.t*3,h=TS*(1.6+g.t*.5);
+function juiceGlowDraw(now){const P=2;for(let i=JGLOW.length-1;i>=0;i--){const g=JGLOW[i],e=now-g.t0;if(e>JGLOWMS){JGLOW.splice(i,1);continue}const u=e/JGLOWMS,a=u<.15?u/.15:1-(u-.15)/.85,cx=g.x*TS,cy=g.y*TS,C=JGLOWC[g.t],w=10+g.t*3,h=TS*(1.6+g.t*.5);isoAt(ctx,cx,cy);/* クォータービュー：その所に立てて */
     for(let b=0;b<3;b++){ctx.globalAlpha=Math.max(0,a*(.45-b*.13));ctx.fillStyle=b?C[0]:C[1];const ww=Math.round((w+b*8)/P)*P;ctx.fillRect(Math.round((cx-ww/2)/P)*P,Math.round((cy-h)/P)*P,ww,Math.round(h/P)*P)}/* 光の柱（3だんの四角） */
     ctx.fillStyle=C[1];for(let k=0;k<8;k++){const ph=(e/900+k/8)%1;ctx.globalAlpha=Math.max(0,a*(1-ph));ctx.fillRect(Math.round((cx+(hash(k*7+g.x)-.5)*w*2)/P)*P,Math.round((cy-ph*h)/P)*P,P,P)}}/* のぼる光の粒 */
-  ctx.globalAlpha=1}
+  ctx.globalAlpha=1;isoBack(ctx)}
 
 /* ---------- 6. 古いオルゴール：夕方（17〜20時）に、音の粒がたちのぼり、小さく鳴る（画面に見えているときだけ） ---------- */
 let JORG=0;const JORGMS=1700,JORGN=[0,4,7,12,7,4];let JORGI=0;
-function orgelTick(now){if(now-JORG<JORGMS||!juice2OK()||sheet!=null)return;JORG=now;const h=hour();if(h<17||h>=20)return;const vw=VW/cam.z,vh=VH/cam.z,x0=cam.x/TS,y0=cam.y/TS;
-  for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='orgel')continue;const x=j%W+.5,y=((j/W)|0)+.2;if(x<x0||y<y0||x>x0+vw/TS||y>y0+vh/TS)continue;
-    for(let k=0;k<3;k++)fx.push({k:'p',x:x*TS+(Math.random()-.5)*10,y:y*TS-20,vx:(Math.random()-.5)*14,vy:-36-Math.random()*20,life:1.2,col:['#ffe58a','#f3aec5','#cfeaff'][k],r:3});
+function orgelTick(now){if(now-JORG<JORGMS||!juice2OK()||sheet!=null)return;JORG=now;const h=hour();if(h<17||h>=20)return;const V=critView();/* 見えているマス */
+  for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='orgel')continue;const x=j%W+.5,y=((j/W)|0)+.2;if(x<V[0]||y<V[1]||x>V[2]||y>V[3])continue;
+    for(let k=0;k<3;k++)fx.push({k:'p',x:x*TS+(Math.random()-.5)*10,y:y*TS-20,gy:(y+.8)*TS,vx:(Math.random()-.5)*14,vy:-36-Math.random()*20,life:1.2,col:['#ffe58a','#f3aec5','#cfeaff'][k],r:3});
     if(typeof playU==='function')try{playU('tink',.18,Math.pow(2,JORGN[JORGI++%JORGN.length]/12))}catch(e){}/* 小さな「チン」を、ドミソの高さで（もらった録音） */
     break}}

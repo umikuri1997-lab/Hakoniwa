@@ -17,7 +17,7 @@ function wxNoise(t){const i=Math.floor(t),f=t-i,u=f*f*(3-2*f);return hash(i*131+
 function wxRainK(){/* 雨の強さ .5〜1 */if(!S||!S.rain)return 0;const t=(dayNo()*24+hour())*6;return .5+.5*wxNoise(t)}
 function wxGust(now){/* 突風 0〜1（あらしの日だけ） */if(!S||!(typeof stormNow==='function'&&stormNow()))return 0;const n=wxNoise(now/5200)*.7+wxNoise(now/1700+40)*.3;return Math.max(0,Math.min(1,(n-.5)/.3))}
 function wxRainDraw(now){if(!S||!S.rain||(typeof snowNow==='function'&&snowNow()))return;const st=typeof stormNow==='function'&&stormNow(),k=wxRainK()*(st?WXSTORM:1),g=wxGust(now);
-  const sx=st?.8+g*1.1:.4;/* 1つぶん（2ドット）さがるあいだに、よこへずれるドットの数 */const P=WXP,cx=cam.x*cam.z,cy=cam.y*cam.z;
+  const sx=st?.8+g*1.1:.4;/* 1つぶん（2ドット）さがるあいだに、よこへずれるドットの数 */const P=WXP,[cx,cy]=camScr();
   for(let l=0;l<WXL.length;l++){const L=WXL[l],n=Math.round(L.n*k),step=P*2;ctx.fillStyle='rgba('+L.c+','+(L.a*.55)+')';const fall=now*.42*L.v,H0=VH+L.len*step+40,W0=VW+H0*sx*.5+40,dr=sx/2;
     for(let i=0;i<n;i++){const sd=l*997+i,ph=hash(sd*3+1)*H0,yy=(fall*(.85+hash(sd*5+2)*.3)+ph-cy*L.par)%H0,y0=(yy<0?yy+H0:yy)-L.len*step,xx=(hash(sd*7+3)*W0-cx*L.par-y0*dr)%W0,x0=(xx<0?xx+W0:xx)-20;
       const X=Math.round(x0/P)*P,Y=Math.round(y0/P)*P;for(let s=0;s<L.len;s++)ctx.fillRect(X-Math.round(s*sx)*P,Y+s*step,P,step)}}

@@ -12,7 +12,7 @@ const PREFJOY={lk:['#joy|わあ……！ これ、だいすき！','#joy|これ�
  fd:['#joy|これ……だいすきな味だ！','#joy|おいしい！ ぼく、これに目がないんだ！','#joy|わあ、しあわせ……！ これ、いちばん好き！'],
  lf:['#joy|わあ……！ こういうの、だいすきなんだ！','#joy|すてき！ ずっと、ながめていたいな！','#joy|これ、いちばん好き！ 見てるだけで、うれしい！']};
 function prefMeet(r,k){if(!r||r.hidden||!prefKnow(r,k))return;const now=performance.now();JUMP.set(r,now);JOYU.set(r,now+3500);r.bubble='💕';
-  fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.6,chatTone(pickFresh('pj:'+k,PREFJOY[k]).replace(/^#[^|]*\|/,''),r,0),'#ffd6e6');sfx('good')}
+  fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS);addFloatG(r.x,r.y,-1.6,chatTone(pickFresh('pj:'+k,PREFJOY[k]).replace(/^#[^|]*\|/,''),r,0),'#ffd6e6');sfx('good')}
 /* お話で話した好み（話の名前から）。会話をさいごまで読んだら prefKnow */
 const PREFTK=[['t:fv','lf'],['lk','lk'],['fd','fd'],['lf','lf'],['ng','ng']];
 const prefOfTopic=key=>{if(!key)return null;for(const[p,k]of PREFTK)if(key.indexOf(p)===0)return k;return null};

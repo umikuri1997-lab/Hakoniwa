@@ -57,9 +57,9 @@ function lordSil(){/* ヌシ様（横向き）の絵から、光のりんかく�
     if(e1[i]){a[p]=255;a[p+1]=255;a[p+2]=240;a[p+3]=235}else if(near){a[p]=250;a[p+1]=255;a[p+2]=232;a[p+3]=200}else{const k=lum/255;a[p]=Math.round(214+k*38);a[p+1]=Math.round(240+k*15);a[p+2]=Math.round(206+k*34);a[p+3]=Math.round(120+k*80)}/* 中も白っぽく光らせて、形がわかるように（明るい所ほど白く） */}
   c.putImageData(d,0,0);LORDCV=cv;return cv}
 function drawSacredScenes(now){
-  drawOmoiLamps(now);if(!SCN.length)return;
+  isoAtA(ctx,treeFoot());/* クォータービュー：御神木の場面の光は、切り株を足もとに立てて（iso-fx.js） */drawOmoiLamps(now);if(!SCN.length)return isoBack(ctx);
   for(let i=SCN.length-1;i>=0;i--){const e=SCN[i];if(e.state!==S||e.session!==VILLAGE_SESSION||now>=e.at+e.ms)SCN.splice(i,1)}
-  ctx.save();ctx.imageSmoothingEnabled=false;for(const e of SCN){if(now<e.at)continue;SCN_DRAW[e.k](e,Math.min(1,(now-e.at)/e.ms),now)}ctx.restore()}
+  ctx.save();ctx.imageSmoothingEnabled=false;for(const e of SCN){if(now<e.at)continue;SCN_DRAW[e.k](e,Math.min(1,(now-e.at)/e.ms),now)}ctx.restore();isoBack(ctx)}
 /* 木の大きさ：根もと（base）・てっぺん（top）。st は育ちぐあい（なければ、いまの育ちぐあい） */
 function sacredGeo(j,st){const top=sacredTopY(j,st),base=storyTreeY(j)*TS+26-liftOf(j);return {cx:storyTreeX(j)*TS,base,top,h:Math.max(24,base-top)}}
 function sacredNearJoy(j,ms,dist){/* 木のそばのせいれいが、木のほうを向いて、はねてよろこぶ（すわっている・場面の姿勢の子はそのまま） */

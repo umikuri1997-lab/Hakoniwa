@@ -31,7 +31,7 @@ function cupDishPick(r){const L=COOKD.filter(d=>FOODS[d.id]),M=L.filter(d=>d.el=
 function cupCheerAsk(E){if(typeof MEMRUN!=='undefined'&&MEMRUN||!started||document.getElementById('cupCheer'))return;const D=EVENTS[E.id],L=E.who.map(id=>S.res.find(r=>r.id===id)).filter(Boolean);if(!L.length)return;
   const o=el('<div id="cupCheer" style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.3);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note" style="margin:0 0 8px">だれを応援する？</p><div class="ks" style="display:flex;flex-wrap:wrap;gap:6px"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">見ているだけ</button></div></div></div>');
   o.querySelector('.t').textContent=D.n;
-  for(const r of L){const b=el('<button class="btn"></button>');b.textContent=r.name;b.onclick=()=>{sfx('stamp');if(S.ev===E){E.cheer=r.id;JUMP.set(r,performance.now());addFloat(r.x,r.y-1.6,'がんばる！','#ffe7a8')}o.remove()};o.querySelector('.ks').appendChild(b)}
+  for(const r of L){const b=el('<button class="btn"></button>');b.textContent=r.name;b.onclick=()=>{sfx('stamp');if(S.ev===E){E.cheer=r.id;JUMP.set(r,performance.now());addFloatG(r.x,r.y,-1.6,'がんばる！','#ffe7a8')}o.remove()};o.querySelector('.ks').appendChild(b)}
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};document.body.appendChild(o)}
 /* ---------- はじまりの合図・実況（実時間） ---------- */
 const CUPV={cd:0,id:null,mg:null,lead:null,leadT:0,cheerT:0,aw:null,fl:null};
@@ -44,7 +44,7 @@ function cupLive(E,P){/* 1秒ごと（cupTick から）：ミニゲームをは�
   const now=performance.now();if(!CUPV.cd)CUPV.cd=now-CUPCD;/* 読みこみなおしたあとは、合図なし */
   if(!CUPV.mg&&!E.mgDone&&E.cheer!=null&&now-CUPV.cd>=CUPCD){E.mgDone=1;const r=P.find(q=>q.id===E.cheer);if(r)cupMGOpen(E,r)}
   if(now>CUPV.leadT&&E.id!=='cup1'){CUPV.leadT=now+6000;const R=cupRanks(E,P),r=P.find(q=>q.id===R[0]);if(r&&r.id!==CUPV.lead&&(E.id==='cup0'?r.x>E.tk.x+1:(E.sc[r.id]||0)>0)){CUPV.lead=r.id;addFloat(E.c[0],E.c[1]-2.6,'いま、'+r.name+'が1位！','#ffe58a');sfx('tink')}}
-  if(now>CUPV.cheerT){CUPV.cheerT=now+3500+Math.random()*3000;const w=S.res.filter(q=>!q.hidden&&!P.includes(q)&&Math.hypot(q.x-E.c[0],q.y-E.c[1])<9).concat(E.id==='cup1'?P.filter(q=>!(E.pairs||[]).some(p=>p.includes(q.id))):[]);const q=pick(w);if(q){addFloat(q.x,q.y-1.5,pick(['がんばれー！','いけいけー！','すごいすごい！','ファイトー！']),'#fff3d6');JUMP.set(q,now);sfx('clap')}}}
+  if(now>CUPV.cheerT){CUPV.cheerT=now+3500+Math.random()*3000;const w=S.res.filter(q=>!q.hidden&&!P.includes(q)&&Math.hypot(q.x-E.c[0],q.y-E.c[1])<9).concat(E.id==='cup1'?P.filter(q=>!(E.pairs||[]).some(p=>p.includes(q.id))):[]);const q=pick(w);if(q){addFloatG(q.x,q.y,-1.5,pick(['がんばれー！','いけいけー！','すごいすごい！','ファイトー！']),'#fff3d6');JUMP.set(q,now);sfx('clap')}}}
 /* ---------- ミニゲーム（応援）：大会ごとにちがう遊び。10秒。うまくできたほど E.ck（0〜1） ---------- */
 const MGW=120,MGH=56;
 const CUPMG={
@@ -77,7 +77,7 @@ function cupMGOpen(E,r){const M=CUPMG[E.id];if(!M||document.getElementById('cupM
   const up=()=>{if(M.up&&!done)M.up(s,T())};o.addEventListener('pointerup',up);o.addEventListener('pointercancel',up);o.addEventListener('pointerleave',up);
   const fin=()=>{done=true;const k=Math.max(0,Math.min(1,M.k(s)));if(S.ev===E){E.ck=k;E.mgLive=null}CUPV.mg=null;
     o.querySelector('.r').textContent=k>=.75?'すごい！ 大声援！':k>=.4?'いいね！ とどいた！':'ざんねん……でも、とどいたよ';if(k>=.75){j3Ding(12,0,.5);j3Ding(16,.06,.5);j3Ding(19,.12,.5)}else sfx(k>=.4?'good':'tap');
-    if(S.res.includes(r)){JUMP.set(r,performance.now());addFloat(r.x,r.y-1.6,k>=.4?'とどいた！':'がんばる！','#ffe7a8')}setTimeout(()=>o.remove(),1300)};
+    if(S.res.includes(r)){JUMP.set(r,performance.now());addFloatG(r.x,r.y,-1.6,k>=.4?'とどいた！':'がんばる！','#ffe7a8')}setTimeout(()=>o.remove(),1300)};
   const loop=()=>{if(done||!o.isConnected)return;const now=performance.now(),dt=Math.min(.1,(now-last)/1000),t=T();last=now;if(M.tick)M.tick(s,dt,t);if(M.live&&S.ev===E)E.mgLive=M.live(s);
     g.fillStyle='#f4e9d2';g.fillRect(0,0,MGW,MGH);M.draw(g,s,t);g.fillStyle='#d8c8a8';g.fillRect(0,MGH-3,MGW,3);g.fillStyle='#a8743f';g.fillRect(0,MGH-3,Math.round(MGW*Math.max(0,1-t*1000/CUPMGT)),3);
     if(t*1000>=CUPMGT||s.end&&t>=s.end||S.ev!==E||!S.ev.ph)return fin();requestAnimationFrame(loop)};requestAnimationFrame(loop)}
@@ -87,9 +87,9 @@ function cupWork(r,a,dt){const E=S.ev,D=EVENTS[E.id],b=cupBoost(E,r.id),n=+E.id.
   if(n===2||n===4){E.sc[r.id]=(E.sc[r.id]||0)+dt*rMul(r,'work')*(.8+.4*Math.random())*b;a.snd=(a.snd||0)+dt;if(a.snd>2.2){a.snd=0;sfxAt(n===2?pick(['nail','saw','nail']):pick(['cook','fry','tonton']),r.x,r.y)}return}
   const rate=n===5?staNow(r)/STD:n===7?1+rStat(r,rLv(r)).atk/100:rMul(r,'work');a.cy=(a.cy||0)+dt*rate*b*(n===6?.8+.6*Math.random():1);a.snd=(a.snd||0)+dt;
   if(a.snd>1.8&&n!==6){a.snd=0;sfxAt(n===5?'chop':'crack',r.x,r.y)}
-  const per=n===6?7:5;if(a.cy<per)return;a.cy-=per;if(n===6&&Math.random()<.35)return addFloat(r.x,r.y-1.5,'にげられた……','#fff3d6');
+  const per=n===6?7:5;if(a.cy<per)return;a.cy-=per;if(n===6&&Math.random()<.35)return addFloatG(r.x,r.y,-1.5,'にげられた……','#fff3d6');
   const k=n===5?'wood':n===7?'stone':(typeof fishPick==='function'?fishPick(E.slot[r.id]):'fish'),L=E.loot[r.id]||(E.loot[r.id]={});L[k]=(L[k]||0)+1;E.sc[r.id]=(E.sc[r.id]||0)+1;
-  const nm=n===6?((FOODS[k]||{}).name||'さかな'):(MATN[k]||k);addFloat(r.x,r.y-1.6,nm+'！','#ffe7a8');JUMP.set(r,performance.now());if(n===6){sfxAt('catch',r.x,r.y);if(typeof fishGot==='function')fishGot(k)}}
+  const nm=n===6?((FOODS[k]||{}).name||'さかな'):(MATN[k]||k);addFloatG(r.x,r.y,-1.6,nm+'！','#ffe7a8');JUMP.set(r,performance.now());if(n===6){sfxAt('catch',r.x,r.y);if(typeof fishGot==='function')fishGot(k)}}
 /* ---------- ごほうび：作った物・とれた物は、せいれいが頭にのせて箱へ（入らない分は、すぐ入れる） ---------- */
 function cupLoot(E,P){const n=+E.id.slice(3),got=[];
   for(const r of P){if(n===2){const id=(E.item||{})[r.id];if(id&&BL[id]){craftCarry({type:id},r);got.push(BL[id].name)}continue}
@@ -106,14 +106,14 @@ function cupAward(E,P,R){const top=[0,1,2].map(i=>P.filter(r=>cupPlace(E,R,r.id)
     setTimeout(()=>{if(!CUPV.aw)return;if(typeof juiceCheer==='function')juiceCheer();sfx('clap');sfx('level')},1900)},delay);
   setTimeout(()=>{CUPV.aw=null},delay+CUPAWD)}
 function cupGround(now){/* 表彰台（地面の層）：台にのぼった子の足もと */const A=CUPV.aw;if(!A||now-A.t0<A.td)return;const c=ctx,H0=[14,9,6],C=['#ffd23f','#d8dfe8','#e0a46a'];
-  [[0,0],[-1,1],[1,2]].forEach(([dx,i])=>{if(!A.top[i])return;const x=(A.x+dx)*TS+4,y=(A.y+.5)*TS-2;c.fillStyle='#8a5a32';c.fillRect(x,y,TS-8,H0[i]+4);c.fillStyle=C[i];c.fillRect(x+1,y,TS-10,H0[i]+2);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x+1,y+H0[i],TS-10,2)})}
+  [[0,0],[-1,1],[1,2]].forEach(([dx,i])=>{if(!A.top[i])return;const x=(A.x+dx)*TS+4,y=(A.y+.5)*TS-2,dr=()=>{c.fillStyle='#8a5a32';c.fillRect(x,y,TS-8,H0[i]+4);c.fillStyle=C[i];c.fillRect(x+1,y,TS-10,H0[i]+2);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x+1,y+H0[i],TS-10,2)};if(isoOn())isoStand(c,gFoot((A.x+dx+.5)*TS,(A.y+.5)*TS),dr);else dr()})}/* クォータービュー：台は、その所に立てて */
 function cupDraw(now){/* 会場の旗・合図・作品・表彰（世界の上の層） */const E=S&&S.ev,c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  if(E&&E.ph&&EVENTS[E.id]&&EVENTS[E.id].cup&&E.c){const P=Object.values(E.slot||{});if(P.length){let x0=1e9,x1=-1e9,y0=1e9;for(const j of P){x0=Math.min(x0,j%W);x1=Math.max(x1,j%W);y0=Math.min(y0,(j/W)|0)}cupFlags(c,(x0-1)*TS,(x1+2)*TS,(y0-1.6)*TS,now)}
-    if(CUPV.cd&&now-CUPV.cd<CUPCD+500){const e=now-CUPV.cd,i=Math.min(3,Math.floor(e/650)),u=(e%650)/650;cupText(c,['3','2','1','どん！'][i],E.c[0]*TS,(E.c[1]-2.2)*TS,i===3?3:2.6+(1-u)*1.2,i===3?Math.max(0,1-(e-1950)/1100):1)}
-    if(E.ph==='do'&&E.item&&(E.id==='cup2'||E.id==='cup4'))for(const id in E.item){const r=S.res.find(q=>q.id===+id);if(!r)continue;const p=(E.pg||{})[id]||0;cupItemDraw(c,E.item[id],E.id,r.x+(r.face||1)*.75,r.y,p,now)}}
-  const A=CUPV.aw;if(A){const e=now-A.t0;A.art.slice(0,8).forEach((q,i)=>{const t=e-i*450;if(t<0||!S.res.includes(q.r))return;const s=t<200?1+(1-t/200)*.6:1;cupItemDraw(c,q.id,A.id,q.r.x+(q.r.face||1)*.75,q.r.y,1,now,s);if(t<450&&!q.s){q.s=1;j3Ding(i*2,0,.35)}});
-    if(e>=A.td)A.top.forEach((r,i)=>{if(A.stamped>i&&S.res.includes(r))cupText(c,(i+1)+'位',r.x*TS,(r.y-2.3)*TS,1.6,1)})}
-  c.imageSmoothingEnabled=sm}
+  if(E&&E.ph&&EVENTS[E.id]&&EVENTS[E.id].cup&&E.c){const P=Object.values(E.slot||{});if(P.length){let x0=1e9,x1=-1e9,y0=1e9;for(const j of P){x0=Math.min(x0,j%W);x1=Math.max(x1,j%W);y0=Math.min(y0,(j/W)|0)}isoAt(c,(x0+x1+1)/2*TS,y0*TS);cupFlags(c,(x0-1)*TS,(x1+2)*TS,(y0-1.6)*TS,now)}/* クォータービュー：旗は、ならぶ所の上に立てて（iso-fx.js） */
+    if(CUPV.cd&&now-CUPV.cd<CUPCD+500){const e=now-CUPV.cd,i=Math.min(3,Math.floor(e/650)),u=(e%650)/650;isoUIAt(c,E.c[0]*TS,E.c[1]*TS,E.c[0]*TS,(E.c[1]-2.2)*TS);cupText(c,['3','2','1','どん！'][i],E.c[0]*TS,(E.c[1]-2.2)*TS,i===3?3:2.6+(1-u)*1.2,i===3?Math.max(0,1-(e-1950)/1100):1)}
+    if(E.ph==='do'&&E.item&&(E.id==='cup2'||E.id==='cup4'))for(const id in E.item){const r=S.res.find(q=>q.id===+id);if(!r)continue;const p=(E.pg||{})[id]||0;isoAt(c,r.x*TS,r.y*TS);cupItemDraw(c,E.item[id],E.id,r.x+(r.face||1)*.75,r.y,p,now)}}
+  const A=CUPV.aw;if(A){const e=now-A.t0;A.art.slice(0,8).forEach((q,i)=>{const t=e-i*450;if(t<0||!S.res.includes(q.r))return;const s=t<200?1+(1-t/200)*.6:1;isoAt(c,q.r.x*TS,q.r.y*TS);cupItemDraw(c,q.id,A.id,q.r.x+(q.r.face||1)*.75,q.r.y,1,now,s);if(t<450&&!q.s){q.s=1;j3Ding(i*2,0,.35)}});
+    if(e>=A.td)A.top.forEach((r,i)=>{if(A.stamped>i&&S.res.includes(r)){isoUIAt(c,r.x*TS,r.y*TS,r.x*TS,(r.y-2.3)*TS);cupText(c,(i+1)+'位',r.x*TS,(r.y-2.3)*TS,1.6,1)}})}
+  c.imageSmoothingEnabled=sm;isoBack(c)}
 const CUPIMG={};function cupImg(id,kind){const k=kind+id;if(!CUPIMG[k]){const im=new Image();try{im.src=kind==='cup4'?foodIc(id):iconURL(id)}catch(e){}CUPIMG[k]=im}return CUPIMG[k]}
 function cupItemDraw(c,id,kind,x,y,p,now,s){const im=cupImg(id,kind);if(!im.complete||!im.naturalWidth)return;const z=Math.round(22*(s||1)),px=Math.round(x*TS-z/2),py=Math.round(y*TS-z+6),h=Math.max(1,Math.round(z*Math.min(1,.15+p*.85)));
   c.save();c.globalAlpha=p>=1?1:.55+p*.35;c.imageSmoothingEnabled=true;c.drawImage(im,0,im.naturalHeight*(1-h/z),im.naturalWidth,im.naturalHeight*h/z,px,py+z-h,z,h);c.restore();/* 下からだんだんできていく */

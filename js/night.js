@@ -189,8 +189,8 @@ function hitFx(t,n,o){o=o||{};n=Math.max(1,Math.round(n));/* 画面の数字に�
   if(!o.nokb)HITV.set(t,{t:now,dx,dy,s:o.skill?HIT_STOPS:o.big?HIT_STOPB:HIT_STOP});/* 止まる長さは、ダメージの大きさで */
   if(en&&!o.silent){const x=t.x,y=t.y;if(o.lag)setTimeout(()=>sfxAt('ehit',x,y),o.lag);else sfxAt('ehit',x,y)}/* ダメージ音：当たって見える時刻に「ぽんっ」 */
   const lift=typeof uLift==='function'?uLift(t):0,near=DMGN.filter(d=>d.who===t&&Math.abs(d.t0-now)<260).length;/* つづけて当たった数字は、上へずらす */
-  if(DMGN.length>60)DMGN.shift();DMGN.push({who:t,x:t.x*TS+(dx>=0?4:-4),y:t.y*TS-(en?30*z+8:36)-lift-near*10,n,row:en?(o.big?1:0):2,t0:now,big:!!o.big,dir:dx>=0?1:-1});
-  if(!o.nokb){if(SPKS.length>40)SPKS.shift();SPKS.push({x:t.x*TS-dx*6,y:t.y*TS-(en?12*z:12)-lift,t0:now,en,sd:(Math.random()*997)|0})}}
+  if(DMGN.length>60)DMGN.shift();DMGN.push({who:t,x:t.x*TS+(dx>=0?4:-4),y:t.y*TS-(en?30*z+8:36)-lift-near*10,n,row:en?(o.big?1:0):2,t0:now,big:!!o.big,dir:dx>=0?1:-1,gx:t.x*TS,gy:t.y*TS});
+  if(!o.nokb){if(SPKS.length>40)SPKS.shift();SPKS.push({x:t.x*TS-dx*6,y:t.y*TS-(en?12*z:12)-lift,t0:now,en,sd:(Math.random()*997)|0,gx:t.x*TS,gy:t.y*TS})}}
 const AIMV=new WeakMap();function enAim(e,x,y){AIMV.set(e,{x,y,t:S.t})}/* コワイノが攻撃している所（マスの上の場所）。絵は、そちらを向く（draw-world.js の enFace） */
 function enLunge(e,r){let dx=r.x-e.x,dy=r.y-e.y;const l=Math.hypot(dx,dy)||1;ATKV.set(e,{t:performance.now(),dx:dx/l,dy:dy/l})}/* コワイノがたたく：相手のほうへふみこむ */
 /* ふみこみ：ため（うしろへ3）→ ふみこむ（前へ10）→ 当たって止まる（HIT_STOP）→ もどる。sd はふりはじめてからのミリ秒 */
@@ -206,14 +206,15 @@ const SPKCOL=[['#fff6d8','#ffd84a','#ff9a4a'],['#ffffff','#d6b8ff','#9a7ae0']];/
 /* 数字と火花を描く（夜の暗さより上。せかいの座標） */
 function drawBattleFx(now){if(!DMGN.length&&!SPKS.length)return;const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   while(SPKS.length&&now-SPKS[0].t0>300)SPKS.shift();
-  for(const s of SPKS){const a=now-s.t0;if(a<0||a>300)continue;const q=a/300,C=SPKCOL[s.en?0:1];
+  const ISO=isoOn(),T=ISO?ctx.getTransform():null,at=f=>{if(ISO)fxStandTf(ctx,dpr*cam.z,f)};/* クォータービュー：当たった子の足もとに立てて（iso-fx.js） */
+  for(const s of SPKS){const a=now-s.t0;if(a<0||a>300)continue;const q=a/300,C=SPKCOL[s.en?0:1];at(s);
     if(a<90){ctx.fillStyle=C[0];const L=a<45?8:5;ctx.fillRect(Math.round(s.x)-1,Math.round(s.y)-L,2,L*2);ctx.fillRect(Math.round(s.x)-L,Math.round(s.y)-1,L*2,2)}/* 当たった所の十字の光 */
     for(let i=0;i<7;i++){const an=(i/7)*6.283+s.sd*.37+i*.9,d=(6+((s.sd>>i)&3)*3)*(1-Math.pow(1-q,2))+4,g=q*q*8;ctx.fillStyle=C[i%3];ctx.globalAlpha=q<.6?1:1-(q-.6)/.4;ctx.fillRect(Math.round(s.x+Math.cos(an)*d)-1,Math.round(s.y+Math.sin(an)*d*.7+g)-1,2,2)}ctx.globalAlpha=1}
   while(DMGN.length&&now-DMGN[0].t0>900)DMGN.shift();const A=dgAtlas();
-  for(const d of DMGN){const a=now-d.t0;if(a<0||a>900)continue;const u=d.big?3:2,sc=a<80?.6+.7*a/80:a<180?1.3-.3*(a-80)/100:1,k=u*sc;
+  for(const d of DMGN){const a=now-d.t0;if(a<0||a>900)continue;if(ISO)isoUITf(ctx,fxFoot(d),d.x,d.y);/* 数は、のばさずに */const u=d.big?3:2,sc=a<80?.6+.7*a/80:a<180?1.3-.3*(a-80)/100:1,k=u*sc;
     const up=a<180?16*(1-Math.pow(1-a/180,2)):a<320?16-5*(a-180)/140:11+7*(a-320)/580,str=String(d.n),w=str.length*6*k+k,x0=d.x+d.dir*5*Math.min(1,a/320)-w/2,y0=d.y-up-9*k;
     ctx.globalAlpha=a<620?1:Math.max(0,1-(a-620)/280);for(let i=0;i<str.length;i++)ctx.drawImage(A,(+str[i])*7,d.row*9,7,9,x0+i*6*k,y0,7*k,9*k)}
-  ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm}
+  ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm;if(T)ctx.setTransform(T)}
 const SHAKEC={s:['shk2',200],m:['shk3',350],l:['shk',500]},SHAKER={s:1,m:2,l:3};let SHAKEN={r:0,t:0};
 function shakeScreen(lv){/* 画面のゆれ。lv：'s' 小・'m' 中・'l' 大（なし＝大）。ゆれているあいだは、小さいゆれで上書きしない。うごきをへらす設定では、ゆらさない */lv=SHAKEC[lv]?lv:'l';if(typeof uiReduced==='function'&&uiReduced())return;const now=performance.now();if(now<SHAKEN.t&&SHAKEN.r>SHAKER[lv])return;const v=$('#cv');if(!v)return;const[c,ms]=SHAKEC[lv];v.classList.remove('shk','shk2','shk3');void v.offsetWidth;v.classList.add(c);SHAKEN={r:SHAKER[lv],t:now+ms};setTimeout(()=>v.classList.remove(c),ms+50)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'「コワイノ」があつまった、大きな影が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きな「コワイノ」'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きな「コワイノ」'}};
@@ -450,9 +451,9 @@ function updTowers(dt){
      if(!q||q.s!==S||q.g!==wg.id||now<q.t0){const ae=bowAim(x,y,st,WE);if(!ae){S.hp[tk]=1;delete BOWQ[tk];continue}BOWQ[tk]={s:S,g:wg.id,t0:now,t:now+BOW_REL};wg.bowT=now;wg.face=ae.x<wg.x?-1:1;S.hp[tk]=0;sfxAt('bowdraw',x,y);continue}/* 引きはじめ：ひきしぼる音。うつ間かくは引きはじめから数える */
      if(now<q.t)continue;delete BOWQ[tk];BOWOVER=Math.min(0,S.hp[tk])}else BOWOVER=0;
     let tg=null,bd=st.range+(o==='watch'?(nightVarNow()==='kiri'?3:6):0);/* 見張り台は、矢の射程ぶん遠くまで見る（あたるかは矢ごと） */for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
-    if(o==='watch'&&WE.water){let w2=null,wd=1e9;const wr=st.range*WE.rng;for(const e of S.enemies){if(!e.spawned||e.dead||(e.stun||0)>0)continue;const d=Math.hypot(e.x-x,e.y-y);if(d>=wr)continue;const kk=torderKey(j,e,d);if(kk<wd){wd=kk;w2=e}}/* ねらう順 *//* 水：止まっていないコワイノのうち、いちばん近い子 */if(!w2){S.hp[tk]=1;continue}w2.stun=(wg?waterStop(wg,w2):(EN[w2.type].boss?.75:1.5))*waterStunMul()*weakStun(w2,'water');/* 上に立つ子の攻撃力（waterStop）。雨の夜は1.5倍 */w2.path=[];shots.push({x1:x,y1:y-1.9,x2:w2.x,y2:w2.y-.3,life:1,water:true});if(wg)wg.face=w2.x<wg.x?-1:1;S.hp[tk]=st.cd*WE.cd/(wg?rMul(wg,'work'):1)+BOWOVER;sfxAt('shoot',x,y);continue}
+    if(o==='watch'&&WE.water){let w2=null,wd=1e9;const wr=st.range*WE.rng;for(const e of S.enemies){if(!e.spawned||e.dead||(e.stun||0)>0)continue;const d=Math.hypot(e.x-x,e.y-y);if(d>=wr)continue;const kk=torderKey(j,e,d);if(kk<wd){wd=kk;w2=e}}/* ねらう順 *//* 水：止まっていないコワイノのうち、いちばん近い子 */if(!w2){S.hp[tk]=1;continue}w2.stun=(wg?waterStop(wg,w2):(EN[w2.type].boss?.75:1.5))*waterStunMul()*weakStun(w2,'water');/* 上に立つ子の攻撃力（waterStop）。雨の夜は1.5倍 */w2.path=[];shots.push({x1:x,y1:y-1.9,x2:w2.x,y2:w2.y-.3,gy1:y,gy2:w2.y,life:1,water:true});if(wg)wg.face=w2.x<wg.x?-1:1;S.hp[tk]=st.cd*WE.cd/(wg?rMul(wg,'work'):1)+BOWOVER;sfxAt('shoot',x,y);continue}
     if(o==='watch'){const g=wg,iv=towerVolley(j,x,y,WE===WPEL.wood?st:Object.assign({},st,{range:st.range*WE.rng,mul:WE.dmg,use:WE.use,burn:WE.burn}),g,shots);/* 矢は威力の大きい順。本数・つらぬき・射程は矢ごと */if(!iv){S.hp[tk]=1;continue}S.flags.noArrow=0;if(g)g.face=tg&&tg.x<g.x?-1:1;S.hp[tk]=(g?st.cd*WE.cd/rMul(g,'work'):st.cd)*iv+BOWOVER;sfxAt('shoot',x,y);continue}
-    let a2=0;if(tg){S.hp[tk]=st.cd;/* 見張り台の子が弓をうつ（うつ間かくは、その子の作業速度で短くなる） */hurtEn(tg,st.dmg+a2,{lag:SHOT_LAG,sx:x,sy:y,dt:o==='yogan'?'fire':'arrow'});sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:o==='watch'?1.9:.6),/* 見張り台は、上に立つ子の手から */x2:tg.x,y2:tg.y-.3,life:1,fire:o==='yogan',wood:o==='watch'});
+    let a2=0;if(tg){S.hp[tk]=st.cd;/* 見張り台の子が弓をうつ（うつ間かくは、その子の作業速度で短くなる） */hurtEn(tg,st.dmg+a2,{lag:SHOT_LAG,sx:x,sy:y,dt:o==='yogan'?'fire':'arrow'});sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:o==='watch'?1.9:.6),/* 見張り台は、上に立つ子の手から */x2:tg.x,y2:tg.y-.3,gy1:y,gy2:tg.y,life:1,fire:o==='yogan',wood:o==='watch'});
       if(st.splash)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<st.splash){hurtEn(e,st.sdmg,{lag:SHOT_LAG,sx:tg.x,sy:tg.y,dt:'fire'});if(e.hp<=0)defeat(e)}}/* 火の玉は、まわりにもダメージ */
       if(tg.hp<=0&&!tg.dead)defeat(tg)}}}
   S.enemies=S.enemies.filter(e=>!e.dead);
