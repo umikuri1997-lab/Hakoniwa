@@ -71,7 +71,7 @@ const assert=require('node:assert/strict');
       let x0=-1;for(let x=0;x<CVW;x++){const o=C.ob.get(J(x,ky));if(o&&o.k==='k'&&cvWalk(J(x-1,ky))){x0=x;break}}put(wo,x0-1,ky);const leaf=(x,y)=>{cvUse(J(x,y),C.ob.get(J(x,y)));step(5)};
       out.leaf0=C.leaf;leaf(x0,ky);leaf(x0+1,ky);let x2=x0+2;while(!(C.ob.get(J(x2,ky))&&C.ob.get(J(x2,ky)).k==='k'))x2++;leaf(x2,ky);out.leaf=C.leaf;
       out.island=reachAdj(J(x0-1,ky),KT);out.far=!!cvBfs(J(x0-1,ky),j=>j===J(x2+2,ky));const kk=[...C.ob].find(([j,o])=>o.k==='k'&&!o.done)[0];cvUse(kk,C.ob.get(kk));out.noLeaf=!wo.job}
-    /* しずく・下絵の区画 */for(let i=0;i<30&&!C.drips.length;i++){C.dripT=0;cvDripTick(performance.now())}out.drip=C.drips.length;caveRender(performance.now());out.chunks=[...CVQK.keys()].some(k=>k[0]==='t')&&[...CVQK.keys()].some(k=>k[0]==='f');caveAbort();out.abort=!CV;
+    /* しずく・下絵の区画 */for(let i=0;i<30&&!C.drips.length;i++){C.dripT=0;cvDripTick(performance.now())}out.drip=C.drips.length;if(C.drips[0])C.drips[0].t0=performance.now()-400;caveRender(performance.now());out.dripS=!!(C.drips[0]&&C.drips[0].s);/* 落ちたら音（cvqDrips） */out.chunks=[...CVQK.keys()].some(k=>k[0]==='t')&&[...CVQK.keys()].some(k=>k[0]==='f');caveAbort();out.abort=!CV;
     /* ===== 2階：ひらいた階からえらべる ===== */cavePrep();{const P=document.querySelector('.pxpopw');out.flBtn=[...P.querySelectorAll('button')].filter(b=>/^[12]階$/.test(b.textContent)).length;P.remove()}
     S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter([by('earth'),by('fire')],{},2);C=CV;{const S1=one('S'),R1=one('R');out.fl1=C.fl;out.main2=!!cvBfs(S1,j=>j===R1);
       out.closed2=chests(2).map(c=>reachAdj(S1,c));out.falls=[...C.wt.keys()].some(j=>C.wt[j]&&C.ab[j+CVW]);C.seen.fill(1);caveRender(performance.now());out.back1=backAll()[1];
@@ -114,7 +114,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.inv,1,'ほりだした土器');assert.equal(r.fosRec,1);assert.equal(r.zk,1);assert.equal(r.zkAll,5);assert.equal(r.ico,'data:image');assert.equal(r.zkList,1);assert.equal(r.lit,true);assert.deepEqual(r.again,[0,30]);
   assert.equal(r.blowOff,null,'まっすぐ先でない');assert.equal(r.blowWall,false,'岩のむこう');assert.equal(r.millNo,true);assert.equal(r.blowHit,true);assert.equal(r.mill,true);
   assert.deepEqual(r.back0,[true,0,true],'1階：どこからでも入口か坂へもどれる');assert.deepEqual(r.terr,[false,false,true]);assert.deepEqual(r.step,[true,false,true,true],'とびおりる・坂からのぼる');assert.equal(r.ore,true);assert.equal(r.top,3);
-  assert.equal(r.clr0,0);assert.equal(r.clr,1,'坂まで来ると、つぎの階がひらく');assert.equal(r.clrF,true);assert.equal(r.fl0,0);assert.equal(r.drip,1);assert.equal(r.chunks,true);
+  assert.equal(r.clr0,0);assert.equal(r.clr,1,'坂まで来ると、つぎの階がひらく');assert.equal(r.clrF,true);assert.equal(r.fl0,0);assert.equal(r.drip,1);assert.equal(r.dripS,true,'しずくが落ちた音');assert.equal(r.chunks,true);
   assert.equal(r.flBtn,2,'出かける階をえらべる');assert.equal(r.fl1,2);assert.equal(r.main2,true,'2階：どのパーティでも坂まで行ける');assert.ok(r.closed2.every(v=>v===false));assert.equal(r.back1,0);assert.deepEqual(r.tier,[true,false,true]);assert.equal(r.dirs2.length,1);assert.equal(r.isle,true);
   assert.equal(r.leaf0,3);assert.equal(r.leaf,0);assert.equal(r.island,true);assert.equal(r.far,true);assert.equal(r.noLeaf,true);assert.equal(r.abort,true);
   assert.deepEqual(r.iceB,[true,0],'氷の階：坂まで行ける・どこからでももどれる');assert.deepEqual(r.slide,[true,true,true],'氷の上は、すべって、とちゅうで止まれない');
