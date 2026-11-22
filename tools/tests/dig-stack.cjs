@@ -59,5 +59,11 @@ const assert=require('node:assert/strict');
   assert.equal(tr.bad,0,'はじめの地形：木のまわり2マス・岩のまわり1マスは、それより高くない');assert.ok(tr.k>=0&&tr.same&&tr.same2,'木のまわり2マスには、つめない');
   const fl=JSON.parse(await run(`(()=>{let bad=0,n=0;for(let j=W;j<W*H-W;j++){if(!FLATR.has(S.obj[j]))continue;n++;if(!flatAt(j))bad++}let k=-1;for(let j=(CY-30)*W;j<(CY+30)*W;j++)if(S.obj[j]==='berry'&&!S.obj[j+1]&&!S.floor[j+1]&&!S.ground[j+1]&&!fogAt(j+1)){k=j;break}let up=null,dn=null;if(k>=0){S.inv.blk_soil=5;const b=hiAt(k+1);terraNow('blk_soil',(k+1)%W,((k+1)/W)|0);up=hiAt(k+1)===b;dn=canPlace('dig',(k+1)%W,((k+1)/W)|0,true)}return JSON.stringify({bad,n,k,up,dn})})()`));
   assert.equal(fl.bad,0,'はじめの地形：茂み・竹のまわり1マスは同じ高さ');assert.ok(fl.n>0,'茂みがある');assert.ok(fl.k>=0&&fl.up===true&&fl.dn===false,'茂みのとなりは、つめない・ほれない');
+  /* こわすモードでも、ブロックを1だんほれる。ほっているあいだのひび（マイクラのよう）が描ける。ブロックのアイコンは立方体 */
+  const rm=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&!treeNextHigh(j,99);let j=-1;for(let k=(CY-10)*W+CX-10;k<(CY+10)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+W)&&hiAt(k)===hiAt(k+1)&&hiAt(k)===hiAt(k+W)){j=k;break}
+    const x=j%W,y=(j/W)|0,h0=hiAt(j);S.hi[j]=h0+2;S.drops=[];setMode('remove');removeAt(x,y);const dug=hiAt(j)-h0;const drop=(S.drops.find(d=>d.lt)||{}).id;
+    PICKH={x,y,j,t0:performance.now()-600,dig:true,n:0,need:1000};for(let i=0;i<2;i++)render(performance.now());PICKH=null;S.hi[j]=h0;setMode('look');
+    const im=new Image();return JSON.stringify({dug,drop,soil:iconURL('blk_soil').slice(0,10),stone:iconURL('blk_stone').slice(0,10)})})()`));
+  console.log(rm);assert.equal(rm.dug,1,'こわすモードで1だんほれる');assert.equal(rm.drop,'blk_soil');assert.ok(rm.soil.startsWith('data:')&&rm.stone.startsWith('data:'),'ブロックのアイコン');
   assert.deepEqual(errors,[]);console.log('dig-stack: ok');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

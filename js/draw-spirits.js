@@ -274,8 +274,10 @@ function soleImg(el,vr){/* 足のうら（正面にすわって足をこちら�
   SOLE.forEach((r,y)=>[...r].forEach((ch,x)=>{const c=col[ch];if(!c)return;g.fillStyle='rgb('+c[0]+','+c[1]+','+c[2]+')';g.fillRect(x,y,1,1)}));return SOLEC[k]=cv}
 const SITF=6;/* 正面にすわる（sitF）：体を下げる量（ドット） */
 const bowNow=(r,now)=>!!r.bowT&&now>=r.bowT&&now-r.bowT<BOW_ALL;/* 弓をうった直後か（セーブに残った前の時刻は、いまより先になることがあるので見ない） */
+const ISOSPX=IQSY/IQSX;/* クォータービュー：立てる描き方（よこ IQSX・たて IQSY）のままだと、せいれいがたてにつぶれる。よこを高さと同じ大きさにして、もとの絵の比にもどす（高さはそのまま。頭の上の物・ふきだしの場所はかわらない） */
 function drawSpiritDot(c,el,x,y,s,f,o){
   if(!spDotReady(el))return false;
+  if(o.iso&&!o.isx){o.isx=1;c.save();c.translate(x,0);c.scale(ISOSPX,1);c.translate(-x,0);try{return drawSpiritDot(c,el,x,y,s,f,o)}finally{c.restore();o.isx=0}}
   const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE,vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.87;/* せいれいの絵は、ゲームの1ドットを2×2に分けた細かさ */
   let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
   const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};
