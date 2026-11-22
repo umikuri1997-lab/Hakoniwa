@@ -20,7 +20,7 @@ function isoGroundLv(c,lv){groundTf(c,dpr*cam.z);if(lv)c.translate(-lv*IQD,-lv*I
 function isoStand(c,A,f){c.save();standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py);try{f()}finally{c.restore()}}
 /* マス j に立つ物（1マス）の足もと */
 function cellFoot(j){return objFoot(j%W,(j/W)|0,1,1,j)}
-/* マス j の物として描く（いままでの見え方では、そのまま） */
+/* マス j の物として、そのマスの足もとに立てて描く */
 function isoCell(c,j,f){isoStand(c,cellFoot(j),f)}
 /* せかいの地面の点 (gx,gy)（段の高さをひいていない点）を足もとにする */
 function gFoot(gx,gy){if(caveOn())return cvqPt(gx,gy);/* 洞窟（iso-cave.js） */const j=clamp(Math.floor(gy/TS),0,H-1)*W+clamp(Math.floor(gx/TS),0,W-1),lv=isoLv(j);return{fx:gx,fy:gy-liftOf(j),px:isoX(gx,gy),py:isoY(gx,gy)-lv*IQL}}

@@ -168,7 +168,7 @@ function drawDrop(d,now){const dz=liftOf(d.y*W+d.x)/* クォータービュー�
     /* 小さなふくろ */
     {const ch=window.CHIPS&&CHIPS['drop:bag'];if(!(ch&&drawChip(ctx,ch,'drop:bag',d.x*TS,d.y*TS-dz,0))){ctx.fillStyle='rgba(40,25,10,.22)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,3,0,0,7);ctx.fill();ctx.fillStyle='#b5854e';ctx.beginPath();ctx.ellipse(cx,cy+1,8.5,7.5,0,0,7);ctx.fill()}}/* もらった絵（絵がまだ読みこみ中なら、まるいふくろ） */
     ctx.fillStyle='rgba(255,245,170,'+(.4+tw*.6)+')';const sx=cx+7,sy=cy-10,sr=2+tw*2.5;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}
-function render(now){RFN++;hdFrame();DCG.armed=false;
+function render(now){RFN++;hdFrame();
   if(dirty)rebuildStatic(STATICFULL);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
   const k=dpr*cam.z,IV=isoView();/* クォータービュー（iso.js） */
