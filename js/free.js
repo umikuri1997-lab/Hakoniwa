@@ -35,7 +35,7 @@ let WILDL=null,WILDS=null;
 function wildDraw(add,vis,ctx,now){/* 奥行きの順に、ほかの物といっしょに描く（draw-world.js） */if(!S||!S.wild)return;
   if(WILDS!==S||!WILDL){WILDS=S;WILDL=Object.keys(S.wild).map(Number)}
   for(const j of WILDL){if(S.obj[j]||S.floor[j])continue;const x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;const id=WILDK[S.wild[j]]||WILDK[0];
-    add(objectDepth(id,j),1,null,()=>sideClip(j,()=>drawObj(ctx,id,x*TS,y*TS-hiAt(j)*LIFT,j,100,now)),j)}}
+    add(objectDepth(id,j),1,null,()=>sideClip(j,()=>drawObj(ctx,id,x*TS,y*TS-liftOf(j),j,100,now)),j)}}
 
 /* ---------- 土地をクリアすると開く ---------- */
 let FTS=null,FTV=0;
@@ -69,9 +69,9 @@ const fplAt=j=>[j%W+.5,((j/W)|0)+.5];
 Object.assign(EVNEED,{fwild:{n:'野の花のむれ',list:fplWild,cap:()=>99,at:fplAt},fpond:{n:'池',list:fplPond,cap:()=>99,at:fplAt},fgrove:{n:'木立',list:fplGrove,cap:()=>99,at:fplAt},fhill:{n:'丘の上',list:fplHill,cap:()=>99,at:fplAt}});
 Object.assign(EVENTS,{
   fhanami:{n:'花見',d:'野の花のむれのそばで、おべんとうをひろげて、花をながめる。',stage:6,sea:0,at:11,dur:40,pt:50,per:8,food:2,need:'fwild',gain:{sta:1},fun:20,talk:['#joy|花が、いっぱい！','いいにおい……。','おべんとう、おいしいね。']},
-  fsuzumi:{n:'夕すずみ',d:'池のそばで、夕方のすずしい風にあたる。',stage:6,sea:1,at:17,dur:40,pt:50,per:8,need:'fpond',gain:{sta:1},fun:20,bond:5,talk:['すずしい……。','池に、夕やけがうつってる。','#joy|風が、きもちいいね。']},
-  fdonguri:{n:'どんぐりひろい',d:'木立で、どんぐりをひろって、数をくらべっこする。',stage:6,sea:2,at:13,dur:40,pt:50,per:8,need:'fgrove',gain:{move:1},fun:20,talk:['あった！ ここにも！','#joy|ぼうしつきの、どんぐりだ！','いくつ、ひろえた？']},
-  fhoshi:{n:'丘の星見',d:'丘の上にのぼって、みんなで星を見る。',stage:6,sea:3,at:19,late:1,dur:50,pt:50,per:8,need:'fhill',gain:{sta:1},fun:20,bond:5,talk:['#surprise|星が、ちかい！','空が、すんでるね。','くっついてると、あったかい。']}});
+  fsuzumi:{n:'夕すずみ',d:'池のそばで、夕方のすずしい風にあたる。',stage:6,sea:1,at:17,dur:40,pt:50,per:8,need:'fpond',gain:{},fx:'rest',talk:['すずしい……。','池に、夕やけがうつってる。','#joy|風が、きもちいいね。']},
+  fdonguri:{n:'どんぐりひろい',d:'木立で、どんぐりをひろって、数をくらべっこする。',stage:6,sea:2,at:13,dur:40,pt:50,per:8,need:'fgrove',gain:{},fxv:3,fx:'donguri',talk:['あった！ ここにも！','#joy|ぼうしつきの、どんぐりだ！','いくつ、ひろえた？']},
+  fhoshi:{n:'丘の星見',d:'丘の上にのぼって、みんなで星を見る。',stage:6,sea:3,at:19,late:1,dur:50,pt:50,per:8,need:'fhill',gain:{},fx:'sunny',talk:['#surprise|星が、ちかい！','空が、すんでるね。','くっついてると、あったかい。']}});
 EVORDER.push('fhanami','fsuzumi','fdonguri','fhoshi');
 /* ---------- おまつりのあと：第2章（火山のたより）・季節の話・きょうの目標 ----------
    どれも「依頼の会話 → その話でした行動 → お礼の会話」。いないせいれいの行ははぶき、FA がいなければはじめない。昼・会話のないときだけ。 */

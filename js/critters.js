@@ -51,6 +51,8 @@ function critHead(c){const lim=CK[c.k].vw?0:.45;if(c.hd==null)c.hd=c.face>0?0:Ma
   if(lim){const r=Math.cos(c.hd)>=0?0:Math.PI;let d=Math.atan2(Math.sin(c.hd-r),Math.cos(c.hd-r));d=Math.max(-lim,Math.min(lim,d));c.hd=r+d}
   return [Math.cos(c.hd),Math.sin(c.hd)]}
 /* 地面の生き物がにげる：近いせいれいからはなれる向きへ、はやく。少しして、いなくなる */
+function critScare(tx,ty,R){/* まもりの光がそばに落ちた：まわりの小さな生き物は、光からはなれる方へ、にげていく */for(const c of CRIT){if(c.fl||c.go)continue;const dx=c.x-(tx+.5),dy=c.y-(ty+.5);if(Math.max(Math.abs(dx),Math.abs(dy))-R>CRITSCARER)continue;const L=Math.hypot(dx,dy)||1;c.fl=1;c.hop=0;if(c.k==='bird'){c.jt=null;c.pre=0}critLeave(c,dx/L,dy/L)}}
+const CRITSCARER=6;
 function critFlee(c){if(c.fl||!CK[c.k].flee&&c.k!=='bird')return;const r=S.res.find(r=>!r.hidden&&Math.hypot(r.x-c.x,r.y-c.y)<1.6);if(!r)return;
   const L=Math.hypot(c.x-r.x,c.y-r.y)||1;c.fl=1;c.hop=0;critLeave(c,(c.x-r.x)/L,(c.y-r.y)/L)}
 /* いなくなるとき：その場で消さず、画面の外へ去る（とぶ物はとんで、地面の物は歩いて・はねて）。見えなくなったら消す（critTick のさいご）。
@@ -168,8 +170,8 @@ function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.
   critDrop(c)}
 /* 小鳥はベリー・りすはどんぐり・うさぎはわた毛を、1ぴき1回だけ、50%で1こ落とす（CRITDROP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
 const CRITDROP={bird:'food:berry',risu:'food:donguri',usagi:'mat:wool'},CRITDROPP=.5;
-function critDrop(c){const k=CRITDROP[c.k];if(!k||c.dr)return;c.dr=1;if(Math.random()>=CRITDROPP)return;const n0=(S.drops||[]).length;dropAt(c.x,c.y,k,1);if(!(S.drops&&S.drops.length>n0))return;
-  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
+function critDrop(c){const k=c.k==='bird'&&WD===WIND?'mat:hane':CRITDROP[c.k];/* 風のステージの小鳥は、風の羽 */if(!k||c.dr)return;c.dr=1;if(Math.random()>=CRITDROPP)return;const n0=(S.drops||[]).length;dropAt(c.x,c.y,k,1);if(!(S.drops&&S.drops.length>n0))return;
+  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-liftOf(d.y*W+d.x),t0:performance.now()})}
 /* どんぐりのアイコン（コードのドット絵。もらった絵があれば、かえる） */
 const DONGURI=['................','................','.......oo.......','.......wo.......','....oooooooo....','...owwwwwwwwo...','..owwwwwwwwwwo..','..oooooooooooo..','...ohmmmmmmdo...','...ohmmmmmmdo...','...ohmmmmmmdo...','....ohmmmmdo....','....ommmmddo....','.....oddddo.....','......oooo......','................'];
 if(!ICONS.donguri){ICONS.donguri=pixURL('food:donguri',DONGURI,'#b9773f');const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS.donguri;ICI.donguri=im}

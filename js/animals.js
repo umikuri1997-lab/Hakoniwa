@@ -1,5 +1,5 @@
 /* ---------- 飼う生き物（ハネマリ・モコダマ・ツノクサ） ----------
-   柵・塀でかこんだ所の、とり小屋（coop）・家畜小屋（barn）に空きがあると、朝に STRAYP（のらの小道 +STRAYSP）で、村の外に野良の生き物が1ぴき来る（strayMorning、a.stray）。
+   朝に STRAYP（のらの小道 +STRAYSP）で、村の外に野良の生き物が1ぴき来る（strayMorning、a.stray）。柵・塀でかこんだ所の、とり小屋（coop）・家畜小屋（barn）に空きがあれば、そこにすめる生き物。小屋がなければ、まだひらめいていない小屋の生き物で、はじめてタップすると、その小屋をひらめく（strayIdea）。
    STRAYH 時に帰る。「しらべる」でタップ →「むかえる」で、近いせいれいが歩いて行き（astray）、つれて小屋の前まで歩く（alead。生き物は、せいれいの通った所をついていく a.tr）。着いたら、その小屋にすむ。
    木のせいれい（いなければ、だれでも）が箱の草を小屋へ運び（えさ：1頭に1日1こ）、水のせいれい（いなければ、だれでも）が水をくんで小屋の水入れへ。
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
@@ -11,13 +11,13 @@ const isHut=o=>!!HUTK[o];
 function hutFront(h){const o=S.obj[h];return o==='barn'?[h+2*W,h+2*W+1]:[h+W]}/* 小屋の出入り口の前のマス */
 function hutCap(h){const o=S.obj[h];return o==='coop'?ANI.hane.cap:o==='barn'?ANI.moko.cap:0}
 const aniOf=h=>(S.ani||[]).filter(a=>a.h===h&&!a.stray);
-const STRAYP=.05,STRAYSP=.05,STRAYH=18;/* 野良の生き物：朝に来る確率・のらの小道で足す確率・帰る時刻 */
+const STRAYP=.25,STRAYSP=.10,STRAYH=18;/* 野良の生き物：朝に来る確率・のらの小道で足す確率・帰る時刻 */
 const aniHome=()=>(S.ani||[]).filter(a=>!a.stray);
 const aniPass=j=>walk(j)&&!GATE_IDS.has(S.obj[j])&&!HOME_DOORS.has(S.obj[j]);
 function penOf(h){/* 小屋の前から、柵・塀・水・がけでかこまれた所（PENMAX マスまで）。外へつながっていれば null */
   const seen=new Set(),Q=[];for(const s of hutFront(h))if(s>=0&&s<W*H&&aniPass(s)&&!seen.has(s)){seen.add(s);Q.push(s)}if(!Q.length)return null;
   for(let i=0;i<Q.length;i++){const c=Q[i],x=c%W,y=(c/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)return null;const n=ny*W+nx;if(seen.has(n))continue;if(fogAt(n))return null;if(!aniPass(n)||cliff2(c,n))continue;seen.add(n);Q.push(n);if(Q.length>PENMAX)return null}}
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)return null;const n=ny*W+nx;if(seen.has(n))continue;if(cliff2(c,n))continue;if(fogAt(n)){if(S.ground[n]===1)continue;return null}/* 霧の中の水は、かこいのはし。霧の中の地面へつながるなら、かこいではない */if(!aniPass(n))continue;seen.add(n);Q.push(n);if(Q.length>PENMAX)return null}}
   return Q}
 function aniRecount(){/* recount のあと：小屋の一覧と、かこいの中のマス */HUTS=[];PENS=new Map();if(!S)return;for(let j=0;j<S.obj.length;j++)if(isHut(S.obj[j]))HUTS.push(j);for(const h of HUTS)PENS.set(h,penOf(h))}
 function hutD(h){return S.dyn[h]||(S.dyn[h]={})}
@@ -34,7 +34,7 @@ function animalMorning(){if(!S||IS_STORY_REPLAY)return;S.ani=S.ani||[];
       const f=hutFront(h).find(j=>PENS.get(h).includes(j));
       const k=mother.k;
       S.ani.push({id:S.aniId=Math.max(S.aniId||0,...S.ani.map(a=>a.id))+1,k,h,born:day,fun:50,x:f%W+.5,y:(f/W|0)+.6,face:1,wt:2});
-      toast(ANI[k].name+'の子どもが生まれた！','good');
+      S.ani[S.ani.length-1].nb=1;/* 子どもが生まれた演出は aniBirthTick（さいごまで見たら nb をけす） */
     }
     for(const a of residents)a.fun=Math.max(0,Math.min(100,aniFun(a)+(a.fd===day-1?aniComfort(h)/10-8:-18)));
   }
@@ -46,16 +46,19 @@ function aniComfort(h){
   if(!pen)return 0;
   return Math.min(100,pen.length*3+15*spotN(h,'makiba')+15*spotN(h,'hidamari'));
 }
-const ANIGRASS=new Set(['weed0g','weed0k','weed1g','weed1k','weedc']);
+const ANIGRASS=new Set(['weed0g','weed0k','weed1g','weed1k','weed4g','weed4k','weed3g','weed3k','weed5g','weed5k','weedc']);
 function aniGraze(j){return ANIGRASS.has(S.obj[j])}
 function aniEat(a,day){a.fd=day;a.eat=3;a.path=null;a.wt=3;a.fun=Math.min(100,aniFun(a)+4)}
 
 function hutRoom(h,k){/* かこいの中で、空きがあって、その生き物がすめる小屋か */return isHut(S.obj[h])&&!!PENS.get(h)&&aniOf(h).length+S.ani.filter(a=>a.stray&&a.lead!=null&&a.lh===h).length<hutCap(h)&&(k==null||HUTK[S.obj[h]].includes(k))}
-function strayMorning(){/* 野良の生き物：空きのある小屋があれば、朝にたまに、村の外に1ぴき */if(typeof MEMRUN!=='undefined'&&MEMRUN||S.ani.some(a=>a.stray))return;
-  const hs=HUTS.filter(h=>hutRoom(h));if(!hs.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
-  const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]],k=K[Math.floor(Math.random()*K.length)],f=hutFront(h).find(c=>walk(c));if(f==null)return;
+function strayMorning(){/* 野良の生き物：朝に STRAYP で、村の外に1ぴき。空きのある小屋があれば、そこにすめる生き物。小屋をまだひらめいていなければ、その小屋の生き物（はじめてタップするとひらめく strayIdea） */if(typeof MEMRUN!=='undefined'&&MEMRUN||WD===YAMI||S.ani.some(a=>a.stray))return;
+  const hs=HUTS.filter(h=>hutRoom(h)),kn=Object.keys(ANI).filter(k=>!recipeKnown(ANI[k].hut));if(!hs.length&&!kn.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
+  let k,f;if(hs.length){const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]];k=K[Math.floor(Math.random()*K.length)];f=hutFront(h).find(c=>walk(c))}
+  else{k=kn[Math.floor(Math.random()*kn.length)];const r=STATUE<0&&S.res.find(q=>!q.hidden);f=STATUE>=0?hutFront(STATUE).find(c=>walk(c)):r?(r.y|0)*W+(r.x|0):null}if(f==null)return;
   const G=bfs(f%W,(f/W)|0),C=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=8&&d<=50&&!VILL[j]&&!S.obj[j]&&aniPass(j)&&S.ground[j]!==1&&!(fogAt(j)))C.push(j)}if(!C.length)return;
   const c=C[Math.floor(Math.random()*C.length)];S.ani.push({id:(S.aniId=(S.aniId||0)+1),k,h:-1,stray:1,x:c%W+.5,y:((c/W)|0)+.6,face:1,wt:0});toast('村の外に、野良の'+ANI[k].name+'が来ている','good')}
+function strayIdea(a){/* はじめて野良をタップしたら、その生き物の小屋をひらめく。ひらめいたら true */const id=ANI[a.k].hut;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||recipeKnown(id))return false;
+  S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes[id]=true;S.guardianIdeas[id]=true;sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('bulb','あたらしいかたち：'+BL[id].name);return true}
 function strayLeave(a,why){S.ani.splice(S.ani.indexOf(a),1);toast(why||'野良の'+ANI[a.k].name+'は、どこかへ行ってしまった')}
 function strayFollow(a,dt){/* つれているせいれいの、通った所をついていく */const r=S.res.find(q=>q.id===a.lead);
   const ok=r&&!r.hidden&&(r.alead&&r.alead.aid===a.id||r.act&&r.act.type==='astray'&&r.act.aid===a.id);if(!ok){a.lead=null;a.lh=null;a.tr=null;a.wt=2;return}
@@ -111,9 +114,9 @@ const grassHave=()=>GRASSK.filter(k=>totKey(k)>0);
 function aniJob(r,G,dry){if(isNight()||!S.ani||!S.ani.length)return false;const day=callDay(),adj=h=>q=>adjOf(q,k=>anc(k)===h)>=0;
   if(r.apk){if(dry)return true;const h=r.apk.j;if(!isHut(S.obj[h])){toHand(r,r.apk.m);r.apk=null;return false}const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'aput',j,{obj:h});return true}return false}/* 運んでいる草は、先に小屋へ */
   for(const h of HUTS){const d=hutD(h);if(!d.pr||!Object.keys(d.pr).length||roomN(r)<1||!free('ap'+h,1))continue;if(dry)return true;const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'acol',j,{key:'ap'+h,obj:h});return true}}/* とれた物を、箱へ */
-  if(aniRole(r,'wood')&&roomN(r)>=1){const gk=grassHave();if(gk.length)for(const h of HUTS){if(!aniOf(h).length||aniNeedFeed(h)<=0)continue;if(dry)return true;const j=nearest(G,q=>keysAdj(q,gk)>=0,200);if(j>=0){startAct(r,G,'apick',j,{h});return true}break}}/* えさの草を、箱から */
-  if(aniRole(r,'water'))for(const h of HUTS){const d=hutD(h);if(!aniOf(h).length||d.wd===day||!free('aw'+h,1))continue;if(dry)return true;
-    if((r.wcan||0)>0){const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'awater',j,{key:'aw'+h,obj:h});return true}}else{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}break}/* 水入れに水を */
+  if(aniRole(r,'wood')&&roomN(r)>=1){const gk=grassHave();if(gk.length)for(const h of HUTS){if(!aniOf(h).length||aniNeedFeed(h)<=0||!dry&&nearest(G,adj(h),200)<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;const j=nearest(G,q=>keysAdj(q,gk)>=0,200);if(j>=0){startAct(r,G,'apick',j,{h});return true}break}}/* えさの草を、箱から */
+  if(aniRole(r,'water'))for(const h of HUTS){const d=hutD(h);if(!aniOf(h).length||d.wd===day||!free('aw'+h,1))continue;const j=dry?0:nearest(G,adj(h),200);/* dry（hasWork）は G がない */if(j<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;
+    if((r.wcan||0)>0){startAct(r,G,'awater',j,{key:'aw'+h,obj:h});return true}else{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}break}/* 水入れに水を */
   return false}
 Object.assign(ACT,{
   apick:{start(r,a){const gk=grassHave();a.box=keysAdj(a.stand,gk);if(a.box<0)return false;faceTo(r,a.box);r.bubble='';},done:(r,a)=>a.t>=4/aniSpd(a.h,a.box,'hoshikusa'),
@@ -130,7 +133,7 @@ ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物に�
 IDLE_ACTS.push('apet');
 /* ---------- 「しらべる」で生き物をタップ：小さな画面（aniPop）→「なでる」で、行けるいちばん近いせいれいが、なでにいく（aniPetAsk） ---------- */
 function aniAtTap(px,py){/* 足もとのまわり（絵の大きさ） */let best=null,bd=1e9;for(const a of S.ani||[]){if(a.in)continue;const sx=a.k==='hane'?.45:.65,top=a.k==='hane'?.85:1.25,dx=px-a.x,dy=py-a.y;if(Math.abs(dx)>sx||dy>.3||dy<-top)continue;const d=Math.hypot(dx,dy+top/2);if(d<bd){bd=d;best=a}}return best}
-const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<500||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
+const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<250||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
 function aniPetWhy(a){if(!a||a.in)return 'いまは小屋の中';if(a.petD===callDay())return 'きょうは、もうなでた';if(isNight())return '夜は、なでられない';if(enemyLive())return '「コワイノ」がいる';if(S.res.some(r=>r.act&&r.act.type==='apetq'&&r.act.aid===a.id))return 'なでにいっている';return ''}
 function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちばん近い子 */if(aniPetWhy(a))return null;const bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
   for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;bd=G.dist[st];best=r;bG=G;bs=st}
@@ -147,6 +150,11 @@ function goPetAnimal(r,G){/* ひまなとき：近くの生き物をなでにい
 /* ---------- 絵 ---------- */
 const ANIEAT=['e0','e1','e2','e1'];/* 食べる：さげる → ついばむ → かむ → ついばむ */
 const ANIJOYF=[['j0',110,0],['j1',170,6],['j2',110,2],['j0',90,0],['j1',170,6],['j2',110,2]],ANIJOYT=760,AJOY=new WeakMap();/* よろこぶ：コマ・ミリ秒・はねる高さ（ゲームの点。絵は下のはしをそろえて写したので、描く位置を上げる）。実時間。セーブしない */
+/* まもりの光がそばに落ちた：おどろいて、ぴょんととび、光からはなれる方へにげる（かこいの中はかこいの中で）。見た目と動きだけ */
+const ANISCARER=4;
+function aniScare(tx,ty,R){for(const a of S.ani||[]){if(a.in)continue;const dx=a.x-(tx+.5),dy=a.y-(ty+.5),d=Math.max(Math.abs(dx),Math.abs(dy))-R;if(d>ANISCARER)continue;AJOY.set(a,performance.now());a.pet=0;a.eat=0;a.wt=4;
+  const P=PENS.get(a.h)||null,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L;let to=-1,bv=-1e9;for(let k=1;k<=4;k++)for(let s2=-1;s2<=1;s2++){const x=Math.round(a.x-.5+ux*k*1.2-uy*s2),y=Math.round(a.y-.6+uy*k*1.2+ux*s2);if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(P?!P.includes(j):!aniPass(j))continue;const v=Math.hypot(x+.5-tx-.5,y+.5-ty-.5);if(v>bv){bv=v;to=j}}
+  if(to>=0&&a.lead==null){a.path=aniPath(a,to,P)||[];a.go=to}}}
 function aniJoy(a){AJOY.set(a,performance.now());if(typeof sfxAt==='function')sfxAt('good',a.x,a.y)}
 function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t0;if(e<0||e>=ANIJOYT){AJOY.delete(a);return null}for(const f of ANIJOYF){if(e<f[1])return f;e-=f[1]}return null}
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
@@ -190,8 +198,8 @@ function strayAsk(a){/* 行けるせいれいのうち、道のりがいちば�
 /* 野良をタップすると、1ぴき1回だけ、50%で、とれる物（たまご・わた毛・ミルク）を1こ落とす（STRAYDROPP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
 const STRAYDROPP=.5;
 function strayDrop(a){if(a.dr||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;a.dr=1;if(Math.random()>=STRAYDROPP)return;const pk=ANI[a.k].prod,key=(FOODS[pk]?'food:':'mat:')+pk,n0=(S.drops||[]).length;dropAt(a.x,a.y,key,1);if(!(S.drops&&S.drops.length>n0))return;
-  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:a.x*TS,sy:(a.y-.6)*TS-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
-function strayPop(a){const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">むかえる</button></div></div></div>');
+  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:a.x*TS,sy:(a.y-.6)*TS-liftOf(d.y*W+d.x),t0:performance.now()})}
+function strayPop(a){if(strayIdea(a))return;const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">むかえる</button></div></div></div>');
   o.querySelector('.t').textContent='野良の'+ANI[a.k].name;const rows=o.querySelector('.rows'),h=strayHut(a);rows.appendChild(rowEl('すめる小屋',h!=null?BL[S.obj[h]].name:'ない'));rows.appendChild(rowEl('とれる物',aniProdName(ANI[a.k].prod)));
   const g=o.querySelector('.go');lackOn(g,strayWhy(a));
   g.onclick=()=>{if(strayWhy(a))return;const r=strayAsk(a);if(!r){toast('いまは、むかえにいけるせいれいがいない');return}sfx('tap');o.remove();toast(r.name+'が、'+ANI[a.k].name+'をむかえにいく')};
@@ -231,4 +239,22 @@ function strayMeet(a){if(AMEET||GIFT_ACTIVE||camAnim&&camAnim.done)return strayP
       const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
       b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();(S.flags.aniMet||(S.flags.aniMet={}))[a.k]=1;
         camAnim=AMEET.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:()=>finish(true)}}},Math.max(0,1500-(performance.now()-T0)))}}}
+/* ---------- 子どもが生まれた：出会いと同じ形の演出 ----------
+   村の時間を止め（GIFT_ACTIVE）、カメラが子どもへよる → 子どもがはねて光る・親もはねる・鳴き声 → 「子どもが生まれた！」のカード → カメラがもどる。
+   さいごまで見たら a.nb をけす（とちゅうで村を切りかえたら、つぎにまたはじめから）。演出は実時間 */
+function aniBirthTick(){if(AMEET||GIFT_ACTIVE||camAnim||!S||!S.ani||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof stageReady==='function'&&!stageReady())return;const a=S.ani.find(q=>q.nb&&!q.in&&!q.stray);if(a)aniBirth(a)}
+function aniBirth(a){const owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION&&S.ani.includes(a);GIFT_ACTIVE=true;AMEET={a};
+  const back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2},tx=a.x*TS,ty=a.y*TS-uLift(a)-16;
+  const finish=()=>{if(!AMEET)return;AMEET=null;GIFT_ACTIVE=false};
+  musicDuck(2600);a.path=null;a.wt=3;
+  camAnim=AMEET.cam={fz:cam.z,tz:Math.min(2.6,Math.max(cam.z,2)),fx:back.x,fy:back.y,tx,ty,t:0,dur:1.2,done:()=>{if(!ok())return finish();
+    const T0=performance.now(),x=a.x*TS,y=a.y*TS-uLift(a)-8;aniJoy(a);sfx('good');
+    S.ani.filter(q=>q!==a&&q.h===a.h&&q.k===a.k&&!q.in&&!q.stray).slice(0,2).forEach((q,i)=>setTimeout(()=>{if(ok()&&AMEET)aniJoy(q)},350+i*300));/* 親もはねる */
+    scnAdd('glow',1700,{x,y,r:24,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+6,r0:5,r1:26,col:'#ffe2ea'},120);scnAdd('ring',900,{x,y:y+6,r0:5,r1:36,col:'#fff6c8'},420);
+    for(let i=0;i<6;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*1.05)*20,y1:y-12+Math.sin(i*1.05)*10,arc:6,col:i%2?'#ffd9e4':'#fff0a8',n:1},200+i*70);
+    setTimeout(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="子どもが生まれた"></div>'),card=el('<div class="idea-card"><h2>子どもが生まれた！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p></div>');
+      const pic=aniMeetPic(a.k);if(pic)card.querySelector('.pic').append(pic);card.querySelector('.nm').textContent=ANI[a.k].name+'の子ども';card.querySelector('.ds').textContent=(BL[S.obj[a.h]]?BL[S.obj[a.h]].name+'で、':'')+'すくすく育っていくよ。';
+      const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');if(typeof juiceCheer==='function')juiceCheer();setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
+      b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();delete a.nb;memo('heart',ANI[a.k].name+'の子どもが生まれた');
+        camAnim=AMEET.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:finish}}},Math.max(0,1500-(performance.now()-T0)))}}}
 function aniMeetReset(){if(!AMEET)return;if(AMEET.cam&&camAnim===AMEET.cam)camAnim=null;AMEET=null;GIFT_ACTIVE=false;document.querySelectorAll('.anim-meet').forEach(e=>e.remove())}/* 村を切りかえたとき */

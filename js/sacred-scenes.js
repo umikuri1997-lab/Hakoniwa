@@ -61,7 +61,7 @@ function drawSacredScenes(now){
   for(let i=SCN.length-1;i>=0;i--){const e=SCN[i];if(e.state!==S||e.session!==VILLAGE_SESSION||now>=e.at+e.ms)SCN.splice(i,1)}
   ctx.save();ctx.imageSmoothingEnabled=false;for(const e of SCN){if(now<e.at)continue;SCN_DRAW[e.k](e,Math.min(1,(now-e.at)/e.ms),now)}ctx.restore()}
 /* 木の大きさ：根もと（base）・てっぺん（top）。st は育ちぐあい（なければ、いまの育ちぐあい） */
-function sacredGeo(j,st){const top=sacredTopY(j,st),base=storyTreeY(j)*TS+26-hiAt(j)*LIFT;return {cx:storyTreeX(j)*TS,base,top,h:Math.max(24,base-top)}}
+function sacredGeo(j,st){const top=sacredTopY(j,st),base=storyTreeY(j)*TS+26-liftOf(j);return {cx:storyTreeX(j)*TS,base,top,h:Math.max(24,base-top)}}
 function sacredNearJoy(j,ms,dist){/* 木のそばのせいれいが、木のほうを向いて、はねてよろこぶ（すわっている・場面の姿勢の子はそのまま） */
   const cx=storyTreeX(j),cy=storyTreeY(j),now=performance.now();for(const r of S.res){if(r.hidden||Math.hypot(r.x-cx,r.y-cy)>(dist||9)||sacredPose(r))continue;r.face=r.x<cx?1:-1;JUMP.set(r,now);JOYU.set(r,now+ms)}}
 function sacredLeafFall(g,n,spread){for(let i=0;i<n;i++)scnAdd('leaf',2200+Math.random()*900,{x:g.cx+(Math.random()-.5)*2*spread,y:g.top+6+Math.random()*g.h*.45,vy:16+Math.random()*14,sway:5+Math.random()*5,ph:Math.random()*6,drift:(Math.random()-.5)*8,col:i%3?'#9ecf75':'#c8f5a0'},i*70)}
@@ -106,7 +106,7 @@ function sacredOfferShard(j,done){
       for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fx.push({k:'p',x:tx,y:ty,vx:Math.cos(a)*50,vy:Math.sin(a)*40-40,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})}});
     if(n===1)at(4100,()=>{/* 育てる力：木のまわりに、光の花が、内がわから外へ咲きひろがる */const cx=storyTreeX(j),cy=storyTreeY(j),C=['#ffd1e8','#fff2f6','#fff0a8','#d8c8ff'];let k=0;
       for(let i=0;i<70&&k<30;i++){const an=Math.random()*Math.PI*2,r=1.8+Math.random()*3.6,x=cx+Math.cos(an)*r,y=cy+.6+Math.sin(an)*r*.7,q=(y|0)*W+(x|0);if(x<0||y<0||x>=W||y>=H||S.obj[q]||S.ground[q]===1||S.ground[q]===2||(fogAt(q)))continue;
-        scnAdd('bloom',4600,{x:x*TS,y:y*TS-hiAt(q)*LIFT,col:C[k++%4]},(r-1.8)*420+Math.random()*200)}sfx('plant')});
+        scnAdd('bloom',4600,{x:x*TS,y:y*TS-liftOf(q),col:C[k++%4]},(r-1.8)*420+Math.random()*200)}sfx('plant')});
     if(n===2)at(4100,()=>{/* 想う力：村のせいれいから、ちいさな光が木へあつまる */const L=S.res.filter(r=>!r.hidden&&r!==f).sort((a,b)=>Math.hypot(a.x-f.x,a.y-f.y)-Math.hypot(b.x-f.x,b.y-f.y)).slice(0,14);
       L.forEach((r,i)=>{const col=ELEM[r.elem].body;scnAdd('orb',1300,{x0:r.x*TS,y0:r.y*TS-18-uLift(r),x1:tx,y1:ty,arc:20,col,n:2},i*150);scnAdd('ring',700,{x:tx,y:ty+6,r0:4,r1:16,col,a:.7},i*150+1300)});sfx('power')});
     if(n>=3){/* 3つめ：育てる力・想う力・守る力の3つの光が、幹でひとつになって、木が大きく育つ（このあと、ヌシ様が帰ってくる） */
@@ -154,5 +154,5 @@ function omoiShardBeat(j,ms,d){/* お礼の会話：3つのあかりが枝から
 /* ---------- ヌシ様の足あと：むかし歩いた光のひづめのあとが、1歩ずつあらわれる ---------- */
 function hoofTrail(pts,gap,ms,delay){/* pts：[[x,y]...]（マスの座標）。1歩ずつ、左右にずらして出す */
   pts.forEach((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,s=i%2?1:-1,x=p[0]-dy/L*.12*s,y=p[1]+dx/L*.12*s,q=(y|0)*W+(x|0);
-    scnAdd('hoof',ms,{x:x*TS,y:y*TS-(q>=0&&q<W*H?hiAt(q)*LIFT:0),v:Math.abs(dy)>Math.abs(dx)},(delay||0)+i*gap);villageTimeout(()=>sfx('chime'),(delay||0)+i*gap)})}
-function hoofBlooms(x,y,n,delay){const C=['#ffd1e8','#fff2f6','#fff0a8'];for(let i=0;i<n;i++){const a=i/n*Math.PI*2+.4,r=.55+(i%3)*.22,bx=x+Math.cos(a)*r,by=y+Math.sin(a)*r*.7,q=(by|0)*W+(bx|0);scnAdd('bloom',3400,{x:bx*TS,y:by*TS-hiAt(q)*LIFT,col:C[i%3]},(delay||0)+i*130)}}
+    scnAdd('hoof',ms,{x:x*TS,y:y*TS-(q>=0&&q<W*H?liftOf(q):0),v:Math.abs(dy)>Math.abs(dx)},(delay||0)+i*gap);villageTimeout(()=>sfx('chime'),(delay||0)+i*gap)})}
+function hoofBlooms(x,y,n,delay){const C=['#ffd1e8','#fff2f6','#fff0a8'];for(let i=0;i<n;i++){const a=i/n*Math.PI*2+.4,r=.55+(i%3)*.22,bx=x+Math.cos(a)*r,by=y+Math.sin(a)*r*.7,q=(by|0)*W+(bx|0);scnAdd('bloom',3400,{x:bx*TS,y:by*TS-liftOf(q),col:C[i%3]},(delay||0)+i*130)}}

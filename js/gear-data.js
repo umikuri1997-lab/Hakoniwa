@@ -17,7 +17,7 @@ const GEARBL={
   gw14:{"name":"銀のレイピア","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"isilver":2,"bamboo":1},"g":{"s":"w","atk":10,"rch":0.5,"iv":0.7},"desc":"攻撃力+10・とどくきょり+0.5マス・攻撃の間かく0.7倍"},
   gw15:{"name":"銀のつえ","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"isilver":2,"crystal":1},"g":{"s":"w","atk":10,"rch":1.0,"glow":1},"desc":"攻撃力+10・とどくきょり+1マス・まわり3マスの「コワイノ」の攻撃0.8倍"},
   gw16:{"name":"金のハンマー","kind":"gear","pc":15,"time":90,"maker":"fire","mat":{"igold":2,"iiron":2},"g":{"s":"w","atk":40,"iv":1.4,"stun":1},"desc":"攻撃力+40・攻撃の間かく1.4倍・10%の確率で2秒止める"},
-  gw17:{"name":"水晶のつるぎ","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"crystal":2,"isilver":1},"g":{"s":"w","atk":20,"steal":1},"desc":"攻撃力+20・当たるとおなか+10"},
+  gw17:{"name":"水晶のつるぎ","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"crystal":2,"isilver":1},"g":{"s":"w","atk":20,"steal":1},"desc":"攻撃力+20・当たるとおなか+5"},
   gw18:{"name":"鉄のくさりむち","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"iiron":3},"g":{"s":"w","atk":20,"rch":1.5,"iv":1.2,"slow":1},"desc":"攻撃力+20・とどくきょり+1.5マス・攻撃の間かく1.2倍・3秒おそくする"},
   gw19:{"name":"竹のむち","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":3,"kuru":2},"g":{"s":"w","atk":0,"rch":1.5,"slow":1},"desc":"とどくきょり+1.5マス・3秒おそくする"},
   gw20:{"name":"竹の弓","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":4,"kuru":1},"g":{"s":"w","atk":10,"rch":3.0,"iv":1.3},"desc":"攻撃力+10・とどくきょり+3マス・攻撃の間かく1.3倍"},
@@ -34,7 +34,7 @@ const GEARBL={
   gw31:{"name":"銀の弓","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"isilver":2,"bamboo":2},"g":{"s":"w","atk":20,"rch":3.0,"glow":1},"desc":"攻撃力+20・とどくきょり+3マス・まわり3マスの「コワイノ」の攻撃0.8倍"},
   gw32:{"name":"金のやり","kind":"gear","pc":15,"time":90,"maker":"fire","mat":{"igold":2,"bamboo":2},"g":{"s":"w","atk":30,"rch":1.5,"stun":1},"desc":"攻撃力+30・とどくきょり+1.5マス・10%の確率で2秒止める"},
   gw33:{"name":"金のこぶし","kind":"gear","pc":15,"time":90,"maker":"fire","mat":{"igold":3},"g":{"s":"w","atk":30,"hit":2},"desc":"攻撃力+30・2回当たる"},
-  gw34:{"name":"水晶のつえ","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"crystal":3,"isilver":1},"g":{"s":"w","atk":10,"rch":2.0,"steal":1,"glow":1},"desc":"攻撃力+10・とどくきょり+2マス・当たるとおなか+10・まわり3マスの「コワイノ」の攻撃0.8倍"},
+  gw34:{"name":"水晶のつえ","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"crystal":3,"isilver":1},"g":{"s":"w","atk":10,"rch":2.0,"steal":1,"glow":1},"desc":"攻撃力+10・とどくきょり+2マス・当たるとおなか+5・まわり3マスの「コワイノ」の攻撃0.8倍"},
   gw35:{"name":"かがり火のおの","kind":"gear","time":90,"maker":"fire","g":{"s":"w","atk":50,"burn":1,"aoe":1,"sp":1},"desc":"攻撃力+50・やけど・まわりぜんぶに当たる"},
   gw36:{"name":"夜明けの剣","kind":"gear","time":90,"maker":"fire","g":{"s":"w","atk":40,"hit":2,"glow":1,"sp":1},"desc":"攻撃力+40・2回当たる・まわり3マスの「コワイノ」の攻撃0.8倍"},
   gar01:{"name":"竹のつがい矢","kind":"ammo","pc":3,"time":60,"maker":"wood","qty":10,"mat":{"bamboo":1,"eda":1},"g":{"s":"ar","dmg":0,"n":2},"desc":"見張り台が放つ矢。2本うつ"},
@@ -48,7 +48,7 @@ const GEARBL={
   gar09:{"name":"銀の矢","kind":"ammo","pc":10,"time":60,"maker":"wood","qty":10,"mat":{"isilver":1,"eda":1},"g":{"s":"ar","dmg":10,"rng":1.0},"desc":"見張り台が放つ矢。威力+10・射程+1マス"},
   gar10:{"name":"金の矢","kind":"ammo","pc":15,"time":60,"maker":"wood","qty":10,"mat":{"igold":1,"eda":1},"g":{"s":"ar","dmg":40,"iv":1.2,"stun":1},"desc":"見張り台が放つ矢。威力+40・攻撃の間かく1.2倍・10%の確率で2秒止める"},
   gar11:{"name":"つらぬきの鉄矢","kind":"ammo","pc":8,"time":60,"maker":"wood","qty":10,"mat":{"iiron":1,"bamboo":1},"g":{"s":"ar","dmg":10,"pierce":1},"desc":"見張り台が放つ矢。威力+10・まっすぐ2ひきに当たる"},
-  gar12:{"name":"水晶の矢","kind":"ammo","pc":12,"time":60,"maker":"wood","qty":10,"mat":{"crystal":1,"eda":1},"g":{"s":"ar","dmg":20,"steal":1},"desc":"見張り台が放つ矢。威力+20・当たると上のせいれいのおなか+10"},
+  gar12:{"name":"水晶の矢","kind":"ammo","pc":12,"time":60,"maker":"wood","qty":10,"mat":{"crystal":1,"eda":1},"g":{"s":"ar","dmg":20,"steal":1},"desc":"見張り台が放つ矢。威力+20・当たると上のせいれいのおなか+5"},
   gar13:{"name":"3本矢","kind":"ammo","pc":3,"time":60,"maker":"wood","qty":10,"mat":{"bamboo":2,"eda":2},"g":{"s":"ar","dmg":0,"n":3,"iv":1.2},"desc":"見張り台が放つ矢。3本うつ・攻撃の間かく1.2倍"},
   gar14:{"name":"竹のはや矢","kind":"ammo","pc":3,"time":60,"maker":"wood","qty":10,"mat":{"bamboo":2},"g":{"s":"ar","dmg":0,"iv":0.7},"desc":"見張り台が放つ矢。攻撃の間かく0.7倍"},
   gar15:{"name":"竹の長矢","kind":"ammo","pc":3,"time":60,"maker":"wood","qty":10,"mat":{"bamboo":2,"eda":1},"g":{"s":"ar","dmg":0,"rng":1.5},"desc":"見張り台が放つ矢。射程+1.5マス"},
@@ -134,5 +134,20 @@ const GEARBL={
   gg08:{"name":"草ぶえ","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"shina":2},"g":{"s":"c","fear":1,"gr":1},"desc":"「コワイノ」をこわがるきょり2マス"},
   gg09:{"name":"ヌシ様の角のつるぎ","kind":"gear","time":90,"maker":"fire","g":{"s":"w","atk":30,"iv":0.9,"sp":1,"nf":1,"gr":1},"desc":"攻撃力+30・攻撃の間かく0.9倍"},
   gg10:{"name":"こもれびのマント","kind":"gear","time":90,"maker":"fire","g":{"s":"a","hun":30,"fun":0.9,"sp":1,"nf":1,"gr":1},"desc":"たたかれたときのおなかのへり－30・たのしさのへる速さ0.9倍"},
+  /* 風のそうび（wd：その土地の物。風ではじめて、その素材を手に入れたときに思いつく） */
+  gk01:{"name":"アカシアのぼう","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"wood":3},"g":{"s":"w","atk":10,"iv":0.9,"wd":4},"desc":"攻撃力+10・攻撃の間かく0.9倍"},
+  gk02:{"name":"羽の矢","kind":"ammo","pc":3,"time":60,"maker":"wind","qty":10,"mat":{"wood":1,"hane":1},"g":{"s":"ar","dmg":0,"rng":1,"wd":4},"desc":"見張り台が放つ矢。射程+1マス"},
+  gk03:{"name":"追い風のマント","kind":"gear","pc":4,"time":90,"maker":"wind","mat":{"kumowata":4,"nuno":1},"g":{"s":"a","hun":10,"mv":4,"wd":4},"desc":"たたかれたときのおなかのへり－10・移動速度+4"},
+  gk04:{"name":"羽のおまもり","kind":"gear","pc":3,"time":90,"maker":"wind","mat":{"hane":3},"g":{"s":"c","rec":1.2,"wd":4},"desc":"つかれのとれる速さ1.2倍"},
+  /* 水のそうび（wd 3） */
+  gm01:{"name":"丸石のつち","kind":"gear","pc":3,"time":90,"maker":"water","mat":{"maruishi":4,"wood":1},"g":{"s":"w","atk":20,"iv":1.2,"kb":1,"wd":3},"desc":"攻撃力+20・攻撃の間かく1.2倍・のけぞらせる"},
+  gm02:{"name":"あしの矢","kind":"ammo","pc":3,"time":60,"maker":"water","qty":10,"mat":{"ashi":2,"maruishi":1},"g":{"s":"ar","dmg":10,"wd":3},"desc":"見張り台が放つ矢。威力+10"},
+  gm03:{"name":"粘土のむねあて","kind":"gear","pc":4,"time":90,"maker":"water","mat":{"nendo":5},"g":{"s":"a","hun":20,"wd":3},"desc":"たたかれたときのおなかのへり－20"},
+  gm04:{"name":"丸石のおまもり","kind":"gear","pc":3,"time":90,"maker":"water","mat":{"maruishi":3},"g":{"s":"c","hun":10,"wd":3},"desc":"たたかれたときのおなかのへり－10"},
+  /* 闇のそうび（wd 5。トモリはたたかわないので、ほかのせいれいの物） */
+  gy01:{"name":"古木のこん棒","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"kogi":4},"g":{"s":"w","atk":20,"kb":1,"wd":5},"desc":"攻撃力+20・のけぞらせる"},
+  gy02:{"name":"月光の矢","kind":"ammo","pc":3,"time":60,"maker":"fire","qty":10,"mat":{"kogi":1,"gekko":1},"g":{"s":"ar","dmg":10,"rng":0.5,"wd":5},"desc":"見張り台が放つ矢。威力+10・射程+0.5マス"},
+  gy03:{"name":"月光石のたて","kind":"gear","pc":4,"time":90,"maker":"fire","mat":{"gekko":3,"stone":2},"g":{"s":"a","hun":30,"mv":-2,"wd":5},"desc":"たたかれたときのおなかのへり－30・移動速度－2"},
+  gy04:{"name":"夜つゆのおまもり","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"yotsuyu":3,"gekko":1},"g":{"s":"c","rec":1.2,"hun":10,"wd":5},"desc":"たたかれたときのおなかのへり－10・つかれのとれる速さ1.2倍"},
 };
 const GEAR_IDS=Object.keys(GEARBL),GEAR_ARROWS=GEAR_IDS.filter(id=>GEARBL[id].g.s==='ar');Object.assign(BL,GEARBL);/* BL にならべる（依頼ボード・アイコン・説明を、ほかの物と同じしくみで使う） */

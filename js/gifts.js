@@ -20,7 +20,7 @@ function giftKnownText(r,v){const L=giftKnown(r,v).map(id=>BL[id].name);return L
 function giftTrText(r){const L=(r.trs||[]).filter(id=>BL[id]).map(id=>BL[id].name);return L.length?L.join('・'):'まだない'}
 const giftToday=r=>!!(r.care&&r.care.gift===callDay());
 /* あげる：なくなって、たからものになる */
-function presentGive(r,id){if(!r||giftToday(r))return false;if(isGM(id))return matGive(r,id.slice(2));if(!BL[id]||inv(id)<1)return false;S.inv[id]--;if(!S.inv[id])delete S.inv[id];(r.care||(r.care={})).gift=callDay();
+function presentGive(r,id){if(!r||giftWhy(r))return false;if(isGM(id))return matGive(r,id.slice(2));if(!BL[id]||inv(id)<1)return false;S.inv[id]--;if(!S.inv[id])delete S.inv[id];(r.care||(r.care={})).gift=callDay();
   const v=giftLike(r,id),gain=v===2?GIFTLOVE:GIFTFUN;funAdd(r,gain,'care');const T=r.trs||(r.trs=[]);T.push(id);while(T.length>GIFTMAX)T.shift();
   const first=!(r.gk&&r.gk[id]!=null);(r.gk||(r.gk={}))[id]=v;dirty=true;
   r.gn=(r.gn||0)+1;if(typeof careNote==='function')careNote(r,'gift',id);/* あげた回数（節目の家具 gift-furn.js）・手紙に書く */
@@ -39,14 +39,15 @@ function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.ca
   r.gn=(r.gn||0)+1;const L=giftTalk(r,'mat',null,MATN[k])||['ありがとう、使わせてもらうね。'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,-1)};
   if(typeof gfPresentShow==='function')gfPresentShow(r,'m:'+k,-1);giftReply(r,L,after);
   logEv(r.name+'に'+MATN[k]+'をあげた');return true}
+function giftWhy(r){/* あげられないわけ（なければ ''）。お世話のタブ・もちもののどちらも同じ */if(r.act&&r.act.type==='sleep'&&r.act.stage==='do')return 'ねているので、おこさない';if(r.hidden)return 'いまは、そばにいない';return giftToday(r)?'きょうは、もうあげた':''}
 /* もちものから：だれにあげるか */
-function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
+function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
   const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};o.querySelector('.t').textContent=presentName(id)+'を、だれにあげる？';const g=o.querySelector('.rows');
-  for(const r of S.res){const kn=!isGM(id)&&r.gk&&r.gk[id]!=null?GLNAME[r.gk[id]]:'',row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'+(kn?'・'+kn:'')),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);lackOn(b,giftToday(r)?'きょうは、もうあげた':'');
-    b.onclick=()=>{if(giftToday(r)||giftHave(id)<1)return;presentGive(r,id);close();if(sheet)renderSheet()};g.appendChild(row)}
+  for(const r of S.res){const kn=!isGM(id)&&r.gk&&r.gk[id]!=null?GLNAME[r.gk[id]]:'',row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'+(kn?'・'+kn:'')),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);lackOn(b,giftWhy(r));
+    b.onclick=()=>{if(giftWhy(r)||giftHave(id)<1)return;presentGive(r,id);close();if(sheet)renderSheet()};g.appendChild(row)}
   document.body.appendChild(o)}
 /* お世話のタブから：なにをあげるか */
-function giftWhat(r,done){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
+function giftWhat(r,done){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
   const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};o.querySelector('.t').textContent=r.name+'に、なにをあげる？';const g=o.querySelector('.rows'),L=GIFTIDS.filter(id=>inv(id)>0),M=Object.keys(MATN).filter(k=>(S.mat[k]||0)>0);
   if(!L.length&&!M.length)g.appendChild(nodata('box','あげられる物は、まだないよ'));
   for(const id of L){const kn=r.gk&&r.gk[id]!=null?GLNAME[r.gk[id]]:'',row=rowEl(BL[id].name+'　×'+inv(id),kn,giftIco(id)),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);

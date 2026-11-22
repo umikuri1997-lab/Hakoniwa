@@ -4,20 +4,19 @@
 /* ---------- ステージ2：火山のふもとの村 ---------- */
 const PROLOGUE2=[
   [GOD,'さて、次の土地じゃな。草原のみなも、元気にやっとるようで、なによりじゃ。'],
-  [GOD,'ここは火の山のふもとの村。むかしは、あちこちから温泉がわく、あったかい村じゃった。'],
-  [GOD,'じゃが、この火山のヌシが力をうばわれて、地面の熱が冷えきってしもうた。温泉も、いまではただの冷たい水たまりじゃ。'],
-  [GOD,'#worry|あそこには、ひとりでがんばっとる子がおる。はよう行ってやらんとのう。'],
+  [GOD,'ここは火の山のふもとの村。……この山のヌシが、力をうばわれてしもうてな。'],
+  [GOD,'#worry|あそこには、ひとりでのこっとる子がおる。はよう行ってやらんとのう。'],
   [GOD,'では、行こうかの。'],
 ];
 const INTRO2=[
   [GOD,'ほい到着〜。ここが火山のふもとの村じゃ。','volcam+vol:introStart'],
-  [GOD,'#worry|見てみい、あの山を。ヌシの熱が、あそこから消えてしもうたんじゃ。'],
   [HOMURA,'…ん？ あんたが、うわさの守り神かい？','homcam+vol:lookbackH'],
   [HOMURA,'あたいはホムラ、火のせいれいさ。この村にのこってるのは、もうあたいひとりだよ。'],
   [HOMURA,'#think|……さいきんさ、風が、なんだかあったかい所から来る気がするんだ。……ふしぎだね。'],
-  [HOMURA,'#wave|寒くてかなわないけど…ま、よろしく頼むよ。','vol:wave'],
-  [GOD,'#joy|ほっほ、ひとりでよう村を守っとったのう、ホムラ。','vol:shoulders'],
-  [GOD,'まずは、わしの居場所になる神殿じゃな。……あそこの古い神殿、ずいぶん、くずれとるのう。'],
+  [HOMURA,'#hush|……つめたいね。ここ、朝はいちばんに湯気が上がるとこだったんだよ。','vol:touchA'],/* 入口の温泉まで歩いて、水に手を入れる */
+  [GOD,'#joy|ひとりで、よう待っとったのう。……その湯気、わしにも見せてくれんか。','vol:shoulders'],
+  [HOMURA,'#wave|……ま、寒くてかなわないからね。よろしく頼むよ。','vol:wave'],
+  [GOD,'まずは、わしの居場所になる神殿じゃな。……あそこの古い神殿、ずいぶん、くずれとるのう。','vol:temple'],
   [HOMURA,'#think|ああ、あれかい。だれも直す子がいなくてさ。'],
   [GOD,'#joy|では、ホムラに直してもらおうかの。'],
 ];
@@ -27,15 +26,18 @@ const QUESTS2=[
     [GOD,'じゃろ〜。ここが、おヌシとわしの居場所じゃ。'],
     [GOD,'#joy|くらしの道具は、とどけておいたぞい。'],[HOMURA,'……ま、助かるよ。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','crate','wbench'],items:{oven:1,bed:1,wbench:1,bamboowall:3,misugaki:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
-  {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「しらべる」で、村の水たまりをタップする',
+  {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>sprLookN()>=2,prog:()=>'調べた水たまり '+Math.min(2,sprLookN())+'/2',how:'「しらべる」で、西と奥の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
-    [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
-    [HOMURA,'それが、いつのまにか消えちまってさ。そこらの水たまり、みんな温泉だったんだ。'],
-    [GOD,'ふむふむ。では、まずは水たまりを見てみようかの。']]},
+    [HOMURA,'#think|……神殿も直ったし。西と奥の水たまりも、見てまわりたいんだ。'],
+    [HOMURA,'どれか一つでも、まだぬくいのが残ってたらって思ってさ。'],
+    [GOD,'ふむ。いっしょに見てまわろうかの。']]},
    story:[
-    [HOMURA,'…やっぱり冷たいね。地面の熱が、ぜんぜんとどいてない。'],
-    [HOMURA,'この村には、温泉が3つあったんだ。入口の温泉、西の温泉、それと村の奥の温泉さ。'],
-    [GOD,'3つとも、よみがえらせたいのう。'],[HOMURA,'#think|……あたいひとりじゃ、どこから手をつけたもんか、わからなかったよ。']]},
+    [HOMURA,'……西も、奥も、だめか。','vol:touchH'],/* さいごに調べた温泉へ歩いて、水に手を入れる */
+    [HOMURA,'湯の出る所は、3つとも、ちゃんと残ってるのにね。熱だけが、とどかないんだ。'],
+    [GOD,'湯の通り道が残っとるなら、熱をとどけてやればよい。'],
+    [HOMURA,'#think|……あたいひとりじゃ、どこから手をつけたもんか、わからなかったよ。'],
+    [HOMURA,'#point|……どれか一つでいい。朝いちばんの、あそこに、もう一度湯気を上げたいんだ。'],
+    [GOD,'#joy|ならば、そこからじゃな。']]},
   {id:'food3',text:'ホムラのおねがい：たけのこをとってこよう',check:()=>tkGot()>=2,prog:()=>'たけのこ '+Math.min(2,tkGot())+'/2',how:'竹のそばに生えた、たけのこを、せいれいに2こ、とってきてもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉をなおすのは、ひと仕事だよ。その前に、腹ごしらえだね。'],
@@ -48,7 +50,7 @@ const QUESTS2=[
     [GOD,'湯のわき岩を入れといたぞい。ホムラの火の力をこめれば、きっと、あたたかいお湯がわいてくるじゃろう。'],
     [HOMURA,'よし、やってみようじゃないか。']],gives:{items:{hotstone:1}}},
    story:[
-    [HOMURA,'…湯気だ！ あったかい湯気が、のぼってきたよ！','vol:springWalk'],[HOMURA,'#joy|……ま、助かったよ。……ほんとに。'],
+    [HOMURA,'…湯気だ！ ここから、また上がったよ！','vol:springWalk'],[HOMURA,'#joy|……ま、助かったよ。……ほんとに。'],
     [GOD,'#joy|ホムラ、ひと仕事のあとは、ここでゆっくりあったまるとよいぞ。'],
     [GOD,'それに…お湯から、水の力も満ちてきたようじゃな。'],
     [HOMURA,'…ん？ 湯気の中に、なにか光ってる。これ…ヌシ様の、火だねじゃないか！','vol:hidane'],
@@ -203,8 +205,8 @@ const PROF=[
   [GOD,'わしも楽しみにしとるぞ！']];
 function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この谷で、ひっそりくらしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[FA(),'#joy|ねえ、この谷を、いっしょにすてきにしようよ！']]}
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
-const LIGHTQ=['g_donguri','g_danro','torch','lamp','campfire','lantern','oldlantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
-const DECOQ=['g_ishitsumi','g_shizuku','g_hidamari','g_kazaguruma','g_kabin','g_oshibana','g_kaifun','g_suisou','hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','doki','rel_kui','rel_suisho','rel_bin','rel_nafuda','rel_sekiban','rel_fuigo','rel_suzu','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
+const LIGHTQ=['g_w_acorn','g_e_lantern','g_f_lamp','g_s_jelly','torch','lamp','campfire','lantern','oldlantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
+const DECOQ=['g_w_kinoko','g_w_shelf','g_w_stump','g_e_planter','g_e_bath','g_e_arch','g_f_hanger','g_f_screen','g_f_sofa','g_k_fan','g_k_egg','g_k_screen','g_s_vanity','g_s_tank','g_s_sofa','hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','doki','rel_kui','rel_suisho','rel_bin','rel_nafuda','rel_sekiban','rel_fuigo','rel_suzu','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
 /* フリーモードの第1章：数ではなく、やり方をえらべる目標（住み心地・スポット・なかま・イベント・すてき度）。神殿もカミサマも出ない。第2章と季節の話は free.js */
 const fComf=()=>HOUSES.reduce((m,h)=>Math.max(m,houseComfort(h).v),0),fComfSt=()=>Math.min(5,Math.max(HOUSES.length?1:0,Math.ceil(fComf()/60))),fSpotN=()=>new Set((SPOTI||[]).map(x=>x.sp.k)).size;
 const QUESTSF=[
@@ -239,7 +241,7 @@ function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=
   let c2=false;try{const t=KV.getItem(SAVE_KEYS[1]);c2=!!(t&&JSON.parse(t).cleared)}catch(e){}if(c2){s.inv.hotstone=(s.inv.hotstone||0)+2;s.flags.giftV=1}/* 火山の村をクリアしていたら、ほのお石もとどく */syncQuestRecipes(s)}
 QL[FREE]=QUESTSF;PROS[FREE]=PROF;INTROS[FREE]=[];
 /* ---------- 風のやんだ空の村（WORLD 5）：風のやんだ遊園地。この島は、むかし、ヌシ様の風で遊具がまわる空の遊び場だった。風が止まって遊具も止まり、せいれいたちは楽しむことをわすれている。
-   いまあるのは、風穴 → 神殿 → ハヤテが目をさます → メリーゴーラウンド → コーヒーカップと空中ブランコ、まで。観覧車の山場・雲の下・さいごの夜は、これから（IDEAS.md）。夜のコワイノも、まだ来ない ---------- */
+   風穴 → 神殿 → ハヤテが目をさます → メリーゴーラウンド → コーヒーカップと空中ブランコ → 島をぜんぶうかせる → 観覧車 → 雲の下 → さいごの夜 → ヌシ様をむかえる（さいごの2つは wind-story.js）。ふだんの夜にコワイノは来ない */
 const PROLOGUE5=[
   [GOD,'つぎの土地は、空の上じゃ。雲の海に、島がいくつもうかんでおる。'],
   [GOD,'#joy|むかしは、風でまわる遊び場があってのう。笑い声が、雲の下までとどいたもんじゃ。'],
@@ -269,7 +271,7 @@ const QUESTS5=[
    gives:{recipes:['kazami'],items:{kazami:3}}},
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',
    story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[KAZANE,'神殿まで直すとはね。……ほんとうに、ものずきだ。'],[GOD,'雲の下に、まだ島がしずんでおる。風がとどけば、うかんでくるはずじゃ。'],[KAZANE,'#think|……しずんだ島、か。あそこには、まだ、ねむっているやつがいるんだ。']],
-   gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10},flag:'calmNight',run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る */
+   gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10},enemy:true,run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る */
   {id:'windReach',text:'となりの島に風をとどけよう',check:()=>windUpN()>=1&&S.flags.hayate===2,how:'風の道に「かざみ」を置くと、風の向きがかわる。雲にしずんだ島に風がとどくと、島がうかぶ'},
   {id:'merryFix',text:'メリーゴーラウンドを動かそう',check:()=>!!(S.flags.rideRun&&S.flags.rideRun.merry),prog:()=>cnt('merry')?'':'こわれたメリーゴーラウンド 0/1',how:'「しらべる」で、こわれたメリーゴーラウンドをタップして直す。風のせいれいが係になると動き、ほかのせいれいがのれる',
    talk:{who:HAYATE,when:()=>true,lines:[[HAYATE,'カザネ、あれを直そう。ぼくがのるから、きみがまわすんだ。'],[KAZANE,'#think|……やれやれ。むかしから、きみは言いだしたら聞かないね。'],[HAYATE,'#joy|そうこなくっちゃ！']]},
@@ -278,7 +280,15 @@ const QUESTS5=[
    talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'#think|……ほかの島にも、遊具がしずんでいたはずだ。カップと、空のブランコ。'],[HAYATE,'#joy|ぜんぶ動かそう！ 音が聞こえたら、ねむっているみんなも、きっと起きてくるよ。'],[KAZANE,'フッ……きみに言われると、できる気がしてくるから、ふしぎだ。']]},
    story:[[KAZANE,'フッ……ひとつ動かすたびに、ひとつ思い出すね。遊ぶって、こういうことだったか。'],[HAYATE,'#think|ねえ、カザネ。……どうして風は、やんだんだろう。'],[KAZANE,'#think|……さあね。あの方は、なにも言わずに、行ってしまったから。'],[HAYATE,'……カザネ。']]},
   {id:'windAll',text:'島をぜんぶうかせよう',check:()=>windUpN()>=windIsleN(),prog:()=>'うかんだ島 '+windUpN()+'/'+windIsleN(),how:'うかんだ島の風穴をひらいて、風をつぎの島へとどける'},
-  {id:'windVillage',text:'空の遊び場を、にぎやかにしよう',check:()=>false,how:'この土地のお話のつづきは、まだない'},
+  {id:'wheelTop',text:'観覧車を動かそう',check:()=>!!(S.flags.rideRun&&S.flags.rideRun.wheel),prog:()=>cnt('wheel')?'':'こわれた観覧車 0/1',how:'「しらべる」で、こわれた観覧車をタップして直す。風のせいれいが係になると動く',
+   talk:{who:HAYATE,when:()=>true,lines:[[HAYATE,'#think|いちばん大きな島に、観覧車があったよね。てっぺんから、空ぜんぶが見えるんだ。'],[KAZANE,'フッ……あそこは、ぼくの特等席だった。……どうして、わすれていたんだろう。'],[HAYATE,'#joy|じゃあ、いっしょにのろう。てっぺんで、むかしみたいに風を見よう！']]},
+   story:[[HAYATE,'#joy big|わあ……！ 雲が、ずっと下まで光ってる！'],[KAZANE,'#think|……まって。雲のすきまに、なにか白いものが……。','wind:peek'],[HAYATE,'#surprise|つばさ……？ 島の下に、大きなつばさがある！'],[KAZANE,'#surprise|……あの方だ。ヌシ様のつばさだよ。'],[KAZANE,'#think|島をささえているのか……？ 風を止めたのは、ヌシ様だったんだね。'],[GOD,'#worry|……なにか、わけがあるはずじゃ。雲の海のはしまで、行ってみようかの。']]},
+  {id:'kumoshita',text:'雲の海のはしで、ヌシ様に会おう',check:()=>!!S.flags.kumo,prog:()=>windKumoProg(),how:'カザネが雲の海のはしで待っている所に、まもりの光を落とす',
+   talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'つばさが見えたのは、あの大きな島のはしの下だった。'],[HAYATE,'#think|でも、雲が厚くて、島の上からじゃ見えないよ。'],[GOD,'あたたかい光をとどければ、雲もひらくかもしれん。みんなで行ってみよう。']]},
+   story:[[KAZANE,'フッ……ヌシ様も、ひとりで、ずいぶんがんばっていたんだね。'],[HAYATE,'#think|ぼくたちの風で、ヌシ様をささえられたらいいのに。'],[GOD,'#joy|ええ考えじゃ。遊び場の風を、もっと強くしていこうかの。']]},
+  {id:'windNight',text:'ひと晩、遊び場を守ろう',check:()=>!!S.flags.windWon,prog:()=>typeof windNightProg==='function'?windNightProg():'',how:'遊具を4つとも直すと、その夜、影が遊具をねらってくる。朝まで遊具を2つのこせば、守りぬける',
+   talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'ヌシ様が、つばさをひらけば、風がもどる。'],[KAZANE,'#think|でも、つばさのかげの影たちも、目をさます。さまよって、遊び場までのぼってくるはずだ。'],[HAYATE,'#joy|ひと晩だけ、守りぬこう。朝の光がとどけば、影たちも、また休めるよ。']]}},/* さいごの夜とおわりは wind-story.js */
+  {id:'windEnd',text:'ヌシ様をむかえよう',check:()=>!!S.flags.windEnd,prog:()=>S.wind&&S.wind.liftD>dayNo()?'あしたの朝、もう一度':'',how:'朝になると、ヌシ様が雲の海のはしへ来る。光る風のはじまりに指をおいて、すじにそって上へなぞり、遊具の風をつばさへとどける'},
 ];
 QL[WIND]=QUESTS5;PROS[WIND]=PROLOGUE5;INTROS[WIND]=INTRO5;
 

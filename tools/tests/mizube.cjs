@@ -18,8 +18,8 @@ const assert=require('node:assert/strict');
   assert.equal(b.mist,false,'4 cells from the water are clear');assert.equal(b.mist2,true,'9 cells away is still mist');
   console.log('Mizube: one open gate wets 40 canal cells and clears the mist 4 cells around');
   /* 3. 水は、高いほうへは流れない */
-  const c=await J(`(()=>{const P=__P;for(let k=40;k<45;k++)delete S.mz.cn[P[k]];let i=10;while(hiAt(P[i+1])===2)i++;const low=P[i+1]+2,up=P[i]+2;for(const k of[low-1,low,up]){S.obj[k]='';S.mz.cn[k]=1}recount();/* up は、低い low からしかつながらない */return {hl:hiAt(low),hu:hiAt(up),wl:MZC.wet[low],wu:MZC.wet[up]}})()`);
-  assert.equal(c.hl,1);assert.equal(c.hu,2);assert.equal(c.wl,1,'the branch on the lower step is wet');assert.equal(c.wu,0,'water does not climb to the higher step');
+  const c=await J(`(()=>{const P=__P;for(let k=40;k<45;k++)delete S.mz.cn[P[k]];let i=10;while(hiAt(P[i+1])===2)i++;const low=P[i+1]+2,up=P[i]+2;const h=hiAt(P[i+1]);for(const k of[low-1,low,up]){S.obj[k]='';S.mz.cn[k]=1}S.hi[low-1]=S.hi[low]=h;S.hi[up]=h+1;recount();/* up は、低い low からしかつながらない。わき道の高さは、まわりの地形によらないように、ここできめる */return {hp:h,hl:hiAt(low),hu:hiAt(up),wl:MZC.wet[low],wu:MZC.wet[up]}})()`);
+  assert.equal(c.hl,c.hp);assert.equal(c.hu,c.hp+1);assert.equal(c.wl,1,'the branch on the lower step is wet');assert.equal(c.wu,0,'water does not climb to the higher step');
   console.log('Mizube: water does not flow uphill');
   /* 4. 船着き場2つが水でつながると小舟が行き来し、荷をはこぶ */
   const d=await J(`(()=>{const a=__P[28]+1,b=__P[33]+1;for(const j of[a,b,a+1,b+1]){S.obj[j]='';S.floor[j]='';delete S.dyn[j]}S.obj[a]='dock';S.obj[b]='dock';S.obj[a+1]='crate';S.obj[b+1]='crate';recount();
@@ -44,23 +44,23 @@ const assert=require('node:assert/strict');
   /* 9. じっさいの遊び方：霧の中の水門はタップできない。水路で霧を晴らしてからタップすると、せいれいが直しにいく。「水路をほる」は、せいれいの工事 */
   const p1=await J(`(()=>{const g0=S.mz.gates[0].j;mzTap(g0%W,(g0/W)|0);return {mist:fogAt(g0),req:S.mz.req.length}})()`);assert.deepEqual(p1,{mist:true,req:0});
   const noon=`if(hour()>=17||hour()<7)S.t=Math.floor(S.t/DAYLEN)*DAYLEN+DAYLEN*10/24;`;/* 夜にならないように、夕方になったら、その日の10時へ（毎コマもどすと、時計で待つ動きが終わらない） */
-  await run(`templeRuinTap(RUINT)`);for(let k=0;k<40&&!(await J(`STATUE>=0`));k++)await run(`(()=>{${noon}S.res[0].hunger=1000;S.res[0].energy=100;for(let i=0;i<200&&STATUE<0;i++)stepWorld(.25)})()`);
+  await run(`templeRuinTap(RUINT)`);for(let k=0;k<40&&!(await J(`STATUE>=0`));k++)await run(`(()=>{${noon}S.res[0].hunger=500;S.res[0].energy=100;for(let i=0;i<200&&STATUE<0;i++)stepWorld(.25)})()`);
   assert.equal(await J(`STATUE>=0`),true,'the temple is repaired first');
-  /* お礼の会話を読みおえる（読むまで、せいれいは待っている）。もうできている目標（水門・水路・船着き場・いかだ・宝箱）も、会話を読むたびに1つずつ進む */
-  for(let i=0;i<120&&await J(`S.quest`)<6;i++){await page.waitForTimeout(300);/* 会話と会話のあいだは、3秒まつ（DLGWAIT） */await run(`(()=>{${noon}for(let k=0;k<40;k++)stepWorld(.25);if(document.querySelector('#dialog').hidden)startTalk()})()`);for(let k=0;k<40&&!(await J(`document.querySelector('#dialog').hidden`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(120)}}
+  /* お礼の会話を読みおえる（読むまで、せいれいは待っている）。もうできている目標（水門・水路・宝箱）も、会話を読むたびに1つずつ進み、ノミをむかえる目標で止まる */
+  for(let i=0;i<120&&await J(`S.quest`)<4;i++){await page.waitForTimeout(300);/* 会話と会話のあいだは、3秒まつ（DLGWAIT） */await run(`(()=>{${noon}for(let k=0;k<40;k++)stepWorld(.25);if(document.querySelector('#dialog').hidden)startTalk()})()`);for(let k=0;k<40&&!(await J(`document.querySelector('#dialog').hidden`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(120)}}
   for(let k=0;k<60&&!(await J(`document.querySelector('#dialog').hidden&&!DLGQ.length`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(150)}/* さいごの会話をとじる */
-  assert.equal(await J(`S.quest`),6,'the goals that are already met (gate, flow, docks, raft, chest) pass one by one after their talks');
+  assert.equal(await J(`QUESTS[S.quest].id`),'mznomi','the goals that are already met (gate, flow, chest) pass one by one after their talks, then wait for Nomi');
   console.log('Mizube: the goals advance through their talks');
   const p2=await J(`(()=>{const g=S.mz.gates[1].j,g0=S.mz.gates[0].j;for(let k=1;k<=5;k++){const j=g+W-k;S.obj[j]='';S.mz.cn[j]=1}recount();mzTap(g0%W,(g0/W)|0);const pt=S.pt,cj=g+W-6;S.obj[cj]='';sel='canal';place('canal',cj%W,(cj/W)|0);
     return {mist:fogAt(g0),req:S.mz.req.length,site:S.obj[cj],paid:pt-S.pt,cj}})()`);
   assert.equal(p2.mist,false);assert.equal(p2.req,1);assert.equal(p2.site,'site');assert.equal(p2.paid,5);
   const pop=async()=>{await run(`(()=>{const b=document.querySelector('.idea-reveal button');if(b){b.disabled=false;b.click()}})()`);await page.waitForTimeout(250)};/* 知らせの画面（あたらしいレシピ など）は時間を止めるので、待ちながらとじる */
-  let p3=null;for(let k=0;k<60;k++){await pop();p3=await J(`(()=>{${noon}S.res[0].hunger=1000;S.res[0].energy=100;for(let i=0;i<200&&!(S.mz.gates[0].open&&S.mz.cn[${p2.cj}]);i++){stepWorld(.25)}return {open:S.mz.gates[0].open,canal:!!S.mz.cn[${p2.cj}],obj:S.obj[S.mz.gates[0].j],n:mzOpenN(),g1:S.ground[S.mz.chests[1].j]}})()`);if(p3.open&&p3.canal)break}
+  let p3=null;for(let k=0;k<60;k++){await pop();p3=await J(`(()=>{${noon}S.res[0].hunger=500;S.res[0].energy=100;for(let i=0;i<200&&!(S.mz.gates[0].open&&S.mz.cn[${p2.cj}]);i++){stepWorld(.25)}return {open:S.mz.gates[0].open,canal:!!S.mz.cn[${p2.cj}],obj:S.obj[S.mz.gates[0].j],n:mzOpenN(),g1:S.ground[S.mz.chests[1].j]}})()`);if(p3.open&&p3.canal)break}
   assert.equal(p3.open,1,'the spirit repaired the gate');assert.equal(p3.canal,true,'the spirit dug the canal');assert.equal(p3.obj,'mzgate');assert.equal(p3.g1,2,'two open gates uncover the second chest');
   console.log('Mizube: a spirit opens a tapped gate and digs a canal');
   /* 10. 川くだり：せいれいが、コースを下って、たのしさがふえる */
   await pop();await pop();
-  const p4=await J(`(()=>{const r=S.res[0],g=S.mz.gates[1].j,raft=g+2*W-1,f=mzRaftFun(raft),C=mzCourse(raft),st=raft-W;endAct(r);r.x=st%W+.5;r.y=((st/W)|0)+.5;r.path=[];r.fun=10;r.hunger=1000;r.energy=100;
+  const p4=await J(`(()=>{const r=S.res[0],g=S.mz.gates[1].j,raft=g+2*W-1,f=mzRaftFun(raft),C=mzCourse(raft),st=raft-W;endAct(r);r.x=st%W+.5;r.y=((st/W)|0)+.5;r.path=[];r.fun=10;r.hunger=500;r.energy=100;
     S.t=Math.floor(S.t/DAYLEN)*DAYLEN+DAYLEN*10/24;startAct(r,roadSearch(r.x|0,r.y|0),'mzraft',st,{key:'o'+raft,obj:raft,what:'raft',fun:f,dur:50,pt:5,pw:2});let rode=false;for(let i=0;i<800&&r.act&&r.act.type==='mzraft';i++){stepWorld(.25);{const b=document.querySelector('.idea-reveal button');if(b){b.disabled=false;b.click()}}if(r.act&&r.act.type==='mzraft'&&r.act.cs)rode=true}
     const end=C[C.length-1];return {rode,fun:Math.round(r.fun),f,at:Math.abs(r.x-(end%W+.5))<1.5&&Math.abs(r.y-(((end/W)|0)+.5))<1.5,toy:!!r.lastToy}})()`);
   assert.equal(p4.rode,true);assert.ok(p4.f>=40,'the longest course is used: '+p4.f);assert.ok(p4.fun>=10+p4.f-5,'fun went up by the rafting fun: '+JSON.stringify(p4));assert.equal(p4.toy,true);

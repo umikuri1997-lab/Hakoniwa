@@ -22,11 +22,22 @@ const BL={
   stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:4,w:1,mat:{stone:6},attr:{earth:.75},desc:'石をしきつめた道。歩く速さ1.55倍'},
   farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕してたねをまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2'},
   misugaki:{name:'御簾垣',fix:2,fixm:{bamboo:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,w:1,solid:1,brk:1,hp:20,hpS:30,attr:{},mat:{bamboo:5},desc:'竹をあんだ垣。「コワイノ」の足止め。じょうぶさ20'},
+  ashifence:{name:'あしの垣',fix:2,fixm:{ashi:1},kind:'block',cost:2,pc:4,time:60,maker:'water',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{ashi:5},desc:'あしをならべた垣。「コワイノ」の足止め。じょうぶさ20'},
+  rankan:{name:'運河の石の欄干',fix:3,fixm:{maruishi:1},kind:'block',cost:3,pc:6,time:70,maker:'water',qty:10,lv:6,solid:1,brk:1,hp:55,hpS:83,attr:{},mat:{maruishi:12},desc:'丸石の手すり。じょうぶさ55'},/* 水の柵・塀 */
+  ibara:{name:'いばらの生垣',fix:2,fixm:{kagekusa:1},kind:'block',cost:2,pc:4,time:60,maker:'fire',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{kagekusa:4,kogi:1},desc:'いばらをからめた生垣。「コワイノ」の足止め。じょうぶさ20'},
+  kuzure:{name:'くずれた石の欄干',fix:3,fixm:{stone:2},kind:'block',cost:3,pc:6,time:70,maker:'fire',qty:10,lv:6,solid:1,brk:1,hp:55,hpS:83,attr:{},mat:{stone:12},desc:'古い庭の石の手すり。じょうぶさ55'},/* 闇の柵・塀 */
+  ropefence:{name:'ロープの手すり',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wind',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{wood:3,nabiki:3},desc:'なびき草をよったロープの手すり。「コワイノ」の足止め。じょうぶさ20'},
   fence:{name:'柵',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{wood:5},desc:'木の板の柵。「コワイノ」の足止め。じょうぶさ20'},
   logfence:{name:'丸太の塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:7},desc:'太い丸太をすきまなくならべた塀。じょうぶさ36'},
   bedge:{name:'花壇のふち',kind:'block',cost:1,pc:2,time:20,maker:'wood',qty:10,lv:8,attr:{},mat:{wood:1},desc:'花壇をかこむ、低い丸太のふち'},
   bamboofence:{name:'竹の柵',fix:3,fixm:{bamboo:1},kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:4,offerOnly:1,solid:1,brk:1,hp:32,hpS:48.8,attr:{},mat:{bamboo:8},desc:'竹を組んだ柵。じょうぶさ32'},
   bamboowall:{name:'竹の壁',fix:3,fixm:{bamboo:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,w:1,solid:1,hp:30,hpS:45.5,attr:{},mat:{bamboo:3},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  canvaswall:{name:'帆布の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wind',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:3,nuno:2},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  timberwall:{name:'木組みの壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'water',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:4,nendo:2},desc:'木の柱としっくいの家の壁。じょうぶさ30'},
+  canalwall:{name:'運河の石積みの壁',fix:4,fixm:{maruishi:1},kind:'block',cost:3,pc:12,time:90,maker:'water',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{maruishi:10,nendo:4},desc:'丸石をつんだ家の壁。じょうぶさ55'},/* 水の家の壁 */
+  mosswall:{name:'こけむした石の壁',fix:3,fixm:{stone:1},kind:'block',cost:2,pc:6,time:70,maker:'fire',qty:10,lv:3,solid:1,hp:32,hpS:48.5,attr:{},mat:{stone:4,kogi:2},desc:'コケのはえた石の家の壁。じょうぶさ32'},
+  moonwall:{name:'月光石の壁',fix:4,fixm:{stone:1,gekko:1},kind:'block',cost:3,pc:12,time:90,maker:'fire',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{stone:8,gekko:3},desc:'月光石をつんだ家の壁。じょうぶさ55'},/* 闇の家の壁 */
+  acaciawall:{name:'アカシアの板壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:12,time:90,maker:'wind',qty:10,lv:6,solid:1,hp:52,hpS:78.5,brk:1,attr:{},mat:{wood:10,stone:2},desc:'板をかさねた家の壁。じょうぶさ52'},
   hwall:{name:'木の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:6},desc:'かこってドアをつけると家になる。じょうぶさ30'},
   logwall:{name:'丸太の壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:50,hpS:75.5,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁。じょうぶさ50'},
   plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
@@ -38,9 +49,12 @@ const BL={
   nebari:{sp:9,name:'ねばり草',item:'ねばり草のたね',kind:'plant',cost:3,attr:{wood:1},desc:'上を歩く「コワイノ」の速さ0.5倍。まわり3マスで、たのしさ+0.2／1時間'},
   hotaru:{sp:9,name:'ヨルボシの草むら',item:'ヨルボシの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスを照らすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりのたね',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
+  ayame:{sp:9,name:'アイリス',item:'アイリスのたね',kind:'plant',cost:3,attr:{water:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},/* 水のステージの花 */
+  tsukimi:{sp:9,name:'月見草',item:'月見草のたね',kind:'plant',cost:3,attr:{earth:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},/* 闇のステージの花 */
+  tanpopo:{sp:9,name:'たんぽぽ',item:'たんぽぽのたね',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},/* 風のステージの花 */
   lotus:{sp:9,name:'ハス',item:'ハスのたね',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水あびすると、たのしさ1.5倍・つかれ－9／1時間'},
-  tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
-  fruit:{hp:5,brk:1,fix:1,fixm:{},name:'りんごの木',item:'りんごの苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
+  tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり2マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
+  fruit:{hp:5,brk:1,fix:1,fixm:{},name:'りんごの木',item:'りんごの苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり2マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
 /* 新しい家具（スクリプトで描く） */
   stool:{name:'木のスツール',kind:'furn',lv:1,cat:'living',f2:1,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:1,eda:2},mat1:{bamboo:2},desc:'小さないす。食卓のとなりで食べると、パワー+0.45。住み心地+2'},
   pouf:{name:'まるクッション',kind:'furn',lv:5,cat:'living',f2:1,pc:1,time:60,maker:'wind',attr:{wind:1},mat:{wood:1,nuno:2},desc:'ころんとしたクッション。食卓のとなりで食べると、パワー+0.9。住み心地+3'},
@@ -54,24 +68,37 @@ const BL={
   cooktable:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'調理台',kind:'furn',cat:'cook',lv:3,w:0,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:4},solid:1,desc:'火を使わない料理を作る台。料理をする家具のまわり3マスにあると、料理の時間－10%（重複なし）。住み心地+4'},
   sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'料理をする家具のまわり3マスにあると、料理の時間－10%（重複なし）。住み心地+4'},
   niguruma:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'にぐるま',kind:'furn',cat:'other',f2:1,sz:[2,1],pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'荷物をはこぶ車。まわり3マスの箱にしまう速さ+20%（重複なし）'},
-  kabebukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'かべかけのふくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:5,wood:2},solid:1,desc:'壁にかけるふくろ。物を55までしまえる。住み心地+3'},
-  taru:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'たる',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:8},solid:1,desc:'物を60までしまえる。住み心地+3'},
-  asabukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'あさぶくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:6,wood:2},solid:1,desc:'物を65までしまえる。住み心地+3'},
-  makidana:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'まき棚',kind:'furn',cat:'other',f2:1,pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'木材と枝を200までしまえる。住み心地+3'},
-  crate:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'木箱',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8},solid:1,desc:'物を80までしまえる。住み心地+3'},
-  monstera:{hp:5,brk:1,fix:2,fixm:{funba:3,stone:2},name:'かんようしょくぶつ',kind:'furn',cat:'other',f2:1,lv:4,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{shina:5,stone:3},mat1:{kuru:5,stone:3},solid:1,desc:'大きな葉の鉢植え。住み心地+10'},
-  shelf1:{hp:5,brk:1,fix:5,fixm:{wood:10},name:'本棚',kind:'furn',cat:'other',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'本と植物の棚。住み心地+12。物を160までしまえる'},
-  wreath:{hp:5,brk:1,fix:2,fixm:{eda:3,funba:3},offerOnly:1,name:'リース',kind:'furn',cat:'other',f2:1,lv:6,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{eda:6,shina:6},mat1:{eda:6,kuru:6},solid:1,desc:'葉と花のリース。住み心地+10'},
+  kabebukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'かべかけのふくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:5,wood:2},solid:1,desc:'壁にかけるふくろ。物をしまえる。わく3。住み心地+3'},
+  taru:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'たる',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:8},solid:1,desc:'物をしまえる。わく4。住み心地+3'},
+  asabukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'あさぶくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:6,wood:2},solid:1,desc:'物をしまえる。わく4。住み心地+3'},
+  makidana:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'まき棚',kind:'furn',cat:'other',f2:1,pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'木材と枝をしまえる。わく2。住み心地+3'},
+  crate:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'木箱',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8},solid:1,desc:'物をしまえる。わく6。住み心地+3'},
+  monstera:{hp:5,brk:1,fix:2,fixm:{funba:3,stone:2},name:'かんようしょくぶつ',kind:'furn',cat:'other',f2:1,lv:4,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{shina:5,stone:3},mat1:{kuru:5,stone:3},mat4:{nabiki:5,stone:3},mat3:{ashi:5,stone:3},mat5:{yotsuyu:5,stone:3},solid:1,desc:'大きな葉の鉢植え。住み心地+10'},
+  shelf1:{hp:5,brk:1,fix:5,fixm:{wood:10},name:'本棚',kind:'furn',cat:'other',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'本と植物の棚。住み心地+12。物をしまえる。わく8'},
+  wreath:{hp:5,brk:1,fix:2,fixm:{eda:3,funba:3},offerOnly:1,name:'リース',kind:'furn',cat:'other',f2:1,lv:6,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{eda:6,shina:6},mat1:{eda:6,kuru:6},mat4:{eda:6,nabiki:6},mat3:{eda:6,ashi:6},mat5:{eda:6,yotsuyu:6},solid:1,desc:'葉と花のリース。住み心地+10'},
   curtain1:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'カーテン',kind:'furn',cat:'other',f2:1,lv:10,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:10,nuno:2},solid:1,desc:'窓にかけるカーテン。住み心地+10'},
-  cabinet:{hp:5,brk:1,fix:5,fixm:{wood:10},offerOnly:1,name:'キャビネット',kind:'furn',cat:'other',f2:1,lv:7,pc:9,time:120,maker:'earth',attr:{earth:1},mat:{wood:20},solid:1,desc:'とびらつきの棚。住み心地+12。物を90までしまえる'},
+  cabinet:{hp:5,brk:1,fix:5,fixm:{wood:10},offerOnly:1,name:'キャビネット',kind:'furn',cat:'other',f2:1,lv:7,pc:9,time:120,maker:'earth',attr:{earth:1},mat:{wood:20},solid:1,desc:'とびらつきの棚。住み心地+12。物をしまえる。わく6'},
   paint2:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'葉っぱの額',kind:'furn',cat:'other',f2:1,lv:7,pc:5,time:80,maker:'wood',attr:{wood:1},mat:{wood:8},solid:1,desc:'葉っぱの絵。住み心地+10'},
-  shelf2:{hp:5,brk:1,fix:6,fixm:{wood:15,stone:4},offerOnly:1,name:'かざり棚',kind:'furn',cat:'other',f2:1,lv:8,pc:11,time:140,maker:'wood',attr:{wood:1},mat:{wood:30,stone:8},solid:1,desc:'小物をかざる棚。住み心地+13。物を200までしまえる'},
+  shelf2:{hp:5,brk:1,fix:6,fixm:{wood:15,stone:4},offerOnly:1,name:'かざり棚',kind:'furn',cat:'other',f2:1,lv:8,pc:11,time:140,maker:'wood',attr:{wood:1},mat:{wood:30,stone:8},solid:1,desc:'小物をかざる棚。住み心地+13。物をしまえる。わく10'},
   curtain2:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'カーテン（緑）',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'森の色のカーテン。住み心地+10'},
   paint3:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'花の額',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'花の絵。住み心地+10'},
-  wshelf:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'かべ棚',kind:'furn',cat:'other',f2:1,lv:8,pc:9,time:100,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'つる草をたらした棚。住み心地+12。物を200までしまえる'},
+  wshelf:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'かべ棚',kind:'furn',cat:'other',f2:1,lv:8,pc:9,time:100,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'つる草をたらした棚。住み心地+12。物をしまえる。わく10'},
   paint1:{hp:5,brk:1,fix:5,fixm:{wood:15},offerOnly:1,name:'風景画',kind:'furn',cat:'other',f2:1,lv:9,pc:9,time:120,maker:'water',attr:{water:1},mat:{wood:30},solid:1,desc:'草原の絵。住み心地+14'},
   bathtub:{hp:5,brk:1,fix:8,fixm:{wood:8,stone:15},offerOnly:1,name:'バスタブ',kind:'furn',cat:'other',f2:1,lv:9,pc:15,time:180,maker:'water',attr:{water:1},mat:{wood:15,stone:30},solid:1,desc:'家の中のおふろ。夕方、ここで水あびできる。住み心地+16'},
   candle:{hp:5,brk:1,fix:1,fixm:{wood:1},offerOnly:1,name:'ろうそく',kind:'furn',cat:'light',f2:1,lv:5,pc:1,time:60,maker:'fire',attr:{fire:1},mat:{wood:2},solid:1,desc:'あかり。住み心地+3'},
+  shimahammock:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'しまもようのハンモック',sz:[2,1],kind:'furn',cat:'env',lv:3,pc:6,time:90,maker:'wind',attr:{wind:2},mat:{wood:4,nuno:3},solid:1,env:3,envW:5,desc:'まわり3マスで、たのしさ+1.1／1時間。風の道のそばでは+1.8／1時間'},
+  fusenya:{hp:5,brk:1,fix:3,fixm:{wood:3},name:'風船の屋台',sz:[2,1],kind:'furn',cat:'env',lv:7,pc:9,time:120,maker:'wind',attr:{wind:2},mat:{wood:6,nuno:2,kumowata:3},solid:1,env:4,envW:6,desc:'まわり3マスで、たのしさ+1.4／1時間。風の道のそばでは+2.2／1時間'},
+  kagoisu:{name:'気球のかごのいす',kind:'furn',lv:4,cat:'living',pc:2,time:70,maker:'wind',attr:{wind:1},mat:{houki:4,wood:2},desc:'気球のかごのいす。食卓のとなりで食べると、パワー+0.9。住み心地+5'},
+  kazakadan:{hp:5,brk:1,fix:2,fixm:{wood:1},name:'かざぐるまの花壇',kind:'furn',cat:'env',lv:5,pc:4,time:80,maker:'wind',attr:{wind:1},mat:{wood:3,hane:2},solid:1,env:2,envW:4,desc:'まわり3マスで、たのしさ+0.7／1時間。風の道のそばでは+1.4／1時間'},
+  kazelamp:{hp:5,brk:1,fix:2,fixm:{wood:1,can:1},name:'風見のランプ',kind:'furn',cat:'light',lv:6,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:2,can:1,hane:1},solid:1,envW:2,desc:'あかり。住み心地+5。風の道のそばでは、まわり3マスで、たのしさ+0.7／1時間'},/* 風の家具（風のステージだけ。風の道のそばで効き目が上がる envW） */
+  terraceseat:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'テラスの席',sz:[2,1],kind:'furn',cat:'env',lv:4,pc:6,time:90,maker:'water',attr:{water:2},mat:{wood:4,maruishi:2},solid:1,env:3,envW:5,desc:'まわり3マスで、たのしさ+1.1／1時間。水べのそばでは+1.8／1時間'},
+  madobachi:{hp:5,brk:1,fix:1,fixm:{nendo:1},name:'窓辺の花の鉢',kind:'furn',cat:'other',lv:3,pc:2,time:60,maker:'water',attr:{water:1},mat:{nendo:2,ashi:1},solid:1,desc:'アイリスをうえた鉢。住み心地+6'},
+  canallamp:{hp:5,brk:1,fix:2,fixm:{maruishi:1,can:1},name:'運河の街灯',kind:'furn',cat:'light',lv:5,pc:3,time:80,maker:'water',attr:{water:1},mat:{maruishi:3,can:1},solid:1,envW:2,desc:'あかり。住み心地+5。水べのそばでは、まわり3マスで、たのしさ+0.7／1時間'},
+  araiba:{hp:5,brk:1,fix:2,fixm:{maruishi:2},name:'水路の洗い場',sz:[2,1],kind:'furn',cat:'env',lv:7,pc:6,time:100,maker:'water',attr:{water:2},mat:{maruishi:4,nendo:2},solid:1,env:2,envW:4,desc:'まわり3マスで、たのしさ+0.7／1時間。水べのそばでは+1.4／1時間'},/* 水の家具（水のステージだけ。水べのそばで効き目が上がる envW） */
+  gekkolamp:{hp:5,brk:1,fix:2,fixm:{gekko:1},name:'月光石のランプ',kind:'furn',cat:'light',lv:3,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{gekko:2,stone:1},solid:1,desc:'あかり。住み心地+5'},
+  hotarukago:{hp:5,brk:1,fix:1,fixm:{yotsuyu:1},name:'ほたるのかご',kind:'furn',cat:'light',lv:4,pc:2,time:70,maker:'fire',attr:{fire:1},mat:{yotsuyu:3,kogi:1},solid:1,desc:'あかり。住み心地+4'},
+  shitone:{name:'夜のしとね',kind:'furn',cat:'living',lv:5,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{yotsuyu:4,nuno:2},desc:'夜つゆ草をつめた、やわらかいしきもの。住み心地+8'},
+  tsukimidai:{hp:5,brk:1,fix:3,fixm:{stone:2},name:'月見台',sz:[2,1],kind:'furn',cat:'env',lv:7,pc:6,time:110,maker:'fire',attr:{fire:2},mat:{stone:6,gekko:1},solid:1,env:4,desc:'まわり3マスで、たのしさ+1.4／1時間'},/* 闇の家具（闇のステージだけ） */
   lantern:{hp:5,brk:1,fix:2,fixm:{wood:1,can:1},name:'ランタン',kind:'furn',cat:'light',f2:1,lv:6,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{wood:2,can:1},solid:1,desc:'あかり。住み心地+5'},
   flamp:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:1},offerOnly:1,name:'フロアランプ',kind:'furn',cat:'light',f2:1,lv:6,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:3,stone:2},solid:1,desc:'あかり。住み心地+6'},
   mimamori:{name:'みまもりのぬいぐるみ',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'家の中に置くと、その家で寝たせいれいの、つかれのとれる速さ1.1倍。住み心地+6'},/* ここから、コワイノの落とし物だけで手に入る家具（絵はあとで） */
@@ -102,13 +129,21 @@ const BL={
   grave:{name:'お墓',kind:'deco',attr:{},desc:''},
   gate:{name:'柵のドア',fix:2,fixm:{wood:1,funba:1},kind:'block',anim:1,hp:20,hpS:30.95,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:3},desc:'柵の出入り口。せいれいだけ通れる。じょうぶさ20'},
   logdoor:{name:'丸太の塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wood',qty:1,lv:6,attr:{},mat:{wood:6},desc:'丸太の塀の出入り口。せいれいだけ通れる。じょうぶさ36'},
+  parkfence:{name:'遊園地の白い塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wind',qty:10,lv:6,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:7},desc:'白い板をならべた塀。じょうぶさ36'},
+  parkdoor:{name:'白い塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wind',qty:1,lv:6,attr:{},mat:{wood:6},desc:'白い塀の出入り口。せいれいだけ通れる。じょうぶさ36'},
+  canalgate:{sz:[2,1],name:'運河の町の門',fix:4,fixm:{maruishi:3},kind:'block',anim:1,brk:1,hp:55,hpS:83,cost:4,pc:12,time:90,maker:'water',qty:1,lv:9,attr:{},mat:{maruishi:10,wood:4},desc:'ランプをのせた石の柱の、大きな出入り口。せいれいだけ通れる。じょうぶさ55'},
+  irongate:{sz:[2,1],name:'古い庭の鉄の門',fix:4,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:60,hpS:90,cost:4,pc:12,time:90,maker:'fire',qty:1,lv:9,attr:{},mat:{stone:10,gekko:2},desc:'月光石をのせた石の柱の、大きな鉄の門。せいれいだけ通れる。じょうぶさ60'},/* 水・闇の大門 */
+  parkgate:{sz:[2,1],name:'入場ゲート',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:36,hpS:54.8,cost:4,pc:12,time:90,maker:'wind',qty:1,lv:9,attr:{},mat:{wood:12,nuno:2},desc:'旗をつるした白い塀の大きな出入り口。せいれいだけ通れる。じょうぶさ36'},
   loggate:{sz:[2,1],name:'丸太の大門',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:36,hpS:54.8,cost:4,pc:12,time:90,maker:'wood',qty:1,lv:9,attr:{},mat:{wood:12},desc:'丸太の塀の大きな出入り口。せいれいだけ通れる。じょうぶさ36'},
   stonegate:{sz:[2,1],name:'石の大門',fix:5,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:60,hpS:90.75,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,w:1,attr:{},mat:{stone:12},desc:'石の塀の大きな出入り口。せいれいだけ通れる。じょうぶさ60'},
   yozoradoor:{name:'よぞらのドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:23,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:1,attr:{},mat:{wood:3},kwr:1,desc:'窓のついたダークチェリーのドア。せいれいだけ通れる。じょうぶさ20'},/* コワイノのレシピ */
+  canvasdoor:{name:'帆布のドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:5,time:40,maker:'wind',qty:1,lv:3,attr:{},mat:{wood:1,nuno:1},desc:'しまの帆布をはったドア。せいれいだけ通れる。じょうぶさ20'},
+  archdoor:{name:'アーチの木のドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:5,time:40,maker:'water',qty:1,lv:3,attr:{},mat:{wood:2,nendo:1},desc:'弓の形のまどのある木のドア。せいれいだけ通れる。じょうぶさ20'},
+  niwadoor:{name:'古い庭の木戸',fix:2,fixm:{kogi:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:5,time:40,maker:'fire',qty:1,lv:3,attr:{},mat:{kogi:2},desc:'古い板の木戸。せいれいだけ通れる。じょうぶさ20'},/* 風・水・闇の家のドア */
   door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口。せいれいだけ通れる。じょうぶさ20'},
   chair:{name:'いす',kind:'furn',lv:3,pc:3,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},mat1:{bamboo:3},desc:'食卓のとなりで食べると、パワー+0.9。住み心地+4'},
   takebench:{name:'竹のベンチ',sz:[2,1],kind:'furn',lv:3,pc:3,time:100,maker:'wood',attr:{wood:1},mat:{bamboo:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+5'},
-  andon:{hp:5,brk:1,fix:2,fixm:{wood:1},name:'行燈',kind:'furn',cat:'light',lv:7,w:1,pc:6,time:80,maker:'fire',solid:1,anim:1,attr:{fire:1},mat:{wood:3,kasa:2},mat1:{wood:3,chiri:2},desc:'紙をはった木のあかり。まわり3.5マスを照らす。住み心地+5'},
+  andon:{hp:5,brk:1,fix:2,fixm:{wood:1},name:'行燈',kind:'furn',cat:'light',lv:7,w:1,pc:6,time:80,maker:'fire',solid:1,anim:1,attr:{fire:1},mat:{wood:3,kasa:2},mat1:{wood:3,chiri:2},mat4:{wood:3,houki:2},mat3:{wood:3,gama:2},mat5:{wood:3,kagekusa:2},desc:'紙をはった木のあかり。まわり3.5マスを照らす。住み心地+5'},
   takeakari:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'竹あかり',kind:'furn',cat:'light',lv:4,pc:4,time:90,maker:'fire',solid:1,anim:1,attr:{fire:1,wood:1},mat:{bamboo:4},desc:'まわり3.5マスを照らす。住み心地+5'},
   yudekago:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'ゆでかご',kind:'furn',cat:'cook',lv:1,w:1,pc:4,time:90,maker:'water',solid:1,attr:{water:1},mat:{bamboo:6,eda:2},desc:'温泉の湯で、ゆでる料理を作る竹のかご。あたたかい温泉の水の上に置く'},
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
@@ -120,7 +155,7 @@ const BL={
   yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
   lamp:{hp:5,brk:1,fix:3,fixm:{eda:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{eda:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ+25（26.7分）。まわり3.5マスを照らす'},
-  swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},desc:'1人で遊べる。たのしさ+40（33.3分）。遊ぶと10%の確率で、移動速度+2'},
+  swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},mat4:{wood:12,nabiki:4},mat3:{wood:12,ashi:4},mat5:{wood:12,yotsuyu:4},desc:'1人で遊べる。たのしさ+40（33.3分）。遊ぶと10%の確率で、移動速度+2'},
   torch:{hp:5,brk:1,fix:1,fixm:{eda:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{eda:3},mat1:{bamboo:3},desc:'まわり3.5マスを照らす。住み心地+4'},
   composter:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'コンポスター',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',solid:1,attr:{wood:1},mat:{wood:10},desc:'草を入れると、1日で肥料になる。草1こで肥料1こ'},
   joro:{hp:5,brk:1,fix:2,fixm:{can:1},name:'ブリキのじょうろ',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'water',solid:1,attr:{water:1},mat:{can:2,eda:1},desc:'空き缶でつくったじょうろ。まわり5マスの畑の水やりの速さ+10%（重複なし）。住み心地+3'},
@@ -141,21 +176,31 @@ const BL={
   hdokei:{chest:1,shopOnly:1,name:'森の柱時計',kind:'furn',pc:15,solid:1,attr:{},mat:{wood:6},desc:'住み心地+15'},
   mizubachi:{chest:1,shopOnly:1,name:'苔むした石の水ばち',kind:'furn',cat:'env',pc:5,solid:1,attr:{},mat:{stone:6},desc:'まわり5マスの花・木の芽が、植えたその日に育つ'},
   /* 限定の家具（gift-furn.js）：gf:'ret' プレゼントのお返し・'let' 手紙のお礼・'bond' プレゼントを10回あげた節目。el はくれるせいれいの属性 */
-  g_ishitsumi:{gf:'ret',el:'earth',shopOnly:1,name:'石つみのかざり',kind:'furn',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'小石をつんだかざり。住み心地+6'},
-  g_donguri:{gf:'ret',el:'wood',shopOnly:1,name:'どんぐりのランプ',kind:'furn',cat:'light',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'あかり。住み心地+5'},
-  g_shizuku:{gf:'ret',el:'water',shopOnly:1,name:'金魚ばち',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'金魚のおよぐ、ガラスのはち。住み心地+6'},
-  g_hidamari:{gf:'ret',el:'fire',shopOnly:1,name:'ほのお色のガラスの小鳥',kind:'furn',pc:4,solid:1,attr:{fire:1},mat:{stone:3},desc:'赤とだいだいのガラスの小鳥。住み心地+6'},
-  g_kazaguruma:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのかざり',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
-  g_kabin:{gf:'let',el:'earth',shopOnly:1,name:'土やきの花びん',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:3},desc:'土をやいた花びん。住み心地+8'},
-  g_oshibana:{gf:'let',el:'wood',shopOnly:1,name:'おし花のがく',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:3},desc:'おし花を入れた、立てるがく。住み心地+8'},
-  g_kaifun:{gf:'let',el:'water',shopOnly:1,name:'貝がらのふんすい',kind:'furn',pc:5,solid:1,anim:1,attr:{water:1},mat:{stone:3},desc:'貝がらの、小さなふんすい。住み心地+8'},
-  g_post:{gf:'let',el:'fire',shopOnly:1,name:'赤いポスト',kind:'furn',pc:5,solid:1,attr:{fire:1},mat:{wood:2,can:1},desc:'手紙を入れる、赤いポスト。住み心地+6'},
-  g_penzukue:{gf:'let',el:'wind',shopOnly:1,name:'はねペンの書きものづくえ',kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'はねペンをのせた、小さなつくえ。住み心地+8'},
-  g_ishibench:{gf:'bond',el:'earth',shopOnly:1,name:'いしだたみのベンチ',sz:[2,1],kind:'furn',pc:8,attr:{earth:2},mat:{stone:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+6'},
-  g_happasofa:{gf:'bond',el:'wood',shopOnly:1,name:'はっぱのソファ',sz:[2,1],kind:'furn',pc:8,attr:{wood:2},mat:{wood:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+8'},
-  g_suisou:{gf:'bond',el:'water',shopOnly:1,name:'水草の水そう',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{water:2},mat:{wood:4,stone:2},desc:'水草のゆれる水そう。住み心地+12'},
-  g_danro:{gf:'bond',el:'fire',shopOnly:1,name:'れんがのだんろ',sz:[2,1],kind:'furn',cat:'light',pc:8,solid:1,attr:{fire:2},mat:{stone:6},desc:'あかり。冬の寒さをふせぐ。住み心地+12'},
-  g_hammock:{gf:'bond',el:'wind',shopOnly:1,name:'はねぶとんのハンモック',sz:[2,1],kind:'furn',pc:8,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:2},mat:{wood:4,nuno:2},desc:'1人で遊べる。たのしさ+40（33.3分）。住み心地+6'},
+  g_w_kinoko:{gf:'ret',el:'wood',shopOnly:1,name:'きのこのスツール',kind:'furn',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'赤いきのこの形のスツール。住み心地+6'},
+  g_w_acorn:{gf:'ret',el:'wood',shopOnly:1,name:'どんぐりのあかり',kind:'furn',cat:'light',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'あかり。住み心地+5'},
+  g_w_clover:{gf:'let',el:'wood',shopOnly:1,name:'クローバーのテーブル',kind:'furn',pc:5,solid:1,eat:{cap:2,pt:2,pw:.9},attr:{wood:1},mat:{wood:4},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
+  g_w_shelf:{gf:'let',el:'wood',shopOnly:1,name:'えだの本だな',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:4},desc:'木のえだでできた本だな。住み心地+8'},
+  g_w_stump:{gf:'bond',el:'wood',shopOnly:1,name:'切り株のいす',kind:'furn',pc:8,solid:1,attr:{wood:2},mat:{wood:6},desc:'苔のクッションの、切り株のいす。住み心地+10'},
+  g_e_planter:{gf:'ret',el:'earth',shopOnly:1,name:'多肉植物のはち',kind:'furn',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'宝石つきの、多肉植物のはち。住み心地+6'},
+  g_e_lantern:{gf:'ret',el:'earth',shopOnly:1,name:'宝石のランタン',kind:'furn',cat:'light',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'あかり。住み心地+5'},
+  g_e_bath:{gf:'let',el:'earth',shopOnly:1,name:'宝石の水ばち',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:4},desc:'水をはった、石の水ばち。住み心地+8'},
+  g_e_arch:{gf:'let',el:'earth',shopOnly:1,name:'宝石のアーチ',sz:[2,1],kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:4},desc:'つたのからまる、石のアーチ。住み心地+8'},
+  g_e_geode:{gf:'bond',el:'earth',shopOnly:1,name:'アメジストのテーブル',sz:[2,2],kind:'furn',pc:8,solid:1,eat:{cap:4,pt:2,pw:.9},attr:{earth:2},mat:{stone:6},desc:'4人まで食べられる。食べるたびにパワー+0.9。住み心地+12'},
+  g_f_hanger:{gf:'ret',el:'fire',shopOnly:1,name:'ほのおのコートかけ',kind:'furn',pc:4,solid:1,attr:{fire:1},mat:{wood:3},desc:'ほのおの形のコートかけ。住み心地+6'},
+  g_f_lamp:{gf:'ret',el:'fire',shopOnly:1,name:'ほのおのランプ',kind:'furn',cat:'light',pc:4,solid:1,anim:1,attr:{fire:1},mat:{wood:2,can:1},desc:'あかり。冬の寒さをふせぐ。住み心地+5'},
+  g_f_table:{gf:'let',el:'fire',shopOnly:1,name:'おひさまのテーブル',kind:'furn',pc:5,solid:1,eat:{cap:2,pt:2,pw:.9},attr:{fire:1},mat:{wood:4},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
+  g_f_screen:{gf:'let',el:'fire',shopOnly:1,name:'ほのおのびょうぶ',sz:[2,1],kind:'furn',pc:5,solid:1,attr:{fire:1},mat:{wood:4},desc:'ほのおのもようのびょうぶ。住み心地+8'},
+  g_f_sofa:{gf:'bond',el:'fire',shopOnly:1,name:'ほのおのソファ',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{fire:2},mat:{wood:4,nuno:2},desc:'ほのおのかざりのソファ。住み心地+12'},
+  g_k_fan:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのスタンド',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
+  g_k_egg:{gf:'ret',el:'wind',shopOnly:1,name:'雲のつりいす',kind:'furn',pc:4,solid:1,attr:{wind:1},mat:{wood:3,nuno:1},desc:'雲のクッションの、つりいす。住み心地+6'},
+  g_k_screen:{gf:'let',el:'wind',shopOnly:1,name:'雲のびょうぶ',sz:[2,1],kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'リボンのかかった、雲のびょうぶ。住み心地+8'},
+  g_k_chest:{gf:'let',el:'wind',shopOnly:1,name:'羽のたんす',kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'羽のもようのたんす。住み心地+6。物をしまえる。わく4'},
+  g_k_bed:{gf:'bond',el:'wind',shopOnly:1,name:'雲のベッド',sz:[2,1],kind:'furn',pc:8,sleep:{cap:1,pt:5,rate:.1},attr:{wind:2},mat:{wood:4,nuno:2},desc:'1人眠れる。つかれ－9／1時間'},
+  g_s_jelly:{gf:'ret',el:'water',shopOnly:1,name:'くらげのあかり',kind:'furn',cat:'light',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'あかり。住み心地+5'},
+  g_s_vanity:{gf:'ret',el:'water',shopOnly:1,name:'貝のドレッサー',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{wood:3},desc:'しずくの形のかがみの、ドレッサー。住み心地+6'},
+  g_s_table:{gf:'let',el:'water',shopOnly:1,name:'ハスの葉のテーブル',kind:'furn',pc:5,solid:1,eat:{cap:2,pt:2,pw:.9},attr:{water:1},mat:{wood:4},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
+  g_s_tank:{gf:'let',el:'water',shopOnly:1,name:'金魚の水そう',kind:'furn',pc:5,solid:1,attr:{water:1},mat:{wood:3,stone:2},desc:'金魚のおよぐ水そう。住み心地+10'},
+  g_s_sofa:{gf:'bond',el:'water',shopOnly:1,name:'貝がらのソファ',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{water:2},mat:{wood:4,nuno:2},desc:'真珠の色の、貝がらのソファ。住み心地+12'},
   chochin:{w:1,name:'おまつりのちょうちん',kind:'furn',shopOnly:1,pc:6,solid:1,attr:{},desc:'おまつりのおみやげ。赤いちょうちん。住み心地+6'},
   furin:{w:1,name:'ふうりん',kind:'furn',shopOnly:1,pc:8,solid:1,anim:1,attr:{},desc:'カミサマのかざり。風がふくと、ちりんと鳴る。住み心地+8'},
   ema:{w:1,name:'えまかけ',kind:'furn',shopOnly:1,pc:8,solid:1,attr:{},desc:'カミサマのかざり。ねがいごとを書いた板をかける。住み心地+8'},
@@ -163,6 +208,10 @@ const BL={
   kadomatsu:{w:1,name:'かどまつ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。竹と松のおめでたいかざり。住み心地+10'},
   rockart:{hp:5,brk:1,fix:1,fixm:{stone:3},name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:5},desc:'土でできたかざり。住み心地+5'},
   vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度1.2倍（重複なし）。住み心地+4'},
+  blk_soil:{name:'土のブロック',kind:'cube',pc:0,time:0,qty:1,lv:1,mat:{},desc:'つむと、土の地面になるブロック'},
+  blk_stone:{name:'石のブロック',kind:'cube',pc:1,time:40,qty:10,lv:1,mat:{stone:5},desc:'つむと、石の地面になるブロック'},
+  blk_brick:{name:'レンガのブロック',kind:'cube',pc:2,time:50,qty:10,lv:1,mat:{stone:3,wood:2},desc:'つむと、レンガの地面になるブロック'},
+  blk_wood:{name:'木のブロック',kind:'cube',pc:1,time:40,qty:10,lv:1,mat:{wood:5},desc:'つむと、板の地面になるブロック'},
   arrow:{name:'木の矢',kind:'ammo',pc:1,time:40,maker:'wood',qty:10,mat:{eda:1,stone:1},desc:'見張り台が放つ矢。1発で1本使う'},
   pit:{name:'落とし穴',fix:1,fixm:{wood:1},kind:'furn',pc:2,time:100,maker:'earth',qty:1,trap:1,attr:{earth:.5},mat:{wood:3,stone:3},desc:'ふんだ「コワイノ」が落ちて、その夜は出てこない。1回でつかいおわる'},
   drum:{name:'合図の太鼓',fix:2,fixm:{wood:1},kind:'furn',pc:4,time:120,maker:'fire',qty:1,attr:{fire:.5},mat:{wood:8,funba:2},solid:1,desc:'まわり5マスの見張り台のうつ速さ1.25倍（重複なし）'},
@@ -186,8 +235,8 @@ const BL={
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が10分止まる',anim:1},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:1,can:2},desc:'ふんだ「コワイノ」と、まわり1マスの「コワイノ」に40ダメージ。つぎに使えるまで3時間',anim:1},
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、1.3分止める。つぎに使えるまで2時間30分',anim:1},
-  dig:{name:'けずる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事。パワー50'},
-  mound:{name:'もる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'低いマスを1だん高くする工事。パワー50'},
+  dig:{name:'ほる',kind:'build',pc:0,time:15,attr:{},desc:'地面を1だんほる。土が1こ出る'},
+  mound:{name:'つむ',kind:'build',pc:0,time:15,attr:{},mat:{},desc:'土を1こつんで、地面を1だん高くする'},
   watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。威力10／6.7分ごと／射程6マス'},
   coop:{name:'とり小屋',kind:'build',mat:{wood:20},pc:15,time:120,maker:'wood',lv:4,solid:1,attr:{wood:1},desc:'ハネマリが3羽まで住む小屋'},
   barn:{name:'家畜小屋',kind:'build',sz:[2,2],mat:{wood:50,stone:10},pc:30,time:200,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'モコダマかツノクサが3頭まで住む小屋'},
@@ -197,9 +246,9 @@ const BL={
   mill:{hp:5,brk:1,fix:6,fixm:{wood:6,stone:4},name:'粉ひき小屋',kind:'build',sz:[2,2],mat:{wood:15,stone:10},pc:10,time:120,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'こむぎ2こで、こむぎこ1こをひく'},
   suisha:{hp:5,brk:1,fix:4,fixm:{wood:6},name:'水車',kind:'build',mat:{wood:20,stone:4},pc:10,time:120,maker:'water',lv:7,solid:1,attr:{water:2},desc:'まわり5マスの粉ひき小屋・はたおり機が、せいれいがいなくても動く'},
   windmill:{hp:5,brk:1,fix:13,fixm:{wood:30,stone:18},name:'風車',kind:'build',mat:{wood:60,stone:35},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり5マスの畑の収穫+1（重複なし）'},
-  mato:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'弓の的',kind:'furn',cat:'env',lv:6,pc:8,time:100,maker:'wood',attr:{wood:1},mat:{wood:10,shina:4},mat1:{wood:10,kuru:4},solid:1,desc:'わらをまるくたばねた的。3人で「的あて」をひらける'},
-  picnic:{name:'ピクニックシート',sz:[2,2],kind:'furn',cat:'env',lv:5,pc:8,time:90,maker:'wood',attr:{wood:1},mat:{wood:4,shina:8},desc:'草の上にひろげる布とかご。6人で「ピクニック」をひらける'},
-  taiko:{hp:5,brk:1,fix:3,fixm:{wood:4},name:'たいこ',kind:'furn',cat:'env',w:1,lv:6,pc:10,time:120,maker:'fire',attr:{fire:1},mat:{wood:12,kuru:2},solid:1,desc:'木の台にのせた太鼓。6人で「たいこの会」をひらける'},
+  mato:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'弓の的',kind:'furn',cat:'env',lv:6,pc:8,time:100,maker:'wood',attr:{wood:1},mat:{wood:10,shina:4},mat1:{wood:10,kuru:4},mat4:{wood:10,nabiki:4},mat3:{wood:10,ashi:4},mat5:{wood:10,yotsuyu:4},solid:1,desc:'わらをまるくたばねた的。3人で「的あて」をひらける'},
+  picnic:{name:'ピクニックシート',sz:[2,2],kind:'furn',cat:'env',lv:5,pc:8,time:90,maker:'wood',attr:{wood:1},mat:{wood:4,shina:8},mat4:{wood:4,nabiki:8},mat3:{wood:4,ashi:8},mat5:{wood:4,yotsuyu:8},desc:'草の上にひろげる布とかご。6人で「ピクニック」をひらける'},
+  taiko:{hp:5,brk:1,fix:3,fixm:{wood:4},name:'たいこ',kind:'furn',cat:'env',w:1,lv:6,pc:10,time:120,maker:'fire',attr:{fire:1},mat:{wood:12,kuru:2},mat4:{wood:12,nabiki:2},mat3:{wood:12,ashi:2},mat5:{wood:12,yotsuyu:2},solid:1,desc:'木の台にのせた太鼓。6人で「たいこの会」をひらける'},
   chadogu:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'茶道具の台',kind:'furn',cat:'env',w:1,lv:7,pc:9,time:110,maker:'water',attr:{water:1},mat:{wood:8,stone:3},solid:1,desc:'てつのかまと茶わんの台。4人で「お茶のけいこ」をひらける'},
   hokora:{hp:8,brk:1,fix:3,fixm:{stone:4},name:'ほこら',kind:'furn',cat:'env',w:1,lv:8,pc:12,time:140,maker:'earth',attr:{earth:1},mat:{stone:15,wood:6},solid:1,desc:'石の台にのせた小さな社。みんなで「ほこらまいり」をひらける'},
   bell:{name:'村の鐘',sz:[2,2],kind:'build',mat:{wood:60,stone:60},pc:120,time:240,maker:'earth',lv:12,solid:1,attr:{},desc:'朝、村のせいれいのたのしさ+15（重複なし）'},
@@ -228,7 +277,7 @@ const BL={
   bamboo:{name:'竹',solid:1,natural:1},
   takenoko:{name:'たけのこ',natural:1,dyn:1},
   weed0g:{name:'しなやかな草',natural:1,weed:'shina'},weed0k:{name:'かさかさ草',natural:1,weed:'kasa'},/* 草原の雑草（よみがえった土地・荒れた土地） */
-  weed1g:{name:'くるくる草',natural:1,weed:'kuru'},weed1k:{name:'ちりちり草',natural:1,weed:'chiri'},/* 火山の雑草 */
+  weed1g:{name:'くるくる草',natural:1,weed:'kuru'},weed1k:{name:'ちりちり草',natural:1,weed:'chiri'},/* 火山の雑草 */weed4g:{name:'なびき草',natural:1,weed:'nabiki'},weed4k:{name:'ほうき草',natural:1,weed:'houki'},/* 風の雑草 */weed3g:{name:'あし',natural:1,weed:'ashi'},weed3k:{name:'がま',natural:1,weed:'gama'},/* 水の雑草 */weed5g:{name:'夜つゆ草',natural:1,weed:'yotsuyu'},weed5k:{name:'かげ草',natural:1,weed:'kagekusa'},/* 闇の雑草 */
   weedc:{name:'ふんばり草',natural:1,weed:'funba'},/* どの土地にも生える雑草（オヒシバ） */
   kinoko:{name:'きのこ',natural:1,weed:'kinoko'},
   plot:{name:'耕す前の畑',job:1,dyn:1},
@@ -238,20 +287,22 @@ const BL={
 
   'seed:mugi':{name:'こむぎのたね',kind:'seed',desc:'2日で育つ。食料+1。パンの材料'},'seed:tomato':{name:'キャベツのたね',kind:'seed',desc:'2日で育つ。食料+1'},'seed:imo':{name:'いものたね',kind:'seed',desc:'3日で育つ。食料+2'}
 };
-const BLOCKS=['path','gravel','woodpath','stone','brick','floor','brickfloor','stonefloor','herrfloor','carpet','farm','fence','misugaki','logfence','bamboofence','bedge','gate','stonegate','logdoor','loggate','hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','wall','sdoor','window'];const GATE_IDS=new Set(['gate','stonegate','logdoor','loggate','leafwall'])/* 葉のかべ：せいれいは通れる・コワイノはこわして通る */,FENCE_IDS=new Set(['fence','misugaki','logfence','bamboofence','gate','stonegate','logdoor','loggate']),HOME_WALLS=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','wall']),HOME_DOORS=new Set(['door','yozoradoor','sdoor']);
+const BLOCKS=['path','gravel','woodpath','stone','brick','floor','brickfloor','stonefloor','herrfloor','carpet','farm','fence','misugaki','ropefence','ashifence','rankan','ibara','kuzure','logfence','bamboofence','parkfence','bedge','gate','stonegate','logdoor','loggate','parkdoor','parkgate','canalgate','irongate','hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','canvasdoor','archdoor','niwadoor','canvasdoor','archdoor','niwadoor','wall','sdoor','window'];const GATE_IDS=new Set(['gate','stonegate','logdoor','loggate','parkdoor','parkgate','canalgate','irongate','leafwall'])/* 葉のかべ：せいれいは通れる・コワイノはこわして通る */,FENCE_IDS=new Set(['fence','misugaki','ropefence','ashifence','rankan','ibara','kuzure','logfence','bamboofence','parkfence','gate','stonegate','logdoor','loggate','parkdoor','parkgate','canalgate','irongate']),HOME_WALLS=new Set(['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall','wall']),HOME_DOORS=new Set(['door','yozoradoor','canvasdoor','archdoor','niwadoor','sdoor']),HDOORS=new Set(['door','yozoradoor','canvasdoor','archdoor','niwadoor'])/* 家のドア（壁ごとの絵 <壁>.<id>#h0〜3） */;
 const TOWER_STONE={...BL.tower};
 const TOWER_TREE={...BL.tower,sz:[4,4],name:'御神木',pc:0,mat:{},maker:'wood',desc:'みんなで育てた木。まわり7マスを照らす'};
-const PLANTDEF=new Set(['nebari','hotaru'])/* 守りの草：草原のサブクエストでおぼえる */,PLANTS=['clover','bellf','salvia','lily','lotus','nebari','hotaru','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus','nebari']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus','nebari','hotaru']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay()&&!(typeof NEARMIZU!=='undefined'&&NEARMIZU.has(j)))/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
-function bedStep(){/* はじめのベッド：はたおり機 → 布 → ベッドの、いまの所 */const lm=cnt('loom')>0,nu=(S.mat.nuno||0)>0||(S.orders||[]).some(o=>o.type==='bed')||cnt('bed')>0||(S.inv||{}).bed>0;return 'はたおり機 '+(lm?'1':'0')+'/1・布 '+(nu?'1':'0')+'/1・ベッド '+Math.min(1,houseBedCount())+'/1'+((S.orders||[]).some(o=>o.type==='bed')&&!S.obj.includes('wbench')?'・作業台がありません':'')}/* 作業台がないと、ベッドの依頼は作れない */
+const STAGEFL=new Set(['tanpopo','ayame','tsukimi'])/* その土地だけの花（風・水・闇）。草原の花のたねの店には出さない */,PLANTDEF=new Set(['nebari','hotaru'])/* 守りの草：草原のサブクエストでおぼえる */,PLANTS=['clover','bellf','salvia','lily','tanpopo','ayame','tsukimi','lotus','nebari','hotaru','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','tanpopo','ayame','tsukimi','lotus','nebari']),ATTRFL=new Set(['clover','bellf','salvia','lily','tanpopo','ayame','tsukimi','lotus','nebari','hotaru']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay()&&!(typeof NEARMIZU!=='undefined'&&NEARMIZU.has(j)))/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
+function bedStep(){/* はじめのベッド：いまの手順だけを、番号つきで出す（はたおり機を置く → 布をおる → ベッドをたのむ → 家の中に置く） */const od=(S.orders||[]).some(o=>o.type==='bed'),L=S.obj.indexOf('loom'),busy=L>=0&&typeof prCount==='function'&&(prCount(L)>0||!!(S.prOut||{})[L]),hasBed=cnt('bed')>0||(S.inv||{}).bed>0;
+  const t=hasBed?'4/4 ベッドを家の中に置く':od?'3/4 ベッドを作っている'+(!S.obj.includes('wbench')?'・作業台がありません':''):(S.mat.nuno||0)>0?'3/4 依頼ボードでベッドをたのむ':L<0?'1/4 はたおり機を置く':busy?'2/4 布をおっている':'2/4 はたおり機で布をおる';return '手順 '+t}/* 作業台がないと、ベッドの依頼は作れない */
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
-const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
+const BEDSET=new Set(['bed','yorubed','g_k_bed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
 function kwrSync(){if(!S)return;let g=[];try{g=JSON.parse(KV.getItem(KWRKEY)||'[]')}catch(e){}const G=new Set(g.filter(id=>KWR.includes(id)));for(const id of KWR)if((S.recipes||{})[id])G.add(id);for(const id of G){(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true}try{KV.setItem(KWRKEY,JSON.stringify([...G]))}catch(e){}}/* コワイノのレシピ：落とし物でまれに手に入る */
-const STAGEONLY={kazami:4,merry:4,cup:4,skyswing:4,wheel:4,picnic:0,hwall:0,bamboowall:1,fence:0,misugaki:1,signw:0,signs:1,logfence:0,logdoor:0,loggate:0,bamboofence:1,takebench:1,takeakari:1,shishiodoshi:1,yudekago:1};/* そのステージで作れる物（草原0・火山1）。おぼえたら、どのステージでも作れる */
+const STAGEONLY={canvasdoor:4,archdoor:3,niwadoor:5,canalgate:3,irongate:5,gekkolamp:5,hotarukago:5,shitone:5,tsukimidai:5,mosswall:5,moonwall:5,ibara:5,kuzure:5,terraceseat:3,madobachi:3,canallamp:3,araiba:3,ashifence:3,rankan:3,timberwall:3,canalwall:3,shimahammock:4,fusenya:4,kagoisu:4,kazakadan:4,kazelamp:4,ropefence:4,kazami:4,canvaswall:4,acaciawall:4,parkfence:4,parkdoor:4,parkgate:4,merry:4,cup:4,skyswing:4,wheel:4,picnic:0,hwall:0,bamboowall:1,fence:0,misugaki:1,signw:0,signs:1,logfence:0,logdoor:0,loggate:0,bamboofence:1,takebench:1,takeakari:1,shishiodoshi:1,yudekago:1};/* そのステージで作れる物（草原0・火山1）。おぼえたら、どのステージでも作れる */
 const GRECKEY='hakoniwa-rec-v1',GRECKEY2='hakoniwa-rec-v2',GRECFIX='hakoniwa-rec-fix1',GNOREC=new Set(['statue','tower','yogan','watch','dig','mound']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
-const NOMAT={0:['bamboo','kuru','chiri'],1:['shina','kasa'],4:['bamboo','kuru','chiri'],6:['bamboo','kuru','chiri']/* フリーモードの素材は草原と同じ */},FREEHIDE=new Set(['watch','lurestatue','drum','arrow2','mato','spike','sticky','puddle','firetrap','gust','pit','nebari'])/* フリーモードでは出さない物（コワイノが来ない土地なので、守りの物はいらない） */,freeHide=id=>!!S&&!!S.free&&FREEHIDE.has(id),matHere=(b,w)=>!Object.keys((w===1?b.mat1:b.mat0)||b.mat||{}).some(k=>(w===FREE&&freeTier()>=1?[]:NOMAT[w]||[]).includes(k));/* そのステージで手に入らない素材を使う物は、村レベルでおぼえない（草原：竹・くるくる草・ちりちり草）。b.mat は、いまのステージの素材になるので、w のステージの素材（mat1・mat0）で見る */
+const NOMAT={0:['bamboo','kuru','chiri','nabiki','houki','kumowata','hane','ashi','gama','nendo','maruishi','yotsuyu','kagekusa','gekko','kogi'],1:['shina','kasa','nabiki','houki','kumowata','hane','ashi','gama','nendo','maruishi','yotsuyu','kagekusa','gekko','kogi'],3:['bamboo','kuru','chiri','shina','kasa','nabiki','houki','kumowata','hane','yotsuyu','kagekusa','gekko','kogi'],4:['bamboo','kuru','chiri','shina','kasa','ashi','gama','nendo','maruishi','yotsuyu','kagekusa','gekko','kogi'],5:['bamboo','kuru','chiri','shina','kasa','nabiki','houki','kumowata','hane','ashi','gama','nendo','maruishi'],6:['bamboo','kuru','chiri','nabiki','houki','kumowata','hane','ashi','gama','nendo','maruishi','yotsuyu','kagekusa','gekko','kogi']/* フリーモードの素材は草原と同じ */},FREEHIDE=new Set(['watch','lurestatue','drum','arrow2','mato','spike','sticky','puddle','firetrap','gust','pit','nebari'])/* フリーモードでは出さない物（コワイノが来ない土地なので、守りの物はいらない） */,freeHide=id=>!!S&&!!S.free&&FREEHIDE.has(id),matHere=(b,w)=>!Object.keys((w===1?b.mat1:w>1&&b['mat'+w]?b['mat'+w]:b.mat0)||b.mat||{}).some(k=>(w===FREE&&freeTier()>=1?[]:NOMAT[w]||[]).includes(k));/* そのステージで手に入らない素材を使う物は、村レベルでおぼえない（草原：竹・くるくる草・ちりちり草）。b.mat は、いまのステージの素材になるので、w のステージの素材（mat1・mat0）で見る */
 function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNOREC.has(id)||STAGEONLY[id]==null&&b.offerOnly&&b.kind==='furn')continue;/* おそなえだけの家具は、レシピにしない */
   if((s.recipes||{})[id]||(s.unlocked||{})[id])out.push(id);
+  else if(typeof LVPICK!=='undefined'&&LVPICK.has(id)&&!s.free&&!((s.lvPick||{}).got||{})[id]&&!((s.flags||{})['lv_'+id]))continue;/* えらんでおぼえる物は、えらぶまでおぼえない（lvpick.js） */
   else if((b.kind==='block'||b.kind==='build'||b.kind==='plant')&&b.lv&&!QB.has(id)&&(s.lv||1)>=b.lv&&(b.w||0)<=w&&matHere(b,w)&&(STAGEONLY[id]==null?!b.offerOnly:STAGEONLY[id]===w))out.push(id)}/* 村レベルで使えるようになった物 */
   return out}
 function ownLearned(d,w){/* そのステージが、自分のクエスト・村レベル・持ち物でおぼえる物（ほかのステージからもらった物はふくめない） */const s2={world:w,free:false,flags:d.flags,quest:d.quest||0,qTalked:d.qTalked,qStory:d.qStory,subDone:d.subDone,subSt:d.subSt,subSeen:d.subSeen,lv:d.lv,inv:d.inv,obj:d.obj,orders:d.orders||[],win:d.win,recipes:{},guardianIdeas:{},unlocked:{}};try{syncQuestRecipes(s2)}catch(e){}return new Set(learnedIn(s2,w))}
@@ -269,15 +320,15 @@ function grecForget(w){/* 「はじめから」：そのステージでおぼえ
   grecSave()}
 const grec=id=>!!S&&!S.free&&grecOf().get(id)<WD;/* 前のステージでおぼえたか */
 function recSync(){if(!S||S.free)return;const G=grecOf();let add=false;for(const[id,o2]of[...G]){const b=BL[id];if(b&&b.lv&&STAGEONLY[id]==null&&!matHere(b,o2)){G.delete(id);add=true;if(o2===WD){if(S.recipes)delete S.recipes[id];if(S.unlocked)delete S.unlocked[id];if(S.guardianIdeas)delete S.guardianIdeas[id]}}}/* 前に、手に入らない素材の物をおぼえていたら、わすれる（草原の竹のハシゴ） */for(const id of learnedIn(S,WD))if(!G.has(id)){G.set(id,WD);add=true}for(const[id,o]of G){const b=BL[id];if(!b||!(o<WD))continue;/* 使えるのは、前のステージでおぼえた物だけ（いまのステージ・この先のステージでおぼえた物は使えない） */if(b.kind==='block'||b.kind==='plant')(S.unlocked||(S.unlocked={}))[id]=true;else{(S.recipes||(S.recipes={}))[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true}}if(add||!KV.getItem(GRECKEY2))grecSave()}/* このステージでおぼえた物を足して（おぼえたステージもしまう）、ほかのステージでおぼえた物をもらう */
-const CRAFTB=['floor','brickfloor','stonefloor','herrfloor','carpet','path','gravel','woodpath','stone','brick','hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','fence','misugaki','bedge','logfence','bamboofence','gate','stonegate','logdoor','loggate','wall','sdoor','window','yozorawin'];
-const CRAFT_TABS=[["家具", ["wbench", "table", "dtable", "chair", "stool", "pouf", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub", "loom"]], ["収納", ["crate", "taru", "asabukuro", "makidana", "niguruma", "kabebukuro", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["merry", "cup", "skyswing", "wheel", "swing", "slide", "sandbox", "seesaw", "campfire", "mato", "picnic", "taiko", "chadogu", "hokora"]], ["庭", ["kazami", "bench", "takebench", "shishiodoshi", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "joro", "composter", "rockart", "signpost", "vane"]], ["あかり", ["torch", "takeakari", "andon", "candle", "lantern", "flamp", "toro", "lamp"]], ["ごはん", ["oven", "cooktable", "yudekago", "tub", "sink"]], ["ワナ", ["arrow", "arrow2", "drum", "pit", "gar01", "gar02", "gar03", "gar04", "gar05", "gar06", "gar07", "gar08", "gar09", "gar10", "gar11", "gar12", "gar13", "gar14", "gar15", "gar16", "gar17", "gar18", "gar19", "gar20", "gar21", "gar22", "gar23", "gar24", "gar25", "gar26", "spike", "puddle", "sticky", "firetrap", "gust"]], ["そうび", ["gw01", "gw02", "gw03", "gw04", "gw05", "gw06", "gw07", "gw08", "gw09", "gw10", "gw11", "gw12", "gw13", "gw14", "gw15", "gw16", "gw17", "gw18", "gw19", "gw20", "gw21", "gw22", "gw23", "gw24", "gw25", "gw26", "gw27", "gw28", "gw29", "gw30", "gw31", "gw32", "gw33", "gw34", "gw35", "gw36", "ga01", "ga02", "ga03", "ga04", "ga05", "ga06", "ga07", "ga08", "ga09", "ga10", "ga11", "ga12", "ga13", "ga14", "ga15", "ga16", "ga17", "ga18", "ga19", "ga20", "ga21", "ga22", "ga23", "ga24", "ga25", "ga26", "ga27", "ga28", "ga29", "gc01", "gc02", "gc03", "gc04", "gc05", "gc06", "gc07", "gc08", "gc09", "gc10", "gc11", "gc12", "gc13", "gc14", "gt01", "gt02", "gt03", "gt04", "gt05", "gt06", "gt07", "gt08", "gt09", "gt10", "gt11", "gt12", "gt13", "gt14", "gt15"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "bamboowall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "window"]], ["道・囲い", ["path", "gravel", "woodpath", "stone", "brick", "fence", "misugaki", "logfence", "bamboofence", "bedge", "gate", "stonegate", "logdoor", "loggate", "wall", "sdoor"]], ["クエスト", ["board"]], ["おくりもの", ["gf_oshibana", "gf_kibori", "gf_koma", "gf_wara"]]];let craftTags=[],craftQ='',craftCan=false;/* 依頼ボードでえらんでいるタグ（ぜんぶ合う物を出す）・さがす名前・いま作れる物だけ *//* 依頼ボードでえらんでいるタグ・さがす名前・しぼりこみを開いているか */
+const CRAFTB=['floor','brickfloor','stonefloor','herrfloor','carpet','path','gravel','woodpath','stone','brick','hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','canvasdoor','archdoor','niwadoor','fence','misugaki','ropefence','ashifence','rankan','ibara','kuzure','bedge','logfence','bamboofence','parkfence','gate','stonegate','logdoor','loggate','parkdoor','parkgate','canalgate','irongate','wall','sdoor','window','yozorawin'];
+const CRAFT_TABS=[["家具", ["wbench", "table", "dtable", "chair", "stool", "pouf", "kagoisu", "shitone", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub", "loom"]], ["収納", ["crate", "taru", "asabukuro", "makidana", "niguruma", "kabebukuro", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["merry", "cup", "skyswing", "wheel", "swing", "slide", "sandbox", "seesaw", "campfire", "mato", "picnic", "taiko", "chadogu", "hokora"]], ["庭", ["kazami", "tsukimidai", "terraceseat", "araiba", "madobachi", "shimahammock", "fusenya", "kazakadan", "bench", "takebench", "shishiodoshi", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "joro", "composter", "rockart", "signpost", "vane"]], ["あかり", ["gekkolamp", "hotarukago", "canallamp", "kazelamp", "torch", "takeakari", "andon", "candle", "lantern", "flamp", "toro", "lamp"]], ["ごはん", ["oven", "cooktable", "yudekago", "tub", "sink"]], ["ブロック", ["blk_stone"]], ["ワナ", ["arrow", "arrow2", "gk02", "gm02", "gy02", "drum", "pit", "gar01", "gar02", "gar03", "gar04", "gar05", "gar06", "gar07", "gar08", "gar09", "gar10", "gar11", "gar12", "gar13", "gar14", "gar15", "gar16", "gar17", "gar18", "gar19", "gar20", "gar21", "gar22", "gar23", "gar24", "gar25", "gar26", "spike", "puddle", "sticky", "firetrap", "gust"]], ["そうび", ["gk01", "gk03", "gk04", "gm01", "gm03", "gm04", "gy01", "gy03", "gy04", "gw01", "gw02", "gw03", "gw04", "gw05", "gw06", "gw07", "gw08", "gw09", "gw10", "gw11", "gw12", "gw13", "gw14", "gw15", "gw16", "gw17", "gw18", "gw19", "gw20", "gw21", "gw22", "gw23", "gw24", "gw25", "gw26", "gw27", "gw28", "gw29", "gw30", "gw31", "gw32", "gw33", "gw34", "gw35", "gw36", "ga01", "ga02", "ga03", "ga04", "ga05", "ga06", "ga07", "ga08", "ga09", "ga10", "ga11", "ga12", "ga13", "ga14", "ga15", "ga16", "ga17", "ga18", "ga19", "ga20", "ga21", "ga22", "ga23", "ga24", "ga25", "ga26", "ga27", "ga28", "ga29", "gc01", "gc02", "gc03", "gc04", "gc05", "gc06", "gc07", "gc08", "gc09", "gc10", "gc11", "gc12", "gc13", "gc14", "gt01", "gt02", "gt03", "gt04", "gt05", "gt06", "gt07", "gt08", "gt09", "gt10", "gt11", "gt12", "gt13", "gt14", "gt15"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "bamboowall", "canvaswall", "acaciawall", "timberwall", "canalwall", "mosswall", "moonwall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "canvasdoor", "archdoor", "niwadoor", "window"]], ["道・囲い", ["path", "gravel", "woodpath", "stone", "brick", "fence", "ropefence", "ashifence", "rankan", "ibara", "kuzure", "misugaki", "logfence", "bamboofence", "parkfence", "bedge", "gate", "stonegate", "logdoor", "loggate", "parkdoor", "parkgate", "canalgate", "irongate", "wall", "sdoor"]], ["クエスト", ["board"]], ["おくりもの", ["gf_oshibana", "gf_kibori", "gf_koma", "gf_wara"]]];let craftTags=[],craftQ='',craftCan=false;/* 依頼ボードでえらんでいるタグ（ぜんぶ合う物を出す）・さがす名前・いま作れる物だけ *//* 依頼ボードでえらんでいるタグ・さがす名前・しぼりこみを開いているか */
 const craftInTag=id=>{if(!craftTags.length)return true;const t=tagsOf(id);return craftTags.every(g=>t.includes(g))};
 const GIFTF=['furin','ema','kadomatsu','komainu','chochin','mimamori','yomawari','oyasumi','yonaka'];/* 交換・おみやげ・コワイノの落とし物でもらう家具 */
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
-const TABLES=new Set(['table','dtable']);/* 食べられる食卓（ふつう・大きな食卓） */
-const FURN=['loom','composter','cooktable','joro','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','dtable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
+const TABLES=new Set(['table','dtable','g_w_clover','g_e_geode','g_f_table','g_s_table']);/* 食べられる食卓（ふつう・大きな食卓） */
+const FURN=['gekkolamp','hotarukago','shitone','tsukimidai','terraceseat','madobachi','canallamp','araiba','shimahammock','fusenya','kagoisu','kazakadan','kazelamp','loom','composter','cooktable','joro','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','dtable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
-const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
+const TERRA=new Set(['dig','mound']),DIGIDS=new Set(['dig','mound']),CUBES=['blk_stone'],CUBEOLD=['blk_brick','blk_wood'],/* つむブロックは土地の地面の物だけ（土と石。持ち主がきめた）。レンガ・木のブロックは前のセーブの読みかえのため（blockMig） */SOIL='blk_soil',PICKB=[SOIL,...CUBES],digSel=id=>DIGIDS.has(id)||CUBES.includes(id);/* つむブロック（S.vx：マス→だんごとのブロック。''は土） *//* 地面の工事（DIGIDS：ほる・つむ。守り神がタップでじかに、なぞるとせいれいにたのむ） */
 const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','smelter','coop','barn','lumber','well','quarry','windmill','fountain','lighthouse','bell','onsen','signw','signs','stele','lurestatue','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
@@ -294,8 +345,8 @@ const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
 const HOMURA='ホムラ',SHIZUKU='シズク',KAZANE='カザネ',HAYATE='ハヤテ',MIO='ミオ',KAGARI='カガリ';/* カガリ：火山からにげた火のせいれい。おまつりのあと、入り口のあかりをたよりに、自分で帰ってくる（kagari.js） *//* ミオ：水のステージの1人目（しずかな歌い手の水のせいれい） *//* ハヤテ：カザネのおさななじみの風のせいれい（はじめにうかんだ島で目をさます） *//* カザネ：風のステージのはじめからいる風のせいれい */
 const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[WIND]=[KAZANE,HAYATE];KEYS[FREE]=[];KEYS[2]=[];KEYS[MIZU]=[MIO];/* 水のステージの2人目（土）は、お話を作るときにきめる */const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const TOMORI='トモリ';KEYS[YAMI]=[TOMORI];/* 闇のステージ：光のせいれい（1人だけ） */
-const KEYEL={[TOMORI]:'light',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind',[MIO]:'water',[KAGARI]:'fire'};
+const TOMORI='トモリ',HIIRO='ヒイロ';KEYS[YAMI]=[TOMORI,HIIRO];/* 闇のステージ：光のせいれい（1人だけ） */
+const KEYEL={[TOMORI]:'light',[HIIRO]:'fire',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind',[MIO]:'water',[KAGARI]:'fire'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|……おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],
@@ -317,7 +368,8 @@ const INTRO=[
   [GOD,'この土地に守護の力を取りもどすには、おヌシの力を集める場所がいる。'],
   [GOD,'#think|……おや。あそこに、古い神殿がのこっとるのう。'],
   [POKO,'#think|うん……。ぼくが気づいたときには、もう、くずれてたんだ。'],
-  [GOD,'#joy|あれを直せば、わしの居場所にもなる。せいれいたちに、直してもらおうのう。'],
+  [GOD,'#joy|フタバ、あの神殿を直してくれんかのう。直れば、おヌシとわしの居場所になるぞい。'],
+  [POKO,'#joy|うん、やってみる！ 守り神さま、神殿の場所をおしえてね。'],
 ];
 let TESTSPD=false;try{TESTSPD=KV.getItem('hakoniwa-test')==='1'}catch(e){}
 const GLASS_IC='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="2.5" rx="1" fill="#a0703f"/><rect x="5" y="19.5" width="14" height="2.5" rx="1" fill="#a0703f"/><path d="M7 4.5c0 5 10 5.5 10 7.5s-10 2.5-10 7.5h10c0-5-10-5.5-10-7.5s10-2.5 10-7.5z" fill="#dff1f7" stroke="#7a5233" stroke-width=".8"/><path d="M9 18.5c1-2 5-2 6 0z" fill="#e8c27a"/></svg>');
@@ -343,7 +395,7 @@ const questStep=q=>q&&q.steps?(q.steps.find(s=>!s.check())||q.steps[q.steps.leng
 /* えらぶ場面：水のせいれいを村へあんないする子（えらんだ子と、なかよしになる） */
 function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...L,['M','#joy|よろしくおねがいします。']])});return {key:'guide',who:POKO,q:'ねえ、'+W+'に村をあんないするの、だれがいいかな？',
   pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;bondSet(g,w,BOND_TALK);tourStart(g,w)},
-  opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]}}
+  opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),...(elemCount('fire')>0?[opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]:[])]}}/* 火のせいれいがまだいないとき（お話の道）は、えらべない */
 const WARMH=17;/* 芽のそばのごはん：燃やさない火のつぎの日の、この時からお話（朝から晩まで芽のそばにいたのを見てから） */
 function warmMealReady(){const F=S.flags;if(F.warmDay==null){F.warmDay=callDay();dirty=true;return false}/* 燃やさない火がおわって、この目標になった日 */const d=callDay()-F.warmDay;return d>=2||d===1&&hour()>=WARMH}
 const QUESTS1=[
@@ -476,7 +528,7 @@ const QUESTS1=[
    story:[
     [POKO,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
     [MINA,'大きくなるの、たのしみだねぇ。']]},
-  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばにあさぶくろを置いたら、切り株をタップ。ノドカと根もとの土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？ どうしたの？"],["N","毎日、畑の土をさわってたらねぇ……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるのに気づいたんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土を入れておく、ふくろがあるといいねぇ。あとで、ちゃんともどせるように。"]],[["F","#think|……あれ？ この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土をもどしておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
+  companionFieldQuest("earthListen","切り株の下で","「おく」の「設計図」で「根もとのものおき」をえらび、切り株のそばに置く。できたら、切り株をタップ。ノドカと根もとの土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？ どうしたの？"],["N","毎日、畑の土をさわってたらねぇ……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるのに気づいたんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土は、ふくろに入れて、そばの小屋にしまっておきたいなぁ。あとで、ちゃんともどせるように。"],["N","#joy|小屋の形、えがいてみたよぉ。守り神さま、これ、見てくれるぅ？"]],[["F","#think|……あれ？ この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土をもどしておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちたつぎの朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:POKO,when:()=>true,lines:[
@@ -486,7 +538,7 @@ const QUESTS1=[
     [MINA,'火のせいれいなら、ぬくもりを分けてあげられるかもしれないねぇ。夜は、「コワイノ」から村を守ってくれるんだってぇ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H','#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'],[POKO,'あったかいせいれいが来てくれた！ あのね、あとで見てほしい木があるの。'],['H','木？ ……いいぜ。そんな顔されちゃ、あとで見てやるよ。']])}},
-  companionFieldQuest("fireRoot","燃やさない火","切り株のそばにたき火を置いたら、切り株をタップ。火のせいれいが温めた石を根のまわりに置く。ノドカと土を整えて、根もとの変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
+  companionFieldQuest("fireRoot","燃やさない火","「おく」の「設計図」で「たき火のひろば」をえらび、切り株のそばに置く。できたら、切り株をタップ。火のせいれいが温めた石を根のまわりに置く。ノドカと土を整えて、根もとの変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"],["H","火の番をする所も、いるな。まわりに道をしいて、すわる切り株も置こう。"],["H","#proud|ひろばの形、えがいといたぜ。守り神さま、たのむ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
   /* 芽が出たあと（つぎの日の夕方 WARMH 時から。warmMealReady）：芽のそばからはなれないフタバのために、火のせいれいが、切り株のそばに食卓を置こうと言う（warmIns1）。かまどは火山から */
   stepQuest({id:'warmMeal',text:'芽のそばのごはん',
    steps:[{id:'warmTable',t:'切り株のそばに、食卓を置く',check:()=>!!S.flags.warmYaki||!!S.flags.warmEat||warmTableJ()>=0,how:'依頼ボードの「家具」で食卓の依頼をはり、切り株のそばに置く'},
@@ -502,12 +554,12 @@ const QUESTS1=[
     [MINA,'水のことなら、水のせいれいがくわしいよぉ。畑の水やりも、得意なんだってぇ。'],
     [MINA,'#nod|みんながここで楽しく暮らして、村が育って、水の力もたまったら、来てくれるかもねぇ。']]},
    get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！ これで、切り株の芽にも、ちゃんと水がとどくかな。'],['H','へぇ、水のせいれいか。悪くない村になってきたじゃねえか。'],['@choice',choiceGuide()]])},gives:{flag:'wellR'}}),
-  companionFieldQuest("waterFilm","根まで届く水","切り株のそばにみずがめを置いたら、切り株をタップ。水の流れを確かめる。ノドカと水のせいれいに根まで通してもらい、若葉が開くのを、そばで見守る","water",[["M","フタバさん。その水は、どちらへ？"],["F","あの木に。芽が出たんだよ！"],["M","……根のところまで、届いていないようです。"],["F","こんなに、持ってきたのに？"],["M","ええ。でも、どこで止まっているか、わかりました。"],["M","木のそばに、みずがめを置きましょう。一度にかけずに、少しずつ流して確かめたいのです。"]],[["F","じゃあ、いっしょに見ててくれる？"],["M","はい。",0,"stree:sit"],["F","……あ。",0,"stree:leaf"],["F","一枚だけだ。"],["M","一枚目、ですね。"],["F","#teary|うん。一枚目。"]],['waterFilm']),
+  companionFieldQuest("waterFilm","根まで届く水","「おく」で井戸をえらび、切り株のそばに建ててもらう。できたら、切り株をタップ。水の流れを確かめる。ノドカと水のせいれいに根まで通してもらい、木のようすを、そばで見守る","water",[["M","フタバさん。その水は、どちらへ？"],["F","あの木に。芽が出たんだよ！"],["M","……根のところまで、届いていないようです。"],["F","こんなに、持ってきたのに？"],["M","ええ。でも、どこで止まっているか、わかりました。"],["M","木のそばに、井戸をほりましょう。地面の下の水を、木のそばでくんで、少しずつ流して確かめたいのです。"]],[["F","じゃあ、いっしょに見ててくれる？"],["M","はい。",0,"stree:sit"],["F","……あ。",0,"stree:leaf"],["F","一枚だけだ。"],["M","一枚目、ですね。"],["F","#teary|うん。一枚目。"]],['waterFilm']),
   /* 根まで届く水のあと：水のせいれいが、つかれたみんなを、ハスのそばの水あびにさそう（aoIns1。id は前のまま） */
   stepQuest({id:'aoFish',text:'ハスのそばの水あび',
    steps:[{id:'aoLotus',t:'池に、ハスの花を咲かせる',check:()=>S.obj.some((o,j)=>o==='lotus'&&!isBud(j)),how:'「おく」で、ハスのたねを池の上に置く'},
-    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3',how:'夕方になると、せいれいが水べで水あびをする'}],
-   talk:{get who(){return keyName('water')},when:()=>true,get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
+    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3'+(typeof seasonNow==='function'&&seasonNow()===3?'　冬は、春まで水あびをしない':''),how:'夕方になると、せいれいが水べで水あびをする'}],
+   talk:{get who(){return keyName('water')},when:()=>{if(S.flags.aoFishD==null)S.flags.aoFishD=dayNo();return dayNo()>S.flags.aoFishD},wait:'みんなのくらしを、水のせいれいが見まもっている',/* みんなが毎日はたらくのを見てから話す：前の目標をおえた日のうちには話さない */get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
    get story(){return KS([['F','#joy|つめたくて、きもちいいね！'],['N','ハスの花のにおいがするよぉ。ねむくなっちゃうねぇ。'],['M','#joy|よかった。みなさんが笑ってくれると、水も、うれしそうです。'],['H','へっ。見てるだけでも、なんだか、すっとするな。'],['M','つかれた日は、また、ここで水あびしましょう。'],['F','#joy|うん！']])}}),
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],
    steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝、あとが見つかる':'村の南のはしにある',how:'「しらべる」で、村の南に出た、大きなかげのあとをタップする'},
@@ -521,8 +573,8 @@ const QUESTS1=[
     [POKO,'#sigh|ぼく、あのつめたさ、知ってる気がするんだ。……ずっとむかし、ぼくがまだ、小さな芽だったころのお話。'],
     [POKO,'ここには、ぼくのきょうだいたちが、いっしょにいたんだ。'],
     [POKO,'#sigh|ある夜、あのあしあとみたいな、つめたくて大きなかげが来た。みんなが、ぼくの前に立って……それで、朝になったら、だれもいなかった。'],
-    [POKO,'みんなの顔、もう、はっきり思い出せないんだ。でも、ノドカといると、なんだか、なつかしい気がするの。'],
-    [MINA,'ふしぎだねぇ。ぼくも、ここの土は、はじめてじゃない気がするよぉ。'],
+    [POKO,'みんなの顔、もう、はっきり思い出せないんだ。'],
+    [MINA,'#think|……ぼくねぇ、ここの土は、はじめてじゃない気がするよぉ。'],
     [POKO,'#nod|今度は、ぼくが、みんなを守るばん。'],
     ['@choice',{key:'futabaBrave',who:POKO,q:'#worry|……ぼく、つよくなれるかな。',opts:[
      {t:'なれるよ',v:'strong',lines:[[POKO,'#joy|……うん。ありがとう、守り神さま。']]},
@@ -546,7 +598,7 @@ const QUESTS1=[
   stepQuest({id:'guardLearn',text:'こもれびのまもり',
    steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバがたたかいに出て、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバがたたかうかは、せいれいの画面でえらぶ'}],
    talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
-    gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、たたかうフタバのまわり3マスで、「コワイノ」にねらわれている、たたかうせいれいを、葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
+    gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');guardLearnPop()}}},
    get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりのたね」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
@@ -555,7 +607,7 @@ const QUESTS1=[
     [MINA,'あの葉っぱにも、いい風を運んでくれるかもしれないねぇ。風の力をためれば、来てくれるはずだよぉ。'],
     [POKO,'#think|じゃあ、ふわっとゆれる遊び道具があったら、よろこんでくれるかな？ 守り神さま、なにか思いつく？'],['@idea']]},
    get story(){return KS([['K','フッ……風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで、木・土・火・水・風のなかまがそろったね！'],['K','フッ……素朴なのも、悪くない。ぼくの風で、もっと華やかにしてあげよう。'],[POKO,'#think|……そうだ。あの切り株の若葉にも、やさしい風をとどけてくれるかな。']])}},
-  companionFieldQuest("windEcho","葉ずれの向こう","切り株のそばに風車を建てたら、切り株をタップ。風のせいれいと若葉の音を聞く。集まった仲間と世話をして、フタバの声を届けよう。返事を最後まで聞く","wind",[["K","ずいぶん大事にされているね。この木は。"],["F","みんなで、お世話してるんだ。"],["K","……根もとへ、風を通してみてもいいかな。"],["F","葉っぱ、飛んでいかない？"],["K","そんな乱暴な風は、使わないさ。"],["K","木のそばに、風車を建ててもいいかな。羽が回れば、風の強さが目で見える。強すぎたら、すぐわかるよ。"]],[["F","#teary|……生きてる。"],["F","ヌシ様、生きてるんだ。"],["F","ぼくが、ひとりじゃないって……。"],["N","聞いてくれたねぇ。",0,"stree:touch"],["F","守り神さま。"],["F","ヌシ様を、もとの姿にもどしてあげたい。"],["F","また、この木の下で……みんなで会いたい。"]],['windEcho']),
+  companionFieldQuest("windEcho","葉ずれの向こう","切り株のそばに風車を建てたら、切り株をタップ。風のせいれいと木の音を聞く。集まった仲間と世話をして、木のようすを最後まで見届けよう","wind",[["K","ずいぶん大事にされているね。この木は。"],["F","みんなで、お世話してるんだ。"],["K","……根もとへ、風を通してみてもいいかな。"],["F","葉っぱ、飛んでいかない？"],["K","そんな乱暴な風は、使わないさ。"],["K","木のそばに、風車を建ててもいいかな。羽が回れば、風の強さが目で見える。強すぎたら、すぐわかるよ。"]],[["F","#teary|……生きてる。"],["N","聞いてくれたねぇ。",0,"stree:touch"],["F","守り神さま。……ヌシ様を、もとの姿にもどしてあげたい。"],["F","また、この木の下で……みんなで会いたい。"]],['windEcho']),
   /* 葉ずれの向こうのあと：風のせいれいが、たこをあげて、空から村をながめる（kiteIns1）。霧のむこうの足あとに気づき、かけらさがしへつながる */
   stepQuest({id:'kite',text:'空からのながめ',
    steps:[{id:'kiteMat',t:'たこの材料をあつめる',check:()=>(S.mat.eda||0)>=3&&(S.mat.shina||0)>=4,prog:()=>'枝 '+Math.min(3,S.mat.eda||0)+'/3　しなやかな草 '+Math.min(4,S.mat.shina||0)+'/4',how:'枝と、しなやかな草を箱にためる'}],
@@ -595,21 +647,22 @@ const QUESTS1=[
     [MINA,'みんなが、だれかを想う気持ちに、ヌシ様の力がこたえてくれたんだねぇ。'],
     [POKO,'#joy|ぼくたち、もっとなかよしになれたんだね！'],
     ...KS([['H','#joy|へへっ、なんだか、てれくさいな。'],['M','あと、ひとつですね。'],['K','フッ……想いの光か。悪くないね。']]).filter(l=>S.res.some(r=>r.name===l[0]))];},gives:{shard:'key'}}),
-  stepQuest({id:'wood6',text:'木のなかまと花畑',
-   steps:[{id:'wood6',t:'木のせいれいを5人にする',check:()=>elemCount('wood')>=5&&NEWRES==null,prog:()=>'木のせいれい '+Math.min(5,elemCount('wood'))+'/5',how:'花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計5人をむかえる'},
+  stepQuest({id:'wood6',text:'きょうだいの花畑',
+   steps:[{id:'wood6',/* id はセーブの読みかえのため、前のまま（前は、木のせいれいを5人） */get t(){return 'きょうだいがかくした、'+wflName()+'のたねを5つ見つける'},check:()=>wseedN()>=WSEED_N||wflN()>=WFL_N||!!S.flags.wSeedOld,prog:()=>'見つけたたね '+Math.min(WSEED_N,wseedN())+'/'+WSEED_N,how:'晴れた土地のどこかで、たねが光っている。「しらべる」でタップすると、せいれいがひろいにいく'},
     {id:'flower50',/* id はセーブの読みかえのため、前のまま（前は、花を50こ） */get t(){return '御神木のそばに、'+wflName()+'を5本咲かせる'},check:()=>wflN()>=WFL_N,prog:()=>wflName()+' '+wflN()+'/'+WFL_N,get how(){return '「おく」で'+wflName()+'のたねを、御神木のそばに置く'}},
-    {id:'flTend',t:'木のせいれい5人に、花の世話をしてもらう',check:()=>wflTN()>=WFL_TEND,prog:()=>'花の世話 '+wflTN()+'/'+WFL_TEND+(wflN()<WFL_N?'　'+wflName()+'が咲くのを待っている':''),get how(){return '御神木のそばの'+wflName()+'が咲くのを待とう'}}],
+    {id:'flTend',t:'フタバとなかまに、花の世話をしてもらう',check:()=>wflTN()>=wflNeed(),prog:()=>'花の世話 '+wflTN()+'/'+wflNeed()+(wflN()<WFL_N?'　'+wflName()+'が咲くのを待っている':''),get how(){return '御神木のそばの'+wflName()+'が咲くのを待とう'}}],
    talk:{who:MINA,when:()=>true,learn:['campfire'],lines:[
     [POKO,'ヌシ様がいたころ、御神木のそばには、花が咲いてたんだ。ぼくと、きょうだいたちの5人で、ひとり1本ずつ、お世話してた。'],
-    [POKO,'#think|……きょうだいたちは、もういないけど。木のなかまが5人そろったら、あのころと同じ花を、咲かせられると思うんだ。'],
-    [MINA,'#nod|ひとりに1本かぁ。だいじに育ててたんだねぇ。'],
-    [POKO,'守り神さま、おねがい。ヌシ様が帰ってきたとき、さいしょに、その花を見てほしいんだ。'],
-    ['@choice',{key:'nushiFlower',who:POKO,q:'#think|ヌシ様に、さいしょに見てほしい花……どれがいいかな？',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */const it={[v]:5};for(const[id,n]of Object.entries(it))giveItem(id,n);queueItemGift(it)},opts:[
+    [POKO,'#think|……きょうだいたちは、もういないけど。みんな、花のたねを、すきな場所にかくしてたんだ。'],
+    [MINA,'#tilt|たねを、かくしてたのぉ？'],
+    [POKO,'#giggle|うん。川のそばとか、大きな木の下とか。春になったら、いっしょに植えようねって。'],
+    [POKO,'守り神さま、おねがい。たねを見つけて、ヌシ様が帰ってきたとき、さいしょに、その花を見てほしいんだ。'],
+    ['@choice',{key:'nushiFlower',who:POKO,q:'#think|みんなでかくしたのは……どの花のたねだったかな？',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */wseedPlace()},opts:[
      {t:'ききょう',v:'bellf',lines:[[POKO,'#joy|ききょう！ ノドカを呼んでくれた花だね！']]},
      {t:'ゆり',v:'lily',lines:[[POKO,'#joy|ゆり！ 白くて、ヌシ様の毛なみみたいだね！']]},
      {t:'シロツメクサ',v:'clover',lines:[[POKO,'#joy|シロツメクサ！ ヌシ様のそばで、よく四つ葉をさがしたんだ！']]}]}],
-    [MINA,'#joy|花が咲いたら、みんなで、お世話しようねぇ。']]},
-   get story(){return [[POKO,'#surprise|わあ……御神木のまわりが、'+wflName()+'でいっぱいだ！ 木のなかまも、こんなにふえたね。'],[POKO,'#joy|ありがとう、守り神さま！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
+    [MINA,'#joy|見つけたら、みんなで植えて、お世話しようねぇ。']]},
+   get story(){return [[POKO,'#surprise|わあ……御神木のまわりが、'+wflName()+'でいっぱいだ！'],[POKO,'#joy|ありがとう、守り神さま！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
   {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],

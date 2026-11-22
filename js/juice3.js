@@ -38,7 +38,7 @@ function juiceDiaryCount(body,secW,defer){/* diaryBody から（朝に出した�
 
 /* ---------- なかよしのハート ---------- */
 function juiceBondHeart(a,b,lv){if(!j3OK()||!a||!b||a.hidden||b.hidden||J3H.length>3)return;J3H.push({a,b,lv,t0:performance.now(),s:0});}
-function j3Mid(h){const x=(h.a.x+h.b.x)/2,y=Math.min(h.a.y,h.b.y),j=(y|0)*W+(x|0),lift=typeof hiAt==='function'?hiAt(j)*LIFT:0;return[x*TS,(y-1.7)*TS-lift]}
+function j3Mid(h){const x=(h.a.x+h.b.x)/2,y=Math.min(h.a.y,h.b.y),j=(y|0)*W+(x|0),lift=typeof hiAt==='function'?liftOf(j):0;return[x*TS,(y-1.7)*TS-lift]}
 function j3Heart(c,cx,cy,P,C,a){const R=BONDHEART,w=R[0].length,h=R.length,x0=Math.round(cx-w*P/2),y0=Math.round(cy-h*P/2);c.globalAlpha=a;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const ch=R[y][x];if(ch==='.')continue;c.fillStyle=ch==='o'?C[0]:C[1];c.fillRect(x0+x*P,y0+y*P,P,P)}c.globalAlpha=1}
 function juiceBondDraw(now){const c=ctx;for(let i=J3H.length-1;i>=0;i--){const h=J3H[i],e=now-h.t0;if(e>J3HEARTMS+J3POPMS||h.a.hidden||h.b.hidden){J3H.splice(i,1);continue}
@@ -98,7 +98,7 @@ function j3Spill(x,y,n){/* 光のつぶ（UIFX の木くずと同じ動き。金
 
 /* juice2 から */
 function juice3Frame(now){juiceStreakTick();juiceLvTick(now);juiceResTick();if(typeof juice4Frame==='function')juice4Frame(now)}
-function juice3Draw(now){if(typeof cupDraw==='function')cupDraw(now);if(typeof juice4Draw==='function')juice4Draw(now);if(J3H.length)juiceBondDraw(now);juiceFirstDraw(now);juiceDreamDraw(now);juiceSnowDraw(now)}
+function juice3Draw(now){if(typeof cupDraw==='function')cupDraw(now);if(typeof evShowDraw==='function')evShowDraw(now);if(typeof juice4Draw==='function')juice4Draw(now);if(J3H.length)juiceBondDraw(now);juiceFirstDraw(now);juiceDreamDraw(now);juiceSnowDraw(now)}
 function juice3Reset(){if(typeof juice4Reset==='function')juice4Reset();J3H.length=0;J3ST=null;J3RN=null;J3F.length=0;J3D.length=0;J3S.clear();if(J3LV){J3LV.e.style.visibility='';const x=document.getElementById('xpBar');if(x)x.classList.remove('ufx','uglow');J3LV=null}JLVW=null;JLVL=null;JLVP=null}
 
 /* ---------- なかまがふえた数（juiceResTick）：紹介をとじてから、上の欄のせいれいの数をふやし（めくり数字は uiNumWatch）、
@@ -127,7 +127,7 @@ function juiceFirstDraw(now){
     if(e<0)continue;
     if(e>J3FMS+J3FOUT){J3F.splice(i,1);continue}
     if(!f.s){f.s=1;j3FirstSnd()}
-    const x=Math.round((f.j%W+.5)*TS),lift=hiAt(f.j)*LIFT,y=Math.round(((f.j/W)|0)*TS-30-lift),out=Math.min(1,Math.max(0,(e-J3FMS)/J3FOUT)),t=e/1000;
+    const x=Math.round((f.j%W+.5)*TS),lift=liftOf(f.j),y=Math.round(((f.j/W)|0)*TS-30-lift),out=Math.min(1,Math.max(0,(e-J3FMS)/J3FOUT)),t=e/1000;
     /* 紙ふぶき（重さで落ちる）と、ひろがる星の十字 */
     for(const p of f.P){const u=Math.min(t,1.6),px=Math.round(x+p.vx*u),py=Math.round(y+8+p.vy*u+140*u*u);if(t>1.6)continue;c.globalAlpha=Math.max(0,1-t/1.6);c.fillStyle=p.c;c.fillRect(px,py,p.s,Math.floor(now/90+p.vx)%2?p.s:1)}
     if(e<700){const u=e/700,r=Math.round(8+u*44);c.globalAlpha=1-u;for(let k=0;k<10;k++){const a=k/10*6.283+.3,sx=Math.round(x+Math.cos(a)*r),sy=Math.round(y+6+Math.sin(a)*r*.6);c.fillStyle=k%2?'#fff6c8':'#ffd23f';c.fillRect(sx-2,sy,5,1);c.fillRect(sx,sy-2,1,5)}}
@@ -145,7 +145,7 @@ const J3D=[],J3DSW=700,J3DPOP=700;
 function juiceDream(r,id){if(!j3OK()||!r||r.hidden||J3D.length>2)return;const im=new Image();try{im.src=iconURL(id)}catch(e){}J3D.push({r,im,t0:performance.now(),s:0})}
 function juiceDreamDraw(now){if(!J3D.length)return;const c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   for(let i=J3D.length-1;i>=0;i--){const d=J3D[i],e=now-d.t0;if(e>J3DSW+J3DPOP||d.r.hidden){J3D.splice(i,1);continue}
-    const j=(d.r.y|0)*W+(d.r.x|0),lift=typeof hiAt==='function'?hiAt(j)*LIFT:0,cx=Math.round(d.r.x*TS),cy=Math.round((d.r.y-2.1)*TS-lift);
+    const j=(d.r.y|0)*W+(d.r.x|0),lift=typeof hiAt==='function'?liftOf(j):0,cx=Math.round(d.r.x*TS),cy=Math.round((d.r.y-2.1)*TS-lift);
     if(e<J3DSW){const q=Math.floor(e/J3DSW*3);if(d.s<=q&&q<3){d.s=q+1;j3Ding([0,4,7][q],0,.18)}/* チン・チン・チン（だんだん高く） */
       const R=[8,11,14][Math.min(2,q)],wob=Math.floor(e/80)%2;c.fillStyle='#ffffff';for(let y=-R;y<=R;y+=2)for(let x=-R-3;x<=R+3;x+=2){if((x*x)/((R+3)*(R+3))+(y*y)/(R*R)<=1)c.fillRect(cx+x,cy+y-wob,2,2)}
       c.fillRect(cx-R+2,cy+R-wob,3,3);c.fillRect(cx-R-1,cy+R+4-wob,2,2);/* ゆめのふきだし（ドットの雲と、しっぽの丸） */
@@ -158,7 +158,7 @@ function juiceDreamDraw(now){if(!J3D.length)return;const c=ctx,sm=c.imageSmoothi
 const J3S=new Map(),J3SMS=700;
 function juiceSnowman(j,r){if(!j3OK())return;J3S.set(j,performance.now());j3U('fsnow',.4,3);j3U('fsnow',.3,0,.09);j3Ding(12,.12);/* 雪をふむ音（録音）でぽん */if(r&&!r.hidden)JOYU.set(r,performance.now()+1600)}
 function snowHop(j){const t=J3S.get(j);if(t==null)return 0;const e=performance.now()-t;if(e>J3SMS){J3S.delete(j);return 0}return [0,6,10,12,10,6,0,3,4,3,0,0][Math.min(11,Math.floor(e/60))]||0}
-function juiceSnowDraw(now){if(!J3S.size)return;const c=ctx;c.fillStyle='#ffffff';for(const[j,t]of J3S){const e=now-t;if(e<0||e>J3SMS)continue;const u=e/J3SMS,lift=typeof hiAt==='function'?hiAt(j)*LIFT:0,cx=(j%W+.5)*TS,cy=((j/W)|0)*TS+20-lift;
+function juiceSnowDraw(now){if(!J3S.size)return;const c=ctx;c.fillStyle='#ffffff';for(const[j,t]of J3S){const e=now-t;if(e<0||e>J3SMS)continue;const u=e/J3SMS,lift=typeof hiAt==='function'?liftOf(j):0,cx=(j%W+.5)*TS,cy=((j/W)|0)*TS+20-lift;
     c.globalAlpha=1-u;for(let k=0;k<10;k++){const an=-Math.PI*(k+.5)/10,r=8+u*22;c.fillRect(Math.round(cx+Math.cos(an)*r),Math.round(cy+Math.sin(an)*r*.7+u*u*16),2,2)}c.globalAlpha=1}}
 
 /* ---------- 図鑑のバー（juiceZkBar）：つぎの節目までのわりあい。前にひらいたときの数から、いまの数へ、とろっとのびる ---------- */

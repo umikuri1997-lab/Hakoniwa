@@ -27,6 +27,9 @@ const assert=require('node:assert/strict');
     /* 水は歩けない・石じゅんは歩けない・光るきのこは歩ける */out.terr=[cvWalk(C.wt.indexOf(1)),cvWalk(one('A')),cvWalk(one('g'))];
     /* 高さ：上の段から下へは、とびおりられる。のぼるのは坂から */{const[hj,lj]=tierPair(),sl=fk('^').find(j=>C.lv[j-CVW]===C.lv[j]+1);out.step=[cvStepOK(hj,lj),cvStepOK(lj,hj),cvStepOK(sl,sl-CVW),(cvBfs(lj,j=>j===hj)||[]).length>2]}
     out.ore=C.ore.size>0;out.top=C.top;
+    /* タップで歩く先：暗い所でも行ける所へ・岩の中で近くに床がなければ歩かない・しまったとびらの先は手前まで・ドラッグのあとカメラは追わない */
+    {let dk=-1;for(let j=0;j<CVW*CVH&&dk<0;j++)if(cvWalk(j)&&!C.seen[j]&&cvBfs(S0,q=>q===j))dk=j;out.tapDark=dk>=0&&cvTapGoal(cvX(dk),cvY(dk))===dk}out.tapRock=cvTapGoal(0,0);{const G0=one('D'),gg=cvTapGoal(cvX(G0),cvY(G0));out.tapGate=gg!==G0&&gg>=0}
+    clampCam(1);out.look=C.lookU>performance.now();clampCam();
     C.en=[];C.seen.fill(1);
     /* 歩く */{const g=nb(R0)[0];cvGo(J(cvX(S0),cvY(S0)+3));step(4);out.walked=C.party.every(a=>Math.hypot(a.x-cvX(S0)-.5,a.y-CVOY-cvY(S0)-3.5)<2.2)}
     /* 風・木のせいれいがいないと、風車・われ目はつかえない */const M0=one('m'),K0=one('k');cvUse(M0,C.ob.get(M0));out.windNo=!C.sel;cvUse(K0,C.ob.get(K0));out.woodNo=!C.party.some(a=>a.job);
@@ -50,7 +53,7 @@ const assert=require('node:assert/strict');
     const e2=mk(sx+1,sy);C.en.push(e2);C.dim=false;C.focus=null;step(.3);out.wideWake=!e2.asleep;C.en=[];
     /* せまい道：コワイノどうしは同じマスに入らない（入口の西のまわり道） */{let nx=-1,ny=-1;for(let y=sy+3;y<sy+9&&nx<0;y++)for(let x=sx-8;x<sx;x++){const j=J(x,y);if(cvWalk(j)&&!cvWalk(j-1)&&!cvWalk(j+1)&&cvWalk(j+CVW)&&cvWalk(j-CVW)){nx=x;ny=y;break}}
       const a1=mk(nx,ny),a2=mk(nx,ny-1);a1.asleep=a2.asleep=false;C.en.push(a1,a2);for(const a of C.party)put(a,nx,ny+3);let same=false;for(let i=0;i<120;i++){caveFrame(1/30,performance.now());if(cvCell(a1)===cvCell(a2))same=true}out.noStack=!same&&nx>=0;C.en=[]}
-    /* 食べる */const fr=by('fire');fr.hunger=300;out.ate=cvEat(act('fire'),'imo');out.hunAte=fr.hunger;out.fsAte=f0-S.fs.imo;
+    /* 食べる */const fr=by('fire');fr.hunger=150;out.ate=cvEat(act('fire'),'imo');out.hunAte=fr.hunger;out.fsAte=f0-S.fs.imo;
     /* 消える */const wr=by('water'),wn=wr.name;wr.hunger=.001;step(.2);out.gone=!S.res.includes(wr)&&!C.party.some(a=>a.r===wr);out.lost=(S.lost||[]).concat(S.buried||[]).some(q=>q.name===wn);document.querySelector('#dialog').hidden=true;
     /* 下へおりる坂：そばまで来ると、その階はクリア。つぎの階がひらく */out.clr0=S.cvClr||0;putJ(act('earth'),R0-CVW);step(.5);out.clr=S.cvClr;out.clrF=C.clr;
     /* 下絵の区画・大穴の絵 */caveRender(performance.now());out.abyssPath=[...C.ch.values()].some(q=>q.wp&&q.wp.AP);
@@ -97,7 +100,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.nightPop,false,'夜は出かけられない');assert.equal(r.prep,true);assert.equal(r.slots,5);
   assert.equal(r.enter,true);assert.equal(r.paused,true,'洞窟のあいだ村は止まる');assert.equal(r.cls,true);assert.equal(r.hud,true);assert.equal(r.seenStart,true);assert.equal(r.unseenFar,true);
   assert.deepEqual(r.abyss,[true,true,true],'大穴：大きい・歩けない・見とおせる');assert.equal(r.abyssPath,true,'大穴の暗がりの形');
-  assert.equal(r.mainPath,true,'どのパーティでも、かえりの光まで行ける');assert.ok(r.closed.every(v=>v===false),'宝箱は、どれも門の先');assert.equal(r.walked,true);
+  assert.equal(r.mainPath,true,'どのパーティでも、かえりの光まで行ける');assert.ok(r.closed.every(v=>v===false),'宝箱は、どれも門の先');assert.equal(r.walked,true);assert.deepEqual([r.tapDark,r.tapRock,r.tapGate,r.look],[true,-1,true,true],'タップで歩く先・見回し');
   assert.equal(r.windNo,true);assert.equal(r.woodNo,true);
   assert.equal(r.sel,'b');assert.equal(r.dirs.length,2,'左はでっぱり・右は立つ所がない：上と下にだけおせる');assert.equal(r.pushed,true);assert.equal(r.reset,1);assert.equal(r.home,true);assert.equal(r.hole,true);assert.equal(r.earthOpen,true);
   assert.equal(r.chest,true);assert.equal(r.fos,1);
@@ -106,7 +109,7 @@ const assert=require('node:assert/strict');
   assert.ok(r.crack.length>=2&&r.crack.every(v=>v));assert.equal(r.detour,true,'まわり道がある');assert.equal(r.rockArmed,true);assert.equal(r.rockHurt,true);
   assert.equal(r.wall0,true);assert.equal(r.wall,true);assert.equal(r.hidden,true);
   assert.equal(r.dimSleep,true,'光をしぼると、そばでも起きない');assert.equal(r.ambush,true);assert.equal(r.wokeHit,true);assert.equal(r.wideWake,true);assert.equal(r.noStack,true);
-  assert.equal(r.ate,true);assert.equal(r.hunAte,800);assert.equal(r.fsAte,1);assert.equal(r.gone,true);assert.equal(r.lost,true);
+  assert.equal(r.ate,true);assert.equal(r.hunAte,400);assert.equal(r.fsAte,1);assert.equal(r.gone,true);assert.equal(r.lost,true);
   assert.equal(r.exit,true);assert.ok(r.pt>=0&&r.pt<=3);assert.equal(r.dt,120,'洞窟にいた時間ぶん、村の時計が進む');assert.equal(r.pop,true);
   assert.equal(r.inv,1,'ほりだした土器');assert.equal(r.fosRec,1);assert.equal(r.zk,1);assert.equal(r.zkAll,5);assert.equal(r.ico,'data:image');assert.equal(r.zkList,1);assert.equal(r.lit,true);assert.deepEqual(r.again,[0,30]);
   assert.equal(r.blowOff,null,'まっすぐ先でない');assert.equal(r.blowWall,false,'岩のむこう');assert.equal(r.millNo,true);assert.equal(r.blowHit,true);assert.equal(r.mill,true);

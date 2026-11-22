@@ -9,7 +9,7 @@
    しずんだ町：ため池に、しずんだ宝箱が3つ。水門を1つひらくごとに水が引いて、宝箱のまわりが浅瀬になる。
    セーブは S.mz。水のとどき方・舟の道は、S.mz からそのつど作る（mzRefresh。recount のはじめによぶ） */
 const MZIDS=new Set(['mzgateb','mzgate','mzchest','dock','raft']);
-const MZFLOW=40/* 水門1つで水のとどく水路のマス */,MZCLR=4/* 水路のまわりの晴れるマス */,MZGCLR=6/* 水門のまわりの晴れるマス */,MZBASE=13/* はじめから晴れている、まん中からのマス */;
+const MZFLOW=40/* 水門1つで水のとどく水路のマス */,MZFLOW3=80/* 3つめの水門（おくりの水路のぶん） */,MZCLR=4/* 水路のまわりの晴れるマス */,MZGCLR=6/* 水門のまわりの晴れるマス */,MZBASE=13/* はじめから晴れている、まん中からのマス */;
 const MZBOATN=20/* 舟が1回にはこぶ数 */,MZBOATK=3/* 舟は歩く何倍の速さか */,MZBOATWAIT=4/* 船着き場でとまる時間 */,MZNEAR=3/* 船着き場のそばの箱（まわりのマス） */;
 const MZTRADEN=10/* ほかの土地へおくる素材の数 */,MZTRADE=[{w:0,name:'はじまりの草原',food:'apple',n:3},{w:1,name:'火山のふもとの村',mat:'bamboo',n:5}];/* お返し（実数） */
 const MZRAFT={fun:20,per:10,add:5,drop:5,max:30};/* 川くだり：たのしさ20。コース10マスごとに+5・段差を1だん下るごとに+5（ふえるのは+30まで） */
@@ -20,7 +20,7 @@ BL.dock={hp:5,brk:1,fix:4,fixm:{wood:4},name:'船着き場',kind:'build',mat:{wo
 BL.raft={hp:5,brk:1,fix:4,fixm:{wood:4},name:'いかだ乗り場',kind:'build',mat:{wood:15},pc:0,time:60,maker:'water',lv:1,w:MIZU,solid:1,play:{pt:5,pw:2,fun:20,dur:50,cap:1,adj:1},attr:{water:1},desc:'水路をいかだで下って遊ぶ。たのしさ+20'};
 BL.mzgateb={name:'こわれた水門',solid:1,natural:1};BL.mzgate={name:'水門',solid:1,natural:1};BL.mzchest={name:'しずんだ宝箱',solid:1,natural:1,anim:1};
 TERRA.add('canal');for(const id of['canal','dock','raft'])GNOREC.add(id);BUILDS.splice(BUILDS.indexOf('bridge')+1,0,'dock','raft');STAGEONLY.dock=MIZU;STAGEONLY.raft=MIZU;
-FAVTOY.water.push('raft');FAVTOY.wind.push('raft');/* 川くだりは、水のせいれいの好きな遊び場。風のせいれいは、どの遊び場も好き */
+FAVTOY.water.push('raft');/* 川くだりは、水のせいれいの好きな遊び場 */
 if(typeof ACT_LBL!=='undefined')Object.assign(ACT_LBL,{mzgate:'水門を直している',mzopen:'宝箱をあけている',mzraft:'川くだりをしている'});
 
 function mzOn(){return !!S&&WD===MIZU&&!!S.mz}
@@ -42,7 +42,7 @@ function mzGenWorld(s){const R=mulberry(20261120),N=W*H,h=new Array(N).fill(0),P
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;if(s.ground[j]===1||s.floor[j])continue;const core=Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7,r=R();if(core||Math.abs(x-CX)<=1&&y<CY&&y>PY1)continue;/* 水門への道すじはあけておく */
     if(r<.06)s.obj[j]='deadtree';else if(r<.1)s.obj[j]='rock';else if(r<.107){s.obj[j]='berry';s.dyn[j]={g:100}}}
   for(let d=1;d<=4;d++){const j=(CY-4)*W+CX+d;s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}
-  const gates=[CX-8,CX,CX+8].map(x=>{const j=(PY1+1)*W+x;s.obj[j]='mzgateb';delete s.dyn[j];return {j,open:0}});
+  const gates=[[CX-8,PY1+1],[CX,PY1+1],[PX0-1,PY0+4]].map(([x,y])=>{const j=y*W+x;s.obj[j]='mzgateb';delete s.dyn[j];s.ground[j]=0;return {j,open:0}});/* 3つめは、ため池の北西のふち（霧の奥） */
   const chests=[[CX-8,PY1-1],[CX+1,PY1-4],[CX+8,PY1-7]].map(([x,y])=>{const j=y*W+x;s.obj[j]='mzchest';return {j,got:0}});
   const clr=new Array(N).fill(0);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(Math.max(Math.abs(x-CX),Math.abs(y-CY))<=MZBASE||Math.abs(x-CX)<=3&&y<CY&&y>=PY1-1)clr[y*W+x]=1;/* まん中のまわりと、まん中の水門への道 */
   s.mz={gates,chests,pond:[PX0,PY0,PX1,PY1],cn:{},clr,req:[],send:{},trade:[],td:{},boats:{},v:0}}
@@ -59,9 +59,9 @@ function mzSetup(s){/* 試作：お話がないので、くらしの道具は、
 const MZC={S:null,wet:null,fd:null,mist:null,comps:[],wetN:0,mv:0,used:[]};
 function mzRefresh(){if(typeof SHOPC!=='undefined')SHOPC.S=null;/* 食堂は recount のたびに見なおす */if(!mzOn()){MZLANE=null;MZC.S=null;return}const M=S.mz,N=W*H,first=MZC.S!==S;MZC.S=S;
   const wet=new Uint8Array(N),fd=new Int16Array(N).fill(-1),used=[];
-  for(const g of M.gates){let left=MZFLOW;if(g.open){const seen=new Uint8Array(N),q=[g.j];seen[g.j]=1;
+  for(const g of M.gates){const fl=g===M.gates[2]?MZFLOW3:MZFLOW;let left=fl;if(g.open){const seen=new Uint8Array(N),q=[g.j];seen[g.j]=1;
     for(let i=0;i<q.length;i++){const c=q[i],dc=c===g.j?0:fd[c];for(const n of mzAdj(c)){if(seen[n]||!M.cn[n]||hiAt(n)>hiAt(c))continue;seen[n]=1;if(!wet[n]){if(left<=0)continue;wet[n]=1;left--;fd[n]=dc+1}q.push(n)}}}
-    used.push(MZFLOW-left)}
+    used.push(fl-left)}
   let wn=0,ch=0;for(const k in M.cn){const j=+k,g=wet[j]?2:0;if(wet[j])wn++;if(S.ground[j]!==g){S.ground[j]=g;ch++}}
   MZC.wet=wet;MZC.fd=fd;MZC.wetN=wn;MZC.used=used;
   let nw=0;const mark=(j,r)=>{const x=j%W,y=(j/W)|0;for(let b=-r;b<=r;b++)for(let a=-r;a<=r;a++){const nx=x+a,ny=y+b;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!M.clr[k]){M.clr[k]=1;nw++}}};
@@ -93,14 +93,15 @@ function mzPlaceCheck(id,j,quiet){/* canPlace1 から：true・false をかえ�
   if(id==='dock'&&!mzAdj(j).some(n=>mzWater(n)&&hiAt(n)===hiAt(j)))return no('船着き場は、水のとなりにだけ建てられます');
   if(id==='raft'&&!mzAdj(j).some(n=>MZC.wet&&MZC.wet[n]))return no('いかだ乗り場は、水の流れる水路のとなりにだけ建てられます');
   return null}
-function mzCanalDone(j,r){delete S.dyn[j];S.obj[j]='';S.mz.cn[j]=1;S.mz.v++;recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);checkQuest()}
-function mzRemove(j){/* removeAt から：水路をうめる・こわせない物 */if(!mzOn())return false;const o=S.obj[j];if(o==='mzgateb'||o==='mzgate'||o==='mzchest'){toast(BL[o].name+'はこわせません');return true}
+function mzCanalDone(j,r){delete S.dyn[j];S.obj[j]='';S.mz.cn[j]=1;S.mz.v++;recount();dirty=true;burst(j,'block');if(r){addSpiritXp(2,r);addMat(r,'nendo',1)}/* 水路をほると、粘土が1こ */checkQuest()}
+function mzRemove(j){/* removeAt から：水路をうめる・こわせない物 */if(!mzOn())return false;const o=S.obj[j];if(o==='mzgateb'||o==='mzgate'||o==='mzchest'||o==='mzkame'){toast(BL[o].name+'はこわせません');return true}
   if(!o&&S.mz.cn[j]){delete S.mz.cn[j];S.ground[j]=0;S.mz.v++;toast('水路をうめた');burst(j,'block','rm');recount();dirty=true;return true}return false}
 
 /* ---- しらべる ---- */
 function mzTap(tx,ty){if(!mzOn())return false;let j=ty*W+tx;if(mzMistAt(j)){toast('霧で見えません');return true}j=anc(j);const o=S.obj[j],M=S.mz;
+  if(o==='mzkame'&&mzKameTap(j))return true;if((o==='mzgateb'||o==='mzgate')&&mzSendTap(j))return true;
   if(o==='mzgateb'){if(!M.req.includes(j))M.req.push(j);toast('せいれいが水門を直しにきてくれる');return true}
-  if(o==='mzgate'){const i=M.gates.findIndex(g=>g.j===j);toast('水門：水のとどいた水路（'+(MZC.used[i]||0)+'/'+MZFLOW+'）');return true}
+  if(o==='mzgate'){const i=M.gates.findIndex(g=>g.j===j);toast('水門：水のとどいた水路（'+(MZC.used[i]||0)+'/'+(i===2?MZFLOW3:MZFLOW)+'）');return true}
   if(o==='mzchest'){if(S.ground[j]===1){toast('水の底に、なにかがしずんでいる');return true}if(!M.req.includes(j))M.req.push(j);toast('せいれいが宝箱をあけにいく');return true}
   if(o==='dock'){mzDockPop(j);return true}if(o==='shopsign'){shopPop();return true}
   if(o==='raft'){const c=mzCourse(j);toast(c.length?'いかだ乗り場：コース'+c.length+'マス・たのしさ+'+mzRaftFun(j):'いかだ乗り場：水の流れる水路がありません');return true}
@@ -113,7 +114,7 @@ function mzChestOpen(j,r){const M=S.mz,c=M.chests.find(q=>q.j===j);if(!c||c.got)
   let nm=null;if(typeof bpGiveNext==='function'&&M.chests.filter(q=>q.got).length===2){const k=bpGiveNext(r?r.id:null);if(k)nm='設計図'}
   if(!nm){S.fukuro=(S.fukuro||0)+1;(S.seenIt||(S.seenIt={}))['x:fukuro']=1;nm='ふしぎなふくろ';toast((r?r.name+'が':'')+'宝箱から「'+nm+'」をみつけた','good')}
   sfx('seed');if(r)JUMP.set(r,performance.now());recount();checkQuest()}
-function mzJob(r,G){if(!mzOn()||isNight()||!S.mz.req.length)return false;for(const j of S.mz.req){const o=S.obj[j];if(o!=='mzgateb'&&!(o==='mzchest'&&S.ground[j]===2))continue;if(!free('o'+j,1))continue;
+function mzJob(r,G){if(!mzOn()||isNight()||!S.mz.req.length)return false;for(const j of S.mz.req){const o=S.obj[j];if(j===mzGate3()&&!S.flags.mzSent)continue;/* 3つめの水門は、ミオがひらく（mizube-story.js） */if(o!=='mzgateb'&&!(o==='mzchest'&&S.ground[j]===2))continue;if(!free('o'+j,1))continue;
     const st=nearest(G,k=>walk(k)&&mzAdj(j).includes(k),9999);if(st<0)continue;startAct(r,G,o==='mzgateb'?'mzgate':'mzopen',st,{key:'o'+j,obj:j});return true}return false}
 ACT.mzgate={start(r,a){if(S.obj[a.obj]!=='mzgateb')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},tick(r,a,dt){a.h=(a.h||0)+dt;if(a.h>=2){a.h=0;sfxAt('twood',r.x,r.y)}},done:(r,a)=>a.t>=MZGATET,end(r,a){if(a.t>=MZGATET)mzGateOpen(a.obj,r)}};
 ACT.mzopen={start(r,a){if(S.obj[a.obj]!=='mzchest')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=MZOPENT,end(r,a){if(a.t>=MZOPENT)mzChestOpen(a.obj,r)}};
@@ -128,16 +129,20 @@ function mzRaftPick(best){/* goPlay から：いかだ乗り場の遊びは、�
 ACT.mzraft={start(r,a){const C=mzCourse(a.obj);if(C.length<2)return false;a.cs=C;r.bubble='🎵'},
   tick(r,a,dt){funAdd(r,a.fun/a.dur*dt,'play');const C=a.cs,p=Math.min(1,a.t/a.dur)*(C.length-1),i=Math.floor(p),f=p-i,A=C[i],B=C[Math.min(C.length-1,i+1)];
     r.x=(A%W+.5)*(1-f)+(B%W+.5)*f;r.y=(((A/W)|0)+.5)*(1-f)+(((B/W)|0)+.5)*f;if(B%W!==A%W)r.face=B%W<A%W?-1:1;if(hiAt(B)<hiAt(A)&&f>.4&&!a['s'+i]){a['s'+i]=1;sfxAt('twater',r.x,r.y)}},
-  done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw,r,a.pt);r.lastToy={j:a.obj,t:S.t}}};
+  done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw,r,a.pt);r.lastToy={j:a.obj,t:S.t};if(a.t>=a.dur&&qAt('mzraft')&&(r.name===MIO||r.name===NOMI)){(S.mz.race||(S.mz.race={}))[r.name]=1;checkQuest()}}};/* くだりくらべ：依頼のあと、さいごまでくだったら数える */
 
 /* ---- 舟便 ---- */
 function mzNearBoxes(d){const x=d%W,y=(d/W)|0;return (typeof BOXL!=='undefined'?BOXL:[]).filter(j=>Math.max(Math.abs(j%W-x),Math.abs(((j/W)|0)-y))<=MZNEAR)}
 function mzBoatStop(C,B,d){const M=S.mz;
   if(B.cg&&B.cg.to===d){let n=B.cg.n;for(const j of mzNearBoxes(d)){if(n<=0)break;n-=boxIn(j,B.cg.k,n)}if(n>0)availAdd(B.cg.k,n);sfxAt('twood',d%W+.5,((d/W)|0)+.5);B.cg=null}
   const o=M.send[d];if(o&&!B.cg&&C.docks.includes(o.to)){let t=0;for(const j of mzNearBoxes(d)){if(t>=MZBOATN)break;t+=boxOut(j,o.k,MZBOATN-t)}if(t>0)B.cg={k:o.k,n:t,to:o.to}}}
-function mzTick(dt){if(!mzOn()||MZC.S!==S)return;const M=S.mz;for(const C of MZC.comps){const B=M.boats[C.key]||(M.boats[C.key]={d:0,w:0,cg:null}),n=C.route.length;if(!n)continue;if(B.w>0){B.w-=dt;continue}
+function mzTick(dt){if(!mzOn()||MZC.S!==S)return;mzStoryTick(dt);const M=S.mz;for(const C of MZC.comps){const B=M.boats[C.key]||(M.boats[C.key]={d:0,w:0,cg:null}),n=C.route.length;if(!n)continue;if(B.w>0){B.w-=dt;continue}
     const p0=Math.floor(B.d);B.d+=.36*MZBOATK*dt;for(let i=p0+1;i<=Math.floor(B.d);i++){const d=C.stops[i%n];if(d!=null){B.d=i;B.w=MZBOATWAIT;mzBoatStop(C,B,d);break}}if(B.d>1e6)B.d%=n}}
-function mzMorning(){if(!mzOn())return;const M=S.mz;for(const t of M.trade||[]){const T=MZTRADE.find(q=>q.w===t.w);if(!T)continue;if(T.food)addFood(T.food,T.n);else S.mat[T.mat]=(S.mat[T.mat]||0)+T.n;toast(T.name+'から、'+(T.food?FOODS[T.food].name:MATN[T.mat])+'が'+T.n+'こ とどいた','good')}M.trade=[]}
+const MZSTDAY=4,MZSTMAX=12;/* 丸石：毎朝、浅瀬・水べのとなりの陸に4こ（地面に12こまで） */
+function mzStoneMorning(){if(!mzOn())return;if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=r0?bfs(r0.x|0,r0.y|0):null,has=new Set(S.drops.map(d=>d.y*W+d.x));let k=S.drops.filter(d=>d.id==='mat:maruishi').length,n=MZSTDAY;
+  const L=[];for(let j=0;j<W*H;j++){if(S.ground[j]!==0||S.obj[j]||S.floor[j]||!walk(j)||has.has(j)||fogAt(j)||G&&G.dist[j]<0)continue;if([j-1,j+1,j-W,j+W].some(q=>q>=0&&q<W*H&&S.ground[q]))L.push(j)}
+  while(n>0&&k<MZSTMAX&&L.length){const i=(Math.random()*L.length)|0,j=L.splice(i,1)[0];S.drops.push({x:j%W,y:(j/W)|0,id:'mat:maruishi',n:1});n--;k++}}
+function mzMorning(){if(!mzOn())return;mzStoneMorning();mzStoryMorning();const M=S.mz;for(const t of M.trade||[]){const T=MZTRADE.find(q=>q.w===t.w);if(!T)continue;if(T.food)addFood(T.food,T.n);else S.mat[T.mat]=(S.mat[T.mat]||0)+T.n;toast(T.name+'から、'+(T.food?FOODS[T.food].name:MATN[T.mat])+'が'+T.n+'こ とどいた','good')}M.trade=[]}
 const mzKeyName=k=>k.startsWith('f:')?FOODS[k.slice(2)].name:MATN[k]||k;
 function mzDockPop(j){const M=S.mz,C=MZC.comps.find(c=>c.docks.includes(j)),P=pxPop('船着き場'),B=P.body;let sel=(M.send[j]||{}).k||null;
   const day=typeof callDay==='function'?callDay():dayNo();
@@ -155,31 +160,39 @@ function mzDockPop(j){const M=S.mz,C=MZC.comps.find(c=>c.docks.includes(j)),P=px
 
 /* ---- 絵（コードで描く仮のドット絵。1ドットは2） ---- */
 const mzPx=(c,col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)};
-function mzDrawObj(c,id,x,y,i,now){now=now||performance.now();const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);
+function mzDrawObj(c,id,x,y,i,now){now=now||performance.now();const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);if(id==='mzkame')return mzKameDraw(c,x,y,i,now);
+  const ch=window.CHIPS&&CHIPS[id];/* 3Dから写したチップ。水門を通る水と、水の中の宝箱は、ゲームで描く */
+  if(ch&&!(id==='mzchest'&&i!=null&&S&&S.ground[i]===1)){if(id==='mzgate')mzGateWater(c,x,y,now);if(drawChip(c,ch,id,x,y,now,i))return}
   if(id==='mzgateb'||id==='mzgate'){P('#a39d8c',2,6,6,26);P('#a39d8c',24,6,6,26);P('#c9c4b4',2,4,6,24);P('#c9c4b4',24,4,6,24);P('#d9d4c4',0,0,32,6);P('#b9b4a6',0,6,32,2);
-    if(id==='mzgate'){P('#b07c4a',8,8,16,4);P('#8a5a33',8,12,16,2);P('#6fbfe0',8,14,16,18);const t=((now/160)|0)%6;for(let k=0;k<3;k++)P('#d7f1f8',10+k*5,14+((t+k*2)%6)*3,2,4)}
+    if(id==='mzgate'){P('#b07c4a',8,8,16,4);P('#8a5a33',8,12,16,2);mzGateWater(c,x,y,now)}
     else{P('#9a6b3f',8,10,16,22);P('#7a5230',8,16,16,2);P('#7a5230',8,24,16,2);P('#5a4a3a',14,10,2,8);P('#5a4a3a',18,22,2,10);P('#7fae5a',2,4,4,2);P('#7fae5a',26,10,4,2);P('#7fae5a',10,0,6,2)}return}
   if(id==='mzchest'){if(i!=null&&S&&S.ground[i]===1){c.save();c.globalAlpha=.45;P('#234f78',8,14,16,12);P('#3a6c98',8,14,16,4);c.restore();return}
     P('#6b4526',6,26,20,2);P('#9a6b3f',6,16,20,10);P('#b5834d',6,12,20,4);P('#c99a62',6,12,20,2);P('#e8c45a',14,12,4,14);P('#fff0b0',14,18,4,2);P('#7fae5a',6,22,4,2);return}
   if(id==='dock'){P('#8a6238',4,22,4,10);P('#8a6238',24,22,4,10);P('#a67c4c',2,24,28,2);P('#c49a66',2,12,28,12);for(let k=0;k<4;k++)P('#a67c4c',2+k*8,12,2,12);P('#d9b684',2,12,28,2);P('#8a6238',14,4,4,10);P('#a67c4c',12,4,8,2);P('#e9dcc0',12,8,8,2);return}
   if(id==='raft'){P('#8a6238',14,4,2,24);P('#e8734a',16,4,10,8);P('#f29a72',16,4,10,2);P('#b08552',4,26,24,4);P('#c49a66',4,22,24,4);P('#d9b684',4,22,24,2);P('#8a6238',8,22,2,8);P('#8a6238',22,22,2,8);return}}
-function mzBoatDraw(px,py,cargo){mzPx(ctx,'#6b4526',px-12,py+2,24,2);mzPx(ctx,'#a8743f',px-12,py-4,24,6);mzPx(ctx,'#c99a62',px-12,py-4,24,2);mzPx(ctx,'#a8743f',px+12,py-2,2,4);mzPx(ctx,'#a8743f',px-14,py-2,2,4);if(cargo){mzPx(ctx,'#b08a4a',px-4,py-10,8,6);mzPx(ctx,'#d8b26a',px-4,py-10,8,2)}}
-function mzRaftDraw(px,py){mzPx(ctx,'#b08552',px-10,py+2,20,4);mzPx(ctx,'#c49a66',px-10,py-2,20,4);mzPx(ctx,'#d9b684',px-10,py-2,20,2)}
+function mzGateWater(c,x,y,now){/* ひらいた水門の、戸の下を流れる水（石の柱のあいだ） */const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);P('#6fbfe0',8,14,16,18);const t=((now/160)|0)%6;for(let k=0;k<3;k++)P('#d7f1f8',10+k*5,14+((t+k*2)%6)*3,2,4)}
+function mzBoatDraw(px,py,cargo){/* 小舟（3Dから写したチップ mzboat・荷をつんだ mzboat:c。まん中が px,py。ないときはコードの仮の絵） */const ch=window.CHIPS&&CHIPS[cargo?'mzboat:c':'mzboat'];if(ch&&drawChip(ctx,ch,'mzboat',px,py))return;mzPx(ctx,'#6b4526',px-12,py+2,24,2);mzPx(ctx,'#a8743f',px-12,py-4,24,6);mzPx(ctx,'#c99a62',px-12,py-4,24,2);mzPx(ctx,'#a8743f',px+12,py-2,2,4);mzPx(ctx,'#a8743f',px-14,py-2,2,4);if(cargo){mzPx(ctx,'#b08a4a',px-4,py-10,8,6);mzPx(ctx,'#d8b26a',px-4,py-10,8,2)}}
+function mzRaftDraw(px,py){const ch=window.CHIPS&&CHIPS.mzraftb;if(ch&&drawChip(ctx,ch,'mzraftb',px,py))return;/* いかだ（チップ mzraftb） */mzPx(ctx,'#b08552',px-10,py+2,20,4);mzPx(ctx,'#c49a66',px-10,py-2,20,4);mzPx(ctx,'#d9b684',px-10,py-2,20,2)}
 function mzRowDraw(y,x0,x1,now){const M=S.mz,t=(now/260)|0;
   for(let x=Math.max(0,x0);x<Math.min(W,x1+1);x++){const j=y*W+x,hh=hiAt(j),X=x*TS,Y=y*TS-hh*LIFT,g=S.ground[j];
     if(M.cn[j]){const wet=MZC.wet&&MZC.wet[j],con=n=>n>=0&&n<W*H&&(!!M.cn[n]||S.obj[n]==='mzgate'||S.obj[n]==='mzgateb');
-      mzPx(ctx,'#c9c4b4',X,Y,TS,TS);mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+4,TS-8,TS-8);
+      const cm=(x>0&&con(j-1)?1:0)|(x<W-1&&con(j+1)?2:0)|(con(j-W)?4:0)|(con(j+W)?8:0),cch=window.CHIPS&&CHIPS['mzcanal:'+(wet?'w':'d')+cm];/* 水路のチップ（H-6：つながる向き 左1・右2・上4・下8） */
+      if(!(cch&&drawChip(ctx,cch,'mzcanal',X,Y,now))){mzPx(ctx,'#c9c4b4',X,Y,TS,TS);mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+4,TS-8,TS-8);
       if(con(j-W))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y,TS-8,4);if(con(j+W))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+4,Y+TS-4,TS-8,4);if(x>0&&con(j-1))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X,Y+4,4,TS-8);if(x<W-1&&con(j+1))mzPx(ctx,wet?'#6fbfe0':'#8f8676',X+TS-4,Y+4,4,TS-8);
-      mzPx(ctx,'#a39d8c',X,Y+TS-2,4,2);mzPx(ctx,'#a39d8c',X+TS-4,Y+TS-2,4,2);
-      if(wet){const k=(t+x*3+y*5)%6;mzPx(ctx,'#bfe9f5',X+8+k*2,Y+8,6,2);mzPx(ctx,'#bfe9f5',X+18-k*2,Y+20,4,2);
+      mzPx(ctx,'#a39d8c',X,Y+TS-2,4,2);mzPx(ctx,'#a39d8c',X+TS-4,Y+TS-2,4,2)}
+      if(wet&&M.ice&&M.ice[j]){mzPx(ctx,'#d9f1f7',X+4,Y+4,TS-8,TS-8);mzPx(ctx,'#ffffff',X+8,Y+10,10,2);mzPx(ctx,'#ffffff',X+16,Y+20,8,2)}
+      else if(wet){const k=(t+x*3+y*5)%6;mzPx(ctx,'#bfe9f5',X+8+k*2,Y+8,6,2);mzPx(ctx,'#bfe9f5',X+18-k*2,Y+20,4,2);
         const s=j+W;if(s<W*H&&M.cn[s]&&hiAt(s)<hh&&MZC.wet[s]){const dh=(hh-hiAt(s))*LIFT;mzPx(ctx,'#9ad8ee',X+4,Y+TS,TS-8,dh);for(let k2=0;k2<3;k2++)mzPx(ctx,'#e6f7fb',X+8+k2*7,Y+TS+((t*4+k2*9)%Math.max(1,dh-4)),2,4)}}
-      else{mzPx(ctx,'#7d766a',X+8,Y+10,4,2);mzPx(ctx,'#7d766a',X+20,Y+20,4,2)}}
-    else if(hh>0&&(g===1||g===2)){const dry=n=>n<0||n>=W*H||!S.ground[n];mzPx(ctx,g===1?'#4f9fd0':'#8fd0e6',X,Y,TS,TS);const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);if(g===2){mzPx(ctx,'#d9cfa8',X+8,Y+22,4,2);mzPx(ctx,'#d9cfa8',X+22,Y+6,2,2)}
+      else if(!cch){mzPx(ctx,'#7d766a',X+8,Y+10,4,2);mzPx(ctx,'#7d766a',X+20,Y+20,4,2)}}
+    else if(hh>0&&(g===1||g===2)){const dry=n=>n<0||n>=W*H||!S.ground[n],pm=(x>0&&!dry(j-1)?1:0)|(x<W-1&&!dry(j+1)?2:0)|(!dry(j-W)?4:0)|(!dry(j+W)?8:0),pch=window.CHIPS&&CHIPS['mzpond:'+pm];/* 高い段の水（ため池）のふちのチップ（H-6） */
+      if(pch&&drawChip(ctx,pch,'mzpond',X,Y,now)){const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);continue}
+      mzPx(ctx,g===1?'#4f9fd0':'#8fd0e6',X,Y,TS,TS);const k=(t+x*5+y*3)%8;mzPx(ctx,g===1?'#7fbfe6':'#c8ecf5',X+4+k*2,Y+10,6,2);if(g===2){mzPx(ctx,'#d9cfa8',X+8,Y+22,4,2);mzPx(ctx,'#d9cfa8',X+22,Y+6,2,2)}
       if(dry(j-W))mzPx(ctx,'#c9c4b4',X,Y,TS,4);if(dry(j+W)){mzPx(ctx,'#c9c4b4',X,Y+TS-4,TS,4);mzPx(ctx,'#a39d8c',X,Y+TS-2,TS,2)}if(x===0||dry(j-1))mzPx(ctx,'#c9c4b4',X,Y,4,TS);if(x===W-1||dry(j+1))mzPx(ctx,'#c9c4b4',X+TS-4,Y,4,TS)}}}
 function mzRows(add,x0,y0,x1,y1,now){if(!mzOn())return;if(MZC.S!==S)mzRefresh();
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)add(y-1+.0007,-1,null,()=>mzRowDraw(y,x0-1,x1+1,now),-1);
-  for(const C of MZC.comps){const B=S.mz.boats[C.key],n=C.route.length;if(!B||!n)continue;const i=Math.floor(B.d)%n,f=B.d-Math.floor(B.d),a=C.route[i],b=C.route[(i+1)%n],bx=(a%W+.5)*(1-f)+(b%W+.5)*f,by=(((a/W)|0)+.5)*(1-f)+(((b/W)|0)+.5)*f,L=hiAt(a)*LIFT;
+  for(const C of MZC.comps){const B=S.mz.boats[C.key],n=C.route.length;if(!B||!n)continue;const i=Math.floor(B.d)%n,f=B.d-Math.floor(B.d),a=C.route[i],b=C.route[(i+1)%n],bx=(a%W+.5)*(1-f)+(b%W+.5)*f,by=(((a/W)|0)+.5)*(1-f)+(((b/W)|0)+.5)*f,L=liftOf(a);
     add(by+.02,-1,null,()=>mzBoatDraw(bx*TS,by*TS-L+Math.round(Math.sin(now/500)),B.cg),-1)}
+  if(mzKanadeOn()){const p=mzKanadePos(now);if(p)add(p.y+.03,-1,null,()=>mzKanadeDraw(ctx,now),-1)}/* 白い影（mizube-story.js） */
   for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(r.act&&r.act.type==='mzraft'&&r.act.stage!=='walk')add(r.y-.01,-1,null,()=>mzRaftDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4),-1);
     else if(MZLANE&&MZLANE[j]&&r.path&&r.path.length)add(r.y-.01,-1,null,()=>mzBoatDraw(r.x*TS,r.y*TS-zAt(r.x,r.y)+4,0),-1)}}
 let MZF=null,MZFX=null,MZFV=-1,MZFS=null;
@@ -189,20 +202,62 @@ function mzMistDraw(c,x0,y0,x1,y1){if(!mzOn())return;if(MZC.S!==S)mzRefresh();co
       let o=a<=0?0:Math.min(1,a*1.3)*(.86+nz*.14);o=Math.round(o*10)/10;const q=(py*n+px)*4,s=nz>.55?1:0;D[q]=s?244:226;D[q+1]=s?246:232;D[q+2]=s?248:238;D[q+3]=o*250}
     MZFX.putImageData(img,0,0)}
   const X0=Math.max(0,x0-1),Y0=Math.max(0,y0-1),X1=Math.min(W,x1+1),Y1=Math.min(H,y1+2);if(X1<=X0||Y1<=Y0)return;
-  c.imageSmoothingEnabled=false;c.drawImage(MZF,X0*4,Y0*4,(X1-X0)*4,(Y1-Y0)*4,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);c.imageSmoothingEnabled=true}
+  c.imageSmoothingEnabled=false;c.drawImage(MZF,X0*4,Y0*4,(X1-X0)*4,(Y1-Y0)*4,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);c.imageSmoothingEnabled=true;mzKiriMistDraw(c,performance.now())}
 function mzToolIcon(g){/* 「水路をほる」のアイコン（72×72のキャンバスに、6のドット） */const P=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h)};P('#8cc35c',6,12,60,12);P('#c9c4b4',6,24,60,36);P('#6fbfe0',18,24,36,30);P('#bfe9f5',24,30,12,6);P('#bfe9f5',36,42,12,6);P('#a39d8c',6,54,12,6);P('#a39d8c',54,54,12,6)}
 
 /* ---- はじまりの会話と目標（お話は、まだない） ---- */
 PROS[MIZU]=[[GOD,'さて、こんどは水の土地じゃ。'],[GOD,'#worry|霧がはれず、水の流れも止まっておる。ひとりで歌っとる子が、まっておるぞい。'],[GOD,'では、行こうかの。']];
 INTROS[MIZU]=[[GOD,'ほい到着〜。ここが霧のみずべの村じゃ。'],[MIO,'#shy|……あ。守り神さま……？ わたし、ミオ。'],[MIO,'水が止まってから、村は、ずっと霧の中なの。'],[GOD,'まずは、あそこの古い神殿を直すとしようかの。']];
+/* ノミ：2人めのキーキャラ（土。ぶっきらぼうな職人、一人称「おれ」）。目標「なかまをむかえよう」を聞いてから、神殿の「！」で来る */
+const NOMI='ノミ';KEYS[MIZU]=[MIO,NOMI];KEYEL[NOMI]='earth';
+KEYVR[NOMI]={key:true,tr:'',pk:'nomi',h:0,l:0,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.9};
+KEYHELLO[NOMI]='……よばれたから、来た。';
+KEYBACK[NOMI]=['……もどった。それだけだ。','#nod|待たせたな。水路は、おれが見る。','ふん。……ただいま。'];
+SECOND[MIZU]={elem:'earth',name:NOMI,ok:()=>qAt('mznomi')};
+const MZQ_OLD=['statue','mzgate1','mzflow','mzdock','mzraft','mzchest','mzshop','mzstage','mzall'];/* 前のならび（古いセーブの読みかえ用 mzQuestMig） */
 QL[MIZU]=[
-  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[MIO,'……神殿。きれいに、なった。']]},
-  {id:'mzgate1',text:'水門をひらこう',check:()=>mzOn()&&mzOpenN()>=1,prog:()=>'ひらいた水門 '+Math.min(1,mzOn()?mzOpenN():0)+'/1',how:'「しらべる」で、北の高い所にある、こわれた水門をタップ',story:[[MIO,'#joy|……水の音。ひさしぶりに、きこえた。']]},
-  {id:'mzflow',text:'水路で水をながそう',check:()=>mzOn()&&MZC.wetN>=10,prog:()=>'水のとどいた水路 '+Math.min(10,MZC.wetN)+'/10',how:'「おく」→「水路をほる」で、ひらいた水門から低いほうへ、水路をつなぐ',story:[[MIO,'水がとおると、霧が、うすくなるの。'],[MIO,'#nod|もっと、とおくまで、ながしたいな。']]},
-  {id:'mzdock',text:'船着き場を2つ、水でつなごう',check:()=>mzOn()&&MZC.comps.length>=1,prog:()=>'つながった船着き場 '+(mzOn()&&MZC.comps.length?2:Math.min(1,cnt('dock')))+'/2',how:'「おく」→「建てる」で、船着き場を水のとなりに2つ建てる。同じ高さの水でつながると、小舟が行き来する',story:[[MIO,'#joy|小舟が、うごいた。……むかしは、村じゅうを、舟がめぐっていたの。']]},
-  {id:'mzraft',text:'いかだ乗り場をつくろう',check:()=>cnt('raft')>=1,prog:()=>'いかだ乗り場 '+Math.min(1,cnt('raft'))+'/1',how:'「おく」→「建てる」で、いかだ乗り場を、水の流れる水路のとなりに建てる',story:[[MIO,'いかだで、水といっしょに、くだるの。'],[MIO,'#shy|……わたしも、のってみたい。']]},
-  {id:'mzchest',text:'しずんだ宝箱をあけよう',check:()=>mzOn()&&S.mz.chests.some(c=>c.got),prog:()=>'あけた宝箱 '+(mzOn()?Math.min(1,S.mz.chests.filter(c=>c.got).length):0)+'/1',how:'水門をひらくと、池の水が引く。浅くなった所の宝箱を、「しらべる」でタップ',story:[[MIO,'#think|池の底に、むかしの物が、のこっていたのね。']]},
-  {id:'mzshop',text:'食堂をひらこう',check:()=>mzOn()&&(S.mz.served||0)>=1,prog:()=>mzOn()&&typeof shopOf==='function'&&shopOf()?'お客さんに出した料理 '+Math.min(1,S.mz.served||0)+'/1':'食堂 0/1',how:'家の中に、店の看板・食卓・いす・料理の家具を置く。船着き場から、お客さんが舟で来る',talk:{who:MIO,when:()=>true,lines:[[MIO,'……カナデとわたしで、やるはずだったの。カナデが作って、わたしが歌う、歌のある食堂。'],[MIO,'#shy|ひとりじゃ、できないと思ってた。……でも、舟が来るなら。']]},story:[[MIO,'#think|……カナデの味じゃない。'],[MIO,'#joy|でも、お皿が、からっぽ。……また、来てね。']]},
-  {id:'mzstage',text:'歌の舞台で歌おう',check:()=>mzOn()&&(S.mz.sung||0)>=1,prog:()=>'舞台で歌った日 '+(mzOn()?Math.min(1,S.mz.sung||0):0)+'/1',how:'食堂の家の中に、歌の舞台を置く。夕方の前に、ミオが歌う',story:[[MIO,'#shy|……ふたりで歌う歌だから、ひとりじゃ、半分なの。'],[MIO,'それでも、手拍子が、きこえた。']]},
-  {id:'mzall',text:'水門を3つひらこう',check:()=>mzOn()&&mzOpenN()>=3,prog:()=>'ひらいた水門 '+(mzOn()?mzOpenN():0)+'/3',how:'水路をのばして霧を晴らすと、のこりの水門が見つかる',story:[[MIO,'#joy|みんな、ひらいた。水が、村へかえってくる。'],[MIO,'守り神さま、ありがとう。']]},
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',gives:{enemy:true},story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[MIO,'……きれい。こんなにきれいな物、ひさしぶりに見た。']]},
+  {id:'mzgate1',text:'水門をひらこう',check:()=>mzOn()&&mzOpenN()>=1,prog:()=>'ひらいた水門 '+Math.min(1,mzOn()?mzOpenN():0)+'/1',how:'「しらべる」で、北の高い所にある、こわれた水門をタップ',
+   talk:{who:MIO,when:()=>true,lines:[[MIO,'北のため池に、水門がある。……3つ。'],[MIO,'むかしは、あそこから村じゅうに水が流れてたの。'],[MIO,'#think|いまは、ぜんぶ、とじてる。……ひとつだけでも、あけられたら。']]},
+   story:[[MIO,'#joy big|……水の音。'],[MIO,'#joy|ずっと、ずっと、聞きたかった音。']]},
+  {id:'mzflow',text:'水路で水をながそう',check:()=>mzOn()&&MZC.wetN>=10,prog:()=>'水のとどいた水路 '+Math.min(10,MZC.wetN)+'/10',how:'「おく」→「水路をほる」で、ひらいた水門から低いほうへ、水路をつなぐ',story:[[MIO,'#surprise|……水がとおったところの霧が、晴れてく。'],[MIO,'#think|もっと、とおくまで、ながせたら。']]},
+  {id:'mzchest',text:'しずんだ宝箱をあけよう',check:()=>mzOn()&&S.mz.chests.some(c=>c.got),prog:()=>'あけた宝箱 '+(mzOn()?Math.min(1,S.mz.chests.filter(c=>c.got).length):0)+'/1',how:'水門をひらくと、池の水が引く。浅くなった所の宝箱を、「しらべる」でタップ',story:[[MIO,'#surprise|……カナデの字。'],[MIO,'ふたりのお店の、はじめの一品。……'],[MIO,'#cry hush|……。']]},
+  {id:'mznomi',text:'なかまをむかえよう',check:()=>S.res.some(r=>r.name===NOMI)&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「しらべる」で神殿をタップ',
+   talk:{who:GOD,when:()=>true,lines:[[GOD,'水の音が、遠くまでとどいとる。'],[GOD,'#think|……岩場のほうの子にも、聞こえたかもしれんのう。']]},
+   story:[[NOMI,'……水が、流れてる。'],[MIO,'#surprise|ノミ……？ 岩場から、おりてきたの？'],[NOMI,'よばれたからな。……それだけだ。'],[NOMI,'#think|あの水路、ほり方がなってねえ。だれがほった。'],[GOD,'#joy|わしらじゃ。'],[NOMI,'……ふん。直してやる。'],[GOD,'#nod|ふたりそろえば、もうだいじょうぶじゃな。'],[GOD,'わしは、ほかの土地も見てまわらねばならん。ときどき、のぞきにくるからの。'],[MIO,'#shy|……行っちゃうの。'],[GOD,'#joy|おヌシの歌、遠くからでも聞こえるぞい。'],[NOMI,'……行ってこい。この村は、おれが見とく。']],
+   gives:{godLeave:true}},
+  {id:'mzdock',text:'船着き場を2つ、水でつなごう',check:()=>mzOn()&&MZC.comps.length>=1,prog:()=>'つながった船着き場 '+(mzOn()&&MZC.comps.length?2:Math.min(1,cnt('dock')))+'/2',how:'「おく」→「建てる」で、船着き場を水のとなりに2つ建てる。同じ高さの水でつながると、小舟が行き来する',
+   talk:{who:NOMI,when:()=>true,lines:[[NOMI,'水路があるなら、舟だ。'],[NOMI,'むかしはな、この村は、舟で行き来してたんだ。'],[MIO,'#joy|ノミの舟、はやかった。'],[NOMI,'……おぼえてるのか。']]},
+   story:[[MIO,'#joy|うごいた……！'],[NOMI,'#proud|当たり前だ。']]},
+  {id:'mzshop',text:'食堂をひらこう',check:()=>mzOn()&&(S.mz.served||0)>=1,prog:()=>mzOn()&&typeof shopOf==='function'&&shopOf()?'お客さんに出した料理 '+Math.min(1,S.mz.served||0)+'/1':'食堂 0/1',how:'家の中に、店の看板・食卓・いす・料理の家具を置く。船着き場から、お客さんが舟で来る',
+   talk:{who:MIO,when:()=>true,lines:[[MIO,'……あの、こわれたお店。'],[MIO,'カナデとわたしで、やるはずだったの。カナデが作って、わたしが歌う、歌のある食堂。'],[MIO,'#shy|ひとりじゃ、できないと思ってた。……でも、舟が来るなら。'],[NOMI,'#nod|屋根なら、おれがかける。']]},
+   story:[[MIO,'#think|……カナデの味じゃない。'],[NOMI,'うまいぞ。'],[MIO,'#surprise|……え。'],[NOMI,'うまいって、言ってんだ。……客も、そう言ってる。'],[MIO,'#joy|……また、来てね。']]},
+  {id:'mzstage',text:'歌の舞台で歌おう',check:()=>mzOn()&&(S.mz.sung||0)>=1,prog:()=>'舞台で歌った日 '+(mzOn()?Math.min(1,S.mz.sung||0):0)+'/1',how:'食堂の家の中に、歌の舞台を置く。夕方の前に、ミオが歌う',story:[[MIO,'#shy|……ふたりで歌う歌だから、ひとりじゃ、半分なの。'],[NOMI,'半分でも、客は来た。']]},
+  {id:'mzraft',text:'いかだで、くだりくらべをしよう',check:()=>mzOn()&&cnt('raft')>=1&&mzRaced(),prog:()=>cnt('raft')?'くだった：'+[MIO,NOMI].filter(n=>(S.mz.race||{})[n]).length+'/2':'いかだ乗り場 0/1',how:'「おく」→「建てる」で、いかだ乗り場を、水の流れる水路のとなりに建てる。ミオとノミが、1回ずつくだる',
+   talk:{who:NOMI,when:()=>true,lines:[[NOMI,'おい、ミオ。いかだで下るぞ。'],[MIO,'#surprise|え……いま？'],[NOMI,'くらべっこだ。負けたほうが、あしたの水くみ。']]},
+   story:[[MIO,'#giggle big|……ふふっ。わたしの、かち。'],[NOMI,'#surprise|……おまえ、笑うんだな。'],[MIO,'#shy|……え？'],[NOMI,'なんでもねえ。あしたの水くみは、おれだ。']]},
+  {id:'mzgate2',text:'2つめの水門をひらこう',check:()=>mzOn()&&mzOpenN()>=2,prog:()=>'ひらいた水門 '+(mzOn()?Math.min(2,mzOpenN()):0)+'/2',how:'「しらべる」で、ため池の南のふちの、こわれた水門をタップ',
+   talk:{who:NOMI,when:()=>true,lines:[[NOMI,'水門は、あと2つ。つぎは、ため池の南のふちだ。'],[MIO,'……うん。']]},
+   story:[[NOMI,'よし。のこりは、ひとつ。'],[NOMI,'ミオ。3つめは、どこだった。'],[MIO,'#think|……わからない。おぼえてない。'],[NOMI,'……そうか。']]},
+  {id:'mzfind3',text:'霧を晴らして、3つめの水門を見つけよう',check:()=>mzOn()&&!!S.mz.clr[mzGate3()],prog:()=>mzOn()&&S.mz.clr[mzGate3()]?'':'3つめの水門は、まだ霧の中',how:'水路をのばして、ため池の北西の霧を晴らす',
+   get story(){return MZL5},gives:{flag:'mzFight'}},
+  {id:'mzpond',text:'ため池の底をしらべよう',check:()=>!!S.flags.mzKame,prog:()=>mzPondProg(),how:'水の引いたため池の底の、大きな岩を、「しらべる」でタップ'},
+  {id:'mzokuri',text:'おくりの水路をほろう',check:()=>mzOn()&&!!mzOkuriPath(),prog:()=>mzOkuriProg(),how:'「おく」→「水路をほる」で、3つめの水門の前から、村の南の池まで、水路をつなぐ',
+   talk:{who:NOMI,when:()=>S.mz.kameD!=null&&dayNo()>S.mz.kameD,get lines(){return MZL7},gives:{flag:'mzMake'}},story:[[MIO,'……できた。'],[NOMI,'#nod|ああ。いい水路だ。']]},
+  {id:'mzkiri',text:'キリノオオカゲを追いはらおう',check:()=>!!S.flags.mzKiriDown,prog:()=>mzKiriProg(),how:'水の流れる水路は、コワイノの足をおそくする。見張り台と堀で村を守る',get story(){return MZL8M}},
+  {id:'mzsend',text:'ミオといっしょに、3つめの水門へ行こう',check:()=>!!S.flags.mzSent,prog:()=>mzWaitProg('sq')||(hour()<MZSENDH0||hour()>=MZSENDH1?'夕方を待とう':''),how:'夕方に、3つめの水門を、「しらべる」でタップ'},
+  {id:'mzdawn',text:'夜明けを待とう',check:()=>!!S.flags.mzEnd,prog:()=>mzDawnProg(),how:'つぎの朝、村じゅうの霧が晴れる'},
 ];
+function mzGate3(){return S.mz.gates[2]?S.mz.gates[2].j:-1}
+function mzRaced(){const R=S.mz.race||{};return !!R[MIO]&&(!!R[NOMI]||!S.res.some(r=>r.name===NOMI))}
+function mzQuestMig(){/* 前のならび（MZQ_OLD）のセーブ：おわっていた目標をとばして、はじめのおわっていない目標へ（名前で） */if(WD!==MIZU||S.flags.mzq2)return;S.flags.mzq2=1;if(!S.mz)return;
+  const done=new Set(MZQ_OLD.slice(0,S.quest||0)),cur=MZQ_OLD[S.quest]||null,i=QUESTS.findIndex(q=>!done.has(q.id));if(i<0)return;if(QUESTS[i].id!==cur){S.qTalked=false;S.qStory=null}S.quest=i}
+function mzGate3Mig(){/* 3つめの水門を、ため池の北西の霧の奥へ（ひらいていなければ） */if(WD!==MIZU||!S.mz||S.flags.mzGate3)return;S.flags.mzGate3=1;const g=S.mz.gates[2];if(!g||g.open)return;const [PX0,PY0]=S.mz.pond,j=(PY0+4)*W+PX0-1;if(S.obj[g.j]==='mzgateb')S.obj[g.j]='';S.obj[j]='mzgateb';delete S.dyn[j];S.ground[j]=0;g.j=j}
+
+/* 堀：水の流れる水路のマスは、コワイノの歩く速さ MZMOAT 倍（浅瀬の2倍ゆっくりに、かさねる。night.js） */
+const MZMOAT=.5;
+function mzMoat(j){return mzOn()&&!!MZC.wet&&MZC.S===S&&!!MZC.wet[j]&&!(S.mz.ice&&S.mz.ice[j])}/* キリノオオカゲにこおらされた水路は、堀にならない */
+
+function mzDecide(r,G){if(mzOn()&&!S.free&&mzStoryDecide(r,G))return true;/* くだりくらべ：依頼を聞いたら、ミオとノミが、昼に1回ずついかだでくだりにいく */if(!mzOn()||S.free||!qAt('mzraft')||mzRaced()||isNight()||enemyLive())return false;if(r.name!==MIO&&r.name!==NOMI||(S.mz.race||{})[r.name])return false;if(r.hunger<250||r.meal||r.carry||r.bm||r.energy<30)return false;
+  const rj=S.obj.indexOf('raft');if(rj<0||!free('o'+rj,1))return false;const f=mzRaftFun(rj);if(!f)return false;const st=nearest(G,j=>mzAdj(j).includes(rj)&&walk(j),200);if(st<0)return false;const P=BL.raft.play;
+  startAct(r,G,'mzraft',st,{key:'o'+rj,obj:rj,what:'raft',dur:P.dur,fun:f,pw:P.pw,pt:P.pt});return true}

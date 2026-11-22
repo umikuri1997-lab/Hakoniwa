@@ -1,6 +1,6 @@
 # 家具を、設計図（items/<id>.py）から3Dに組んで、ゲームと同じ見え方のドット絵に写す（スキル model3d-pixel）。木箱 tools/art/crate3d と同じやり方。
 # 使い方：python3 tools/art/furn3d/furn3d.py <id> <出力フォルダ> [--chips]
-#   見え方：見おろし42度・左右は平行で奥行きだけ遠近（画角10度・1マスぶん、oblique3d.persp）。
+#   見え方：見おろし38度・左右は平行で奥行きだけ遠近（画角10度・1マスぶん、oblique3d.persp）。高さの見え方と光の当たり方は、前の42度のときのまま（KEEP。持ち主がきめた）。
 #   出す物：<chip>.png（向きごと）・<chip>_x10.png・views_x4.png（向きをならべた4倍）・cmp_x4.png（いまのチップとならべた4倍）・bp.png（設計図）
 #   --chips：ゲームのチップ（chips.js とアトラス）に入れ、.chips_changed に id を書く。
 # items/<id>.py に書く物：
@@ -13,7 +13,7 @@
 #   PWATER(sc_info)=関数（粒の水。FRAMES のコマでループ。M.FR を見て、粒の一覧 [(x,y,z,半径,色,奥へ描く順)] をかえす）。本体もコマごとに写す（水面のさざなみ）
 #   PFIRE_HIDE=部品の名前を見る関数（粒の火が、そのうしろにかくれる部品。ほかの部品には、火を上にかさねる。なければ、ぜんぶ）
 #   MERGE=n（にた色をまとめるさかい。色の数が多いとき）
-#   FOV=n（画角の度。なければ10）・ELEV=n（見おろしの角度。なければ42）
+#   FOV=n（画角の度。なければ10）・ELEV=n（見おろしの角度。なければ38。書いた物は、高さ・光をそろえない）
 #   PARALLEL=True（奥行きのない物。遠近をかけずに写す）
 #   OUTERK=True か数（まわりのふちの輪郭線は、部品の olk でうすくしない。目地の線だけうすくするとき。数なら、まわりの線の色＝となりの色×その数）
 #   POUT=k（粒（PWATER）のかたまりのまわりに、粒の色×k の1ドットの輪郭線を引く）
@@ -34,14 +34,15 @@ from PIL import Image
 import oblique3d as O
 from blueprint import build,blueprint,check
 ROUND={'egg','tongue','log','frust','lathe','cyl','ball','tube','rope','ring','loft','wheel','logy','maki','model','cone'}   # まるい物（GRAD のとき、なめらかなかげ）
-ELEV,FOV,FRAME=42,10,1   # 見おろしの角度・画角・画角に入れる範囲（マス）。木箱と同じ
+ELEV,FOV,FRAME=38,10,1   # 見おろしの角度・画角・画角に入れる範囲（マス）。木箱と同じ
+KEEP=42   # 高さの見え方（たてにのびない）と5色のかげの光は、この角度のときのまま（角度をゆるくすると、上の面がうすくなるだけ）
 LW=2   # 輪郭線のはば（持ち主がきめた：2ドット）
 def load(iid):return importlib.import_module(iid)
 PN={}
 def scene(M,k,only=None,filt=None,foot=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=2,minrun=2,dark=(0.16,0.92),light=(0.14,1.06));TB=O.Tex(os.path.join(ART,'textures','rock030.png'),span=0.5,flow=1,minrun=1,dark=(0.18,0.90),light=(0.12,1.07));TP=O.Tex(os.path.join(ART,'textures','plaster001.png'),span=2.0,flow=3,minrun=3,dark=(0.18,0.96),light=(0.16,1.03));TMT=O.Tex(os.path.join(ART,'textures','metal032.png'),span=1.0,flow=3,minrun=2,dark=(0.16,0.94),light=(0.14,1.05));L=[p for p in M.PARTS() if not filt or filt(p.name)];keep=set()   # filt：写す部品をえらぶ（動く部品だけ・動く部品のほか）   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
-        mt=getattr(p,'metal',False);from blueprint import barktex as _bk;sc.texture(getattr(p,'texobj',None) or (_bk() if getattr(p,'barktex',False) else TP if getattr(p,'plaster',False) else TMT if getattr(p,'mtex',False) else (TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None));sc.material(('shinym' if getattr(p,'shiny',False) else 'metal') if mt else 'glass' if getattr(p,'glass',False) else 'glassc' if getattr(p,'glassc',False) else 'gwater' if getattr(p,'gwater',False) else 'clear' if getattr(p,'clear',False) else 'shiny' if getattr(p,'shiny',False) else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None) or (__import__('blueprint').uvdecal(p.dims,p.uvtex,fix=getattr(p,'uvfix',None)) if getattr(p,'uvtex',None) else None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
+        mt=getattr(p,'metal',False);from blueprint import barktex as _bk;sc.texture(getattr(p,'texobj',None) or (_bk() if getattr(p,'barktex',False) else TP if getattr(p,'plaster',False) else TMT if getattr(p,'mtex',False) else (TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None));sc.material(('shinym' if getattr(p,'shiny',False) else 'metal') if mt else 'glass' if getattr(p,'glass',False) else 'glassc' if getattr(p,'glassc',False) else 'gwater' if getattr(p,'gwater',False) else 'clear' if getattr(p,'clear',False) else 'shiny' if getattr(p,'shiny',False) else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None) or (__import__('blueprint').uvdecal(p.dims,p.uvtex,fix=getattr(p,'uvfix',None),sel=getattr(p,'uvsel',None)) if getattr(p,'uvtex',None) else None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
         for q in range(p0+1,sc.pid+1):PN[q]=p.name   # 部品の番号 → 名前（粒の火で、かくれる物をえらぶ）
     if hasattr(M,'EXTRA') and not filt:sc.texture(None);M.EXTRA(sc)
@@ -58,7 +59,8 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     sc,keep=scene(M,k,only);V=np.array([v for t in sc.t for v in t[:3]])   # 見え方（中心・はんい）は、いつも、ぜんぶの部品からきめる（動く部品と本体の絵の場所をそろえる）
     if filt:sc,keep=scene(M,k,only,filt,foot=sc.foot)   # まわす中心も、ぜんぶの部品の床の範囲で
     c=getattr(M,'CENTER',None) or ((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)   # CENTER：見え方の中心をきめる（中身のちがう絵どうしで、台の写り方をそろえる）
-    PROJ,DEPTH=O.persp(getattr(M,'ELEV',ELEV),getattr(M,'FOV',FOV),None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
+    kp=None if hasattr(M,'ELEV') else KEEP   # ELEV を書いた物（木・岩・限定の家具など）は、いままでどおり
+    PROJ,DEPTH=O.persp(getattr(M,'ELEV',ELEV),getattr(M,'FOV',FOV),None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False),keep=kp)   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     PX=getattr(M,'PX',None);PX=PX if isinstance(PX,int) else None;K=1   # PX がほかの意味の名前（井戸の柱の場所など）のときは使わない
     if PX:K=S_//PX;S_=PX   # PX：1マスのドット数（あらいドット）。PX で写して、K 倍（NEAREST）にのばす。ゲームのチップは g64 のまま
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
@@ -69,7 +71,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     if getattr(M,'MATCAP',None):   # MATCAP='clay' など：マットキャップでかげと質感（tools/art/matcap.py）。TONE5 のかわりに
         import matcap;im=matcap.apply(im,M.MATCAP,glow=getattr(M,'GLOW',None))   # GLOW：色→光る所（かげをつけず明るく）
     elif getattr(M,'TONE5',False):   # TONE5=True：木と同じ5色のかげ（左上の光・5色・まるい面のさかいめに市松のあみかけ。tools/art/furntone.py）。家具・建物はこれ（持ち主がきめた）
-        import furntone;im=furntone.tone(im,streak=getattr(M,'STREAK',furntone.STREAK),three=getattr(M,'TONE3',False),dw=getattr(M,'DITHER',None))   # DITHER：あみかけのはば（0 で、なし）   # TONE3：3だん・あみ少し   # STREAK：木目のすじのこさ（設計図ごとにかえられる）
+        import furntone;im=furntone.tone(im,streak=getattr(M,'STREAK',furntone.STREAK),three=getattr(M,'TONE3',False),dw=getattr(M,'DITHER',None),world=furntone.worldlight(kp) if kp else None)   # world：光はせかいの向き（角度をかえても、当たり方がかわらない）   # DITHER：あみかけのはば（0 で、なし）   # TONE3：3だん・あみ少し   # STREAK：木目のすじのこさ（設計図ごとにかえられる）
     if K>1:
         im=im.resize((im.width*K,im.height*K),Image.NEAREST);S_*=K;O.S=S_
         for nm_ in('LAST_ZB','LAST_IDS'):

@@ -30,7 +30,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     const r=[got(0),got(29),got(30),got(60),got(100)].join(',');if(r!=='0,0,2,3,5')throw Error('bonus '+r);
     const c=mkRes(S,'テスト火2','fire',h.x-1,h.y);S.res.push(c);S.bond={};bondAdd(a,b,30);bondAdd(a,c,100);supportTick();if(supAtk(a)!==5)throw Error('best one '+supAtk(a));
     S.res.pop();S.bond={};bondAdd(a,b,100);b.x=a.x+4;supportTick();if(supAtk(a))throw Error('far still');b.x=a.x+2;
-    /* こわがって、にげている子とは、ならばない */b.hunger=400;supportTick();if(supAtk(a))throw Error('hungry partner');b.hunger=hMax(b);
+    /* こわがって、にげている子とは、ならばない */b.hunger=200;supportTick();if(supAtk(a))throw Error('hungry partner');b.hunger=hMax(b);
     S.enemies=[];supportTick();if(supAtk(a))throw Error('no enemy still');
     /* 火の攻撃にたされる */S.enemies=[{type:'basic',x:a.x+1,y:a.y,hp:999,max:999,spawned:true,path:[]}];supportTick();a.fatk=0;const e=S.enemies[0],h0=e.hp;updRes(a,.1);const d1=h0-e.hp;
     S.bond={};supportTick();e.hp=999;a.fatk=0;updRes(a,.1);const d0=999-e.hp;S.res.pop();S.enemies=[];S.enemyOn=false;S.t=720;if(!(d1>d0))throw Error('fire dmg '+d0+' '+d1);
@@ -38,10 +38,10 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* 助けてにげる：にげる子のとなりにつき、攻撃をかわりにうけ、とどけたら なかよし+2 */
   console.log('escort',await run(`(()=>{const [f,n,h]=S.res;S.bond={};const w=h,g=mkRes(S,'テスト火','fire',h.x+1,h.y);S.res.push(g);for(const r of[w,g])endAct(r);
     S.t=1440*2+60;S.enemyOn=true;S.ns=S.ns||{};S.enemies=[{type:'basic',x:w.x+2,y:w.y+1,hp:EN.basic.hp,spawned:true,path:[]}];bondAdd(w,g,40);
-    w.hunger=400;const G=bfs(w.x|0,w.y|0),st=(w.y|0)*W+(w.x|0)-8;startAct(w,G,'flee',st,{run:true});if(!w.act||w.act.type!=='flee')throw Error('no flee');
+    w.hunger=200;const G=bfs(w.x|0,w.y|0),st=(w.y|0)*W+(w.x|0)-8;startAct(w,G,'flee',st,{run:true});if(!w.act||w.act.type!=='flee')throw Error('no flee');
     escTick();if(!g.act||g.act.type!=='escort'||g.act.who!==w.id||w.escBy!==g.id)throw Error('no escort '+JSON.stringify(g.act&&g.act.type));
     /* なかよし30より下なら助けない */
-    if(escGuard(w)!==g)throw Error('no guard');const wh=w.hunger,gh=g.hunger;hitRes(S.enemies[0],w,EN.basic);if(w.hunger!==wh||!(g.hunger<gh))throw Error('not covered '+wh+'/'+w.hunger+' '+gh+'/'+g.hunger);
+    if(escGuard(w)!==g)throw Error('no guard');const wh=w.hunger,gh=g.hunger;hitRes(S.enemies[0],w,EN.basic);if(w.hunger!==wh||!(g.hunger<gh))throw Error('not covered '+wh+'/'+w.hunger+' '+gh+'/'+g.hunger);g.hunger=hMax(g);/* たたかれて、おなかが250より少なくなると、つきそいをやめるので、もどす */
     g.x=w.x+3;if(escGuard(w))throw Error('guard far');g.x=w.x+1;
     /* とどいた */w.x=st%W+.5;w.y=((st/W)|0)+.5;w.path=[];w.act.stage='do';g.x=w.x+1;g.y=w.y;const b0=bondOf(w,g);escTick();if(bondOf(w,g)!==b0+2)throw Error('no bond '+bondOf(w,g));if(g.act&&g.act.type==='escort')throw Error('still escort');if(w.escBy!=null)throw Error('ward keeps');
     /* なかよしが低いと助けない */endAct(w);endAct(g);S.bond={};bondAdd(w,g,20);g.x=w.x+1;startAct(w,bfs(w.x|0,w.y|0),'flee',(w.y|0)*W+(w.x|0)+6,{run:true});escTick();if(g.act&&g.act.type==='escort')throw Error('helped at 20');
@@ -49,7 +49,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* 時間をすすめても、助ける子は、にげる子のとなりのまま、にげる先までつく（火のせいれいの「コワイノが来たらたたかいに行く」でやめない） */
   console.log('escort live',await run(`(()=>{const [f,n,h]=S.res;const x0=CX-12,y0=CY-3;for(let y=y0;y<y0+5;y++)for(let x=x0;x<x0+5;x++){if(x===x0||x===x0+4||y===y0||y===y0+4)S.obj[y*W+x]='hwall'}S.obj[(y0+4)*W+x0+2]='door';
     recount();const g=mkRes(S,'テスト火','fire',h.x+1,h.y);S.res.push(g);S.bond={};bondAdd(h,g,50);S.t=1440*2+60;S.enemyOn=true;S.ns={};
-    S.enemies=[{type:'basic',x:h.x+3,y:h.y+.4,hp:999,max:999,spawned:true,path:[]}];h.hunger=420;h.fleeNow=true;let esc=0,maxd=0;
+    S.enemies=[{type:'basic',x:h.x+3,y:h.y+.4,hp:999,max:999,spawned:true,path:[]}];h.hunger=210;h.fleeNow=true;let esc=0,maxd=0;
     for(let i=0;i<240;i++){for(const r of S.res)updRes(r,.25);supportTick();if(g.act&&g.act.type==='escort'){esc++;maxd=Math.max(maxd,Math.hypot(g.x-h.x,g.y-h.y))}}
     const b=bondOf(h,g);for(let y=y0;y<y0+5;y++)for(let x=x0;x<x0+5;x++)S.obj[y*W+x]='';S.res.pop();S.enemies=[];S.enemyOn=false;S.t=720;h.hunger=hMax(h);endAct(h);recount();
     if(esc<20)throw Error('escort ended early '+esc);if(maxd>2.5)throw Error('fell behind '+maxd.toFixed(1));if(b!==52)throw Error('no bond on arrival '+b);return 'beside (max '+maxd.toFixed(1)+'), arrived, bond 50→52'})()`));

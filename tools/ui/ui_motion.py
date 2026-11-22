@@ -23,6 +23,7 @@ SRC = {
  'ustampk': (.32, "0%{transform:translate(0,3px) scale(1.02,.97)}15%{transform:translate(-3px,1.5px)}30%{transform:translate(3px,0)}45%{transform:translate(-1.5px,1.5px)}60%{transform:translate(1.5px,0)}80%{transform:translate(0,0)}100%{transform:none}"),
  'ucntp': (.16, "0%{transform:scale(1.45,1.45) translate(0,-3px)}35%{transform:scale(.9,1.1)}70%{transform:scale(1.05,.97)}100%{transform:none}"),
  'ucntd': (.42, "0%{transform:scale(1,1);filter:brightness(1)}18%{transform:scale(1.8,1.8) translate(0,-6px);filter:brightness(1.6)}40%{transform:scale(.85,1.15);filter:brightness(1.3)}60%{transform:scale(1.12,.92)}80%{transform:scale(.97,1.03)}100%{transform:none;filter:brightness(1)}"),
+ 'recshk': (.1, "0%{transform:translateX(1.5px)}50%{transform:translateX(-1.5px)}100%{transform:translateX(1.5px)}"),
  'ustk': (.45, "0%{transform:translateY(-24px) scale(1.4);opacity:0}20%{transform:translateY(-15px) scale(1.25);opacity:1}40%{transform:translateY(-4.5px) scale(1.1)}60%{transform:scale(.95)}80%{transform:scale(1.03)}100%{transform:none}"),
  'nbump': (.42, "0%{transform:translateY(-4.5px)}30%{transform:translateY(-1.5px)}60%{transform:translateY(1.5px)}100%{transform:none}"),
  'nspk': (.5, "0%{opacity:1}50%{opacity:1;transform:translateY(-1.5px)}100%{opacity:0;transform:translateY(-3px)}"),

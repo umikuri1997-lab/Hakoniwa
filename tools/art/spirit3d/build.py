@@ -3,6 +3,8 @@
   python3 tools/art/spirit3d/build.py walk play_swing → その動きだけ作りなおす（ほかの動きは、いまの js/spirit-motions.js のまま）
   --dbg <フォルダ>                                     → たしかめ用に、動きごとの絵（大きくした物）も出す
   --els wood                                           → その属性だけ（たしかめ用。js は書かない）
+  --add light,dark                                     → その属性だけ作って、いまの js/spirit-motions.js に足す（ほかの属性の絵はそのまま）
+光・闇（トモリ・ツキミ）は light_dark.py の LightDark で組む（GPT の H-4）。
 絵のならび：動きと属性ごとに1まい（ゲームは、使う動き・属性の絵だけ読みこむ）。3行（正面・横・うしろ）× コマ数。目の上にかさねる絵（ずきん・顔の上で手前にある、うで・手・道具）があれば、正面・横・うしろの3行を、かさねる所の高さに切りつめて下に。わくは、そのぜんぶのコマの絵が入る大きさ。
 js/spirit-motions.js：SPM = {動きの名前: {s（属性ごとの絵）, n（コマ数）, r（速さ。'ph' は o.ph）, g（属性ごとの [わくのはば, 高さ, わくの左上 x, y]、目の上にかさねる絵があれば [.., わくの上からのずれ, 高さ]）,
   e（属性ごと・向きごと・コマごとの [目のずれ x, y]）, h（向きごと・コマごとの [手前の手 x, y, 奥の手 x, y]、道具の先があれば [.., 先 x, y]）}}"""
@@ -16,9 +18,16 @@ from motions import MOTIONS
 import rig
 
 _SP = {}
-def job(a):
+LDELS = ('light', 'dark')   # 光・闇は、light_dark.py の形
+def job(a, *, factory=None):
     """1つの動き・属性：絵（PNG のまま）と、わく・目・手の場所"""
-    name, el = a; sp = _SP.get(el) or _SP.setdefault(el, Spirit(el)); m = MOTIONS[name]; n = m['n']
+    name, el = a
+    if factory is None:
+        if el in LDELS:
+            from light_dark import LightDark as factory
+        else:
+            factory = Spirit
+    sp = _SP.get(el) or _SP.setdefault(el, factory(el)); m = MOTIONS[name]; n = m['n']
     fr = {}; fo = {}; meta = {}
     for face in (0, 1, 2):
         for i in range(n):
@@ -42,16 +51,18 @@ def job(a):
     return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)]
 
 def main():
-    args = sys.argv[1:]; dbg = None; els = ELS
+    args = sys.argv[1:]; dbg = None; ALL = ELS + list(LDELS); els = ALL
     if '--dbg' in args: i = args.index('--dbg'); dbg = args[i+1]; del args[i:i+2]; os.makedirs(dbg, exist_ok=True)
     if '--els' in args: i = args.index('--els'); els = args[i+1].split(','); del args[i:i+2]
+    add = None
+    if '--add' in args: i = args.index('--add'); add = args[i+1].split(','); els = add; del args[i:i+2]
     names = args or list(MOTIONS)
     jsf = os.path.join(ROOT, 'js', 'spirit-motions.js'); old = {}
     if os.path.exists(jsf):
         m = re.search(r'const SPM=(\{.*\});', open(jsf, encoding='utf8').read(), re.S)
         if m: old = json.loads(m.group(1))
     used0 = {v for d in old.values() for v in d.get('s', {}).values()}
-    new = {k: v for k, v in old.items() if k in MOTIONS and k not in names}
+    new = {k: v for k, v in old.items() if k in MOTIONS and (add or k not in names)}
     jobs = [(n, e) for n in names for e in els]
     with Pool(min(4, os.cpu_count() or 1)) as pool:
         for name, el, raw, geo, eye, hd in pool.imap_unordered(job, jobs):
@@ -62,7 +73,7 @@ def main():
             if dbg:
                 im = Image.open(io.BytesIO(raw)); bg = Image.new('RGBA', im.size, (200, 220, 180, 255)); bg.alpha_composite(im); bg.save(os.path.join(dbg, f'{name}_{el}.png'))
             print(name, el, src, len(raw), 'bytes', flush=True)
-    if els != ELS: print('属性をしぼったので、js は書かない'); return
+    if els != ALL and not add: print('属性をしぼったので、js は書かない'); return
     used = {v for d in new.values() for v in d['s'].values()}
     for f in used0-used:   # どの動きも使わなくなった絵だけ消す
         if os.path.exists(os.path.join(ROOT, f)): os.remove(os.path.join(ROOT, f))

@@ -17,7 +17,8 @@ function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画
   if(S.hi&&cliffChipsOK()){CPRE=S;const RW=cliffRuns(),keys=new Set();for(const[y,R0]of RW)for(const R of R0)for(let k=R.x0;k<=R.x1;k++)keys.add(cliffKey(k,y,R.lv));for(const K of [2,1])for(const k of keys)L.push(()=>cliffPart(k,K))}
   if(S.hi&&cliffChipsOK())for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{if(!farOK(cx,cy))farBuild(cx,cy)});/* 遠くの絵（拡大が小さいとき）も、先に作っておく */
   return {s:S,L,i:0}}
-function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<90){try{J.L[J.i]()}catch(e){frameErr('preload',e)}J.i++}if(J.i>=J.L.length){GRD.job=null;GRD.pre=J.s;tmpFree()}}
+const STAGEMS=180;/* 読みこみ中、1コマにマップを作る時間（ミリ秒。長いほど、コマのあいだのむだがへって速い。%の出かたは、ゆっくりになる） */
+function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<STAGEMS){try{J.L[J.i]()}catch(e){frameErr('preload',e)}J.i++}if(J.i>=J.L.length){GRD.job=null;GRD.pre=J.s;tmpFree()}}
 function assetPct(){/* 絵の読みこみの進みぐあい（0〜1）。マップチップのアトラス（大きい絵）で半分、ほかの絵で半分 */let n=0,d=0,cn=0;const cp=(window.CHIPA||[]).length;for(let k=0;k<cp;k++){const a=chipPage(k);if(a.ok||a.bad)cn++}for(const k in ICI){const im=ICI[k];d++;if(im.ok||im.bad||im.complete)n++}for(const k in ART){const a=ART[k];d++;if(a.ok||a.bad)n++}return ((cp?cn/cp:1)+(d?n/d:1))/2}
 function loadPct(){/* 読みこみの%：絵の読みこみが30%、マップを作るのが70% */const J=GRD.job;return Math.min(99,Math.floor(J&&J.s===S?30+70*J.i/J.L.length:30*assetPct()))}
 function assetsOK(){/* 絵がぜんぶ読みこめたか（マップチップのアトラス・アイコン・そのほかの絵） */for(let n=0;n<(window.CHIPA||[]).length;n++){const a=chipPage(n);if(!a.ok&&!a.bad)return false}for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===1||waterChipsOK())&&cliffChipsOK()}
@@ -30,7 +31,8 @@ function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh
     const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
     const q=GRD.s===S&&GRD.c.get(cy*64+cx);if(!q)continue;let im=lod?q.l:(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;q.u=RFN;/* できていない区画はとばす（つぎのコマ以降に、見えている区画から作る）。くわしい絵をすてた区画は、半分の絵で */
     const e1=a===ox&&a>sx?GPAD:0,e2=a2===ox+GPX&&a2<sx+sw?GPAD:0,f1=b===oy&&b>sy?GPAD:0,f2=b2===oy+GPX&&b2<sy+sh?GPAD:0,A=a-e1,B=b-f1,A2=a2+e2,B2=b2+f2;/* 区画のさかいでは、のりしろの分だけ、となりの区画にかさねて描く（Safari は切りとった所のはしを透明とまぜるので、さかいめに線が出る） */
-    c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}}
+    c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}
+  dcBlit(c,dx,dy,dw,dh)}/* 物といっしょに描く地面の絵にも、地面の層の色（daycolor.js） */
 let dirty=true,STATICFULL=false,ICON=false,VIG=null;
 function artLoaded(){for(const q in iconCache)delete iconCache[q];STATICFULL=true;dirty=true}/* 絵が読みこまれたら、次に描くときに1回だけ地面を全部描きなおす */
 

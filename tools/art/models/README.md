@@ -14,3 +14,4 @@
 - `tripo`（3回め）：伐採場・採石場のためにトリポで作った物（プロンプトは `tripo/prompts.md` の「3回め」）。色のない FBX（y が上）1つに入っていたのを `tripo_split.py` で切りわけた：切り株（stump。あとで、根が放射状にのびる形にさしかえた）・切り出した石（stone_big・stone_mid）・まるい石（stone_round）・平たい石（stone_slab）・石のかけら（stone_chunk）・小石（pebbles2・pebbles3a・pebbles3b・pebble_a〜c）・ねかせた丸太（log_lying）・わったまき（firewood）・葉の小枝（sprig）。色は設計図の `p.recol` でつける。面は3000までにへらしてある。
 - `kenney/space`：Kenney「Tower Defense Kit」（www.kenney.nl、CC0）の水晶（detail-crystal → `td_crystal.glb`・detail-crystal-large → `td_crystal_large.glb`）。洞窟の水晶・水晶のかべ（`furn3d/items/cave_crys0〜2`・`cave_ccols`、`natcommon.modelfacets`）。取ってきた所：GitHub にある写し（series-ai/jam-ready-assets の `kenney-tower-defense-kit`、Git LFS の中身）。
 - `polyhaven`：Poly Haven（polyhaven.com、CC0）の岩・切り株・木の家具。くわしくは `polyhaven/README.md`（一覧の絵 `catalog.png`）。
+- `quaternius/<パック>`：Quaternius（CC0）の家具・食べ物・小物・サバイバルのパック（OpenGameArt から）。くわしくは `quaternius/README.md`（パックごとの一覧の絵 `catalog.png`）。

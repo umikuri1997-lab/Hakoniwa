@@ -1,7 +1,7 @@
 'use strict';
 function treePlanted(){let n=cnt('tree')+cnt('fruit');for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='sprout'&&S.dyn[j]&&(S.dyn[j].plant==='tree'||S.dyn[j].plant==='fruit'))n++}return n}/* 木・果樹（苗もふくむ）。花の芽はかぞえない */
 const kcOK=(c,r,p)=>!WD&&sevName(c.kc[0])===r.name&&(c.kc[1]==='*'?!isKey(p.name):sevName(c.kc[1])===p.name);
-const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18,kClr=()=>!!S.cleared,kRuin=d=>()=>(S.fogF||[]).some(f=>f.t==='ruin'&&!!f.done===!!d&&!(S.fog&&S.fog[f.a]));/* 晴れた所に、古い家のあとがある（d：もう家にもどった） */
+const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18,kClr=()=>!!S.cleared,kRuin=d=>()=>(S.fogF||[]).some(f=>f.t==='ruin'&&!!f.done===!!d&&!!f.set);/* 晴れた所に、古い家のあとがある（d：もう家にもどった） */
 /* せいれいどうしのおしゃべり。0が話しかけた子、1が相手。「しらべる」でタップすると読める。「コワイノ」のお話は、はっきりは言わず、聞いていると正体が少しずつわかる（STORY.md） */
 const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、el：その属性の子だけ、mate：なかよしだけ、ok：出る条件。セーブに番号が入るので、順番を変えない */
  Object.assign([[0,'ねえ、さっき柵のむこうで、なにか光ってなかった？'],[1,'見た見た！ きらきらってしてた。'],[0,'なんだろう…。さわったら、いいことあるのかな。']],{ok:()=>['fence','misugaki','logfence','bamboofence','wall'].some(id=>cnt(id)>0)}),
@@ -560,11 +560,12 @@ CHATS.push(
  Object.assign([[0,"家の中で、ごはんを作れたらいいのにね。"],[1,"お水と、たるもそばにあったら、べんりそう。"]],{hint:'daidokoro',ok:()=>spotHintOK('daidokoro',['oven','cooktable'])}));
 
 /* せいれい同士のおしゃべり：話す子の属性に合わせて、口調をととのえる（話の中身は変えない） */
-function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?(k==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):r.elem==='water'?'わたし':'ぼく';
+function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=k==='nomi'?'おれ':r.elem==='fire'?(k==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):r.elem==='water'?'わたし':'ぼく';
   if(tx.replace(LOOKRX,'').length>60)return tx;let t=tx.replace(/ぼく|わたし/g,pr);if(r.elem==='fire'&&pr!=='あたい')t=t.replace(/あたい/g,pr);/* 「あたい」はホムラだけ */
   const ends=(m)=>{for(const[a,b]of m)t=t.split(a).join(b)};
   const rx=(m)=>{for(const[a,b]of m)t=t.replace(a,b)};
-  if(r.elem==='earth'){ends([['よ。','よぉ。'],['よ！','よぉ！'],['かな。','かなぁ。'],['かな？','かなぁ？'],['くない？','くないのぉ？'],['てない？','てないのぉ？'],['じゃない？','じゃないのぉ？'],['できない？','できないのぉ？']]);rx([[/ね([。！])/g,'ねぇ$1']])}/* 「しない？」（さそい）は「しないのぉ？」にしない */
+  if(k==='nomi'){ends([['えへへ','……ふん'],['ふふ','……ふん'],['わあ、','……'],['ありがとう。','……ありがとな。'],['ありがとう！','……ありがとな。'],['すごい！','やるな。'],['しようよ','するぞ'],['ごめんね','わるかった'],['だよね','だな'],['だよ。','だ。'],['だよ！','だ。'],['だね。','だな。'],['だね！','だな。'],['かな。','か。'],['かな？','か？'],['の？','のか？'],['よ。','。'],['よ！','。'],['ね。','な。'],['ね！','な。'],['ね？','な？'],['！','。']])}/* ノミ（水のステージの土のせいれい）：みじかく、ぶっきらぼう */
+  else if(r.elem==='earth'){ends([['よ。','よぉ。'],['よ！','よぉ！'],['かな。','かなぁ。'],['かな？','かなぁ？'],['くない？','くないのぉ？'],['てない？','てないのぉ？'],['じゃない？','じゃないのぉ？'],['できない？','できないのぉ？']]);rx([[/ね([。！])/g,'ねぇ$1']])}/* 「しない？」（さそい）は「しないのぉ？」にしない */
   else if(r.elem==='water'){t=t.replace(/わたしら/g,'わたしたち');ends([['えへへ','ふふ'],['えー！ ','ええっ。'],['えー！','ええっ。'],['ないよ。','ないですよ。'],['だよ。','ですよ。'],['だよ！','ですよ。'],['だね。','ですね。'],['だね！','ですね。'],['のかな。','のでしょうか。'],['のかな？','のでしょうか？'],['るかな。','るでしょうか。'],['すごい！ ','すごいですね。'],['すごい！','すごいですね。'],['ある？','ありますか？']])}/* 「こわいかな」「音かな」など、じぶんのことの「かな」はそのまま */
   else if(r.elem==='wind'){ends([['えー！ ','おや、'],['えー！','おや、'],['えへへ','ふふ'],['もん。','からね。'],['んだよ。','のさ。'],['んだよ！','のさ！'],['からだよ。','からさ。'],['いいよ。','いいさ。'],['いいよ！','いいさ！'],['ないよ。','ないさ。'],['すごい！','見事だね！'],['ほんと？','ほう？']]);rx([[/([^さ])だよ([。！])/g,'$1さ$2'],[/([^て])るよ。/g,'$1るさ。']])}/* 「さ」は、言いきる文だけ（「〜たよ」「〜しようよ」「気になるよ！」「〜てるよ」はそのまま） */
   else if(r.elem==='fire'){const com=[['えへへ','へへっ'],['ふふ、','へっ、'],['あはは','はは'],['もー！','ったく！'],['わあ、','おっ、'],['ねえねえ','なあなあ'],['ねえ、','なあ、'],['えー！','えぇ！'],['ふうん','ふーん'],['ありがとう。','ありがとな。'],['ありがとう！','ありがとな！'],['ごめん','わりぃ'],['しようよ','しようぜ'],['ちゃった','ちまった'],['でしょ','だろ'],['じゃない？','じゃないか？'],['すごい！','やるじゃないか！']];
@@ -600,6 +601,7 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK,gn=!!goneTalkName()
   {const hs=L.filter(i=>CHATS[i].hint),nh=L.filter(i=>!CHATS[i].hint),use=hs.length&&(Math.random()<.25||!nh.length)?hs:nh;if(use.length)L.splice(0,L.length,...use)}/* スポットのヒントは、たまに（4回に1回くらい） */
   if(gn&&Math.random()<.5){const F=L.filter(i=>CHATS[i].gone);if(F.length)L.splice(0,L.length,...F)}/* 消えたばかりの子がいる日は、その子の話が出やすい */
   if(festOn()){const F=L.filter(i=>CHATS[i].fest);if(F.length)L.splice(0,L.length,...F)}/* おまつりの日は、おまつりの話だけ */
+  if(Math.random()<.7){const F=L.filter(i=>CHATS[i].evc);if(F.length)L.splice(0,L.length,...F)}/* いっしょに出たイベントの話（ev-show.js）が出やすい */
   const R=S.chatRec||(S.chatRec=[]),G=chatSeen(),last=i=>{const k=R.lastIndexOf(i);return k>=0?k:G.has(i)?-.5:-1}/* まだどこでも出ていない話 → ほかのステージで出た話 → このステージで前に出た話 */,lo=Math.min(...L.map(last));let C=L.filter(i=>last(i)===lo);/* だれとだれの会話でも、まだしていない話（なければ、いちばん前にした話）からえらぶ。ひととおりするまで、同じ話はしない */
   if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */
   const t=C[Math.floor(Math.random()*C.length)];for(let o;(o=R.indexOf(t))>=0;)R.splice(o,1);R.push(t);chatMark(t);return t}
@@ -607,7 +609,7 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK,gn=!!goneTalkName()
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;if(evIn(o)||evIn(r))return false;/* イベントに出ている子は、おしゃべりによばない */endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const NIGATE={fire:['fountain'],wood:['campfire'],water:['campfire'],earth:['swing'],wind:[]};/* 属性ごとの、にがてなおもちゃ：遊びに行かない */
 const nigate=(el,k)=>(NIGATE[el]||[]).includes(k);
-const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw','sandbox','swing','fountain','campfire']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
+const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw','sandbox','swing','fountain','campfire','merry','cup','skyswing','wheel']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
 const FISHP=.125,FISHPS=.2,FISHPA=.1;/* つりに行く確率：ふつうの水べ12.5%、つり場（水べのいす）20%、つりスポット・よるづり場は1つで+10% */
 function goPlay(r,G,strict){
   if(windOpGo(r,G))return true;/* 風の遊園地：風のせいれいは、遊具の係になる（wind.js） */

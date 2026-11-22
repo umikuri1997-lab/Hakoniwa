@@ -18,6 +18,7 @@ B.ensure=(id,n,nx,ny,ok)=>{if(B.have(id)>=n)return true;const b=BL[id];if(!b)ret
   if(b.kind==='furn'||b.kind==='block'&&!S.unlocked[id]){if(inv(id)>0){B.put(id,nx,ny,ok)}else if(!B.ordered(id)&&recipeKnown(id)){orderFurn(id)}return false}
   B.put(id,nx,ny,ok);return B.have(id)>=n};
 B.ui=()=>{
+  for(const P of[typeof ROUTEPOP!=='undefined'&&ROUTEPOP,typeof LVPOP!=='undefined'&&LVPOP]){const b=P&&P.querySelector('.btn');if(b){b.click();return true}}/* お話の道・レシピをえらぶ：はじめの物 */
   const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b){b.click();return true}if(document.querySelector('.idea-reveal'))return true;
   for(const id of ['#lvup','#rlv']){const e=document.querySelector(id);if(e&&!e.hidden){const bs=[...e.querySelectorAll('button')].filter(b=>!b.classList.contains('lvic'));if(bs.length){bs[bs.length-1].click();return true}}}
   {const y=document.querySelector('.askyn .btn.pri');if(y){y._held=1;y.click();y._held=0;return true}}/* 材料をわたすクエストの「もらってもいい？」は「わたす」 */
@@ -43,7 +44,7 @@ B.fenceTick=()=>{if(isNight()||cnt('site')>=3)return;
 /* 素材の箱：箱がいっぱいに近いとき、使わない素材をおたきあげ・木箱をふやす */
 B.usedMats=()=>{const u={wood:99,stone:99};const q=QUESTS[S.quest];for(const id in BL){const b=BL[id];if(!b||!b.mat)continue;let ok=false;try{ok=(recipeKnown(id)||learnedIn(S,WD).includes(id))&&(!b.lv||S.lv>=b.lv)}catch(e){}if(!ok)continue;for(const k in b.mat)u[k]=Math.max(u[k]||0,b.mat[k])}
   if(q&&FIELD_PREP&&FIELD_PREP[q.id])for(const id of (FIELD_PREP[q.id].build||{}).ids||[])for(const k in (BL[id]||{}).mat||{})u[k]=Math.max(u[k]||0,BL[id].mat[k]*2);return u};/* 素材ごとに、のこす数：知っている物で、いちばん多く使う数（ないものは0） */
-B.boxTick=()=>{if(isNight())return;const cap=boxCapTot(),tot=(()=>{let n=0;for(const k of BOXL)for(const v of Object.values(S.box[k]||{}))n+=v;return n})();if(!cap||tot<cap*.6)return;const tight=tot>=cap*.8&&(S.mat.wood||0)<8;
+B.boxTick=()=>{if(isNight())return;const cap=boxSlotTot(),tot=(()=>{let n=0;for(const k of BOXL)n+=slotUsed(k);return n})();/* わく：使っている数・ぜんぶ */if(!cap||tot<cap*.6)return;const tight=tot>=cap*.8&&(S.mat.wood||0)<8;
   if(!B.uc||B.ucD!==dayNo()){B.uc=B.usedMats();B.ucD=dayNo()}const Q=S.otakiQ||(S.otakiQ={});B.qneed={};{const q=QUESTS[S.quest];if(q&&FIELD_PREP&&FIELD_PREP[q.id])for(const id of (FIELD_PREP[q.id].build||{}).ids||[])Object.assign(B.qneed,(BL[id]||{}).mat||{})}
   for(const k in MATTRADE){const n=S.mat[k]||0,tr=MATTRADE[k],keep=tight?((k==='wood'||k==='stone')?99:(B.qneed&&B.qneed[k])||0):Math.max(5,B.uc[k]||0);if(tot<cap*.8)continue;if(n<keep+tr||Q[k])continue;const v=Math.floor((n-keep)/tr)*tr;if(v>0){rsvAdd({[k]:v});Q[k]=v;B.lg('OTAKI '+k+' '+v)}}
   const want=BOXL.length+1;if(B.have('crate')<want&&!B.ordered('crate')&&inv('crate')<1){if(recipeKnown('crate')&&(S.mat.wood||0)>=8){orderFurn('crate');if(B.ordered('crate'))B.lg('ORDER crate')}}
@@ -120,10 +121,11 @@ H.kikyo=()=>B.plantAll('bellf');H.farm6=()=>{B.ensure('farm',6,44,56)};H.imoseed
 const field=prep=>q=>{const [sx,sy]=SR(),st=B.st;
   if(typeof SPLAY!=='undefined'&&SPLAY){if(!st.pw||performance.now()-st.pw>4000){st.pw=performance.now();sacredPlayWin()}return}
   /* 調べの準備の物：依頼のあとに、切り株のそばへ置いた物だけが数に入る（前からある物では進まない）。足りないあいだは、持っていれば置き、なければたのむ・建てる */
-  if(S.qTalked&&!fieldBuildOK(q.id)&&!B.sites(prep)){const near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1,k=BL[prep].kind;
+  {const bp=FIELD_PREP[q.id]&&FIELD_PREP[q.id].bp;if(bp){/* 設計図の準備：もらった設計図を、切り株のそばに置く */if(S.qTalked&&!fieldBuildOK(q.id)&&!(S.bp||[]).some(e=>e.k===bp)){const i=(S.bpInv||[]).findIndex(it=>it.k===bp);if(i>=0)for(let b=-10;b<=10&&(S.bpInv||[]).some(it=>it.k===bp);b++)for(let a=-10;a<=10;a++){const x=sx+a,y=sy+b;if(bpCheck(bp,x,y)[0]){bpPlace(i,x,y);break}}}prep=null}}
+  if(prep&&S.qTalked&&!fieldBuildOK(q.id)&&!B.sites(prep)){const near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1,k=BL[prep].kind;
     if(k==='build')B.put(prep,sx+2,sy+6,near);else if(inv(prep)>0)B.put(prep,sx+2,sy+6,near);else if(!B.ordered(prep)&&recipeKnown(prep))orderFurn(prep)}
   if(!isNight()&&S.qTalked){try{fieldStoryTap(sx+1,sy+1)}catch(e){B.lg('fieldTap err '+e.message)}}};
-H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('jar');H.windEcho=field('windmill');H.tower=field('bench');
+H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('well');H.windEcho=field('windmill');H.tower=field('bench');
 H.warmMeal=()=>{if(warmTableJ()>=0)return;const [sx,sy]=SR(),near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1;if(inv('table')>0)B.put('table',sx+2,sy+6,near);else if(!B.ordered('table'))orderFurn('table')};/* 切り株のそばに食卓。フタバはそこで食べる */
 H.aoFish=()=>{if(S.obj.some(o=>o==='lotus'))return;if(B.opts.supply&&!(S.inv.lotus>0))S.inv.lotus=1;B.plantAll('lotus')};/* ハスのそばの水あび：ハスがなければ池に植える（補給のときは種をわたす。水あびは夕方に、せいれいがする） */
 H.kite=()=>{if((S.mat.shina||0)<4){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0g'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}};/* たこの材料：しなやかな草（枝はいつもひろう） */
@@ -160,7 +162,7 @@ H._all=()=>{all0();
   if(B.opts.supply){
   /* 補給（進行のたしかめ用）：パワー・食べ物・やられない */
   if(S.pt<400)S.pt=400;for(const k of ['wood','stone'])if((S.mat[k]||0)<60)S.mat[k]=60;for(const k of ['eda','kasa','shina','funba'])if((S.mat[k]||0)<12)S.mat[k]=12;if((S.fs.imo||0)<30){S.fs.imo=40;S.food=Object.values(S.fs).reduce((a,b)=>a+b,0)}
-  for(const r of S.res){if(r.hunger<700)r.hunger=700}
+  for(const r of S.res){if(r.hunger<350)r.hunger=350}
   const q=QUESTS[S.quest];if(q&&q.steps&&q.steps.some(s=>/^lv\d/.test(s.id))&&S.lv<10){S.totalPt+=25}
   if(q&&q.id==='lv2')S.totalPt+=10;
   if(S.quest>=questIndexOf('tower')||S.cleared){
@@ -173,6 +175,7 @@ H._all=()=>{all0();
   if(q&&(q.id==='lv5'||q.id==='wood6')&&S.qTalked){let n=0;for(let i=0;i<400&&n<8;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]&&!S.floor[j]&&walk(j)&&S.ground[j]!==1){S.obj[j]='clover';n++}}if(n)recount()}
   if(q&&q.id==='lv5'&&S.qTalked&&!isNight()&&q.check()===false){const f=printList().find(f=>!printTraced(f.j));if(f){if(S.fog&&S.fog[f.a])fogClear(f.a,true);if(!S.fogReq.includes(f.j)&&!S.res.some(r=>r.act&&r.act.type==='foglook'))S.fogReq.push(f.j)}}/* 足あと：霧を晴らして、フタバに見にいってもらう */
   if(q&&q.id==='omoi'&&S.qTalked&&omoiWait()&&!OMOI_RUN&&!isNight()&&$('#dialog').hidden)sacredTreeTap(S.obj.indexOf('tower'));/* なかよしの2人を、御神木へ */
+  if(q&&q.id==='wood6'&&S.qTalked)for(const d of S.drops||[])if(d.ws)d.tap=1;/* きょうだいのたね：ひろいにいってもらう */
   if(q&&q.id==='wood6'&&S.qTalked&&wflCells().length<WFL_N&&S.sacredRoot!=null){const j=S.sacredRoot,R=FIELD_NEAR_R;for(let b=-R;b<sacredSpan()+R&&wflCells().length<WFL_N;b++)for(let a=-R;a<sacredSpan()+R&&wflCells().length<WFL_N;a++){const k=j+b*W+a;if(k>=0&&k<W*H&&!S.obj[k]&&!S.floor[k]&&walk(k)&&S.ground[k]===0)S.obj[k]=wflKind()}recount()}/* えらんだ花を、御神木のそばに */
   if(q&&q.id==='omoi'&&S.qTalked&&omoiN()+(S.flags.omoiW||[]).length<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
   for(const e of S.enemies)if(e.type==='boss2'&&e.hp>300)e.hp=300;

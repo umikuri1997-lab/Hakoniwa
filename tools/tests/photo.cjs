@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
   assert.equal(nm.v,'こもれびABC1');assert.ok(nm.row.includes('こもれびABC1村'),'name shown after renaming');
   console.log('Village name: set from the village sheet, limited to font characters');
   /* 日記の絵：家具ができたら、その所に近よって写す（カメラはうごかさない）。夜は写さない。もっと大事な物（スポット）なら写しなおし、前の絵はけす */
-  await run(`closeSheet();USERPAUSE=true;S.dy=null;PHQ=null;cam.z=2.2;centerOn((CX-20)*TS,(CY+18)*TS)`);
+  await run(`closeSheet();USERPAUSE=true;S.dy=null;PHQ=null;TUTPAN=S;cam.z=2.2;centerOn((CX-20)*TS,(CY+18)*TS)`);/* はじめの神殿へ1回だけカメラをよせるしくみ（TUTPAN）は、すんだことにする */
   const cam0=JSON.parse(await run(`JSON.stringify(cam)`));
   const F=JSON.parse(await run(`JSON.stringify(Object.assign(phFrame(phBoxJ('bench',CY*W+CX+3)),{m:PHZMIN,hz:homeZ()}))`));assert.ok(F.z>=F.m&&F.cw>0,'photo frame');assert.ok(F.z>1,'close to the thing: '+F.z);
   await run(`S.t=Math.floor(S.t/1440)*1440+22*60;S.dy=null;PHQ=null;admireNote('bench',CY*W+CX+3)`);await page.waitForTimeout(2600);
@@ -55,5 +55,8 @@ const assert=require('node:assert/strict');
   /* マップえらびに村の名前 */
   const mp=await run(`(()=>{save();showMaps();return document.querySelector('#mList').textContent})()`);assert.ok(mp.includes('こもれびABC1村'),'map card shows the village name');
   console.log('Village name: shown on the map select');
+  /* はじめからにした同じ土地の、前の村の写真は、新しい村の日記に出さない（QA NEW-06） */
+  {const o=JSON.parse(await run(`(()=>{const vk=S.vk,old=S.vkOld,n=newState(0).vk;const r={own:!!vk&&!old,newKey:!!n&&n!==vk,mine:phMine({v:vk},null),other:phMine({v:'old'},null),legacy:phMine({},null),ref:phMine({id:7},{ph:7})};S.vkOld=1;r.legacyOld=phMine({},null);S.vkOld=old;return JSON.stringify(r)})()`));
+    assert.deepEqual(o,{own:true,newKey:true,mine:true,other:false,legacy:false,ref:true,legacyOld:true},'photos are per village '+JSON.stringify(o))}
   assert.deepEqual(errors,[]);await browser.close();console.log('Photo: ok');
 })().catch(e=>{console.error(e);process.exit(1)});

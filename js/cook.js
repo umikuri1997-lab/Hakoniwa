@@ -38,6 +38,10 @@ function cookMigrate(){/* 前のセーブ：いまの17の料理は作ったこ�
   for(const D of COOKD)if(!D.f)K[D.i.join('+')+'@'+D.st[0]]=D.id;
   const O=S.ovenSet||{};for(const q in O)if(typeof O[q]==='string'){const D=COOKDI[O[q]];if(D&&COOKST.has(S.obj[q])){const s=D.st.includes(S.obj[q])?S.obj[q]:null;O[q]=s?{m:'in',in:D.i.slice()}:{m:'auto'}}else delete O[q]}
   for(const r of S.res||[]){if(r.cgot)cgBack(r);if(r.cing&&r.cing.rec&&r.cing.rec.indexOf('@')<0){const R=recOf(r.cing.rec);if(R)r.cing.rec=R.key;else cingBack(r)}}}
+function cookState(j,R){/* えらんだ料理のいまのようす：作っている・作るせいれいがいない・材料が足りない・まっている */
+  if(S.res.some(q=>q.act&&q.act.type==='cook'&&q.act.obj===j))return '作っている';
+  const o=useOwner(j);if(!S.res.some(q=>cookElOK(R,q)&&(!o||o===q)))return '作るせいれいがいない';
+  return cookHas(R,null)?'まっている':'材料が足りない'}
 /* 料理の家具の画面 */
 function cookSheet(body,j){if(!S.ovenSet)S.ovenSet={};const st=S.obj[j],M=ovenMode(j);
   {const tb=el('<div class="ctabs"></div>');for(const[m,nm]of[['off','やすむ'],['auto','おまかせ'],['in','入れる']]){const on=m==='off'?!M:M&&M.m===m,t=el('<button class="ctab'+(on?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{if(m==='off')delete S.ovenSet[j];else if(m==='auto')S.ovenSet[j]={m:'auto'};else S.ovenSet[j]={m:'in',in:M&&M.m==='in'?M.in:[]};sfx('next');renderSheet()};tb.appendChild(t)}body.appendChild(tb)}
@@ -47,14 +51,14 @@ function cookSheet(body,j){if(!S.ovenSet)S.ovenSet={};const st=S.obj[j],M=ovenMo
     if(R&&!cookHas(R,null))body.appendChild(el('<p class="note">材料が足りない</p>'))}
   {const ms=new Map(Object.entries(S.cookKn||{}).filter(([k])=>k.endsWith('@'+st)));body.appendChild(el('<p class="story">この家具で作った料理（'+ms.size+'）</p>'));const rows=el('<div class="rows"></div>');
     for(const[k,out]of ms){const R=recOf(k),F=FOODS[out];if(!R||!F)continue;const cur=M&&M.m==='in'&&cookKey(M.in,st)===k,has=cookHas(R,null);
-      const r=rowEl(F.name+(cur?'（作っている）':''),'材料：'+cookInTxt(R)+(R.el?'／作る：'+ELEM[R.el].name:'')+'／時間：'+R.time+'分'+(F.fx?'／'+F.fx:''),foodIc(out));const b=el('<button class="btn"></button>');b.textContent=cur?'やめる':'これを作る';if(cur)b.classList.add('pri');
+      const r=rowEl(F.name+(cur?'（'+cookState(j,R)+'）':''),'材料：'+cookInTxt(R)+(R.el?'／作る：'+ELEM[R.el].name:'')+'／時間：'+R.time+'分'+(F.fx?'／'+F.fx:''),foodIc(out));const b=el('<button class="btn"></button>');b.textContent=cur?'やめる':'これを作る';if(cur)b.classList.add('pri');
       b.onclick=()=>{if(cur)delete S.ovenSet[j];else S.ovenSet[j]={m:'in',in:Object.keys(R.need)};sfx('tap');renderSheet()};r.appendChild(b);if(!has&&!cur){r.style.filter='grayscale(1)';r.style.opacity='.55'}rows.appendChild(r)}
     if(!ms.size)rows.appendChild(nodata('box','まだ作っていない'));body.appendChild(rows)}}
 function cookInPop(j){/* 入れる材料をえらぶ（しゅるいごとに1こ、3しゅるいまで） */const st=S.obj[j],M=ovenMode(j),V=new Set(M&&M.m==='in'?M.in:[]);
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px">入れる材料</b><p class="note n" style="margin:0 0 10px"></p><div class="ks" style="display:flex;flex-wrap:wrap;gap:6px;max-height:50vh;overflow:auto"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">これで作る</button></div></div></div>');
   const seen=S.seenIt||{},fishN=()=>['fish',...FISHK].reduce((a,k)=>a+(S.fs[k]||0),0),L=COOKIN.filter(k=>k==='fish'?fishN()>0||['fish',...FISHK].some(f=>seen['f:'+f]):(S.fs[k]||0)>0||seen['f:'+k]);
   const bs=L.map(k=>{const b=el('<button class="btn"></button>'),n=k==='fish'?fishN():S.fs[k]||0,ic=foodIc(k);b.innerHTML=(ic?'<img src="'+ic+'" alt="" style="width:20px;height:20px;vertical-align:middle;image-rendering:auto"> ':'')+FOODS[k].name+'（'+n+'）';b.onclick=()=>{sfx('notch');if(V.has(k))V.delete(k);else if(V.size<COOKMAX)V.add(k);upd()};o.querySelector('.ks').appendChild(b);return[k,b]});
-  const upd=()=>{for(const[k,b]of bs)b.classList.toggle('pri',V.has(k));const R=V.size?recOf(cookKey([...V],st)):null,kn=R&&(S.cookKn||{})[R.key];o.querySelector('.n').textContent=V.size?'できる料理：'+(kn?FOODS[R.out].name:'？？？'):'3しゅるいまで';o.querySelector('.go').disabled=!V.size};
+  const upd=()=>{for(const[k,b]of bs)b.classList.toggle('pri',V.has(k));const R=V.size?recOf(cookKey([...V],st)):null,kn=R&&(S.cookKn||{})[R.key];o.querySelector('.n').textContent=V.size?'できる料理：'+(kn?FOODS[R.out].name:'？？？'):'3しゅるいまで';lackOn(o.querySelector('.go'),V.size?'':'材料をえらんでいません')};
   if(!L.length)o.querySelector('.ks').appendChild(nodata('box','食べ物がない'));
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};o.querySelector('.go').onclick=()=>{if(!V.size)return;S.ovenSet[j]={m:'in',in:[...V]};sfx('tap');o.remove();renderSheet()};
   document.body.appendChild(o);upd()}

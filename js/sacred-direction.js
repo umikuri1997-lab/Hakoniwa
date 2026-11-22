@@ -14,7 +14,7 @@ function sacredStartEffect(k,ms,extra={}){const d=sacredDirection(true);if(!d)re
 function sacredCast(){return S.res.filter(r=>!r.hidden&&r.act&&['fieldintro','fieldstory','fieldassist','fieldgather','fieldwait','storywait','nmeet'].includes(r.act.type));}
 function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   if(!S||WD!==0||S.sacredRoot==null)return;
-  sacredDirection(true);const j=S.sacredRoot,x=storyTreeX(j)*TS,y=storyTreeY(j)*TS-hiAt(j)*LIFT;
+  sacredDirection(true);const j=S.sacredRoot,x=storyTreeX(j)*TS,y=storyTreeY(j)*TS-liftOf(j);
   let points=[[x-38,y-55],[x+38,y+20]],limit=mode==='detail'?3:2.5;
   if(mode==='face'){const f=S.res.find(r=>r.name===POKO);if(f)points=[[f.x*TS-24,f.y*TS-55-uLift(f)],[f.x*TS+24,f.y*TS+8-uLift(f)]];limit=3;}
   else if(mode==='reunion'&&S.nushi){const f=S.res.find(r=>r.name===POKO),n=S.nushi;points=[[n.x*TS-110,n.y*TS-160],[n.x*TS+100,n.y*TS+12]];if(f)points.push([f.x*TS-25,f.y*TS-48],[f.x*TS+25,f.y*TS+8]);limit=2.4;}
@@ -50,10 +50,10 @@ function sacredBody(r,now){
   const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='offer2'||p.anim==='crownput'?f*4*sacredEase(Math.min(1,t/.5)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
   return {...p,p:q,t,dx:dx+(p.step||0)*(p.sdir||0)*sacredEase(Math.min(1,t/.5)),dy};/* step：あいてのほうへ、ひと足よる（会話のふれあう動き） */
 }
-const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:3200,leaf:3600,grow:5000,omoishard:5200,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
-const SACRED_AWAY=new Set(['bud','gaze']);/* この動きのあいだは、会話のわくをしまって場面を見せる（dlgAway） */
+const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:3200,leaf:3600,grow:5000,omoishard:5200,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800,echo:3900,still:3200,sunny:3200};
+const SACRED_AWAY=new Set(['bud','gaze','echo','still','sunny']);/* この動きのあいだは、会話のわくをしまって場面を見せる（dlgAway） */
 const sacredLineAway=cue=>String(cue||'').split('+').some(c=>c.startsWith('stree:')&&SACRED_AWAY.has(c.slice(6)));
-function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):0),0);}
+function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):c.startsWith('wind:')&&typeof WIND_BEAT_MS!=='undefined'?(WIND_BEAT_MS[c.slice(5)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
   const k=beats[a.fieldId]?.[a.phase];if(!k)return step.lines;
@@ -86,6 +86,16 @@ function sacredBeat(c){
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('sacred');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
   if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('sacred');d.waitUntil=performance.now()+ms;}
   if(c==='gaze'&&f){/* フタバが芽によろこんではねてから、芽の前にしゃがみ、ほっぺに両手をあてて、みをのりだしてのぞきこむ（kneelGaze） */const now=performance.now();JUMP.set(f,now);JOYU.set(f,now+900);f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'kneelGaze',600000,{side:true,face:f.face,target:j,step:3,sdir:f.face});sacredShot('care',[f],1.4);d.waitUntil=performance.now()+ms;}
+  if(c==='echo'){/* 名前が返る前：守り神がなぞった順（葉の音を聞く P.order と同じ）に、木の葉がもう一度ゆれて鳴り、そのあと止まる。フタバは見あげて待つ */
+    const ord=[];for(let k=0;ord.length<4;k++){const v=(hash((S.sacredRoot||0)*7+k)*4)|0;if(v!==ord[ord.length-1])ord.push(v)}const L=[[-.8,-1.7],[.8,-1.7],[-.8,-1.1],[.8,-1.1]],tx=storyTreeX(j),ty=storyTreeY(j);
+    if(f){f.face=tx>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}sacredShot('detail',cast,1.4);
+    ord.forEach((v,i)=>villageTimeout(()=>{if(sacredDirection()!==d)return;sacredStartEffect('sway',500);leafFX({x:tx+L[v][0],y:ty+L[v][1]});sfx('sacred')},i*600));d.waitUntil=performance.now()+ms;}
+  if(c==='still'){/* 「ただいま」のあと：セリフのない間。葉がふって、木がしずかにゆれる */const tx=storyTreeX(j),ty=storyTreeY(j);sacredStartEffect('sway',ms);for(let i=0;i<5;i++)villageTimeout(()=>{if(sacredDirection()===d)leafFX({x:tx+(i%2?.9:-.9)*(1+i*.1),y:ty-1.6+i*.2})},i*550);d.waitUntil=performance.now()+ms;}
+  if(c==='sunny'&&n){/* 木陰：ノドカが、日のあたる所へ少しずれて座りなおし、顔を上げる。フタバの目が、そこで一瞬とまる（だれも説明しない） */
+    const tx=storyTreeX(j),side=n.x>=tx?1:-1,x1=n.x+side,y1=n.y,jj=(y1|0)*W+(x1|0);const sit=()=>{n.face=-side;sacredScenePose(n,'storyListen',600000,{sit:true,side:true,face:n.face})};
+    if(walk(jj)&&!S.obj[jj]&&typeof volHop==='function')volHop(n,x1,y1,420,sit);else sit();
+    if(f)villageTimeout(()=>{if(sacredDirection()!==d)return;f.face=n.x>=f.x?1:-1;sacredScenePose(f,'storyListen',1700,{sit:true,side:true,face:f.face});villageTimeout(()=>{if(sacredDirection()===d){f.face=tx>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}},1700)},900);
+    sacredShot('care',[n,f].filter(Boolean),1.4);d.waitUntil=performance.now()+ms;}
   if(c==='face')sacredShot('face',cast);
   if(c==='group'){d.effects.delete('hug');d.effects.delete('embrace');for(const r of cast)SACRED_POSES.delete(r);sacredShot('group',cast,1.7);}
   if(c==='hug'&&f&&S.nushi){d.waitUntil=performance.now()+8000;
@@ -104,7 +114,7 @@ function sacredTreeMotion(now){
 }
 function sacredStone(c,x,y,warm=0){const art=window.CHIPS?.['story:stone'];if(art&&drawChip(c,art,'story:stone',Math.round(x),Math.round(y),performance.now()))return;c.fillStyle=warm?'#cbb69b':'#b9b6aa';c.fillRect(Math.round(x-4),Math.round(y-2),8,4);c.fillStyle=warm?'#e5cdb0':'#d7d3c6';c.fillRect(Math.round(x-3),Math.round(y-3),6,2);}
 function drawSacredCare(now){
-  if(!S||WD!==0||S.sacredRoot==null)return;const j=S.sacredRoot,x=storyTreeX(j)*TS,y=(storyTreeY(j)+.5)*TS-hiAt(j)*LIFT;
+  if(!S||WD!==0||S.sacredRoot==null)return;const j=S.sacredRoot,x=storyTreeX(j)*TS,y=(storyTreeY(j)+.5)*TS-liftOf(j);
   const d=sacredDirection();if(!d)return;ctx.save();ctx.lineCap='round';
   for(const [kind,e]of d.effects){const p=Math.max(0,Math.min(1,(now-e.at)/e.ms));if(p>=1)continue;const a=e.actor,sx=a?a.x*TS:x,sy=a?a.y*TS-(kind==='stone'?8:16)-uLift(a):y;
     if(kind==='stone'){if(e.warming&&p<.3){ctx.fillStyle='#edbd8b';ctx.beginPath();ctx.moveTo(sx+8,sy+4);ctx.quadraticCurveTo(sx+6,sy-3,sx+12,sy-7);ctx.quadraticCurveTo(sx+11,sy-1,sx+15,sy+4);ctx.fill();}const q=sacredEase((p-.3)/.6);sacredStone(ctx,sx+(x+17-sx)*q,sy+(y+4-sy)*q-Math.sin(Math.PI*q)*7,1);}

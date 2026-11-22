@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
     for(const el of ['wood','earth','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=60;r.nap=false}
     for(let i=0;i<5;i++){S.obj[(CY-6)*W+CX-8+i*2]='tree';S.obj[(CY-6)*W+CX+4+i*2]='rock'}for(let y=CY+7;y<CY+10;y++)for(let x=CX-4;x<CX+4;x++){S.obj[y*W+x]='';S.ground[y*W+x]=1}
     S.recipes.stool=true;S.recipes.chair=true;S.pt=5000;for(let i=0;i<40;i++)addFood('apple',1);S.t=12*60;recount();`);
-  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);r.energy=Math.max(r.energy,80)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
+  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,400);r.energy=Math.max(r.energy,80)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
   const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
   /* 1. ミニゲーム：うまくできたほど k が大きい（すべての大会） */
   const mg=JSON.parse(await run(`(()=>{const o={};for(const id of CUPIDS){const M=CUPMG[id];const good={},bad={};M.init(good);M.init(bad);
@@ -27,7 +27,7 @@ const assert=require('node:assert/strict');
   for(const id of ['cup2','cup4','cup5','cup6','cup7','cup1']){
     let d=await run(`dayNo()`);await to(d,15);while(await run(`seasonDay(dayNo()+1)===CUPDAY`)){d=await run(`dayNo()`)+1;await to(d,15)}
     const o=JSON.parse(await run(`(()=>{recount();const pt=S.pt,mat=Object.assign({},S.mat),fs=Object.assign({},S.fs);const ok=evOpen('${id}',S.res.map(r=>r.id));return JSON.stringify({ok:!!ok,pt:pt-S.pt,day:S.ev&&S.ev.day,again:evWhy('${id}')})})()`));
-    assert.ok(o.ok,id+' opened');assert.equal(await run(`evDoneNow('${id}')`),true,id+' once per season');assert.equal(o.pt,30,id+' costs 30');
+    assert.ok(o.ok,id+' opened');assert.equal(await run(`evDoneOn('${id}',dayNo()+1)`),true,id+' once per season');assert.equal(o.pt,30,id+' costs 30');
     await to(o.day,`EVENTS['${id}'].at-0.1`);
     const st0=JSON.parse(await run(`JSON.stringify({mat:Object.assign({},S.mat),fs:Object.assign({},S.fs),inv:Object.assign({},S.inv),h:S.res.map(r=>heldN(r))})`));
     await sim(60*3,"S.ev&&S.ev.ph==='go'");const ask=await run(`!!document.getElementById('cupCheer')`);await run(`{const b=document.querySelector('#cupCheer .ks button');if(b)b.click()}`);

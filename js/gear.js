@@ -13,7 +13,7 @@ function gearMigrate(){
     delete r.gear.t;gearChanged(r);
   }
 }
-const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
+const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',nabiki:'#b4d890',houki:'#e2cc8e',kumowata:'#e8f0f8',hane:'#d6e8f4',ashi:'#b8d494',gama:'#dcc68c',nendo:'#c0bcb6',maruishi:'#c4ccd4',yotsuyu:'#9cc8bc',kagekusa:'#b8b0c8',gekko:'#d8e8f8',kogi:'#c8bcae',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
 const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
@@ -37,7 +37,13 @@ function gearEquip(r,i){const L=gearList(),q=L[i];if(!q)return false;const why=g
 function gearOff(r,k){if(!r.gear||!r.gear[k])return;gearList().push(r.gear[k]);delete r.gear[k];gearChanged(r)}
 function gearDropAll(r){if(!r||!r.gear)return;for(const k of GSLOTK)if(r.gear[k])gearList().push(r.gear[k]);r.gear={};gearChanged(r)}/* いなくなった子のそうびは、もちものにもどる */
 function gearUpCost(q){const n=(q.lv||0)+1;return{k:gearMain(q.id),n:GUPN[n-1],pc:n===3?GUPPC:0}}
-function gearUp(q){if(!q||!gearCanUp(q.id)||(q.lv||0)>=3)return false;const c=gearUpCost(q);if((S.mat[c.k]||0)<c.n){toast(MATN[c.k]+'が足りません','warn');return false}if(S.pt<c.pc){toast('パワーが足りません','warn');return false}S.mat[c.k]-=c.n;S.pt-=c.pc;if(c.pc){PTW.q=true;sfx('power')}else sfx('level');q.lv=(q.lv||0)+1;for(const r of S.res)if(r.gear)for(const k of GSLOTK)if(r.gear[k]===q)gearChanged(r);toast(BL[q.id].name+'+'+q.lv+'になった','good');return true}
+function gearUp(q){if(!q||!gearCanUp(q.id)||(q.lv||0)>=3)return false;const c=gearUpCost(q);if((S.mat[c.k]||0)<c.n){toast(MATN[c.k]+'が足りません','warn');return false}if(S.pt<c.pc){toast('パワーが足りません','warn');return false}S.mat[c.k]-=c.n;S.pt-=c.pc;if(c.pc){PTW.q=true;sfx('power')}else sfx('level');q.lv=(q.lv||0)+1;for(const r of S.res)if(r.gear)for(const k of GSLOTK)if(r.gear[k]===q)gearChanged(r);gearUpFx(q);return true}
+/* 強化できた：そうびの絵がシールのように、ぺたっ（はねる）→ 「+1」のハンコ → 紙ふぶき（見た目と音だけ） */
+function gearUpFx(q){const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="強化できた"></div>'),card=el('<div class="idea-card"><h2>強化できた！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b></div>');
+  const im=new Image();im.className='ampic';im.style.width=im.style.height='96px';im.style.imageRendering='pixelated';im.src=gearIcon(q.id);card.querySelector('.pic').append(im);card.querySelector('.nm').textContent=gearName(q);
+  const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('good');
+  setTimeout(()=>{if(!ov.isConnected)return;if(typeof uiStamp==='function')uiStamp(card.querySelector('.pic'),false,'+'+q.lv);if(typeof juiceCheer==='function')juiceCheer()},450);setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
+  b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove()}}
 const gearName=q=>BL[q.id].name+(q.lv?'+'+q.lv:'');
 
 /* ---------- コワイノへの、とくべつな効果 ---------- */
@@ -48,7 +54,7 @@ function gearSpecial(f,e,sx,sy,who){if(!e||e.dead)return;const D=EN[e.type];
   if(f.stun&&!D.boss&&Math.random()<.1)e.stun=Math.max(e.stun||0,STUNT);
   if(f.glow)e.glowU=S.t+SLOWT;
   if(f.kb&&!D.boss){let dx=e.x-sx,dy=e.y-sy;const l=Math.hypot(dx,dy)||1;const nx=e.x+dx/l*.6,ny=e.y+dy/l*.6,q=(ny|0)*W+(nx|0);if(nx>1&&ny>1&&nx<W-1&&ny<H-1&&walk(q)&&!HOME_DOORS.has(typeAt(q))&&!GATE_IDS.has(typeAt(q))){e.x=nx;e.y=ny;e.path=[];e.repath=0}}
-  if(f.steal&&who)who.hunger=Math.min(hMax(who),who.hunger+10)}
+  if(f.steal&&who)who.hunger=Math.min(hMax(who),who.hunger+5)}
 function gearEnemyTick(e,dt){if(e.burnU>S.t&&!e.dead){e.brT=(e.brT||0)+dt;while(e.brT>=1){e.brT-=1;hurtEn(e,BURND,{keep:1,nokb:1,dt:'burn'})}/* 1ごとに3へる */if(e.hp<=0){defeat(e);return true}}return false}/* やけど：少しずつへる */
 function gearGlowNear(e){if(e.glowU>S.t)return true;for(const r of S.res){if(r.hidden||!r.gear)continue;if(gearStat(r).glow&&Math.hypot(r.x-e.x,r.y-e.y)<=3)return true}return false}
 /* 火のせいれいの攻撃のあと：とくべつな効果・横・まわりの敵 */
@@ -132,7 +138,7 @@ function gearIdea(material,crafted,carried=0){
   const ore=VOLK()&&GEAR_ORES.some(k=>acquired(k)>0);
   for(const id of GEAR_IDS){
     const b=BL[id],g=b.g;
-    if(g.sp||!b.mat||g.gr&&WD!==0||!g.gr&&!b.idea&&WD!==1)continue;
+    if(g.sp||!b.mat||(g.gr||g.wd?WD!==(g.gr?0:g.wd):!b.idea&&WD!==1))continue;/* 草原の物（gr）・風の物（wd）は、その土地だけ */
     const primary=source(b.idea||gearMain(id));
     const gear=g.s==='w'||g.s==='a';
     const key=primary+':'+g.s;
@@ -140,7 +146,7 @@ function gearIdea(material,crafted,carried=0){
     if(known[id])continue;
     if(crafted&&crafted!=='nuno'&&source(gearMain(crafted))!==primary)continue;
     if(material&&source(material)!==primary&&!Object.keys(b.mat).some(k=>source(k)===source(material)))continue;
-    if(b.idea?acquired(b.idea)<1:!g.gr&&!ore&&primary!=='bamboo')continue;
+    if(b.idea?acquired(b.idea)<1:!g.gr&&!g.wd&&!ore&&primary!=='bamboo')continue;
     const related=crafted&&BL[crafted]?.g&&['w','a'].includes(BL[crafted].g.s)&&
       gear&&source(gearMain(crafted))===primary;
     const threshold=rank<=1?1:(rank-1)*(related?1:3)+1;
@@ -177,7 +183,7 @@ for(const k of['icopper','iiron','isilver','igold']){if(ICONS[k])continue;ICONS[
 for(const k of GEAR_ORES){if(ICONS[k])continue;ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
 
 /* ---------- 画面：せいれいの「そうび」タブ ---------- */
-function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gearCanUp(q.id)||(q.lv||0)>=3){b.textContent=(q.lv||0)>=3?'+3':'強化なし';b.disabled=true;return b}const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');lackOn(b,lackMat(c.k,c.n)||lackPt(c.pc));b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
+function gearUpBtn(q,after){if(!gearCanUp(q.id)||(q.lv||0)>=3){const t=el('<span class="gst"></span>');t.textContent=(q.lv||0)>=3?'強化+3':'強化できない';return t}/* 強化できない物は、ボタンでなく、いまの状態の札 */const b=el('<button class="btn"></button>');const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');lackOn(b,lackMat(c.k,c.n)||lackPt(c.pc));b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
 function gearRow(q,sub){const r=rowEl(gearName(q),'',gearIcon(q.id));r.querySelector('small').textContent=sub||BL[q.id].desc;r.style.alignItems='center';return r}
 function gearSheet(body,r){const sec=el('<div class="sec"></div>');
   for(const k of GSLOTK){const q=r.gear&&r.gear[k];const h=el('<b style="display:block;margin-top:6px"></b>');h.textContent=GSLOT[k];sec.appendChild(h);
@@ -219,7 +225,7 @@ function smPop(j){/* 炉：延べ棒にする鉱石の種類ごとに数をえ�
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div class="ks"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn jb">たんとう</button><button class="btn pri go"></button></div></div></div>');o.querySelector('.jb').onclick=()=>{sfx('tap');o.remove();openSheet('furn',j)};/* 担当のせいれいをきめる */
   const room=()=>Math.max(0,SMELT_CAP-Math.floor(smCount(j)/SMELT_ORE)),sum=()=>ores.reduce((a,k)=>a+(V[k]||0),0),can=k=>Math.floor((S.mat[k]||0)/SMELT_ORE);
   const rows=ores.filter(k=>can(k)>0).map(k=>{const r=el('<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px"><span class="nm" style="flex:1"></span><button class="btn m">－</button><b class="v" style="min-width:2.4em;text-align:center"></b><button class="btn p">＋</button></div>');r.querySelector('.m').onclick=()=>{sfx('notch');V[k]=Math.max(0,(V[k]||0)-1);upd()};r.querySelector('.p').onclick=()=>{sfx('notch');if(sum()<room()&&(V[k]||0)<can(k))V[k]=(V[k]||0)+1;upd()};o.querySelector('.ks').appendChild(r);return[k,r]});
-  const upd=()=>{o.querySelector('.t').textContent=BL.smelter.name;o.querySelector('.n').textContent='延べ棒にする（'+Math.floor(smCount(j)/SMELT_ORE)+'/'+SMELT_CAP+'）';for(const[k,r]of rows){r.querySelector('.nm').textContent=MATN[INGOT[k]]+'（'+MATN[k]+(V[k]||0)*SMELT_ORE+'/'+(S.mat[k]||0)+'）';r.querySelector('.v').textContent=V[k]||0;r.querySelector('.m').disabled=!(V[k]>0);r.querySelector('.p').disabled=sum()>=room()||(V[k]||0)>=can(k)}const g=o.querySelector('.go');g.textContent='延べ棒にする';g.disabled=!sum()};
+  const upd=()=>{o.querySelector('.t').textContent=BL.smelter.name;o.querySelector('.n').textContent='延べ棒にする（'+Math.floor(smCount(j)/SMELT_ORE)+'/'+SMELT_CAP+'）';for(const[k,r]of rows){r.querySelector('.nm').textContent=MATN[INGOT[k]]+'（'+MATN[k]+(V[k]||0)*SMELT_ORE+'/'+(S.mat[k]||0)+'）';r.querySelector('.v').textContent=V[k]||0;r.querySelector('.m').disabled=!(V[k]>0);lackOn(r.querySelector('.p'),sum()>=room()?BL.smelter.name+'がいっぱいです':(V[k]||0)>=can(k)?MATN[k]+'が足りません':'')}const g=o.querySelector('.go');g.textContent='延べ棒にする';lackOn(g,sum()?'':'鉱石をえらんでいません')};/* 押せないときも、おすと、わけを知らせる */
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};
   o.querySelector('.go').onclick=()=>{if(!sum())return;const Q=(S.smQ||(S.smQ={}))[j]||(S.smQ[j]={});for(const k of ores){const t=Math.min((V[k]||0)*SMELT_ORE,S.mat[k]||0);if(t>0){rsvAdd({[k]:t});Q[k]=(Q[k]||0)+t}}sfx('quest');toast('延べ棒づくりをたのんだ','good');o.remove()};
   if(!workOK(j))o.querySelector('.ks').appendChild(el('<p class="note">前がふさがっています</p>'));

@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();S.enemyOn=true;S.enemies=[];NOSAVE=true;
     for(const el of ['wood','earth','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=60}
     S.pt=5000;S.mat.wood=60;for(let i=0;i<99;i++)addFood('apple',1);S.t=12*60;`);
-  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);r.energy=Math.max(r.energy,80)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
+  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,400);r.energy=Math.max(r.energy,80)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
   /* 前へすすめる：d 日めの h 時（いまより前なら、なにもしない） */
   const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
   const go=async(id,n,needs,minDay=0)=>{
@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
     const o=JSON.parse(await run(`(()=>{${needs||''}recount();const who=S.res.slice(0,${n||99}).map(r=>r.id);const pt=S.pt,f=S.food;const ok=evOpen('${id}',who);return JSON.stringify({ok,pt:pt-S.pt,f:f-S.food,ev:!!S.ev,day:S.ev&&S.ev.day,now:dayNo()})})()`));
     assert.ok(o.ok&&o.ev,id+' opened '+JSON.stringify(o));
     const before=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Object.assign({},r.est)))`));
-    await to(o.day,`EVENTS['${id}'].at-0.1`);await sim(60*8,'!S.ev');
+    await to(o.day,`EVENTS['${id}'].at-0.1`);await run(`S.rain=false`);/* 雨・雪の日は、星見の会・花火があしたになる */await sim(60*8,'!S.ev');
     const r=JSON.parse(await run(`JSON.stringify({ev:S.ev,est:S.res.map(r=>r.est||{}),memo:(S.memo||[]).map(m=>m[2]).filter(t=>t.includes(EVENTS['${id}'].n))})`));
     assert.equal(r.ev,null,id+' finished: '+JSON.stringify(r.ev));assert.ok(r.memo.length,id+' memo');
     const gain=r.est.map((e,i)=>{const o2={};for(const k in e)if(e[k]!==(before[i][k]||0))o2[k]=e[k]-(before[i][k]||0);return o2});
@@ -27,7 +27,7 @@ const assert=require('node:assert/strict');
   await go('ensoku',4);
   await go('gochi',2,"{const j=(CY+5)*W+CX-6;S.obj[j]='table';S.obj[j+1]='part';S.ref[j+1]=j;}");
   await go('soji',0,"for(let i=0;i<6;i++){const j=(CY+4)*W+CX+4+i;if(!S.obj[j])S.obj[j]='weed0g'}");
-  const tk=await go('takara',4);assert.ok(tk.slice(0,4).every(g=>g.move>=1&&g.move<=2),'takara 1..2');
+  const tk=await go('takara',4);assert.ok(tk.slice(0,4).every(g=>g.cap===1),'takara cap+1');
   await go('yomi',0,"{const j=(CY+6)*W+CX+6;S.obj[j]='shelf1';}");
   assert.equal(await run(`!!evOpen('mizu',[S.res[0].id])`),false,'summer only');
   await go('mizu',0,"{const j=(CY+6)*W+CX-8;S.obj[j]='fountain';for(const k of[j+1,j+W,j+W+1]){S.obj[k]='part';S.ref[k]=j}}",9);
@@ -52,19 +52,19 @@ const assert=require('node:assert/strict');
   /* 新しい家具のイベント（草原）：弓の的・ピクニックシート。村レベルでおぼえる */
   assert.deepEqual(JSON.parse(await run(`JSON.stringify([levelUpItemsAt(6).includes('mato'),levelUpItemsAt(5).includes('picnic'),levelUpItemsAt(6).includes('taiko')])`)),[true,true,false],'level rewards (taiko is volcano)');
   await run(`S.inv.arrow=(S.inv.arrow||0)+40`);const ar0=await run(`S.inv.arrow`);
-  const mg=await go('matoate',3,"{const j=(CY+6)*W+CX+3;S.obj[j]='mato';}");assert.ok(mg.slice(0,3).every(g=>g.atk===5),'matoate atk+5');assert.equal(await run(`S.inv.arrow`),ar0-15,'arrows used');
+  const mg=await go('matoate',3,"{const j=(CY+6)*W+CX+3;S.obj[j]='mato';}");assert.ok(mg.slice(0,3).every(g=>g.atk===5),'matoate atk+5');assert.equal(await run(`S.inv.arrow`),ar0-15+10,'arrows used, then 10 back as the reward');
   await go('pikunikku',0,"{const j=(CY+8)*W+CX-3;for(const k of[j,j+1,j+W,j+W+1])S.obj[k]=k===j?'picnic':'part';for(const k of[j+1,j+W,j+W+1])S.ref[k]=j}",58);
   /* 豪華なイベント：決まった数をはらい、みんなが出る */
   await run(`for(const id of ['salvia','lily'])S.inv[id]=(S.inv[id]||0)+6;S.mat.shina=(S.mat.shina||0)+30;S.mat.wood=(S.mat.wood||0)+40;addFood('mugi',20);addFood('imo',15);for(let i=0;i<60;i++)addFood('apple',1);S.pt+=3000`);
   const fl="{let n=0;for(let y=CY-14;y<CY-8&&n<30;y++)for(let x=CX-12;x<CX+12&&n<30;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='salvia';n++}}}";
-  const h0=await run(`S.inv.salvia+S.inv.lily`);
-  const hg=await go('hana',0,fl,58);assert.ok(hg.every(g=>g.sta===2),'hana sta+2');assert.equal(await run(`S.inv.salvia+S.inv.lily`),h0-10,'10 flower seeds used');
+  const h0=await run(`FLOWERS2.reduce((a,f)=>a+(S.inv[f]||0),0)`);
+  const hg=await go('hana',0,fl,58);/* 花まつり・しゅうかく祭・ランタンは、あたらしい効果（fx） */assert.equal(await run(`EVENTS.hana.fx`),'bloom');assert.equal(await run(`FLOWERS2.reduce((a,f)=>a+(S.inv[f]||0),0)`),h0-10+3,'10 flower seeds used, then 3 back as the reward');
   const ug=await go('undo',0,'',72);const big=ug.filter(g=>g.work===2).length,small=ug.filter(g=>g.work===1).length;assert.ok(big>=1&&big+small===ug.length,'undo +1 / winners +2 '+JSON.stringify(ug));
   const farm="{let n=0;for(let y=CY+9;y<CY+12&&n<10;y++)for(let x=CX-4;x<CX+4&&n<10;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='plot';S.dyn[j]={p:0};n++}}}";
   await run(`addFood('mugi',20);addFood('imo',15)`);/* 運動会の食料で作物がへっているので、たす */
   const cr0=await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`);
-  const sg=await go('shukaku',0,farm,73);assert.ok(sg.every(g=>g.cap===1),'shukaku cap+1');assert.equal(await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`),cr0-30,'30 crops used');
-  const lg=await go('lantern',0,'',79);assert.ok(lg.every(g=>g.work===2),'lantern work+2');
+  const sg=await go('shukaku',0,farm,73);assert.equal(await run(`EVENTS.shukaku.fx`),'ripen');assert.equal(await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`),cr0-30,'30 crops used');
+  const lg=await go('lantern',0,'',79);assert.equal(await run(`EVENTS.lantern.fx`),'tokui');
   assert.equal(await run(`evOn('himatsuri')||evOn('utage')`),false,'volcano only');
   /* 得意な仕事（★）：30・100・300回で★1・2・3、その仕事だけ はたらく速さ+★。はじめからの★1は、tk。前のセーブの称号は★2 */
   const tt=JSON.parse(await run(`(()=>{const r=S.res[1];r.vr.tk=['ishi'];delete r.ttl;r.jc={kikori:29};const g0=gJob(r,'chop');titleNote(r,{type:'chop',stage:'do'});const l1=tokuiLv(r,'kikori');r.jc.kikori=99;titleNote(r,{type:'chop',stage:'do'});const l2=tokuiLv(r,'kikori'),w=rStat(r,rLv(r)).work,g2=gJob(r,'chop'),gm=gJob(r,'mine'),gf=gJob(r,'fish');r.jc.kikori=299;titleNote(r,{type:'chop',stage:'do'});const l3=tokuiLv(r,'kikori');r.jc.kikori=5000;const lx=tokuiLv(r,'kikori');const q={vr:{tk:[]},jc:{},ttl:{tsuri:1}};return JSON.stringify({g0,l1,l2,l3,lx,w,g2,gm,gf,old:tokuiLv(q,'tsuri'),innate:tokuiLv(r,'ishi'),txt:tokuiHtml(r)})})()`));
@@ -98,5 +98,16 @@ const assert=require('node:assert/strict');
   /* 大会（季節の大会・運動会）は、せいれいが3人から：2人だと知らせもなく、ひらかない */
   await run(`if(sheet)closeSheet()`);const dn=await run(`dayNo()`),SD=await run(`SEASONDAYS`),CUPD=await run(`CUPDAY`);await to(dn+((CUPD-((dn-1)%SD+1))+SD)%SD||SD,6.02);{const o=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.res=keep.slice(0,2);S.ev=null;const sd=seasonDay(dayNo());evMorning();const ev=S.ev;S.ev=null;const w=evWhy('undo');S.res=keep;return JSON.stringify({sd,ev:!!ev,w})})()`));
     assert.equal(o.sd,5,'cup day');    assert.equal(o.ev,false,'no cup with 2 spirits');assert.equal(o.w,'せいれいが3人からです','undo needs 3')}
+  /* QAの報告（NEW-02・03・05・07） */
+  {const o=JSON.parse(await run(`(()=>{const keep=S.res.slice(),out={};S.ev=null;S.evDone={};while(seasonDay(dayNo()+1)!==CUPDAY)S.t+=1440;
+      /* あしたが大会の日でも、せいれいが3人いなければ、ほかのイベントをひらける（大会はひらかれないので） */S.res=keep.slice(0,2);out.few=evWhy('oni');S.res=keep;out.many=evWhy('oni');
+      /* 依頼ボードでひらいた大会が、その日に3人いなくてやめになったら、はらった分をもどし、またひらける */S.t+=1440;S.t=Math.floor(S.t/1440)*1440+12*60;S.ev=null;S.evDone={};const p0=S.pt;out.ok=!!evOpen('cup4',keep.slice(0,3).map(r=>r.id));out.paid=p0-S.pt;
+      S.res=keep.slice(0,2);S.t=S.ev.day*1440-1440+10*60+1;evTick();out.ev=!!S.ev;out.back=p0-S.pt;out.done=evDoneOn('cup4',dayNo());S.res=keep;out.again=evWhy('cup4');
+      /* 季節のさいごの日にひらいて、つぎの季節の1日めにする：1季節に1回は、ひらく日の季節で見る */S.ev=null;S.evDone={};S.t=(Math.floor(S.t/1440)+1)*1440+12*60;while(seasonDay(dayNo())!==SEASONDAYS)S.t+=1440;out.cross=!!evOpen('oni',keep.slice(0,2).map(r=>r.id));out.key=S.evDone.oni===seasonKeyOf(dayNo()+1)&&S.evDone.oni!==seasonKey();S.ev=null;S.t+=1440;out.next=evWhy('oni');
+      /* 雪・雨の日の星見の会は、あしたにする */S.ev={id:'hoshi',day:dayNo(),who:keep.slice(0,2).map(r=>r.id),paid:{pt:0,food:[]},ph:null};S.rain=true;S.enemies=[];S.t=Math.floor(S.t/1440)*1440+20.5*60+1;evTick();out.star=S.ev&&{ph:S.ev.ph,day:S.ev.day-dayNo()};S.rain=false;S.ev=null;return JSON.stringify(out)})()`));
+    assert.ok(!/^あしたは/.test(o.few),'2人なら、あしたの大会で止めない '+o.few);assert.match(o.many,/^あしたは.*大会です$/,'3人なら止める');
+    assert.ok(o.ok&&o.paid===30,'cup4 booked '+JSON.stringify(o));assert.equal(o.ev,false,'cup4 dropped');assert.equal(o.back,0,'cup4 refunded');assert.equal(o.done,false,'cup4 not done');assert.equal(o.again,'','cup4 can open again');
+    assert.ok(o.cross&&o.key,'season of the event day');assert.equal(o.next,'この季節は、もうひらきました');
+    assert.deepEqual(o.star,{ph:null,day:1},'hoshi in rain goes to tomorrow')}
   await page.waitForTimeout(500);assert.deepEqual(errors,[]);await browser.close();console.log('Events: ok');
 })().catch(e=>{console.error(e);process.exit(1)});

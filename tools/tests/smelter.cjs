@@ -15,7 +15,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await run(`smPop(${sj});1`);
  const pop=await page.evaluate(()=>[...document.querySelectorAll('.pxcard .nm')].map(e=>e.textContent));assert.deepEqual(pop,['銅の延べ棒（銅鉱石0/7）'],'鉄は2こないので出ない');
  await page.click('.pxcard .p');await page.click('.pxcard .p');await page.click('.pxcard .p');
- assert.equal(await page.textContent('.pxcard .v'),'3');assert.equal(await page.evaluate(()=>document.querySelector('.pxcard .p').disabled),true,'7こなら3つまで');
+ assert.equal(await page.textContent('.pxcard .v'),'3');assert.equal(await page.evaluate(()=>document.querySelector('.pxcard .p').classList.contains('lack')),true,'7こなら3つまで');
  if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/smpop.png'});
  await page.click('.pxcard .go');
  assert.deepEqual(await run(`[S.mat.copper,JSON.stringify(S.smQ)]`),[1,JSON.stringify({[sj]:{copper:6}})]);

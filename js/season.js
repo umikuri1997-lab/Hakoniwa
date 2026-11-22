@@ -9,7 +9,7 @@ const ANNIV=[10,30,50,100,200,365];
 function seasonOf(d){return Math.floor(Math.max(0,d-1)/SEASONDAYS)%4}
 function seasonNow(){return S?seasonOf(dayNo()):0}
 const snowNow=()=>seasonNow()===3&&!!S.rain;
-function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;const n=SEASONS[seasonOf(d)];memo('',n+'になった');if(seasonOf(d)!==3)S.snowm=[];/* 雪だるまは、冬がおわるととける */setTimeout(()=>toast(n+'になった　'+SEAFXT[seasonOf(d)],'good'),900)}
+function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;if(typeof splaySeason==='function')splaySeason();if(seasonOf(d)===3)S.flags.winter1=1;const n=SEASONS[seasonOf(d)];memo('',n+'になった');if(seasonOf(d)!==3)S.snowm=[];/* 雪だるまは、冬がおわるととける */setTimeout(()=>toast(n+'になった　'+SEAFXT[seasonOf(d)],'good'),900)}
 /* 粒：画面の中の場所（0〜1）。p：ゆれ、s：速さ、c：色 */
 const SEAP=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.5,1),c:Math.random()}));
 const SEACOL=[['#f7c4d6','#f3aec5','#fbe0ea'],null,['#f6a650','#ec6f45','#f5d25a','#e2884a'],['#ffffff','#f1f6ff','#e4eefb']];
@@ -42,7 +42,7 @@ const TALKSEA=[
    冬：移動速度0.8倍・おなかのへり1.2倍（火のせいれいと、あたたかい物 WARMOBJ・温泉の水・火のせいれいのまわり3マスにいる子はかわらない seaWarm）、風のせいれい1.2倍、
    コワイノの体力・攻撃・速さ0.8倍（冬の夜に出てきたコワイノ。出てきたときにきめる seaFoeInit・e.wz）。画面の能力は「20→24」（seaTxt）。 ---------- */
 const SEAUP=1.2,SEAEL=[['wood'],['fire','water'],['earth'],['wind']],SEATIRED=1.2,SEACOLD=.8,SEAHUN=1.2,SEAFOE=.8,SEAWARMR=3;
-const WARMOBJ=new Set(['g_danro','campfire','oven','torch','onsen','hotstone','smelter','yogan']);
+const WARMOBJ=new Set(['g_f_lamp','campfire','oven','torch','onsen','hotstone','smelter','yogan']);
 const SEAFXT=['木のせいれいの能力1.2倍','火・水のせいれいの能力1.2倍・つかれのへり1.2倍','土のせいれいの能力1.2倍','移動速度0.8倍・おなかのへり1.2倍・風のせいれいの能力1.2倍・「コワイノ」の能力0.8倍'];
 const SEAWC=new WeakMap();
 function seaWarm(r){/* 冬の寒さがとどかない子：火のせいれい・あたたかい料理を食べた子（r.warmT）・あたたかい物や火のせいれいのまわり3マス（マスがかわるか、時計の数分ごとに調べなおす） */if(!r||r.elem==='fire'||r.warmT>S.t)return true;const j=(r.y|0)*W+(r.x|0);let c=SEAWC.get(r);if(c&&c.j===j&&Math.abs(S.t-c.t)<5)return c.v;
@@ -69,5 +69,5 @@ ACT.snowman={start(r,a){if(seasonNow()!==3||S.obj[a.tg])return false;r.face=1;co
   done:(r,a)=>a.t>=a.dur,end(r,a){const m=(S.snowm||[]).find(q=>q.j===a.tg);if(m)m.g=3;if(typeof juiceSnowman==='function')juiceSnowman(a.tg,r);/* ぽんとはねる */funAdd(r,SNOWFUN,'solo');JUMP.set(r,performance.now());r.wanderRestUntil=S.t+45}};
 ACT_LBL.snowman='雪だるまを作っている';IDLE_ACTS.push('snowman');
 function snowDraw(add,vis,ctx){/* 奥行きの順に、ほかの物といっしょに描く */if(!S||!S.snowm||!S.snowm.length||seasonNow()!==3||!SNOWSPR.ok)return;const Z=SNOWSPR;
-  for(const m of S.snowm){const j=m.j;if(S.obj[j]||S.floor[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.8};if(!vis(o))continue;const px=o.x*TS,fy=o.y*TS-(S.hi?hiAt(j)*LIFT:0)-(typeof snowHop==='function'?snowHop(j):0),g=Math.max(0,Math.min(Z.n-1,m.g|0));
+  for(const m of S.snowm){const j=m.j;if(S.obj[j]||S.floor[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.8};if(!vis(o))continue;const px=o.x*TS,fy=o.y*TS-(S.hi?liftOf(j):0)-(typeof snowHop==='function'?snowHop(j):0),g=Math.max(0,Math.min(Z.n-1,m.g|0));
     add(o.y,2,[px-12,fy-30,px+12,fy+4],()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(Z.img,g*Z.w,0,Z.w,Z.h,px-Z.ax/2,fy-Z.ay/2,Z.w/2,Z.h/2);ctx.imageSmoothingEnabled=sm},j)}}

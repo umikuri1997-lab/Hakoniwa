@@ -78,6 +78,10 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 | `nat_deadtree.glb` | 枯れ木（deadtree） | 立つ | 同上 |
 | `nat_bush.glb` | ベリーの茂み（berry） | 立つ | 同上 |
 | `nat_cedar.glb`・`nat_cedar2.glb` | とんがりの木（tree~v・deadtree~v） | 立つ | 同上 |
+| `nat_acacia.glb` | 風の木・アカシア（tree~k・deadtree~k） | 立つ | 目じるしの色（幹・葉）。`acacia.glb` の色から `tools/art/nature3d/acacia_prep.py` で作る |
+| `nat_oak.glb` | 水の木・オーク（tree~m・deadtree~m） | 立つ | 目じるしの色（幹・葉）。`oak.glb` から `tools/art/nature3d/tree_prep.py` で作る |
+| `nat_maple.glb` | 水の木・メープル（maple~m） | 立つ | 目じるしの色。`maple.glb` から `tree_prep.py` |
+| `nat_deadoak.glb` | 闇の木・枯れたオーク（tree~y・deadtree~y） | 立つ | 目じるしの色（幹だけ）。`oak_dead.glb` から `tree_prep.py` |
 | `nat_kinoko0〜2.glb` | きのこ（kinoko#0〜2） | 立つ | 目じるしの色（かさ・かさのうら・じく） |
 | `ck_mugi.glb`・`ck_imo.glb`・`ck_sashimi.glb` | むぎのたば・いも・さかなの切り身（料理の家具の上の材料・さしみ） | ねかせた形 | 色なし。`furn3d/cooktop.py` で `recol` |
 | `ck_berry.glb`・`ck_milk.glb`・`ck_salad.glb` | ブルーベリー・ミルクのびん・サラダのボウル | 立つ | 色なし。`cooktop.py` の `model2` で、高さ・場所で2つの色にぬりわける（葉・ふた・ボウル） |

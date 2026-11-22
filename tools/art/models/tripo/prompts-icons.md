@@ -489,3 +489,24 @@ Row 2 (five) are pulled-up bunches, each a small bundle of the same plant pulled
 12. A bunch of goosegrass: light-green blades with a few short pale yellow-green finger-like spikes.
 Each object: whole, three-quarter front view seen from slightly above (about 20 degrees down), level, not tilted; growing plants stand upright, perfectly vertical, resting on the same invisible flat floor at the same ground level. Stylized, slightly chunky, clean simple smooth shapes with thick soft blades, meant to be turned into one 3D model and then separated. Pale, light, soft colors; no dark or heavily saturated colors, no black. Clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine vein lines. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground, no soil, no pots, no props, no text, no labels, no numbers.
 ```
+
+---
+
+## 18まいめ：風のステージの草・花・素材（7こ）
+
+ファイル名：マップの雑草 `weed_nabiki`（なびき草・緑の草）・`weed_houki`（ほうき草・かれた草）、花 `dandelion`（たんぽぽ）、草のアイコン `grass_nabiki`・`grass_houki`、素材のアイコン `icon_kumowata`（雲わた）・`icon_hane`（風の羽）（.glb）。
+17まいめの草と同じ大きさ・同じ見え方にしてある。なびき草は、風の島の草なので、葉が片がわへ流れる形。
+
+```
+A sheet of seven separate plants and items for a cozy farming game set on breezy floating sky islands, arranged in two rows in one image (three in the top row, four in the bottom row), with wide empty space between them so that no two objects touch or overlap. Draw all seven at about the same size so every shape is clear.
+Row 1 (three) are growing plants, each growing from one spot with its base flat on the ground:
+1. A tuft of wind-swept grass: long fresh light-green blades all sweeping gently to the right as if blown by a soft breeze, with two thin stems ending in soft pale cream feathery tips.
+2. A tuft of dry broom grass: many thin stiff pale straw-yellow stems standing up and fanning out like a small broom, with tiny pale tan seed clusters at the tips.
+3. A dandelion plant: a low rosette of jagged light-green leaves on the ground, with two upright stems, one ending in a round bright soft yellow flower and one ending in a round fluffy white seed puff.
+Row 2 (four):
+4. A pulled-up bunch of the wind-swept grass from item 1, a small bundle with a little clump of pale tan roots at the bottom, lying flat on the floor with the roots to the left.
+5. A pulled-up bunch of the dry broom grass from item 2, a small bundle with a little clump of pale tan roots at the bottom, lying flat on the floor with the roots to the left.
+6. A small soft puff of cloud fluff: a rounded cushion-like cluster of three or four puffy white lumps with a very faint pale blue tint underneath, sitting on the floor.
+7. One soft feather lying flat on the floor: a smooth white feather with a pale sky-blue tip and a thin pale cream quill, gently curved.
+Each object: whole, three-quarter front view seen from slightly above (about 20 degrees down), level, not tilted; growing plants stand upright, perfectly vertical, resting on the same invisible flat floor at the same ground level; flat items lie flat on that floor. Stylized, slightly chunky, clean simple smooth shapes with thick soft blades and petals, meant to be turned into one 3D model and then separated. Pale, light, soft colors; no dark or heavily saturated colors, no black. Clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine vein lines. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground, no soil, no pots, no props, no clouds in the background, no text, no labels, no numbers.
+```

@@ -51,8 +51,7 @@ function sacredRevealed(id){const i=sacredQuestIndex(id);return i>=0&&S.quest>i&
 function sacredStage(){
   if(!S)return 4;if(IS_STORY_REPLAY&&S.replayMature)return 4;
   if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=3||S.treeSeen>=4?4:3;/* 大きな木になるのは、3つめのかけらをささげたとき（前のセーブで、もう育っていた木は、そのまま） */
-  if(sacredRevealed('waterFilm'))return 2;
-  if(sacredRevealed('fireRoot'))return 1;
+  {const n=['fireRoot','waterFilm','windEcho'].filter(sacredRevealed).length;if(n)return Math.min(2,n)}/* 1つめの調べで芽、2つめで若葉（お話の道 route.js：火・水・風のどれでも） */
   return 0;
 }
 function sacredRootFits(j){const base=SACREDBASE.map(d=>fieldStump(j)+d);return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>(walk(k)||STUMPB.has(k))&&!S.obj[k]&&!(S.floor[k]&&base.includes(k))&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}/* 道・床は、根もとのマスだけことわる（sacredNoBuild と同じ） */
@@ -132,9 +131,9 @@ function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   if(stage>=1){c.strokeStyle='#779753';c.lineWidth=3;c.beginPath();c.moveTo(cx+9,cy-14);c.lineTo(cx+13,cy-28);c.stroke();c.fillStyle=stage===1?'#8cb46b':'#9ecf75';c.beginPath();c.ellipse(cx+14,cy-29,stage===1?3:3+6*unfold,stage===1?6:6-2*unfold,stage===1?.2:-1.3+.8*unfold,0,7);c.fill();}
   c.restore();
 }
-function drawSacredRoot(now){if(!S||WD!==0||S.free||S.sacredRoot==null||S.obj.includes('tower'))return;const j=S.sacredRoot;if(S.obj[j]==='site')return;drawStoryTree(ctx,(j%W)*TS,(j/W|0)*TS-hiAt(j)*LIFT,j,now);}
+function drawSacredRoot(now){if(!S||WD!==0||S.free||S.sacredRoot==null||S.obj.includes('tower'))return;const j=S.sacredRoot;if(S.obj[j]==='site')return;drawStoryTree(ctx,(j%W)*TS,(j/W|0)*TS-liftOf(j),j,now);}
 const SACRED_QUIET=[
-  ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……。'],['U','わたしにも、まだわからぬ。'],['F','……そっか。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','……うん。'],['U','こうして生きているおまえを見たら、きっと、喜ぶだろう。'],['F','#teary|……。'],['N','#hush|……となり、座るねぇ。',1,'stree:sit'],['F','#hush|……今日は、ここにいてもいい？'],['U','もちろんだ。']
+  ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……わたしにも、まだわからぬ。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','#teary|……うん。'],['N','#hush|……となり、座るねぇ。',1,'stree:sit'],['N','#hush|……。',1,'stree:sunny'],['F','#hush|……今日は、ここにいてもいい？'],['U','もちろんだ。']
 ];
 function sacredQuietScene(){return startSacredQuiet();}
 function drawSacredQuiet(now){if(WD===0&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}

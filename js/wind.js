@@ -72,7 +72,13 @@ function windRiseTick(){while(WRISEQ.length&&WRISEQ[0].state!==S)WRISEQ.shift();
       const button=el('<button class="btn pri" type="button">とじる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
       button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();memo('leaf','風がとどいて、島がうかんだ');const go=()=>{checkQuest();camAnim=WRISECAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}};if(!windHayateWake(k,go))go()}},WINDRISE+200)}}}
 function windRiseReset(){WRISEQ.length=0;if(WRISEON){if(WRISECAM&&camAnim===WRISECAM)camAnim=null;WRISECAM=null;WRISEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="島がうかんだ"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
-function windTick(){if(!windOn())return;if(!WN||WNS!==S)windSync();windCarry();windRiseTick()}
+const KUMODAY=6,KUMOMAX=20,HANEDAY=3,HANEMAX=10;/* 雲わた：毎朝、雲の海のふちに6こ（地面に20こまで）。風の羽：毎朝、風の道の上に3まい（10まいまで） */
+function windMatMorning(){if(!windOn())return;if(!WN||WNS!==S)windSync();if(!S.drops)S.drops=[];const M=skyM(),I=windIsles(S),r0=S.res.find(q=>!q.hidden),G=r0?bfs(r0.x|0,r0.y|0):null,has=new Set(S.drops.map(d=>d.y*W+d.x)),cnt=id=>S.drops.filter(d=>d.id===id).length;
+  const ok=j=>j>=0&&j<W*H&&S.ground[j]===0&&!S.obj[j]&&!S.floor[j]&&walk(j)&&!has.has(j)&&!fogAt(j)&&(!G||G.dist[j]>=0)&&I.id[j]>0;
+  const put=(L,id,n,max)=>{for(let k=cnt(id);n>0&&k<max&&L.length;){const i=(Math.random()*L.length)|0,j=L[i];L.splice(i,1);if(!ok(j))continue;S.drops.push({x:j%W,y:(j/W)|0,id,n:1});has.add(j);n--;k++}};
+  const edge=[],path=[];for(let j=0;j<W*H;j++){if(!ok(j))continue;if([j-1,j+1,j-W,j+W].some(q=>q>=0&&q<W*H&&M[q]))edge.push(j);if(WN.dir[j]>=0)path.push(j)}
+  put(edge,'mat:kumowata',KUMODAY,KUMOMAX);put(path,'mat:hane',HANEDAY,HANEMAX)}
+function windTick(){if(!windOn())return;if(!WN||WNS!==S)windSync();windCarry();windRiseTick();if(typeof windStoryTick==='function')windStoryTick()}
 /* ---------- 風の遊園地 ----------
    遊具（RIDES）は、風のせいれいが係（rideop）になって風を送っているあいだだけ動き、ほかのせいれいがのれる。係は、のったせいれいが遊びおわるたびに、たのしさ+RIDEOPFUN。風の道が2マス以内にとどいている遊具は、係がつかれない。
    わすれた楽しさ：この土地のせいれいは、遊び家具の遊び方をわすれている（r.rem にない遊び家具へは、自分から行かない）。動いている遊具にはのる。遊具にはじめてのる・係をつとめると、遊び方を1つ思い出す。
@@ -91,7 +97,15 @@ ACT.rideop={start(r,a){if(!RIDES.has(S.obj[a.obj]))return false;r.bubble='';r.fa
 for(const id of RIDES)TOYS.add(id);/* のっているせいれいを、遊具の上に描く（toyR・toyPose） */
 if(typeof ACT_LBL!=='undefined')ACT_LBL.rideop='遊具を動かしている';if(typeof WORKFACE!=='undefined')WORKFACE.add('rideop');
 function windPlayEnd(r,a){if(!windFun()||!RIDES.has(a.what))return;windRemember(r,a.what);const F=S.flags.rideRun||(S.flags.rideRun={});F[a.what]=(F[a.what]||0)+1;const op=rideOp(a.obj);if(op){funAdd(op,RIDEOPFUN,'play');op.bubble='🎵'}}
-function windRemember(r,ride){/* はじめてその遊具にのった・係をした：遊び方を1つ思い出す */r.rode=r.rode||{};if(r.rode[ride])return;r.rode[ride]=1;r.rem=r.rem||{};const L=Object.keys(BL).filter(id=>BL[id].play&&!RIDES.has(id)&&!r.rem[id]&&!nigate(r.elem,id));if(!L.length)return;const here=L.filter(id=>cnt(id)>0),t=L.includes(r.like)?r.like:here.length?here[(Math.random()*here.length)|0]:L[(Math.random()*L.length)|0];r.rem[t]=1;toast(r.name+'が、'+BL[t].name+'の遊び方を思い出した','good');if(typeof spReact==='function')spReact(r,'joy',1400)}
+function windRemember(r,ride){/* はじめてその遊具にのった・係をした：遊び方を1つ思い出す */r.rode=r.rode||{};if(r.rode[ride])return;r.rode[ride]=1;r.rem=r.rem||{};const L=Object.keys(BL).filter(id=>BL[id].play&&!RIDES.has(id)&&!r.rem[id]&&!nigate(r.elem,id));if(!L.length)return;const here=L.filter(id=>cnt(id)>0),t=L.includes(r.like)?r.like:here.length?here[(Math.random()*here.length)|0]:L[(Math.random()*L.length)|0];r.rem[t]=1;toast(r.name+'が、'+BL[t].name+'の遊び方を思い出した','good');if(typeof spReact==='function')spReact(r,'joy',1400);windRemFx(r,t)}
+/* 思い出した：頭の上に、その遊び家具の絵がふわっとうかんで光り、風のつぶがあつまる。その子の言いかたのひとこと（見た目と音だけ。実時間） */
+const WREMLINE=['そうだ、こうやって遊んだんだ！','思い出した！ 体がおぼえてる。','あっ、この遊び、すきだったなあ。','風がふいたら、思い出したよ。','なつかしい……もう一回やりたい！','わすれてたのが、うそみたい！'],WREMIMG=new Map(),WREMMS=3200;
+function windRemFx(r,t){if(!r||r.hidden||IS_STORY_REPLAY)return;let im=WREMIMG.get(t);if(!im){im=new Image();im.src=iconURL(t);WREMIMG.set(t,im)}
+  const x=r.x*TS,y=r.y*TS-uLift(r)-58;scnAdd('windrem',WREMMS,{r,im});scnAdd('glow',WREMMS*.8,{x,y,r:22,col:'#e8f6ff'},150);scnAdd('ring',900,{x,y,r0:6,r1:30,col:'#dff4ff'},150);
+  for(let i=0;i<6;i++){const a=i*1.047;scnAdd('orb',700,{x0:x+Math.cos(a)*34,y0:y+Math.sin(a)*20,x1:x,y1:y,arc:i%2?10:-10,col:i%2?'#dff4ff':'#fff6c8',n:1},i*80)}
+  sfx('good');addFloat(r.x,r.y-1.7,chatTone(pickFresh('wrem',WREMLINE),r),'#e8f6ff')}
+SCN_DRAW.windrem=(e,t,now)=>{/* 頭の上の遊び家具の絵（144のアイコンを30の大きさに。うかんでから、ゆっくりゆれる） */const r=e.r,im=e.im;if(!r||r.hidden||!im.complete||!im.naturalWidth)return;const env=scnEnv(t,.1,.18);if(env<=0)return;
+  const s=30,rise=Math.min(1,t/.12),x=Math.round(r.x*TS-s/2),y=Math.round((r.y*TS-uLift(r)-44-rise*14-s/2+Math.sin(now/320)*2)/2)*2;ctx.save();ctx.globalAlpha=env;ctx.imageSmoothingEnabled=true;ctx.drawImage(im,x,y,s,s);ctx.restore()}
 function windRemNote(r){if(!windFun())return '';const n=Object.keys(r.rem||{}).length;return '思い出した遊び：'+n}
 /* ハヤテ：はじめにうかんだ島で目をさます（カザネのおさななじみ）。会話を読みおえてから、来たことにする */
 function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYATE))return false;const I=windIsles(S),h=S.wind.holes.find(q=>I.id[q.j]===k);let c=-1,bd=1e9;for(let j=0;j<W*H;j++){if(I.id[j]!==k||!walk(j)||S.obj[j])continue;const d=h?Math.hypot(j%W-h.j%W,((j/W)|0)-((h.j/W)|0)):Math.hypot(j%W-I.cx[k],((j/W)|0)-I.cy[k]);if(d>=1&&d<bd){bd=d;c=j}}if(c<0)return false;
@@ -102,6 +116,8 @@ const RIDEPH=new Map();
 function rideAng(j,now){let p=RIDEPH.get(j);if(!p){p={a:(j*.37)%6.28,t:now};RIDEPH.set(j,p)}const dt=Math.max(0,Math.min(.1,(now-p.t)/1000));p.t=now;if(S&&RIDES.has(S.obj[j])&&rideOn(j))p.a+=dt*1.5;return p.a}
 function windRidePose(r,a,now){if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
   const K=RIDEK,fx=X+(a.what==='wheel'?48:32),fy=Y+56,PX=v=>fx+(v-fx)*K,PY=v=>fy+(v-fy)*K;
+  const ch=window.CHIPS&&CHIPS[a.what];if(ch&&ch.seats){/* 3Dの絵の座席（コマごと、足もとからの g64）。そのコマの座席の、うしろ半分にいるときは、遊具の奥に描く */const F=ch.seats,f=rideFrame(a.what,j,now),n=F[0].length,q=k%n,p=F[f][q],nx=F[(f+1)%16][q];let my=0;for(const L of F)my+=L[q][1];my/=16;
+    r.face=a.what==='wheel'?1:nx[0]>p[0]?1:nx[0]<p[0]?-1:r.face||1;const front=p[1]>=my;return{x:fx+p[0]/2,y:fy+p[1]/2,z:Y/TS+(front?2.06:a.what==='skyswing'?.95:1.4)}}
   if(a.what==='wheel'){const th=A*.35+k*1.5708,cx=X+48,cy=Y-6;r.face=1;return{x:PX(cx+Math.cos(th)*34),y:PY(cy+Math.sin(th)*34+12),z:Y/TS+2.06}}
   const cx=X+32,n=a.what==='cup'?2:3,th=A*(a.what==='cup'?1.3:1)+k*6.2832/n,sn=Math.sin(th),cs=Math.cos(th);r.face=sn>0?(cs>0?-1:1):(cs>0?1:-1);
   if(a.what==='skyswing')return{x:PX(cx+cs*27),y:PY(Y+30+sn*9),z:Y/TS+(sn>0?2.06:.95)};
@@ -123,16 +139,22 @@ function drawWindGround(c,x0,y0,x1,y1,now){/* 地面の高さの絵：雲の橋�
 function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};
   if(RIDES.has(id)||RIDEB[id]){drawRide(c,RIDEB[id]||id,!!RIDEB[id],x,y,i,now,R);return}
   if(id==='oldmill'){drawObj(c,'windmill',x,y,i,g,now);return}/* 古い風車：風があたっているときだけ、まわる */
-  if(id==='kazaana'||id==='kazaanab'){/* 風穴：石でかこんだ穴。ふさがった風穴は、石の山 */
+  if(id==='kazaana'||id==='kazaanab'){/* 風穴：石でかこんだ穴。ふさがった風穴は、石の山（3Dから写したチップ。ないときはコードの仮の絵） */const ch=window.CHIPS&&CHIPS[id];
+    if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='kazaana')windHoleDots(c,x,y,i,now);return}
     R(5,12,22,14,'#8f8672');R(3,15,26,9,'#8f8672');R(6,11,20,2,'#b3aa94');R(4,14,3,2,'#b3aa94');R(25,14,3,2,'#b3aa94');R(5,25,22,2,'#6f6857');
     if(id==='kazaana'){R(8,14,16,9,'#3d4a5c');R(10,13,12,1,'#3d4a5c');R(10,23,12,1,'#3d4a5c');R(9,15,14,2,'#2b3442');
-      if(i!=null){const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}}
+      windHoleDots(c,x,y,i,now)}
     else{R(8,10,8,8,'#a39a84');R(15,7,9,10,'#b3aa94');R(11,15,11,9,'#9a917b');R(18,16,7,7,'#a8a08a');R(9,11,6,1,'#cfc7b2');R(16,8,7,1,'#cfc7b2');R(12,16,9,1,'#c2baa4');R(8,17,1,1,'#6f6857');R(22,23,3,1,'#6f6857')}return}
-  if(id==='kazami'){/* かざみ：柱の上に、風の向きをさす矢の羽 */const d=(i!=null?rotAt(i):(PLROTS.kazami||0))&3;R(12,26,8,3,'rgba(60,50,30,.25)');R(15,10,2,18,'#8a6a42');R(14,26,4,2,'#6f5433');R(14,8,4,3,'#c9a46a');
+  if(id==='kazami'){/* かざみ：柱の上に、風の向きをさす矢の羽 */const d=(i!=null?rotAt(i):(PLROTS.kazami||0))&3,ch=chipOf('kazami',i,i!=null?null:d);if(ch&&drawChip(c,ch,id,x,y,now,i))return;R(12,26,8,3,'rgba(60,50,30,.25)');R(15,10,2,18,'#8a6a42');R(14,26,4,2,'#6f5433');R(14,8,4,3,'#c9a46a');
     const a='#f4fbfd',b='#7fc7b4';if(d===1){R(8,4,16,3,a);R(22,2,3,7,b);R(25,4,2,3,b);R(6,2,3,7,b)}else if(d===3){R(8,4,16,3,a);R(7,2,3,7,b);R(5,4,2,3,b);R(23,2,3,7,b)}else if(d===0){R(14,0,4,12,a);R(12,10,8,3,b);R(14,13,4,2,b);R(12,-1,8,2,b)}else{R(14,0,4,12,a);R(12,0,8,3,b);R(14,-2,4,2,b);R(12,11,8,2,b)}return}}
 
+function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白いつぶ */if(i==null)return;const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}
+
 /* 遊具の絵（コードの仮のドット絵）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
-function drawRide(c,id,brk,x0,y0,i,now,R0){const fx=id==='wheel'?48:32,fy=56;c.save();c.translate(Math.round(x0+fx),Math.round(y0+fy));c.scale(RIDEK,RIDEK);const x=-fx,y=-fy,R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};drawRide0(c,id,brk,x,y,i,now,R);c.restore()}
+function rideFrame(id,i,now){/* 遊具の絵のコマ（16コマでひとまわり。チップの pf がまわる速さの倍） */const ch=window.CHIPS&&CHIPS[id];if(!ch||!ch.pf||i==null)return 0;const a=rideAng(i,now||0)*ch.pf/6.2832*16;return((Math.round(a)%16)+16)%16}
+function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。ないときはコードの仮の絵 */const C=window.CHIPS;
+  if(C){if(brk){const ch=C[id+'b'];if(ch&&drawChip(c,ch,id+'b',x0,y0,now,i))return}else if(i==null||ICON){const ch=C[id];if(ch&&drawChip(c,ch,id,x0,y0,now,i))return}else{const st=C[id+':s'],mv=C[id+':m'+rideFrame(id,i,now)];if(st&&mv&&drawChip(c,st,id,x0,y0,now,i)){drawChip(c,mv,id,x0,y0,now,i);return}}}
+const fx=id==='wheel'?48:32,fy=56;c.save();c.translate(Math.round(x0+fx),Math.round(y0+fy));c.scale(RIDEK,RIDEK);const x=-fx,y=-fy,R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};drawRide0(c,id,brk,x,y,i,now,R);c.restore()}
 function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0):.6,O=(cx,cy,rx,ry,col)=>{c.fillStyle=col;for(let q=-ry;q<=ry;q++){const w=Math.round(rx*Math.sqrt(Math.max(0,1-q*q/(ry*ry+.01))));if(w>0)c.fillRect(Math.round(x+cx-w),Math.round(y+cy+q),w*2,1)}},
     Ln=(x0,y0,x1,y1,col,t)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))|0;c.fillStyle=col;for(let q=0;q<=n;q++)c.fillRect(Math.round(x+x0+(x1-x0)*q/Math.max(1,n)),Math.round(y+y0+(y1-y0)*q/Math.max(1,n)),t||1,t||1)},
     P=brk?{a:'#c9c2b4',b:'#e3ddd0',p:'#a79f90',w:'#8f8676',m:'#b3aa98'}:{a:'#f2a7b5',b:'#fff6e8',p:'#c9a46a',w:'#b08a52',m:'#8fd3c2'};
@@ -153,3 +175,49 @@ function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0)
   if(id==='skyswing'){O(32,52,16,5,P.w);O(32,50,16,5,P.p);R(30,-34,4,84,P.p);R(31,-34,1,84,P.b);const sp=brk?0:5;
     for(let q=0;q<3;q++){const th=A+q*2.0944,sx=32+Math.cos(th)*(22+sp),sy=22+Math.sin(th)*9;Ln(32+Math.cos(th)*14,-30+Math.sin(th)*4,sx,sy,P.m,1);R(sx-4,sy,9,3,P.a);R(sx-4,sy+3,9,1,P.w)}
     O(32,-31,18,5,P.w);O(32,-33,18,5,P.a);for(let q=-16;q<16;q+=8)R(32+q,-35,4,2,P.b);R(30,-42,4,6,P.a);if(brk)Ln(44,-28,52,6,P.m,1);return}}
+/* ---------- 観覧車の山場・雲の下（目標6・7）：観覧車のてっぺんから、雲のすきまにヌシ様のつばさが見える（wind:peek）。
+   雲の海のはしでカザネたちが待つ所に、まもりの光を落とすと、雲がひらいて、つばさ・ヌシ様の顔・つばさのかげでねむる影が見え、ヌシ様が話す（windGlHit・windPartScene）。
+   絵はコードで描くかりのドット絵（drawWindScene）。場面の動き・カメラは実時間、ひらく場面のあいだは村の時間を止める（SCENEHOLD） ---------- */
+const NUSHI4='風のヌシ',WIND_BEAT_MS={peek:3200},WPARTMS=4200,WKUMOR=2/* まもりの光が、印のまわり何マスまでなら、とどく */;
+let WSCN=[];/* {k:'peek'|'part',x,y,t0,end,s} 世界の点・実時間 */
+function windKumoSpot(){/* 雲の海のはしの印：観覧車にいちばん近い、雲の海にとなりあう、歩ける陸のマス（1回きめて S.wind.kj に） */if(!windOn())return null;if(S.wind.kj!=null&&walk(S.wind.kj))return S.wind.kj;if(WKNULL.s===S&&performance.now()<WKNULL.t)return null;/* 行けないときは、2秒に1回だけさがしなおす */
+  let w=-1;for(let j=0;j<W*H&&w<0;j++)if(S.obj[j]==='wheel'||S.obj[j]==='wheelb'||S.obj[j]==='site'&&S.dyn[j]&&S.dyn[j].build==='wheel')w=j;const wx=w<0?CX:w%W,wy=w<0?CY:(w/W)|0;
+  const r0=S.res.find(q=>q.name===KAZANE&&!q.hidden)||S.res.find(q=>!q.hidden);if(!r0)return null;const G=bfs(r0.x|0,r0.y|0);/* せいれいが歩いて行ける所だけ */
+  let best=-1,bd=1e9;for(let j=0;j<W*H;j++){if(!walk(j)||S.obj[j]||skyJ(j)||windSunk(j)||!(G.dist[j]>=0))continue;const x=j%W,y=(j/W)|0;if(!(skyJ(j+W)&&y<H-1))continue;/* 南が雲の海（見おろすので南のはし） */const d=Math.hypot(x-wx,y-wy);if(d<bd){bd=d;best=j}}
+  S.wind.kj=best<0?null:best;if(best<0){WKNULL.s=S;WKNULL.t=performance.now()+2000}return S.wind.kj}
+const WKNULL={s:null,t:0};
+function windKumoOn(){return windOn()&&!S.free&&qAt('kumoshita')&&!S.flags.kumo}
+function windKumoWait(n){const r=S.res.find(q=>q.name===n&&!q.hidden);return !!(r&&r.act&&r.act.type==='wwait'&&r.act.stage==='do')}
+function windKumoProg(){if(!S.qTalked)return '';if(isNight())return '朝を待とう';if(windKumoSpot()==null)return '雲の海のはしへ行けない';const k=S.res.find(q=>q.name===KAZANE&&!q.hidden);if(!k)return 'カザネが村にいない';return windKumoWait(KAZANE)?'カザネが雲の海のはしで待っている':'カザネが雲の海のはしへ向かっている'}
+function windDecide(r,G){/* 雲の海のはしで待つ：カザネ（いなくてもよいのはハヤテ）。昼だけ。待っているあいだ、おなか・たのしさ・つかれはへらない（wwait） */
+  if(!windKumoOn()||WPART||!S.qTalked||isNight()||r.name!==KAZANE&&r.name!==HAYATE)return false;if(r.hunger<250||r.meal||r.carry||r.bm)return false;
+  const kj=windKumoSpot();if(kj==null)return false;const here=(r.y|0)*W+(r.x|0),k=yamiFreeNear(kj,r,G);if(k<0)return false;
+  if(k===here)return startAct(r,G,'wwait',-1,{dur:30,kj}),true;return startAct(r,G,'ywalk',k,{}),true}
+ACT.wwait={start(r,a){r.bubble='';r.nap=false;a.h0=r.hunger;a.f0=r.fun;a.e0=r.energy;r.face=(a.kj%W)+.5>=r.x?1:-1},tick(r,a){r.hunger=Math.max(r.hunger,a.h0);r.fun=Math.max(r.fun,a.f0);r.energy=Math.max(r.energy,a.e0)},done:(r,a)=>a.t>=a.dur||isNight()||!windKumoOn()||!!WPART};
+ACT_LBL.wwait='雲の海のはしで待っている';
+let WPART=null;
+function windGlHit(tx,ty){/* まもりの光が、雲の海のはしの印にとどいた */if(!windKumoOn()||WPART||isNight()||!S.qTalked)return;const kj=windKumoSpot();if(kj==null)return;if(Math.max(Math.abs(tx-kj%W),Math.abs(ty-((kj/W)|0)))>WKUMOR)return;
+  if(!windKumoWait(KAZANE)){toast('カザネが来るのを待とう');return}windPartScene(kj)}
+function windPartScene(kj){const S0=S,x=(kj%W+.5)*TS,y=((kj/W|0)+2.2)*TS,now=performance.now();WPART={S:S0,t0:now};SCENEHOLD=now+WPARTMS+600;
+  camAnim={fz:cam.z,tz:Math.max(cam.z,1.4),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:x,ty:y-TS,t:0,dur:1.4};if(typeof musicDuck==='function')musicDuck(WPARTMS);
+  WSCN.push({k:'part',x,y,t0:now+GLFX,end:Infinity});sfx('wave');for(const r of S.res)if(!r.hidden&&Math.hypot(r.x*TS-x,r.y*TS-y)<6*TS){r.face=x>=r.x*TS?1:-1;SHOCKU.set(r,now+1600)}if(typeof hdBig==='function')hdBig();
+  villageTimeout(()=>{if(S!==S0){WPART=null;return}const H2=S.res.some(q=>q.name===HAYATE&&!q.hidden);
+    dialog([[NUSHI4,'……風の子らか。よく、ここまで来たな。'],[KAZANE,'#surprise|ヌシ様……！ どうして、風を止めたんですか。'],[NUSHI4,'見よ。わたしのつばさのかげで、影たちがねむっている。'],[NUSHI4,'夜に休む場所をなくした子らだ。風がふけば、目をさまして、さまよってしまう。'],[NUSHI4,'だから、わたしは風をたたみ、つばさで島をささえて、ここにいた。'],[HAYATE,'#worry|……だから、遊び場も止まったんだ。'],[NUSHI4,'すまぬ。おまえたちから、楽しむことまで、うばってしまったな。'],[KAZANE,'#think|……いいえ。思い出しましたよ。ハヤテと、守り神のおかげでね。'],[NUSHI4,'……そうか。笑い声は、ここまでとどいていた。あたたかかった。']].filter(l=>H2||l[0]!==HAYATE),
+      ()=>{WPART=null;for(const s of WSCN)if(s.k==='part')s.end=performance.now()+1500;if(S!==S0)return;S.flags.kumo=1;for(const r of S.res)if(r.act&&r.act.type==='wwait')endAct(r);memo('spirit','雲の海のはしで、風のヌシ様に会った');checkQuest();renderQuest();save()},null,NUSHI4)},WPARTMS)}
+function windBeat(k){/* 会話の合図 wind:<場面> */if(k!=='peek'||!windOn())return;const kj=windKumoSpot();if(kj==null)return;const x=(kj%W+.5)*TS,y=((kj/W|0)+2.2)*TS,now=performance.now();
+  camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:x,ty:y-TS,t:0,dur:1.2};WSCN.push({k:'peek',x,y,t0:now+900,end:now+WIND_BEAT_MS.peek+2200});sfx('wave')}
+function windSceneReset(){WSCN=[];WPART=null}
+function drawWindScene(c,now){/* つばさ・ヌシ様の顔・ねむる影（雲の上、夜の暗さより下） */if(!WSCN.length)return;WSCN=WSCN.filter(s=>now<s.end+1500);
+  for(const s of WSCN){if(now<s.t0)continue;const fin=Math.min(1,(now-s.t0)/1500),out=s.end===Infinity?1:Math.max(0,1-(now-s.end)/1500),a=fin*out;if(a<=0)continue;
+    if(s.k==='peek'){const tw=.55+.45*Math.sin((now-s.t0)/260);if(!(typeof wnDraw==='function'&&wnDraw(c,'support',s.x,s.y+8,a*.6*tw,false,.5)))wingDots(c,s.x,s.y,1,a*.6*tw,now)}/* 雲のすきまに見えるつばさ */
+    else{c.save();c.globalAlpha=a*.85;c.fillStyle='#eef6ff';const R=4*TS;for(let i=-R;i<=R;i+=8){const h=Math.round(Math.sqrt(Math.max(0,R*R-i*i))*.45/4)*4;c.fillRect(Math.round(s.x+i),Math.round(s.y-h),8,h*2)}c.restore();/* 雲がひらいた所：うすい空の色のだ円（段々） */
+      const art=typeof wnDraw==='function'&&wnDraw(c,'support',s.x,s.y+10,a);if(!art)wingDots(c,s.x,s.y+10,1.6,a,now);/* つばさで島をささえる姿（3Dの絵） */for(const[dx,dy]of[[-46,18],[-14,26],[22,20]])if(typeof drawShade==='function'){c.save();c.globalAlpha=a*.8;drawShade(c,'basic',s.x+dx,s.y+dy,.18,1,{dot:1,t:0});c.restore()}/* つばさのかげで、ねむる影 */
+      if(!art)nushiFaceDots(c,s.x,s.y-30,a,now)}}}/* 3Dの絵には顔もある */
+function wingDots(c,x,y,k,a,now){/* 白いつばさ（2点の四角のドット）：羽根を、ゆっくりはばたく角度でならべる */const P=2*Math.max(1,Math.round(k)),fl=Math.sin(now/900)*.08;c.save();c.globalAlpha=a;
+  for(const sd of[-1,1])for(let f=0;f<9;f++){const L=(44-f*3)*k,ang=(-.25+f*.11+fl)*sd,bx=x+sd*(10+f*7)*k,by=y-f*2*k;for(let t=0;t<L;t+=P){const px=Math.round((bx+Math.sin(ang)*t*.3*sd+sd*t*.55)/P)*P,py=Math.round((by+t*.25)/P)*P;c.fillStyle=t<P*2?'#d6deef':'#f8fbff';c.fillRect(px,py,P,P*2)}}c.restore()}
+function nushiFaceDots(c,x,y,a,now){/* 風のヌシ様の顔：白い大きな鳥の頭（かりのドット絵） */const P=4,R=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round((x+dx*P)/2)*2,Math.round((y+dy*P)/2)*2,w*P,h*P)};c.save();c.globalAlpha=a;
+  R(-5,-4,10,8,'#f8fbff');R(-4,-5,8,1,'#f8fbff');R(-6,-2,1,5,'#e2e8f4');R(5,-2,1,5,'#e2e8f4');R(-4,4,8,1,'#e2e8f4');const bl=Math.floor(now/2600)%7===0?1:0;R(-3,-1,2,bl?1:2,'#5a6a8a');R(1,-1,2,bl?1:2,'#5a6a8a');R(-1,1,2,2,'#f0c46a');R(-1,3,2,1,'#d9a64a');c.restore()}
+/* 風の夜のコワイノ：雲の海のふち（雲の海にとなりあう陸）の、村まで歩いて行ける所から来る（つばさの下から、のぼってくる） */
+const WSPC={n:-1,s:null,L:null};
+function windSpawnSpot(R){if(!windOn())return null;if(WSPC.n!==STATN||WSPC.s!==S){WSPC.n=STATN;WSPC.s=S;const L=[];for(let j=0;j<W*H;j++){if(S.ground[j]===1||windSunk(j)||!walk(j)||R[j]<0)continue;const x=j%W,y=(j/W)|0;if(skyJ(j-1)&&x>0||skyJ(j+1)&&x<W-1||skyJ(j-W)&&y>0||skyJ(j+W)&&y<H-1)L.push(j)}WSPC.L=L}
+  const L=WSPC.L;if(!L.length)return null;for(let t=0;t<60;t++){const j=L[(Math.random()*L.length)|0],x=j%W,y=(j/W)|0;if(solidOf(j)||lightAt(x+.5,y+.5))continue;return [x+.5,y+.5]}return null}

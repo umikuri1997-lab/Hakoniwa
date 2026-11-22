@@ -122,4 +122,4 @@ function cupFlags(c,x0,x1,y,now){const C=['#ff8a5c','#ffd23f','#7fc6ff','#a8f08a
   for(let x=x0+2;x<x1-2;x+=2){const t=(x-x0)/(x1-x0),sag=Math.round(Math.sin(t*Math.PI)*6);c.fillStyle='#5c4a32';c.fillRect(x,y+sag,2,1)}
   let i=0;for(let x=x0+6;x<x1-8;x+=10,i++){const t=(x+3-x0)/(x1-x0),sag=Math.round(Math.sin(t*Math.PI)*6),w=Math.floor(now/400+i)%2;c.fillStyle=C[i%C.length];for(let k=0;k<6;k++)c.fillRect(x+Math.ceil(k/2)+w*0,y+sag+1+k,6-k*1,1)}}
 function cupText(c,s,x,y,z,al){c.save();c.globalAlpha=al;c.font=Math.round(10*z)*2/2+'px PixelMplus10, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#8a4a1c';c.fillText(s,Math.round(x),Math.round(y)+Math.max(1,Math.round(z)));c.fillStyle='#ffd23f';c.fillText(s,Math.round(x),Math.round(y));c.restore()}
-function cupReset(){CUPV.cd=0;CUPV.aw=null;CUPV.mg=null;for(const id of['cupMG','cupCheer']){const e=document.getElementById(id);if(e)e.remove()}}
+function cupReset(){if(typeof evShowReset==='function')evShowReset();CUPV.cd=0;CUPV.aw=null;CUPV.mg=null;for(const id of['cupMG','cupCheer']){const e=document.getElementById(id);if(e)e.remove()}}

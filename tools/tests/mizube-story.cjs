@@ -1,0 +1,20 @@
+/* 水のお話の前半：目標のならび・3つめの水門は北西の霧の奥・ノミ（よばれて来る・ぶっきらぼうな言いかた・カミサマの旅立ち）・くだりくらべ・古いセーブの読みかえ */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:3});
+  const r=JSON.parse(await run(`(()=>{const o={};document.querySelector('#dialog').hidden=true;S.introSeen=true;S.hold=0;
+    o.ids=QUESTS.map(q=>q.id).join();const g3=mzGate3(),[PX0,PY0]=S.mz.pond;o.g3nw=g3%W<PX0&&((g3/W)|0)<PY0+8;o.g3fog=!S.mz.clr[g3]&&S.obj[g3]==='mzgateb';
+    o.second=SECOND[MIZU].name===NOMI&&SECOND[MIZU].elem==='earth';S.quest=questIndexOf('mznomi');S.qTalked=true;o.okAfter=SECOND[MIZU].ok();
+    const n=mkRes(S,NOMI,'earth',S.res[0].x+1,S.res[0].y);S.res.push(n);o.tone=chatTone('ぼくは、いいと思うよ。ありがとう。',n);o.key=KEYS[MIZU].includes(NOMI);
+    o.godLeave=!!QUESTS[questIndexOf('mznomi')].gives.godLeave;
+    S.quest=questIndexOf('mzraft');S.qTalked=true;o.raced0=mzRaced();(S.mz.race||(S.mz.race={}))[MIO]=1;o.raced1=mzRaced();S.mz.race[NOMI]=1;o.raced2=mzRaced();
+    S.quest=questIndexOf('mzfind3');o.find0=QUESTS[S.quest].check();S.mz.clr[g3]=1;o.find1=QUESTS[S.quest].check();
+    /* 古いセーブ：前のならびで「食堂をひらこう」まで来ていた → ノミをむかえる目標から */S.flags.mzq2=0;S.quest=MZQ_OLD.indexOf('mzshop');S.qTalked=true;mzQuestMig();o.mig=QUESTS[S.quest].id;o.migT=S.qTalked;mzQuestMig();o.mig2=QUESTS[S.quest].id;
+    return JSON.stringify(o)})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.ids,'statue,mzgate1,mzflow,mzchest,mznomi,mzdock,mzshop,mzstage,mzraft,mzgate2,mzfind3,mzpond,mzokuri,mzkiri,mzsend,mzdawn');
+  assert.ok(r.g3nw,'3つめの水門は、ため池の北西');assert.ok(r.g3fog,'はじめは霧の中');assert.ok(r.second);assert.equal(r.okAfter,true);assert.ok(r.key);assert.ok(r.godLeave,'ノミが来たら、カミサマが旅立つ');
+  assert.match(r.tone,/おれ/);assert.doesNotMatch(r.tone,/ぼく/);
+  assert.equal(r.raced0,false);assert.equal(r.raced1,false);assert.equal(r.raced2,true);assert.equal(r.find0,false);assert.equal(r.find1,true);
+  assert.equal(r.mig,'mznomi','おわっていない目標の、はじめから');assert.equal(r.migT,false);assert.equal(r.mig2,'mznomi','2回読みこんでもずれない');
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});

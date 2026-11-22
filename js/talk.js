@@ -5,14 +5,19 @@
    いつでも話せる。たのしさ+10（TALKFUN）は、1日に1回（r.care.talk、callDay）。
    きょうあったこと：作業がおわったときに dayNote でおぼえる（r.dl：{d:callDay, e:[[種類,なに],...]}）。 */
 const TALKFUN=10,DLMAX=16;
-const DLFUN=new Set(['play','chat','fish','bathe','critwatch','sunset','rainjoy','eat','admire','ownseat']);/* たのしかったことにする物 */
-function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY||a.shade)return;let v='';const t=a.type;
-  if(t==='play')v=a.what||'';else if(t==='chat'||t==='tag'){const p=S.res.find(q=>q.id===a.partner);if(!p)return;v=p.name}
+const DLFUN=new Set(['yubench','splay','play','chat','fish','bathe','critwatch','sunset','rainjoy','eat','admire','ownseat']);/* たのしかったことにする物 */
+/* 火山：よみがえった温泉のそば（水のマスから4マス）のベンチ。温泉の印（a 入口・b 西・c 奥）か '' */
+function benchSpr(j){if(WD!==1||j==null||j<0||!BENCHES.has(S.obj[j]))return '';const M=sprMap(),x=j%W,y=(j/W)|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx,k=M[q];if(k&&S.ground[q]===1&&springOn(k))return k}return ''}
+function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY||a.shade)return;let v='';let t=a.type;
+  if((t==='rest'||t==='admire'||t==='ownseat')&&benchSpr(a.obj)){v=benchSpr(a.obj);t='yubench'}/* 湯のそばのベンチで休んだ・見た */
+  else if(t==='rest')return;
+  if(t==='yubench');else if(t==='play')v=a.what||'';else if(t==='chat'||t==='tag'){const p=S.res.find(q=>q.id===a.partner);if(!p)return;v=p.name}
   else if(t==='eat'){v=(a.items||[])[0]||'';if(!FOODS[v])return}else if(t==='cook'){v=r.cing&&r.cing.rec||'';if(!FOODS[v])return}
   else if(t==='build'){const d=S.dyn[a.obj];v=d&&d.build||'';if(!BL[v])return}else if(t==='craft'){const o=(S.orders||[]).find(q=>q.id===a.order);v=o&&o.type||'';if(!BL[v])return}
   else if(t==='harvest'){const d=S.dyn[a.obj],o=S.obj[a.obj];v=o==='farm'?(d&&cropK(d)):o==='fruit'?'apple':'berry';if(!FOODS[v]&&!(CROPS[v]))return}
   else if(t==='plant'){const d=S.dyn[a.obj];v=d&&d.plant||'';if(!BL[v])return}
   else if(t==='admire'){v=S.obj[a.obj]||'';if(!BL[v])return}
+  else if(t==='splay'){v=a.k||'';if(!v)return}/* 季節の遊び（season-play.js） */
   else if(!['fish','bathe','critwatch','sunset','rainjoy','chop','mine','weed','water','till','repair','ownseat'].includes(t))return;
   const d=callDay();if(!r.dl||r.dl.d!==d)r.dl={d,e:[]};const E=r.dl.e;for(let i=E.length-1;i>=0;i--)if(E[i][0]===t&&E[i][1]===v)E.splice(i,1);E.push([t,v]);if(E.length>DLMAX)E.shift();dyWork(r,t,v)}
 const dlToday=r=>r.dl&&r.dl.d===callDay()?r.dl.e:[];
@@ -53,9 +58,25 @@ const DAYL={
   water:[()=>['きょうは、畑に水をやったよ。','作物が、ごくごく飲んでるみたいだった。'],()=>['水やりのあと、葉っぱがきらきらしてたよ。','きれいだったなあ。']],
   till:[()=>['きょうは、畑をたがやしたよ。','ふかふかの土になったんだ。'],()=>['土をたがやすとね、','あったかいにおいがするんだよ。']],
   repair:[()=>['きょうは、こわれた所を直したよ。','これで、またみんなを守れるね。'],()=>['こわれた所、ちゃんと直したんだ。','前より、じょうぶになったかも。']],
-  ownseat:[()=>['きょうは、じぶんの席でひと休みしたよ。','あそこにすわると、ほっとするんだ。'],()=>['じぶんの席って、いいね。','すわると、なんだかおちつくんだ。']]};
+  ownseat:[()=>['きょうは、じぶんの席でひと休みしたよ。','あそこにすわると、ほっとするんだ。'],()=>['じぶんの席って、いいね。','すわると、なんだかおちつくんだ。']],
+  splay_snowball:[()=>['#joy|きょうは、雪合戦したよ！','雪玉、いっぱい当たっちゃった。'],()=>['雪玉をまるめて、えいって投げたんだ。','つめたいけど、たのしかったな。']],
+  splay_kama:[()=>['きょうは、みんなでかまくらを作ったよ。','中に入ると、ふしぎとあったかいんだ。'],()=>['雪をつんで、かためて、かまくらにしたんだ。','#joy|できたとき、みんなでばんざいしたよ！']],
+  splay_mizu:[()=>['#joy|きょうは、水あそびしたよ！','ぱしゃぱしゃって、びしょびしょになっちゃった。'],()=>['水べで、水をかけあったんだ。','あついから、つめたくてきもちよかったよ。']],
+  splay_hanami:[()=>['きょうは、お花見をしたよ。','みんなで、すわって、ずっとながめてたんだ。'],()=>['花びらが、ひらひらおちてきてね。','ずっと見ていたくなったんだ。']],
+  splay_kiri:[()=>['#joy|きょうは、水切りしたよ！','石が、ぴょんぴょんって、水の上をはねたんだ。'],()=>['ひらたい石をさがして、水べでなげたよ。','なんかい、はねるか、みんなでかぞえたんだ。']],
+  splay_leaf:[()=>['#joy|きょうは、落ち葉の山にとびこんだよ！','かさかさって、いい音がしたんだ。'],()=>['落ち葉をあつめて、ふわってまきあげたよ。','赤や黄色で、きれいだったな。']]};
+/* 同じできごとでも、せいれいによって目がいく所がちがう。'できごと:名前'・'できごと:属性'（elemKey）の文が、あれば DAYL より先（名前が先）。
+   yubench：湯のそばのベンチ（v は温泉の印）。'@a' のつくのは、入口の温泉のそばのときだけ。うしろに足すだけ */
+const DAYLK={
+  ['yubench:'+SHIZUKU]:[()=>['……さっき、湯のそばのベンチにすわっていました。','ぽこ、ぽこ、と湯のわく音を聞いていたら、説明するのを、わすれていました。'],()=>['湯のそばのベンチは、湯気があたたかいのです。','目をとじると、湯のわく音だけが聞こえます。']],
+  ['yubench:'+HOMURA]:[()=>['ひと仕事のあとさ、湯のそばのベンチにすわったんだ。','湯気をながめてると、つかれがぬけてくよ。'],()=>['湯気の向こうに、山が見えてさ。','すわってると、うっかり長居しちまうよ。']],
+  ['yubench:'+HOMURA+'@a']:[()=>['ひと仕事のあとさ、湯のそばのベンチにすわったんだ。','朝いちばんの湯気、あそこから、よく見えるんだよ。']],
+  'sunset:wood':[()=>['夕やけのあいだね、葉っぱがみんな、お日さまのほうを向いてたよ。','かくれるまで、ずっと見てたんだ。'],()=>['夕やけを見てたらね、木のかげが、村のはしまでのびてたよ。','木も、夕やけを見てるのかな。']],
+  'sunset:fireB':[()=>['夕やけを見てたら、もうすぐ夜だなって思ってさ。','……今夜も、おれが前に出るからな。'],()=>['夕やけの色って、たき火の火に、にてるよな。','……あれが消えたら、夜の番だ。']]};
+DAYL.yubench=[()=>['湯のそばのベンチで、ひと休みしたよ。','湯気が、ほかほかしてたんだ。']];
 function dayLine(r,[t,v]){let k=t,n='';
-  if(t==='play'){if(v==='flower')k='flower';else{n=tName(v)||'遊び家具';if(r.like===v)k='playfav'}}
+  {const K=[t+':'+r.name+'@'+v,t+':'+r.name,t+':'+elemKey(r)+'@'+v,t+':'+elemKey(r)].find(q=>DAYLK[q]);if(K){const f=tkFresh('d:'+K,DAYLK[K]);if(f)return f('',r)}}
+  if(t==='splay')k='splay_'+v;else if(t==='play'){if(v==='flower')k='flower';else{n=tName(v)||'遊び家具';if(r.like===v)k='playfav'}}
   else if(t==='eat'){n=fName(v);if(v===favDish(r))k='eatfav'}else if(t==='cook'||t==='harvest')n=fName(v);else if(t==='chat'||t==='tag')n=v;else if(v)n=tName(v);
   const F=DAYL[k]||[];if(!F.length)return null;const f=tkFresh('d:'+k,F);return f?f(n,r):null}
 /* いまのようす：u は、ほかの話題より先 */
@@ -65,8 +86,9 @@ function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id=
   if(r.came===dayNo()&&!r.back)return{u:1,L:tkFresh('u:new',TALKU.new)};
   {const a=annivTopic(r);if(a)return a}/* 村に来て〇日の記念日 */
   {const d=typeof dreamTopic==='function'?dreamTopic(r):null;if(d)return d}/* ゆうべのゆめ */
+  {const e=typeof evTopic==='function'?evTopic(r):null;if(e)return e}/* きのう・きょうのイベントの思い出（ev-show.js） */
   if(r.grief&&gn)return{u:1,L:tkFresh('u:grief',TALKU.grief).map(t=>t.split('@G').join(gn))};
-  if(r.hunger<500)return{u:1,L:tkFresh('u:hungry',TALKU.hungry)};
+  if(r.hunger<250)return{u:1,L:tkFresh('u:hungry',TALKU.hungry)};
   if(r.energy<30)return{u:1,L:tkFresh('u:tired',TALKU.tired)};
   const P=[];
   if(T==='cramped')tAll(P,'t:cr',[['#think|家が、ちょっとせまくて……。','もうすこし広かったら、のびのびできるのにな。'],['#think|ねがえりをうつと、となりにぶつかっちゃうんだ。','もうすこし、ひろびろしたいな。']]);

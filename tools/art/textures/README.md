@@ -30,3 +30,8 @@
   取ってきた所：GitHub にある写し（eikrt/gemstone の `res/textures/Ice003_1K-PNG/Ice003_1K_Color.png`）。512×512 に BOX でちぢめた。
 - `rocks023.png`：ambientCG「Rocks023」の色の絵（https://ambientcg.com/view?id=Rocks023 、CC0 1.0）。洞窟の化石の階の、小石の地面（チップ `cave:pebble`）。
   取ってきた所：GitHub にある写し（db0/Fragment-Forge の `shaders/textures/cc0textures/Rocks023_1K_Color.jpg`）。512×512 に BOX でちぢめて PNG に。
+
+### 水路の水面
+
+- `water-h6-generated.png` は H-6 用に画像生成で作った水のテクスチャ。外部素材は使用していない。
+- `tools/art/handoff3d/canal.py` で明るさを取り出し、上下左右の端を重ねて、水の透けと岸の映り込みの間に使う。

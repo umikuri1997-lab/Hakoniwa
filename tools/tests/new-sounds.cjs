@@ -1,10 +1,10 @@
 /* 手もとの音（本物の録音）：ひろった物の音（材質ごと）・はしご・弓・きのこ・水やりのつづく音・畑の動き・ちょう・図鑑・ボタンでない所のタップ・コワイノの足音・流れ星 */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await boot();
-await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume()})()`);
+await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume();if(sheet)closeSheet()})()`);/* まん中の御神木をクリックしてひらいた画面をとじる（ひらいたままだと村が止まり、音が鳴らない） */
 await page.waitForFunction(()=>sacredEval(`AC.state==='running'&&['ladder','bowdraw','tpuni','loomk','shutl','cv_chou','midnight','tsoil','twood','tgrass','tstone','pourw','tillhit','starkira','fgrass','knockw','tink','tbell','slip'].every(k=>(SBUF[k]||[]).some(Boolean))`),{},{timeout:30000});
 const out=await run(`(()=>{const o={},name=b=>{for(const k in SBUF)if((SBUF[k]||[]).includes(b))return k;return'?'},L=[];const st=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...a){L.push(name(this.buffer));return st.apply(this,a)};
- const n=k=>L.filter(x=>x===k).length,clr=()=>{L.length=0;for(const k in lastSfx)delete lastSfx[k]};const r=S.res[0];r.nap=false;RHOLD.set(r,0);S.enemies=[];
+ const n=k=>L.filter(x=>x===k).length,clr=()=>{L.length=0;LOWL.length=0;for(const k in lastSfx)delete lastSfx[k]}/* 前の音がまだ鳴っていることにしない（うしろの音は同時に LOWN こまで） */;const r=S.res[0];r.nap=false;RHOLD.set(r,0);S.enemies=[];
  const cx=Math.floor(cam.x/TS+VW/cam.z/TS/2),cy=Math.floor(cam.y/TS+VH/cam.z/TS/2);r.x=cx+.5;r.y=cy+.5;
  /* ひろった物：材質の録音 */
  for(const[id,k]of[['mat:wood','twood'],['mat:eda','twood'],['mat:stone','tstone'],['mat:shina','tgrass'],['mat:can','tcan'],['mat:nuno','tcloth'],['food:berry','tgrass'],['food:fish','twater']]){clr();itemSnd(id);o['pick '+id]=itemMat(id)===k&&n(k)>=1&&n('seed')===0}

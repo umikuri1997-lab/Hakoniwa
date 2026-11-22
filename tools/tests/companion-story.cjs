@@ -109,7 +109,7 @@ console.log('First attribute summons: story gate, pending dialogue, repeat resid
 const acts=fs.readFileSync(path.join(root,'js/spirit-act.js'),'utf8');
 const morning=acts.slice(acts.indexOf('const AREAW='),acts.indexOf('function takenokoMorning'));
 const d=vm.createContext({console});
-vm.runInContext(`const W=108,H=108;let WD=0,day=1;const RFC=new Set(),RUGC=new Set(),REV=new Set(),WEEDS=new Set(['weed0g','weed0k','weedc','kinoko']);const pick=a=>a[Math.floor(Math.random()*a.length)],dayNo=()=>day;let S={ground:Array(W*H).fill(0),obj:Array(W*H).fill(''),floor:Array(W*H).fill(''),drops:[]};`,d);
+vm.runInContext(`const W=108,H=108;let WD=0,day=1;const RFC=new Set(),RUGC=new Set(),REV=new Set(),WEEDS=new Set(['weed0g','weed0k','weedc','kinoko']),weedSt=()=>WD===1?1:0;const pick=a=>a[Math.floor(Math.random()*a.length)],dayNo=()=>day;let S={ground:Array(W*H).fill(0),obj:Array(W*H).fill(''),floor:Array(W*H).fill(''),drops:[]};`,d);
 vm.runInContext(morning,d);
 for(const green of [false,true]){
   vm.runInContext(`S.obj.fill('');REV.clear();${green?'for(let j=0;j<W*H;j++)REV.add(j);':''}day=1;weedMorning();day=2;weedMorning();`,d);

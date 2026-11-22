@@ -1,9 +1,10 @@
 'use strict';
 
 /* ---------- カメラ・入力 ---------- */
+const ZMAX=3,ZRUB=.1,ZBACKS=.2;let ZBACK=null;/* ズームのはしの手ごたえ（下の zoomRubber） */
 function minZ(){return Math.max(.3,Math.min(VW/(W*TS),VH/(H*TS)))}
-function clampCam(){if(typeof caveOn==='function'&&caveOn())return caveClamp();/* 洞窟のあいだは、カメラはパーティを追う（cave.js） */
-  cam.z=clamp(cam.z,minZ(),3);
+function clampCam(look){if(typeof caveOn==='function'&&caveOn())return caveClamp(look);/* 洞窟のあいだは、カメラはパーティを追う（cave.js） */
+  {const rb=ZBACK||gest&&gest.type==='pinch';cam.z=clamp(cam.z,minZ()*(rb?1-ZRUB:1),rb?ZMAX*(1+ZRUB):ZMAX)}/* ピンチ中・もどるあいだだけ、はしをこえてよい */
   const vw=VW/cam.z,vh=VH/cam.z;
   cam.x=vw>=W*TS?(W*TS-vw)/2:clamp(cam.x,-40,W*TS-vw+40);
   cam.y=vh>=H*TS?(H*TS-vh)/2:clamp(cam.y,-80,H*TS-vh+(performance.now()<(window.BOSSCAM||0)?vh/2+120:120));/* オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に */
@@ -23,31 +24,50 @@ const ptrs=new Map();let gest=null;
 cv.addEventListener('pointerdown',e=>{
   if(!started)return;if(!(camAnim&&camAnim.done))camAnim=null;/* 演出のカメラ（おわりの処理つき）は、さわっても止めない（止めると、おわりの処理がよばれず、ゲームが止まったままになる） */
   cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});
-  if(ptrs.size===1)gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};
+  if(ptrs.size===1){gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};if(FLING&&Math.hypot(FLING.vx,FLING.vy)>FLINGSTOP)gest.stopTap=1;/* すべっている地図をおさえて止めたタップは、タップにしない */gest.grab=grabAt(cX(e),cY(e));FLING=null}
   else if(ptrs.size===2){const[p,q]=[...ptrs.values()];gest={type:'pinch',d:Math.hypot(p.x-q.x,p.y-q.y),z:cam.z,mid:toWorld((p.x+q.x)/2,(p.y+q.y)/2)};if(selRect&&!pending)selRect=null}
+  if(ptrs.size===1&&mode==='bulk'&&selStamp==='pick')pickDown(cX(e),cY(e));else pickCancel();/* かたちの筆：長おしでほる・タップでつむ */
 });
 cv.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});if(!gest)return;
-  if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=clamp(gest.z*d/gest.d,minZ(),3);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;cam.x=gest.mid.x-mx/cam.z;cam.y=gest.mid.y-my/cam.z;clampCam();return}
+  if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=zoomRubber(gest.z*d/gest.d);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;gest.mx=mx;gest.my=my;cam.x=gest.mid.x-mx/cam.z;cam.y=gest.mid.y-my/cam.z;clampCam(1);return}
   const dx=cX(e)-gest.sx,dy=cY(e)-gest.sy;
   if(gest.type==='maybe'&&Math.hypot(dx,dy)>8){
     const k=BL[sel]&&BL[sel].kind;
-    if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=toWorld(gest.sx,gest.sy),t0=tapLv(w0.x,w0.y);leafAdd(Math.floor((w0.y+(t0?t0*LIFT:0))/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
+    if(gest.grab)gest.type='grab';/* 置く前の家具の絵をつまんで、ずらす */
+    else if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=toWorld(gest.sx,gest.sy),t0=tapLv(w0.x,w0.y);leafAdd(Math.floor((w0.y+(t0?t0*LIFT:0))/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
     else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=toWorld(gest.sx,gest.sy);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
-    else gest.type='pan'}
-  if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */cam.x=gest.cx-dx/cam.z;cam.y=gest.cy-dy/cam.z;clampCam()}
+    else{gest.type='pan';pickCancel()}}
+  if(gest.type==='grab'){grabMove(cX(e),cY(e));return}
+  if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */cam.x=gest.cx-dx/cam.z;cam.y=gest.cy-dy/cam.z;clampCam(1);const t=performance.now(),V=gest.vs||(gest.vs=[]);V.push({t,x:cX(e),y:cY(e)});while(V.length>2&&t-V[0].t>FLINGWIN)V.shift()}/* 指の速さ（はなしたときの慣性） */
   if(gest.type==='leaf'){const w=toWorld(cX(e),cY(e)),tl=tapLv(w.x,w.y);leafAdd(Math.floor((w.y+(tl?tl*LIFT:0))/TS)*W+Math.floor(w.x/TS));return}
   if(gest.type==='rect'){let w=toWorld(cX(e),cY(e));{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
 });
+/* 地図の慣性：はなしたときの指の速さで、すこしすべってから止まる（画面の点／秒。FLINGK は1秒でのこる速さのわりあいの対数） */
+let FLING=null;const FLINGWIN=90,FLINGMIN=180,FLINGMAX=2600,FLINGK=5.5,FLINGSTOP=40;
+function flingStart(V){FLING=null;if(!V||V.length<2||typeof uiReduced==='function'&&uiReduced())return;const a=V[0],b=V[V.length-1],dt=b.t-a.t;if(dt<16||performance.now()-b.t>60)return;/* 止めてからはなしたら、すべらない */let vx=(b.x-a.x)/dt*1000,vy=(b.y-a.y)/dt*1000;const v=Math.hypot(vx,vy);if(v<FLINGMIN)return;if(v>FLINGMAX){vx*=FLINGMAX/v;vy*=FLINGMAX/v}FLING={vx,vy}}
+function flingTick(rdt){zoomBackTick(rdt);const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y,ex=cam.x-F.vx*rdt/cam.z,ey=cam.y-F.vy*rdt/cam.z;cam.x=ex;cam.y=ey;clampCam(1);if(Math.abs(cam.x-ex)>.01)F.vx=0;if(Math.abs(cam.y-ey)>.01)F.vy=0;/* はしについたら、その向きは止める */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
+/* ズームのはし：いちばん大きく・小さくしたあとも、少しだけ（ZRUB）手ごたえをのこしてのび、はなすと ZBACKS 秒でもどる */
+function zoomRubber(z){const mn=minZ();if(z>ZMAX)return ZMAX*(1+ZRUB*(1-1/(1+Math.log(z/ZMAX)*3)));if(z<mn)return mn*(1-ZRUB*(1-1/(1+Math.log(mn/z)*3)));return z}
+function zoomSettle(mx,my){const mn=minZ(),to=clamp(cam.z,mn,ZMAX);if(Math.abs(to-cam.z)<1e-4){clampCam(1);return}if(mx==null){mx=VW/2;my=VH/2}if(typeof uiReduced==='function'&&uiReduced()){const w=toWorld(mx,my);cam.z=to;cam.x=w.x-mx/cam.z;cam.y=w.y-my/cam.z;clampCam(1);return}ZBACK={fz:cam.z,tz:to,t:0,mx,my,w:toWorld(mx,my)}}
+function zoomBackTick(rdt){const B=ZBACK;if(!B)return;if(!S||camAnim||ptrs.size>=2){ZBACK=null;return}B.t+=rdt;const k=Math.min(1,B.t/ZBACKS),e=1-Math.pow(1-k,3);cam.z=B.fz+(B.tz-B.fz)*e;cam.x=B.w.x-B.mx/cam.z;cam.y=B.w.y-B.my/cam.z;clampCam(1);if(k>=1)ZBACK=null}
+/* 置く前の家具の絵（pending）を、指でつまんでマスごとにずらす */
+function grabTile(sx,sy){const w=toWorld(sx,sy),tl=tapLv(w.x,w.y);return{x:Math.floor(w.x/TS),y:Math.floor((w.y+(tl?tl*LIFT:0))/TS)}}
+function grabAt(sx,sy){const p=pending;if(mode!=='build'||!p||p.kind!=='one'||p.id==='statue')return null;const z=szR(p.id,PLROTS[p.id]||0)||[1,1],t=grabTile(sx,sy),ox=t.x-p.x,oy=t.y-p.y;return ox>=0&&oy>=0&&ox<z[0]&&oy<z[1]?{ox,oy}:null}
+function grabMove(sx,sy){const p=pending,g=gest&&gest.grab;if(!p||p.kind!=='one'||!g)return;const t=grabTile(sx,sy),nx=clamp(t.x-g.ox,0,W-1),ny=clamp(t.y-g.oy,0,H-1);if(nx===p.x&&ny===p.y)return;p.x=nx;p.y=ny;p.ok=canPlace(p.id,nx,ny,true);confirmOne();sfx('notch');dirty=true}
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
-  if(gest&&gest.type==='maybe'&&e.type==='pointerup')onTap(cX(e),cY(e));
+  if(gest&&gest.type==='maybe'&&e.type==='pointerup'&&mode==='bulk'&&selStamp==='pick'){pickUp();gest=null;return}/* かたちの筆 */
+  pickCancel();
+  if(gest&&gest.type==='maybe'&&e.type==='pointerup'){if(!gest.stopTap)onTap(cX(e),cY(e))}
+  else if(gest&&gest.type==='pan'&&e.type==='pointerup'&&!ptrs.size)flingStart(gest.vs);
   else if(gest&&gest.type==='rect'&&selRect)askBulk(sel,rectCells(selRect.a,selRect.b));
   else if(gest&&gest.type==='leaf'){const c=LEAFDRAG;LEAFDRAG=null;leafPlace(c)}
+  if(gest&&gest.type==='pinch')zoomSettle(gest.mx,gest.my);/* はしをこえてピンチしたら、もどる */
   if(ptrs.size===1){const p=[...ptrs.values()][0];gest={type:'pan',sx:p.x,sy:p.y,cx:cam.x,cy:cam.y}}else if(!ptrs.size)gest=null;
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
-cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=toWorld(cX(e),cY(e));cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-cX(e)/cam.z;cam.y=w.y-cY(e)/cam.z;clampCam()},{passive:false});
+cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;FLING=null;const w=toWorld(cX(e),cY(e));cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-cX(e)/cam.z;cam.y=w.y-cY(e)/cam.z;clampCam(1)},{passive:false});
 
 const bubHit=(r,w)=>r.bubX!=null&&Math.abs(r.bubX-w.x)<33&&Math.abs(r.bubY-w.y)<33;/* 描いた吹き出しをタップ（遊具の上で遊ぶ子は、描く場所がr.x,r.yとずれる） */
 const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
@@ -81,7 +101,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
   return openSheet('clear');
 }
 /* 「みる」でタップした物の音：材質で分ける（木・石・金物・布・植物・畑や地面・水。御神木と切り株は太い木の音、神殿と台座は石） */
-let TAPPEND=0;const TAPCLOTH=new Set(['nuno','wool','shina','kasa','kuru','chiri','funba']),TAPMETAL=new Set(['can','icopper','iiron','isilver','igold']),TAPHOLY=new Set(['statue','statueb','altar','tower']),TAPNATW=new Set(['tree','ntree','deadtree','fruit','bamboo','takenoko']),TAPNATS=new Set(['rock','boulder','volcano','crack']);
+let TAPPEND=0;const TAPCLOTH=new Set(['nuno','wool','shina','kasa','kuru','chiri','funba','nabiki','houki','kumowata','hane','ashi','gama','yotsuyu','kagekusa']),TAPMETAL=new Set(['can','icopper','iiron','isilver','igold']),TAPHOLY=new Set(['statue','statueb','altar','tower']),TAPNATW=new Set(['tree','ntree','deadtree','fruit','bamboo','takenoko']),TAPNATS=new Set(['rock','boulder','volcano','crack']);
 function tapMatOf(o){if(o==='tower')return WD===0?'tsacred':'tstone';/* 草原は御神木（木）、火山は守護の台座（石） */if(TAPHOLY.has(o))return 'tstone';if(TAPNATS.has(o))return 'tstone';if(TAPNATW.has(o))return 'twood';const b=BL[o];if(!b)return null;if(b.kind==='plant'||o==='berry')return 'tgrass';if(o==='farm'||o==='plot'||o==='sprout')return 'tsoil';
   let w=0,st=0,cl=0,me=0;for(const k in b.mat||{}){const n=b.mat[k];if(TAPCLOTH.has(k))cl+=n;else if(TAPMETAL.has(k))me+=n;else if(k==='stone')st+=n;else w+=n}
   if(b.mat&&b.mat.nuno||b.mat&&b.mat.wool||cl>w+st+me)return 'tcloth';if(me>w&&me>=st)return 'tcan';if(st>w)return 'tstone';return 'twood'}
@@ -89,7 +109,7 @@ function tapSnd(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return;const g=ty*W+tx,j=anc(
   let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(skyJ(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else k=footMat(tx+.5,ty+.5)||'fsoil'}/* 地面・床：その場所の足音の録音 */
   if(!k)return;const t0=performance.now();TAPPEND=t0;setTimeout(()=>{if(TAPPEND===t0){TAPPEND=0;if(TAPMAT<t0)sfx(k)}},0)}/* ほかの物の音（神殿・宝箱など）が同じタップで鳴ったら、そちらだけ */
 function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,sy);/* 洞窟の探検（cave.js） */if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap(sx,sy))return;if(typeof letterTap==='function'&&letterTap(sx,sy))return;/* とどいた手紙のふうとう *//* 流れ星そのものをタップしたら、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* しらべるでタップしたところに、葉（火山は火の粉）が舞う */
-  let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
+  let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */if(mode==='look'&&yamiTap(w0.x/TS,w0.y/TS,tx,ty))return;if(mode==='look'&&typeof ngTap==='function'&&ngTap(tx,ty))return;if(mode==='look'&&typeof hapTap==='function'&&hapTap(tx,ty))return;/* ときどき起きるできごと（happen.js） *//* 夜のたからさがし：光るつぶ（nightglow.js） *//* 闇のステージ：ヨリ・夜の仕事のあと（yami.js） */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
   if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
@@ -117,7 +137,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(best&&best.act&&best.act.type==='outing'&&best.act.stage==='do'&&typeof outingTalk==='function'&&outingTalk(best))return;/* おでかけ中の2人：会話を見る（outing.js） */
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const ti=best.act.topic,C=CHATS[ti];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c)).replace(/@G/g,goneTalkName()||'あの子')]}),()=>{if(C.wave){A.waveU=B.waveU=S.t+4}if(C.mem)bondMemNote(A,B,ti)})}}/* なかよしの雑談は、さいごまで見たら思い出になる（消えたときに話す） *//* おしゃべり中の子をタップすると、会話が見られる */
     if(!best){const an=typeof aniAtTap==='function'&&aniAtTap(w.x/TS,w.y/TS);if(an){sfx('tani');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
-    if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
+    if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);if(typeof tapReact==='function')tapReact(best);/* タップした子が、こちらを見て、ぴょん（draw-spirits.js） */return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
     tapSnd(tx,ty);
     if(RUINT>=0&&S.obj[RUINT]==='statueb'){const px=w.x/TS-RUINT%W,py=w.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
@@ -132,7 +152,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;
-      if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k==='a'&&WD===1&&yumomiTap())return;/* 湯もみ（シズクのおねがい） */if(k){if(!S.flags.sprLook){S.flags.sprLook=true;checkQuest()}return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
+      if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k==='a'&&WD===1&&yumomiTap())return;/* 湯もみ（シズクのおねがい） */if(k){sprLookTap(k);return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
       if(o==='volcano'){if(!S.flags.volLook){S.flags.volLook=true;checkQuest()}return toast('火山：ふもとから、熱の道が村へのびている')}
       if(o==='heatv')return openSheet('heatv',j);
       if(o==='kaeribi'){sfx('twood');return toast(kgrLampTxt())}

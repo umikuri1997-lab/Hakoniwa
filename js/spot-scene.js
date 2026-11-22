@@ -7,7 +7,7 @@ let SPOTSCN=null;/* いまの場面 {cam,back,ok} */
 const SPOTSCN_POP=260,SPOTSCN_MAX=8;/* 物が1つずつ光る間（ミリ秒）・光らせる物の数 */
 const SPOT_CONF=['#ffd76a','#ff9fb5','#9fd8ff','#b6eb8f','#fff6c8','#d9b3ff'];/* 紙ふぶきの色（明るくやわらかい色） */
 function spotSceneBox(I){const C=spotCells(I);let x0=W,y0=H,x1=0,y1=0;for(const q of C){const x=q%W,y=(q/W)|0;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
-  const z=hiAt(I.j)*LIFT,seen=new Set(),A=[];for(const q of[I.j,...I.found.flat()]){const a=anc(q);if(seen.has(a))continue;seen.add(a);A.push(a)}A.sort((a,b)=>(a%W)-(b%W)||a-b);
+  const z=liftOf(I.j),seen=new Set(),A=[];for(const q of[I.j,...I.found.flat()]){const a=anc(q);if(seen.has(a))continue;seen.add(a);A.push(a)}A.sort((a,b)=>(a%W)-(b%W)||a-b);
   return{x0,y0,x1,y1,z,A:A.slice(0,SPOTSCN_MAX),X:x0*TS-4,Y:y0*TS-4-z,Wd:(x1-x0+1)*TS+8,Hd:(y1-y0+1)*TS+8}}
 SCN_DRAW.spotline=(e,t,now)=>{/* かこみ：はじめ e.run のわりあいで、まわりを1周はしって描かれる。そのあとは、点線がゆっくりまわる */
   const{X,Y,Wd,Hd}=e,P=2*(Wd+Hd),run=Math.min(1,t/e.run),L=P*sacredEase(run),a=scnEnv(t,.02,.08),pt=d=>{d=((d%P)+P)%P;return d<Wd?[X+d,Y]:d<Wd+Hd?[X+Wd,Y+d-Wd]:d<2*Wd+Hd?[X+Wd-(d-Wd-Hd),Y+Hd]:[X,Y+Hd-(d-2*Wd-Hd)]};

@@ -12,7 +12,7 @@ import oblique3d as O
 from blueprint import Part as P
 TRIPO=os.path.join(HERE,'tripo')
 # 一覧で写す高さ（マス）。ゲームでよく使う大きさのめやす
-SIZE={'nat_tree':1.9,'nat_deadtree':1.4,'nat_bush':0.62,'nat_cedar':2.0,'nat_cedar2':2.6,'nat_kinoko0':0.55,'nat_kinoko1':0.42,'nat_kinoko2':0.55,'oak':2.4,'oak_dead':2.2,'cedar':2.6,'maple':2.2,'acacia':2.0,'appletree':2.0,'bamboo':2.2,'berrybush':0.7,'rock':0.5,
+SIZE={'nat_tree':1.9,'nat_deadtree':1.4,'nat_bush':0.62,'nat_cedar':2.0,'nat_cedar2':2.6,'nat_acacia':1.8,'nat_oak':1.9,'nat_maple':1.8,'nat_deadoak':1.7,'nat_kinoko0':0.55,'nat_kinoko1':0.42,'nat_kinoko2':0.55,'oak':2.4,'oak_dead':2.2,'cedar':2.6,'maple':2.2,'acacia':2.0,'appletree':2.0,'bamboo':2.2,'berrybush':0.7,'rock':0.5,
       'rosevine':1.0,'rose':0.25,'roseleaf':0.3,'takenoko':0.35,'clover':0.25,'bellflower':0.45,'salvia':0.45,'lily':0.5,'lotus':0.35,
       'mushrooms':0.3,'grass':0.35,'grass2':0.35,'plant':0.6,'sack':0.5,'sacks2':0.6,'jar_band':0.5,'terracotta':0.5,'candle':0.3,
       'lantern':0.45,'wateringcan':0.35,'veggies':0.3,'bathtub':0.6,'cutboard':0.2,'bird':0.2,

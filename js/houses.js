@@ -3,9 +3,9 @@
 const houseRes=h=>S.res.filter(r=>h.set.has((r.y|0)*W+(r.x|0)));
 const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
-const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
-const COMFY={oldlantern:6,doki:6,rel_kui:5,rel_suisho:5,rel_bin:5,rel_nafuda:5,rel_sekiban:5,rel_fuigo:5,rel_suzu:5,g_ishitsumi:6,g_donguri:5,g_shizuku:6,g_hidamari:6,g_kazaguruma:4,g_kabin:8,g_oshibana:8,g_kaifun:8,g_post:6,g_penzukue:8,g_ishibench:6,g_happasofa:8,g_suisou:12,g_danro:12,g_hammock:6,cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,dtable:12,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
-const DECAYW=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
+const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,tanpopo:1,ayame:1,tsukimi:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
+const COMFY={rel_kui:5,rel_suisho:5,rel_bin:5,rel_nafuda:5,rel_sekiban:5,rel_fuigo:5,rel_suzu:5,gekkolamp:5,hotarukago:4,shitone:8,tsukimidai:6,terraceseat:6,madobachi:6,canallamp:5,araiba:5,shimahammock:6,fusenya:6,kagoisu:5,kazakadan:4,kazelamp:5,oldlantern:6,doki:6,g_w_kinoko:6,g_w_acorn:5,g_w_clover:8,g_w_shelf:8,g_w_stump:10,g_e_planter:6,g_e_lantern:5,g_e_bath:8,g_e_arch:8,g_e_geode:12,g_f_hanger:6,g_f_lamp:5,g_f_table:8,g_f_screen:8,g_f_sofa:12,g_k_fan:4,g_k_egg:6,g_k_screen:8,g_k_chest:6,g_s_jelly:5,g_s_vanity:6,g_s_table:8,g_s_tank:10,g_s_sofa:12,cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,dtable:12,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
+const DECAYW=new Set(['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
 const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
 function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa=(o,v)=>{PT[o]=(PT[o]||0)+v};/* PT：家具ごとの点（住み心地のくわしい計算 comfyPop で出す） */
@@ -19,12 +19,12 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa
   let rs=0;const RS=[];for(const[k,p]of[['shosai',.1],['living',.1],['dinroom',.05],['daidokoro',.05],['nedoko',.05]])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]))){rs+=p;RS.push([k,p])}/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+10%、ダイニング・だいどころ・ねどこ：+5% */
   let webs=0;if(S.web)for(const j of h.inside)if(S.web[j]!=null)webs++;/* クモの巣 */
   const bp=typeof bpHouseName==='function'&&bpHouseName(h)?BPCOMF:0,pc=typeof pathA==='function'?pathA('comf'):0,flp=(n?fl/n:0)*45;
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+bp+pc+Math.min(210,furn)+flp-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
-  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs,why:{bp,pc,furn,PT,kc,fl,n,flp,rs,RS}}}
+  const ev=S.evComf&&dayNo()<S.evComf&&typeof EVCOMF!=='undefined'?EVCOMF:0;/* 大そうじのあと（ev-show.js） */const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+bp+pc+ev+Math.min(210,furn)+flp-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
+  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs,why:{bp,pc,ev,furn,PT,kc,fl,n,flp,rs,RS}}}
 
 
 
-const LIGHTF=new Set(['g_donguri','g_danro','torch','lamp','lantern','oldlantern','candle','flamp','yomawari','toro','takeakari','andon']);/* 灯りになる家具 */
+const LIGHTF=new Set(['g_w_acorn','g_e_lantern','g_f_lamp','g_s_jelly','torch','lamp','lantern','oldlantern','candle','flamp','yomawari','toro','takeakari','andon']);/* 灯りになる家具 */
 // すきな家具：その家具が家にあると、そのせいれいにとっての住み心地が上がる（名前から決まる）
 const LIKEF=['rockart','jar','vane','bench','table','torch','candle','lantern','sofa1','achair','rug1','monstera','shelf1','paint1','curtain1','birdbath','parasol','stool','pouf'];
 /* 新しいせいれいが来たときのひとこと。性格：木=げんき・土=のんびり・火=らんぼう（あねご／あにき）・水=知的・風=キザで自由人 */
@@ -61,7 +61,7 @@ const DEATHL={wood:n=>[n+'が…！','…でも、だいじょうぶ。',backWhe
 function elemKey(r){if(KEYVR[r.name]&&KEYVR[r.name].pk)return KEYVR[r.name].pk;let h=0;for(const ch of r.name)h=(h*17+ch.charCodeAt(0))>>>0;return r.elem==='fire'?(WD===0?'fireB':h%2?'fireA':'fireB'):r.elem==='wind'?'wind':r.elem}/* 火のせいれいは名前で、あねご／あにき。風のせいれいは1つ（キザで自由人） */
 function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray'))return 'さみしいなぁ…';/* お墓へ向かう・埋葬するあいだ、タップしたときのひとこと */
-  if(r.hunger<300)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
+  if(r.hunger<150)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
   if(isNight()&&S.enemies.some(e=>e.spawned&&!e.dead))return r.elem==='fire'?'「コワイノ」なんて、こわくない！':fighter(r)?'こわいけど、村をまもるよ！':'「コワイノ」、こわいね…';
   if(BOXL.length&&S.food<3)return '箱の食べ物が、もうすぐからっぽだよ';
   if((r.cryU||0)>S.t)return 'さみしいなぁ…';
@@ -166,7 +166,7 @@ function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使
     {const rc=S&&S.roofCol&&S.roofCol[hKey(h)],P=rc&&ROOFCOL[rc];if(P)roofTint(c,cv,P)}/* 屋根の色（村レベル13から、家をタップしてえらぶ） */
     return{cv,ox,oy,sc,chim}}}
 function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
-  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);if(typeof feelRoof==='function')feelRoof(c,h,R,A);if(typeof feelRoofWet==='function')feelRoofWet(c,h,R,A);/* 冬：屋根の雪 */
+  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);dcRoof(c,h,R,A);/* 屋根の層の色（daycolor.js） */c.globalAlpha=A;if(typeof feelRoof==='function')feelRoof(c,h,R,A);if(typeof feelRoofWet==='function')feelRoofWet(c,h,R,A);/* 冬：屋根の雪 */
     if(!R.chim||eo)continue;const cx=R.chim.cx,cy=R.chim.cy;
     c.fillStyle='#8f8f8f';c.fillRect(cx-7,cy-10,14,18);
     for(let r=0;r<3;r++)for(let k=0;k<2;k++){c.fillStyle=(r+k)%2?'#b8b8b8':'#acacac';c.fillRect(cx-6+k*6.5+(r%2?-2:0),cy-9+r*5.6,6,4.8)}
@@ -181,22 +181,30 @@ const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),..
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
+const GRR=12,GRT=.5,GRRIM=.07,GRSH=.06,GRWOB=1.6;/* 草地とあれ地のさかい（あつ森より）：草地のマスの形を、はば GRR ドットの箱でぼかして、こさ GRT でくぎる（角は丸く）。草地のふち GRRIM はこい緑、あれ地がわ GRSH はうすいかげ。GRWOB はさかいのうねり */
+function grassRound(sc,gt,X0,Y0,X1,Y1){/* 草地を、まわりのマスと高さ・水を見て、丸い形でしく。まわりがぜんぶ同じ（草地か、あれ地）のマスは、マスまるごと */
+  const G=k=>REV.has(k)&&S.ground[k]!==1,ok=(x,y)=>x>=0&&y>=0&&x<W&&y<H,w1=(u,a)=>a<0?Math.max(0,GRR-u)/(2*GRR):a>0?Math.max(0,u+GRR-TS)/(2*GRR):(Math.min(u+GRR,TS)-Math.max(u-GRR,0))/(2*GRR);
+  let T=null,tg=null;
+  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]===1)continue;const h0=hiAt(i),g0=G(i),px=x*TS,py=y*TS;let mix=false;const nb=[];
+    for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!ok(x+a,y+b))continue;const k=(y+b)*W+x+a;if(S.ground[k]===1||hiAt(k)!==h0)continue;/* 水・高さのちがうマスは見ない（がけのさかいは、まっすぐのまま） */const gg=G(k);nb.push([a,b,gg?1:0]);if(gg!==g0)mix=true}
+    if(!mix){if(g0)sc.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,px,py,TS,TS);continue}
+    if(!T){T=document.createElement('canvas');T.width=T.height=TS;tg=T.getContext('2d')}tg.clearRect(0,0,TS,TS);tg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,0,0,TS,TS);const id=tg.getImageData(0,0,TS,TS),d=id.data;
+    for(let v=0;v<TS;v++)for(let u=0;u<TS;u++){let n=0,m=0;for(const[a,b,gg]of nb){const wt=w1(u+.5,a)*w1(v+.5,b);m+=wt;n+=wt*gg}const f=(m?n/m:g0)+wNoise(px+u,py+v)*GRWOB,q=(v*TS+u)*4;
+      if(f>=GRT+GRRIM){continue}if(f>=GRT){d[q]=d[q]*.78|0;d[q+1]=d[q+1]*.84|0;d[q+2]=d[q+2]*.74|0;continue}/* 草地のふち：こい緑 */
+      if(f>=GRT-GRSH){d[q]=40;d[q+1]=46;d[q+2]=24;d[q+3]=38;continue}d[q+3]=0}/* あれ地がわ：草のかげ */
+    tg.putImageData(id,0,0);sc.drawImage(T,px,py)}
+  if(T)T.width=T.height=0}
 function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
   if(WD===0){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：224×224のテクスチャを、マップの位置どおりにしきつめる */
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
-  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%GRTEX,y%GRTEX,TS,TS,x,y,TS,TS)}
+  const gt=chipImgs(C['tex:grass'],'ground')[0];grassRound(sc,gt,X0,Y0,X1,Y1);
   {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
     const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%GRTEX,ry%GRTEX,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%DRTEX,ry%DRTEX,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
       const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
       if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
       if(!L&&!U&&x>0&&y>0&&land(i-W-1))put(i-W-1,px,py,h2,h2);if(!R&&!U&&x<W-1&&y>0&&land(i-W+1))put(i-W+1,px+h2,py,h2,h2);if(!L&&!D&&x>0&&y<H-1&&land(i+W-1))put(i+W-1,px,py+h2,h2,h2);if(!R&&!D&&x<W-1&&y<H-1&&land(i+W+1))put(i+W+1,px+h2,py+h2,h2,h2)}}
-  {/* 草とあれ地のさかい：あぜ道のふちと同じ。あれ地のマスの、草地がわのふちに、草のふちの絵（fringeg）をかさねる（となりの草地からはみ出す草）。ななめだけ草地の角には、角の絵 */
-    const G=k=>REV.has(k)&&S.ground[k]!==1/* 水のマスからは草をはみ出させない */,open=k=>!REV.has(k)&&S.ground[k]!==1;
-    for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(!open(i))continue;const hi0=hiAt(i),g=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&G(i+dy*W+dx)&&hiAt(i+dy*W+dx)===hi0,/* 高さのちがう草地からは、はみ出さない */u=g(0,-1),d=g(0,1),l=g(-1,0),r=g(1,0),px=x*TS,py=y*TS;
-      if(!(u||d||l||r||g(-1,-1)||g(1,-1)||g(1,1)||g(-1,1)))continue;const sh=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&hiAt(i+dy*W+dx)===hi0,m=4;sc.save();sc.beginPath();sc.rect(px-(sh(-1,0)?m:0),py-(sh(0,-1)?m:0),TS+(sh(-1,0)?m:0)+(sh(1,0)?m:0),TS+(sh(0,-1)?m:0)+(sh(0,1)?m:0));sc.clip();/* 草のふちの絵はマスの外へ少しはみ出すので、高さのちがうとなりのマスには出さない */
-      if(u)dc('fringeg:U',px,py,i);if(d)dc('fringeg:D',px,py,i);if(l)dc('fringeg:L',px,py,i);if(r)dc('fringeg:R',px,py,i);
-      if(!u&&!l&&g(-1,-1))dc('fringeg:c0',px,py,i);if(!u&&!r&&g(1,-1))dc('fringeg:c1',px,py,i);if(!d&&!r&&g(1,1))dc('fringeg:c2',px,py,i);if(!d&&!l&&g(-1,1))dc('fringeg:c3',px,py,i);sc.restore()}}}/* 草とあれ地のさかい */
+}/* 草とあれ地のさかいは grassRound（丸い形と草のふち） */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
 function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物を、マス(X0,Y0)〜(X1,Y1)のはんいだけ描く */const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};
@@ -240,6 +248,8 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
   if(BL[id]&&BL[id].g)return gearIcon(id);/* そうび・矢：ドット絵 */
   if(iconCache[id])return iconCache[id];
+  if(id==='blk_soil'&&typeof ICONS!=='undefined'&&ICONS.tsuchi)return ICONS.tsuchi;/* 土のブロック：土のアイコン */
+  if(typeof CUBES!=='undefined'&&CUBES.includes(id)){const T=cubeTex(id);if(!T)return '';const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(T,0,0,64,40,8,6,128,80);g.drawImage(T,0,0,64,26,8,86,128,52);g.fillStyle='rgba(48,34,24,.3)';g.fillRect(8,86,128,52);g.fillStyle='rgba(255,250,230,.5)';g.fillRect(8,86,128,2);const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u}/* つむブロック：上の面と正面を、そのまま2倍のドットで */
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
@@ -253,6 +263,10 @@ function toolIcon(k){
   if(k==='glass'){g.fillStyle='#8a5a33';g.fillRect(16,8,40,6);g.fillRect(16,58,40,6);g.fillStyle='#6d4424';g.fillRect(20,14,4,44);g.fillRect(48,14,4,44);
     g.fillStyle='rgba(200,235,255,.55)';g.beginPath();g.moveTo(24,14);g.lineTo(48,14);g.quadraticCurveTo(48,30,37,36);g.quadraticCurveTo(48,42,48,58);g.lineTo(24,58);g.quadraticCurveTo(24,42,35,36);g.quadraticCurveTo(24,30,24,14);g.fill();
     g.fillStyle='#ffcf4a';g.beginPath();g.moveTo(28,22);g.lineTo(44,22);g.lineTo(36,34);g.fill();g.beginPath();g.moveTo(36,40);g.lineTo(45,56);g.lineTo(27,56);g.fill();g.fillRect(35.5,34,1.5,8)}
+  else if(k==='fude'){/* かたちの筆（ドット絵、24×24のます目を3pxずつ）：白木の軸・うすい金の口金・光る穂先と、光のつぶ */
+    const M=['......................y.','.....................yhy','....................yhhy','...................yhhy.','..................yhhy..','.................yhhy...','................yhhy....','...............yhhy.....','..............yhhy......','.............yhhy.......','............ggy.........','...........gGGg.........','..........gGGg..........','.........bwwb...........','........bwwwb...........','.......bwWwb............','......bwWwb.............','.....bwWwb..............','....bWWwb...............','...bWWb.................','..bWb...........*.......','.bb.....................','.................*......','..*.....................'];
+    const C={y:'#d8c49a',h:'#f3e6c6',g:'#c9a24a',G:'#f2d77e',b:'#e8c86a',w:'#fff6d6',W:'#fffbe9','*':'#ffe9a8'};
+    for(let y=0;y<24;y++)for(let x=0;x<24;x++){const ch=M[y][x];if(C[ch]){g.fillStyle=C[ch];g.fillRect(x*3,y*3,3,3)}}}
   else if(k==='canal'){mzToolIcon(g)}
   else if(k==='scoop'||k==='dig'||k==='mound'){/* だんさスコップ・けずる・もる */if(k!=='scoop'){g.fillStyle='#8cc35c';g.fillRect(12,k==='dig'?30:20,48,8);g.fillStyle='#b08a5e';g.fillRect(12,k==='dig'?38:28,48,k==='dig'?20:30);g.fillStyle='#fff6df';g.beginPath();if(k==='dig'){g.moveTo(36,26);g.lineTo(24,10);g.lineTo(48,10)}else{g.moveTo(36,4);g.lineTo(24,18);g.lineTo(48,18)}g.fill()}else{g.save();g.translate(36,36);g.rotate(.6);g.fillStyle='#b07c50';rr(g,-3,-32,6,34,3);g.fillStyle='#9aa3ad';g.beginPath();g.moveTo(-11,2);g.lineTo(11,2);g.lineTo(9,22);g.quadraticCurveTo(0,30,-9,22);g.closePath();g.fill();g.restore()}}
   else if(k==='hake'){g.save();g.translate(36,36);g.rotate(-.7);g.fillStyle='#b07c50';rr(g,-5,-30,10,30,4);g.fillStyle='#8a5a33';g.fillRect(-5,-30,3,30);

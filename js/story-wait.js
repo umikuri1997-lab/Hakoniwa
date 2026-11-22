@@ -96,19 +96,20 @@ function mainStoryFocusTarget(){
   const report=S.qStory!=null,q=QUESTS[report?S.qStory:S.quest];if(!q)return null;
   if(q.id==='nushi'&&S.qTalked){const target=grassEndingFocusTarget();if(target)return target;}
   if(TALKW===GOD&&godHere()&&mainStoryBubbleReady())return{x:godX(),y:godY()-.8,w:3,h:3};
+  if(!report&&WD===0&&q.id==='statue'&&typeof RUINT!=='undefined'&&RUINT>=0&&S.obj[RUINT]==='statueb'){const z=BL.statueb.sz||[1,1];return{x:RUINT%W+z[0]/2,y:(RUINT/W|0)+z[1]/2-.5,w:z[0],h:z[1]}}/* はじめの目標：こわれた神殿の場所へ */
   if(q.field){
     if(!report&&(!S.qTalked&&!earthIntroCurrent()||S.qTalked&&!fieldStoryCurrent()))return null;
     fieldStoryEnsure(fieldActiveId(q));const j=S.sacredRoot;
     if(j!=null)return{x:storyTreeX(j),y:storyTreeY(j)-.3,w:sacredSpan(),h:sacredSpan()};
   }
-  if(!report&&S.qTalked&&q.id==='kagemark'&&S.flags.kgMark!=null&&!S.flags.kgLook){const k=S.flags.kgMark;return{x:k%W+.5,y:(k/W|0)+.5-hiAt(k)*LIFT/TS,w:3,h:2}}/* 大きなかげのあとをさがす：そのあとの場所へ */
-  if(!report&&q.id==='lv5'&&typeof printOn==='function'&&printOn()){const k=printFocus();if(k>=0)return{x:k%W+.5,y:(k/W|0)+.5-hiAt(k)*LIFT/TS,w:3,h:2}}/* ヌシ様の足あとをたどる：晴れている所の、まだたどっていない足あとへ */
+  if(!report&&S.qTalked&&q.id==='kagemark'&&S.flags.kgMark!=null&&!S.flags.kgLook){const k=S.flags.kgMark;return{x:k%W+.5,y:(k/W|0)+.5-liftOf(k)/TS,w:3,h:2}}/* 大きなかげのあとをさがす：そのあとの場所へ */
+  if(!report&&q.id==='lv5'&&typeof printOn==='function'&&printOn()){const k=printFocus();if(k>=0)return{x:k%W+.5,y:(k/W|0)+.5-liftOf(k)/TS,w:3,h:2}}/* ヌシ様の足あとをたどる：晴れている所の、まだたどっていない足あとへ */
   const p=mainStoryWaitInfo();if(!p)return null;const z=p.id&&BL[p.id]?szAt(p.id,p.obj)||[1,1]:[1,1];
   return{x:p.obj%W+z[0]/2,y:(p.obj/W|0)+z[1]/2-.5,w:z[0],h:z[1]};
 }
-function focusMainStoryPlace(){
+function focusMainStoryPlace(quiet){
   const target=mainStoryFocusTarget();if(!target)return false;
-  if(sheet)closeSheet();setMode('look');sfx('tap');
+  if(sheet)closeSheet();setMode('look');if(!quiet)sfx('tap');
   const top=Math.max(76,($('#topUI').getBoundingClientRect().bottom||64)+12),bottom=Math.max(top+80,($('#botUI').getBoundingClientRect().top||VH-80)-14);
   const z=Math.max(minZ(),Math.min(2.2,Math.max(cam.z,homeZ(),1.6),(VW-56)/((target.w+3)*TS),(bottom-top)/((target.h+4)*TS)));
   const ty=target.y*TS+(VH/2-(top+bottom)/2)/z;

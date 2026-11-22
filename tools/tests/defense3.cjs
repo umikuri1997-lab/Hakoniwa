@@ -1,14 +1,14 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-/* 守りのしくみ3（defense.js）：ねらう順・落とし穴の罠・季節のコワイノ・せいれいの大わざ・守りつづけた夜 */
+/* 守りのしくみ3（defense.js）：ねらう順・落とし穴の罠・季節のコワイノ・守りつづけた夜 */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/opt/pw-browsers/chromium')?'/opt/pw-browsers/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.dfEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.dfEval);
 await page.waitForFunction(()=>dfEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
-const out=await page.evaluate(()=>dfEval(`(()=>{const o={};S=newState(0);setWorld(0);S.t=(5*24+12)*60;S.obj.fill('');recount();
+const out=await page.evaluate(()=>dfEval(`(()=>{const o={};DMGVAR=0;S=newState(0);setWorld(0);S.t=(5*24+12)*60;S.obj.fill('');recount();
  /* ねらう順 */const j=50*W+50;S.obj[j]='watch';S.hp['L'+j]=1;recount();const mk=(id,type,x,y,hp)=>({id,type,x,y,hp,max:hp,spawned:true,path:[]});
  const run=k=>{torderSet(j,k);const a=mk(1,'basic',51,52.5,100),b=mk(2,'rockc',51,56,200),c=mk(3,'fast',51,57,50);S.enemies=[a,b,c];S.inv.arrow=10;towerVolley(j,51,51,{dmg:10,range:8,cd:10},null,[]);return S.enemies.find(e=>e.hp<e.max).id};
  o.near=run('near');o.hp=run('hp');o.fast=run('fast');
  /* 落とし穴 */const pj=(CY+8)*W+CX;S.obj[pj]='pit';S.ns={n:3,kill:0,lost:[]};const e=mk(5,'basic',CX+.5,CY+8.5,100);S.enemies=[e];o.fell=pitStep(e,pj)&&e.dead;const e2=mk(6,'basic',CX+.5,CY+8.5,100);S.enemies=[e2];o.used=pitStep(e2,pj);const bo=mk(7,'boss',CX+.5,CY+8.5,600);delete S.dyn[pj].pu;o.boss=pitStep(bo,pj);
  /* 季節 */const L=[];S.t=(1*24+12)*60;seasonFoes(L);o.spring=L[0];S.t=(17*24+12)*60;/* 冬（16〜20日め） */const L2=[];seasonFoes(L2);o.winter=L2[0];const h={type:'hoteri',hp:100,max:100};hurtEn(h,20,{dt:'fire'});o.hoteri=100-h.hp;o.ochiba=nebariMul({type:'ochiba',x:0,y:0});
- /* 大わざ */S.t=(5*24+23.5)*60;const r=S.res[0];r.elem='earth';r.x=CX+.5;r.y=CY+.5;r.ult=0;const f=mk(8,'basic',CX+1.5,CY+.5,100);S.enemies=[f];for(let i=0;i<10;i++)ultHit(r,f,10);o.before=f.stun||0;ultHit(r,f,10);o.after=f.stun;o.ult=r.ult;
+ const r=S.res[0];o.noUlt=typeof ultHit==='undefined';/* 大わざは、なくした */
  /* 守りつづけた夜 */S.streak=0;for(let i=0;i<3;i++){S.ns={n:2,broke:0};S.nightHurt=0;streakMorning()}o.s3=S.streak;o.w3=streakWork();o.rw=rStat(r).work;S.ns={n:2,broke:1};streakMorning();o.reset=S.streak;o.rw0=rStat(r).work;S.ns={n:0};S.streak=5;streakMorning();o.noFoe=S.streak;
  o.subq=SUBQ.some(q=>q.k==='pit1'&&q.learn.includes('pit'));o.z=['hana','hoteri','ochiba','yuki'].every(k=>ZUKAN[k]&&WEAK[k]);
  return o})()`));
@@ -16,7 +16,7 @@ console.log(JSON.stringify(out));
 assert.equal(out.near,1);assert.equal(out.hp,2,'強い：体力が多い');assert.equal(out.fast,3,'速い');
 assert.ok(out.fell,'落ちる');assert.equal(out.used,false,'穴があいたら落ちない');assert.equal(out.boss,false,'オオカゲは落ちない');
 assert.equal(out.spring,'hana');assert.equal(out.winter,'yuki');assert.equal(out.hoteri,10,'ホテリカゲ：火は半分');assert.equal(out.ochiba,1);
-assert.equal(out.before,0);assert.equal(out.after,3,'土の大わざ：止める');assert.equal(out.ult,0);
+assert.ok(out.noUlt,'大わざはない');
 assert.equal(out.s3,3);assert.equal(out.w3,1);assert.equal(out.rw-out.rw0,1);assert.equal(out.reset,0);assert.equal(out.noFoe,5,'コワイノの来ない夜はそのまま');
 assert.ok(out.subq);assert.ok(out.z);
 assert.equal(errors.length,0,errors.join('\n'));

@@ -26,7 +26,7 @@ function kgrLampPlace(){/* 村の南の入り口：まん中の少し南の、�
 function kgrDue(){/* カガリが帰ってくる夕方か */return kgrOn()&&!S.flags.kagariCame&&QUESTS[S.quest]&&QUESTS[S.quest].id==='kagari'&&S.qTalked&&S.qStory==null&&callDay()>(S.flags.kgrFrom??-1)}
 function goVigil(r,G){
   if(!kgrOn()||r.name!==HOMURA||S.flags.kagariCame||isNight()||enemyLive()||KGRRUN)return false;
-  const h=hour();if(h<KGRH0||h>=KGRH1||S.st2.lampD===callDay()||r.hunger<400||kgrDue())return false;/* カガリが帰ってくる夕方は、場面の中でともす */
+  const h=hour();if(h<KGRH0||h>=KGRH1||S.st2.lampD===callDay()||r.hunger<200||kgrDue())return false;/* カガリが帰ってくる夕方は、場面の中でともす */
   if(typeof storyCalled==='function'&&storyCalled(r))return false;
   const L=kgrLampJ();if(L<0)return false;
   let st=nearest(G,j=>(j===L-1||j===L+1)&&walk(j)&&!S.obj[j],9999);if(st<0)st=nearest(G,j=>j===L-W&&walk(j)&&!S.obj[j],9999);if(st<0)return false;
@@ -77,7 +77,7 @@ function kgrReturn(){
     villageTimeout(()=>{if(!ok())return stop();S.st2.lampD=callDay();recount();sfxAt('crackle',lx,ly);
       for(const q of[hh,ss])if(q){q.face=1;volPose(q,'storyListen',600000,{front:true})}/* 道の先（手前）を見る */
       villageTimeout(()=>{if(!ok())return stop();
-        k=mkRes(S,KAGARI,'fire',sp%W+.5,(sp/W|0)+.5);k.kgrTemp=1;k.came=dayNo();k.hunger=750;k.face=1;S.res.push(k);recount();
+        k=mkRes(S,KAGARI,'fire',sp%W+.5,(sp/W|0)+.5);k.kgrTemp=1;k.came=dayNo();k.hunger=375;k.face=1;S.res.push(k);recount();
         volShot([[lx,ly],[sp%W+.5,(sp/W|0)+.5]],[hh,ss,k],2.2,1.6);quietBeat(2400);
         volWalk(k,lx,ly+2,{cap:16000},()=>{if(!ok())return stop();volFace(k,hh?hh.x:lx);volShot([[lx,ly]],[hh,ss,k],2.4,1.2);
           say(KGR_MEET,()=>{
@@ -110,7 +110,7 @@ function kgrIvPlay(k){
   else if(k==='c'){x=VOLJ%W+1.5;y=(VOLJ/W|0)+5.5}
   else{const tw=S.obj.indexOf('tower');if(tw<0)return false;x=tw%W+1;y=(tw/W|0)+1}
   const ms=KGRIVMS[k],now=performance.now(),run=KGRIV={k,x,y,at:now+1300,ms,S,session:VILLAGE_SESSION};
-  SCENEHOLD=now+ms+1600;sacredDirection(true);const lift=hiAt((y|0)*W+(x|0))*LIFT;
+  SCENEHOLD=now+ms+1600;sacredDirection(true);const lift=liftOf((y|0)*W+(x|0));
   storyShot([[x*TS-90,y*TS-80-lift],[x*TS+90,y*TS+30-lift]],{limit:2.6,seconds:1.3,full:true});quietBeat(ms+1300);
   villageTimeout(()=>{if(KGRIV!==run)return;KGRIV=null;SCENEHOLD=0;
     if(k==='end')return kgrEndTalk();
@@ -134,7 +134,7 @@ function kgrTick(){if(!kgrOn())return;const now=performance.now();if(now-KGRT<10
   if(kgrLampNeed()&&kgrLampJ()<0)kgrLampPlace();
   {const lit=kgrLit();if(KGRLIT.S!==S){KGRLIT.S=S;KGRLIT.v=lit}else if(lit!==KGRLIT.v){KGRLIT.v=lit;recount()}}/* ともした・朝になった：夜の光の一覧を作りなおす */
   if(!kgrSceneOK())return;const h=hour();
-  if(kgrDue()&&h>=KGRH0&&h<KGRH1){const ho=volWho(HOMURA);if(ho&&!(ho.act&&ho.act.type==='sleep')&&ho.hunger>=300)kgrReturn();return}
+  if(kgrDue()&&h>=KGRH0&&h<KGRH1){const ho=volWho(HOMURA);if(ho&&!(ho.act&&ho.act.type==='sleep')&&ho.hunger>=150)kgrReturn();return}
   if(h<KGRIVH0||h>=KGRIVH1)return;
   if(S.cleared&&!S.flags.kgrEnd&&S.obj.includes('tower')){kgrEndGather();return}
   if(S.cleared||S.flags.kgrIvD===callDay()||S.finalNight)return;/* 1晩に1つ。山の影の夜は出さない */
@@ -152,7 +152,7 @@ function kgrShade(ty,X,Y,sc,o,a=1,warm=0){if(a<=0)return;ctx.save();ctx.globalAl
   if(warm>0&&window.CHIPS&&typeof kgTint==='function'){/* あたたまって、ほんのり火の色に */const K='kg_'+ty+':idle',ch=CHIPS[K];if(ch){const s=.27*(EN[ty]?EN[ty].size:.9)*2*sc,fi=Math.floor((o.t||0)*1.6)%(ch.n||1);ctx.globalAlpha=a*warm*.55;ctx.translate(X,Y);ctx.scale(s,s);ctx.drawImage(kgTint(K,'#ffb35a'),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h)}}
   ctx.restore()}
 const kgrEase=q=>q<=0?0:q>=1?1:q*q*(3-2*q);
-function kgrIvDraw(now){const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000;if(T<0)return;const lift=hiAt((e.y|0)*W+(e.x|0))*LIFT,X=e.x*TS,Y=e.y*TS-lift+10,out=T>e.ms/1000-1.4?Math.max(0,(e.ms/1000-T)/1.4):1;
+function kgrIvDraw(now){const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000;if(T<0)return;const lift=liftOf((e.y|0)*W+(e.x|0)),X=e.x*TS,Y=e.y*TS-lift+10,out=T>e.ms/1000-1.4?Math.max(0,(e.ms/1000-T)/1.4):1;
   if(e.k==='a'){/* ハイカゲが、火を朝までのこそうとして灰をかぶせ、消してしまう。手をかざしても、つめたいまま */
     const f=T<5?1:T<7.5?1-(T-5)/2.5:0;kgrFire(X,Y,f,T);if(f<=0&&T<11)for(let i=0;i<3;i++){const q=((T-7.5)*.5+i/3)%1;kgrDot(X-2+i*2,Y-8-q*16,2,2,'#b9b4ae',(1-q)*.6)}/* けむり */
     kgrAsh(X,Y,T,5,7.2);const wk=T>=1.5&&T<4.5,sx=X-70+56*kgrEase((T-1.5)/3);
@@ -173,6 +173,6 @@ function kgrIvDraw(now){const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1
     if(T>=10)for(let i=0;i<10;i++){const q=Math.min(1,(T-10)/1.8),ox=((i*37)%31)-15;kgrDot(sx+ox*(.4+q),Y-6-q*(26+i*3),2,2,i%2?'#ffcf6a':'#ffb347',(1-q)*.9)}}/* あたたまって、火の粉のようにほどける */
   ctx.globalAlpha=1}
 function kgrAdd(add,now){if(!KGRIV||KGRIV.S!==S)return;add(KGRIV.y+.9,1,null,()=>{ctx.save();kgrIvDraw(now);ctx.restore()},-1)}
-function kgrLights(g,now){/* 場面の火・灰の下の火の明かり（夜の暗さをけずる） */const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000,lift=hiAt((e.y|0)*W+(e.x|0))*LIFT,X=e.x*TS,Y=e.y*TS-lift+10;let R=0,yy=Y-6;
+function kgrLights(g,now){/* 場面の火・灰の下の火の明かり（夜の暗さをけずる） */const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000,lift=liftOf((e.y|0)*W+(e.x|0)),X=e.x*TS,Y=e.y*TS-lift+10;let R=0,yy=Y-6;
   if(e.k==='a')R=T<5?70:T<7.5?70*(1-(T-5)/2.5):0;else if(e.k==='end'){R=T<4.5?60:40+6*Math.sin(T*2.4);yy=Y-44}
   if(R>2)g.drawImage(lightSpr(70),X-R,yy-R,R*2,R*2)}

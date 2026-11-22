@@ -1,7 +1,7 @@
 /* 箱にしまう・取るあいだのゴソゴソ（work-fx.js の boxLoop）：動きのあいだ、録音から切った所を、高さ・大きさをかえてつなげて鳴らし、おわったら止まる・近い子から2人まで・村の時間が止まったら止まる */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await boot();
-await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume()})()`);
+await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume();if(sheet)closeSheet()})()`);/* まん中の御神木をクリックしてひらいた画面をとじる（ひらいたままだと村が止まり、音が鳴らない） */
 await page.waitForFunction(()=>sacredEval(`AC.state==='running'&&(SBUF.goso||[]).some(Boolean)`),{},{timeout:30000});
 const out=await run(`(()=>{const o={};const base=S.res[0];S.res=[];S.enemies=[];
  const mk=(i,type)=>{const r=JSON.parse(JSON.stringify(base));r.id=500+i;r.name='b'+i;r.nap=false;r.x=cam.x/TS+VW/cam.z/TS/2+i*.3;r.y=cam.y/TS+VH/cam.z/TS/2;r.act={type,stage:'do',t:0};S.res.push(r);return r};

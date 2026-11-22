@@ -8,7 +8,7 @@
    貿易：料理をおくると、つぎの朝に、水の土地にない材料がとどく。
    お客さんは、見た目と動きだけ（セーブしない）。かいがら・メニュー・料理のおいしさ・歌の日はセーブ（S.mz） */
 const SHOP={waves:[[11,14],[17,20]]/* お客さんの来る時間 */,min:2,max:4/* 1回のお客さん */,price:[3,5,8]/* おいしさ★1・2・3のかいがら */,extra:5/* メニューにない注文 */,
-  fun:{deco:2,light:3,rug:3,plant:2,counter:5,menuboard:5,stage:10},star:[20,40,60,80],song:2/* 歌で、夕方のお客さん */,udeN:10/* うでが1つ上がる料理の数 */,udeMax:10,
+  fun:{deco:2,light:3,rug:3,plant:2,counter:5,menuboard:5,stage:10},star:[20,40,60,80],song:2/* 歌で、夕方のお客さん */,songAll:4/* クリアのあと、みんなの歌 */,udeN:10/* うでが1つ上がる料理の数 */,udeMax:10,
   trade:{n:10,get:3,items:['takenoko','egg','milk','apple']},wait:90/* 料理を待つ時間（時計の60分） */,eat:20/* 食べる時間 */,xtra:.1/* メニューにない注文のわりあい */,songH:16,songDur:30};
 const SHOPIDS=new Set(['shopsign','counter','menuboard','stage']);
 BL.shopsign={hp:4,brk:1,fix:3,fixm:{wood:3},name:'店の看板',kind:'furn',mat:{wood:6},pc:0,time:60,maker:'water',lv:1,w:MIZU,solid:1,attr:{water:1},desc:'家の中に置くと、その家が食堂になる'};
@@ -44,11 +44,11 @@ function shopCooked(r,d){/* spirit-act の料理のおわり：うでと、そ�
 const SHOPNAMES=['旅のせいれい','川むこうのせいれい','ふもとのせいれい','島のせいれい'];
 function shopDock(){const D=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='dock')D.push(j);if(!D.length)return -1;const d=D[(Math.random()*D.length)|0];return mzAdj(d).find(n=>walk(n)&&!S.ground[n])??-1}
 function shopWave(i){const sh=shopOf();if(!sh)return;const start=shopDock();if(start<0)return;const m=shopMenu();if(!m.length)return;
-  let n=SHOP.min+((Math.random()*(SHOP.max-SHOP.min+1))|0)+sh.stars+(i===1&&S.mz.songD===callDay()?SHOP.song:0);n=Math.min(n,sh.seats.length);
+  let n=SHOP.min+((Math.random()*(SHOP.max-SHOP.min+1))|0)+sh.stars+(i===1&&S.mz.songD===callDay()?(S.cleared?SHOP.songAll:SHOP.song):0);n=Math.min(n,sh.seats.length);
   const used=new Set(SHOPC.cust.map(c=>c.seat));const free0=sh.seats.filter(s=>!used.has(s));n=Math.min(n,free0.length);
   for(let k=0;k<n;k++){const seat=free0[k],known=shopKnown().filter(d=>!m.includes(d)),x=known.length&&Math.random()<SHOP.xtra;
     const want=x?known[(Math.random()*known.length)|0]:m[(Math.random()*m.length)|0],el=pick(ELEM_KEYS);
-    const c=mkRes({nid:-2000-(SHOPC.seq++)},pick(SHOPNAMES),el,start%W+.5,((start/W)|0)+.5);c.id=-2000-SHOPC.seq;c.hidden=false;c.st='come';c.seat=seat;c.want=want;c.x0=x?1:0;c.delay=k*6;c.wt=0;c.path=[];c.act={type:'mzc',stage:'walk',t:0};c.home=start;
+    const c=mkRes({nid:-2000-(SHOPC.seq++)},pick(SHOPNAMES),el,start%W+.5,((start/W)|0)+.5);c.id=-2000-SHOPC.seq;c.hidden=false;c.guest=1;/* 旅の外套の絵（guestDraw） */c.st='come';c.seat=seat;c.want=want;c.x0=x?1:0;c.delay=k*6;c.wt=0;c.path=[];c.act={type:'mzc',stage:'walk',t:0};c.home=start;
     SHOPC.cust.push(c)}
   if(n){SHOPC.boatT=performance.now();toast('お客さんが、舟で来た','good')}}
 function shopGoal(c){/* すわる所の、となりの歩けるマス */const s=c.seat;return [s+W,s-1,s+1,s-W].find(n=>walk(n))??-1}
@@ -71,12 +71,12 @@ function shopJob(r,G){/* せいれいの仕事：料理を運ぶ・歌う */if(!
     const st=nearest(G,k=>walk(k)&&keysAdj(k,[key])>=0,9999);if(st<0)continue;c.taken=r.id;startAct(r,G,'mzpick',st,{key:'c'+c.id,cid:c.id,d:c.want});return true}
   return false}
 const SHOPCUT=new Set(['bathe','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat','chat','rest','stretch']);/* お客さんのために、やめてよい事 */
-function shopCut(r){if(!mzOn()||isNight()||!r.act||!SHOPCUT.has(r.act.type)||r.hunger<350||(r.shk>S.t))return false;r.shk=S.t+2;return SHOPC.cust.some(c=>c.st==='wait'&&!c.taken&&availOf('f:'+c.want)>0)}
+function shopCut(r){if(!mzOn()||isNight()||!r.act||!SHOPCUT.has(r.act.type)||r.hunger<175||(r.shk>S.t))return false;r.shk=S.t+2;return SHOPC.cust.some(c=>c.st==='wait'&&!c.taken&&availOf('f:'+c.want)>0)}
 ACT.mzpick={start(r,a){r.bubble=''},done:(r,a)=>a.t>=4,end(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);const j=(r.y|0)*W+(r.x|0),b=keysAdj(j,['f:'+a.d]);if(c&&b>=0&&boxOut(b,'f:'+a.d,1)){r.mzd={c:a.cid,d:a.d};r.bubble=FOODS[a.d].e}else if(c)c.taken=0}};
 ACT.mzgive={start(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);if(!c||!r.mzd)return false;r.face=(c.x<r.x)?-1:1},done:(r,a)=>a.t>=3,end(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);if(c&&c.st==='wait'&&r.mzd){c.st='eat';c.wt=0;S.mz.served=(S.mz.served||0)+1;c.bubble='';JUMP.set(c,performance.now());addFloat(c.x,c.y-1.2,FOODS[r.mzd.d].name,'#ffd38a')}else if(r.mzd)availAdd('f:'+r.mzd.d,1);r.mzd=null;r.bubble=''}};
 ACT.mzsing={start(r,a){r.bubble='🎵';r.face=1},tick(r,a,dt){funAdd(r,dt*.05,'play')},done:(r,a)=>a.t>=SHOP.songDur,end(r,a){if(a.t>=SHOP.songDur){S.mz.songD=callDay();S.mz.sung=(S.mz.sung||0)+1;toast('ミオの歌が、川にひびいた','good')}r.bubble=''}};
 function shopRows(add,now){if(!mzOn())return;for(const c of SHOPC.cust){if(c.delay>0)continue;add(c.y+.03,2,[c.x*TS-30,c.y*TS-70,c.x*TS+30,c.y*TS+15],()=>drawRes(c,now),(c.y|0)*W+(c.x|0))}
-  if(performance.now()-SHOPC.boatT<8000){const d=S.obj.indexOf('dock');if(d>=0){const w=mzAdj(d).find(n=>mzWater(n));if(w!=null)add(((w/W)|0)+.02,-1,null,()=>mzBoatDraw((w%W+.5)*TS,(((w/W)|0)+.5)*TS-hiAt(w)*LIFT,0),-1)}}}
+  if(performance.now()-SHOPC.boatT<8000){const d=S.obj.indexOf('dock');if(d>=0){const w=mzAdj(d).find(n=>mzWater(n));if(w!=null)add(((w/W)|0)+.02,-1,null,()=>mzBoatDraw((w%W+.5)*TS,(((w/W)|0)+.5)*TS-liftOf(w),0),-1)}}}
 
 /* ---- 貿易・朝 ---- */
 function shopMorning(){if(!mzOn())return;const t=S.mz.strade;if(!t)return;const id=SHOP.trade.items[t.i%SHOP.trade.items.length];addFood(id,SHOP.trade.get);toast('貿易の舟が、'+FOODS[id].name+'を'+SHOP.trade.get+'こ とどけてくれた','good');S.mz.strade=null}
@@ -98,7 +98,7 @@ function shopPop(){const P=pxPop('食堂'),B=P.body;
   draw()}
 
 /* ---- 絵（コードで描く仮のドット絵） ---- */
-function shopDrawObj(c,id,x,y){const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);
+function shopDrawObj(c,id,x,y){const P=(col,a,b,w,h)=>mzPx(c,col,x+a,y+b,w,h);const ch=window.CHIPS&&CHIPS[id];if(ch&&drawChip(c,ch,id,x,y))return;/* 3Dから写したチップ（GPT の H-7） */
   if(id==='shopsign'){P('#8a6238',14,10,4,22);P('#c49a66',4,4,24,12);P('#d9b684',4,4,24,2);P('#6fbfe0',8,8,6,4);P('#f29a72',18,8,6,4);return}
   if(id==='counter'){P('#8a6238',2,14,28,18);P('#a67c4c',2,14,28,4);P('#c49a66',0,10,32,6);P('#d9b684',0,10,32,2);P('#e9dcc0',10,6,6,4);return}
   if(id==='menuboard'){P('#8a6238',8,24,4,8);P('#8a6238',20,24,4,8);P('#3f5a4a',4,4,24,20);P('#c49a66',4,4,24,2);for(let k=0;k<4;k++)P('#e9dcc0',8,9+k*4,10+(k%2)*6,2);return}
