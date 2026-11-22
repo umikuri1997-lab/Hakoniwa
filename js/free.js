@@ -23,6 +23,12 @@ function valleyCell(s,x,y,i,r){/* 1マスの自然の物（genWorld から。r�
   if(valleyEdge(x,y)>=0){if(valleyGap(x,y))return;if(r<.22)s.obj[i]='ntree';else if(r<.255)s.obj[i]='rock';else if(r<.265)berry();return}/* 丘の上は森 */
   if(VGROVE.some(g=>Math.hypot(dx-g[0],dy-g[1])<g[2])){if(r<.5)s.obj[i]='ntree';else if(r<.54)berry();return}/* 木立 */
   if(r<.008)s.obj[i]='ntree';else if(r<.03)s.obj[i]='rock';else if(r<.036)berry()}
+function valleyPlace(s,VR){/* 花の谷の自然の物：段差を作ったあとに置く。木（まわり2マス）・岩（1マス）は、まわりに自分より高い段がある所には置かない。茂みは、まわり1マスが同じ高さの所だけ（あとで木のまわりをならすと、丘がけずれて平らになるため） */
+  const hA=k=>s.hi&&s.hi[k]||0;
+  for(let i=0;i<W*H;i++){if(VR[i]<0||s.obj[i]||s.floor[i]||s.ground[i])continue;const x=i%W,y=(i/W)|0;valleyCell(s,x,y,i,VR[i]);const o=s.obj[i];if(!o)continue;
+    const R=hiRad(o)||(FLATR.has(o)?1:0);if(!R)continue;const h=hA(i);let bad=false;
+    for(let b=-R;b<=R&&!bad;b++)for(let a=-R;a<=R;a++){const X=x+a,Y=y+b;if(X<0||Y<0||X>=W||Y>=H)continue;const g=hA(Y*W+X);if(FLATR.has(o)?g!==h:g>h){bad=true;break}}
+    if(bad){s.obj[i]='';if(s.dyn)delete s.dyn[i]}}}
 function wildNoise(R,sc){const gw=Math.ceil(W/sc)+2,gh=Math.ceil(H/sc)+2,g=new Float32Array(gw*gh);for(let k=0;k<g.length;k++)g[k]=R();const sm=t=>t*t*(3-2*t);
   return (x,y)=>{const fx=x/sc,fy=y/sc,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),v=(a,b)=>g[(iy+b)*gw+ix+a];return (v(0,0)*(1-tx)+v(1,0)*tx)*(1-ty)+(v(0,1)*(1-tx)+v(1,1)*tx)*ty}}
 function wildGen(s){/* 野の花：谷の中に、むれになって咲く。むれごとに花のしゅるいがちがう */

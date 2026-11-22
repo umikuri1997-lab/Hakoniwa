@@ -3,8 +3,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.luEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.luEval);
 await page.waitForFunction(()=>luEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
 const out=await page.evaluate(()=>luEval(`(()=>{const o={};S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);if(S.fog)S.fog.fill(0);
- const w0=WD;o.lvGrass=levelUpItemsAt(6).includes('lurestatue');WD=2;o.lvWater=levelUpItemsAt(6).includes('lurestatue');WD=w0;
- grecOf().set('lurestatue',2);S.recipes=S.recipes||{};S.recipes.lurestatue=1;/* 水のステージでおぼえたことにする */
+ const w0=WD;o.lvGrass=levelUpItemsAt(6).includes('lurestatue');WD=MIZU;o.lvWater=levelUpItemsAt(6).includes('lurestatue');WD=w0;
+ grecOf().set('lurestatue',MIZU);S.recipes=S.recipes||{};S.recipes.lurestatue=1;/* 水のステージでおぼえたことにする */
  const j=50*W+50;S.obj[j]='lurestatue';recount();o.lures=LURES.length;
  const fire=S.res.find(r=>r.elem==='fire')||S.res[0];fire.elem='fire';S.res=[Object.assign(fire,{hidden:false,x:50.5,y:36.5,act:null,hunger:9999})];
  const mk=(id,type,x,y)=>({id,type,x,y,hp:99,max:99,spawned:true,path:[],atk:0,stun:0,flash:0,repath:0});
