@@ -462,10 +462,10 @@ function drawObj0(c,id,x,y,i,g,now){
     const rail=(x1,y1,x2,y2)=>{c.lineCap='round';c.strokeStyle=RD;c.lineWidth=3.2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=RC;c.lineWidth=2.2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=RL;c.lineWidth=.7;c.beginPath();c.moveTo(x1-.5,y1);c.lineTo(x2-.5,y2);c.stroke()};
     const rung=(x1,y1,x2,y2)=>{c.strokeStyle=RD;c.lineWidth=2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=bb?'#cfd683':'#cf9f66';c.lineWidth=1.1;c.beginPath();c.moveTo(x1,y1-.3);c.lineTo(x2,y2-.3);c.stroke()};
     const lad=(x1,x2,top,bot)=>{for(let yy=bot-4;yy>top+2;yy-=5)rung(x1+.5,yy,x2-.5,yy);rail(x1,top,x1,bot);rail(x2,top,x2,bot);if(bb)for(const xx of[x1,x2])for(let yy=bot-7;yy>top+1;yy-=10){c.fillStyle=RD;c.fillRect(xx-1.6,yy,3.2,1)}};/* まっすぐ立てたハシゴ（竹は節つき） */
-    {const ch=chipOf(id+(d===1&&!ICON?':sideL':d===3&&!ICON?':sideR':':front'));if(ch){if(d<=0&&!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,y-LIFT+1,15,LIFT)}/* がけにおちるかげ */if(ICON){c.save();c.translate(0,28)}const ok=drawChip(c,ch,id,x,y,now,i);if(ICON)c.restore();if(ok)break}}/* もらった絵：正面（がけの正面だけ）・よこ（がけのふちにそった細い線）。アイコンは正面を1マスに *//* 絵を読みこむまでは、コードの絵 */
-    if(d<=0||ICON){const top=ICON?y+2:y-LIFT-1,bot=ICON?y+TS-3:y+2;if(!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,top+2,15,bot-top-2)}/* がけにおちるかげ */lad(x+9,x+23,top,bot)}/* 正面：がけの正面だけ（下のマスにはみ出さない） */
+    {const ch=chipOf(id+(d===1&&!ICON?':sideL':d===3&&!ICON?':sideR':':front'));if(ch){if(d<=0&&!ICON){c.fillStyle='rgba(40,46,104,.16)';c.fillRect(x+10,y-LIFT+1,15,LIFT)}/* がけにおちるかげ */if(ICON){c.save();c.translate(0,28)}const ok=drawChip(c,ch,id,x,y,now,i);if(ICON)c.restore();if(ok)break}}/* もらった絵：正面（がけの正面だけ）・よこ（がけのふちにそった細い線）。アイコンは正面を1マスに *//* 絵を読みこむまでは、コードの絵 */
+    if(d<=0||ICON){const top=ICON?y+2:y-LIFT-1,bot=ICON?y+TS-3:y+2;if(!ICON){c.fillStyle='rgba(40,46,104,.16)';c.fillRect(x+10,top+2,15,bot-top-2)}/* がけにおちるかげ */lad(x+9,x+23,top,bot)}/* 正面：がけの正面だけ（下のマスにはみ出さない） */
     else{const x0=d===1?x+.5:x+TS-4.5,ya=y+8,yb=y+24;/* 横向き：がけのよこに立てかけたハシゴを真上から見た形。ほぼ一本の線（はばの向きに、がけのふちにそって）。両はしがレールの頭 */
-      c.fillStyle='rgba(40,30,20,.18)';c.fillRect(d===1?x0+4:x0-1.5,ya+1,1.5,yb-ya);/* かげ */
+      c.fillStyle='rgba(40,46,104,.18)';c.fillRect(d===1?x0+4:x0-1.5,ya+1,1.5,yb-ya);/* かげ */
       c.fillStyle=RD;c.fillRect(x0,ya,4,yb-ya);c.fillStyle=RC;c.fillRect(x0+.6,ya+.6,2.8,yb-ya-1.2);c.fillStyle=RL;c.fillRect(x0+.6,ya+.6,1,yb-ya-1.2);/* いちばん上の段（上から見ると、この線だけ見える） */
       for(const yy of[ya,yb-4]){c.fillStyle=RD;c.fillRect(x0-.5,yy,5,4);c.fillStyle=RC;c.fillRect(x0+.2,yy+.6,3.6,2.8);c.fillStyle=RL;c.fillRect(x0+.2,yy+.6,3.6,.8)}}/* レールの頭 */
     break}
