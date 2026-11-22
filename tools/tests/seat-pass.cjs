@@ -6,6 +6,9 @@ const assert=require('node:assert/strict');
     const a=S.res[0];S.res=[a];endAct(a);a.act=null;a.nap=false;
     const ok=j=>!S.obj[j]&&!S.ground[j]&&!S.floor[j]&&!hiAt(j)&&walk(j)&&!(S.fog&&S.fog[j]);let p=-1;
     for(let y=CY-20;y<CY+20&&p<0;y++)for(let x=CX-20;x<CX+20;x++){let g=true;for(let b=-2;b<=2&&g;b++)for(let c=-1;c<=7;c++)if(!ok((y+b)*W+x+c)){g=false;break}if(g){p=y*W+x;break}}
+    if(p<0){/* まん中にも段差がある地図：木・岩・段差をどけて、場所を作る */const keep=new Set(['statue','statueb','board','obox','part']),can=j=>!(S.fog&&S.fog[j])&&!sacredNoBuild(j)&&!S.floor[j]&&!keep.has(S.obj[j]);
+      for(let y=CY-20;y<CY+20&&p<0;y++)for(let x=CX-20;x<CX+20;x++){let g=true;for(let b=-2;b<=2&&g;b++)for(let c=-1;c<=7;c++)if(!can((y+b)*W+x+c)){g=false;break}if(g){p=y*W+x;break}}
+      for(let b=-2;b<=2;b++)for(let c=-1;c<=7;c++){const k=p+b*W+c;S.obj[k]='';delete S.dyn[k];S.ground[k]=0;if(S.hi)S.hi[k]=0}recount()}
     /* 横の通路：上下を柵でふさぎ、まん中にいす。すぐ上の行は、ひらいたまわり道 */
     for(let c=-1;c<=7;c++){S.obj[p+W+c]='fence'}S.obj[p+3]='chair';recount();
     a.x=p%W+.5;a.y=((p/W)|0)+.5;const G=roadSearch(a.x|0,a.y|0),path=pathTo(G,p+6);
