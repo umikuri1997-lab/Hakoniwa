@@ -358,7 +358,7 @@ let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてか
 const SHOCKU=new WeakMap(),GLSHOCKR=3;/* まもりの光が落ちたとき、範囲から GLSHOCKR マスまでの起きているせいれいは、おどろいた顔（SHOCKU：おわる時刻）でぴょんとはねる */
 function guardLight(e){return glCast(Math.floor(e.x),Math.floor(e.y),e)}/* コワイノをタップした：そのコワイノのいるマスに落とす（落ちるまでに少しうごいても、そのコワイノには当たる） */
 function glCast(tx,ty,foc){/* まもりの光：タップしたマス（tx,ty）に光の槌を落とす。パワー1・チャージは GUP の cd。当たるのは、光が地面にとどくとき（GLFX）。範囲は GUP の rng */PTW.q=true;
-  if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return false}if(S.pt<1){toast('パワーが足りません');return false}if(tx<0||ty<0||tx>=W||ty>=H)return false;S.pt-=1;LIGHTCD=lightCdMax();
+  if(LIGHTCD>0){skillDeny('#guardStatus');toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return false}if(S.pt<1){skillDeny('#guardStatus');toast('パワーが足りません');return false}if(tx<0||ty<0||tx>=W||ty>=H)return false;S.pt-=1;LIGHTCD=lightCdMax();
   const j=ty*W+tx,R=gupOf('rng').v[gupLv('rng')],cx=foc?foc.x*TS:tx*TS+16,cy=foc?foc.y*TS+8:ty*TS+26-liftOf(j);
   fxSpr('godlight',cx,cy);lightSnd(tx,ty);const S0=S;villageTimeout(()=>{if(S===S0)glHit(tx,ty,R,foc)},GLFX);return true}
 function glHit(tx,ty,R,foc){/* 光が地面にとどいた：範囲（タップしたマスから R マス、ななめも）のコワイノにダメージととめる、木・岩には素材を落とす。まわりのせいれいはおどろく */

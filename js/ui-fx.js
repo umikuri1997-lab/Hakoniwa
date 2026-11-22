@@ -186,3 +186,6 @@ function tapSlopPick(t,x,y){if(!t||!t.querySelectorAll||t.id==='cv'||t.closest('
   return best}
 document.addEventListener('click',e=>{if(!e.isTrusted)return;const b=tapSlopPick(e.target,e.clientX,e.clientY);if(!b)return;
   e.preventDefault();e.stopPropagation();b.click()},true);
+/* わざのボタン：チャージがたまった・パワーがそろって使えるようになった瞬間に、ぽんとはねて「ちりん」。チャージ中におしたら、ボタンが左右にふるえる */
+const SKP={};function skillReady(el,k,p){if(el.hidden){SKP[k]=null;return}const q=SKP[k];SKP[k]=p;if(q==null||q>=1||p<1)return;el.classList.remove('sready');void el.offsetWidth;el.classList.add('sready');sfx('tink')}
+function skillDeny(sel){const el=typeof sel==='string'?document.querySelector(sel):sel;if(!el)return;el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake');buzz(15)}
