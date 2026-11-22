@@ -574,7 +574,7 @@ function morning(){if(typeof mzMorning==='function')mzMorning();if(typeof windMa
   if(typeof juiceGrowWave==='function')juiceGrowWave();/* 育った物が、なみのように順にはねる（juice4.js） */
   if(WD===1){takenokoMorning();eruptMorning();gearMorning();veinMorning();visitMorning()}if(S.free){visitMorning();if(VOLK())veinMorning()}/* フリーモード：旅のお客さん・火山をクリアしたあとの鉱脈 */weedMorning();webMorning();if(typeof animalMorning==='function')animalMorning();
   if(cnt('bell')>0){BELLRING=performance.now();{const j=S.obj.indexOf('bell');if(j>=0)bellRing(j%W+1,((j/W)|0)+1)}for(const r of S.res)if(!r.hidden)funAdd(r,15,'bell')}/* 村の鐘：朝に鳴って、たのしさ+15（いくつあっても1回） */
-  const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */
+  const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */if(typeof hapMorning==='function')hapMorning();/* ときどき起きるできごと（happen.js。雨のつぎの朝を見るので、天気のあと） */
   S.today=null;if(S.enemyOn&&dayNo()>=3&&wxE&&wxE.t&&DAYEV[wxE.t]){const k=wxE.t,E=DAYEV[k];S.today=k;/* 日替わりのできごと（前もってきめた日 wxE.t） */
     setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
     if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
