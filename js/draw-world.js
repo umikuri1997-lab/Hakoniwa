@@ -90,6 +90,7 @@ const WCK={s:null,c:new Map(),pt:null};/* 水面の区画（16×16マス）：�
 function waterDirty(R){if(!R){for(const q of WCK.c.values())if(q&&q.o)q.o.width=q.o.height=0;WCK.c.clear();return}for(const r of R)for(let cy=Math.max(0,(r[1]-2)>>4);cy<=Math.min((H-1)>>4,(r[3]+2)>>4);cy++)for(let cx=Math.max(0,(r[0]-2)>>4);cx<=Math.min((W-1)>>4,(r[2]+2)>>4);cx++){const k=cy*64+cx,q=WCK.c.get(k);if(q&&q.o)q.o.width=q.o.height=0;WCK.c.delete(k)}}/* 下絵がかわった所の区画を作りなおす（R がなければ、ぜんぶ） */
 const WRND={s:12,t:.72,m:8};/* 池・川のふちを丸める：水のマスの形をぼかして（s：ぼかしのはば、世界のドット）、こさ t でくぎる。まっすぐなふちは、前の水のふちの絵と同じく、水のマスの7ドット内がわ。出た角は大きく、へこんだ角は少しだけ丸くなる。m：区画のまわりをしらべるはば（ふちの帯の5ドットより広く） */
 const WBANK=8,WBANKC=[[196,160,118],[178,144,106],[164,132,98],[150,120,90],[138,110,84],[126,101,78],[112,91,72],[96,80,66]],WBSH=4,WBSHA=[130,90,55,25],WBANKS=[132,108,84];/* 水面を岸より一段ひくく見せる：奥の岸の下の土の断面（上から8ドット、上ほど明るい）・その下の水のかげ（4ドット）・左右の岸の細い断面（仮の色） */
+const WBSUB=12,WBSUBA=170,WBSUBC=[30,78,110];/* 奥の岸の下の水：水の中の岩の断面が透けて見えるはば・こさ・まぜる水の色 */
 const WBEV=[150,115,75,35],WBEVL=[255,248,226],WBEVD=[58,64,44];/* 岸のふちの面とり：水から1〜4ドットのこさ・光の色・かげの色 */
 const WBAND=[[67,139,164],[117,151,82],[141,174,92],[152,183,98]],WBANDA=[255,130,82,35];/* 水のふちの色：水がわの1ドット（0）と、陸がわの水からの道のり1〜3ドット（草地 tex:grass の色に合わせた）。陸がわは外ほどうすく（WBANDA）して、まわりの地面につなげる */
 let WKER=null;function wKer(){/* ぼかし（箱のぼかしを3回）の、マス1つぶん（TSドット）のおもみの表：u ドットはなれた所に、マスがどれだけきくか */if(WKER)return WKER;const r=Math.round((Math.sqrt(4*WRND.s*WRND.s+1)-1)/2),R3=3*r;let k=[1];for(let p=0;p<3;p++){const o=new Array(k.length+2*r).fill(0);for(let i=0;i<k.length;i++)for(let j=0;j<=2*r;j++)o[i+j]+=k[i]/(2*r+1);k=o}
@@ -141,9 +142,10 @@ function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);
           if(k&&k<=fh){c=SKYFACE[k<=2?0:k<=fh-5?1:k<=fh-2?2:3];ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}
           if(k){ed[p]=96;ed[p+1]=150;ed[p+2]=184;ed[p+3]=[120,96,72,48,24][k-fh-1];continue}
           if(!F[i-1]||!F[i+1]||!F[i+gw]){ed[p]=SKYRIM[0];ed[p+1]=SKYRIM[1];ed[p+2]=SKYRIM[2];ed[p+3]=255}}continue}
-      if(F[i]&&u<0){md[p+3]=255;let k=0;for(let q=1;q<=WBANK+WBSH&&(y+M-q)>=0;q++)if(!F[i-q*gw]){k=q;break}/* 水面は岸より一段ひくい：奥の岸の下に土の断面、その下の水にかげ */
+      if(F[i]&&u<0){md[p+3]=255;let k=0;for(let q=1;q<=WBANK+Math.max(WBSH,WBSUB)&&(y+M-q)>=0;q++)if(!F[i-q*gw]){k=q;break}/* 水面は岸より一段ひくい：奥の岸の下に土の断面、その下の水にかげ */
         if(k&&k<=WBANK){c=WBANKC[k-1];if(BK){const q=((((k-1)*2)*64)+((((X0*TS+x)*2)%64)+64)%64)*4;if(BK.d[q+3]>128)c=[BK.d[q],BK.d[q+1],BK.d[q+2]]}ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}/* 奥の岸の断面：がけの正面の岩の絵（cliff:block の上の帯から）を、世界のマスどおりに */
-        if(k){ed[p]=24;ed[p+1]=52;ed[p+2]=70;ed[p+3]=WBSHA[k-WBANK-1];continue}
+        if(k&&BK){const t=(k-WBANK-1)/WBSUB,q=((((k-1)*2)%64)*64+((((X0*TS+x)*2)%64)+64)%64)*4,m=.5-.2*t;c=BK.d[q+3]>128?[BK.d[q]*m+WBSUBC[0]*(1-m),BK.d[q+1]*m+WBSUBC[1]*(1-m),BK.d[q+2]*m+WBSUBC[2]*(1-m)]:WBSUBC;ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=Math.round(WBSUBA*Math.pow(1-t,1.5));continue}/* 水の中へつづく岩の断面が、うっすら透けて見える（下ほどうすく・水の色にまざる） */
+        if(k&&k<=WBANK+WBSH){ed[p]=24;ed[p+1]=52;ed[p+2]=70;ed[p+3]=WBSHA[k-WBANK-1];continue}
         if(!F[i-1]||!F[i+1]||!F[i-2]||!F[i+2]){c=BK?BK.s:WBANKS;ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=(!F[i-1]||!F[i+1])?230:150;continue}/* 左右の岸：細い断面（2ドット） */
         if(!F[i+gw])c=WBAND[0];if(c){ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255}continue}
       if(F[i]){md[p+3]=255;if(u<0&&(!F[i-1]||!F[i+1]||!F[i-gw]||!F[i+gw]))c=WBAND[0]}/* 水：陸にとなる1ドットは、こい水の線 */
