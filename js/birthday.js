@@ -41,7 +41,7 @@ function bdayEveLines(r){const c=bdayEveCast(r);if(!c)return[];const[a,b]=c,t=(s
 function bdayEveTick(){if(!S||typeof MEMRUN!=='undefined'&&MEMRUN||IS_STORY_REPLAY)return;const d=dayNo()+1;
   for(const r of S.res){if(!bdayOK(r)||!bdayOn(r,d))continue;const k='bdy_'+r.id+'_'+bdayYear(d);if((S.sev||{})[k])break;
     if(!SEV1.some(e=>e.k===k))SEV1.push({k,bdy:r.id,at(){const q=S.res.find(o=>o.id===this.bdy);return !!q&&bdayOK(q)&&bdayOn(q,dayNo()+1)&&!isNight()&&S.qStory==null&&!!bdayEveCast(q)},get L(){const q=S.res.find(o=>o.id===this.bdy);return q?bdayEveLines(q):[]}});
-    if(WD&&!sevBusy()&&!isNight()){/* 草原は checkSev が出す。ほかの土地は、ここで吹き出しにする */const P=S.sevP||(S.sevP=[]),e=SEV1.find(x=>x.k===k);if(!P.includes(k)&&!(S.sevMiss||{})[k]&&e.at()){const L=sevLines(e.L);if(L&&L.length&&sevAllHere(e)){P.push(k);sevBub()}}}
+    if(WD!==KUSA&&!sevBusy()&&!isNight()){/* 草原は checkSev が出す。ほかの土地は、ここで吹き出しにする */const P=S.sevP||(S.sevP=[]),e=SEV1.find(x=>x.k===k);if(!P.includes(k)&&!(S.sevMiss||{})[k]&&e.at()){const L=sevLines(e.L);if(L&&L.length&&sevAllHere(e)){P.push(k);sevBub()}}}
     break}}
 /* プレイヤーの「おいわい」（お世話のタブ） */
 function bdayCareBtn(bw,r){if(!bdayToday(r)||r.hidden)return;const d=dayNo(),done=(r.care||{}).bday===d,b=el('<button class="btn pri">おいわい</button>');lackOn(b,done?'きょうは、もうした':S.food<1?'食料が足りません':'');b.onclick=()=>{if(done||S.food<1)return;sfx('tap');bdayPop(r)};bw.appendChild(b)}

@@ -556,7 +556,7 @@ function renderSheet(){
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>openSheet('res',r.id);rows.appendChild(row)}
     body.appendChild(rows);
   }else if(sheet==='clear'){T.textContent=storyTreeName();
-    const rows=el('<div class="rows"></div>');for(const[t,ok]of(WD||cnt('tower')>=1?clearConds():towerConds())){const r=el('<div class="row"><div class="tx"><b></b></div></div>');ckSet(r.querySelector('b'),(ok?'✓ ':'・')+t);if(ok)r.classList.add('done');rows.appendChild(r)}body.appendChild(rows);
+    const rows=el('<div class="rows"></div>');for(const[t,ok]of(WD!==KUSA||cnt('tower')>=1?clearConds():towerConds())){const r=el('<div class="row"><div class="tx"><b></b></div></div>');ckSet(r.querySelector('b'),(ok?'✓ ':'・')+t);if(ok)r.classList.add('done');rows.appendChild(r)}body.appendChild(rows);
   }else if(sheet==='bed'){const j=sheetArg;if(!BEDSET.has(S.obj[j]))return closeSheet();/* よぞらのベッドも */
     const o=bedOwner(j);T.textContent='ベッド';
 
@@ -605,7 +605,7 @@ function renderSheet(){
     body.appendChild(rows);
   }else if(sheet==='enemy'){const e=S.enemies.find(q=>q.id===sheetArg);if(!e||e.dead){closeSheet();return}const D=EN[e.type];
     T.textContent=D.name;
-    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD!==KUSA?'5日めの夜、そのあと3日ごとに来る。追いはらうと「ヌシ様の火だね」があらわれ、そのあとは5日ごとに来る。当たると目をまわす':'3日めの夜、そのあと3日ごとに来る。一度追いはらうと、そのあとは5日ごと。とても強い。当たると目をまわす'};
+    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD===KAZAN?'5日めの夜、そのあと3日ごとに来る。追いはらうと「ヌシ様の火だね」があらわれ、そのあとは5日ごとに来る。当たると目をまわす':'3日めの夜、そのあと3日ごとに来る。一度追いはらうと、そのあとは5日ごと。とても強い。当たると目をまわす'};
     const st=el('<div class="sec"><h3>ステータス</h3><div class="stats"></div></div>'),g=st.querySelector('.stats');
     for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか －'+D.hitN],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(st);
@@ -802,7 +802,7 @@ function zukanBody(body){
   if(ws.length>1){const tb=el('<div class="bktabs bkw"></div>');ws.forEach((w,i)=>{const t=el('<button class="bktab'+(w===ZKW?' on':'')+'" type="button"></button>');t.textContent=WORLDS[w].name;t.onclick=()=>{if(w===ZKW)return;go(()=>{ZKW=w},i>ws.indexOf(ZKW)?1:-1)};tb.appendChild(t)});body.appendChild(tb)}
   {const tb=el('<div class="bktabs"></div>');ZKTABS.forEach((nm,i)=>{const t=el('<button class="bktab'+(i===ZKT?' on':'')+'" type="button"></button>');t.style.setProperty('--tc',ZKTC[i%ZKTC.length]);t.textContent=nm;t.onclick=()=>{if(i===ZKT)return;go(()=>{ZKT=i},i>ZKT?1:-1)};tb.appendChild(t)});body.appendChild(tb)}
   const tabs=[...body.children];
-  const d=ZKW===WD!==KUSA?S:savedStage(ZKW);if(!d)return;
+  const d=ZKW===WD?S:savedStage(ZKW);if(!d)return;
   const G=grecOf(),here=id=>G.get(id)===ZKW,placed=new Set((d.obj||[]).filter(o=>o&&BL[o])),has=id=>placed.has(id)||((d.inv||{})[id]||0)>0;
   const rows=el('<div class="rows"></div>'),list=[];
   const add=(nm,desc,img,snd)=>list.push([nm,desc,img,snd]);/* snd：アイコンをタップしたときの音（'i:<物のid>'＝ひろったときと同じ材質の録音・'k:<音の名前>'） */

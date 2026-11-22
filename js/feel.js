@@ -1,5 +1,5 @@
 /* 時間・温度・質感の手ざわり（feel.js）。見た目と音だけで、数字・せいれいの行動の計算はかえない。セーブするのは、雨のつぎの朝の印（S.wetD）だけ。
-   時間：窓のあかりが家ごとにともる・消える（feelWin）／雲のかげ（feelClouds）／地面にのこる季節（冬の雪・秋の落ち葉 feelRow、木と岩の雪 feelCap、屋根の雪 feelRoof）／朝もや・朝つゆ
+   時間：窓のあかりが家ごとにともる・消える（feelWin）／雲のかげ（feelClouds）／木もれ日（komorebi）／地面にのこる季節（冬の雪・秋の落ち葉 feelRow、木と岩の雪 feelCap、屋根の雪 feelRoof）／朝もや・朝つゆ
    温度：白い息（feelAir）／火のゆらめき（feelFlick）／夏のかげろう・セミ／冬の家の中のぬくもり（feelWarm）
    質感：足音（feelStep・feelStepSnd）／足もとの反応（波紋・土ぼこり・雪の足あと・草のかけら・ふんだ花がゆれる feelKick）／雨のぬれ（水面の波紋・のきのしずく・地面のはね・水たまり）／場所の音（feelAmb：川・池・温泉・火・葉・セミ）
    絵は、1マス64ドットのドット絵を1回だけ作って（feelArt）、ならべる。マスごとの出る・出ないは、マスの番号から決まる（hash）ので、しまわない */
@@ -164,6 +164,31 @@ function feelCloudPat(c){if(FEELCL)return FEELCL;const N=128,t=document.createEl
   return FEELCL=c.createPattern(t,'repeat')}
 function feelClouds(c,now,dk){if(!S||S.rain||dk>.05)return;const h=hour(),a=FEEL_CLOUD*Math.min(1,(h-7)/1,(17-h)/1);if(!(a>0))return;const K=7,ox=(now*.0055)%(128*K),oy=(now*.0012)%(128*K),vw=VW/cam.z,vh=VH/cam.z;
   c.save();c.imageSmoothingEnabled=true;c.globalAlpha=a;c.globalCompositeOperation='multiply';c.fillStyle=feelCloudPat(c);c.translate(ox,oy);c.scale(K,K);c.fillRect((cam.x-ox)/K-1,(cam.y-oy)/K-1,vw/K+2,vh/K+2);c.restore()}
+
+/* ---------- 木もれ日（晴れた昼）：葉のある木の落ち影の中に、あたたかい光のまだら ----------
+   落ち影のチップ（:sh）の、こい所の内がわにだけ、光のつぶ（ドットの楕円）を置く。つぶの場所はチップの絵からきめて、チップごとに1回だけ
+   KMBF コマぶんの絵を作っておく（チップと同じ大きさ・同じ1マス64ドット）。毎コマは、その絵を落ち影と同じ所にかさねるだけ。
+   つぶは KMBMS ごとに、明るさ（KMBLV）がずれて、ゆっくりちらちらする。木ごとにコマをずらす（となりの木と同じにならない）。 */
+const KMBF=4,KMBMS=700,KMBLV=[1,.7,.3,.7];/* コマの数・1コマの長さ（ミリ秒）・つぶの明るさのめぐり */
+const KMBA=.62,KMBCOL=[255,238,184];/* つぶのこさ（いちばん明るいコマ）・色 */
+const KMBDARK=90,KMBIN=3,KMBN=[3,10],KMBAREA=260;/* こい所のうすさ（/255）・ふちから内がわへのドット・つぶの数（少ない・多い）・つぶ1こあたりのこい所のドット数 */
+const KMBSZ=[[6,4],[4,3],[8,5],[5,3]];/* つぶの大きさ（ドット。はば・高さ） */
+function kmbLeafy(o){if(WD===YAMI)return false;if(o==='tree'||o==='ntree'||o==='fruit')return true;return o==='deadtree'&&(WD===KAZAN||WD===WIND||WD===MIZU)}/* 葉のある木だけ（枯れ木・闇の枯れたオークはなし。火山・風・水の自然の木は葉がある） */
+function kmbNow(){if(!S||S.rain||(typeof stormNow==='function'&&stormNow()))return 0;const h=hour();return Math.max(0,Math.min(1,(h-7)/1,(17-h)/1))}/* 晴れた昼だけ（朝・夕方はゆっくり出入り） */
+function kmbArt(sh,o){const src=sh.src||sh;if(src._kmb!==undefined)return src._kmb;const im=chipImgs(src,o)[0];if(!im||!im.ok)return null;
+  const w=im.width,h=im.height,d=im.getContext('2d').getImageData(0,0,w,h).data,dark=(x,y)=>x>=0&&y>=0&&x<w&&y<h&&d[(y*w+x)*4+3]>=KMBDARK,P=[];
+  for(let y=KMBIN;y<h-KMBIN;y++)for(let x=KMBIN;x<w-KMBIN;x++){let ok=true;for(let k=-KMBIN;k<=KMBIN&&ok;k++)ok=dark(x+k,y)&&dark(x,y+k);if(ok)P.push([x,y])}
+  if(P.length<KMBAREA/2){src._kmb=null;return null}
+  const n=Math.max(KMBN[0],Math.min(KMBN[1],Math.round(P.length/KMBAREA))),sp=[];
+  for(let k=0;k<n*6&&sp.length<n;k++){const q=P[(hash(k*97+P.length)*P.length)|0],z=KMBSZ[(hash(k*31+7)*KMBSZ.length)|0];if(sp.some(s=>Math.abs(s[0]-q[0])<10&&Math.abs(s[1]-q[1])<7))continue;sp.push([q[0],q[1],z[0],z[1],(hash(k*53+11)*KMBF)|0])}
+  const F=[];for(let f=0;f<KMBF;f++){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
+    for(const[x,y,zw,zh,ph]of sp){const a=KMBA*KMBLV[(f+ph)%KMBF];if(a<=0)continue;const rx=zw/2,ry=zh/2;
+      for(let yy=-Math.ceil(ry);yy<=Math.ceil(ry);yy++)for(let xx=-Math.ceil(rx);xx<=Math.ceil(rx);xx++){const e=(xx*xx)/(rx*rx)+(yy*yy)/(ry*ry);if(e>1)continue;const px=x+xx,py=y+yy;if(!dark(px,py))continue;
+        g.fillStyle='rgba('+KMBCOL.join(',')+','+(e>.5?a*.5:a).toFixed(3)+')';g.fillRect(px,py,1,1)}}/* まん中はこく、ふち1だんはうすく（2色のドット） */
+    F.push(c)}
+  return src._kmb=F}
+function komorebi(sh,o,x,y,i,now){if(!kmbLeafy(o))return;const a=kmbNow();if(!(a>0))return;const F=kmbArt(sh,o);if(!F)return;const src=sh.src||sh,f=(Math.floor(now/KMBMS)+((hash(i*13+5)*KMBF)|0))%KMBF,q=src.g===64?.5:1;
+  const sm=ctx.imageSmoothingEnabled,ga=ctx.globalAlpha;ctx.imageSmoothingEnabled=false;ctx.globalAlpha=ga*a;ctx.drawImage(F[f],x+src.ax*q,y+src.ay*q,src.w*q,src.h*q);ctx.globalAlpha=ga;ctx.imageSmoothingEnabled=sm}
 
 /* ---------- 冬の家の中のぬくもり：屋根をはずした家の中を、あたたかい色に（夜の暗さより下） ---------- */
 function feelWarm(c,x0,y0,x1,y1){if(!S||seasonNow()!==3||!HOUSES.length)return;c.save();c.globalCompositeOperation='soft-light';c.fillStyle='rgb(255,168,96)';
