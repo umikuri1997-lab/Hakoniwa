@@ -13,7 +13,7 @@ from PIL import Image,ImageDraw
 import furn3d as F,oblique3d as O,chips as CHP
 SHD=(46,54,30,100);SHL=(46,54,30,52)   # 影の2色（こい・うすい。うすさ/255）
 BLUR=2.0   # ぼかし（ドット）
-BANDS=(0.15,0.30,0.50,0.70)   # ぼかしたこさのさかい：なし｜うすいのあみ｜うすい｜うすい・こいのあみ｜こい
+BANDS=(0.21,0.24,0.585,0.615)   # ぼかしたこさのさかい：なし｜うすいのあみ｜うすい｜うすい・こいのあみ｜こい
 FLIPIDS={'deadtree'}   # ゲームで左右反対にも描く物
 from natcommon import SUN
 def shadow(M,k,L,mirror,chip):
