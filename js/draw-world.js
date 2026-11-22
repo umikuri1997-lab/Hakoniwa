@@ -89,6 +89,7 @@ function drawFords(x0,y0,x1,y1){/* 浅瀬（仮の絵）：水の底の砂がす
 const WCK={s:null,c:new Map(),pt:null};/* 水面の区画（16×16マス）：水ぎわの陸の地面と水のふちの絵（上にかさねる）と、水の模様をぬる所の形。区画の地面が変わったときだけ作りなおす */
 function waterDirty(R){if(!R){for(const q of WCK.c.values())if(q&&q.o)q.o.width=q.o.height=0;WCK.c.clear();return}for(const r of R)for(let cy=Math.max(0,(r[1]-2)>>4);cy<=Math.min((H-1)>>4,(r[3]+2)>>4);cy++)for(let cx=Math.max(0,(r[0]-2)>>4);cx<=Math.min((W-1)>>4,(r[2]+2)>>4);cx++){const k=cy*64+cx,q=WCK.c.get(k);if(q&&q.o)q.o.width=q.o.height=0;WCK.c.delete(k)}}/* 下絵がかわった所の区画を作りなおす（R がなければ、ぜんぶ） */
 const WRND={s:12,t:.72,m:8};/* 池・川のふちを丸める：水のマスの形をぼかして（s：ぼかしのはば、世界のドット）、こさ t でくぎる。まっすぐなふちは、前の水のふちの絵と同じく、水のマスの7ドット内がわ。出た角は大きく、へこんだ角は少しだけ丸くなる。m：区画のまわりをしらべるはば（ふちの帯の5ドットより広く） */
+const WBANK=8,WBANKC=[[196,160,118],[178,144,106],[164,132,98],[150,120,90],[138,110,84],[126,101,78],[112,91,72],[96,80,66]],WBSH=4,WBSHA=[130,90,55,25],WBANKS=[132,108,84];/* 水面を岸より一段ひくく見せる：奥の岸の下の土の断面（上から8ドット、上ほど明るい）・その下の水のかげ（4ドット）・左右の岸の細い断面（仮の色） */
 const WBAND=[[67,139,164],[117,151,82],[141,174,92],[152,183,98]],WBANDA=[255,130,82,35];/* 水のふちの色：水がわの1ドット（0）と、陸がわの水からの道のり1〜3ドット（草地 tex:grass の色に合わせた）。陸がわは外ほどうすく（WBANDA）して、まわりの地面につなげる */
 let WKER=null;function wKer(){/* ぼかし（箱のぼかしを3回）の、マス1つぶん（TSドット）のおもみの表：u ドットはなれた所に、マスがどれだけきくか */if(WKER)return WKER;const r=Math.round((Math.sqrt(4*WRND.s*WRND.s+1)-1)/2),R3=3*r;let k=[1];for(let p=0;p<3;p++){const o=new Array(k.length+2*r).fill(0);for(let i=0;i<k.length;i++)for(let j=0;j<=2*r;j++)o[i+j]+=k[i]/(2*r+1);k=o}
   const C=new Float64Array(2*R3+TS);for(let u=-R3;u<=R3+TS-1;u++){/* マスの左はしから u ドットの所のおもみ＝K(u-TS+1)〜K(u) の合計 */let v=0;for(let q=u-TS+1;q<=u;q++)if(q>=-R3&&q<=R3)v+=k[q+R3];C[u+R3]=v}WKER={R3,C};return WKER}
@@ -138,8 +139,13 @@ function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);
           if(k&&k<=fh){c=SKYFACE[k<=2?0:k<=fh-5?1:k<=fh-2?2:3];ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}
           if(k){ed[p]=96;ed[p+1]=150;ed[p+2]=184;ed[p+3]=[120,96,72,48,24][k-fh-1];continue}
           if(!F[i-1]||!F[i+1]||!F[i+gw]){ed[p]=SKYRIM[0];ed[p+1]=SKYRIM[1];ed[p+2]=SKYRIM[2];ed[p+3]=255}}continue}
+      if(F[i]&&u<0){md[p+3]=255;let k=0;for(let q=1;q<=WBANK+WBSH&&(y+M-q)>=0;q++)if(!F[i-q*gw]){k=q;break}/* 水面は岸より一段ひくい：奥の岸の下に土の断面、その下の水にかげ */
+        if(k&&k<=WBANK){c=WBANKC[k-1];ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}
+        if(k){ed[p]=24;ed[p+1]=52;ed[p+2]=70;ed[p+3]=WBSHA[k-WBANK-1];continue}
+        if(!F[i-1]||!F[i+1]||!F[i-2]||!F[i+2]){c=WBANKS;ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=(!F[i-1]||!F[i+1])?230:150;continue}/* 左右の岸：細い断面（2ドット） */
+        if(!F[i+gw])c=WBAND[0];if(c){ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255}continue}
       if(F[i]){md[p+3]=255;if(u<0&&(!F[i-1]||!F[i+1]||!F[i-gw]||!F[i+gw]))c=WBAND[0]}/* 水：陸にとなる1ドットは、こい水の線 */
-      else{const k=Math.round(D[i]);if(k>=1&&k<WBAND.length&&REV.has(ty*W+tx))c=WBAND[k]}/* 陸：水からの道のりで、ふちの草の帯 */
+      else{if(F[i-gw]&&(y+M-1)>=0){ed[p]=255;ed[p+1]=246;ed[p+2]=222;ed[p+3]=150;continue}/* 手前の岸：水のすぐ下の陸のふちに、光の1ドット */const k=Math.round(D[i]);if(k>=1&&k<WBAND.length&&REV.has(ty*W+tx))c=WBAND[k]}/* 陸：水からの道のりで、ふちの草の帯 */
       if(c){ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=F[i]?255:WBANDA[Math.round(D[i])]}}}
   gm.putImageData(mi,0,0);ge.putImageData(ei,0,0);if(full.length){gm.fillStyle='#000';for(let k=0;k<full.length;k+=2)gm.fillRect(full[k],full[k+1],TS,TS)}
   g.drawImage(gq(cx,cy).f,-GPAD,-GPAD);waterCorner(g,R,X0,Y0,X1,Y1,isW);g.globalCompositeOperation='destination-out';g.drawImage(m,0,0);g.globalCompositeOperation='source-over';g.drawImage(e,0,0);/* 陸の地面（下絵）のうち、水でない所と、水のふち */
