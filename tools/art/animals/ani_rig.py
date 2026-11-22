@@ -3,7 +3,7 @@
 点の重み：足は地面からの高さ（足の付け根より下ほど足について行く）、頭は前の方・上の方ほど頭について行く。あいだはなめらかにまぜる（線形のスキニング）。
 向き：モデルの顔の向き（目の位置）を前（f）、それと直角の横（s）。ポーズをつけたあと、rot 度まわす（ゲームでは右ななめ前）。
 モーション（POSES）：立つ（息をする2コマ）・歩く（4コマ。ななめの足が組でふる）・食べる（3コマ。頭をさげて、ついばむ・かむ）・よろこぶ（3コマ。かがむ・はねる・おりる）。"""
-import math,numpy as np
+import os,math,numpy as np
 from scipy.cluster.vq import kmeans2
 RIG={  # 生き物ごと：足の数・足の付け根の高さ（全体の高さの何わり）・頭の範囲（前へのきょりの何わりから前）・首の高さ
  'niwatori':dict(legs=2,hip=.16,head=.05,neck=.45,headall=True),   # まんまるの鳥：頭と体がひとつなので、体ごと前へかたむけてついばむ
@@ -57,7 +57,7 @@ CHICK={'0':dict(),'1':dict(sq=.92),'w0':dict(swing=44,roll=11,bob=.08),'w1':dict
  'e0':dict(pitch=30),'e1':dict(pitch=48),'e2':dict(pitch=36),
  'j0':dict(sq=.84),'j1':dict(sq=1.07,pitch=-12),'j2':dict(sq=.96,pitch=-5)}   # まんまるの鳥：体ごと、ころがって歩き、かたむいてついばむ。よろこぶと、ちぢんで、のびて、うしろへそる
 ROT=-90   # 右むき（少し手前）。歩く足が見えるように
-VROT={'d':-35,'u':-185}   # 正面（d：手前へ歩く）・うしろ（u：奥へ歩く）。まっすぐ正面は −20、そこから15度右へ（顔が見える。ゲームで左右反転する）。ani_build.py
+VROT={'d':25,'u':-155} if os.environ.get('ANIISO') else {'d':-35,'u':-185}   # ANIISO：クォータービューの前ななめ（左下を向く）・うしろななめ（右上を向く）。ゲームが左右を反転する   # 正面（d：手前へ歩く）・うしろ（u：奥へ歩く）。まっすぐ正面は −20、そこから15度右へ（顔が見える。ゲームで左右反転する）。ani_build.py
 def warp(name,frame,rot=None):
     """blueprint の Part.warp にわたす関数：点（ゲームの向き）→ ポーズをつけて rot 度まわした点"""
     from blueprint import model_tris

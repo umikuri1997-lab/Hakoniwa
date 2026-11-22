@@ -111,9 +111,10 @@ def ry(a):
     c, s = math.cos(a), math.sin(a); return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
 def rz(a):
     c, s = math.cos(a), math.sin(a); return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-def view(face, yaw=0.0):
-    """face：0 正面・1 右向き・2 うしろ（yaw でさらに回す）。キャラの点 → (画面 x, 画面 y, 手前ほど大きい数)"""
-    R = rz(-face*math.pi/2+yaw)
+ISOY = 0.0   # クォータービューの絵（build.py --iso）：正面・うしろを、さらに45度まわして写す（正面 → 左下を向く前ななめ・うしろ → 右上を向くうしろななめ）。横はそのまま
+def view(face, yaw=0.0, iso=True):
+    """face：0 正面・1 右向き・2 うしろ（yaw でさらに回す）。キャラの点 → (画面 x, 画面 y, 手前ほど大きい数)。iso=False：ISOY をつけない（目の絵の場所のもと）"""
+    R = rz(-face*math.pi/2+yaw+(ISOY if iso and face in (0, 2) else 0.0))
     def f(P):
         Wd = np.asarray(P)@R.T; return Wd[:, 0], -Wd[:, 2], Wd[:, 1]
     return f
