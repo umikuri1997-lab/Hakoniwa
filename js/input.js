@@ -1,9 +1,10 @@
 'use strict';
 
 /* ---------- カメラ・入力 ---------- */
+const ZMAX=3,ZRUB=.1,ZBACKS=.2;let ZBACK=null;/* ズームのはしの手ごたえ（下の zoomRubber） */
 function minZ(){return Math.max(.3,Math.min(VW/(W*TS),VH/(H*TS)))}
 function clampCam(look){if(typeof caveOn==='function'&&caveOn())return caveClamp(look);/* 洞窟のあいだは、カメラはパーティを追う（cave.js） */
-  cam.z=clamp(cam.z,minZ(),3);
+  {const rb=ZBACK||gest&&gest.type==='pinch';cam.z=clamp(cam.z,minZ()*(rb?1-ZRUB:1),rb?ZMAX*(1+ZRUB):ZMAX)}/* ピンチ中・もどるあいだだけ、はしをこえてよい */
   const vw=VW/cam.z,vh=VH/cam.z;
   cam.x=vw>=W*TS?(W*TS-vw)/2:clamp(cam.x,-40,W*TS-vw+40);
   cam.y=vh>=H*TS?(H*TS-vh)/2:clamp(cam.y,-80,H*TS-vh+(performance.now()<(window.BOSSCAM||0)?vh/2+120:120));/* オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に */
@@ -29,7 +30,7 @@ cv.addEventListener('pointerdown',e=>{
 });
 cv.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});if(!gest)return;
-  if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=clamp(gest.z*d/gest.d,minZ(),3);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;cam.x=gest.mid.x-mx/cam.z;cam.y=gest.mid.y-my/cam.z;clampCam(1);return}
+  if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=zoomRubber(gest.z*d/gest.d);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;gest.mx=mx;gest.my=my;cam.x=gest.mid.x-mx/cam.z;cam.y=gest.mid.y-my/cam.z;clampCam(1);return}
   const dx=cX(e)-gest.sx,dy=cY(e)-gest.sy;
   if(gest.type==='maybe'&&Math.hypot(dx,dy)>8){
     const k=BL[sel]&&BL[sel].kind;
@@ -45,7 +46,11 @@ cv.addEventListener('pointermove',e=>{
 /* 地図の慣性：はなしたときの指の速さで、すこしすべってから止まる（画面の点／秒。FLINGK は1秒でのこる速さのわりあいの対数） */
 let FLING=null;const FLINGWIN=90,FLINGMIN=180,FLINGMAX=2600,FLINGK=5.5,FLINGSTOP=40;
 function flingStart(V){FLING=null;if(!V||V.length<2||typeof uiReduced==='function'&&uiReduced())return;const a=V[0],b=V[V.length-1],dt=b.t-a.t;if(dt<16||performance.now()-b.t>60)return;/* 止めてからはなしたら、すべらない */let vx=(b.x-a.x)/dt*1000,vy=(b.y-a.y)/dt*1000;const v=Math.hypot(vx,vy);if(v<FLINGMIN)return;if(v>FLINGMAX){vx*=FLINGMAX/v;vy*=FLINGMAX/v}FLING={vx,vy}}
-function flingTick(rdt){const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y,ex=cam.x-F.vx*rdt/cam.z,ey=cam.y-F.vy*rdt/cam.z;cam.x=ex;cam.y=ey;clampCam(1);if(Math.abs(cam.x-ex)>.01)F.vx=0;if(Math.abs(cam.y-ey)>.01)F.vy=0;/* はしについたら、その向きは止める */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
+function flingTick(rdt){zoomBackTick(rdt);const F=FLING;if(!F)return;if(!S||camAnim||FOLLOW||ptrs.size){FLING=null;return}const x0=cam.x,y0=cam.y,ex=cam.x-F.vx*rdt/cam.z,ey=cam.y-F.vy*rdt/cam.z;cam.x=ex;cam.y=ey;clampCam(1);if(Math.abs(cam.x-ex)>.01)F.vx=0;if(Math.abs(cam.y-ey)>.01)F.vy=0;/* はしについたら、その向きは止める */const k=Math.exp(-FLINGK*rdt);F.vx*=k;F.vy*=k;if(Math.hypot(F.vx,F.vy)<FLINGSTOP||cam.x===x0&&cam.y===y0)FLING=null}
+/* ズームのはし：いちばん大きく・小さくしたあとも、少しだけ（ZRUB）手ごたえをのこしてのび、はなすと ZBACKS 秒でもどる */
+function zoomRubber(z){const mn=minZ();if(z>ZMAX)return ZMAX*(1+ZRUB*(1-1/(1+Math.log(z/ZMAX)*3)));if(z<mn)return mn*(1-ZRUB*(1-1/(1+Math.log(mn/z)*3)));return z}
+function zoomSettle(mx,my){const mn=minZ(),to=clamp(cam.z,mn,ZMAX);if(Math.abs(to-cam.z)<1e-4){clampCam(1);return}if(mx==null){mx=VW/2;my=VH/2}if(typeof uiReduced==='function'&&uiReduced()){const w=toWorld(mx,my);cam.z=to;cam.x=w.x-mx/cam.z;cam.y=w.y-my/cam.z;clampCam(1);return}ZBACK={fz:cam.z,tz:to,t:0,mx,my,w:toWorld(mx,my)}}
+function zoomBackTick(rdt){const B=ZBACK;if(!B)return;if(!S||camAnim||ptrs.size>=2){ZBACK=null;return}B.t+=rdt;const k=Math.min(1,B.t/ZBACKS),e=1-Math.pow(1-k,3);cam.z=B.fz+(B.tz-B.fz)*e;cam.x=B.w.x-B.mx/cam.z;cam.y=B.w.y-B.my/cam.z;clampCam(1);if(k>=1)ZBACK=null}
 /* 置く前の家具の絵（pending）を、指でつまんでマスごとにずらす */
 function grabTile(sx,sy){const w=toWorld(sx,sy),tl=tapLv(w.x,w.y);return{x:Math.floor(w.x/TS),y:Math.floor((w.y+(tl?tl*LIFT:0))/TS)}}
 function grabAt(sx,sy){const p=pending;if(mode!=='build'||!p||p.kind!=='one'||p.id==='statue')return null;const z=szR(p.id,PLROTS[p.id]||0)||[1,1],t=grabTile(sx,sy),ox=t.x-p.x,oy=t.y-p.y;return ox>=0&&oy>=0&&ox<z[0]&&oy<z[1]?{ox,oy}:null}
@@ -58,6 +63,7 @@ function endPtr(e){
   else if(gest&&gest.type==='pan'&&e.type==='pointerup'&&!ptrs.size)flingStart(gest.vs);
   else if(gest&&gest.type==='rect'&&selRect)askBulk(sel,rectCells(selRect.a,selRect.b));
   else if(gest&&gest.type==='leaf'){const c=LEAFDRAG;LEAFDRAG=null;leafPlace(c)}
+  if(gest&&gest.type==='pinch')zoomSettle(gest.mx,gest.my);/* はしをこえてピンチしたら、もどる */
   if(ptrs.size===1){const p=[...ptrs.values()][0];gest={type:'pan',sx:p.x,sy:p.y,cx:cam.x,cy:cam.y}}else if(!ptrs.size)gest=null;
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
