@@ -5,12 +5,12 @@
    1マスのひし形は、はば IQW・高さ IQH（ゲームの点。g64 の絵で 128×96）。段1だんは IQL 上。
    カメラは、いままでどおり cam.x・cam.y（画面のまん中のせかいの点から、画面の半分をひいた所）と cam.z。
    画面のまん中のせかいの点（camCX・camCY）を、画面のまん中にうつす。
-   洞窟（cave.js）は、まだいままでの見え方のまま（isoOn）。 */
+   洞窟（cave.js）も、ひし形のマス（iso-cave.js）。 */
 const IQW=64,IQH=48,IQL=30;
 const IQA=IQW/2/TS,IQB=IQH/2/TS;/* せかいの点が1つ動くと、画面の点がいくつ動くか */
 const IQD=IQL/(2*IQB);/* 段1だんぶん上に見せるとき、せかいの点を左上（x・y とも）へずらす数 */
 const IQSX=IQW/Math.SQRT2/TS,IQSY=IQL/(.8*TS);/* 仮：いまの絵（ななめ見おろし）を立てるときの、よこ・たての大きさ（絵がそろうまで） */
-function isoOn(){return !(typeof caveOn==='function'&&caveOn())}
+function isoOn(){return true}
 const isoX=(wx,wy)=>(wx-wy)*IQA,isoY=(wx,wy)=>(wx+wy)*IQB;
 function isoInv(ix,iy){const u=ix/IQA,v=iy/IQB;return{x:(u+v)/2,y:(v-u)/2}}
 const camCX=()=>cam.x+VW/cam.z/2,camCY=()=>cam.y+VH/cam.z/2;
