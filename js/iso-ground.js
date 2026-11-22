@@ -13,8 +13,9 @@ const IGNX=Math.ceil((W+H)*IQW/2/IGW),IGNY=Math.ceil((W+H)*IQH/2/IGH);
 const IGWT=.72;/* 水のしきい：まっすぐな岸は、水のマスの7ドット内がわ（前と同じ） */
 const IG={s:null,c:new Map(),tg:null,tw:null,pt:null,tmp:null,n:0};
 function igq(cx,cy){const k=cy*64+cx;let q=IG.c.get(k);if(!q){q={cx,cy,f:null,l:null,w:null,st:false,e:false,u:0};IG.c.set(k,q)}return q}
-function igClear(){for(const q of IG.c.values())igFree(q);IG.c.clear();IG.s=S;IG.pt=null}
-function igFree(q){for(const k of['f','l','w'])if(q[k]){q[k].width=q[k].height=0;q[k]=null}}
+function igClear(){for(const q of IG.c.values())igFree(q);IG.c.clear();IG.s=S;IG.pt=null;igTileFree()}
+function igTileFree(){if(IG.tc){for(const e of IG.tc.values())e.c.width=e.c.height=0;IG.tc=null}}
+function igFree(q){for(const k of['f','l','w','ws'])if(q[k]){q[k].width=q[k].height=0;q[k]=null}q.wk=null}
 function igOK(){return groundChipsOK()&&waterChipsOK()}
 /* デュアルグリッドのタイル（1まい 64×48。ドットのまん中の点が、そのタイルの四角のどこにあるかで、なかみをきめる）
    角の番号：1 左上のマス・2 右上・4 左下・8 右下（せかいの向き） */
@@ -85,19 +86,26 @@ function igDraw(k,now){if(IG.s!==S)igClear();if(!igOK())return;const O=isoOff(k)
     const x=igX(q)+q.ox,y=igY(q)+q.oy,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(im,a,b,Math.round(O[0]+k*(x+q.f.width))-a,Math.round(O[1]+k*(y+q.f.height))-b)}
   igShimmer(k,O,c0,r0,c1,r1,now);ctx.restore()}
 /* ちぢめていないあいだ、半分の絵を手ばなす */
-function igHalfFree(){if(GLOD){IG.lu=RFN;return}if(RFN-(IG.lu||0)<GHALFT)return;for(const q of IG.c.values())if(q.l){q.l.width=q.l.height=0;q.l=null}IG.lu=RFN}
+function igHalfFree(){if(GLOD){IG.lu=RFN;return}if(RFN-(IG.lu||0)<GHALFT)return;for(const q of IG.c.values()){if(q.l){q.l.width=q.l.height=0;q.l=null}if(q.ws){q.ws.width=q.ws.height=0;q.ws=null;q.wk=null}}igTileFree();IG.lu=RFN}
 /* 水の模様（tex:water）を、ひし形へ写した絵（256×192 でくりかえす） */
 function igWaterPat(){if(IG.pt)return IG.pt;const im=chipImgs(window.CHIPS['tex:water'],'water')[0],T=igPix(im),w=2*T.w*IQA,h=2*T.h*IQB,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),id=g.createImageData(w,h);
   for(let v=0;v<h;v++)for(let u=0;u<w;u++){const wx=Math.floor(((u+.5)/IQA+(v+.5)/IQB)/2),wy=Math.floor(((v+.5)/IQB-(u+.5)/IQA)/2),ti=((((wy%T.h)+T.h)%T.h)*T.w+(((wx%T.w)+T.w)%T.w))*4,o=(v*w+u)*4;id.data[o]=T.d[ti];id.data[o+1]=T.d[ti+1];id.data[o+2]=T.d[ti+2];id.data[o+3]=255}
   g.putImageData(id,0,0);return IG.pt={c,w,h}}
 /* 水面：水の模様を、1秒に よこ4・たて2ドット（せかいの向き）流す */
-function igShimmer(k,O,c0,r0,c1,r1,now){const P=igWaterPat(),t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128,dx=Math.round((sx-sy)*IQA),dy=Math.round((sx+sy)*IQB),dc=dcLayer('w');
-  for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.w)continue;const T=IG.tmp||(IG.tmp=document.createElement('canvas'));if(T.width<q.w.width||T.height<q.w.height){T.width=Math.max(T.width,q.w.width);T.height=Math.max(T.height,q.w.height)}
+function igShimmer(k,O,c0,r0,c1,r1,now){const P=igWaterPat(),t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128,dx=Math.round((sx-sy)*IQA),dy=Math.round((sx+sy)*IQB),dc=dcLayer('w'),lod=k<1.2,key=dx+','+dy+','+dc;
+  for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.w)continue;
+    if(lod&&q.ws&&q.wk===key){const x=igX(q)+q.wx,y=igY(q)+q.wy,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(q.ws,a,b,Math.round(O[0]+k*(x+q.w.width))-a,Math.round(O[1]+k*(y+q.w.height))-b);continue}/* ちぢめたときは、流れが1ドットうごくまで、作った絵を使いまわす（IGWLOD） */
+    const T=lod?(q.ws||(q.ws=document.createElement('canvas'))):IG.tmp||(IG.tmp=document.createElement('canvas'));if(lod){if(T.width!==q.w.width||T.height!==q.w.height){T.width=q.w.width;T.height=q.w.height}q.wk=key}else if(T.width<q.w.width||T.height<q.w.height){T.width=Math.max(T.width,q.w.width);T.height=Math.max(T.height,q.w.height)}
     const g=T.getContext('2d'),x=igX(q)+q.wx,y=igY(q)+q.wy,ww=q.w.width,hh=q.w.height;g.globalCompositeOperation='copy';g.drawImage(q.w,0,0);g.globalCompositeOperation='source-in';
     const ox=((x-dx)%P.w+P.w)%P.w,oy=((y-dy)%P.h+P.h)%P.h;for(let b=-oy;b<hh;b+=P.h)for(let a=-ox;a<ww;a+=P.w)g.drawImage(P.c,a,b);
     if(dc){g.globalCompositeOperation='multiply';g.fillStyle=dc;g.fillRect(0,0,ww,hh);g.globalCompositeOperation='destination-in';g.drawImage(q.w,0,0)}/* 夜の水の色（daycolor.js） */
     g.globalCompositeOperation='source-over';const a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(T,0,0,ww,hh,a,b,Math.round(O[0]+k*(x+ww))-a,Math.round(O[1]+k*(y+hh))-b)}}
 /* 1マスの地面を、画面の (ix,iy)（そのマスのひし形の上のかど、ゲームの点）に描く（高い段の上の面）。c は画面の向き（ゲームの点）で描く */
-function igTile(c,x,y,ix,iy){const sx=(x-y)*IQW/2,sy=(x+y)*IQH/2;c.save();c.beginPath();c.moveTo(ix,iy);c.lineTo(ix+IQW/2,iy+IQH/2);c.lineTo(ix,iy+IQH);c.lineTo(ix-IQW/2,iy+IQH/2);c.closePath();c.clip();
-  for(let cy=Math.max(0,Math.floor((sy-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((sy+IQH)/IGH));cy++)for(let cx=Math.max(0,Math.floor((sx-IQW/2-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((sx+IQW/2-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.f)continue;c.drawImage(q.f,ix-sx+igX(q)+q.ox,iy-sy+igY(q)+q.oy)}
+const IGTZ=.6;/* これより ちぢめたときは、高い段の上の面を、半分の細かさの絵にしてとっておく（IG.tc。1マス 32×24、ちぢめるのをやめたら手ばなす） */
+function igTile(c,x,y,ix,iy){if(cam.z<IGTZ&&c===ctx){const T=igTileLod(x,y);if(T){c.drawImage(T,ix-IQW/2-1,iy-1,IQW+2,IQH+2);return}}igTile0(c,x,y,ix,iy)}
+function igTileLod(x,y){const j=y*W+x,sx=(x-y)*IQW/2,sy=(x+y)*IQH/2;let v='';for(let cy=Math.max(0,Math.floor((sy-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((sy+IQH)/IGH));cy++)for(let cx=Math.max(0,Math.floor((sx-IQW/2-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((sx+IQW/2-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.f)return null;v+=q.v+','}
+  const M=IG.tc||(IG.tc=new Map());let e=M.get(j);if(e&&e.v===v)return e.c;if(!e){e={c:document.createElement('canvas'),v:''};e.c.width=IQW/2+1;e.c.height=IQH/2+1;M.set(j,e)}
+  const g=e.c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,e.c.width,e.c.height);g.imageSmoothingEnabled=true;g.setTransform(.5,0,0,.5,0,0);igTile0(g,x,y,IQW/2+1,1,1);e.v=v;return e.c}/* まわり1ドット大きく切って、となりの面とのすきまを出さない */
+function igTile0(c,x,y,ix,iy,pad){const sx=(x-y)*IQW/2,sy=(x+y)*IQH/2,p=pad||0;c.save();c.beginPath();c.moveTo(ix,iy-p);c.lineTo(ix+IQW/2+p,iy+IQH/2);c.lineTo(ix,iy+IQH+p);c.lineTo(ix-IQW/2-p,iy+IQH/2);c.closePath();c.clip();
+  for(let cy=Math.max(0,Math.floor((sy-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((sy+IQH)/IGH));cy++)for(let cx=Math.max(0,Math.floor((sx-IQW/2-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((sx+IQW/2-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.f)continue;{const gx=igX(q)+q.ox,gy=igY(q)+q.oy,u0=Math.max(0,Math.floor(sx-IQW/2-gx)),v0=Math.max(0,Math.floor(sy-gy)),u1=Math.min(q.f.width,Math.ceil(sx+IQW/2-gx)),v1=Math.min(q.f.height,Math.ceil(sy+IQH-gy));if(u1>u0&&v1>v0)c.drawImage(q.f,u0,v0,u1-u0,v1-v0,ix-sx+gx+u0,iy-sy+gy+v0,u1-u0,v1-v0)}}/* そのマスにかかる所だけ写す（区画ぜんぶを切りとって描くと、ちぢめた画面で重い） */
   c.restore()}
