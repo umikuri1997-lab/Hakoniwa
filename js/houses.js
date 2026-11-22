@@ -236,7 +236,7 @@ let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたと
     SSIG=sg;
     for(let m=true;m;){m=false;for(let a=0;a<R.length&&!m;a++)for(let b=a+1;b<R.length;b++){const p=R[a],q=R[b];if(p[0]<=q[2]+1&&q[0]<=p[2]+1&&p[1]<=q[3]+1&&q[1]<=p[3]+1){R[a]=[Math.min(p[0],q[0]),Math.min(p[1],q[1]),Math.max(p[2],q[2]),Math.max(p[3],q[3])];R.splice(b,1);m=true;break}}}/* かさなる四角は1つにまとめる */
     let area=0;for(const r of R)area+=(r[2]-r[0]+1)*(r[3]-r[1]+1);
-    if(area<W*H*.4){STDIRTY=R.map(r=>[r[0],r[1],r[2],r[3]]);waterDirty(R);for(const r of R){
+    if(area<W*H*.4){STDIRTY=R.map(r=>[r[0],r[1],r[2],r[3]]);waterDirty(R);if(typeof igDirty==='function')igDirty(R);for(const r of R){
         for(let cy=Math.max(0,(r[1]-1)>>4);cy<=Math.min((H-1)>>4,(r[3]+1)>>4);cy++)for(let cx=Math.max(0,(r[0]-1)>>4);cx<=Math.min((W-1)>>4,(r[2]+1)>>4);cx++){const q=GRD.c.get(cy*64+cx);if(q)q.st=true}}/* 変わった所にかかる区画に、作りなおすしるし（作りなおすまでは前の絵） */
       dirty=false;return}}
   SSIG=sg;SSIG_S=S;SSIG_G=g;gclear();waterDirty(null);dirty=false;STATICFULL=false;
