@@ -219,7 +219,7 @@ let HORNICO=null;function hornIco(){/* よびごえの角笛のアイコン：32
   g.fillStyle='#fff8e6';for(const[x,y]of[[12,17],[13,16],[19,12],[20,11]])g.fillRect(x*2,y*2,2,2);/* 光 */
   return HORNICO=c.toDataURL()}
 function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const a=ART.bag;if(a&&a.ok){const h=56,w=h*a.w/a.h;g.drawImage(a.img,(64-w)/2-4,4,w,h)}g.save();g.translate(30,26);g.scale(1.1,1.1);drawCrop(g,k,0,0,100,true);g.restore();return c.toDataURL()}/* たねは、たねのふくろ（もらった絵）と、育つ作物の絵のセット */
-function cropIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.scale(2,2);drawCrop(g,k,0,0,100,true);return c.toDataURL()}
+
 /* 説明は❓をおしたときだけ出す */
 function helpify(r,text){if(!r||!text)return r;const tx=r.querySelector('.tx');if(!tx)return r;const q=document.createElement('button');q.className='qbtn';q.textContent='?';q.setAttribute('aria-label','説明');const nm=tx.querySelector('b').textContent;q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,text)};tx.querySelector('b').appendChild(q);return r}
 const GENRE_TAB={'家具':'家具','収納':'収納','遊び':'あそび道具','庭':'庭の家具','あかり':'あかり','ごはん':'料理家具','ワナ':'ワナ','家づくり':'家づくり','道・囲い':'道・囲い','クエスト':'クエスト'};

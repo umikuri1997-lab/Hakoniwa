@@ -1,7 +1,7 @@
 // ステージだけの物（竹の物・丸太の塀など）が、ほかのステージで、おそなえ・つり・落とし物から出ないこと
 const fs=require('fs'),vm=require('vm'),assert=require('assert');const root=require('path').resolve(__dirname,'../..')+'/';
 const c=vm.createContext({console,localStorage:{getItem(){return null},setItem(){},removeItem(){}},document:{querySelector(){return {hidden:true}}},ACT:{},setTimeout(){},performance:{now:()=>0}});
-for(const f of ['core','data','story','world','quests','level','night'])vm.runInContext(fs.readFileSync(root+'js/'+f+'.js','utf8'),c,{filename:f});
+for(const f of ['core','data','story','world','quests','level','night'])vm.runInContext(fs.readFileSync(root+'js/'+f+'.js','utf8'),c,{filename:f});vm.runInContext(fs.readFileSync(__dirname+'/vm-stubs.js','utf8'),c);/* gear.js・yami.js のかわり */
 const pick=(f,start)=>fs.readFileSync(root+'js/'+f,'utf8').split('\n').find(l=>l.startsWith(start));
 vm.runInContext(pick('build.js','const WIND_STAGE_TOYS'),c);vm.runInContext(pick('village.js','const QB='),c);
 const act=fs.readFileSync(root+'js/spirit-act.js','utf8');
