@@ -4,7 +4,7 @@
    夜・敵・人物不在・道がないときは、動きを省いてそのまま進める。村を切りかえたら残さない（VILLAGE_SESSION）。絵はコードで描くドット絵（1ドット＝整数の四角）。 */
 const VOL_BEAT_MS={touchA:1200,touchH:1200,dipWalk:900,dipS:1200,altarPair:900,altarLit:3400,introStart:400,lookbackH:1300,temple:1300,lookbackS:1300,wave:900,shoulders:1800,springWalk:900,hidane:900,summonRing:1000,meet:900,fanS:800,jumpBoth:800,traceRock:900,canal:1200,benchSit:900,armsCross:600,egg:900,eatS:1200,crackSeal:1000,yoganSide:800,fist:1000,stepBackS:1000,yoganPulse:1200,sitBeside:900,bump:1400,lanterns:1200,eggsUp:1200,cheer:800,ashiyu:900,ripple:900,scaredS:1000,pointDevice:1000,ashFall:600,stepMountain:900,grab:900,backToBack:1300,morning:1500,shadowSpot:900,kneelAsh:1500,skyH:1100,innFront:900,soakBoth:1000,kneelNushi:1500};
 const HINO_AT=new WeakMap();/* ヒノオオカゲが消えた所（保存しない） */
-function volDir(){if(!S||WD!==1||S.free)return null;const d=sacredDirection(true);if(!d)return null;if(!d.vol){d.vol=true;d.volKey=DLGCUR;}return d;}
+function volDir(){if(!S||WD!==KAZAN||S.free)return null;const d=sacredDirection(true);if(!d)return null;if(!d.vol){d.vol=true;d.volKey=DLGCUR;}return d;}
 function volWho(n){return S.res.find(r=>r.name===n&&!r.hidden)||null;}
 function volUnsafe(){return isNight()||S.enemies.some(e=>e.spawned&&!e.dead&&S.res.some(r=>!r.hidden&&Math.hypot(e.x-r.x,e.y-r.y)<6));}
 /* 動きが終わるまで待つ：task を出して、終わったら done(余韻)。cap は、じゃまされたときに止まったままにしないための上限 */
@@ -122,7 +122,7 @@ function storyStageAdd(add,now){const d=sacredDirection();if(!d||!d.effects.size
   for(const [key,e]of d.effects){if(!(VOL_GROUND.has(e.kind)||e.kind==='egg'&&!e.actor))continue;const one=(y,fn)=>add(y,1,null,()=>{ctx.save();fn();ctx.globalAlpha=1;ctx.restore();},-1);
     if(e.kind==='lanterns')e.pts.forEach((p,i)=>one(p[1],()=>volDrawFx({...e,pts:[p],at:e.at+i*e.step},now)));else one(e.y,()=>volDrawFx(e,now));}}
 function drawStoryStage(now){
-  if(!S||WD!==1)return;const d=sacredDirection();if(!d||!d.effects.size)return;ctx.save();
+  if(!S||WD!==KAZAN)return;const d=sacredDirection();if(!d||!d.effects.size)return;ctx.save();
   for(const [key,e]of d.effects){if((now-e.at)/e.ms>=1){d.effects.delete(key);continue;}if(!e.kind||VOL_GROUND.has(e.kind)||e.kind==='egg'&&!e.actor)continue;volDrawFx(e,now);}
   ctx.globalAlpha=1;ctx.restore();
 }
@@ -178,7 +178,7 @@ const ALTAR_FAIL=[
   [SHIZUKU,'#teary|すみません。かけすぎました……。'],
   [HOMURA,'かわくまで待って、あした、もう一度やろう。']];
 let ALTAR_RUN=null;
-const altarLit=()=>WD===1&&!!(S.st2&&S.st2.lit);
+const altarLit=()=>WD===KAZAN&&!!(S.st2&&S.st2.lit);
 const altarLines=L=>L.filter(l=>!!volWho(l[0]));/* いないせいれいの行は、はぶく */
 /* 火を入れられないわけ（目標の進みぐあいと、タップしたときの知らせで同じ文） */
 function altarWhy(){if(!volWho(HOMURA))return 'ホムラがもどるのを待とう';if((st2().litRetry||0)>callDay())return '火入れは、あした、もう一度';if(isNight())return '火入れは、朝になってから';if(S.enemies.some(e=>e.spawned&&!e.dead))return '「コワイノ」がいなくなってから';return ''}
@@ -188,7 +188,7 @@ function altarLightRun(j,won){const run=ALTAR_RUN={S,session:VILLAGE_SESSION},ok
   say(ALTAR_PRE,()=>{if(!ok())return end();
     startSacredPlay('towerLight',j,[],()=>{if(!ok())return end();say(ALTAR_POST,()=>{if(!ok())return end();end(true)})},
       ()=>{if(!ok())return end();say(ALTAR_FAIL,()=>{if(!ok())return end();end(false)})})})}
-function towerLightTap(j){if(WD!==1||S.free||S.cleared||altarLit()||S.obj[j]!=='tower'||IS_STORY_REPLAY)return false;
+function towerLightTap(j){if(WD!==KAZAN||S.free||S.cleared||altarLit()||S.obj[j]!=='tower'||IS_STORY_REPLAY)return false;
   if(ALTAR_RUN&&ALTAR_RUN.S===S&&ALTAR_RUN.session===VILLAGE_SESSION)return true;/* 何回タップしても1回 */
   const why=altarWhy();if(why){toast(why);return true}
   sfx('tstone');altarLightRun(j,v=>{const t=st2();
@@ -203,7 +203,7 @@ function towerLightTap(j){if(WD!==1||S.free||S.cleared||altarLit()||S.obj[j]!=='
 const YUMOMI_PRE=[[SHIZUKU,'#think|……では、湯をもんでみます。守り神さま、板をおねがいします。','vol:dipWalk']];
 const YUMOMI_FAIL=[[SHIZUKU,'#teary|……湯が、ずいぶんこぼれてしまいました。'],[SHIZUKU,'湯がたまるまで待って、あした、もう一度おねがいします。']];
 let YUMOMI_RUN=null;
-const yumomiOn=()=>WD===1&&!S.free&&!S.cleared&&!st2().yumomi&&QUESTS[S.quest]&&QUESTS[S.quest].id==='shizukuRest'&&S.qTalked&&S.qStory==null;
+const yumomiOn=()=>WD===KAZAN&&!S.free&&!S.cleared&&!st2().yumomi&&QUESTS[S.quest]&&QUESTS[S.quest].id==='shizukuRest'&&S.qTalked&&S.qStory==null;
 function yumomiWhy(){if(st2().yumomi)return '';if(!volWho(SHIZUKU))return 'シズクがもどるのを待とう';if((st2().yuRetry||0)>callDay())return '湯もみは、あした、もう一度';if(isNight())return '湯もみは、朝になってから';if(S.enemies.some(e=>e.spawned&&!e.dead))return '「コワイノ」がいなくなってから';if(!springOn('a'))return '入口の温泉が、冷めている';return ''}
 function yumomiRun(won){const run=YUMOMI_RUN={S,session:VILLAGE_SESSION},ok=()=>YUMOMI_RUN===run&&S===run.S&&VILLAGE_SESSION===run.session,end=v=>{if(YUMOMI_RUN===run)YUMOMI_RUN=null;if(v!=null&&won)won(v)},say=(L,then)=>{DLGTAP=performance.now();const ls=altarLines(L);if(!ls.length||dialog(ls,then)===false)then()};
   say(YUMOMI_PRE,()=>{if(!ok())return end();startSacredPlay('yumomi',-1,[],()=>{if(!ok())return end();end(true)},()=>{if(!ok())return end();say(YUMOMI_FAIL,()=>{if(!ok())return end();end(false)})})})}

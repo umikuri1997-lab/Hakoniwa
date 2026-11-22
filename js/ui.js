@@ -408,15 +408,15 @@ function renderSheet(){
       }
     }
     buyItems('きょうの花のたね',shopDaily(flowerIds));
-    {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる。生き物は、小屋をタップすると、せいれいがつれていく','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。たねもまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、もちものにもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
+    {const TL=WD===KUSA?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる。生き物は、小屋をタップすると、せいれいがつれていく','mover']]:WD===KAZAN?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。たねもまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、もちものにもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
       if(TL.length){const r3=sec('道具');for(const T of TL){const bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,'もらう　'+SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！','good');trade()},1)}
 }}
     {const rg=sec('きょうのおくりもの');for(const id of giftShopToday()){const got=giftShopBought(id),bx=row(rg,BL[id].name,BL[id].desc+'（所持：'+inv(id)+'）',giftIco(id),got),b=el('<button class="btn pri"></button>');b.textContent=got?'もらった':'もらう　'+SP(BL[id].shop);lackOn(b,got?'きょうは、もうもらった':S.pt<BL[id].shop?'パワーが足りません':'');b.onclick=()=>{if(got||S.pt<BL[id].shop)return;if(giftShopBuy(id))trade()};bx.appendChild(b)}}/* おくりもの：日がわり（gifts.js） */
     if(S.enemyOn||S.nights>0){const r7=sec('まもりの品'),bx=row(r7,'まよけのハーブ',HERBDESC+'（所持：'+(S.herb||0)+'）',herbIco());btn(bx,SP(200),S.pt<200,()=>{S.pt-=200;S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;toast('まよけのハーブをもらった','good');trade()},1)}
-    if(WD===1&&(qAt('fest')||S.cleared)||S.free&&VOLK()){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・ごちそうは、おまつりの日に、せいれいの屋台で */
+    if(WD===KAZAN&&(qAt('fest')||S.cleared)||S.free&&VOLK()){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・ごちそうは、おまつりの日に、せいれいの屋台で */
       {const done=S.festDay!=null&&S.festDay>=dayNo(),bx=row(r5,'おまつり','つぎの日が、おまつりになる',null,done);btn(bx,done?(S.festDay>dayNo()?'あしたはおまつり':'きょうはおまつり'):'ひらく　'+SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo()+1;sfx('good');toast('あしたは、おまつり！','good');trade()},1)}/* たのんだつぎの日の朝7時に、おまつりがはじまる */
       }
-    if(WD===1&&(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown)||S.free&&VOLK()){const r6=sec(S.free?'火山のかざり':'カミサマのかざり');const DECO=[['furin',120],['ema',150],['kadomatsu',180],['komainu',200]]/* 和風のかざりは火山だけ */,d=dayNo();
+    if(WD===KAZAN&&(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown)||S.free&&VOLK()){const r6=sec(S.free?'火山のかざり':'カミサマのかざり');const DECO=[['furin',120],['ema',150],['kadomatsu',180],['komainu',200]]/* 和風のかざりは火山だけ */,d=dayNo();
       for(const[id,c]of[DECO[d%DECO.length],DECO[(d+1)%DECO.length]]){const bx=row(r6,BL[id].name,BL[id].desc+'（所持：'+(inv(id)||0)+'）',iconURL(id));btn(bx,'もらう　'+SP(c),S.pt<c,()=>{S.pt-=c;giveItem(id,1);toast(BL[id].name+'をもらった','good');trade()},1)}
       }/* 終盤のパワーの使い道 */
   }else if(sheet==='inv'){
@@ -605,7 +605,7 @@ function renderSheet(){
     body.appendChild(rows);
   }else if(sheet==='enemy'){const e=S.enemies.find(q=>q.id===sheetArg);if(!e||e.dead){closeSheet();return}const D=EN[e.type];
     T.textContent=D.name;
-    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日めの夜、そのあと3日ごとに来る。追いはらうと「ヌシ様の火だね」があらわれ、そのあとは5日ごとに来る。当たると目をまわす':'3日めの夜、そのあと3日ごとに来る。一度追いはらうと、そのあとは5日ごと。とても強い。当たると目をまわす'};
+    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD!==KUSA?'5日めの夜、そのあと3日ごとに来る。追いはらうと「ヌシ様の火だね」があらわれ、そのあとは5日ごとに来る。当たると目をまわす':'3日めの夜、そのあと3日ごとに来る。一度追いはらうと、そのあとは5日ごと。とても強い。当たると目をまわす'};
     const st=el('<div class="sec"><h3>ステータス</h3><div class="stats"></div></div>'),g=st.querySelector('.stats');
     for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか －'+D.hitN],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(st);
@@ -625,7 +625,7 @@ function renderSheet(){
   }else if(sheet==='manual'){
     T.textContent='ひでんのしょ';
     sheetBack();
-    body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>${WD===0?'御神木':'守護の台座'}</b>を${WD===0?'育てて':'建てて'}<b>ヌシ様</b>をむかえましょう。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたは最低限だけ。くわしいことは、ほかのタブに */
+    body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>${WD===KUSA?'御神木':'守護の台座'}</b>を${WD===KUSA?'育てて':'建てて'}<b>ヌシ様</b>をむかえましょう。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたは最低限だけ。くわしいことは、ほかのタブに */
     {const CAT=[['あそびかた',[]],['せいれい',['せいれいのようす','ステータス','属性と得意なこと']],['くらし・家具',['家具の種類','くらし']],['守り神',['守り神のちから']],['夜と戦い',['夜と「コワイノ」','夜の種類']]];
       if(!CAT.some(c=>c[0]===MANC))MANC='あそびかた';
       const bar=el('<div class="mtabs" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0"></div>');for(const c of CAT){const b=el('<button class="btn"></button>');b.innerHTML=pxi(MANTAB[c[0]]||'book','mti');b.appendChild(document.createTextNode(c[0]));if(c[0]===MANC)b.classList.add('pri');b.onclick=()=>{sfx('tap');MANC=c[0];openSheet('manual')};bar.appendChild(b)}
@@ -664,7 +664,7 @@ function renderSheet(){
     else if(t.hvb[j]){P('ヒノオオカゲにこわされて、止まっている。石材3で直せる。');const b=el('<button class="btn pri">直す（石材3）</button>');lackOn(b,lackMat('stone',3));b.onclick=()=>{S.mat.stone-=3;delete t.hvb[j];dirty=true;sfx('level');burst(j,'block');toast('装置を直した','good');dirty=true;closeSheet()};body.appendChild(b)}
     else{P(j===D1?'火山の熱を、左（西の温泉）と右（奥の装置）のどちらに流すか切りかえる。':'熱を、左（奥の温泉）と右（けむり穴）のどちらに流すか切りかえる。');
       P('いまは「'+(dir===0?'左':'右')+'」に流している。');
-      if(j===D1&&!t.crank&&!t.sp.b&&dir===1){P('ハンドルが、さびついている。');const b=el('<button class="btn pri">ハンドルを回す</button>');b.onclick=()=>{sfx('tap');closeSheet();startSacredPlay('heatCrank',j,[],()=>{if(WD!==1||S.st2!==t)return;t.d1=0;t.crank=1;dirty=true;checkQuest()},()=>toast('ハンドルが、あつくなりすぎた'))};body.appendChild(b)}/* はじめて西へむけるときは、守り神の出番「かじとり」（sacred-play.js の heatCrank） */
+      if(j===D1&&!t.crank&&!t.sp.b&&dir===1){P('ハンドルが、さびついている。');const b=el('<button class="btn pri">ハンドルを回す</button>');b.onclick=()=>{sfx('tap');closeSheet();startSacredPlay('heatCrank',j,[],()=>{if(WD!==KAZAN||S.st2!==t)return;t.d1=0;t.crank=1;dirty=true;checkQuest()},()=>toast('ハンドルが、あつくなりすぎた'))};body.appendChild(b)}/* はじめて西へむけるときは、守り神の出番「かじとり」（sacred-play.js の heatCrank） */
       else{const b=el('<button class="btn pri">向きをかえる</button>');b.onclick=()=>{if(j===D1)t.d1=1-t.d1;else t.d2=1-t.d2;sfx('tap');renderSheet();checkQuest()};body.appendChild(b)}}
     const c2=el('<button class="btn">とじる</button>');c2.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(c2);
   }else if(sheet==='stall'){const st=festStalls().find(t=>t.x===sheetArg);if(!st)return closeSheet();const M=STALLM[st.el],kp=S.res.find(r=>r.id===st.id);T.textContent=M.nm+'の屋台';
@@ -677,7 +677,7 @@ function renderSheet(){
       else if(it[0]==='mebuki'){if(!((S.bossKills||0)>=1||S.flags.hinoDown))continue;add('めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null,'もらう　'+SP(c),S.pt<c,()=>{S.pt-=c;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good')})}
       else if(it[0]==='chochin')add(BL.chochin.name,BL.chochin.desc+'（所持：'+(inv('chochin')||0)+'）',iconURL('chochin'),'もらう　'+SP(c),S.pt<c,()=>{S.pt-=c;giveItem('chochin',1);toast(BL.chochin.name+'をもらった','good')})}
   }else if(sheet==='travel'){T.textContent=storyTreeName();
-    const nx=WORLDS[WD+1];body.appendChild(el('<p class="story"></p>')).textContent=(WD===0?'御神木から、ほかの土地へ行ける。':'台座から、ほかの土地へ行ける。')+(nx?'つぎは「'+nx.name+'」。':'');
+    const nx=WORLDS[WD+1];body.appendChild(el('<p class="story"></p>')).textContent=(WD===KUSA?'御神木から、ほかの土地へ行ける。':'台座から、ほかの土地へ行ける。')+(nx?'つぎは「'+nx.name+'」。':'');
     const b=el('<button class="btn pri">マップをひらく</button>');b.onclick=()=>{sfx('tap');save();closeSheet();showMaps()};body.appendChild(b);
     const c=el('<button class="btn">とじる</button>');c.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(c);
   }else if(sheet==='watch'){
@@ -715,7 +715,7 @@ function renderSheet(){
        body.appendChild(sec)}
     }else if(sheetArg==='goal'&&S.cleared){
       body.appendChild(el('<p class="note">'+(WD===FREE?'おまつりのあとも、村づくりはつづく。季節の話や目標をたっせいすると、パワーがもらえる。':'この土地は守られた。ここからは、クエストや目標で村をそだてよう。たっせいすると、パワーがもらえる。')+'</p>'));
-      if(WD===0&&!S.free){const ng=nextStageGoal(),sec=el('<div class="sec"><h3>つぎの土地</h3><div class="rows"></div></div>');sec.querySelector('.rows').appendChild(ng?rowEl('・'+ng.t,ng.pr+'。'+ng.how):rowEl('火山のふもとの村','御神木をタップすると、火山のふもとの村へ行ける'));body.appendChild(sec)}/* つぎのステージへの行き方 */
+      if(WD===KUSA&&!S.free){const ng=nextStageGoal(),sec=el('<div class="sec"><h3>つぎの土地</h3><div class="rows"></div></div>');sec.querySelector('.rows').appendChild(ng?rowEl('・'+ng.t,ng.pr+'。'+ng.how):rowEl('火山のふもとの村','御神木をタップすると、火山のふもとの村へ行ける'));body.appendChild(sec)}/* つぎのステージへの行き方 */
       if(WD===FREE)freeSec(body);/* 第2章と季節の話（free.js） */
       {const a=AFTERQ[S.aq||0],qs=el('<div class="sec"><h3>クエスト</h3><div class="rows"></div></div>');
         if(!a)qs.querySelector('.rows').appendChild(rowEl('✓ ぜんぶたっせい','カミサマからのおねがいは、ぜんぶかなえた'));
@@ -802,7 +802,7 @@ function zukanBody(body){
   if(ws.length>1){const tb=el('<div class="bktabs bkw"></div>');ws.forEach((w,i)=>{const t=el('<button class="bktab'+(w===ZKW?' on':'')+'" type="button"></button>');t.textContent=WORLDS[w].name;t.onclick=()=>{if(w===ZKW)return;go(()=>{ZKW=w},i>ws.indexOf(ZKW)?1:-1)};tb.appendChild(t)});body.appendChild(tb)}
   {const tb=el('<div class="bktabs"></div>');ZKTABS.forEach((nm,i)=>{const t=el('<button class="bktab'+(i===ZKT?' on':'')+'" type="button"></button>');t.style.setProperty('--tc',ZKTC[i%ZKTC.length]);t.textContent=nm;t.onclick=()=>{if(i===ZKT)return;go(()=>{ZKT=i},i>ZKT?1:-1)};tb.appendChild(t)});body.appendChild(tb)}
   const tabs=[...body.children];
-  const d=ZKW===WD?S:savedStage(ZKW);if(!d)return;
+  const d=ZKW===WD!==KUSA?S:savedStage(ZKW);if(!d)return;
   const G=grecOf(),here=id=>G.get(id)===ZKW,placed=new Set((d.obj||[]).filter(o=>o&&BL[o])),has=id=>placed.has(id)||((d.inv||{})[id]||0)>0;
   const rows=el('<div class="rows"></div>'),list=[];
   const add=(nm,desc,img,snd)=>list.push([nm,desc,img,snd]);/* snd：アイコンをタップしたときの音（'i:<物のid>'＝ひろったときと同じ材質の録音・'k:<音の名前>'） */

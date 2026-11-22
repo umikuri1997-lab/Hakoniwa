@@ -7,7 +7,7 @@
 const TALKFUN=10,DLMAX=16;
 const DLFUN=new Set(['yubench','splay','play','chat','fish','bathe','critwatch','sunset','rainjoy','eat','admire','ownseat']);/* たのしかったことにする物 */
 /* 火山：よみがえった温泉のそば（水のマスから4マス）のベンチ。温泉の印（a 入口・b 西・c 奥）か '' */
-function benchSpr(j){if(WD!==1||j==null||j<0||!BENCHES.has(S.obj[j]))return '';const M=sprMap(),x=j%W,y=(j/W)|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx,k=M[q];if(k&&S.ground[q]===1&&springOn(k))return k}return ''}
+function benchSpr(j){if(WD!==KAZAN||j==null||j<0||!BENCHES.has(S.obj[j]))return '';const M=sprMap(),x=j%W,y=(j/W)|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx,k=M[q];if(k&&S.ground[q]===1&&springOn(k))return k}return ''}
 function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY||a.shade)return;let v='';let t=a.type;
   if((t==='rest'||t==='admire'||t==='ownseat')&&benchSpr(a.obj)){v=benchSpr(a.obj);t='yubench'}/* 湯のそばのベンチで休んだ・見た */
   else if(t==='rest')return;

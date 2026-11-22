@@ -5,7 +5,7 @@
    ねばり草（nebari）：上を歩くコワイノの速さ NEBARISP 倍。ほたるの草むら（hotaru）：まわり2マスのあかり。はじめて光に入ったコワイノを HOTARUSTUN 止める（1ぴきに1晩1回）。 */
 const WAVES=[15,90,165,240,315],WAVEGAP=4.5,WAVEPART=.2,SCOUTCUT=.2,SCOUTLV=[3,5],SIDEP=1/3,NEBARISP=.5,HOTARUSTUN=3,HOTARUSTUNB=1.5,HOTARUR2=4;
 function wavesOn(){/* 波に分けて来る夜：草原、はじめてオオカゲを追いはらったあと、ふつうの夜だけ（最後の夜の前の群れ・最後の夜・試練・かげのうしおはのぞく） */
-  return WD===0&&!S.free&&(S.bossKills||0)>0&&!S.rushOn&&!S.finalOn&&!S.trialOn&&nightVarNow()!=='ushio'}
+  return WD===KUSA&&!S.free&&(S.bossKills||0)>0&&!S.rushOn&&!S.finalOn&&!S.trialOn&&nightVarNow()!=='ushio'}
 function villAvgLv(){return Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,S.res.length))}
 function waveApply(es){/* spawnWave で入れたコワイノを、3つの波にならべかえる。先ぶれを足す */
   const ord=es.filter(e=>!EN[e.type].boss).concat(es.filter(e=>EN[e.type].boss)),n=ord.length,p=Math.floor(n*WAVEPART),last=WAVES.length-1;
@@ -15,7 +15,7 @@ function waveApply(es){/* spawnWave で入れたコワイノを、3つの波に�
   for(let i=0;i<ns;i++){const hp=EN.fast.hp;S.enemies.push({id:S.nid++,type:'fast',x:0,y:0,hp,max:hp,delay:i*6,scout:1,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})}
   return ns+(typeof shinyAdd==='function'?shinyAdd():0)}
 function waveNote(){/* 目標の欄：つぎの波まで */
-  if(!S||WD!==0||!S.enemies||!S.enemies.length)return '';const L=S.enemies.filter(e=>e.wv!=null&&!e.dead);if(!L.length)return '';
+  if(!S||WD!==KUSA||!S.enemies||!S.enemies.length)return '';const L=S.enemies.filter(e=>e.wv!=null&&!e.dead);if(!L.length)return '';
   const wait=L.filter(e=>!e.spawned);if(!wait.length)return '';const g=Math.min(...wait.map(e=>e.wv));
   if(L.some(e=>e.wv===g&&e.spawned))return '影の波 '+(g+1)+'/'+WAVES.length;
   const m=Math.max(1,Math.ceil(Math.min(...wait.filter(e=>e.wv===g).map(e=>e.delay))/DAYLEN));return 'つぎの波まで：あと'+(m>=60?Math.floor(m/60)+'時間'+(m%60?m%60+'分':''):m+'分')}
@@ -35,7 +35,7 @@ function scoutDown(e){/* 先ぶれをたおした：まだ来ていない本隊�
 /* ---------- 横から来る ---------- */
 function nightSideNow(){const v=S&&S.nightSide;if(!v)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.s:null}
 function nightSidePick(){/* 夜20時、今夜のコワイノが決まったあと（nightVarPick のあと）に1回 */const d=dayNo();if(S.nightSide&&S.nightSide.d===d)return;S.nightSide=null;
-  if(WD!==0||S.free||!((S.bossKills||0)>0)||S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn||nightVarNow()||S.hornD===d)return;
+  if(WD!==KUSA||S.free||!((S.bossKills||0)>0)||S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn||nightVarNow()||S.hornD===d)return;
   const w=S.wave||[];if(!w.length||w.some(t=>EN[t].boss))return;if(Math.random()>=SIDEP)return;
   const s=Math.random()<.5?'e':'w';S.nightSide={d,s};sfx('bush');toast((s==='e'?'東':'西')+'の草むらが、ざわざわしている','warn')}
 function sideEdge(y,s){if(!fogOn())return s==='e'?W-1:0;if(s==='e'){for(let x=W-1;x>=0;x--)if(!fogAt(y*W+x))return x}else for(let x=0;x<W;x++)if(!fogAt(y*W+x))return x;return -1}

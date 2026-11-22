@@ -64,7 +64,7 @@ const BPT={floor:8,wall:12,door:15,win:18,furn:40,path:8,farm:8,edge:8,fence:12,
 const BPWM={hwall:{wood:1},bamboowall:{bamboo:1},canvaswall:{wood:1},acaciawall:{wood:1,stone:1},timberwall:{wood:1,nendo:1},canalwall:{maruishi:1,nendo:1},mosswall:{stone:1,kogi:1},moonwall:{stone:1,gekko:1},logwall:{wood:1},plasterwall:{wood:1,stone:1},brickwall:{stone:2},yozorawall:{wood:1,stone:1}};/* 壁1マスの素材 */
 const BPWINM={hwall:{wood:3},bamboowall:{bamboo:1,wood:2},canvaswall:{wood:3},acaciawall:{wood:3,stone:1},timberwall:{wood:3,nendo:1},canalwall:{maruishi:2,wood:2},mosswall:{stone:2,kogi:1},moonwall:{stone:2,gekko:1},logwall:{wood:3},plasterwall:{wood:3,stone:1},brickwall:{stone:2,wood:2},yozorawall:{wood:3,stone:1}};/* 窓のある壁1マスの素材 */
 const BPFM={floor:{wood:1},stonefloor:{stone:1},brickfloor:{stone:1},path:{stone:1},gravel:{stone:1},woodpath:{wood:1},stone:{stone:1},brick:{stone:1},fence:{wood:1},misugaki:{bamboo:1},ropefence:{wood:1,nabiki:1},ashifence:{ashi:1},ibara:{kagekusa:1},bedge:{wood:1},door:{wood:2},yozoradoor:{wood:2},gate:{wood:3}};/* 床・道・柵・ふち・ドア1マスの素材 */
-const bpWall=()=>WD===1?'bamboowall':WD===WIND?'canvaswall':WD===MIZU?'timberwall':WD===YAMI?'mosswall':'hwall',bpWallOf=b=>b.wl||bpWall(),bpFence=()=>WD===1?'misugaki':WD===WIND?'ropefence':WD===MIZU?'ashifence':WD===YAMI?'ibara':'fence';
+const bpWall=()=>WD===KAZAN?'bamboowall':WD===WIND?'canvaswall':WD===MIZU?'timberwall':WD===YAMI?'mosswall':'hwall',bpWallOf=b=>b.wl||bpWall(),bpFence=()=>WD===KAZAN?'misugaki':WD===WIND?'ropefence':WD===MIZU?'ashifence':WD===YAMI?'ibara':'fence';
 function bpPieceMat(t,id){/* 1つずつの部品の素材 */if(t==='farm'||t==='plant')return{};if(t==='wall')return Object.assign({},BPWM[id]||{wood:1});if(t==='win')return Object.assign({},BPWINM[id]||{wood:3});if(BPFM[id])return Object.assign({},BPFM[id]);return Object.assign({},BL[id].mat||{})}
 const bpTime=(t,id)=>t==='build'?BL[id].time:BPT[t];
 function bpPieces(k){/* 設計図の部品：[dx,dy,t,id,rot,phase]。段：1 床・道・畑・ふち（1行ずつ）→ 2 家具・建物・花・木 → 3 壁・窓・柵 → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出られる） */const b=BPS[k],L=[],wl=bpWallOf(b);
@@ -77,8 +77,8 @@ const bpCellsOf=(id,x,y,rot)=>fp(id,x,y,rot||0).map(([a,c])=>c*W+a);/* 家具・
 function bpCost(k){const m={};for(const p of bpPieces(k)){const pm=bpPieceMat(p[2],p[3]);for(const key in pm)m[key]=(m[key]||0)+pm[key]}return m}
 const bpSize=k=>({w:Math.max(...BPS[k].rows.map(r=>r.length)),h:BPS[k].rows.length});
 function bpKnown(t,id){/* その部品を、いまのステージで、おぼえているか */const b=BL[id];if(!b)return false;
-  if(t==='plant')return !!S.feat.plant&&lvOK(id)&&plantOK(id)&&(WD===0||id==='tree');
-  if(t==='furn'||t==='build'){if(b.offerOnly&&STAGEONLY[id]==null||WIND_STAGE_TOYS.has(id)&&WD!==4)return false;if(!((b.w||0)<=WD&&(STAGEONLY[id]==null||STAGEONLY[id]===WD)||grec(id)))return false;/* あとのステージの物・ほかのステージだけの物は、そこでおぼえていなければ入れない */return t==='build'?usable(id):recipeKnown(id)&&lvOK(id)}
+  if(t==='plant')return !!S.feat.plant&&lvOK(id)&&plantOK(id)&&(WD===KUSA||id==='tree');
+  if(t==='furn'||t==='build'){if(b.offerOnly&&STAGEONLY[id]==null||WIND_STAGE_TOYS.has(id)&&WD!==WIND)return false;if(!((b.w||0)<=WD&&(STAGEONLY[id]==null||STAGEONLY[id]===WD)||grec(id)))return false;/* あとのステージの物・ほかのステージだけの物は、そこでおぼえていなければ入れない */return t==='build'?usable(id):recipeKnown(id)&&lvOK(id)}
   if(t==='win')return !!S.unlocked.window&&!!S.unlocked[id];return !!S.unlocked[id]}
 const bpCanGet=k=>bpPieces(k).every(p=>bpKnown(p[2],p[3]));/* 中の物を、ぜんぶおぼえている設計図だけ、もらえる */
 const bpIcon=k=>{const b=BPS[k];if(b.cat==='house')return iconURL(bpWallOf(b));const f=b.furn.find(q=>BL[q[2]].kind!=='plant')||b.furn[0];return iconURL(f?f[2]:b.rows.join('').includes('f')?'farm':bpFence())};
