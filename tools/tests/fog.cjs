@@ -2,11 +2,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 /* 霧の中の土地：はじめはまん中の4エリアだけ晴れ。みどりのマスで晴れる・霧の中に置けない・コワイノは晴れた所の南から・宝箱・古い家のあと・あしあと・古いセーブ */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:900,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.ltEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.ltEval);
 await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
-const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;showItemGift=()=>{};
+const FOGRT=6;const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;showItemGift=()=>{};
  o.fog0=S.fog.join('');o.kinds=S.fogF.filter(f=>f.t!=='mansion').map(f=>f.t).sort().join(',');o.nF=S.fogF.filter(f=>f.t!=='mansion').length;o.mansions=S.fogF.filter(f=>f.t==='mansion').length;{const m=S.fogF.find(f=>f.t==='mansion');o.msHidden=!!m&&S.fog[m.a]===1&&S.obj[m.j]!=='hwall'}
  const fj=10*W+10,cj=40*W+40;o.walkFog=walk(fj);o.walkMid=walk(cj);o.placeFog=canPlace('fence',10,10,true);o.placeMid=canPlace('fence',40,40,true)||S.obj[cj]!=='';
  o.tapFog=fogTap(10,10);o.digFog=canPlace('dig',10,10,true);o.freeFog=free('o'+fj,1);o.freeMid=free('o'+cj,1);
- /* コワイノは、晴れた所の南のはしから */const ys=new Set();for(let i=0;i<200;i++){const [x,y]=spawnSpot();ys.add((y|0)===fogSouth(x|0)&&!fogAt((y|0)*W+(x|0)))}o.spawnOK=[...ys].join();o.south=fogSouth(40);
+ /* コワイノは、晴れた所の南のはしから */const ys=new Set();for(let i=0;i<200;i++){const [x,y]=spawnSpot();ys.add((y|0)===fogSouth(x|0)&&!fogAt((y|0)*W+(x|0)))}o.spawnOK=[...ys].join();o.south=fogSouth(40);o.southEdge=!fogAt(o.south*W+40)&&(o.south+1>=H||fogAt((o.south+1)*W+40));
  /* みどりのマスで晴れる：エリア5（左上のまん中）に木を植える */for(let y=29;y<=49;y+=5)for(let x=29;x<=49;x+=5){const j=y*W+x;S.obj[j]='tree';delete S.bud}recount();/* 木はまわり2マス（5×5）を緑にする：5×5本。みどりのまわり3マスの霧が、1マスずつ晴れる */o.fog1=S.fog.join('');o.cellNear=fogAt(24*W+40);o.cellFar=fogAt(22*W+40);o.cellNearL=fogAt(40*W+24);o.cellFarL=fogAt(40*W+22);
  /* 見つける物は、そのマスがぜんぶ晴れるまで霧の中 */{const it=S.fogF.find(f=>f.t==='spring'&&S.fog[f.a]);if(it){const B=fcBits();B[it.j]=1;fcSave();S.fogV++;o.itemHalf=fogAt(it.j);const C=fogItemCells(it);for(const k of C)B[k]=1;fcSave();fogCellsDone(C,true);o.itemOut=!fogAt(it.j)&&!!it.out}}
  /* エリアの9わりが晴れたら、のこりも晴れる */{const a=[3,12].find(q=>S.fog[q]),R=fogArea(a),B=fcBits(),L=[];for(let y=R.y0;y<R.y1;y++)for(let x=R.x0;x<R.x1;x++)L.push(y*W+x);const n=Math.ceil(L.length*.9);for(const k of L.slice(0,n-1))B[k]=1;fcSave();fogCellsDone(L.slice(0,n-1),true);o.area89=S.fog[a];B[L[n-1]]=1;fcSave();fogCellsDone([L[n-1]],true);o.area90=S.fog[a];o.areaAll=L.every(k=>!fogAt(k))}
@@ -31,7 +31,7 @@ const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0)
 console.log(JSON.stringify(out));
 assert.equal(out.fog0,'1111100110011111');assert.equal(out.nF,12);assert.equal(out.kinds.split(',').filter(k=>k==='ruin').length+out.kinds.split(',').filter(k=>k==='box').length,7);
 assert.equal(out.walkFog,false);assert.equal(out.placeFog,false);assert.equal(out.placeMid,true);assert.equal(out.tapFog,true);assert.equal(out.digFog,false);assert.equal(out.freeFog,false);assert.equal(out.freeMid,true);
-assert.equal(out.spawnOK,'true');assert.equal(out.south,80);
+assert.equal(out.spawnOK,'true');assert.ok(out.south>=80&&out.south<=80+FOGRT,'晴れたエリアのはし（みどりのまわりで、少し先まで晴れる）');assert.equal(out.southEdge,true);
 assert.equal(out.fog1[1],'1','エリアごとには晴れない');assert.equal(out.cellNear,false,'みどりのまわり3マスは晴れる');assert.equal(out.cellFar,true);assert.equal(out.cellNearL,false);assert.equal(out.cellFarL,true);assert.equal(out.fog1[15],'1');
 if(out.itemHalf!==undefined){assert.equal(out.itemHalf,true,'見つける物は、ぜんぶのマスが晴れるまで霧の中');assert.equal(out.itemOut,true)}
 assert.equal(out.area89,1);assert.equal(out.area90,0,'9わりでエリアが晴れる');assert.equal(out.areaAll,true);assert.equal(out.fogcKeep,true);
