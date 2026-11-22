@@ -3,7 +3,7 @@
 #   おわん：鉄（下の半径0.08 → 上の半径0.17・高さ0.68〜0.84）。柱のさきを、底の穴にさしこむ。中に、すみ。
 from blueprint import Part as P
 from common import *
-ID='cave_torch';GRAD=True;BOTTOM=60
+ID='cave_torch';TONE5=True;DITHER=0;BOTTOM=60
 VIEWS=[('cave:torch',0)]
 CX,CY=0.50,0.58;IRON=(146,140,150);COAL=(112,96,92);ST=(150,134,120)
 def PARTS():
