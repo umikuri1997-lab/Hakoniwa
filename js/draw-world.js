@@ -124,11 +124,16 @@ let SKYTEX=null;function skyTex(){if(SKYTEX)return SKYTEX;const N=128,cv=documen
   SKYTEX=cv;return cv}
 const SKYFACE=[[108,92,66],[150,130,98],[126,108,80],[96,82,62]],SKYFH=13,SKYRIM=[104,122,84];/* 浮き島の手前のがけ（上から：土のかげ・岩・岩のかげ・うら）と、島のふちの線（仮の色） */
 function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水のマスの角：下絵には前の四角い水のふち（こい緑の線）がのこっているので、その所だけ、まわりの陸と同じ地面（あれ地か草地。マップの位置どおり）でぬりなおす */
-  const M=WRND.m,gw=R.w,F=R.f,w=(X1-X0)*TS,h=(Y1-Y0)*TS,C=window.CHIPS,gt=chipImgs(C['tex:grass'],'ground')[0];let L=null,lg=null,id=null;
-  for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){if(!isW(tx,ty)||R.ut(tx,ty)!==-1)continue;const xa=(tx-X0)*TS,ya=(ty-Y0)*TS;let any=false;
-    for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++)if(!F[(y+M)*gw+x+M]){any=true;if(!L){L=TMPC();L.width=w;L.height=h;lg=L.getContext('2d');id=lg.createImageData(w,h)}id.data[(y*w+x)*4+3]=255}
-    if(!any)continue;let gr=0,dr=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b||isW(tx+a,ty+b))continue;const j=(ty+b)*W+tx+a;if(REV.has(j))gr++;else dr++}/* まわりの陸が草地か、あれ地か */
-    const px=tx*TS,py=ty*TS;if(gr>dr&&gt.ok)lg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,xa,ya,TS,TS);else lg.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,xa,ya,TS,TS)}
+  const M=WRND.m,gw=R.w,F=R.f,w=(X1-X0)*TS,h=(Y1-Y0)*TS,C=window.CHIPS,gt=chipImgs(C['tex:grass'],'ground')[0];let L=null,lg=null,id=null,L2=null,lg2=null,idg=null;
+  const mk=()=>{L=TMPC();L.width=w;L.height=h;lg=L.getContext('2d');id=lg.createImageData(w,h)};
+  for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){if(!isW(tx,ty)||R.ut(tx,ty)!==-1)continue;const xa=(tx-X0)*TS,ya=(ty-Y0)*TS;let any=false,anyG=false;
+    const nb=[];for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b||isW(tx+a,ty+b))continue;nb.push([a,b,REV.has((ty+b)*W+tx+a)])}/* まわりの陸のマス */
+    if(!nb.length)continue;
+    for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++){if(F[(y+M)*gw+x+M])continue;any=true;if(!L)mk();const q=(y*w+x)*4;id.data[q+3]=255;
+      const rx=x-xa,ry=y-ya;let bd=1e9,g=false;for(const[a,b,gg]of nb){const dx=a<0?rx:a>0?TS-1-rx:0,dy=b<0?ry:b>0?TS-1-ry:0,d=dx*dx+dy*dy;if(d<bd){bd=d;g=gg}}/* そのドットにいちばん近い陸のマスが草地なら草地（となりがあれ地と草地のとき、マスまるごと片方にしない） */
+      if(g){anyG=true;if(!L2){L2=TMPC();L2.width=w;L2.height=h;lg2=L2.getContext('2d');idg=lg2.createImageData(w,h)}idg.data[q+3]=255}}
+    if(!any)continue;const px=tx*TS,py=ty*TS;lg.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,xa,ya,TS,TS);if(anyG&&gt.ok)lg2.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,xa,ya,TS,TS)}
+  if(L&&L2){const m2=TMPC();m2.width=w;m2.height=h;m2.getContext('2d').putImageData(idg,0,0);lg2.globalCompositeOperation='destination-in';lg2.drawImage(m2,0,0);lg.drawImage(L2,0,0);m2.width=m2.height=0}if(L2)L2.width=L2.height=0;
   if(!L)return;if(NOISEC){lg.save();lg.imageSmoothingEnabled=true;lg.imageSmoothingQuality='high';{const kx=NOISEC.width/((W+1)*TS),ky=NOISEC.height/((H+1)*TS),sx=(X0*TS+TS/2)*kx,sy=(Y0*TS+TS/2)*ky;lg.drawImage(NOISEC,sx-1,sy-1,w*kx+2,h*ky+2,-1/kx,-1/ky,w+2/kx,h+2/ky)}lg.restore()}/* 区画の所だけを切りとって描く（マップぜんたいの大きさで描くと重い） *//* 下絵と同じ色むら（drawStaticArea）もかさねる。ないと、ぬりなおした所だけ明るくなって、まわりの草とのさかいに線が出る */const m=TMPC();m.width=w;m.height=h;m.getContext('2d').putImageData(id,0,0);lg.globalCompositeOperation='destination-in';lg.drawImage(m,0,0);g.drawImage(L,0,0);L.width=L.height=m.width=m.height=0}
 const LIPC=[[150,184,98],[128,162,86],[92,124,66]],LIPSH=[.34,.16];/* 草の層の色（上の明るい所・まん中・下のこいふち）と、その下の岩に落ちるかげ */
 function lipN(wx){/* ふちのうねり：世界のよこの場所できまる、なめらかなノイズ（0〜1） */let s=0;for(const[g,a]of[[9,.7],[4,.3]]){const i=Math.floor(wx/g),f=wx/g-i,u=f*f*(3-2*f),h=n=>hash(((n*7349+g*911)>>>0));s+=a*(h(i)*(1-u)+h(i+1)*u)}return s}
