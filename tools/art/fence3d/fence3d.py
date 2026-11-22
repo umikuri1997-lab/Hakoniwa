@@ -291,8 +291,10 @@ def scene_kuzure(m):   # くずれた石の欄干（闇）：運河の石の欄�
         out.append((k,p,o))
     return out
 MSTONE=(178,176,170);MSTONED=(160,158,154)
-def render(P,xr=(0,1)):
-    sc=O.Scene();sc.txo={};sc.txax={};ext_ids=set()
+FNS={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park,'ropefence':scene_rope,'ashifence':scene_ashi,'rankan':scene_rankan,'ibara':scene_ibara,'kuzure':scene_kuzure}
+def add_parts(sc,P):
+    """部品を scene に足す（木目・石のもようの向きと場所もつける）。上のマスへのばした部品（ext）の番号をかえす"""
+    ext_ids=set()
     for kind,p,org in P:
         if kind=='stone':sc.texture(TS)
         elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP,PARKB,PARKW,REED,REEDG,BIND,RSTN,RSTND,IBS,IBSD,IBL,IBF,MSTONE,MSTONED):sc.texture(TW)
@@ -311,7 +313,9 @@ def render(P,xr=(0,1)):
             for q in ids:
                 ax=(1,0,0) if kind=='railh' else (0,1,0) if kind in('railv','ext') else (0,0,1)
                 sc.txo[q]=((0,0,0) if kind!='picket' else (org[0],org[1],0),(int(round(org[0]*4))*13+int(round(org[1]*8))*29) if kind=='picket' else 0,11);sc.txax[q]=np.array(ax,float)
-    sc.texture(None);O.S=64
+    sc.texture(None);return ext_ids
+def render(P,xr=(0,1)):
+    sc=O.Scene();sc.txo={};sc.txax={};ext_ids=add_parts(sc,P);O.S=64
     ex=(xr[0]-0.5,xr[1]+0.5,-2.0,2.4);im=O.render_px(sc,O.game,ex,O.VIEW,k=0.80,lw=2,k2=0.90,merge=4)
     import furntone;im=furntone.tone(im)   # かげは家具と同じ5色（furntone。持ち主がきめた）。見え方はゲームのマスと同じなので、光は画面の向きのまま
     a=np.array(im).copy();ids=O.LAST_IDS
@@ -323,7 +327,7 @@ def render(P,xr=(0,1)):
     im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0]+int(round(xr[0]*64)),bb[1]-128
 OLD={0:'H0',1:'HL',2:'HR',3:'HLR',4:'VU',8:'VD',12:'VUD'}
 def build_all(iid):
-    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park,'ropefence':scene_rope,'ashifence':scene_ashi,'rankan':scene_rankan,'ibara':scene_ibara,'kuzure':scene_kuzure}[iid];out={}
+    fn=FNS[iid];out={}
     for m in range(16):im,ax,ay=render(fn(m));out[m]=(im,ax,ay)
     return out
 def sheet(res,path,layout):
