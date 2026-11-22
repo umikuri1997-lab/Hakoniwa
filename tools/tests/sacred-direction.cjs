@@ -29,7 +29,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   }
   for(const size of [{width:1200,height:900},{width:390,height:844}]){
     await begin('group');await page.setViewportSize(size);await page.waitForTimeout(150);await page.waitForTimeout(1900);await frame('direction-group-'+size.width);
-    const bounds=await run(`(()=>{const q=sacredDirection().shot;return {left:(q.left-cam.x)*cam.z,right:(q.right-cam.x)*cam.z,top:(q.top-cam.y)*cam.z,bottom:(q.bottom-cam.y)*cam.z,safeBottom:q.safeBottom,dialogTop:document.querySelector('#dialog .dlg').getBoundingClientRect().top};})()`);
+    const bounds=await run(`(()=>{const q=sacredDirection().shot;const c=[w2s(q.left,q.top),w2s(q.right,q.top),w2s(q.left,q.bottom),w2s(q.right,q.bottom)];return {left:Math.min(...c.map(p=>p.x)),right:Math.max(...c.map(p=>p.x)),top:Math.min(...c.map(p=>p.y)),bottom:Math.max(...c.map(p=>p.y)),safeBottom:q.safeBottom,dialogTop:document.querySelector('#dialog .dlg').getBoundingClientRect().top};})()`);
     assert(bounds.left>=0&&bounds.right<=size.width,JSON.stringify(bounds));assert(bounds.top>=65&&bounds.bottom<=bounds.safeBottom+2,JSON.stringify(bounds));assert(bounds.bottom<bounds.dialogTop-65,JSON.stringify(bounds));
     await page.waitForTimeout(100);await close();
   }

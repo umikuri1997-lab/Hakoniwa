@@ -16,11 +16,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     return target;
   })()`);
   await page.waitForTimeout(1100);
-  const visible=await run(`(()=>{const x=(${target.x}*TS-cam.x)*cam.z,y=(${target.y}*TS-cam.y)*cam.z;return x>24&&x<VW-24&&y>76&&y<VH-100;})()`);assert(visible,'ordinary destination outside visible area');
+  const visible=await run(`(()=>{const q=w2s(${target.x}*TS,${target.y}*TS),x=q.x,y=q.y;return x>24&&x<VW-24&&y>76&&y<VH-100;})()`);assert(visible,'ordinary destination outside visible area');
   for(const size of [{width:1200,height:900},{width:390,height:844},{width:844,height:390}]){
     await page.setViewportSize(size);await page.waitForTimeout(150);
     await run(`(()=>{S.quest=questIndexOf('earthListen');S.fieldStories={...(S.fieldStories||{}),earthListen:{step:0,built:{legacy:1}}};S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthListen');cam.z=.4;centerOn(100,100);checkQuest();camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();if(sheet!==null||!camAnim?.storyGoal)throw Error('field intro focus');})()`);
-    await page.waitForTimeout(1000);assert(await run(`(()=>{const p=mainStoryFocusTarget(),x=(p.x*TS-cam.x)*cam.z,y=(p.y*TS-cam.y)*cam.z;return x>28&&x<VW-28&&y>76&&y<VH-100;})()`),'field point outside viewport');
+    await page.waitForTimeout(1000);assert(await run(`(()=>{const p=mainStoryFocusTarget(),q=w2s(p.x*TS,p.y*TS),x=q.x,y=q.y;return x>28&&x<VW-28&&y>76&&y<VH-100;})()`),'field point outside viewport');
     await run(`(()=>{S.qTalked=true;camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();if(!camAnim?.storyGoal||S.qStory!=null)throw Error('accepted investigation focus');})()`);await page.waitForTimeout(1000);
     if(process.env.SCREENSHOT_DIR)await page.screenshot({path:process.env.SCREENSHOT_DIR+'/story-goal-'+size.width+'.png'});
     await run(`(()=>{camAnim=null;S.t=1440;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('night should open goals');closeSheet();S.t=1800;openSheet('menu','goal');})()`);

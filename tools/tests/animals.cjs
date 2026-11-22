@@ -34,12 +34,12 @@ const assert=require('node:assert/strict');
     /* 「しらべる」で生き物をタップ → 小さな画面 →「なでる」→ いちばん近いせいれいが、なでにいく → よろこぶ → たのしさ+5。1ぴき1日1回 */
     {const a0=S.ani[0];AJOY.delete(a0);S.hold=0;S.t=1440*3+10*60;a0.path=null;a0.eat=0;f.fun=50;endAct(f);f.act=null;setMode&&setMode('look');
       document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());
-      onTap((a0.x*TS-cam.x)*cam.z,((a0.y-.3)*TS-cam.y)*cam.z);
+      {const q=ptS(a0.x,a0.y,a0.x*TS,(a0.y-.3)*TS);onTap(q.x,q.y)}
       const card=document.querySelector('.pxcard');out.pop=card?card.textContent:'';
       if(card)card.querySelector('.go').click();out.asked=!!(f.act&&f.act.type==='apetq');out.toastPet=[...document.querySelectorAll('#toasts > *')].map(x=>x.textContent).join('|');
       let joy=-1,chip=null;for(let i=0;i<20000;i++){S.food=100;f.hunger=hMax(f);f.energy=100;stepWorld(.1);if(AJOY.has(a0)){joy=i;chip=aniChip(a0,performance.now());break}}
       out.joy=joy;out.joyChip=chip===CHIPS['ani:hane#j0'];out.fun=f.fun;out.petD=a0.petD===callDay();
-      onTap((a0.x*TS-cam.x)*cam.z,((a0.y-.3)*TS-cam.y)*cam.z);const c2=document.querySelector('.pxcard');if(c2)c2.querySelector('.go').click();
+      {const q=ptS(a0.x,a0.y,a0.x*TS,(a0.y-.3)*TS);onTap(q.x,q.y)}const c2=document.querySelector('.pxcard');if(c2)c2.querySelector('.go').click();
       out.again=!!(f.act&&f.act.type==='apetq');out.why=aniPetWhy(a0);if(c2)c2.parentNode.remove();
       for(const k of ['hane','moko','tsuno'])for(const j of ['j0','j1','j2'])if(!CHIPS['ani:'+k+'#'+j])out.noChip=(out.noChip||'')+k+j}
     /* 夕方：とれる物 */

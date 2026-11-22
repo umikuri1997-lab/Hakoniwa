@@ -10,19 +10,19 @@ for(const d of [-3,-2,-1])S.obj[CY*W+CX+d]='salvia';for(let y=CY+3;y<CY+6;y++)fo
 await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const o=await run(`(()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');const out={};
   const mk=(k,x,y,z)=>({id:CRITID++,k,x,y,hx:x,hy:y,z:z||0,vx:0,vy:0,face:1,t:0,life:999,hop:9,fl:0,ci:0,act:0,ph:0,wait:3});
-  const scr=(x,y)=>({sx:(x*TS-cam.x)*cam.z,sy:(y*TS-cam.y)*cam.z});/* マスの点 → 画面の点 */
-  const tap=c=>{const q=scr(c.x,c.y-(c.z||0)/TS-.2);floats.length=0;onTap(q.sx,q.sy);return c.pk&&!floats.length?CRITN[c.k]:'x'};/* 反応した・名前は出さない */
+  const scr=(x,y,c)=>{const q=ptS(c.x,c.y,x*TS,y*TS);return{sx:q.x,sy:q.y}};/* 生き物 c を立てて描いた絵の上の点 → 画面の点 */
+  const tap=c=>{const q=scr(c.x,c.y-(c.z||0)/TS-.2,c);floats.length=0;onTap(q.sx,q.sy);return c.pk&&!floats.length?CRITN[c.k]:'x'};/* 反応した・名前は出さない */
   const one=(k,x,y,z)=>{const c=mk(k,x,y,z);CRIT=[c];S.res=[];const name=tap(c);return {c,name}};
   {const {c,name}=one('bird',CX+.5,CY-1.4);out.bird=[name,!!c.fl,!!c.go]}
   {const {c,name}=one('usagi',CX+1.5,CY+1.5);out.usagi=[name,!!c.fl,!!c.go]}
-  /* 段差の上（高い段）のうさぎも、見えている所でタップできる */{for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=1;const c=mk('usagi',CX+6.5,CY+7.6);CRIT=[c];S.res=[];const L=uLift(c)/TS,q=scr(c.x,c.y-L-.2);floats.length=0;onTap(q.sx,q.sy);out.usagiHi=[L>0,c.pk&&!floats.length?CRITN[c.k]:'x'];for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=0}
+  /* 段差の上（高い段）のうさぎも、見えている所でタップできる */{for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=1;const c=mk('usagi',CX+6.5,CY+7.6);CRIT=[c];S.res=[];const L=uLift(c)/TS,q=scr(c.x,c.y-.2,c);floats.length=0;onTap(q.sx,q.sy);out.usagiHi=[L>0,c.pk&&!floats.length?CRITN[c.k]:'x'];for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=0}
   {const {c,name}=one('fly',CX-2.5,CY+.6,12);const z=critPokeZ(c,performance.now()+500);out.fly=[name,z]}
   {const {c,name}=one('frog',CX-4.5,CY+2.5);out.frog=[name,c.hop,critPokeZ(c,performance.now()+250)]}
   {const {c,name}=one('hotaru',CX-6.5,CY+2.5,10);out.hotaru=[name,!!c.pk]}
   {const {c,name}=one('mogura',CX+3.5,CY+2.5);out.mogura=[name,c.fade,!!c.go]}
   {const {c,name}=one('tentoumushi',CX-1.5,CY+1.5);out.ten=[name,c.act]}
   /* 同じ1ぴきは1回だけ数える */{const c=mk('tentoumushi',CX-1.5,CY+1.5);CRIT=[c];c.pk=0;tap(c);c.pk=0;tap(c);out.tenN=S.critRec.tentoumushi}
-  /* せいれいのほうが近い：せいれいの画面 */{const c=mk('usagi',CX+4.5,CY+1.5);CRIT=[c];const r=mkRes(S,'a','wood',CX+4.5,CY+1.4);S.res=[r];closeSheet&&closeSheet();const q=scr(r.x,tapY(r)-.5);onTap(q.sx,q.sy);out.resWins=sheet==='res';closeSheet();S.res=[]}
+  /* せいれいのほうが近い：せいれいの画面 */{const c=mk('usagi',CX+4.5,CY+1.5);CRIT=[c];const r=mkRes(S,'a','wood',CX+4.5,CY+1.4);S.res=[r];closeSheet&&closeSheet();const q=scr(r.x,tapY(r)-.5,r);onTap(q.sx,q.sy);out.resWins=sheet==='res';closeSheet();S.res=[]}
   /* 小鳥はベリー・りすはどんぐり・うさぎはわた毛を、1ぴき1回だけ、50%で1こ落とす */{const R0=Math.random,CR0=JSON.stringify(S.critRec);S.drops=[];Math.random=()=>0;const b=mk('bird',CX+.5,CY-1.4);CRIT=[b];tap(b);b.pk=0;b.fl=0;b.go=0;b.fade=null;tap(b);const r=mk('risu',CX+1.5,CY+1.5);CRIT=[r];tap(r);const u=mk('usagi',CX+3.5,CY+1.5);CRIT=[u];tap(u);Math.random=()=>.9;const r2=mk('risu',CX+2.5,CY+1.5);CRIT=[r2];tap(r2);Math.random=R0;
     out.drops=S.drops.map(d=>d.id+':'+d.n+':'+!!d.tap);out.dIcon=!!ICONS.donguri&&FOODS.donguri.name;S.drops=[];S.critRec=JSON.parse(CR0)}
   /* どの生き物にも鳴き声がある */out.noVoice=CRITKINDS.filter(k=>!CRITV[k]||!SAMPLES[CRITV[k]]);

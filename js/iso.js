@@ -65,3 +65,7 @@ function tapObj(j){return isoOn()?tapAt(objFootJ(j)):TAPS?TAPS.w:{x:0,y:0}}
 function qRect(c,x,y,w,h,j,stroke){if(isoOn()){const s=Math.max(0,hiAt(j))*IQD;stroke?c.strokeRect(x-s,y-s,w,h):c.fillRect(x-s,y-s,w,h)}else{const z=liftOf(j);stroke?c.strokeRect(x,y-z,w,h):c.fillRect(x,y-z,w,h)}}
 /* 仮：ドアの箱の、手前左の面のとびら */
 function isoBoxDoor(c,x,y,lv){const s0=lv*IQD,s1=(lv*IQL+IQWH*.8)/(2*IQB),X=x*TS,Y=y*TS+TS;c.beginPath();c.moveTo(X+TS*.25-s0,Y-s0);c.lineTo(X+TS*.75-s0,Y-s0);c.lineTo(X+TS*.75-s1,Y-s1);c.lineTo(X+TS*.25-s1,Y-s1);c.closePath();c.fill()}
+/* 立てて描いた物の上の点（いままでの見え方のせかいの点 wx,wy）の、画面の点（CSS の px）。テスト・案内の指で使う */
+function standS(A,wx,wy,lv){if(!isoOn())return{x:(wx-cam.x)*cam.z,y:(wy-cam.y)*cam.z};const cx=camCX(),cy=camCY();return{x:VW/2+(A.px-isoX(cx,cy)+(wx-A.fx)*IQSX)*cam.z,y:VH/2+(A.py-(lv||0)*IQL-isoY(cx,cy)+(wy-A.fy)*IQSY)*cam.z}}
+function objS(j,wx,wy){return standS(objFootJ(j),wx,wy)}
+function ptS(fx,fy,wx,wy){const j=clamp(Math.floor(fy),0,H-1)*W+clamp(Math.floor(fx),0,W-1);return standS(ptFoot(fx*TS,fy*TS),wx,wy,Math.max(0,hiAt(j)))}
