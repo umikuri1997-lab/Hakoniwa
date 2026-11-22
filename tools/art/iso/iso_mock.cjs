@@ -2,11 +2,13 @@
    ゲームはかえない。新しい草原のゲームに小さな村を置き、いまの見え方（now.png）と、クォータービュー（iso.png）を写す。
    地面の下絵は、そのまま45度まわして、たてを半分につぶす。物・せいれいの絵は、いまの絵をそのまま、ひし形のマスの上に立てる。
    家の壁は、いまの絵がななめ見おろし専用なので、この見本では、壁の色の箱（上の面・左の面・右の面）で描く。
-   つかいかた：node tools/art/iso/iso_mock.cjs <出力フォルダ> */
-const fs=require('fs');const OUT=(process.argv[2]||'.').replace(/\/?$/,'/');fs.mkdirSync(OUT,{recursive:true});
+   高い段のマスは、段の高さだけ上げて、まわりより高い所に土の横の面をつける。
+   つかいかた：node tools/art/iso/iso_mock.cjs <出力フォルダ> [start]（start：村を置かず、草原のはじめのマップの、切り株のまわり24×24マス） */
+const fs=require('fs');const OUT=(process.argv[2]||'.').replace(/\/?$/,'/'),START=process.argv[3]==='start';fs.mkdirSync(OUT,{recursive:true});
 (async()=>{const {browser,page,run,errors}=await require('../../sim/boot.cjs')({world:0,viewport:{width:1200,height:900}});
  await run(`(()=>{USERPAUSE=true;document.querySelector('#dialog').hidden=true;document.querySelectorAll('.hud,.dock,.quest,#qrow,.qrow,#skill,#toast,#topbar,#dock').forEach(e=>e.style.visibility='hidden');
   S.t=Math.floor(S.t/1440)*1440+11*60;S.hold=0;S.enemies=[];
+  if(${START}){const N=24,X0=CX-12,Y0=CY-12;window.ISO={X0,Y0,N};S.res.forEach(r=>{r.nap=false;r.act=null;r.path=[]});cam.z=1;centerOn((X0+N/2)*TS,(Y0+N/2)*TS);dirty=true;return}
   const X0=60,Y0=58,N=14;window.ISO={X0,Y0,N};
   for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a;S.obj[j]='';delete S.ref[j];S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.floor)S.floor[j]='';if(S.roof)delete S.roof[j];if(S.win)delete S.win[j];if(S.rug)delete S.rug[j];(S.grn||(S.grn={}))[j]=1;delete S.dyn[j]}
   const put=(id,a,b)=>{const j=(Y0+b)*W+X0+a,z=BL[id]&&BL[id].sz||[1,1];S.obj[j]=id;for(let q=0;q<z[1];q++)for(let p=0;p<z[0];p++)if(p||q){S.obj[j+q*W+p]='part';S.ref[j+q*W+p]=j}};
@@ -24,26 +26,35 @@ const fs=require('fs');const OUT=(process.argv[2]||'.').replace(/\/?$/,'/');fs.m
   try{recount();rebuildStatic(true)}catch(e){console.error(e)}
   cam.z=1.6;centerOn((X0+N/2)*TS,(Y0+N/2)*TS);dirty=true})()`);
  for(let i=0;i<20;i++)await page.waitForTimeout(150);
- await page.screenshot({path:OUT+'now.png',clip:{x:600-360,y:450-360,width:720,height:720}});
+ await page.screenshot({path:OUT+(START?'start-now.png':'now.png'),clip:START?{x:600-384,y:450-384,width:768,height:768}:{x:600-360,y:450-360,width:720,height:720}});
  /* クォータービューを描く（本物の描く処理は止め、#cv をそのまま使う） */
  const url=await run(`(()=>{render=function(){};const {X0,Y0,N}=ISO,K=2,IW=Math.round(TS*Math.SQRT2),IH=IW/2,WH=TS,now=performance.now();
   const G=document.createElement('canvas');G.width=N*TS;G.height=N*TS;gblit(G.getContext('2d'),X0*TS,Y0*TS,N*TS,N*TS,0,0,N*TS,N*TS);
-  const cw=N*IW+40,ch=N*IH+110,ox=cw/2,oy=90;cv.width=cw*K;cv.height=ch*K;const c=ctx;c.setTransform(1,0,0,1,0,0);c.fillStyle='#2f3b2a';c.fillRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;
-  const iso=(gx,gy)=>[ox+(gx-gy)*IW/2,oy+(gx+gy)*IH/2];
-  c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*oy);c.drawImage(G,0,0);for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a;if(S.obj[j]==='farm')try{drawObj(c,'farm',a*TS,b*TS,j,0,now)}catch(err){}}/* 畑の土は、地面といっしょに45度まわす */
+  const cw=N*IW+40,ch=N*IH+110+3*Math.round(IH*1.1),ox=cw/2,oy=90+3*Math.round(IH*1.1);cv.width=cw*K;cv.height=ch*K;const c=ctx;c.setTransform(1,0,0,1,0,0);c.fillStyle='#2f3b2a';c.fillRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;
+  const iso=(gx,gy)=>[ox+(gx-gy)*IW/2,oy+(gx+gy)*IH/2];const HI0=3;
+  const HL=Math.round(IH*1.1),hv=(a,b)=>{const j=(Y0+b)*W+X0+a;return a<0||b<0||a>=N||b>=N?0:Math.max(0,hiAt(j))};/* 段1だんの高さ（ゲームの点） */
   /* 壁は箱、ほかの物は絵を立てる。x+y の小さい順（うしろから） */
-  const L=[];for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a,o=S.obj[j];if(!o||o==='part'||o==='farm'||!BL[o]||BL[o].floor)continue;/* 畑は地面といっしょに描いた */const z=BL[o].sz||[1,1];L.push({d:a+z[0]-1+b+z[1]-1+.5,a,b,o,j,z})}
+  c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*oy);c.drawImage(G,0,0);/* 地面はまず1まいで（マスごとに切ると、さかいに線が出る） */
+  const L=[];for(let b=0;b<N;b++)for(let a=0;a<N;a++)if(hv(a,b)>0||S.obj[(Y0+b)*W+X0+a]==='farm')L.push({d:a+b-.99,t:1,a,b,j:(Y0+b)*W+X0+a});if(S.sacredRoot!=null&&WD===0){const j=S.sacredRoot,a=j%W-X0,b=(j/W|0)-Y0;if(a>=0&&b>=0&&a<N&&b<N)L.push({d:a+3+b+3+.5,a,b,o:'story',j,z:[4,4]})}
+  for(let b=0;b<N;b++)for(let a=0;a<N;a++){const j=(Y0+b)*W+X0+a,o=S.obj[j];if(!o||o==='part'||o==='farm'||!BL[o]||BL[o].floor)continue;/* 畑は地面といっしょに描いた */const z=BL[o].sz||[1,1];L.push({d:a+z[0]-1+b+z[1]-1+.5,a,b,o,j,z})}
   for(const r of S.res){const a=r.x-X0,b=r.y-Y0;if(a>=0&&b>=0&&a<N&&b<N)L.push({d:a+b-.5,r,a,b})}
   L.sort((p,q)=>p.d-q.d);
-  const box=(a,b,h,top,lf,rt)=>{const P=[iso(a,b),iso(a+1,b),iso(a+1,b+1),iso(a,b+1)].map(([x,y])=>[x*K,y*K]),U=P.map(([x,y])=>[x,y-h*K]);c.setTransform(1,0,0,1,0,0);
+  const box=(a,b,h,top,lf,rt)=>{const u=hv(a,b)*HL,P=[iso(a,b),iso(a+1,b),iso(a+1,b+1),iso(a,b+1)].map(([x,y])=>[x*K,(y-u)*K]),U=P.map(([x,y])=>[x,y-h*K]);c.setTransform(1,0,0,1,0,0);
    const poly=(Q,f)=>{c.fillStyle=f;c.beginPath();Q.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill()};
    poly([U[3],U[2],P[2],P[3]],lf);poly([U[2],U[1],P[1],P[2]],rt);poly(U,top)};
-  for(const e of L){
-   if(e.r){const [px,py]=iso(e.a,e.b);c.setTransform(K,0,0,K,K*(px-e.r.x*TS),K*(py-e.r.y*TS));try{drawRes0(e.r,now)}catch(err){}continue}
-   if(HOME_WALLS.has(e.o)){box(e.a,e.b,WH,'#d9b07a','#b98652','#946538');continue}
-   if(HOME_DOORS.has(e.o)){box(e.a,e.b,WH,'#d9b07a','#b98652','#946538');const [x1,y1]=iso(e.a+.25,e.b+1),[x2,y2]=iso(e.a+.75,e.b+1);c.setTransform(1,0,0,1,0,0);c.fillStyle='#7a4a2a';c.beginPath();c.moveTo(x1*K,y1*K);c.lineTo(x2*K,y2*K);c.lineTo(x2*K,(y2-WH*.8)*K);c.lineTo(x1*K,(y1-WH*.8)*K);c.closePath();c.fill();continue}
+  const tile=e=>{const {a,b}=e,h=hv(a,b),up=h*HL,P=[iso(a,b),iso(a+1,b),iso(a+1,b+1),iso(a,b+1)].map(([x,y])=>[x*K,(y-up)*K]);c.setTransform(1,0,0,1,0,0);
+    const poly=(Q,f)=>{c.fillStyle=f;c.beginPath();Q.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill()};
+    const dl=h-hv(a,b+1),dr=h-hv(a+1,b);/* 手前左・手前右のとなりが低いと、土の横の面 */
+    if(dl>0)poly([P[3],P[2],[P[2][0],P[2][1]+dl*HL*K],[P[3][0],P[3][1]+dl*HL*K]],'#9b9384');if(dr>0)poly([P[2],P[1],[P[1][0],P[1][1]+dr*HL*K],[P[2][0],P[2][1]+dr*HL*K]],'#7d7568');
+    c.save();c.beginPath();P.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.clip();c.setTransform(K*IW/2/TS,K*IH/2/TS,-K*IW/2/TS,K*IH/2/TS,K*ox,K*(oy-up));c.drawImage(G,0,0);
+    if(S.obj[e.j]==='farm')try{drawObj(c,'farm',a*TS,b*TS,e.j,0,now)}catch(err){}c.restore()};
+  for(const e of L){if(e.t){tile(e);continue}const up=hv(Math.floor(e.a),Math.floor(e.b))*HL;
+   if(e.r){const [px,py]=iso(e.a,e.b);c.setTransform(K,0,0,K,K*(px-e.r.x*TS),K*(py-up-e.r.y*TS));try{drawRes0(e.r,now)}catch(err){}continue}
+   if(HOME_WALLS.has(e.o)){box(e.a,e.b,WH,'#f0d6a8','#d8b07c','#b88c58');continue}
+   if(HOME_DOORS.has(e.o)){box(e.a,e.b,WH,'#f0d6a8','#d8b07c','#b88c58');const [x1,y1]=iso(e.a+.25,e.b+1),[x2,y2]=iso(e.a+.75,e.b+1);c.setTransform(1,0,0,1,0,0);c.fillStyle='#7a4a2a';c.beginPath();c.moveTo(x1*K,y1*K);c.lineTo(x2*K,y2*K);c.lineTo(x2*K,(y2-WH*.8)*K);c.lineTo(x1*K,(y1-WH*.8)*K);c.closePath();c.fill();continue}
    const {a,b,z}=e,[cx,cy]=iso(a+z[0]/2,b+z[1]/2),by=iso(a+z[0],b+z[1])[1],ob=[(X0+a+z[0]/2)*TS,(Y0+b+z[1])*TS];/* いまの絵の足もと（マスの下のはし）を、ひし形の下の角より少し上へ */
-   c.setTransform(K,0,0,K,K*(cx-ob[0]),K*(cy+(by-cy)*.55-ob[1]+TS*.12));try{drawObj(c,e.o,(X0+a)*TS,(Y0+b)*TS,e.j,S.dyn[e.j]?S.dyn[e.j].g||0:0,now)}catch(err){}}
-  c.setTransform(1,0,0,1,0,0);return cv.toDataURL('image/png')})()`);
- fs.writeFileSync(OUT+'iso.png',Buffer.from(url.split(',')[1],'base64'));
+   c.setTransform(K,0,0,K,K*(cx-ob[0]),K*(cy-up+(by-cy)*.55-ob[1]+TS*.12));try{if(e.o==='story')drawStoryTree(c,(X0+a)*TS,(Y0+b)*TS,e.j,now);else drawObj(c,e.o,(X0+a)*TS,(Y0+b)*TS,e.j,S.dyn[e.j]?S.dyn[e.j].g||0:0,now)}catch(err){}}
+  c.setTransform(1,0,0,1,0,0);/* なにもない所を切る */const D=c.getImageData(0,0,cv.width,cv.height).data,bg=[0x2f,0x3b,0x2a];let x0=cv.width,y0=cv.height,x1=0,y1=0;for(let y=0;y<cv.height;y+=2)for(let x=0;x<cv.width;x+=2){const q=(y*cv.width+x)*4;if(Math.abs(D[q]-bg[0])+Math.abs(D[q+1]-bg[1])+Math.abs(D[q+2]-bg[2])>6){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
+  const M=24;x0=Math.max(0,x0-M);y0=Math.max(0,y0-M);x1=Math.min(cv.width,x1+M);y1=Math.min(cv.height,y1+M);const O=document.createElement('canvas');O.width=x1-x0;O.height=y1-y0;const oc=O.getContext('2d');oc.fillStyle='#2f3b2a';oc.fillRect(0,0,O.width,O.height);oc.drawImage(cv,-x0,-y0);return O.toDataURL('image/png')})()`);
+ fs.writeFileSync(OUT+(START?'start-iso.png':'iso.png'),Buffer.from(url.split(',')[1],'base64'));
  console.log(JSON.stringify(errors.slice(0,5)));await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
