@@ -40,6 +40,8 @@ function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
     const ay=(a/W)|0;if(ay<ey&&!(BL[o].sz&&ay+szAt(o,a)[1]-1>=ey))continue;const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
   for(const h of HOUSES)if(h.set.has(ey*W+ex)||h.set.has((ey+1)*W+ex))return true;return false}
 function enFace(e,v,now){/* 攻撃している相手のほうを向く：よこ（R・L）・うしろ（B）・正面（F）。歩いているあいだは、歩く向きのまま */const a=AIMV.get(e);if(!a||S.t-a.t>8||S.t<a.t||now-v.mv<200)return null;const dx=a.x-e.x,dy=a.y-e.y;if(Math.abs(dx)<.05&&Math.abs(dy)<.05)return null;return Math.abs(dx)>=Math.abs(dy)?(dx>0?'R':'L'):dy<0?'B':'F'}
+/* コワイノの体力ゲージ：へった分（白）を HPGHOLD ミリ秒のこしてから、1秒に HPGRATE（ゲージのわりあい）ずつちぢめる */
+const HPG=new WeakMap(),HPGHOLD=380,HPGRATE=.9;function hpGhost(e,f,now){let g=HPG.get(e);if(!g||f>g.v){g={v:f,f,t:now,n:now};HPG.set(e,g);return f}if(f<g.f){g.f=f;g.t=now}const dt=Math.max(0,Math.min(100,now-g.n));g.n=now;if(now-g.t>HPGHOLD)g.v=Math.max(f,g.v-HPGRATE*dt/1000);return g.v}
 function drawEnemy(e,now){
   if(!e.spawned)return;const D=EN[e.type],z=D.size*2;let px=e.x*TS,py=e.y*TS;
   if(!EV.has(e))EV.set(e,{x:e.x,y:e.y,back:false,f:1,mv:0});const v=EV.get(e),dx=e.x-v.x,dy=e.y-v.y;
@@ -59,7 +61,7 @@ function drawEnemy(e,now){
      glx.setTransform(ctx.getTransform());/* 段差の上・よじのぼり中の高さ（liftDraw）も、本体と同じにする */for(const[dx,dy]of OFF)glx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);glx.globalCompositeOperation='destination-out';glx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);glx.globalCompositeOperation='source-over'}
    ctx.globalAlpha=e.stun>0?.55:1;ctx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);ctx.globalAlpha=1}
   const bw=Math.max(14,e.max*.22)*Math.min(z,1.3),bx=px-bw/2,byy=py+8-27*z-6;
-  const bar=()=>{let by=byy;for(const[j]of WALLHIT){const wx=(j%W)*TS,wy=((j/W)|0)*TS;if(bx<wx+TS&&bx+bw>wx&&by+3>wy-18&&by-1<wy){by=Math.min(by,wy-22)}}/* 柵などの体力ゲージと重なるときは、その上に出す */ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(bx-1,by-1,bw+2,4);ctx.fillStyle='#ff6b8a';ctx.fillRect(bx,by,bw*Math.max(0,e.hp)/e.max,2)};if(BUBQ)BUBQ.push(bar);else bar();/* 体力ゲージは物にかくれないよう最後に */
+  const bar=()=>{let by=byy;for(const[j]of WALLHIT){const wx=(j%W)*TS,wy=((j/W)|0)*TS;if(bx<wx+TS&&bx+bw>wx&&by+3>wy-18&&by-1<wy){by=Math.min(by,wy-22)}}/* 柵などの体力ゲージと重なるときは、その上に出す */ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(bx-1,by-1,bw+2,4);const f=Math.max(0,e.hp)/e.max,gv=hpGhost(e,f,now);if(gv>f){ctx.fillStyle='#fff4dc';ctx.fillRect(bx+bw*f,by,bw*(gv-f),2)}/* へった分は白くのこって、少しおくれてちぢむ */ctx.fillStyle='#ff6b8a';ctx.fillRect(bx,by,bw*f,2)};if(BUBQ)BUBQ.push(bar);else bar();/* 体力ゲージは物にかくれないよう最後に */
 }
 // 物の見た目のおおよその範囲（描き直し・重なり判定用、少し大きめ）
 // 建てている足場の見た目の広さ（マス）。x0:左はし, w:はば, rows:足もとまでの行数, hf:高さの倍率
