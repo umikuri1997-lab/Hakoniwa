@@ -3,13 +3,13 @@
 /* ---------- 描画 ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
-const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
+const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ちぢめたときだけ、くわしい区画から作り、ちぢめるのをやめて GHALFT コマたったら手ばなす（ghalf・ghalfFree）。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
 const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
 function gq(cx,cy){const k=cy*64+cx;let q=GRD.c.get(k);if(!q){q={f:null,l:null,u:0,st:false};GRD.c.set(k,q)}return q}
 function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわり4マス・下へ6マスもいっしょに描いて、区画の中だけをのこす：となりのマスからはみ出す平らな物・水のふち・草のふち）。半分の細かさの絵も、ここから作る */const t0=performance.now(),X0=cx*GCS,Y0=cy*GCS,X1=Math.min(W,X0+GCS)-1,Y1=Math.min(H,Y0+GCS)-1,w=(X1-X0+1)*TS+2*GPAD,h=(Y1-Y0+1)*TS+2*GPAD;
   const c=q.f||document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,h);g.setTransform(1,0,0,1,GPAD-X0*TS,GPAD-Y0*TS);drawStaticArea(g,Math.max(0,X0-4),Math.max(0,Y0-4),Math.min(W-1,X1+4),Math.min(H-1,Y1+6));g.setTransform(1,0,0,1,0,0);
-  const l=q.l||document.createElement('canvas');l.width=Math.ceil(w/2);l.height=Math.ceil(h/2);const gl=l.getContext('2d');gl.imageSmoothingEnabled=true;gl.imageSmoothingQuality='high';gl.drawImage(c,0,0,l.width,l.height);
-  q.f=c;q.l=l;q.st=false;q.u=RFN;q.v=++GRD.n;/* 作りなおしの番号（遠くの絵が、新しくするかを見る） */GRD.bt+=performance.now()-t0;
+  if(q.l){q.l.width=q.l.height=0;q.l=null}/* 半分の絵は、ちぢめたときに、くわしい絵から作る（ghalf） */
+  q.f=c;q.st=false;q.u=RFN;q.v=++GRD.n;/* 作りなおしの番号（遠くの絵が、新しくするかを見る） */GRD.bt+=performance.now()-t0;
   let n=0;for(const v of GRD.c.values())if(v.f)n++;if(n>GFULL){const L=[...GRD.c.values()].filter(v=>v.f&&v.u<RFN-1).sort((a,b)=>a.u-b.u);for(const v of L){if(n<=GFULL)break;v.f.width=v.f.height=0;v.f=null;n--}}/* くわしい区画が多すぎたら、しばらく使っていない区画からすてる（半分の絵はのこす） */}
 function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()}],NX=(W-1)>>4,NY=(H-1)>>4;
   for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q)});L.push(()=>{GRD.any=true});
@@ -25,11 +25,14 @@ function assetsOK(){/* 絵がぜんぶ読みこめたか（マップチップの
 const stageReady=()=>GRD.pre===S;/* マップ全体を作りおわったか。おわるまで、マップを見せず、時間も止める */
 function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:15px';document.body.appendChild(d)}if(!d.querySelector('#ldTxt')){d.style.flexDirection='column';d.style.gap='6px';d.innerHTML='<canvas id="ldWalk" width="320" height="150" style="width:160px;height:75px;image-rendering:pixelated"></canvas><span id="ldTxt"></span>'}/* 歩くせいれいと、読みこみの文 */if(on){d.querySelector('#ldTxt').textContent='マップを読みこみ中… '+loadPct()+'%';if(typeof ldWalk==='function')ldWalk(d.querySelector('#ldWalk'))}d.hidden=!on;return d}
 function gget(cx,cy){/* 区画のくわしい絵（なければ・古ければ、すぐ作る） */if(GRD.s!==S)gclear();const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q);q.u=RFN;return q.f}
+const GHALFT=600;/* ちぢめるのをやめてから、半分の絵を手ばなすまでのコマ（約10秒） */
+function ghalf(q,force){/* 区画の半分の細かさの絵。なければ、くわしい絵をちぢめて作る（1コマ GBUD ミリ秒まで。こえたら null：くわしい絵をちぢめて描く） */if(q.l)return q.l;if(!q.f||!force&&GRD.bt>=GBUD)return null;const t0=performance.now(),l=document.createElement('canvas');l.width=Math.ceil(q.f.width/2);l.height=Math.ceil(q.f.height/2);const gl=l.getContext('2d');gl.imageSmoothingEnabled=true;gl.imageSmoothingQuality='high';gl.drawImage(q.f,0,0,l.width,l.height);q.l=l;GRD.bt+=performance.now()-t0;return l}
+function ghalfFree(){/* ちぢめていないあいだ、半分の絵を手ばなす（くわしい絵をすてた区画の分は、のこす） */if(GLOD){GRD.lu=RFN;return}if(RFN-(GRD.lu||0)<GHALFT)return;for(const v of GRD.c.values())if(v.l&&v.f){v.l.width=v.l.height=0;v.l=null}GRD.lu=RFN}
 function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false;if(typeof farClear==='function')farClear()}
 function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh) を、c の (dx,dy,dw,dh) へ描く（区画をまたいでもよい）。lod：半分の細かさの絵を使う */const kx=dw/sw,ky=dh/sh;
   for(let cy=Math.max(0,Math.floor(sy/GPX));cy<=Math.min((H-1)>>4,Math.floor((sy+sh-.001)/GPX));cy++)for(let cx=Math.max(0,Math.floor(sx/GPX));cx<=Math.min((W-1)>>4,Math.floor((sx+sw-.001)/GPX));cx++){
     const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
-    const q=GRD.s===S&&GRD.c.get(cy*64+cx);if(!q)continue;let im=lod?q.l:(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;q.u=RFN;/* できていない区画はとばす（つぎのコマ以降に、見えている区画から作る）。くわしい絵をすてた区画は、半分の絵で */
+    const q=GRD.s===S&&GRD.c.get(cy*64+cx);if(!q)continue;let im=lod?(ghalf(q)||q.f):(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;q.u=RFN;/* できていない区画はとばす（つぎのコマ以降に、見えている区画から作る）。くわしい絵をすてた区画は、半分の絵で */
     const e1=a===ox&&a>sx?GPAD:0,e2=a2===ox+GPX&&a2<sx+sw?GPAD:0,f1=b===oy&&b>sy?GPAD:0,f2=b2===oy+GPX&&b2<sy+sh?GPAD:0,A=a-e1,B=b-f1,A2=a2+e2,B2=b2+f2;/* 区画のさかいでは、のりしろの分だけ、となりの区画にかさねて描く（Safari は切りとった所のはしを透明とまぜるので、さかいめに線が出る） */
     c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}
   dcBlit(c,dx,dy,dw,dh)}/* 物といっしょに描く地面の絵にも、地面の層の色（daycolor.js） */
