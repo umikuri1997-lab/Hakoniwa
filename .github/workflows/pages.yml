@@ -28,9 +28,10 @@ jobs:
       - name: Prepare site from committed files
         run: |
           mkdir -p _site/assets
-          cp index.html chips.js .nojekyll structure-preview.png _site/
+          cp index.html chips.js .nojekyll _site/
           cp -R js _site/js
           sed -i "s/\.js?v=[^\"]*/.js?v=${GITHUB_SHA::8}/g" _site/index.html
+          node tools/sizes.cjs _site
           cp -R assets/. _site/assets/
       - uses: actions/upload-pages-artifact@v3
         with:
