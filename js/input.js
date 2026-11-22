@@ -197,7 +197,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
   if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('tplace');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
-  if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty);if(selStamp&&selStamp.startsWith('bp:'))return askBp(+selStamp.slice(3),tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらぶ');return toast('ぬりたい物をえらんで、なぞる')}
+  if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty,w.x/TS,w.y/TS);if(selStamp&&selStamp.startsWith('bp:'))return askBp(+selStamp.slice(3),tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらぶ');return toast('ぬりたい物をえらんで、なぞる')}
 }
 
 /* Android の「戻る」で、ゲームのページから出ないようにする：さわったときに、履歴にゲームの印を1つ足しておき、戻るでその印がきえたら、すぐ足しなおす（Chrome は、さわらずに足した履歴を戻るでとばすので、さわるたびにたしかめる） */

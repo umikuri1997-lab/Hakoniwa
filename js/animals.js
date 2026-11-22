@@ -50,7 +50,7 @@ const ANIGRASS=new Set(['weed0g','weed0k','weed1g','weed1k','weed4g','weed4k','w
 function aniGraze(j){return ANIGRASS.has(S.obj[j])}
 function aniEat(a,day){a.fd=day;a.eat=3;a.path=null;a.wt=3;a.fun=Math.min(100,aniFun(a)+4)}
 
-function hutRoom(h,k){/* かこいの中で、空きがあって、その生き物がすめる小屋か */return isHut(S.obj[h])&&!!PENS.get(h)&&aniOf(h).length+S.ani.filter(a=>a.stray&&a.lead!=null&&a.lh===h).length<hutCap(h)&&(k==null||HUTK[S.obj[h]].includes(k))}
+function hutRoom(h,k){/* かこいの中で、空きがあって、その生き物がすめる小屋か */return isHut(S.obj[h])&&!!PENS.get(h)&&aniOf(h).length+S.ani.filter(a=>(a.stray||a.mvh)&&a.lead!=null&&a.lh===h).length<hutCap(h)&&(k==null||HUTK[S.obj[h]].includes(k))}
 function strayMorning(){/* 野良の生き物：朝に STRAYP で、村の外に1ぴき。空きのある小屋があれば、そこにすめる生き物。小屋をまだひらめいていなければ、その小屋の生き物（はじめてタップするとひらめく strayIdea） */if(typeof MEMRUN!=='undefined'&&MEMRUN||WD===YAMI||S.ani.some(a=>a.stray))return;
   const hs=HUTS.filter(h=>hutRoom(h)),kn=Object.keys(ANI).filter(k=>!recipeKnown(ANI[k].hut));if(!hs.length&&!kn.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
   let k,f;if(hs.length){const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]];k=K[Math.floor(Math.random()*K.length)];f=hutFront(h).find(c=>walk(c))}
@@ -78,6 +78,7 @@ function aniPath(a,to,cells){/* かこいの中だけを通る道（cells がな
 function animalTick(dt){if(!S||!S.ani||!S.ani.length||IS_STORY_REPLAY)return;const night=isNight(),day=callDay(),h=hour();
   const sec=(ANISUB+=dt)>=1;if(sec)ANISUB=0;
   for(const a of S.ani.slice()){a.mv=0;if(a.eat>0)a.eat-=dt;
+    if(a.mvh){if(night){const q=S.res.find(q=>q.id===a.lead);if(q&&q.alead&&q.alead.aid===a.id)q.alead=null;aniMoveBack(a)}else if(a.lead!=null){strayFollow(a,dt);continue}else aniMoveBack(a)}/* ひっこし：つれられているあいだは、ついていく。とちゅうでやめたら、もとの小屋へ */
     if(a.stray){if(a.lead!=null){strayFollow(a,dt);continue}if((h>=STRAYH||night)&&sec){strayLeave(a);continue}}/* 野良：つれられているあいだは、ついていく。夕方には帰る */
     if(a.pet>0){a.pet-=dt;continue}
     const P=PENS.get(a.h)||null,d=isHut(S.obj[a.h])?hutD(a.h):null;
@@ -204,16 +205,45 @@ function strayPop(a){if(strayIdea(a))return;const o=el('<div style="position:fix
   const g=o.querySelector('.go');lackOn(g,strayWhy(a));
   g.onclick=()=>{if(strayWhy(a))return;const r=strayAsk(a);if(!r){toast('いまは、むかえにいけるせいれいがいない');return}sfx('tap');o.remove();toast(r.name+'が、'+ANI[a.k].name+'をむかえにいく')};
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
-function aniLeadGo(r,G){/* むかえたあと：小屋の前まで歩く（生き物がついてくる） */const a=(S.ani||[]).find(q=>q.id===r.alead.aid&&q.stray);if(!a||a.lead!==r.id){r.alead=null;return false}
-  let h=r.alead.h;if(!hutRoom(h,a.k)&&!(isHut(S.obj[h])&&PENS.get(h)&&a.lh===h&&aniOf(h).length<hutCap(h))){h=strayHut(a);if(h==null){r.alead=null;a.lead=null;a.lh=null;return false}r.alead.h=a.lh=h}
+function aniLeadGo(r,G){/* むかえたあと・ひっこし：小屋の前まで歩く（生き物がついてくる） */const a=(S.ani||[]).find(q=>q.id===r.alead.aid&&(q.stray||q.mvh));if(!a||a.lead!==r.id){r.alead=null;return false}
+  let h=r.alead.h;if(!hutRoom(h,a.k)&&!(isHut(S.obj[h])&&PENS.get(h)&&a.lh===h&&aniOf(h).length<hutCap(h))){if(a.mvh){r.alead=null;a.lead=null;return false}/* ひっこしの先がいっぱいになったら、やめる（もとの小屋へ） */h=strayHut(a);if(h==null){r.alead=null;a.lead=null;a.lh=null;return false}r.alead.h=a.lh=h}
   const st=nearest(G,j=>hutFront(h).includes(j),400);if(st<0){r.alead=null;a.lead=null;a.lh=null;return false}startAct(r,G,'alead',st,{aid:a.id,h});return !!r.act&&r.act.type==='alead'}
 Object.assign(ACT,{
-  astray:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||!b.stray||b.lead!==r.id)return false;b.face=r.x<b.x?-1:1;b.vw='';r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>1.5)r.bubble='🎵'},done:(r,a)=>a.t>=3,
+  astray:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||!(b.stray||b.mvh)||b.lead!==r.id)return false;b.face=r.x<b.x?-1:1;b.vw='';r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>1.5)r.bubble='🎵'},done:(r,a)=>a.t>=3,
     end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||a.t<3)return;r.alead={aid:b.id,h:a.h};b.tr=[];r.bubble='';aniJoy(b)}},/* そばで声をかけると、ついてくる */
   alead:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.lead!==r.id)return false;faceTo(r,a.h)},done:(r,a)=>{const b=(S.ani||[]).find(q=>q.id===a.aid);return a.t>=1&&(!b||Math.hypot(b.x-r.x,b.y-r.y)<1.3||a.t>=8)},
-    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);r.alead=null;if(!b||!b.stray||!isHut(S.obj[a.h])||!PENS.get(a.h)||aniOf(a.h).length>=hutCap(a.h)){if(b){b.lead=null;b.lh=null;b.tr=null}return}
+    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);r.alead=null;if(!b)return;const mv=!!b.mvh;if(!b.stray&&!mv)return;
+      if(!isHut(S.obj[a.h])||!PENS.get(a.h)||aniOf(a.h).length>=hutCap(a.h)||!HUTK[S.obj[a.h]].includes(b.k)){b.lead=null;b.lh=null;b.tr=null;if(mv)aniMoveBack(b);return}
+      if(mv){delete b.mvh;b.h=a.h;b.lead=null;b.lh=null;b.tr=null;b.path=null;b.go=null;b.wt=2;b.x=r.x;b.y=r.y+.1;aniJoy(b);toast(ANI[b.k].name+'が、あたらしい'+BL[S.obj[a.h]].name+'にうつった','good');return}/* ひっこし：新しい小屋にすむ */
       b.stray=0;b.h=a.h;b.lead=null;b.lh=null;b.tr=null;b.path=null;b.wt=2;b.x=r.x;b.y=r.y+.1;aniJoy(b);toast(ANI[b.k].name+'が、'+BL[S.obj[a.h]].name+'にすみついた','good');if(typeof memo==='function')memo(ANI[b.k].name+'が村にすみついた')}}});
-ACT_LBL.astray='野良の生き物をむかえにいく';ACT_LBL.alead='生き物を小屋へつれていく';KEEPC.add('astray');KEEPC.add('alead');
+ACT_LBL.astray='野良の生き物をむかえにいく';ACT_LBL.alead='生き物を小屋へつれていく';
+/* ---------- ひっこしミトンで、飼う生き物を、べつの小屋へ（a.mvh：ひっこし中・a.lh：うつす先の小屋）----------
+   生き物をタップ → 同じしゅるいがすめて、空きのある、べつの小屋をタップ → 近いせいれいが歩いて行き（astray）、つれて小屋の前まで歩く（alead）。
+   とちゅうでやめたら（夜・せいれいがほかの用事・小屋がいっぱい）、もとの小屋の前へもどる（aniMoveBack）。同じ村の小屋だけ */
+function aniMoveTargets(a){return HUTS.filter(h=>h!==a.h&&hutRoom(h,a.k))}
+function aniMoveWhy(a){if(isNight())return '夜は、つれていけない';if(enemyLive())return '「コワイノ」がいる';return ''}
+function aniMovePick(px,py){const a=aniAtTap(px,py);if(!a||a.stray)return false;
+  if(a.mvh){toast(ANI[a.k].name+'は、いま、ひっこししている');return true}
+  if(!aniMoveTargets(a).length){toast(ANI[a.k].name+'がすめる、空いた小屋がない');return true}
+  MOVESRC={k:'ani',id:a.id};sfx('tplace');toast(ANI[a.k].name+'を、どの小屋へうつす？');dirty=true;renderPalette();return true}
+function aniMoveTap(tx,ty){const a=(S.ani||[]).find(q=>q.id===MOVESRC.id&&!q.stray&&!q.mvh);if(!a){MOVESRC=null;dirty=true;renderPalette();return}
+  const j=anc(ty*W+tx),o=S.obj[j];
+  if(j===a.h||(a.y|0)===ty&&(a.x|0)===tx){MOVESRC=null;dirty=true;renderPalette();return toast('やめた')}
+  if(!isHut(o))return toast('うつす先の小屋をタップ');
+  if(!HUTK[o].includes(a.k))return toast(ANI[a.k].name+'は、'+BL[o].name+'にすめない');
+  if(!PENS.get(j))return toast(BL[o].name+'のまわりが、かこまれていない');
+  if(!hutRoom(j,a.k))return toast(BL[o].name+'は、いっぱい');
+  const why=aniMoveWhy(a);if(why)return toast(why);
+  const r=aniMoveAsk(a,j);if(!r)return toast('いまは、つれていけるせいれいがいない');
+  MOVESRC=null;sfx('tap');dirty=true;renderPalette();toast(r.name+'が、'+ANI[a.k].name+'を'+BL[o].name+'へつれていく')}
+function aniMoveAsk(a,h){/* 行けるせいれいのうち、道のりがいちばん近い子。生き物のそばから小屋の前まで行けることもたしかめる（strayAsk と同じ） */const bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)&&!r.alead).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
+  for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)<=1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;const G2=bfs(st%W,(st/W)|0);if(!hutFront(h).some(c=>G2.dist[c]>=0))continue;bd=G.dist[st];best=r;bG=G;bs=st}
+  if(!best)return null;a.mvh=1;a.lead=best.id;a.lh=h;a.path=null;a.go=null;a.tr=null;a.pet=0;endAct(best);startAct(best,bG,'astray',bs,{aid:a.id,h});if(!best.act||best.act.type!=='astray'){delete a.mvh;a.lead=null;a.lh=null;return null}return best}
+function aniMoveBack(a){/* ひっこしをやめた：かこいの外にいたら、もとの小屋の前へ */delete a.mvh;a.lead=null;a.lh=null;a.tr=null;a.path=null;a.go=null;a.wt=2;const P=PENS.get(a.h),here=(a.y|0)*W+(a.x|0);if(!isHut(S.obj[a.h])||P&&P.includes(here))return;
+  const f=hutFront(a.h)[0];a.x=f%W+.5;a.y=((f/W)|0)+.6;if(isNight())a.in=1;toast(ANI[a.k].name+'は、もとの小屋にもどった')}
+function aniMoveMark(g){/* えらんだ生き物の足もとと、うつせる小屋を黄色でしめす */const a=(S.ani||[]).find(q=>q.id===MOVESRC.id);if(!a)return;g.save();g.fillStyle='rgba(255,220,90,.32)';g.strokeStyle='rgba(255,200,60,.9)';g.lineWidth=2;
+  const L=[(a.y|0)*W+(a.x|0)];for(const h of aniMoveTargets(a))for(const[x,y]of fp(S.obj[h],h%W,(h/W)|0))L.push(y*W+x);
+  for(const j of L){const z=liftOf(j);g.fillRect((j%W)*TS,((j/W)|0)*TS-z,TS,TS);g.strokeRect((j%W)*TS+1,((j/W)|0)*TS-z+1,TS-2,TS-2)}g.restore()}KEEPC.add('astray');KEEPC.add('alead');
 /* ---------- 野良の生き物に、はじめて会ったとき（しゅるいごとに1回、S.flags.aniMet）：
    村の時間を止め（GIFT_ACTIVE）、カメラが生き物へよる → ぴょんとはねて「？」・光の輪とつぶ・音 → 出会いのカード（絵はシールで、ぺたっ）→ カメラがもとの所へもどる → いつもの小さな画面。
    さいごまで見たら「会った」にする（とちゅうで村を切りかえたら、つぎにまたはじめから）。演出は実時間 ---------- */

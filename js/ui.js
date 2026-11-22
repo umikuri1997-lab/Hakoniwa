@@ -70,7 +70,7 @@ function chip(img,name,cost,cls,onClick,mat){
 function lbl(box,t){const s=document.createElement('span');s.className='pallbl';s.textContent=t;box.appendChild(s)}
 
 function updItemInfo(){const ii=$('#itemInfo');if(!(mode==='build'||mode==='bulk')||!S){ii.hidden=true;return}
-  let nm='',ds='';if(mode==='bulk'&&selStamp==='pick'){nm='かたちの筆';ds='タップでつむ・長おしでほる'}else if(mode==='bulk'&&selStamp==='move'){nm='ひっこしミトン';ds=MOVESRC?moveName(MOVESRC)+'を、どこへうつす？':'うつしたい家具・建物をタップ'}else if(mode==='bulk'&&selStamp){if(selStamp.startsWith('bp:')){const it=(S.bpInv||[])[+selStamp.slice(3)];nm=it?BPS[it.k].name:'設計図';ds='建てたい場所の左上をタップ'}else if(selStamp.startsWith('swap:')){nm=BL[selStamp.slice(5)].name+'につけかえ';ds='つけかえたい物をタップ'}else{nm=STAMPS[selStamp].name;ds='置きたい場所の左上をタップ'}}
+  let nm='',ds='';if(mode==='bulk'&&selStamp==='pick'){nm='かたちの筆';ds='タップでつむ・長おしでほる'}else if(mode==='bulk'&&selStamp==='move'){nm='ひっこしミトン';ds=MOVESRC?moveName(MOVESRC)+(MOVESRC.k==='ani'?'を、どの小屋へうつす？':'を、どこへうつす？'):'うつしたい家具・建物・生き物をタップ'}else if(mode==='bulk'&&selStamp){if(selStamp.startsWith('bp:')){const it=(S.bpInv||[])[+selStamp.slice(3)];nm=it?BPS[it.k].name:'設計図';ds='建てたい場所の左上をタップ'}else if(selStamp.startsWith('swap:')){nm=BL[selStamp.slice(5)].name+'につけかえ';ds='つけかえたい物をタップ'}else{nm=STAMPS[selStamp].name;ds='置きたい場所の左上をタップ'}}
   else if(sel&&BL[sel]){const b=BL[sel];nm=iname(sel);const bm=sel==='tower'?TOWER_MAT():b.mat;ds=(b.kind==='build'?(b.pc?SP(b.pc)+(bm?' '+matHTML(bm):''):''):'所持：'+inv(sel));const hp=withAttr(sel,b.desc||'');if(hp)ds+=' <button class="qbtn" id="iiQ">?</button>';}else ds=esc(ds);
   ii.hidden=!nm;$('#iiName').textContent=nm;$('#iiDesc').innerHTML=ds;const q=$('#iiQ');if(q)q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,withAttr(sel,BL[sel].desc||''))}}
 /* 「おく」のしぼりこみ（PALF：all・recent・タグ）。タグは依頼ボードと同じ tagsOf に、花・木は「ガーデン」、建物は「建物」、たねは「はたけ」。見る人の画面だけの物（セーブしない） */
@@ -105,7 +105,7 @@ function renderPalette(){
     const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
   if(mode==='bulk'){
     if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたい物をえらんで、なぞる')))}/* もらった道具だけ出す */
-    if(S.mover){lbl(box,'ひっこし');box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide'+(selStamp==='move'?' sel':''),()=>{selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物をタップ')}))}/* ひっこしミトン：家具・建物を、すぐべつの場所へ */
+    if(S.mover){lbl(box,'ひっこし');box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide'+(selStamp==='move'?' sel':''),()=>{selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}))}/* ひっこしミトン：家具・建物を、すぐべつの場所へ */
     if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
     if((S.bpInv||[]).length){lbl(box,'設計図');S.bpInv.forEach((it,i)=>{const k='bp:'+i;box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide'+(selStamp===k?' sel':''),()=>{sfx('tap');bpPop(i)}))})}/* 家の設計図 */
     if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
@@ -119,7 +119,7 @@ function renderPalette(){
       for(const id of L){const sd=id.startsWith('seed:'),n=sd?cseed(id.slice(5)):inv(id);box.appendChild(chip(iconURL(id),iname(id),'×'+n,sel===id&&!selStamp?'sel':'',pickItem(id)))}return}}
   const n0=box.children.length;
   if(mode==='build'&&PF==='all'){lbl(box,'どうぐ');if(fudeHas())box.appendChild(chip(toolIcon('fude'),'かたちの筆','ほる・つむ','wide',()=>{sfx('tap');setMode('bulk');selStamp='pick';palOpen=false;renderPalette();toast('タップでつむ・長おしでほる')}));/* かたちの筆：守り神のどうぐ（草原は神殿を直したあと、カミサマにもらう） */if((S.bpInv||[]).length)box.appendChild(chip(iconURL(bpWall()),'設計図','×'+S.bpInv.length,'wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));/* 道具は「おく」の中でえらぶ */
-    if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物をタップ')}));
+    if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}));
     if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');setMode('bulk');selStamp=null;toast('ぬりたい物をえらんで、なぞる')}));
     if(S.stamps)box.appendChild(chip(toolIcon('stamp'),'かたどりスタンプ','スタンプ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));
     if(S.swap)box.appendChild(chip(toolIcon('swap'),'つけかえトンカチ','つけかえ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}))}
@@ -407,7 +407,7 @@ function renderSheet(){
       }
     }
     buyItems('きょうの花のたね',shopDaily(flowerIds));
-    {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。たねもまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、もちものにもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
+    {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる。生き物は、小屋をタップすると、せいれいがつれていく','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。たねもまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、もちものにもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
       if(TL.length){const r3=sec('道具');for(const T of TL){const bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,'もらう　'+SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！','good');trade()},1)}
 }}
     {const rg=sec('きょうのおくりもの');for(const id of giftShopToday()){const got=giftShopBought(id),bx=row(rg,BL[id].name,BL[id].desc+'（所持：'+inv(id)+'）',giftIco(id),got),b=el('<button class="btn pri"></button>');b.textContent=got?'もらった':'もらう　'+SP(BL[id].shop);lackOn(b,got?'きょうは、もうもらった':S.pt<BL[id].shop?'パワーが足りません':'');b.onclick=()=>{if(got||S.pt<BL[id].shop)return;if(giftShopBuy(id))trade()};bx.appendChild(b)}}/* おくりもの：日がわり（gifts.js） */
