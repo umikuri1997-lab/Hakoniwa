@@ -61,7 +61,7 @@ def sea():
     return Image.fromarray(np.array(SEA,dtype=np.uint8)[col])
 
 
-def bridge(vertical):
+def bridge_fields(vertical):
     x, y = grid(64,64)
     along, across = (y,x) if vertical else (x,y)
     middle = 32 if vertical else 30
@@ -78,11 +78,34 @@ def bridge(vertical):
     glow = np.maximum.reduce([
         ellipse(along,across,s-2,c-4,l-2,r-5,64) for s,c,l,r in puffs
     ])
+    return np.stack((body, shadow, glow))
+
+
+def bridge_pixels(fields):
+    body, shadow, glow = fields
     rgb = np.zeros((64,64,4), dtype=np.uint8)
     for mask, index, alpha in ((shadow>0,0,112),(shadow>.18,1,190),(body>0,2,255),
                                (body>.21,3,255),(glow>0,4,255),(glow>.42,5,255)):
         rgb[mask] = (*CREAM[index], alpha)
     return Image.fromarray(rgb)
+
+
+BRIDGE_MASKS = (5, 6, 7, 9, 10, 11, 13, 14, 15)
+
+
+def junction(mask, horizontal, vertical):
+    x, y = grid(64, 64)
+    inner = np.stack((
+        ellipse(x, y, 32, 30, 19, 19),
+        ellipse(x, y, 35, 34, 20, 20),
+        ellipse(x, y, 29, 26, 15, 14),
+    ))
+    # One surface and one contour, so the arm shadows never cross the bend.
+    for bit, side, fields in ((1, x <= 32, horizontal), (2, x >= 32, horizontal),
+                              (4, y <= 30, vertical), (8, y >= 30, vertical)):
+        if mask & bit:
+            inner = np.where(side, np.maximum(inner, fields), inner)
+    return bridge_pixels(inner)
 
 
 def cliff():
@@ -145,7 +168,7 @@ def captured_rects(ops, size):
     return image
 
 
-def assembled(tile, wall, horizontal, vertical):
+def assembled(tile, wall, horizontal, vertical, corner=None):
     image = Image.new('RGBA',(256,256))
     for y in (0,128):
         for x in (0,128):
@@ -155,16 +178,20 @@ def assembled(tile, wall, horizontal, vertical):
     d = ImageDraw.Draw(image)
     d.rounded_rectangle((128,49,255,97),radius=12,fill='#b6ca83')
     d.rectangle((140,74,248,96),fill='#b6ca83')
-    for x in (0,64):
-        image.alpha_composite(horizontal,(x,48))
-    for y in (78,142):
+    image.alpha_composite(horizontal,(0,48))
+    image.alpha_composite(horizontal if corner is None else corner,(64,48))
+    for y in ((78,142) if corner is None else (112,176)):
         image.alpha_composite(vertical,(64,y))
     return image
 
 
 def main():
     tile, wall = sea(), cliff()
-    horizontal, vertical = bridge(False), bridge(True)
+    h_fields, v_fields = bridge_fields(False), bridge_fields(True)
+    horizontal, vertical = bridge_pixels(h_fields), bridge_pixels(v_fields)
+    corners = {mask: junction(mask,h_fields,v_fields) for mask in BRIDGE_MASKS}
+    for mask, tile_image in corners.items():
+        tile_image.save(OUT/f'skybridge_m{mask}.png')
     for name,image in (('skysea',tile),('skycliff',wall),
                        ('skybridge_h',horizontal),('skybridge_v',vertical)):
         image.save(OUT/f'{name}.png')
@@ -179,7 +206,7 @@ def main():
         draw.rectangle((0,y*2,63,y*2+1),fill=tuple(old['face'][index]))
     sheet = Image.new('RGB',(1036,512),'#eee8dc')
     for i, parts in enumerate(((old_sea,old_wall,old_h,old_v),
-                               (tile,wall,horizontal,vertical))):
+                               (tile,wall,horizontal,vertical,corners[11]))):
         sheet.paste(assembled(*parts).resize((512,512),Image.Resampling.NEAREST),(i*524,0))
     sheet.save(OUT/'cmp_x2.png')
     seam = Image.new('RGB',(256,256))
@@ -187,8 +214,19 @@ def main():
         for x in (0,128):
             seam.paste(tile,(x,y))
     seam.resize((512,512),Image.Resampling.NEAREST).save(OUT/'skysea_2x2.png')
-    assembled(tile,wall,horizontal,vertical).resize((768,768),Image.Resampling.NEAREST).save(
+    assembled(tile,wall,horizontal,vertical,corners[11]).resize((768,768),Image.Resampling.NEAREST).save(
         OUT/'connections_x3.png')
+    joins = Image.new('RGBA',(192*3,192*3))
+    for i, (mask, center) in enumerate(corners.items()):
+        sample = Image.new('RGBA',(192,192), '#bddbef')
+        sample.alpha_composite(center,(64,64))
+        for bit, at, arm in ((1,(0,64),horizontal),(2,(128,64),horizontal),
+                             (4,(64,0),vertical),(8,(64,128),vertical)):
+            if mask & bit:
+                sample.alpha_composite(arm,at)
+        ImageDraw.Draw(sample).text((4,4),f'm{mask}',fill='#4a4e65')
+        joins.paste(sample,(i%3*192,i//3*192))
+    joins.save(OUT/'bridge_junctions.png')
 
 
 if __name__ == '__main__':
