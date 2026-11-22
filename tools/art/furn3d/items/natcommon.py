@@ -345,3 +345,49 @@ def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35
     lv=np.clip(lv,0,4).astype(int)
     P=np.array(pal);a[inner,:3]=P[lv[inner]];a[edge,:3]=OL
     return Image.fromarray(a)
+def modelfacets(sc,path,c,size,pal,zs=1.0,rot=0,gi='m',split=True,view=42,light=(-0.75,0.35,0.55),tilt=0):   # light：左から強く当てて、柱の左の面と右の面の明るさをはっきりわける（水晶らしく）
+    """3Dモデル（glb）を、面ごとに光の向きで pal の色（hullrock と同じ。かげは5だん）にして組む。split：つながった形ごと（水晶なら1本ずつ）に、べつのグループにする（あいだに輪郭線が出る）。
+    c=(x,y) 置く所（足もとのまん中）、size：モデルの高さ（マス、zs でのばす前）"""
+    import os,trimesh,oblique3d as O
+    M=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','models',path)
+    s=trimesh.load(M,force='scene');ms=[]
+    for node in s.graph.nodes_geometry:
+        T,g=s.graph[node];m=s.geometry[g].copy();m.apply_transform(T);ms.append(m)
+    m=trimesh.util.concatenate(ms);m=trimesh.Trimesh(m.vertices,m.faces,process=True)
+    F=np.asarray(m.faces);E={}   # 辺→面（trimesh の split・facets は、このモデルでは、となりの面を見つけられなかったので、自分でつなぐ）
+    for f,tr in enumerate(F):
+        for e in((tr[0],tr[1]),(tr[1],tr[2]),(tr[2],tr[0])):E.setdefault(tuple(sorted(e)),[]).append(f)
+    def groups(ok):
+        par=list(range(len(F)))
+        def fd(x):
+            while par[x]!=x:par[x]=par[par[x]];x=par[x]
+            return x
+        for fs in E.values():
+            for g in fs[1:]:
+                if ok(fs[0],g):par[fd(g)]=fd(fs[0])
+        G={}
+        for f in range(len(F)):G.setdefault(fd(f),[]).append(f)
+        return list(G.values())
+    FN=np.asarray(m.face_normals)
+    comps=groups(lambda a,b:True) if split else [list(range(len(F)))]
+    flats=groups(lambda a,b:FN[a]@FN[b]>0.995)
+    parts=[(np.asarray(m.vertices),F[c],c) for c in comps]
+    V=np.asarray(m.vertices);k=size/(V[:,1].max()-V[:,1].min());a=np.radians(rot)
+    cx,cz,y0=(V[:,0].max()+V[:,0].min())/2,(V[:,2].max()+V[:,2].min())/2,V[:,1].min()
+    def tf(P):
+        x,y,z=(P[:,0]-cx)*k,(P[:,2]-cz)*k,(P[:,1]-y0)*k*zs
+        x,y=x*np.cos(a)-y*np.sin(a),x*np.sin(a)+y*np.cos(a);tl=np.radians(tilt);x,z=x*np.cos(tl)+z*np.sin(tl),-x*np.sin(tl)+z*np.cos(tl)   # tilt：左右へかたむける（度）
+        return np.stack([c[0]+x,c[1]+y,z],1)
+    cut=np.linspace(0.75,-0.35,len(pal)-1)   # 光の向きとの内積で、明るい順に pal の色（y と z を入れかえるので、面の向きをそろえるため、点の順を 0・2・1 に）
+    VT=tf(np.asarray(m.vertices));NA=np.cross(VT[F[:,2]]-VT[F[:,0]],VT[F[:,1]]-VT[F[:,0]]);NA/=np.linalg.norm(NA,axis=1,keepdims=True)+1e-12
+    for fc in flats:   # 平らな面（いくつかの三角形）は、向きを1つにそろえる（さかいに色のちがいを出さない）
+        q=NA[fc].mean(0);NA[fc]=q/(np.linalg.norm(q)+1e-12)
+    AR=np.linalg.norm(np.cross(VT[F[:,1]]-VT[F[:,0]],VT[F[:,2]]-VT[F[:,0]]),axis=1);LT=np.array(light,float)/np.linalg.norm(light);dd=NA@LT;o_=np.argsort(-dd);cw=np.cumsum(AR[o_])/AR.sum()
+    cut=[dd[o_][np.searchsorted(cw,q)] for q in(0.14,0.38,0.64,0.86)]   # 面の広さでわけた5だん（明るい面14%・つぎ24%・まん中26%・かげ22%・こいかげ14%）
+    for i,(_,FF,c) in enumerate(parts):
+        t=VT[FF[:,[0,2,1]]];n=NA[c]
+        cen=t.mean(1);ok=(n@np.array([0,np.cos(np.radians(view)),np.sin(np.radians(view))])>0.02)   # うら向きの面と、同じ所にかさなった面（ちらつく）はすてる
+        _,u=np.unique(np.round(cen[ok],4),axis=0,return_index=True);t,n=t[ok][np.sort(u)],n[ok][np.sort(u)]
+        d=n@LT;sc.texture(None);sc.material('flat');sc.smooth(False);sc.group('%s%d'%(gi,i));sc.part()
+        for tt,dd in zip(t,d):sc.tri(tt[0],tt[1],tt[2],pal[int((dd<cut).sum())])
+    sc.group(None);sc.material(None)

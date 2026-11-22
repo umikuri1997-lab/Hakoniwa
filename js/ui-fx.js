@@ -155,7 +155,7 @@ function lvWatch(){const e=document.getElementById('lvLbl');if(!e)return;let p=p
   if(v>p&&started){if(typeof juiceLvUp==='function')juiceLvUp(e,p,v);else lvBrand(e)}p=v}).observe(e,{childList:true,characterData:true,subtree:true})}/* バーがあふれてから焼き印（juice3.js） */
 function lvBrand(e){if(!document.body.classList.contains('wd0')||uiReduced())return;e.classList.remove('ubrand');void e.offsetWidth;e.classList.add('ubrand');sfx('sizzle');const q=e.getBoundingClientRect();smoke(q.left+q.width/2,q.top,7);clearTimeout(e._bT);e._bT=setTimeout(()=>e.classList.remove('ubrand'),1000)}
 /* 草原：下のシートをとじるとき、板が少しうきあがってから、下へすべっていく（とじた画面の写しを動かす。本物は、すぐとじる） */
-function sheetGhost(){if(!document.body.classList.contains('wd0')||uiReduced())return;const w=document.getElementById('sheetWrap');if(!w||w.hidden)return;const s=w.querySelector('.sheet');if(!s)return;
+function sheetGhost(){if(SWIPESHUT){SWIPESHUT=0;return}/* なでてとじたときは、写しの板を出さない（もう下へすべっている） */if(!document.body.classList.contains('wd0')||uiReduced())return;const w=document.getElementById('sheetWrap');if(!w||w.hidden)return;const s=w.querySelector('.sheet');if(!s)return;
   const g=w.cloneNode(true);/* 同じ id の写しは、本物のすぐあとに置くので、id でさがすと本物が先に見つかる */
   const cs=w.querySelectorAll('canvas'),cg=g.querySelectorAll('canvas');cs.forEach((c,i)=>{try{if(cg[i]&&c.width)cg[i].getContext('2d').drawImage(c,0,0)}catch(e){}});
   g.classList.add('ughostw');g.style.pointerEvents='none';const gs=g.querySelector('.sheet');gs.classList.add('ughost');const gb=g.querySelector('.sheet [id="sheetBody"]');
@@ -189,3 +189,15 @@ document.addEventListener('click',e=>{if(!e.isTrusted)return;const b=tapSlopPick
 /* わざのボタン：チャージがたまった・パワーがそろって使えるようになった瞬間に、ぽんとはねて「ちりん」。チャージ中におしたら、ボタンが左右にふるえる */
 const SKP={};function skillReady(el,k,p){if(el.hidden){SKP[k]=null;return}const q=SKP[k];SKP[k]=p;if(q==null||q>=1||p<1)return;el.classList.remove('sready');void el.offsetWidth;el.classList.add('sready');sfx('tink')}
 function skillDeny(sel){const el=typeof sel==='string'?document.querySelector(sel):sel;if(!el)return;el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake');buzz(15)}
+/* 下のシート：上のはし（見出し）を下へなでると、指について下がり、SWDIST より下か、はやくなでたら、とじる。とちゅうではなすと、もどる。動きは1.5pxのます目。本・巻物はのぞく（とじる動きがあるため） */
+let SWIPESHUT=0;const SWDIST=90,SWVEL=.6,SWOUTMS=140,SWBACKMS=120;
+(function(){const q=s=>document.querySelector(s),st=v=>Math.round(v/1.5)*1.5;let D=null;
+  const sh=()=>q('#sheetWrap .sheet'),okNow=()=>{const w=q('#sheetWrap');if(!w||w.hidden||typeof sheet==='undefined'||!sheet)return false;if(typeof scSheet==='function'&&scSheet())return false;if(typeof BK!=='undefined'&&BK&&BK.el&&BK.el.isConnected)return false;return true};
+  const put=(el,y)=>{el.style.transform=y>0?'translateY('+st(y)+'px)':''};
+  const slide=(el,a,b,ms,fin)=>{if(typeof uiReduced==='function'&&uiReduced()){put(el,b);fin&&fin();return}const t0=performance.now();const f=()=>{const k=Math.min(1,(performance.now()-t0)/ms),e=1-Math.pow(1-k,2);put(el,a+(b-a)*e);if(k<1)requestAnimationFrame(f);else fin&&fin()};requestAnimationFrame(f)};
+  document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('#sheetWrap .sheet>header');if(!h||e.target.closest('#sheetX')||!okNow())return;D={id:e.pointerId,y0:e.clientY,y:0,v:0,t:performance.now(),el:sh()}},true);
+  document.addEventListener('pointermove',e=>{if(!D||e.pointerId!==D.id)return;const t=performance.now(),y=Math.max(0,e.clientY-D.y0),dt=Math.max(1,t-D.t);D.v=(y-D.y)/dt;D.y=y;D.t=t;if(y>4){D.moved=1;D.el.classList.remove('kotonn');D.el.style.animation='none';put(D.el,y)}},true);
+  const end=e=>{if(!D||e.pointerId!==D.id)return;const d=D;D=null;if(!d.moved)return;
+    if(d.y>SWDIST||d.v>SWVEL&&d.y>12){const H=d.el.offsetHeight||400;sfx('close');slide(d.el,d.y,H,SWOUTMS,()=>{SWIPESHUT=1;SHEETQUIET=1;closeSheet();SWIPESHUT=0;d.el.style.transform='';d.el.style.animation=''})}
+    else slide(d.el,d.y,0,SWBACKMS,()=>{d.el.style.animation=''})};
+  document.addEventListener('pointerup',end,true);document.addEventListener('pointercancel',end,true);})();

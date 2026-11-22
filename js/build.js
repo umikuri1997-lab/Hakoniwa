@@ -192,14 +192,16 @@ const CELLSTATE=['prQ','prIn','prOut','prW','smQ','smIn','cmpQ','ovenSet'];/* �
 function moveCellState(a,j){/* ひっこしミトンでうつした家具の、予定・入れた物・できた物・進みぐあい・運んでいるとちゅうの行き先を、うつした先へ */
   for(const f of CELLSTATE){const Q=S[f];if(Q&&Q[a]!=null){Q[j]=Q[a];delete Q[a]}}
   for(const r of S.res){for(const k of['ppk','spk','cpk'])if(r[k]&&r[k].j===a)r[k].j=j;const A=r.act;if(A){if(A.sj===a)A.sj=j;if(A.cj===a)A.cj=j}}}
-let MOVESRC=null;/* ひっこしミトン：えらんだ物 {k:'obj'|'rug'|'roof',j} */
+let MOVESRC=null;/* ひっこしミトン：えらんだ物 {k:'obj'|'rug'|'roof',j}・飼う生き物は {k:'ani',id}（animals.js の aniMoveTap） */
 const NOMOVE=new Set(['kaeribi','kazaana','kazaanab','oldmill','merryb','cupb','skyswingb','wheelb','statue','statueb','obox','board','altar','tower','site','site2','matyard']);/* 神殿まわり・建てている物は、うつせない */
 function moveTarget(j){if(S.rug&&RUGC.has(j)&&!(S.obj[j]&&S.obj[j]!=='part'&&!WEEDS.has(S.obj[j])))return {k:'rug',j:RUGC.get(j)};const a=anc(j),o=S.obj[a];
   if(o&&BL[o]&&(BL[o].kind==='furn'||BL[o].kind==='build')&&!BL[o].natural&&!NOMOVE.has(o))return {k:'obj',j:a};if(RFC.has(j))return {k:'roof',j:RFC.get(j)};return null}
-function moveName(m){return BL[m.k==='rug'?S.rug[m.j]:m.k==='roof'?S.roof[m.j]:S.obj[m.j]].name}
+function moveName(m){if(m.k==='ani'){const a=(S.ani||[]).find(q=>q.id===m.id);return a?ANI[a.k].name:'生き物'}return BL[m.k==='rug'?S.rug[m.j]:m.k==='roof'?S.roof[m.j]:S.obj[m.j]].name}
 function writeObj(id,j,v){/* うつした物を書きこむ（向き・状態・じょうぶさもそのまま） */if(v.rot!=null)(S.rot||(S.rot={}))[j]=v.rot;S.obj[j]=id;if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}else setParts(id,j,'part');if(v.dyn)S.dyn[j]=v.dyn;if(v.hp!=null)S.hp[j]=v.hp;if(v.hpL!=null)S.hp['L'+j]=v.hpL;if(v.own!=null)(S.bedOwn||(S.bedOwn={}))[j]=v.own;if(v.wown!=null)(S.wpOwn||(S.wpOwn={}))[j]=v.wown;if(v.uown!=null)(S.useOwn||(S.useOwn={}))[j]=v.uown;if(v.jown!=null)(S.jobOwn||(S.jobOwn={}))[j]=v.jown;if(v.cd!=null)(S.trapCd||(S.trapCd={}))[j]=v.cd}
-function moveTap(tx,ty){const j=ty*W+tx;
-  if(!MOVESRC){const m=moveTarget(j);if(!m)return toast('うつしたい家具・建物をタップ');if(m.k==='obj'&&fireAt(m.j))return toast('燃えているあいだは、うつせません');MOVESRC=m;sfx('tplace');toast(moveName(m)+'を、どこへうつす？');dirty=true;renderPalette();return}
+function moveTap(tx,ty,px,py){const j=ty*W+tx;
+  if(MOVESRC&&MOVESRC.k==='ani')return aniMoveTap(tx,ty);/* 飼う生き物：うつす先の小屋をタップ（animals.js） */
+  if(!MOVESRC&&px!=null&&aniMovePick(px,py))return;
+  if(!MOVESRC){const m=moveTarget(j);if(!m)return toast('うつしたい家具・建物・生き物をタップ');if(m.k==='obj'&&fireAt(m.j))return toast('燃えているあいだは、うつせません');MOVESRC=m;sfx('tplace');toast(moveName(m)+'を、どこへうつす？');dirty=true;renderPalette();return}
   const m=MOVESRC;if(m.j===j||m.k==='obj'&&anc(j)===m.j){MOVESRC=null;dirty=true;renderPalette();return toast('やめた')}/* 同じ物をタップしたら、やめる */
   if(m.k==='rug'||m.k==='roof'){const L=m.k==='rug'?S.rug:S.roof,id=L[m.j],rr=m.k==='rug'&&S.rugRot?S.rugRot[m.j]:null;delete L[m.j];if(rr!=null)delete S.rugRot[m.j];recount();
     if(!(m.k==='rug'?canRug(tx,ty,false):canRoof(tx,ty,false))){L[m.j]=id;if(rr!=null)S.rugRot[m.j]=rr;recount();return}

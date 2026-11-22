@@ -3,7 +3,7 @@
 from blueprint import Part as P
 from common import *
 import math
-ID='cave_leaf';GRAD=True;BOTTOM=60;PARALLEL=True
+ID='cave_leaf';TONE5=True;DITHER=0;BOTTOM=60;PARALLEL=True
 VIEWS=[('cave:leaf',0)]
 LEAF=(112,180,88);VEIN=(170,220,130);EDGE=(84,146,70)
 def PARTS():

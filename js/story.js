@@ -206,7 +206,7 @@ const PROF=[
 function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この谷で、ひっそりくらしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[FA(),'#joy|ねえ、この谷を、いっしょにすてきにしようよ！']]}
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
 const LIGHTQ=['g_w_acorn','g_e_lantern','g_f_lamp','g_s_jelly','torch','lamp','campfire','lantern','oldlantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
-const DECOQ=['g_w_kinoko','g_w_shelf','g_w_stump','g_e_planter','g_e_bath','g_e_arch','g_f_hanger','g_f_screen','g_f_sofa','g_k_fan','g_k_egg','g_k_screen','g_s_vanity','g_s_tank','g_s_sofa','hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','doki','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
+const DECOQ=['g_w_kinoko','g_w_shelf','g_w_stump','g_e_planter','g_e_bath','g_e_arch','g_f_hanger','g_f_screen','g_f_sofa','g_k_fan','g_k_egg','g_k_screen','g_s_vanity','g_s_tank','g_s_sofa','hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','doki','rel_kui','rel_suisho','rel_bin','rel_nafuda','rel_sekiban','rel_fuigo','rel_suzu','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
 /* フリーモードの第1章：数ではなく、やり方をえらべる目標（住み心地・スポット・なかま・イベント・すてき度）。神殿もカミサマも出ない。第2章と季節の話は free.js */
 const fComf=()=>HOUSES.reduce((m,h)=>Math.max(m,houseComfort(h).v),0),fComfSt=()=>Math.min(5,Math.max(HOUSES.length?1:0,Math.ceil(fComf()/60))),fSpotN=()=>new Set((SPOTI||[]).map(x=>x.sp.k)).size;
 const QUESTSF=[

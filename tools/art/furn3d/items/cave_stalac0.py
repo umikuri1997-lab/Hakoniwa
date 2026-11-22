@@ -2,7 +2,7 @@
 # 設計図（単位はマス）：どちらも、ろくろの形（上が太く、下へ細く）。天井（高さ0.92）からたれる。
 from blueprint import Part as P
 from common import *
-ID='cave_stalac0';GRAD=True;BOTTOM=40;PARALLEL=True;ELEV=6
+ID='cave_stalac0';TONE5=True;DITHER=0;BOTTOM=40;PARALLEL=True;ELEV=6
 VIEWS=[('cave:stalac#0',0)]
 STONE=(138,123,110)
 def PARTS():

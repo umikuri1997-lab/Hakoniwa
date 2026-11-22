@@ -4,12 +4,15 @@
    - 明るい所のにじみ（画面を小さくして、明るい所だけをのこし、なめらかに大きくして screen でかさねる。あかりに色はかぶせない）
    - 見せ場（なかまが来る・オオカゲの登場・御神木が育つ、hdBig）は、にじみを強く
    - かげの向きと長さ（朝は西・夕方は東へかたむき、朝・夕方は長く、昼は短い。shadow() と落ち影が sunLen・sunLean を見る）
+   - 画面の四すみを少し暗く（まん中に目がいくように。HDVIG：昼のこさ。夜はもう暗いので、暗さに合わせてうすく）
    - にじみは、設定の「にじみ」で入り・切り（HDGLOW。自動ではかえない。持ち主がきめた。上下のぼかしは、持ち主がきめてなくした）
    作業用のキャンバスは画面の1/6・1/12の大きさ（iPhone の縦画面で約0.5MB）。小さくした絵（にじみのもと）は2コマに1回だけ作りなおす（HDEVERY） */
 let HD2D=true;try{if(KV.getItem('hakoniwa-hd2d')==='0')HD2D=false}catch(e){}
 function setHd2d(v){HD2D=!!v;try{KV.setItem('hakoniwa-hd2d',HD2D?'1':'0')}catch(e){}}
 let HDGLOW=true;try{if(KV.getItem('hakoniwa-hdglow')==='0')HDGLOW=false}catch(e){}
 function setHdGlow(v){HDGLOW=!!v;try{KV.setItem('hakoniwa-hdglow',HDGLOW?'1':'0')}catch(e){}}
+const HDVIG=.3;/* 四すみの暗さ：昼のこさ（四すみのいちばん外） */
+const HDVIGR=[.42,.78];/* 暗くなりはじめる所・いちばん暗い所（画面のまん中から、対角線の半分にたいする長さ） */
 const HDAIR=.16;/* 空気の遠近：画面のいちばん上のこさ */
 const HDLONG=.8;/* かげの長さ：朝6時・夕方18時に、昼より 0.8 ぶん長い */
 const HDLEAN=.6;/* 落ち影のかたむき：朝6時・夕方18時に、根もとから1上がるごとに、よこへ 0.6 */
@@ -39,6 +42,7 @@ function hdPost(dk,now){/* 夜の暗さのあと・ふきだしの前に、画�
   c.globalCompositeOperation='source-over';
   {const a=HDAIR*(1-Math.min(1,dk/.4));if(a>0){const g=c.createLinearGradient(0,0,0,H0*.55);g.addColorStop(0,'rgba(200,216,236,'+a+')');g.addColorStop(1,'rgba(200,216,236,0)');c.fillStyle=g;c.fillRect(0,0,W0,H0*.55)}}/* 空気の遠近：奥ほど少し青く・うすく（夜はなし） */
   if(S.rain&&!(typeof snowNow==='function'&&snowNow())){const st=typeof stormNow==='function'&&stormNow(),a=(st?.12:.075)*(typeof wxRainK==='function'?wxRainK():1)*(1-Math.min(1,dk/.5)*.6);if(a>0){const col='210,220,234',g=c.createLinearGradient(0,0,0,H0);g.addColorStop(0,'rgba('+col+','+a*1.5+')');g.addColorStop(.45,'rgba('+col+','+a*.35+')');g.addColorStop(.75,'rgba('+col+',0)');g.addColorStop(1,'rgba('+col+','+a*.7+')');c.fillStyle=g;c.fillRect(0,0,W0,H0);const e=Math.round(W0*.18),gl=c.createLinearGradient(0,0,e,0);gl.addColorStop(0,'rgba('+col+','+a+')');gl.addColorStop(1,'rgba('+col+',0)');c.fillStyle=gl;c.fillRect(0,0,e,H0);const gr=c.createLinearGradient(W0-e,0,W0,0);gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(1,'rgba('+col+','+a+')');c.fillStyle=gr;c.fillRect(W0-e,0,e,H0)}}/* 雨のもや：画面のはしほど白くかすむ（雨が強いほど・あらしはこく） */
+  {const a=HDVIG*(1-Math.min(1,dk/.5)*.7);if(a>0){const r=Math.hypot(W0,H0)/2,g=c.createRadialGradient(W0/2,H0/2,r*HDVIGR[0],W0/2,H0/2,r*HDVIGR[1]);g.addColorStop(0,'rgba(24,20,36,0)');g.addColorStop(1,'rgba(24,20,36,'+a.toFixed(3)+')');c.fillStyle=g;c.fillRect(0,0,W0,H0)}}/* 四すみを暗く */
   if(!HDGLOW){c.restore();return}/* にじみ：切り */
   const aw=Math.max(1,Math.round(W0/HDA)),ah=Math.max(1,Math.round(H0/HDA)),bw=Math.max(1,Math.round(W0/HDB)),bh=Math.max(1,Math.round(H0/HDB));const fresh=!HDC.b||HDC.b.width!==bw||HDC.b.height!==bh||++HDC.n>=HDEVERY;if(fresh)HDC.n=0;
   const B=HDC.b=hdCv(HDC.b,bw,bh),C=HDC.c=hdCv(HDC.c,bw,bh),gb=B.getContext('2d'),gc=C.getContext('2d');
