@@ -69,20 +69,21 @@ function nmBake(g,w,h){/* 地面・ブロックの絵に、ドットごとの面
   for(let y=0;y<h;y++){const ym=((y-1+h)%h)*w,yp=((y+1)%h)*w,yr=y*w;for(let x=0;x<w;x++){const i=yr+x;if(!d[i*4+3])continue;const xm=(x-1+w)%w,xp=(x+1)%w,dx=(L[yr+xp]-L[yr+xm])*NMK,dy=(L[yp+x]-L[ym+x])*NMK,nl=Math.hypot(dx,dy,1),s=(-dx*Lx-dy*Ly+Lz)/nl/Lz,f=1+(s-1)*NMS;
     d[i*4]=Math.max(0,Math.min(255,d[i*4]*f));d[i*4+1]=Math.max(0,Math.min(255,d[i*4+1]*f));d[i*4+2]=Math.max(0,Math.min(255,d[i*4+2]*f))}}
   g.putImageData(img,0,0)}
-function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(r=>atlasFrame(r,id));return ch._im}
+let CHIPK=null;function chipKey(ch){/* チップの名前の、[@>:] より前（木の壁の色・地面の光など、切り出すときの手直しは、この名前できめる。よんだ所の名前ではきめない） */if(!CHIPK){CHIPK=new Map();const C=window.CHIPS||{};for(const k in C){const c=C[k],id=k.split(/[@>:]/)[0];CHIPK.set(c,id);for(const p of c.parts||[])CHIPK.set(p,id)}}return CHIPK.get(ch)}
+function chipImgs(ch,id){if(!ch._im){const k=chipKey(ch);ch._im=ch.f.map(r=>atlasFrame(r,k!=null?k:id))}return ch._im}
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
   swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return rotAt(i)===1?{rot:d*SWROT}:{sx:1+d*.04,sy:1+d*.3}},/* 縦のブランコは、横から見るので、支点のまわりに左右へゆれる */
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
   windmill:(i,now)=>({rot:ICON||WD===WIND&&!(i!=null&&windNear(i,2))?0:(now||performance.now())/1000*.9}),/* 風のステージ：風があたっているときだけ、まわる */
   suisha:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.7}),/* 水車の輪は、ずっとまわる */
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
-function partImg(p,id){if(!p._im)p._im=atlasFrame(p.f[0],id);return p._im}
+function partImg(p,id){if(!p._im){const k=chipKey(p);p._im=atlasFrame(p.f[0],k!=null?k:id)}return p._im}
 function hotSteam(c,x,y,now,i){/* 湯のわき岩の湯気：4コマを、となりのコマとうすくかさねて、ゆっくり入れかえる */if(seasonNow()===1)return;const C=window.CHIPS;if(!C||!C['hotstone:steam#0'])return;const t=((now||performance.now())/700+(i||0)*.37)%4,k=t|0,f=t-k,a0=c.globalAlpha;for(const[n,al]of[[k,1-f],[(k+1)%4,f]]){if(al<=.01)continue;c.globalAlpha=a0*al*.8;drawChip(c,C['hotstone:steam#'+n],'hotstone:steam',x,y,now,i)}c.globalAlpha=a0}
 function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chipImgs(src,id),n=ims.length,im=ims[n>1?Math.floor((now||performance.now())/(id==='yomawari'?900:180))%n:0];if(!im.ok)return false;const sm=c.imageSmoothingEnabled,branch=id==='mat:eda'||id==='drop:eda',sv=ch.flip||src.parts||branch;c.imageSmoothingEnabled=false;if(sv)c.save();if(branch){c.translate(x+TS/2,y+TS/2);c.scale(.75,.75);c.translate(-x-TS/2,-y-TS/2)}if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}/* 反転は、マスのはばの中で */
   if(g64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay);/* 1マス64ドットの絵（g:64）は、半分の大きさでかく */
   if(src.parts){const mv=PARTMV[id]?PARTMV[id](i,now):{};for(const p of src.parts){const pm=partImg(p,id);if(!pm.ok)continue;const q=g64?.5:1,px=x+p.px*q,py=y+p.py*q;if(p.fix){c.drawImage(pm,x+p.ax*q,y+p.ay*q,p.w*q,p.h*q);continue}/* fix：動く部品より手前の本体（横木・手前の柱など）。動かさずに上に重ねる */c.save();c.translate(px,py);if(mv.rot)c.rotate(mv.rot);if(mv.sx!=null||mv.sy!=null)c.scale(mv.sx??1,mv.sy??1);c.translate(-px,-py);c.drawImage(pm,x+p.ax*q,y+p.ay*q,p.w*q,p.h*q);c.restore()}}/* 動く部品は、支点のまわりで動かして重ねる */
   if(sv)c.restore();c.imageSmoothingEnabled=sm;return true}
-if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id);for(const p of ch.parts||[])partImg(p,id)}/* 動く部品（ブランコの座面など）も *//* はじめに読みこんでおく */
+/* チップの1コマずつの絵は、はじめて描くときに切り出す（chipImgs・partImg）。読みこむときに全ステージの全コマを切り出すと、キャンバスが約86MBになり、iPhone で落ちるおそれがある。アトラスの読みこみは assetsOK がまつ */
 const CONN={bedge:'s',fence:'f',misugaki:'f',ropefence:'f',ashifence:'f',rankan:'f',ibara:'f',kuzure:'f',logfence:'f',bamboofence:'f',parkfence:'f',wall:'w',hwall:'h',bamboowall:'h',canvaswall:'h',acaciawall:'h',timberwall:'h',canalwall:'h',mosswall:'h',moonwall:'h',logwall:'h',plasterwall:'h',brickwall:'h',yozorawall:'h'},CONNR={'bedge':'HV','fence':'HV','misugaki':'HV','ropefence':'HV','ashifence':'HV','rankan':'HV','ibara':'HV','kuzure':'HV','logfence':'HV','parkfence':'HV','bamboofence':'VH','wall':'HV','hwall':'HV','bamboowall':'HV','canvaswall':'HV','acaciawall':'HV','timberwall':'HV','canalwall':'HV','mosswall':'HV','moonwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 const LOGF=new Set(['logfence','logdoor','loggate']);
 const GLX={gate:2.56,logdoor:6.4,loggate:7.04,parkdoor:5.76,parkgate:7.04,canalgate:7.68,irongate:7.68,sdoor:5.76,stonegate:6.4};/* 左がこのドア・門：右の柱がとなりのマスにはみ出すので、柵・塀の左はしをこのはばだけ描かない */
