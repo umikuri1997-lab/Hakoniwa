@@ -8,6 +8,8 @@ HERE=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,HERE);sys.path
 import numpy as np
 import blueprint as bp,bake_rig as br
 OUT=os.path.join(HERE,'heat')
+MERGE=.002   # この長さより近い点をまとめる（モデルの高さを1として）
+SC=10.0   # 大きさ（モデルの高さ1のままだと、ボーンヒートがとけずに、重みがぜんぶの骨にうすく広がる）
 
 def main(name):
     import bpy
@@ -17,24 +19,30 @@ def main(name):
     Pu=np.zeros((n,3));np.add.at(Pu,uid,P);Pu/=np.bincount(uid,minlength=n)[:,None]
     Fu=uid[F];Fu=Fu[(Fu[:,0]!=Fu[:,1])&(Fu[:,1]!=Fu[:,2])&(Fu[:,0]!=Fu[:,2])]
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    me=bpy.data.meshes.new(name);me.from_pydata(Pu.tolist(),[],Fu.tolist());me.update()
+    import bmesh
+    me=bpy.data.meshes.new(name);me.from_pydata((Pu*SC).tolist(),[],Fu.tolist());me.update()
+    bm=bmesh.new();bm.from_mesh(me);bmesh.ops.remove_doubles(bm,verts=bm.verts,dist=MERGE*SC);bmesh.ops.recalc_face_normals(bm,faces=bm.faces);bm.to_mesh(me);bm.free();me.update()   # 近い点をまとめ、面の向きをそろえる（しないと、ボーンヒートがとけない）
     ob=bpy.data.objects.new(name,me);bpy.context.scene.collection.objects.link(ob)
     ad=bpy.data.armatures.new('ARM_'+name);ar=bpy.data.objects.new('ARM_'+name,ad);bpy.context.scene.collection.objects.link(ar)
     bpy.context.view_layer.objects.active=ar;bpy.ops.object.mode_set(mode='EDIT')
     eb={}
     for bn,par,h,t in br.SKEL[name]:
-        b=ad.edit_bones.new(bn);b.head=h;b.tail=t
+        b=ad.edit_bones.new(bn);b.head=tuple(np.array(h)*SC);b.tail=tuple(np.array(t)*SC)
         if par:b.parent=eb[par];b.use_connect=False
         eb[bn]=b
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='DESELECT');ob.select_set(True);ar.select_set(True);bpy.context.view_layer.objects.active=ar
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-    names=[b[0] for b in br.SKEL[name]];W=np.zeros((n,len(names)))
+    names=[b[0] for b in br.SKEL[name]];Wm=np.zeros((len(me.vertices),len(names)))
     gi={g.index:names.index(g.name) for g in ob.vertex_groups if g.name in names}
     for v in me.vertices:
         for g in v.groups:
-            if g.group in gi:W[v.index,gi[g.group]]=g.weight
+            if g.group in gi:Wm[v.index,gi[g.group]]=g.weight
+    from scipy.spatial import cKDTree
+    co=np.array([v.co[:] for v in me.vertices])/SC;_,nn=cKDTree(co).query(Pu);W=Wm[nn]   # まとめたあとの点から、もとの点へ
     miss=(W.sum(1)==0).sum()
+    if miss:   # ボーンヒートでとどかなかった点（はなれた小さな部品）は、いちばん近い、重みのある点と同じに
+        ok=W.sum(1)>0;bi=np.where(ok)[0];_,k=cKDTree(Pu[bi]).query(Pu[~ok]);W[~ok]=W[bi[k]]
     os.makedirs(OUT,exist_ok=True);np.savez_compressed(os.path.join(OUT,name+'.npz'),W=W.astype(np.float32),n=n,names=np.array(names))
     print(name,'点',n,'重みのない点',int(miss))
 

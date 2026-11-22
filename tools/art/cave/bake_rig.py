@@ -88,7 +88,7 @@ def _hum(sh,elb,hand,hip,knee,foot,sp,neck,top=1.0,rigid=False):
     return B
 SKEL={
  'kui':_hum(sh=(-.21,.09,.45),elb=(-.24,.11,.25),hand=(-.23,.03,.03),hip=(-.12,.05,.32),knee=(-.13,.09,.15),foot=(-.11,0,.0),sp=.5,neck=.70),   # 根の足・横の根のうで
- 'tame':_hum(sh=(-.21,.02,.62),elb=(-.22,-.01,.34),hand=(-.23,.12,.06),hip=(-.12,.0,.3),knee=(-.12,.06,.14),foot=(-.11,.17,.02),sp=.46,neck=.74),
+ 'tame':_hum(sh=(-.20,-.03,.60),elb=(-.21,.05,.28),hand=(-.20,.14,.12),hip=(-.10,-.08,.36),knee=(-.10,-.04,.18),foot=(-.10,-.06,.03),sp=.46,neck=.74)+[('hand%s'%s_,'arm%s_l'%s_,(-.20*k,.14,.12),(-.17*k,.18,.0)) for s_,k in(('L',1),('R',-1))],   # 形をはかった：うでは、かた→ひじ→手首と前へ出て、大きな手は足の前（つま先より前）の床につく。足は、また→ひざ→足首と、からだの下
  'hone':_hum(sh=(-.19,-.02,.60),elb=(-.2,-.03,.38),hand=(-.22,-.02,.15),hip=(-.12,-.03,.19),knee=(-.11,-.04,.09),foot=(-.12,-.02,.0),sp=.40,neck=.66),
  'ro':_hum(sh=(-.21,0,.45),elb=(-.22,0,.30),hand=(-.24,0,.15),hip=(-.10,0,.12),knee=(-.10,0,.06),foot=(-.11,0,.0),sp=.30,neck=.57),
  'mi':_hum(sh=(-.10,0,.70),elb=(-.13,0,.46),hand=(-.15,.03,.12),hip=(-.06,0,.47),knee=(-.055,.02,.23),foot=(-.06,0,.0),sp=.58,neck=.77,rigid=True),
@@ -104,6 +104,7 @@ SKEL={
 FARK=1.5   # 空間で、いちばん近い骨のこの倍よりとおい、木の上ではなれた骨は、まぜない
 ARMR={}   # 上うでの太さ（モデルの高さを1として）
 SMALLP=.05   # これより点の少ない、はなれた部品は、となりの部品の重み（モデルの点の数にたいして）
+CAPE={'tame':(.6,.75,1000)}   # かたにのった部品：(点の高さの平均の下・上、点の数の下)
 ISLAND=40   # これより点の少ない、ほかの手足にかこまれた島は、まわりにつける
 RIGID={'mi'}   # べつべつの部品でできた体（あやつり人形のよう）：部品ごとに1本の骨にまるごとつける（まぜると部品がのびる）
 KIND={'kui':'hum','tame':'hum','hone':'hum','ro':'hum','mi':'hum','sui':'float','yoru':'blob','esa':'hop','te':'te'}
@@ -142,7 +143,7 @@ def weights(name,V,F):
     W/=W.sum(1,keepdims=True)
     A=coo_matrix((np.ones(len(e)*2),(np.r_[e[:,0],e[:,1]],np.r_[e[:,1],e[:,0]])),shape=(n,n)).tocsr();deg=np.maximum(np.asarray(A.sum(1)).ravel(),1)
     for _ in range(3):W=.5*W+.5*(A@W)/deg[:,None]   # 関節のさかいを、なだらかに
-    hp=os.path.join(os.path.dirname(os.path.abspath(__file__)),'heat',name+'.npz')
+    hp=os.path.join(os.path.dirname(os.path.abspath(__file__)),'heat',name+'.npz');Wh=None
     if os.path.exists(hp):   # Blender の自動の重み（ボーンヒート、bake_heat.py）があれば、それを使う
         hz=np.load(hp)
         if int(hz['n'])==n and list(hz['names'])==[b[0] for b in B]:
@@ -151,6 +152,14 @@ def weights(name,V,F):
             if (~big).any() and big.any():   # 小さなはなれた部品（爪の先・かざり）は、いちばん近い大きな部品の点と同じ重み（ボーンヒートは、はなれた小さな部品の重みがずれる）
                 from scipy.spatial import cKDTree
                 bi=np.where(big)[0];_,nn_=cKDTree(Pu[bi]).query(Pu[~big]);W[~big]=W[bi[nn_]]
+            if name in CAPE:   # かたにのった物（かたの氷）は、部品ごと、さこつにつける（上うでにつくと、うでを上げたとき、いっしょに上がる）
+                zlo,zhi,nmin=CAPE[name];ixb={B[i][0]:i for i in range(nb)}
+                for c in np.unique(cc_):
+                    m=cc_==c
+                    if m.sum()>=nmin and zlo<Pu[m,2].mean()<zhi:
+                        x=Pu[m,0];W[m]=0;t=np.clip((x+.06)/.12,0,1)   # まん中の0.12は、左右のさこつを、なだらかに
+                        W[m,ixb['clavL']]=1-t;W[m,ixb['clavR']]=t
+            Wh=W.copy()   # ボーンヒートの重みは、この下の手作りの直し（さこつ・はなれた骨・島・まぜる骨）をかけずに使う
     if name in RIGID:   # 部品ごとに1本（1本の骨が7わりより多い部品だけ。いくつもの骨にまたがる部品は、なだらかなまま）
         for c in np.unique(comp):
             m=comp==c;sw=W[m].sum(0);b=int(sw.argmax())
@@ -192,6 +201,7 @@ def weights(name,V,F):
     dm=W.argmax(1);keep=np.zeros_like(W,bool)
     for b in range(nb):keep[np.ix_(dm==b,list(nb_[b]))]=True
     W=np.where(keep,W,0);W/=W.sum(1,keepdims=True)   # まぜるのは、いちばん重い骨と、その親・子だけ（うでと足など、はなれた骨をまぜない）
+    if Wh is not None:W=Wh
     k=np.argsort(-W,1)[:,4:];np.put_along_axis(W,k,0,1);W/=W.sum(1,keepdims=True)   # 4本まで
     par=[ix0.get(B[b][1],-1) if B[b][1] else -1 for b in range(nb)]
     def anc(b):
