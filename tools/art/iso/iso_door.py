@@ -5,9 +5,10 @@
 #   2マスの門（stonegate・loggate・parkgate・canalgate・irongate）：iso:<id>:h・#1〜#3（左のマスのチップが2マスぶん）
 #   壁にかける物：iso:win:<id>:<h|v>（壁の面）・iso:win:wreath:d・d#1（ドアの板の面のリース）
 # 設計図（マス。x=東・y=南・z=上。マスのまん中が(0.5,0.5)）
-#   家のドア：わくは家の壁（hwall）と同じあつさ0.3・高さ1.0。両わきの柱（はば0.15。となりの壁と同じく、となりのマスまでのばして切る）・
-#     上のかもい（高さ0.8〜1.0）・しきい（高さ0.03）。わくの面は hwall の壁の絵。
-#     とびら：はば0.7・高さ0.8・あつさ0.06。面は、いまのチップ hwall.<id>#h0 の板（わくの内がわ 56×56）。うらの面は左右反対。
+#   家のドア：わくは家の壁（hwall）と同じあつさ0.3・高さ2.0。両わきの柱（はば0.15。となりの壁と同じく、となりのマスまでのばして切る）・
+#     上のかもい（高さ1.4〜2.0）・しきい（高さ0.03）。わくの面は hwall の壁の絵。
+#     とびら：はば0.7・高さ1.4・あつさ0.06。面は、いまのチップ hwall.<id>#h0 の板（わくの内がわ 56×56）を、上下の18行はそのまま、
+#     まん中の行をくりかえして98行にした絵（leaf_img。高さ1.4で1マス70ドットの細かさ）。うらの面は左右反対。
 #     ちょうつがいは西（たては北）の柱。よこ置きは北へ、たて置きは西へ（家の中へ）、0・30・60・85度まわす。
 #     ひらいたとびらは、マスの外へ出ても切らない（そのマスの物より先に描かれるおくのマスへ出るので、かさなりはただしい）。
 #     ~low：しきい（高さ0.02）と、ひくい壁と同じ高さ（0.2）の柱。かもいととびらはなし。
@@ -15,7 +16,7 @@
 #     （よこ置きの柱がマスのさかいにまたがると、となりの柵の絵に柱がないので、マスのさかいで切れる）。
 #   2マスの門：doors3d.py の設計図の柱を、マスの中（BIGIN）にうつす。
 #   壁にかける物：いまのチップの絵を、壁の正面（よこ置きは南の面 y=0.65、たて置きは東の面 x=0.65）に、1マス64ドットではる。
-#     いまの見え方で壁の正面の上のはし（y）から描いていた所を、壁の面の高さ 1.0 の所にあわせる（上へはみ出す分は、壁の中へさげる）。
+#     いまの見え方で壁の正面の上のはし（y）から描いていた所を、壁の面の高さ HANGZ の所にあわせる（上へはみ出す分は、壁の中へさげる）。
 import sys,os,math,json
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
 for p in(ART,HERE,os.path.join(ROOT,'tools'),os.path.join(ART,'fence3d')):sys.path.insert(0,p)
@@ -30,7 +31,9 @@ GATES=['gate','logdoor','parkdoor','sdoor','ropefence.gate','ashifence.gate','ra
 BIG=['stonegate','loggate','parkgate','canalgate','irongate']
 HANG=['window','curtain1','curtain2','paint1','paint2','paint3','wshelf','wreath','kabebukuro','yonaka']
 ANG=[0,30,60,85]
-JW,LZ,LT=0.15,0.8,0.06   # 柱のはば・とびらの高さ・とびらのあつさ
+JW,LZ,LT=0.15,1.4,0.06   # 柱のはば・とびらの高さ・とびらのあつさ
+LEAFN=98   # とびらの絵の行の数（56行の板の、まん中をくりかえして、高さ1.4に）
+HANGZ=1.6   # 壁にかける物の絵の上のはしの高さ（高さ2の壁の、上のほう）
 def frame(px0,py0,wp,hp,own):
     """写すわくをかえる（2マスの門は大きく）"""
     IC.PX0,IC.PY0,IC.WP,IC.HP,IC.OWN=px0,py0,wp,hp,own
@@ -38,7 +41,8 @@ def frame(px0,py0,wp,hp,own):
 F1=(108,150,216,200,(0,1,0,1));F2=(108,170,300,270,(0,2,0,1))
 # ---- 家のドア ----
 def leaf_img(C,iid):
-    a=np.array(C['hwall.'+iid+'#h0']['f'][0].convert('RGBA'))[4:60,4:60,:3].astype(float);return a
+    a=np.array(C['hwall.'+iid+'#h0']['f'][0].convert('RGBA'))[4:60,4:60,:3].astype(float)
+    mid=a[18:38];n=LEAFN-36;return np.concatenate([a[:18],np.concatenate([mid]*(n//len(mid)+1))[:n],a[38:]])   # 上と下の18行はそのまま、まん中20行をくりかえす
 def frame_deco(top,front,v,h):
     """わくの面：家の壁と同じ（上の面は断面の絵、ほかは正面の絵を、世界の場所ではる）"""
     def f(x,y,z):
@@ -47,7 +51,7 @@ def frame_deco(top,front,v,h):
         else:
             if not v:u,k=(x,IC.FACE[1]) if abs(abs(y-0.5)-0.15)<1e-4 else (y,IC.FACE[2])
             else:u,k=(y,IC.FACE[2]) if abs(abs(x-0.5)-0.15)<1e-4 else (x,IC.FACE[1])
-            c=front[min(63,max(0,int((1.0-z)*64))),math.floor(u*64)%64]*k
+            c=front[min(63,max(0,IC.frow(z,h))),math.floor(u*64)%64]*k
         return tuple(np.clip(c,0,255))
     return f
 def hdoor_parts(C,iid,v,n,low):
@@ -69,7 +73,7 @@ def hdoor_parts(C,iid,v,n,low):
             front_=abs(lw)<2e-3;s=lu/(1-2*JW);s=s if front_ else 1-s
             nx,ny=(sa,ca) if front_ else (-sa,-ca)   # 面の向き（よこ置きのとき。たて置きは x と y をいれかえる）
             if v:nx,ny=ny,nx
-            k=IC.FACE[1]*ny*ny+IC.FACE[2]*nx*nx;c=L[min(55,max(0,int((LZ-z)/LZ*56))),min(55,max(0,int(s*56)))]*k
+            k=IC.FACE[1]*ny*ny+IC.FACE[2]*nx*nx;c=L[min(LEAFN-1,max(0,int((LZ-z)/LZ*LEAFN))),min(55,max(0,int(s*56)))]*k
         else:c=edge
         return tuple(np.clip(c,0,255))
     lp=Part('とびら','box',((0.5-LT/2,JW+0.004,0.035,0.5+LT/2,1-JW-0.004,LZ-0.004) if v else (JW+0.004,0.5-LT/2,0.035,1-JW-0.004,0.5+LT/2,LZ-0.004)),(200,200,200),grp='leaf')
@@ -174,7 +178,7 @@ def hang_render(C,iid,v,plane=None,ang=0):
         else:U,Wv=u,w0
         return np.array([Wv,U,z]) if v else np.array([U,Wv,z])
     def scr(p):q=IC.PROJ(IC.rot(p));return np.array([(q[0]-IC.EXTS[0])*S,(q[1]-IC.EXTS[2])*S])
-    o=scr(W(0,1));du=scr(W(1,1))-o;dz=scr(W(0,0))-o   # 絵の (1マスよこ・1マス下) の画面のずれ
+    o=scr(W(0,HANGZ));du=scr(W(1,HANGZ))-o;dz=scr(W(0,HANGZ-1))-o   # 絵の (1マスよこ・1マス下) の画面のずれ
     M=np.array([du,dz]).T/64.0;Mi=np.linalg.inv(M)
     gx,gy=np.meshgrid(np.arange(IC.WP)+0.5,np.arange(IC.HP)+0.5);P=np.stack([gx-o[0],gy-o[1]],-1)@Mi.T
     sx=np.floor(P[...,0]+OX).astype(int);sy=np.floor(P[...,1]+OY).astype(int)

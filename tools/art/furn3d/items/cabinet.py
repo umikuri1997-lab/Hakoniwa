@@ -11,7 +11,7 @@ from blueprint import Part as P
 from common import *
 ID='cabinet';BOTTOM=39
 VIEWS=[('cabinet',0),('cabinet>1',1)]
-X0,X1,Y0,Y1=0.05,0.95,0.44,0.90;FT=0.06;SD=0.04;TT=0.04;H=0.68;FR=0.05;DT=0.025
+X0,X1,Y0,Y1=0.0,1.0,0.0,0.46;FT=0.06;SD=0.04;TT=0.04;H=0.68;FR=0.05;DT=0.025   # はば1.0（マスのはばぴったり）。うしろの面はマスのうしろのふち（壁にそう。持ち主がきめた）
 def PARTS():
     L=[]
     for nx,x in(('左',X0+0.03),('右',X1-0.11)):
@@ -20,7 +20,7 @@ def PARTS():
     for nx,x in(('左',X0),('右',X1-SD)):L.append(P('側板（%s）'%nx,'box',(x,Y0,FT,x+SD,Y1,H-TT),WOOD,on=('足（%s前）'%nx,'足（%sうしろ）'%nx),bevel=0,note='底板をはさむ'))
     L.append(P('背板','box',(X0+SD,Y0,FT+0.03,X1-SD,Y0+0.02,H-TT),WOOD,on=('底板',),bevel=0,note='側板のあいだ'))
     L.append(P('中の棚板','box',(X0+SD,Y0+0.02,0.36,X1-SD,Y1-DT-0.01,0.385),WOOD,on=('側板（左）','側板（右）'),bevel=0,note='側板にわたす'))
-    L.append(P('天板','box',(X0-0.02,Y0-0.01,H-TT,X1+0.02,Y1+0.02,H),WOOD,on=('側板（左）','側板（右）','背板'),bevel=0,note='側板・背板の上'))
+    L.append(P('天板','box',(X0,Y0,H-TT,X1,Y1+0.02,H),WOOD,on=('側板（左）','側板（右）','背板'),bevel=0,note='側板・背板の上'))
     W=(X1-X0-2*SD-0.006)/2;z0,z1=FT+0.005,H-TT-0.005;yd=Y1-DT
     for i,nd in enumerate(('左','右')):
         x0=X0+SD+i*(W+0.006);x1=x0+W;g='とびら'+nd;hx,ax_=(x0,x1-FR) if i==0 else (x1-FR,x0);hn='とびら（%s）たて框（ちょうつがい）'%nd;on=(hn,)

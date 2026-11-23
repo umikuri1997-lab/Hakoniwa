@@ -9,7 +9,7 @@ from common import *
 def MT(p):p.metal=True;return p
 ID='cooktable';BOTTOM=45;TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
 VIEWS=[('cooktable',0),('cooktable>1',1),('cooktable>2',2)]   # 前・右・後ろ（左は右の反転）
-X0,X1,Y0,Y1=0.03,0.97,0.30,0.88;PS=0.07;H=0.54;TT=0.06;BW=0.04
+X0,X1,Y0,Y1=0.0,1.0,0.0,0.58;PS=0.07;H=0.54;TT=0.06;BW=0.04   # はば1.0（マスのはばぴったり）。うしろの面はマスのうしろのふち（壁にそう。持ち主がきめた）
 def PARTS():
     L=[]
     for nx,x in(('左',X0),('右',X1-PS)):
@@ -21,5 +21,5 @@ def PARTS():
     for k in range(2):
         z0,z1=zs[k]+BW,zs[k+1];L.append(P('ひきだし%dの前板'%(k+1),'box',(X0+PS+0.01,fy+0.01,z0+0.008,X1-PS-0.01,fy+0.04,z1-0.008),WOOD,on=('前の横木%d'%(k+1),),bevel=0,note='横木のあいだ'))
         zc=(z0+z1)/2;L.append(P('取っ手%d'%(k+1),'box',(0.42,fy+0.04,zc-0.018,0.58,fy+0.065,zc+0.018),WOOD,on=('ひきだし%dの前板'%(k+1),),bevel=0,note='前板にとめる'))
-    L.append(P('天板','box',(X0-0.02,Y0-0.02,H,X1+0.02,Y1+0.02,H+TT),WOOD,on=('柱（左うしろ）','柱（右前）'),bevel=0,note='柱と板の上'))
+    L.append(P('天板','box',(X0,Y0,H,X1,Y1+0.02,H+TT),WOOD,on=('柱（左うしろ）','柱（右前）'),bevel=0,note='柱と板の上'))
     return L
