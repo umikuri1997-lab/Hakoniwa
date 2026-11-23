@@ -28,7 +28,7 @@ cv.addEventListener('pointerdown',e=>{
   cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});
   if(ptrs.size===1){gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};if(FLING&&Math.hypot(FLING.vx,FLING.vy)>FLINGSTOP)gest.stopTap=1;/* すべっている地図をおさえて止めたタップは、タップにしない */gest.grab=grabAt(cX(e),cY(e));FLING=null}
   else if(ptrs.size===2){const[p,q]=[...ptrs.values()];gest={type:'pinch',d:Math.hypot(p.x-q.x,p.y-q.y),z:cam.z,mid:toWorld((p.x+q.x)/2,(p.y+q.y)/2)};if(selRect&&!pending)selRect=null}
-  if(ptrs.size===1&&mode==='bulk'&&selStamp==='pick')pickDown(cX(e),cY(e));else pickCancel();/* かたちの筆：長おしでほる・タップでつむ */
+  if(ptrs.size===1&&mode==='remove'&&!LIGHTARM&&!LEAFARM&&!AREAARM)pickDown(cX(e),cY(e));else pickCancel();/* こわす：ブロック・地面は長おしでこわす（build.js） */
 });
 cv.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});if(!gest)return;
@@ -59,8 +59,7 @@ function grabAt(sx,sy){const p=pending;if(mode!=='build'||!p||p.kind!=='one'||p.
 function grabMove(sx,sy){const p=pending,g=gest&&gest.grab;if(!p||p.kind!=='one'||!g)return;const t=grabTile(sx,sy),nx=clamp(t.x-g.ox,0,W-1),ny=clamp(t.y-g.oy,0,H-1);if(nx===p.x&&ny===p.y)return;p.x=nx;p.y=ny;p.ok=canPlace(p.id,nx,ny,true);confirmOne();sfx('notch');dirty=true}
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
-  if(gest&&gest.type==='maybe'&&e.type==='pointerup'&&mode==='bulk'&&selStamp==='pick'){pickUp();gest=null;return}/* かたちの筆 */
-  pickCancel();
+  if(pickEnd()&&gest&&gest.type==='maybe'){gest=null;return}/* 長おしでこわしていたら、タップにしない */
   if(gest&&gest.type==='maybe'&&e.type==='pointerup'){if(!gest.stopTap)onTap(cX(e),cY(e))}
   else if(gest&&gest.type==='pan'&&e.type==='pointerup'&&!ptrs.size)flingStart(gest.vs);
   else if(gest&&gest.type==='rect'&&selRect)askBulk(sel,rectCells(selRect.a,selRect.b));

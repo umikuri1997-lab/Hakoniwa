@@ -106,6 +106,7 @@ function plantWet(D){if(D._wet)return D._wet;const M=D._wet=new Uint8Array(W*H),
 const plantReach=(D,j)=>!D||D[j]>=0||[1,-1,W,-W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)<=1&&D[k]>=0})||S.ground[j]===1&&!!plantWet(D)[j];
 function place(id,x,y){
   const b=BL[id];
+  if(b.kind==='cube')return terraNow(id,x,y);/* ブロック：タップしたマスに1だんつむ */
   if(WALLD.has(id)){if(!usable(id)||inv(id)<=0)return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;/* カーテンは、上がわの壁の窓にかける。窓はそのまま（S.win がカーテンなら、その下に窓がある） */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(HOME_DOORS.has(S.obj[j])?'door':'hwall',j);burst(j,'furn');recount();if(BOXCAP[id])boxUnstash(j,id);dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('たねは、畑にしかまけません');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
@@ -236,7 +237,7 @@ function removeAt0(x,y){const tx0=x,ty0=y;
   {const c=ty0*W+tx0;if(RUGC.has(c)){const a=RUGC.get(c),id=S.rug[a];delete S.rug[a];if(S.rugRot)delete S.rugRot[a];giveItem(id,1,1);toast(BL[id].name+'をもちものにもどした');burst(a,'furn','rm');recount();renderPalette();return}}/* 上に物がなければ、ラグをはずす */
   if(S.edge&&S.edge[j]){const id=S.edge[j];delete S.edge[j];giveItem(id,1,1);toast(BL[id].name+'をもちものにもどした');burst(j,'block','rm');recount();renderPalette();return}/* 花などをとりのぞいたあと、もう1回で、ふちをはずす */
   if(S.floor[j]){const f=S.floor[j];S.floor[j]='';giveItem(f,1,1);burst(j,'block','rm');recount();renderPalette();return}
-  if(!o&&hiAt(j)>0&&fudeHas()){if(!canPlace('dig',x,y))return toast('ここは、ほれません');RMOK=1;terraNow('dig',x,y)}/* こわす：つんだブロック・高い段を、1だんほる（かたちの筆と同じ） */
+  if(!o&&canPlace('dig',x,y)){RMOK=1;return toast('長おしで、こわす')}/* ブロック・地面は、長おしでこわす（pickTick） */
 }
 function finishBuild(j,r){
   if(S.dyn[j]&&S.dyn[j].bp!=null&&typeof bpFinish==='function')return bpFinish(j,r);/* 家の設計図の部品 */
@@ -267,10 +268,11 @@ function yesLbl(t){$('#cYes').textContent=t}/* たしかめのボタンの字は
 const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない分を買うときの値段（1こあたり、パワーの10倍の数：畑3.2・柵1.6・石1.6・あぜ道0.8） */
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short?short*(STAMPC10[id]==null?Infinity:STAMPC10[id]):0;/* 足りない分だけ、1こあたりの値段で買う（足りていれば0） */if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
-/* ---------- ほる・つむ（地面のブロック） ----------
-   守り神のどうぐ「かたちの筆」（selStamp 'pick'）：タップで、下の列でえらんだブロック（PICKB）をつむ。長おしで、筆のあとが光って、ほる（材質で時間がかわる pickMs）。
-   ほるとブロックが落ち（土は土のブロック、地面より下は石のブロック）、せいれいがはこぶ。つむブロックは、もちものから。
-   草原は、神殿を直したあと、カミサマにもらう（サブクエスト fude）。ほかの土地・フリーモードは、はじめから（fudeHas）。
+/* ---------- ブロック（地面のブロック。マイクラと同じ） ----------
+   おく：「おく」で、もちものの土・石のブロックをえらび、マスをタップすると、そのマスに1だんつむ（その場にパッと出て、足もとに少し砂ぼこり）。
+   こわす：「こわす」で、物のないマスを長おしすると、面にひびが10だんで広がり（bcrack#0〜9 の絵）、たたくたびに材質の音とブロックのかけら。
+   ひびが10だんめまで行くと、そのだんがその場で消え、かけらがはねて落ちる（材質で時間がかわる pickMs）。とちゅうではなすと、こわさない。
+   平らな地面も、地面より下へほれる（HMIN）。こわしたブロックはその場に落ち（土は土のブロック、地面より下は石のブロック）、せいれいがはこぶ。
    S.vx[マス]：だんごとのブロック（[1だんめ,2だんめ,…]、''は土）。ないマスは、ぜんぶ土 */
 const VX=()=>S.vx||(S.vx={});
 function cubeAt(j,lv){const v=S.vx&&S.vx[j];return v&&v[lv-1]||''}/* マス j の lv だんめのブロック（''は土） */
@@ -293,8 +295,8 @@ function flatAt(j){/* まわり1マスが、みんなマス j と同じ高さか
 function hiRad(id){/* まわりを高くできないはば：木2・岩1・ほかは0 */return TREES.has(id)?TREER:HIROCK.has(id)?ROCKR:0}
 function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;const cb=PICKB.includes(id)?id:SOIL;
   if(up&&terraHave(cb)<1)return toast(BL[cb].name+'が足りません','warn');
-  let got='';if(up){S.inv[cb]--;terraUp(j,cb);S.flags.fudeUp=1}else{got=terraTop(j);FUDEGOT=got;terraDown(j);S.flags.fudeDig=1}
-  recount();dirty=true;burst(j,'block');sfxAt((up?'put_':'brk_')+(CUBEMAT[up?cb:got]||'tsoil'),x+.5,y+.5);fudeFx(j,up);
+  let got='';if(up){S.inv[cb]--;terraUp(j,cb)}else{got=terraTop(j);terraDown(j)}
+  recount();dirty=true;sfxAt((up?'put_':'brk_')+(CUBEMAT[up?cb:got]||'tsoil'),x+.5,y+.5);if(up)blkPutFx(j);else blkChips(j,got,14,true);/* 置く・こわすは、はずむ・うきあがる演出なしで、その場ですぐかわる */
   if(!up){const n0=(S.drops||[]).length;dropAt(x,y,got,1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほったブロックは、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
 }
 function soilMigrate(){/* 前のセーブの素材「土」は、土のブロックにする（読みこむたび。はこんでいるとちゅうの土は、つぎに読みこんだとき） */
@@ -306,40 +308,32 @@ function blockMig(){/* 前のセーブ：レンガ・木のブロック（いま
   for(const id of CUBEOLD){const n=S.inv[id]|0;if(n>0)back(id,n);delete S.inv[id]}
   S.drops=(S.drops||[]).filter(d=>{if(!CUBEOLD.includes(d.id))return true;back(d.id,d.n||1);return false});
   for(const o of (S.orders||[]).filter(o=>CUBEOLD.includes(o.type)))cancelOrder(o.id)}
-function fudeHas(){/* かたちの筆をもっているか：草原の本編は、カミサマにもらってから（カミサマが旅立ったあとのセーブも） */return !S||WD!==KUSA||!!S.free||!!S.flags.fude||!!S.godGone}
-let PICKSEL=SOIL,PICKH=null;/* 筆の下の列でえらんでいる物・長おし */
-const pickHave=k=>inv(k);
-function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?2000:t===SOIL?1000:t==='blk_brick'||t==='blk_wood'?1500:2000}/* ほるのにかかる時間（ミリ秒）：土1秒・レンガと木1.5秒・石と地面より下2秒 */
-const PICKTAP=250;/* これより短くはなしたら、つむ */
+let PICKH=null;/* こわすの長おし */
+function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?2000:t===SOIL?1000:t==='blk_brick'||t==='blk_wood'?1500:2000}/* こわすのにかかる時間（ミリ秒）：土1秒・石と地面より下2秒 */
+const PICKTAP=250;/* これより長くおしたら、こわしはじめる（短ければ、ふつうのタップ） */
 function pickCell(sx,sy){const w=tapW(sx,sy),x=Math.floor(w.x/TS),y=Math.floor(w.y/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
-function pickDown(sx,sy){if(!fudeHas())return;const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
-function pickTick(now){const P=PICKH;if(!P||P.done)return;const a=now-P.t0;if(a<PICKTAP)return;if(!P.dig){if(nightLock()){PICKH=null;return toast('夜のあいだは、ほれません')}if(!canPlace('dig',P.x,P.y)){PICKH=null;return}P.dig=true;P.need=pickMs(P.j)}
-  const k=Math.floor(a/250);if(k>P.n){P.n=k;const t=terraTop(P.j),col=CUBECOL[t]||CUBECOL[SOIL];sfxAt('fudedig:'+(CUBEMAT[t]||'tsoil'),P.x+.5,P.y+.5);spawnFX(P.x+.5,P.y+.6,col[0]);spawnFX(P.x+.2+hash(P.j+k)*.6,P.y+.3+hash(P.j*7+k)*.5,col[1])}/* マイクラのように：たたくたびに、そのブロックの音と、ブロックの色のかけら */
-  if(a>=P.need){P.done=true;terraNow('dig',P.x,P.y)}}
-function pickUp(){const P=PICKH;PICKH=null;if(!P||P.done||P.dig)return;/* 長おしのとちゅうではなしたら、ほるのをやめる */if(performance.now()-P.t0>=PICKTAP)return;
-  if(nightLock())return toast('夜のあいだは、つめません');terraNow(PICKSEL,P.x,P.y)}
+function pickDown(sx,sy){const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
+function pickFree(j){const o=S.obj[j];return !o&&!S.floor[j]&&!(S.edge&&S.edge[j])&&!(S.win&&S.win[j])&&!RUGC.has(j)&&!RFC.has(j)}/* 長おしでこわせるのは、物・床・ラグ・屋根のないマスだけ（ある所は、タップでふつうにこわす） */
+function pickTick(now){const P=PICKH;if(!P||P.done)return;const a=now-P.t0;if(a<PICKTAP)return;if(!P.dig){if(nightLock()||!pickFree(P.j)||!canPlace('dig',P.x,P.y)){PICKH=null;return}/* こわせないマスは、はなしたときのタップにまかせる（知らせはそこで） */P.dig=true;P.need=pickMs(P.j)}
+  const k=Math.floor((a-PICKTAP)/250);if(k>=P.n){P.n=k+1;const t=terraTop(P.j);sfxAt('fudedig:'+(CUBEMAT[t]||'tsoil'),P.x+.5,P.y+.5);blkChips(P.j,t,2+(hash(P.j+k)<.5?1:0),false)}/* マイクラのように：たたくたびに、そのブロックの音と、ブロックのかけら */
+  if(a-PICKTAP>=P.need){P.done=true;terraNow('dig',P.x,P.y)}}
+function pickEnd(){const P=PICKH;PICKH=null;return !!(P&&P.dig)}/* はなした：こわしていたら true（そのときは、タップにしない。とちゅうなら、こわさない） */
 function pickCancel(){PICKH=null}
-const FUDEFX=[];/* 筆でほった・つんだときの光（見た目だけ） */
-function fudeFx(j,up){if(!up){const x=j%W,y=(j/W)|0,col=CUBECOL[FUDEGOT]||CUBECOL[SOIL];for(let i=0;i<10;i++)spawnFX(x+.15+hash(j*13+i)*.7,y+.2+hash(j*7+i*3)*.6,col[i%2]);return}/* ほりおえた：光ではなく、ブロックのかけらが、はじける */FUDEFX.push({j,up,t0:performance.now()});if(FUDEFX.length>8)FUDEFX.shift()}
-const CUBECOL={blk_soil:['#8a6440','#a47b52'],blk_stone:['#8f8a80','#b5afa4']};let FUDEGOT='';/* ブロックのかけらの色 */
-const FUDEC='rgba(255,236,160,',FUDEMS=420;
-function fudeRect(px,py,r,a){/* 1マスのわくを、左上から時計まわりに r（0〜1）だけ光の線でなぞる（2ドット） */let L=r*4*TS;const s=[[px,py,1,0],[px+TS-2,py,0,1],[px+TS,py+TS-2,-1,0],[px,py+TS,0,-1]];ctx.fillStyle=FUDEC+a+')';
-  for(const[x,y,dx,dy]of s){const n=Math.min(TS,L);if(n<=0)break;if(dx>0)ctx.fillRect(x,y,n,2);else if(dx<0)ctx.fillRect(x-n,y,n,2);else if(dy>0)ctx.fillRect(x,y,2,n);else ctx.fillRect(x,y-n,2,n);L-=TS}}
-const CRACKN=10;let CRACKP=null;/* ほっているあいだのひび（マイクラのように、10だんで広がる）：32×32のます目（1つ2ドット）の、ひびの点のならび（まん中から外へ、のびる順） */
-function crackPts(){if(CRACKP)return CRACKP;const L=[],seen=new Set(),B=[];const add=(x,y)=>{if(x<1||y<1||x>30||y>30)return;const k=y*32+x;if(seen.has(k))return;seen.add(k);L.push([x,y])};
-  for(let i=0;i<7;i++){const a=i/7*Math.PI*2+hash(i*17+3)*.6;B.push({x:15.5+Math.cos(a)*2,y:15.5+Math.sin(a)*2,a,n:9+((hash(i*5+1)*8)|0)})}
-  for(let s=0;s<17;s++)for(let i=0;i<B.length;i++){const b=B[i];if(s>=b.n)continue;b.a+=(hash(i*31+s*7)-.5)*.9;b.x+=Math.cos(b.a);b.y+=Math.sin(b.a);add(Math.round(b.x),Math.round(b.y));
-    if(s===5&&B.length<16)B.push({x:b.x,y:b.y,a:b.a+(hash(i+s)<.5?1:-1)*1.1,n:s+5+((hash(i*3+s)*4)|0)})}
-  return CRACKP=L}
-function crackFace(c,st){const L=crackPts(),n=Math.ceil(L.length*(st+1)/CRACKN);c.fillStyle='rgba(28,20,14,.62)';for(let i=0;i<n;i++)c.fillRect(L[i][0]*2,L[i][1]*2,2,2);c.fillStyle='rgba(255,246,226,.18)';for(let i=0;i<n;i+=3)c.fillRect(L[i][0]*2+2,L[i][1]*2,2,2)}/* 64×64 の面に、ひび（こい線と、少し明るいふち） */
-function drawPickCrack(now){const P=PICKH;ctx.save();
-  if(P&&P.dig&&!P.done){const r=Math.min(.999,(now-P.t0)/P.need),st=Math.floor(r*CRACKN),lv=isoLv(P.j),h=hiAt(P.j),px=P.x*TS,py=P.y*TS;ctx.imageSmoothingEnabled=false;
-    isoGroundLv(ctx,lv);ctx.save();ctx.translate(px,py);ctx.scale(TS/64,TS/64);crackFace(ctx,st);ctx.restore();/* 上の面 */
-    if(h>0){const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(P.x-P.y)*IQW/2,iy=(P.x+P.y)*IQH/2-h*IQL;
-      for(const side of[0,1]){if((side?hv(P.x+1,P.y):hv(P.x,P.y+1))>=h)continue;isoScreenTf(ctx);/* 手前が低いときだけ、見えている左右の面にも */
-        if(side)ctx.transform(IQW/2/64,-IQH/2/64,0,IQL/64,ix,iy+IQH);else ctx.transform(IQW/2/64,IQH/2/64,0,IQL/64,ix-IQW/2,iy+IQH/2);crackFace(ctx,st)}}}
-  for(let i=FUDEFX.length-1;i>=0;i--){const f=FUDEFX[i],a=(now-f.t0)/FUDEMS;if(a>=1){FUDEFX.splice(i,1);continue}const px=f.j%W*TS,py=((f.j/W)|0)*TS;isoGroundLv(ctx,isoLv(f.j));
-    fudeRect(px,py,Math.min(1,a*2.2),1-a*.8)}/* つむ：光の線が、ブロックの形をさっと描く */
+function blkSrc(id){if(id===SOIL){const ch=(window.CHIPS||{})['cliff:block'],im=ch&&chipImgs(ch,'cliff')[0];if(im&&im.ok)return im}return cubeTex(id)}/* かけらの絵：そのブロックの面の絵（土はがけの正面の絵） */
+function blkChips(j,id,n,brk){/* ブロックのかけら（マイクラと同じ）：ブロックの面の絵から切りとった小さな四角が、とんで、地面ではねて、消える。brk：こわれた（ブロックぜんたいから、多く・大きくとぶ） */
+  const im=blkSrc(id);if(!im)return;const x=j%W,y=(j/W)|0,cx=x*TS+16,cy=y*TS+16;
+  for(let i=0;i<n;i++){const r=k=>hash(j*31+i*7+k+(performance.now()|0)),s=brk?3+(r(1)<.5?1:0):3,sn=s*2;/* 絵は1マス64ドットなので、2ドットを1点に（もようがそのまま見える） */
+    const px=brk?(r(3)-.5)*20:(r(3)-.5)*14,py=brk?-4-r(4)*18:-2-r(4)*4;/* こわれたときはブロックのあった所ぜんたいから、たたくときは上の面から */
+    fx.push({k:'bc',im,sx:(r(5)*(64-sn))|0,sy:(r(6)*(64-sn))|0,sn,s,x:cx+px,y:cy+py,gx:cx,gy:cy,gnd:cy+(r(7)-.5)*6,vx:px*(brk?4:5)+(r(8)-.5)*30,vy:brk?-60-r(9)*90:-40-r(9)*40,g:brk?420:380,nd:1,life:brk?1.1+r(10)*.5:.5+r(10)*.25})}}
+function blkPutFx(j){const x=j%W,y=(j/W)|0,wx=(x+1)*TS-2,wy=(y+1)*TS-2;fxSpr('bdust',wx,wy);const f=fx[fx.length-1];if(f&&f.n==='bdust')f.A={fx:wx,fy:wy,px:isoX(wx,wy),py:isoY(wx,wy)-(isoLv(j)-1)*IQL}}/* おいた：その場にパッと出て、足もと（手前の角の、1だん下の地面）に少しだけ砂ぼこり */
+const CRACKN=10;/* こわしているあいだのひび（マイクラの destroy_stage と同じ：10まいの絵 bcrack#0〜9。tools/art/crack/bcrack_art.py） */
+function crackImg(st){const ch=(window.CHIPS||{})['bcrack#'+st],im=ch&&chipImgs(ch,'bcrack')[0];return im&&im.ok?im:null}
+function drawPickCrack(now){const P=PICKH;if(!(P&&P.dig&&!P.done))return;const r=Math.min(.999,(now-P.t0-PICKTAP)/P.need),im=crackImg(Math.floor(r*CRACKN));if(!im)return;
+  const lv=isoLv(P.j),h=hiAt(P.j),px=P.x*TS,py=P.y*TS;ctx.save();ctx.imageSmoothingEnabled=false;
+  isoGroundLv(ctx,lv);ctx.drawImage(im,px,py,TS,TS);/* 上の面 */
+  if(h>0){const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(P.x-P.y)*IQW/2,iy=(P.x+P.y)*IQH/2-h*IQL;
+    for(const side of[0,1]){if((side?hv(P.x+1,P.y):hv(P.x,P.y+1))>=h)continue;isoScreenTf(ctx);/* 手前が低いときだけ、見えている左右の面にも */
+      if(side)ctx.transform(IQW/2/64,-IQH/2/64,0,IQL/64,ix,iy+IQH);else ctx.transform(IQW/2/64,IQH/2/64,0,IQL/64,ix-IQW/2,iy+IQH/2);ctx.drawImage(im,0,0)}}
   ctx.restore()}
 function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハケではぬれません');/* 窓・カーテンは、壁に1つずつかける */
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));

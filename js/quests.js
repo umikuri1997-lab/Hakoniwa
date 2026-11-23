@@ -52,7 +52,6 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'seedwait_food',w:0,g:'wood',t:'朝のごはんを10こ用意しよう',how:'フタバが、ベリーの茂みから実をとって箱へはこぶ。箱の食べ物を10こにする',L:[['K','なかまが来てくれたら……いっしょにごはん、食べたいな。'],['K','箱に、少し多めに入れておこうよ。ぼく、ベリーを集めてくる！']],X:[['K','これだけあれば、新しい子のぶんもあるね。'],['K','#joy|どんな子かなあ。……えへへ、たのしみ！']],at:()=>waitingBellflowers(),ok:()=>FOODN()>=10,n:10,now:()=>Math.min(10,FOODN()),rw:5},
 
   /* カミサマとの交換・おつげの出し方（もとはメインの目標）。いものたねをまいたあとに出る */
-  {k:'fude',w:0,g:'wood',t:'かたちの筆をつかってみよう',how:'「おく」→「どうぐ」→「かたちの筆」。地面をタップすると、えらんだブロックをつむ。長おしすると、ほれる',who:GOD,L:[[GOD,'#think|そうじゃ、おヌシにわたしておくものがあった。'],[GOD,'神殿のおくに、ねむっておった筆じゃ。むかし、ヌシ様が、この土地に形を描くのに使っておったものでな。'],[GOD,'#joy|この筆でなぞれば、土はしずみ、描いた形は、そのまま土地になる。おヌシの思うように、土地をととのえてみい。']],X:[[GOD,'#joy|うむうむ、ええ形じゃ。'],[GOD,'土地が、おヌシの筆をよろこんでおるようじゃのう。']],at:()=>cnt('statue')>=1,onAccept(){S.flags.fude=1;renderPalette()},ok:()=>!!(S.flags.fudeDig&&S.flags.fudeUp),rw:5},/* 神殿を直したら、カミサマが「かたちの筆」をくれる（ほる・つむ）。ほって、つんだらクリア */
   {k:'trade',w:0,g:'wood',t:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",who:GOD,L:[[GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'困ったことがあったら、言うんじゃぞ。わしが力になってやろう。'],
     [GOD,'ほしい物があったら、わしに声をかけておくれ〜。']],get X(){return [[GOD,'まいど〜！ ほっほっ。'],...GOD_FAREWELL()]},at:()=>qDone('imoseed')&&!qDone('fire')&&!S.godGone&&godHere(),ok:()=>!!S.flags.tradedSeen,feat:['shop'],godLeave:1},
   {k:'oracle',w:0,g:'wood',t:'おつげを出してみよう',how:'メニューの「おつげ」で、きょう、みんなに何をしてもらうかをえらぶ',L:[[POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
@@ -152,7 +151,7 @@ const SUB_MAIN_AFTER={table1:'bed',chair2:'bed',farm10:['farm6','fire'],light3:'
 function subMainOK(q){const m=SUB_MAIN_AFTER[q.k];return WD!==KUSA||!m||[].concat(m).every(id=>qDone(id))}
 function subOfferReady(q){if(subDaily(q))return subMainOK(q);/* デイリーは、ほかのクエストがあっても出す */if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return subMainOK(q)}
 const DAILYN=3;/* デイリー：1日に出す数・受けていられる数 */
-const SUBSCHED=['fude','trade','oracle','lighttry','sortie','salvia3','watch2','lotus3','lily5','swing1','benchwood'];
+const SUBSCHED=['trade','oracle','lighttry','sortie','salvia3','watch2','lotus3','lily5','swing1','benchwood'];
 function subDaily(q){return !(q.k.startsWith('seedwait_')||q.k.startsWith('lv_')||SUBSCHED.includes(q.k))}/* 順番の決まっていないサブクエスト（1日に1つのデイリー） */
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['bed3'],4:['farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
 function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('lv'+n),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}

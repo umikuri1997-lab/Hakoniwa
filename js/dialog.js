@@ -206,10 +206,15 @@ function startPrologue(){
   $('#proSkip').onclick=end;if(PROS[WD].length)show();else{$('#proWho').textContent='';$('#proText').textContent='';end()}/* プロローグのないステージ（風の土台）は、すぐ村へ */
 }
 const arriveF=()=>WD===KUSA&&S.sacredRoot!=null&&S.res.find(r=>r.name===POKO);/* 草原のはじめは、カミサマと、切り株の前のフタバが入るように */
+function uiSafe(){/* 上の欄の下から下の欄の上まで（画面の点）。かくしているあいだも、出したときの大きさではかる */const T=$('#topUI'),B=$('#botUI'),h0=T.hidden,h1=B.hidden;T.hidden=false;B.hidden=false;const t=T.getBoundingClientRect().bottom,b=B.getBoundingClientRect().top;T.hidden=h0;B.hidden=h1;return{t:t>0&&t<VH*.5?t:0,b:b>VH*.5&&b<=VH?b:VH}}
+function shotFit(P,zMax){/* 見せたい物（[せかいのx,せかいのy,頭の上の高さ（画面の点）]、マス）が、上と下の欄にかからずに入る、カメラの点と大きさ（ふつうのカメラの作り方：画面の上の四角にあわせる） */
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const[wx,wy,up]of P){const j=clamp(Math.floor(wy),0,H-1)*W+clamp(Math.floor(wx),0,W-1),X=isoX(wx*TS,wy*TS),Y=isoY(wx*TS,wy*TS)-isoLv(j)*IQL;x0=Math.min(x0,X-24);x1=Math.max(x1,X+24);y0=Math.min(y0,Y-up);y1=Math.max(y1,Y+8)}
+  const U=uiSafe(),m=20,z=Math.max(minZ(),Math.min(zMax,(VW-2*m)/(x1-x0),(U.b-U.t-2*m)/(y1-y0))),cy=(y0+y1)/2-((U.t+U.b)/2-VH/2)/z,c=isoInv((x0+x1)/2,cy);return{x:c.x/TS,y:c.y/TS,z}}
 function arrive(){
   stageMusic();
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
-  camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:arriveF()?(CX+arriveF().x)/2*TS:CX*TS,ty:arriveF()?(CY-3+arriveF().y-1)/2*TS:(CY-3)*TS,t:0,dur:2.2,done:()=>{
+  const F=arriveF(),G=[godX(),godY(),(godOnAltar()?GODALTARZ:0)+70],A=shotFit(F?[G,[F.x,F.y,34]]:[G,[CX+.5,CY+.5,0]],homeZ());/* カミサマ（台座の上）と、切り株の前のフタバ（ほかのステージは、まん中の広場）が、上と下の欄にかからずに入る所 */
+  camAnim={fz:cam.z,tz:A.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:A.x*TS,ty:A.y*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
     setTimeout(()=>{started=true;showUI(true);{const f=WD===KUSA&&S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}}/* 草原のはじめ：フタバは、すわってうとうと */const seen=()=>{for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}S.introSeen=true;save()},run=()=>{const L=(WD===FREE?INTROFL():INTROS[WD]).slice();if(!L.length)return seen();/* 着いてからの会話のないステージ（風の土台） */dialog(Object.assign(L,{skip:1}),seen)};/* さいごまで見てから「見た」に */if(WD===KUSA){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else if(WD===TSUCHI&&typeof tsIntro==='function')tsIntro(run);/* 土：はじまりの地ゆれ（tsuchi.js） */else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
 }
