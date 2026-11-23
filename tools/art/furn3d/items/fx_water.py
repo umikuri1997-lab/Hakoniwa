@@ -1,6 +1,6 @@
 # 雨の水たまり・こおった水たまり・水面の雨の輪（feel.js がクォータービューの地面に置く絵）。
 # 設計図（単位はマス。地面＝z0。どれもマスのまん中 (0.5,0.5) のまわり）
-#   水たまり iso:pud:<大きさ>#<形>：地面のくぼみにたまった、うすい水。まわりがでこぼこの形（半径を角度ごとに少しかえる。形2しゅるい）。
+#   水たまり iso:pud:<大きさ>#<形>：地面のくぼみにたまった、うすい水。まわりがでこぼこの形（半径を角度ごとに少しかえる。形3しゅるい）。
 #     大きさ 0・1・2 は、雨がふえるほど大きい（半径 PUDR）。水面は地面の 0.004 上、ごく小さなさざなみ。色は場所ごと（'flat'）：おく（画面の上）ほど空の色をうつす（水おけ tub と同じ）。
 #     チップの絵はすけない（すけて見える 'clear' は、下に何もないと写らない）。下の地面がすけるのは、ゲームでかけるうすさ。
 #   氷 iso:pudi:<大きさ>#<形>：同じ形の、うすい水色の氷（冬）。すけない。白いつやのすじは、氷の面のもよう（decal）。
@@ -10,10 +10,10 @@ from blueprint import Part as P
 from common import *
 ID='fx_water';BOTTOM=40
 PUDR=(0.17,0.25,0.33)   # 水たまりの半径（大きさ 0・1・2）
-SHAPES=((0.16,0.6,0.09,2.1,1.35),(0.12,2.4,0.13,0.4,1.5))   # 形：半径のゆれ（2つの波の大きさと、ずれ）と、画面のよこ（せかいの x−y の向き）へのばす倍（水たまりは、ひらたく広がる）
+SHAPES=((0.16,0.6,0.09,2.1,1.75),(0.12,2.4,0.13,0.4,2.0),(0.2,4.1,0.07,5.0,1.85))   # 形：半径のゆれ（2つの波の大きさと、ずれ）と、画面のよこ（せかいの x−y の向き）へのばす倍（水たまりは、ひらたく広がる）
 RIPR=(0.07,0.12,0.17,0.22);RIPW=(0.022,0.022,0.02,0.018)   # 雨の輪の半径と、はば（コマごと）
 WATER=(112,172,224);SKY=(196,228,248);ICE=(226,242,250);RING=(236,247,253)
-VIEWS=[('iso:pud:%d#%d'%(n,s),0,('pud',n,s)) for n in range(3) for s in range(2)]+[('iso:pudi:%d#%d'%(n,s),0,('ice',n,s)) for n in range(3) for s in range(2)]+[('iso:rip#%d'%f,0,('rip',f,0)) for f in range(4)]
+VIEWS=[('iso:pud:%d#%d'%(n,s),0,('pud',n,s)) for n in range(3) for s in range(3)]+[('iso:pudi:%d#%d'%(n,s),0,('ice',n,s)) for n in range(3) for s in range(3)]+[('iso:rip#%d'%f,0,('rip',f,0)) for f in range(4)]
 VAR=None
 def PARTS():return []
 def blob(n,s):
@@ -37,8 +37,9 @@ def EXTRA(sc):
             d=(x-0.5)-(y-0.5);w=(x-0.5)+(y-0.5)
             return (250,253,255) if abs(w+R*0.35)<R*0.07 and abs(d)<R*0.45 or abs(w+R*0.05)<R*0.05 and abs(d+R*0.1)<R*0.22 else None
         sc.material('flat');sc.decal(streak);hfield(sc,0,0,1,1,lambda x,y:0.006,ICE,n=(28,28),shape=f);sc.decal(None);sc.material(None);return
-    def col(x,y):   # 水の色。おくのふちの近くに、空のうつりこみの帯（画面のよこにのびる、うすい色）
-        u,v=f(x,y);d=((0.5-u)+(0.5-v))/(2*R);t=max(0.0,1-abs(d-0.42)/0.16)*0.85;return tuple(WATER[i]*(1-t)+SKY[i]*t for i in range(3))
+    def col(x,y):   # 水の色。まん中より少しおくに、空のうつりこみの、画面のよこにまっすぐな短い帯（ふちの形にそわせない）
+        u,v=f(x,y);d=((0.5-u)+(0.5-v))/(2*R);a=((u-0.5)-(v-0.5))/(2*R*SHAPES[s][4])
+        t=0.8 if abs(d-0.18)<0.07 and abs(a+0.05)<0.28 or abs(d-0.02)<0.05 and abs(a-0.2)<0.12 else 0.0;return tuple(WATER[i]*(1-t)+SKY[i]*t for i in range(3))
     def top(x,y):return 0.004+0.003*math.sin(x*15.0+y*5.0)+0.002*math.sin(y*19.0-x*7.0+1.3)
     sc.material('flat');hfield(sc,0,0,1,1,top,col,n=(28,28),shape=f);sc.material(None)
 TONE5=True

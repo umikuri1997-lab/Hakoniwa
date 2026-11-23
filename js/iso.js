@@ -44,7 +44,7 @@ function objFoot(x,y,w,h,j){const lv=Math.max(0,hiAt(j)),t=.1375*(w+h)*TS,cx=(x+
 function objFootJ(j){const a=anc(j),o=S.obj[a];if(!o||!BL[o])return objFoot(a%W,(a/W)|0,1,1,a);if(o==='lotus')return lotusFoot(a);const z=o==='site'&&S.dyn[a]&&BL[S.dyn[a].build]?BL[S.dyn[a].build].sz||[1,1]:szAt(o,a)||[1,1];return objFoot(a%W,(a/W)|0,z[0],z[1],a)}
 /* ハス：水にうかぶ葉のまん中（いまの絵の LOTUSPAD、芽 bud~w も同じ所）を、マスのひし形のまん中に。
    池のはしのマスは、水の形がデュアルグリッドで丸くけずれるので、陸のある向きと反対（水のほう）へ LOTUSOFF ずらす（ななめだけ陸のマスは LOTUSOFFD） */
-const LOTUSPAD=[16.5,20.5],LOTUSOFF=.24,LOTUSOFFD=.14;/* 絵の葉のまん中：マスの左上からのせかいの点（lotus の ax・ay と、葉のある行からはかった） */
+const LOTUSPAD=[16.5,20.5],LOTUSOFF=.36,LOTUSOFFD=.16;/* 絵の葉のまん中：マスの左上からのせかいの点（lotus の ax・ay と、葉のある行からはかった） */
 function lotusFoot(a){const x=a%W,y=(a/W)|0,lv=Math.max(0,hiAt(a)),dry=(X,Y)=>X<0||Y<0||X>=W||Y>=H||!waterJ(Y*W+X);
   let ox=(dry(x-1,y)?1:0)-(dry(x+1,y)?1:0),oy=(dry(x,y-1)?1:0)-(dry(x,y+1)?1:0);ox*=LOTUSOFF;oy*=LOTUSOFF;
   if(!ox&&!oy)for(const[dx,dy]of[[-1,-1],[1,-1],[-1,1],[1,1]])if(dry(x+dx,y+dy)){ox-=dx*LOTUSOFFD;oy-=dy*LOTUSOFFD}
