@@ -35,7 +35,9 @@ import furn3d as F3
 _shot=F3.shot
 def shot(M,k,only=None,S_=64,filt=None,info=None):return _shot(M,k,only,ISOS,filt,info)
 F3.shot=shot
+BATCH2=['crate','bed','wbench','loom','taru','chair','table']   # はじめの家具
 BATCH1=['statue','statueb','obox','board','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
+WBUP=10
 SHADOWS={'nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush','sacred'}   # 落ち影も写す物
 def bl_sizes():
     """ゲームの BL の大きさ sz（id → (よこ,たて)）"""
@@ -68,6 +70,11 @@ def run_item(iid,out):
         fr=getattr(F3.run,'frames',{}).get(nm)
         if fr:c['f']=fr
         if nm in parts:c['parts']=[dict(q,ax=q['ax']+dx,ay=q['ay']+dy,px=q['px']+dx,py=q['py']+dy) for q in parts[nm]]
+        if base(nm)=='wbench':c['ay']-=WBUP   # 作業台の絵は、写した位置より10ドット上（CLAUDE.md の WBUP）
+        if nm in getattr(M,'CUT',()):   # すわった子の足をかくす行：いまのチップの数のまま（せいれいは、いままでの立てる形で描くので）
+            import chips as CHP
+            old=CHP.load_imgs()[1].get(nm)
+            if old and 'cut' in old:c['cut']=old['cut']
         R[nm]=c;print('iso',nm,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
     if iid in SHADOWS:R.update(shadows(M,R,out))
     return R
@@ -79,6 +86,38 @@ def run_sacred(out):   # 落ち影は作らない（御神木は落ち影の描�
         ax-=round(ST.TX*64);ay-=round(ST.TY*64)   # 根もと（4×4のまん中）から
         R[M.ID]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im],'iso':1};print('iso',M.ID,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
         im.save(os.path.join(out,'story_'+name+'.png'))
+    return R
+def run_crate(out):
+    """木箱（tools/art/crate3d）：4つの向き・ふたの開くコマ #o1〜#o3・中身のだん #f<だん>o<コマ>（crate3d.py と同じ名前と組み方）"""
+    sys.path.insert(0,os.path.join(ART,'crate3d'));import crate_parts as C
+    from blueprint import build as B
+    import furntone
+    L=C.parts();LIDANG=[0,35,70,105];R={}
+    PROJ,DEPTH=O.persp(38,10,1,((C.X0+C.X1)/2,(C.Y0+C.Y1)/2,C.ZT/2),keep=42)
+    def scene(k,ang,lv):
+        sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));sc.texture(T);lid=set()
+        for p in L:
+            if C.INNER(p.name):sc.outline(0)
+            p0=sc.pid;B(sc,[p]);sc.outline()
+            if C.LIDP(p.name):lid|=set(range(p0+1,sc.pid+1))
+        C.contents(sc,lv);sc.texture(T)
+        if ang:
+            t=np.radians(ang);ct,st=np.cos(t),np.sin(t)
+            def Rt(v):dy,dz=v[1]-C.Y0,v[2]-C.ZT;return np.array([v[0],C.Y0+dy*ct-dz*st,C.ZT+dy*st+dz*ct])
+            sc.t=[(Rt(a_),Rt(b_),Rt(c_),col,pid) if pid in lid else (a_,b_,c_,col,pid) for a_,b_,c_,col,pid in sc.t]
+        sc.turn(k,(C.X0,C.Y0,C.X1,C.Y1));return sc
+    for lv in range(4):
+        for k,nm in enumerate(['crate','crate>1','crate>2','crate>3']):
+            r0=C.REST[lv]
+            for f in range(4):
+                if lv and not f:continue   # 中身のあるしまった絵は、空のしまった絵と同じ（crate3d.py と同じ）
+                ang=r0+(LIDANG[-1]-r0)*f/3;sc=scene(k,ang,lv)
+                V=np.array([v for t in sc.t for v in t[:3]]);P=np.array([PROJ(v) for v in V]);m=2/64
+                ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=ISOS
+                im=O.render_px(sc,PROJ,ext,DEPTH,k=0.72,lw=2);im=furntone.tone(im,world=furntone.worldlight(42));bb=im.getbbox();im=im.crop(bb)
+                A=PROJ(sc.fwd((0.5,0.5,0.0)));u,v=(A[0]-ext[0])*ISOS,(A[1]-ext[2])*ISOS
+                cid=nm+('#f%d'%lv+('o%d'%f if f else '') if lv else ('#o%d'%f if f else ''))
+                R[cid]={'g':64,'ax':round(bb[0]-u),'ay':round(bb[1]-v),'w':im.width,'h':im.height,'f':[im],'iso':1};print('iso',cid,im.size,R[cid]['ax'],R[cid]['ay'],flush=True)
     return R
 def shadows(M,R,out,anc=None):
     """落ち影（castshadow.py と同じ作り）を、クォータービューの見え方で。光（natcommon.SUN）は、物といっしょに45度まわす（画面の上で、前と同じ向きに落ちる）"""
@@ -108,7 +147,7 @@ def shadows(M,R,out,anc=None):
     return res
 def build(out,ids):
     os.makedirs(out,exist_ok=True);R={}
-    for iid in ids:R.update(run_sacred(out) if iid=='sacred' else run_item(iid,out))
+    for iid in ids:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_item(iid,out))
     D=os.path.join(out,'_chips');os.makedirs(D,exist_ok=True)   # チップの絵（--from で、写しなおさずにチップへ入れる）
     for k,c in R.items():
         for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
@@ -125,5 +164,5 @@ def to_chips(R):
     head,C=CHP.load_imgs();C.update(R);CHP.pack_imgs(head,C)
     open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(R));print('チップに入れた',len(R))
 if __name__=='__main__':
-    a=[q for q in sys.argv[1:] if not q.startswith('--')];R=load_out(a[0]) if '--from' in sys.argv else build(a[0],a[1:] or BATCH1)
+    a=[q for q in sys.argv[1:] if not q.startswith('--')];R=load_out(a[0]) if '--from' in sys.argv else build(a[0],(BATCH2 if a[1:]==['BATCH2'] else a[1:]) or BATCH1)
     if '--chips' in sys.argv:to_chips(R)
