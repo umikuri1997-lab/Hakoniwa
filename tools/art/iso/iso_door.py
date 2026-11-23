@@ -142,8 +142,8 @@ def gate_render(iid,fn,v,n,big=False):
     m=m|ol;a[m]=f[m];return Image.fromarray(a)
 NOSTUB=('post','picket','cap')
 NBF={'sdoor':'wall','stonegate':'wall','gate':'fence','logdoor':'logfence','parkdoor':'parkfence','ropefence.gate':'ropefence','ashifence.gate':'ashifence','rankan.gate':'rankan','ibara.gate':'ibara','kuzure.gate':'kuzure','misugaki.gate':'misugaki','loggate':'logfence','parkgate':'parkfence','canalgate':'rankan','irongate':'kuzure'}   # となりにくる柵・塀
-POSTE={'sdoor':0.3,'stonegate':0.4,'gate':0.16,'logdoor':0.3,'parkdoor':0.18,'ropefence.gate':0.17,'ashifence.gate':0.16,'rankan.gate':0.22,'ibara.gate':0.15,'kuzure.gate':0.22,'misugaki.gate':0.115,'loggate':0.44,'parkgate':0.22,'canalgate':0.24,'irongate':0.24}   # マスのさかいから、柱のそとまで（この中だけ柵の腕を描く）
-BIGIN={'loggate':0.22,'stonegate':0.2,'parkgate':0.11,'canalgate':0.12,'irongate':0.12}   # 柱のはばの半分（柱のそとがわが、マスのさかいにそろう）
+POSTE={'sdoor':0.36,'stonegate':0.46,'gate':0.16,'logdoor':0.3,'parkdoor':0.18,'ropefence.gate':0.17,'ashifence.gate':0.16,'rankan.gate':0.24,'ibara.gate':0.15,'kuzure.gate':0.24,'misugaki.gate':0.115,'loggate':0.44,'parkgate':0.22,'canalgate':0.3,'irongate':0.3}   # マスのさかいから、柱のそとまで（この中だけ柵の腕を描く）
+BIGIN={'loggate':0.22,'stonegate':0.23,'parkgate':0.11,'canalgate':0.15,'irongate':0.15}   # 柱のはばの半分（かさ石もふくめて、柱のそとがわが、マスのさかいにそろう）
 PWOF={'loggate':0.76,'stonegate':0.8,'parkgate':0.865,'canalgate':0.865,'irongate':0.865,'gate':0.865,'logdoor':0.76,'parkdoor':0.865,'sdoor':0.8,'misugaki.gate':0.9,'ropefence.gate':0.865,'ashifence.gate':0.865,'rankan.gate':0.865,'ibara.gate':0.865,'kuzure.gate':0.865}   # よこ置きの柱のおく行き（設計図の PW。となりの柵の FPCY と同じ）
 def build_gate(iid):
     import doors3d as D

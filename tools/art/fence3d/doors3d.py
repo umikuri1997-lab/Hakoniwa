@@ -107,7 +107,7 @@ def planks(b,u0,u1,w0,w1,top,col,arch=False):
         else:pts=[(a,0.02),(c,0.02),(c,top),(a,top)]
         b.prism('door','板',pts,w0,w1,col if i%2==0 else DOORD)
 def sdoor(v,n):
-    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not(v or INPOST) else 0.15;posts=[0.0,1.0] if not(v or INPOST) else [0.15,0.85]
+    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not(v or INPOST) else 0.15;posts=[0.0,1.0] if not(v or INPOST) else [0.18,0.82] if INPOST else [0.15,0.85]   # クォータービューは、かさ石（はみ出し0.03）もマスの中に
     for pu in posts:pillar(b,pu,PW,hw,3,0.32)
     u0,u1=posts[0]+hw,posts[1]-hw;W0,W1=PW-0.03,PW+0.03;rot=b.hinge(u0,W1,ANG[n])
     def body(b):
@@ -196,7 +196,7 @@ def ashidoor(v,n):   # あしの戸（水。あしの垣のとなりの柵のド
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def rankandoor(v,n):   # 欄干の戸（水。運河の石の欄干のとなりの柵のドアの絵）：石の柱（0.2角・高さ0.86、かさ石）、とびらは鉄のわくに、たての鉄の棒
     b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;h=0.10;IR=(150,156,168)
-    posts=[0.0,1.0] if not(v or INPOST) else [0.11,0.89]
+    posts=[0.0,1.0] if not(v or INPOST) else [0.12,0.88] if INPOST else [0.11,0.89]   # クォータービューは、かさ石もマスの中に
     for pu in posts:b.box('stone','石の柱',pu-h,PW-h,0,pu+h,PW+h,0.80,F.RSTN);b.box('stone','かさ石',pu-h-0.02,PW-h-0.02,0.80,pu+h+0.02,PW+h+0.02,0.86,F.RSTN)
     u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR,ANG[n])
     def body(b):
