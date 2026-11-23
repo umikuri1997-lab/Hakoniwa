@@ -40,9 +40,13 @@ function iqDoorHz(i,o,g){if(IQBIG.has(o))return true;const q=k=>{const t=typeAt(
 const IQBIG=new Set(['stonegate','loggate','parkgate','canalgate','irongate']);
 /* 柵のドアは、となりの柵・塀の戸の絵があれば、それ（ロープの手すりのとなりはロープの戸 など） */
 function iqGateId(i,o,hz){if(o!=='gate')return o;for(const k of hz?[i-1,i+1]:[i-W,i+W]){const t=typeAt(k);if(t&&t!=='gate'&&window.CHIPS&&CHIPS['iso:'+t+'.gate:'+(hz?'h':'v')])return t+'.gate'}return o}
+/* マスのさかいにも、くいが立つ柵（ロープの柵）：となりがドアのがわは、くいをぬいた絵（~d<がわ>）。ドアの柱と2本ならばないように */
+const IQSTAKE=new Set(['ropefence']);
+function iqNoStake(i,o,m){if(!IQSTAKE.has(o))return m;let d=0;for(const[b,k]of[[1,i-1],[2,i+1],[4,i-W],[8,i+W]])if(m&b&&GATE_IDS.has(typeAt(k)))d|=b;
+  return d&&window.CHIPS&&CHIPS['iso:'+o+':'+m+'~d'+d]?m+'~d'+d:m}
 function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)|0,lv=Math.max(0,hiAt(i)),b=lv*IQL,m=iqMask(i,g),low=g==='h'&&iqFront(i),door=HOME_DOORS.has(o)||GATE_IDS.has(o),hz=door?iqDoorHz(i,o,g):!!(m&3)||!(m&12),
     op=door?(hz?doorOp(i,x*TS,y*TS,.9,2.1):doorOp(i,x*TS,y*TS,2.1,.9)):0,n=Math.min(3,Math.round(op*3));
-  if(iqChip(c,'iso:'+(door?iqGateId(i,o,hz):o)+':'+(door?(hz?'h':'v'):m)+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv)){if(g==='h'&&!low&&(!door||hz&&S.win&&S.win[i]==='wreath'))door?iqChip(c,'iso:win:wreath:d'+(n?'#'+n:''),i,lv):iqWinDraw(c,i,hz,TS*.3,lv);return}/* ドアは向き（h よこ・v たて）と開いたコマ。壁の絵のときも、かけた物は上にかさねる。ドアのリースは、とびらの面に */
+  if(iqChip(c,'iso:'+(door?iqGateId(i,o,hz):o)+':'+(door?(hz?'h':'v'):iqNoStake(i,o,m))+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv)){if(g==='h'&&!low&&(!door||hz&&S.win&&S.win[i]==='wreath'))door?iqChip(c,'iso:win:wreath:d'+(n?'#'+n:''),i,lv):iqWinDraw(c,i,hz,TS*.3,lv);return}/* ドアは向き（h よこ・v たて）と開いたコマ。壁の絵のときも、かけた物は上にかさねる。ドアのリースは、とびらの面に */
   const col=iqCols(IQC[o]||'#c89a64'),dm=door?(hz?3:12):m;/* ドアは、つながりのむきにまっすぐ */
   if(g==='g'){iqArms(c,x,y,m,TS*.74,b,b+22,col);return}/* 生垣：こんもりした葉のかたまり（仮） */
   if(g==='f'){const pc=iqCols(IQC[o]||'#c69a62',.88),X=x*TS,Y=y*TS,ph=18,pt=TS*.09;/* 柵：柱と、2本の横木 */

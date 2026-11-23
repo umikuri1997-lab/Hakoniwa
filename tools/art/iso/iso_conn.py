@@ -184,8 +184,21 @@ def fence_parts(iid,m):
             cur[3]=('railv' if base[0]=='ext' else base[0],p,base[2])
         if cur:A2.append(cur[3])
     return FZ,A2,B2
-def fence_render(iid,m):
+def stake_side(q,lower):
+    """マスのさかいに立つ、ロープの柵の細いくいなら、そのがわ（左1・右2・上4・下8）。lower：下のマスの部品（B）"""
+    p=q[1]
+    if q[0]!='post' or p.name!='くい' or p.kind!='cyl':return 0
+    x,y=p.dims[0],p.dims[1]
+    if abs(y-0.375)<1e-6:return 8 if lower else 4
+    return 1 if x<1e-6 else 2 if x>1-1e-6 else 0
+STAKEF=('ropefence',)   # マスのさかいにも、くいが立つ柵（となりがドアのがわは、くいをぬいた絵 ~d<がわ> も作る）
+def stake_sides(iid,m):
+    if iid not in STAKEF:return 0
+    FZ,A,B=fence_parts(iid,m);return sum({stake_side(q,0) for q in A}|{stake_side(q,1) for q in B})
+def fence_render(iid,m,nod=0):
+    """nod：となりがドアのがわ。そこのマスのさかいのくいを描かない（ドアの柱と2本ならぶので）"""
     FZ,A,B=fence_parts(iid,m);dy=0.5-FPCY[iid]
+    if nod:A=[q for q in A if not stake_side(q,0)&nod];B=[q for q in B if not stake_side(q,1)&nod]
     sc=O.Scene();sc.txo={};sc.txax={}
     FZ.add_parts(sc,A);na=sc.pid;FZ.add_parts(sc,B)
     def sh(v,pid):return np.array([v[0],v[1]+(dy if pid<=na else dy+1),v[2]])
@@ -262,7 +275,10 @@ def build_all(out,ids):
                 top,front=wall_tex(C,iid)
                 for low in(False,True):res['iso:%s:%d%s'%(iid,m,'~low' if low else '')]=crop(render(wall_parts(m,top,front,LH if low else WH),None))
             elif iid=='hedge':res['iso:hedge:%d'%m]=crop(hedge_render(m))
-            else:res['iso:%s:%d'%(iid,m)]=crop(fence_render(iid,m))
+            else:
+                res['iso:%s:%d'%(iid,m)]=crop(fence_render(iid,m));sd=stake_sides(iid,m)
+                for d in range(1,16):   # となりがドアのがわ d（m の中）に、くいがあるときだけ
+                    if d&m==d and d&sd:res['iso:%s:%d~d%d'%(iid,m,d)]=crop(fence_render(iid,m,d))
         print(iid,flush=True)
     for k,(im,ax,ay) in res.items():im.save(os.path.join(out,k.replace(':','_')+'.png'))
     json.dump({k:[ax,ay,im.width,im.height] for k,(im,ax,ay) in res.items()},open(os.path.join(out,'_info.json'),'w'))
