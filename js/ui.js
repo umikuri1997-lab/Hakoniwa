@@ -201,7 +201,7 @@ function closeSheet(){if(sheet){if(SHEETQUIET)SHEETQUIET=0;else if(sheet==='menu
 function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstElementChild}
 /* たね：たね袋の絵＋作物の小さな絵 */
 const foodIc=k=>ICONS[k]||icURL(FOODS[k].e)||(CROPS[k]?cropIcon(k):null);/* 食べ物のアイコン：もらった絵（いもは potato の絵）→ なければ作物の絵 */
-const CROPIC={};function cropIcon(k){if(CROPIC[k])return CROPIC[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.translate(32,30);g.scale(1.7,1.7);drawCrop(g,k,0,0,100,true);const u=c.toDataURL();c.width=c.height=0;return CROPIC[k]=u}/* 作物の絵だけのアイコン（図鑑） */
+const CROPIC={};function cropIcon(k){if(CROPIC[k])return CROPIC[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.translate(32-16*1.7,32-12*1.7);g.scale(1.7,1.7);drawCrop(g,k,0,0,100,true);/* drawCrop は1マス（32）の絵：まん中（16,12）を、アイコンのまん中に（ずれて、右と下が切れていた） */const u=c.toDataURL();c.width=c.height=0;return CROPIC[k]=u}/* 作物の絵だけのアイコン（図鑑） */
 let HERBICO=null;function herbIco(){/* まよけのハーブ：葉のついた枝を3本、ひもでたばねた形。32×32のマス目の四角だけで描く（2倍の細かさ）。ふちは形から作る */if(HERBICO)return HERBICO;const N=32,M=new Int8Array(N*N),K=new Int8Array(N*N);/* M:形 K:1茎 2葉 3ひも */
   const put=(x,y,k)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<N&&y<N){M[y*N+x]=1;K[y*N+x]=k}};
   const stems=[[16,28,9,7],[16,28,16,5],[16,28,23,7]];for(const[x0,y0,x1,y1]of stems)for(let i=0;i<=40;i++){const t=i/40;put(x0+(x1-x0)*t,y0+(y1-y0)*t,1);put(x0+(x1-x0)*t+1,y0+(y1-y0)*t,1)}

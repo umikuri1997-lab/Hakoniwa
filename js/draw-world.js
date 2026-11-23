@@ -103,7 +103,7 @@ const SKYFACE=[[108,92,66],[150,130,98],[126,108,80],[96,82,62]],SKYFH=13
 const LIPC=[[150,184,98],[128,162,86],[92,124,66]]
 /* 一面の雪：水の区画の絵の陸の所（水ぎわの地面）にも、地面と同じ雪をのせる。見えている区画だけ、雪のあいだだけ作って、とけたら手ばなす（WSNOWMAX まで） */
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z*IQL/LIFT/IQSY);/* クォータービュー：段1だん（LIFT）は、画面で IQL 上 */f();ctx.restore()}
-const WPLIFT=108;/* 見張り台の上に立つ高さ */const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
+const WPLIFT=78;/* 見張り台の上に立つ高さ（段の高さ LIFT で。3Dの見張り台の床の高さ 2.45だん＝watch.py の DZ） */const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
 function uLift(o){if(o&&o.act&&o.act.type==='watchpost'&&o.act.stage==='do'){const k=Math.min(1,o.act.cl||0);if(k<1)CLIMB.add(o);else CLIMB.delete(o);return (S.hi?liftOf(o.act.obj+W):0)+WPLIFT*k}/* 見張り台の上に立つ（ハシゴを少しずつのぼる） */if(o&&o.elem){CLIMB.delete(o);if(S&&LADDERS.has(S.obj[(o.y|0)*W+(o.x|0)])&&o.path&&o.path.length)CLIMB.add(o)}/* ハシゴの上を動いている子も、よじのぼる動き *//* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
   if(!S.hi||!o)return 0;const cj=(o.y|0)*W+(o.x|0),n=o.path&&o.path.length?o.path[0]:-1;
   if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=Math.max(0,hiAt(a)),hn=Math.max(0,hiAt(n));if(jumpEdge(a,n)){const t=1-d;if(o.elem){CLIMB.add(o);return LIFT*(ha+(hn-ha)*t)+Math.abs(Math.sin(t*Math.PI*4))*1.5}/* せいれいは、よじのぼる・おりる（少しずつ高さをかえ、1歩ごとに小さくゆれる） */return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
