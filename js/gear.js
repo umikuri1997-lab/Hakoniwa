@@ -13,7 +13,7 @@ function gearMigrate(){
     delete r.gear.t;gearChanged(r);
   }
 }
-const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',nabiki:'#b4d890',houki:'#e2cc8e',kumowata:'#e8f0f8',hane:'#d6e8f4',ashi:'#b8d494',gama:'#dcc68c',nendo:'#c0bcb6',maruishi:'#c4ccd4',yotsuyu:'#9cc8bc',kagekusa:'#b8b0c8',gekko:'#d8e8f8',kogi:'#c8bcae',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
+const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',nabiki:'#b4d890',houki:'#e2cc8e',kumowata:'#e8f0f8',hane:'#d6e8f4',ashi:'#b8d494',gama:'#dcc68c',nendo:'#c0bcb6',maruishi:'#c4ccd4',sagan:'#e0b88a',iwakusa:'#9cbc78',susuki:'#d8c490',yotsuyu:'#9cc8bc',kagekusa:'#b8b0c8',gekko:'#d8e8f8',kogi:'#c8bcae',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
 const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
