@@ -11,7 +11,8 @@
 #   色：横の面は、がけの絵（いちばん上のだん cliff:block・その下 cliff:blockm。ゲームの icFace と同じ写し方：左の面は x、右の面は 1−y、たては 1−z）。
 #     上の面と、まるいふちの上のほうは、地面の絵（草 tex:grass・かれた地面 tex:dry。画面の場所でくりかえす）。草は、ふちから少したれる。
 #     明るさ：上 1・左の面（南）.94・右の面（東）.74（ゲームの ICLF・ICRT）。まるい所は、面の向きでまぜて、段にする。
-# チップのなまえ（--chips はまだ）：iso:blk-<g|d|m>:<n><s><e><w>（g 草の上のだん・d かれた地面の上のだん・m 上にブロックがつづくだん。nsew は外に出ていれば1）
+# チップのなまえ（--chips はまだ）：iso:blk-<g|d|m>:<n><s><e><w>[-<南西><南東><北東>]（g 草の上のだん・d かれた地面の上のだん・m 上にブロックがつづくだん。nsew は外に出ていれば1。
+#   うしろの3つは、内がわの角になるななめのマスがうまっていれば1）。上の面の平らな所のかたちは <なまえ>~top（ゲームの地面をこのかたちで切って見せる）
 import sys,os,math
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
 for p in(ART,HERE,os.path.join(ROOT,'tools')):sys.path.insert(0,p)
@@ -66,16 +67,28 @@ def facetex(p,nrm,top_tex):
     u=(x%1) if side==0 else (1-(y%1))%1
     return min(63,int((1-min(1,max(0,z)))*64)),min(63,int(u*64)),side
 KEY=(255,0,255)   # 上の面の平らな所の印（ゲームの地面を見せる所。チップ ~top のかたち）
-def tilev(L):
-    """でこぼこの形を、たて64行でくりかえすように（blockm は32行が2つ。つなぎ目の行は、半分ずらした行とまぜる）"""
-    r=np.arange(64);a=(1-np.abs((r%32)-15.5)/16)[:,None]
-    return a*L+(1-a)*np.roll(L,-16,0)
 def pnoise(u):   # 1マスでくりかえす、なめらかなゆらぎ（0〜1）
     t=2*math.pi*u;return 0.5+0.25*math.sin(3*t+1.3)+0.15*math.sin(7*t+0.4)+0.1*math.sin(11*t+2.1)
-def build(n,s,e,w,top,var):
-    """var：'g' 草・'d' かれた地面・'m' 上につづく。もどり：(横の面とまるいふちの絵, 上の面のかたち, ax, ay)"""
+def midtex():
+    """下のだんの岩の絵（64×64）：がけの正面の24〜46行を、うら返し＋そのまま にならべる（上は46行め＝いちばん上のだんの下はしの行、まん中は24行め、下はまた46行め）。
+    だんのさかいでも、上下に何だんつんでも、もようがとぎれない"""
+    f=chipimgs()['cliff:face']['f'][0].convert('RGB').crop((0,24,64,47));f=np.asarray(f.resize((64,32),Image.BOX),float)
+    return np.concatenate([f[::-1],f],0)
+def build(n,s,e,w,top,var,dg=(0,0,0)):
+    """var：'g' 草・'d' かれた地面・'m' 上につづく。dg：ななめのマス（南西・南東・北東）がうまっているか（内がわの角）。
+    もどり：(横の面とまるいふちの絵, 上の面のかたち, ax, ay)"""
     core,ex=shape(n,s,e,w,top)
-    tex=arr('cliff:block' if top else 'cliff:blockm');L=tilev(soft(lum(arr('cliff:blockm'))))
+    tex=arr('cliff:block') if top else midtex();L=soft(lum(tex))   # でこぼこは、その面の岩の絵の明るさから（色とでこぼこがそろう）
+    led=arr('cliff:block')[2:5].reshape(-1,3).mean(0)   # 上にだんがある所の上の面（だんの角から少し見える）：岩のいちばん上の明るい帯の色
+    sw,se,ne=dg
+    def cfade(x,y,nrm):   # 内がわの角の手前で、へこみをなくす（へこんだ面の角から、うしろのマスの角がのぞいて、明るい線に見えた）
+        f=np.ones_like(x);F=lambda d:np.clip(d/0.12,0,1)
+        sf=nrm[...,1]>=nrm[...,0]   # 左の面（南）
+        if not e and se:f=np.where(sf,f*F(1-x),f)
+        if not w and sw:f=np.where(sf,f*F(x),f)
+        if not s and se:f=np.where(~sf,f*F(1-y),f)
+        if not n and ne:f=np.where(~sf,f*F(y),f)
+        return f
     gt=arr('tex:grass' if var=='g' else 'tex:dry')
     sc=O.Scene();sc.material('flat')
     lo=np.array(core[0::2]);hi=np.array(core[1::2])
@@ -86,7 +99,8 @@ def build(n,s,e,w,top,var):
         u=(x+y)%1;dr=(0.03+0.09*pnoise(u)) if var=='g' else 0.0   # 草が横の面にたれる長さ（だん）
         if top and z>core[5]+R*(0.35 if var=='g' else 0.55)-dr:   # まるいふちの上のほう（草は少したれる）：地面の色
             dep=max(0.0,core[5]+R-z);c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]
-            k=1.0 if nrm[2]>0.8 else 0.94 if nrm[1]>=nrm[0] else 0.8
+            k=1.0 if nrm[2]>0.8 else 1.08 if nrm[0]<-0.3 or nrm[1]<-0.3 else 0.94 if nrm[1]>=nrm[0] else 0.8   # 光は左上：奥（北・西）のまるいふちは明るい
+        elif not top and nrm[2]>0.985 and z>0.999:c0=led;k=0.94   # 上にだんがある所のふたの面
         else:
             r_,c_,side=facetex(p,nrm,None);c0=tex[r_,c_]
             a=max(0,nrm[1]);b=max(0,nrm[0]);t=max(0,nrm[2]);sm=a+b+t+1e-6
@@ -100,7 +114,7 @@ def build(n,s,e,w,top,var):
         side=sum(np.maximum(0,nrm[...,i]*sg_) for i,sg_,on in((0,1,e),(0,-1,w),(1,1,s),(1,-1,n)) if on)
         P=p.copy();zz=np.clip(P[...,2],0,1);rr=np.minimum(63,((1-zz)*64).astype(int))
         uu=np.where(nrm[...,1]>=nrm[...,0],P[...,0]%1,(1-(P[...,1]%1))%1);cc=np.minimum(63,(uu*64).astype(int))
-        dd=DEP*(1-L[rr,cc])*np.clip(side*1.25-0.15,0,1)
+        dd=DEP*(1-L[rr,cc])*np.clip(side*1.25-0.15,0,1)*cfade(P[...,0],P[...,1],nrm)
         if top:dd=dd*np.clip((core[5]+R*0.7-P[...,2])/(R*0.7),0,1)
         P=P-nrm*dd[...,None]
         for i in range(NG):
@@ -117,7 +131,11 @@ def build(n,s,e,w,top,var):
     bb=Image.fromarray(np.maximum(a,tp)).getbbox()
     A=Image.fromarray(a).crop(bb);T=Image.fromarray(tp).crop(bb)
     return A,T,IC.PX0-bb[0],IC.PY0-bb[1]
-def key(n,s,e,w):return '%d%d%d%d'%(n,s,e,w)
+def dgof(ex,sw,se,ne):
+    """ななめのマスのうち、形にかかわる物だけ（内がわの角になる所）。ほかは0にして、同じ形のチップをふやさない"""
+    n,s,e,w=ex
+    return (int(sw and (s and not w)),int(se and ((s and not e) or (e and not s))),int(ne and (e and not n)))
+def key(ex,dg):return '%d%d%d%d'%tuple(ex)+('-'+'%d%d%d'%dg if any(dg) else '')
 def tiles_for(cells,var):
     """cells：{(x,y):高さ}。マスごと・だんごとのチップ（同じ形は1回だけ写す）"""
     memo={};out=[]
@@ -125,8 +143,9 @@ def tiles_for(cells,var):
     for (x,y),h in cells.items():
         for L in range(1,h+1):
             ex=[hv(x,y-1)<L,hv(x,y+1)<L,hv(x+1,y)<L,hv(x-1,y)<L];top=L==h
-            v=var if top else 'm';k=(v,)+tuple(ex)
-            if k not in memo:memo[k]=build(*ex,top,v)
+            dg=dgof(ex,hv(x-1,y+1)>=L,hv(x+1,y+1)>=L,hv(x+1,y-1)>=L)
+            v=var if top else 'm';k=(v,)+tuple(ex)+dg
+            if k not in memo:memo[k]=build(*ex,top,v,dg)
             out.append((x,y,L,memo[k]))
     return out,memo
 def compose(cells,var,pad=40):
