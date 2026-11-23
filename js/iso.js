@@ -48,7 +48,7 @@ const LOTUSPAD=[16.5,20.5],LOTUSOFF=.36,LOTUSOFFD=.16;/* 絵の葉のまん中�
 function lotusFoot(a){const x=a%W,y=(a/W)|0,lv=Math.max(0,hiAt(a)),dry=(X,Y)=>X<0||Y<0||X>=W||Y>=H||!waterJ(Y*W+X);
   let ox=(dry(x-1,y)?1:0)-(dry(x+1,y)?1:0),oy=(dry(x,y-1)?1:0)-(dry(x,y+1)?1:0);ox*=LOTUSOFF;oy*=LOTUSOFF;
   if(!ox&&!oy)for(const[dx,dy]of[[-1,-1],[1,-1],[-1,1],[1,1]])if(dry(x+dx,y+dy)){ox-=dx*LOTUSOFFD;oy-=dy*LOTUSOFFD}
-  const cx=(x+.5+ox)*TS,cy=(y+.5+oy)*TS;return{x,y,w:1,h:1,fx:(x+ox)*TS+LOTUSPAD[0],fy:(y+oy)*TS+LOTUSPAD[1]-liftOf(a),px:isoX(cx,cy),py:isoY(cx,cy)-lv*IQL}}
+  const cx=(x+.5+ox)*TS,cy=(y+.5+oy)*TS;/* 絵はマスの左上から描くので、ずらすのは画面の点（px・py）だけ */return{x,y,w:1,h:1,fx:x*TS+LOTUSPAD[0],fy:y*TS+LOTUSPAD[1]-liftOf(a),px:isoX(cx,cy),py:isoY(cx,cy)-lv*IQL}}
 /* せいれい・コワイノなど（足もとの点）の足もと。高さは liftDraw がつける */
 function ptFoot(wx,wy){return{fx:wx,fy:wy,px:isoX(wx,wy),py:isoY(wx,wy)}}
 /* 足もと A で立てて描いた物の、いままでの見え方でのタップの点（せかいの点）。lv：その物の段（タップのときは、絵が上に見える高さ） */

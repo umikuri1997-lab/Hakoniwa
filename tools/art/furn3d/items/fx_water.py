@@ -10,7 +10,7 @@ from blueprint import Part as P
 from common import *
 ID='fx_water';BOTTOM=40
 PUDR=(0.17,0.25,0.33)   # 水たまりの半径（大きさ 0・1・2）
-SHAPES=((0.16,0.6,0.09,2.1,1.75),(0.12,2.4,0.13,0.4,2.0),(0.2,4.1,0.07,5.0,1.85))   # 形：半径のゆれ（2つの波の大きさと、ずれ）と、画面のよこ（せかいの x−y の向き）へのばす倍（水たまりは、ひらたく広がる）
+SHAPES=((0.16,0.6,0.09,2.1,1.75),(0.12,2.4,0.13,0.4,2.0),(0.1,4.1,0.08,5.0,1.85))   # 形：半径のゆれ（2つの波の大きさと、ずれ）と、画面のよこ（せかいの x−y の向き）へのばす倍（水たまりは、ひらたく広がる）
 RIPR=(0.07,0.12,0.17,0.22);RIPW=(0.022,0.022,0.02,0.018)   # 雨の輪の半径と、はば（コマごと）
 WATER=(112,172,224);SKY=(196,228,248);ICE=(226,242,250);RING=(236,247,253)
 VIEWS=[('iso:pud:%d#%d'%(n,s),0,('pud',n,s)) for n in range(3) for s in range(3)]+[('iso:pudi:%d#%d'%(n,s),0,('ice',n,s)) for n in range(3) for s in range(3)]+[('iso:rip#%d'%f,0,('rip',f,0)) for f in range(4)]
@@ -31,15 +31,15 @@ def EXTRA(sc):
             a,b=2*math.pi*i/N,2*math.pi*(i+1)/N;q=lambda r,t:(0.5+r*math.cos(t),0.5+r*math.sin(t),z)
             sc.quad(q(r0,a),q(r1,a),q(r1,b),q(r0,b),RING)
         sc.material(None);sc.outline();return
-    f=blob(n,s);R=PUDR[n]
+    f=blob(n,s);R=PUDR[n];sc.outline(None,0.86)   # 水たまりのふちの線は、うすく（こいと、はりつけたシールに見える）
     if k=='ice':
         def streak(x,y,z):   # 白いつや：左上から右下へのびる、みじかいすじ2本
             d=(x-0.5)-(y-0.5);w=(x-0.5)+(y-0.5)
             return (250,253,255) if abs(w+R*0.35)<R*0.07 and abs(d)<R*0.45 or abs(w+R*0.05)<R*0.05 and abs(d+R*0.1)<R*0.22 else None
-        sc.material('flat');sc.decal(streak);hfield(sc,0,0,1,1,lambda x,y:0.006,ICE,n=(28,28),shape=f);sc.decal(None);sc.material(None);return
+        sc.material('flat');sc.decal(streak);hfield(sc,0,0,1,1,lambda x,y:0.006,ICE,n=(28,28),shape=f);sc.decal(None);sc.material(None);sc.outline();return
     def col(x,y):   # 水の色。まん中より少しおくに、空のうつりこみの、画面のよこにまっすぐな短い帯（ふちの形にそわせない）
         u,v=f(x,y);d=((0.5-u)+(0.5-v))/(2*R);a=((u-0.5)-(v-0.5))/(2*R*SHAPES[s][4])
         t=0.8 if abs(d-0.18)<0.07 and abs(a+0.05)<0.28 or abs(d-0.02)<0.05 and abs(a-0.2)<0.12 else 0.0;return tuple(WATER[i]*(1-t)+SKY[i]*t for i in range(3))
     def top(x,y):return 0.004+0.003*math.sin(x*15.0+y*5.0)+0.002*math.sin(y*19.0-x*7.0+1.3)
-    sc.material('flat');hfield(sc,0,0,1,1,top,col,n=(28,28),shape=f);sc.material(None)
+    sc.material('flat');hfield(sc,0,0,1,1,top,col,n=(28,28),shape=f);sc.material(None);sc.outline()
 TONE5=True
