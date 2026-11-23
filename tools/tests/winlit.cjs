@@ -8,7 +8,7 @@ const out=JSON.parse(await run(`(()=>{USERPAUSE=true;const T=h=>{S.t=1440*2+h*60
   const h=HOUSES.find(q=>q.inside.has((Y+2)*W+X+2));const got=[];const o0=iqChip;iqChip=(c,k,i,lv)=>{got.push([k,i]);return true};
   const draw=()=>{got.length=0;iqWinLit(ctx,new Set([h]));return got.map(g=>(g[1]===sw?'s':g[1]===ew?'e':g[1]===nw?'n':g[1]===ww?'w':'?')+':'+g[0].slice(-1)).sort().join(',')};
   const cs=()=>{cam.x=(X+2)*TS-VW/cam.z/2;cam.y=(Y+2)*TS-VH/cam.z/2};cs();
-  const r={};T(23);r.night=draw();T(12);r.noon=draw();T(23);ROOFS.set(hKey(h),{a:0});IQFRONT.clear();r.open=draw();ROOFS.set(hKey(h),{a:1});IQFRONT.clear();
+  const r={};T(23);r.night=draw();T(12);r.noon=draw();T(23);ROOFS.set(hKey(h),{a:0});r.open=draw();ROOFS.set(hKey(h),{a:1});
   S.obj[(Y+5)*W+X+1]='tree';r.tree=draw();iqChip=o0;r.chip=!!(CHIPS['iso:win:window:lit:h']&&CHIPS['iso:win:window:lit:v']);
   ctx.save();iqWinLit(ctx,new Set([h]));ctx.restore();return JSON.stringify(r)})()`));
   assert.ok(out.chip,'lit window chips exist');
