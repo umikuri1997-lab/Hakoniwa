@@ -63,10 +63,16 @@ def own_mask(im,free=None):
         nb=lab.copy()
         for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):
             sh=np.roll(np.roll(lab,dy,0),dx,1);nb=np.where((nb==0)&(sh>0),sh,nb)
+            nb=np.where((lab==0)&(sh==1),1,nb)   # このマスの面ととなりの面の両方にふれる線のドットは、このマスの物にする（どちらのマスにもならず、つなぎ目の足もとに1ドットのすきまが出た）
         lab=nb
     keep=(lab==1)&(a[...,3]>0)
     a[~keep]=0
-    return Image.fromarray(a)
+    return Image.fromarray(notch(a))
+def notch(a):
+    """足もとの1ドットの切れこみ（とがった角を写したときの、左・右・上が絵で、下の3つが透明なドット）を、上のドットの色でうめる"""
+    o=a[...,3]>0;sh=lambda dy,dx:np.roll(np.roll(o,-dy,0),-dx,1)
+    m=~o&sh(0,-1)&sh(0,1)&sh(-1,0)&~sh(1,0)&~sh(1,-1)&~sh(1,1)
+    a[m]=np.roll(a,1,0)[m];return a
 def crop(im):
     bb=im.getbbox()
     if not bb:return im,0,0
