@@ -39,10 +39,11 @@ function cvqTop(P,ox,oy,key){const K='t'+key+'|'+ox+','+oy;let c=CVQK.get(K);if(
   for(let v=0;v<IQH;v++)for(let u=0;u<IQW;u++){const ix=u-IQW/2+.5,iy=v+.5,wx=(ix/IQA+iy/IQB)/2,wy=(iy/IQB-ix/IQA)/2;if(wx<0||wy<0||wx>=TS||wy>=TS)continue;
     const si=(((oy+((wy*2)|0))%P.h)*P.w+((ox+((wx*2)|0))%P.w))*4,o=(v*IQW+u)*4;d[o]=P.d[si];d[o+1]=P.d[si+1];d[o+2]=P.d[si+2];d[o+3]=255}
   g.putImageData(id,0,0);CVQK.set(K,c);return c}
-/* かべのタイル（1だんぶん）：side 0 左の面（y+1 がわ）・1 右の面（x+1 がわ）。帯の絵（cave:cols）のたてを、1だんにちぢめる。k は明るさ */
-function cvqFace(side,P,ox,key,k){const K='f'+side+key+'|'+ox+'|'+k;let c=CVQK.get(K);if(c)return c;const w=IQW/2,h=IQH/2+IQL,bh=Math.max(1,P.h-P.top);c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),id=g.createImageData(w,h),d=id.data;
+/* かべのタイル（1だんぶん）：side 0 左の面（y+1 がわ）・1 右の面（x+1 がわ）。帯の絵（cave:cols）は、クォータービューで写した左の面を、マスごとに、この絵と同じわく（g64）でならべた物（iso3d.py の run_band）。
+   右の面は、左右反対にして使う。k は明るさ */
+function cvqFace(side,P,ox,key,k){const K='f'+side+key+'|'+ox+'|'+k;let c=CVQK.get(K);if(c)return c;const w=IQW/2,h=IQH/2+IQL;c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),id=g.createImageData(w,h),d=id.data;
   for(let v=0;v<h;v++)for(let u=0;u<w;u++){const t=(u+.5)/w,top=side?IQH/2*(1-t):IQH/2*t,vv=v+.5-top;if(vv<0||vv>=IQL)continue;
-    const si=((P.top+Math.min(bh-1,((vv/IQL)*bh)|0))*P.w+((ox+((t*64)|0))%P.w))*4,o=(v*w+u)*4;if(!P.d[si+3])continue;d[o]=P.d[si]*k;d[o+1]=P.d[si+1]*k;d[o+2]=P.d[si+2]*k;d[o+3]=255}
+    const du=(t*64)|0,si=(Math.min(P.h-1,((v+.5)*2)|0)*P.w+((ox+(side?63-du:du))%P.w))*4,o=(v*w+u)*4;if(!P.d[si+3])continue;d[o]=P.d[si]*k;d[o+1]=P.d[si+1]*k;d[o+2]=P.d[si+2]*k;d[o+3]=255}
   g.putImageData(id,0,0);CVQK.set(K,c);return c}
 /* まわりより低くない平らな床（先にまとめて描いてよい） */
 function cvqFlat(x,y){const C=CV,j=cvJ(x,y);if(!C.g[j])return false;const h=cvqH(x,y);for(const[dx,dy]of[[1,0],[0,1],[-1,0],[0,-1],[-1,-1]])if(cvqH(x+dx,y+dy)<h)return false;return true}

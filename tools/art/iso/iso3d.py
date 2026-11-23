@@ -38,7 +38,7 @@ import furn3d as F3
 _shot=F3.shot
 def shot(M,k,only=None,S_=64,filt=None,info=None):return _shot(M,k,only,ISOS,filt,info)
 F3.shot=shot
-SKIP={'kabebukuro','wreath','wshelf','nat_eda','g_w_acorn','g_w_clover','g_w_shelf','g_w_stump','cave_cols','cave_ccols','cave_steps','cave_down','cave_stalac0','cave_stalac1'}|{'cave_crys%d'%n for n in range(8)}   # 壁にかける物（H-14 の iso:win）・落とし物の枝（物の絵ではない）・トリポの _t がある前の限定の家具・洞窟の、かべの帯と、こさの番号でぬりかえる物（cave_tex.py を通る）と、かべの正面のつらら石
+SKIP={'kabebukuro','wreath','wshelf','nat_eda','g_w_acorn','g_w_clover','g_w_shelf','g_w_stump'}   # 壁にかける物（H-14 の iso:win）・落とし物の枝（物の絵ではない）・トリポの _t がある前の限定の家具
 BATCH2=['crate','bed','wbench','loom','taru','chair','table']   # はじめの家具
 BATCH1=['statue','statueb','obox','board','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
 WBUP=10
@@ -172,11 +172,44 @@ def shadows(M,R,out,anc=None):
         if M.ID in CS.FLIPIDS:res[nm+':shf']=dict(res[nm+':sh'])   # 反転の絵でも、クォータービューでは反転しないので同じ影
         im.save(os.path.join(out,(nm+'_sh').replace('#','_').replace(':','_').replace('>','_')+'.png'))
     return res
+# ---- 洞窟（cave_tex.py を通る物）----
+# かべの帯（cave_cols・cave_ccols）：帯の3Dを、この見え方で写し、左の面（南の面）の、1だん（高さ1）・4マスぶんを、マスごとの面の絵にならべる（256×120、g64）。
+#   マス n の面の絵は、そのマスの面の左上（x=2+n・y=FACEY・高さ1）から、よこ64・たて120ドット（ゲームの cvqFace の絵と同じわく）。右の面は、ゲームで左右反対にして使う。
+#   こさの番号にして（cave_tex.tone）、岩の上のふちより下で、面の中のすきまは、いちばん暗いこさでうめる。
+# 水晶・岩の段・下へおりる穴（TONED）：ふつうに写して、こさの番号にする（ゲームで階ごとの色にぬる）。
+FACEY=0.8   # 帯の岩の、手前の面（かべのマスの面にあわせる所）
+CAVE_BAND={'cave_cols':'cave:cols','cave_ccols':'cave:ccols'}
+def cave_tex():
+    sys.path.insert(0,os.path.join(ART,'cave'));import cave_tex as CT;return CT
+def run_band(iid,out):
+    CT=cave_tex();M=F3.load(iid);F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));nm=M.VIEWS[0][0];im=CH[nm][0];bb,inf=F3.META[nm]
+    A=np.asarray(im.convert('RGBA'));P,E,S_=inf['PROJ'],inf['ext'],inf['S']
+    def scr(p):q=P(inf['fwd'](p));return (q[0]-E[0])*S_-bb[0],(q[1]-E[2])*S_-bb[1]
+    at=np.zeros((120,256,4),np.uint8)
+    for n in range(4):
+        tx,ty=scr((2+n,FACEY,1.0))
+        for dv in range(120):
+            for du in range(64):
+                X,Y=int(round(tx+du)),int(round(ty+dv))
+                if 0<=X<A.shape[1] and 0<=Y<A.shape[0]:at[dv,n*64+du]=A[Y,X]
+    o=CT.tone(at).astype(np.uint8)
+    for c in range(256):
+        du=c%64;r0=max(0,int(round(du*0.75))-2);r1=min(120,int(round(du*0.75))+74);o[:r0,c,3]=0;o[r1:,c,3]=0   # 面のわくの外はすかす（ゲームのドットの丸めで、ふちが1ドットずれても、すきまが出ないよう、上下2ドットのゆとり）
+        ys=np.nonzero(o[r0:r1,c,3]>0)[0]
+        if len(ys):m=o[r0+ys[0]:r1,c,3]==0;o[r0+ys[0]:r1,c][m]=[CT.LV[1],CT.LV[1],CT.LV[1],255]
+    img=Image.fromarray(o,'RGBA');img.save(os.path.join(out,iid,iid+'_face.png'))
+    return {CAVE_BAND[iid]:{'g':64,'ax':0,'ay':0,'w':256,'h':120,'f':[img]}}
+def tone_cave(R):
+    """TONED の物（cave_tex.py）：こさの番号にして、ゲームのチップの名前に"""
+    CT=cave_tex();inv={f:k for k,f in CT.TONED.items()}
+    for f,k in inv.items():
+        if f in R:c=R.pop(f);c['f']=[Image.fromarray(CT.tone(np.asarray(i.convert('RGBA'))).astype(np.uint8),'RGBA') for i in c['f']];R[k]=c
+    return R
 def build(out,ids):
     os.makedirs(out,exist_ok=True);R={}
     bad=[]
     for iid in ids:   # 1つがこわれても、つづける（こわれた物は _bad.txt に）
-        try:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_item(iid,out))
+        try:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_band(iid,out) if iid in CAVE_BAND else tone_cave(run_item(iid,out)))
         except Exception as e:
             import traceback;traceback.print_exc();bad.append(iid)
     if bad:open(os.path.join(out,'_bad.txt'),'w').write('\n'.join(bad));print('写せなかった物',bad)
