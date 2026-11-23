@@ -4,7 +4,7 @@
    - g    地面（ひし形の地面の区画）。物より先に、かけ算でかさねる（dcGround）
    - w    水（池・川）。水面を流すときにかけ算（iso-ground.js の igShimmer）
    - s    雲の海（風）。地面の層のかわりに、雲の海の所だけかけ算（dcGround。iso-ground.js の雲の海の形 q.k）
-   - r    屋根。屋根を描いたあと、屋根の形にかけ算（iso-conn.js の iqRoofCol）。高い段の上の面は g（dcTop）
+   - r    屋根。屋根を描いたあと、屋根の形にかけ算（iso-conn.js の iqRoofColDraw）。高い段の上の面は g（dcTop）
    - win  窓のあかりの強さ（1がふつう）
    - glow 時間の光（HD-2D の入りのときだけ。soft-light、hd2d.js の hdTint）
    色は [赤,緑,青,こさ]。かけ算の層は、こさ0で何もしない。こさ1でその色をそのままかける。時刻のあいだは、なめらかにつなぐ。 */

@@ -11,13 +11,13 @@ const assert=require('node:assert/strict');
   for(const h of [0,3,5,6,7,9,15,16.5,18,18.8,20,21.5])await at(h);
   await run(`(()=>{for(let i=0;i<W*H;i+=97)if(!S.obj[i]&&S.ground[i]===0)S.hi[i]=1;dirty=true;recount()})()`);
   for(const z of [1.6,.4]){await run(`cam.z=${z}`);for(const h of [12,19.3,23])await at(h)}
-  /* 高い段の上の面（dcTop）と屋根（iqRoofCol の r）にも、時間の色がかかる */
+  /* 高い段の上の面（dcTop）と屋根（iqRoofColDraw の r）にも、時間の色がかかる */
   const tint=JSON.parse(await run(`(()=>{S.t=1440*3+23*60;DC.h=-1;const v=dcNow(),px=(x,y)=>Array.from(ctx.getImageData(x,y,1,1).data).slice(0,3);
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,40,40);dcTop(ctx,20,4);const top=px(20,20);ctx.restore();
     const f=S.res[0],X=(f.x|0)+6,Y=(f.y|0)+3;for(let y=Y-1;y<Y+7;y++)for(let x=X-1;x<X+7;x++){const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0}
     for(let y=Y;y<Y+5;y++)for(let x=X;x<X+5;x++){const j=y*W+x;if(y===Y||y===Y+4||x===X||x===X+4)S.obj[j]='hwall';else S.floor[j]='floor'}S.obj[(Y+4)*W+X+2]='door';recount();
-    const h=HOUSES.find(q=>q.inside.has((Y+2)*W+X+2)),I=iqRoofCols(h);cam.z=2;cam.x=(X+2.5)*TS-VW/cam.z/2;cam.y=(Y+2.5)*TS-VH/cam.z/2;
-    const roofAt=()=>{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);groundTf(ctx,dpr*cam.z);for(const x of I.top.keys())iqRoofCol(ctx,h,I,x,1);ctx.restore();return px(Math.round(ctx.canvas.width/2),Math.round(ctx.canvas.height/2))};
+    const h=HOUSES.find(q=>q.inside.has((Y+2)*W+X+2));cam.z=2;cam.x=(X+2.5)*TS-VW/cam.z/2;cam.y=(Y+2.5)*TS-VH/cam.z/2;
+    const roofAt=()=>{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);iqRoofDraw(ctx,h,1);ctx.restore();return px(Math.round(ctx.canvas.width/2),Math.round(ctx.canvas.height/2))};
     const rn=roofAt();S.t=1440*3+12*60;DC.h=-1;const rd=roofAt();return JSON.stringify({g:v.g,r:v.r,top,rn,rd})})()`));
   {const g=rgb(tint.g),r=rgb(tint.r);assert.ok(tint.top.every((c,i)=>Math.abs(c-g[i])<=2),'high ledge top gets the ground tint '+tint.top+' / '+tint.g);
    assert.ok(tint.rd.some(c=>c>0)&&tint.rn.every((c,i)=>Math.abs(c-Math.round(tint.rd[i]*r[i]/255))<=3),'roof gets the roof tint at night '+tint.rn+' / '+tint.rd+' * '+tint.r)}
