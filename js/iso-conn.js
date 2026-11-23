@@ -77,6 +77,7 @@ function iqRoofCol(c,h,I,x,A){const t0=I.top.get(x),b0=I.bot.get(x);if(t0==null)
   if(!nx)iqPoly(c,[[x1,yr,zr],[x1,yS,ze],[x1,yS,ze-2],[x1,yr,zr-2]],T.l);/* 東のはしの、のきのあつみ */
   iqPoly(c,[[x0,yS,ze],[x1,yS,ze],[x1,yS,ze-2],[x0,yS,ze-2]],T.l);/* 南の、のきのあつみ */
   iqPoly(c,[[x0,yr-1.2,zr+.6],[x1,yr-1.2,zr+.6],[x1,yr+1.2,zr+.6],[x0,yr+1.2,zr+.6]],T.r);/* 棟がわら */
+  feelRoof(c,h,{x0,x1,yr,zr,yN,yS,ze},A,performance.now());/* 屋根の雪・あらしの日のつや（feel.js） */
   c.restore()}
 /* 家ごとに、列の屋根を足もとの順に足す（add は draw-world の D に足す関数）。屋根のすけぐあいは、いままでどおり roofAOf */
 function iqRoofsAdd(add,x0,y0,x1,y1){for(const h of HOUSES){if(h.y1<y0-2||h.y0>y1+2||h.x1<x0-2||h.x0>x1+2)continue;const A=roofAOf(h);if(A<=0)continue;const I=iqRoofCols(h);for(const[x,b0]of I.bot)add(b0+1.001,3,null,()=>iqRoofCol(ctx,h,I,x,A),-1,false,x+b0+1.35)}}
