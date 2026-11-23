@@ -157,7 +157,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   c.fillStyle=R[2];c.fillRect(x-2,y+8,68,2);c.fillRect(x+12,y-15,40,1.5);
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
-function drawWbYard(c,i,x,y,now){/* 作業台についた材料置き場：いまの依頼で運んだ素材のわりあいで4まい */const d=S.dyn[i],st=d&&d.order!=null?yardStage('o'+d.order):0,ch=window.CHIPS&&CHIPS['matyard#'+st];if(ch)drawChip(c,ch,'matyard',x,y,now,i)}
+function drawWbYard(c,i,x,y,now,k){/* 作業台についた材料置き場：いまの依頼で運んだ素材のわりあいで4まい。k：置き場のマス（クォータービューの絵は、そのマスのまん中から） */const d=S.dyn[i],st=d&&d.order!=null?yardStage('o'+d.order):0,ch=window.CHIPS&&CHIPS['matyard#'+st];if(ch)drawChip(c,ch,'matyard',x,y,now,k!=null?k:i)}
 /* 建てている所：足場の上に、できあがる物の絵をうすく出す。建てるほど、こくなる（0%で.3・100%で.65） */
 function siteGhost(c,d,x,y,now,i){const id=d&&d.build;if(!id||!BL[id]||id==='site'||id==='statue'||STAIRS.has(id)||LADDERS.has(id)||id==='bridge'||TERRA.has(id))return;const p=Math.min(1,d.p/(d.need||1)),rot=S.rot&&i!=null?S.rot[i]:0,rch=ROTS[id]&&rot&&chipOf(id,null,rot);c.save();c.globalAlpha*=.3+.35*p;if(rch)drawChip(c,rch,id,x,y,now);else drawObj(c,id,x,y,null,100,now);c.restore()}
 const LOOMSEQ=[0,1,2,3,2,1,0,3],LOOMMS=150;
