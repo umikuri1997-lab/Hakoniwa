@@ -107,7 +107,7 @@ def planks(b,u0,u1,w0,w1,top,col,arch=False):
         else:pts=[(a,0.02),(c,0.02),(c,top),(a,top)]
         b.prism('door','板',pts,w0,w1,col if i%2==0 else DOORD)
 def sdoor(v,n):
-    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not(v or INPOST) else 0.15;posts=[0.0,1.0] if not(v or INPOST) else [0.18,0.82] if INPOST else [0.15,0.85]   # クォータービューは、かさ石（はみ出し0.03）もマスの中に
+    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not(v or INPOST) else 0.12 if INPOST else 0.15;posts=[0.0,1.0] if not(v or INPOST) else [0.15,0.85]   # クォータービューは、柱をほそく（とびらを広く）して、かさ石（はみ出し0.03）もマスの中に
     for pu in posts:pillar(b,pu,PW,hw,3,0.32)
     u0,u1=posts[0]+hw,posts[1]-hw;W0,W1=PW-0.03,PW+0.03;rot=b.hinge(u0,W1,ANG[n])
     def body(b):
