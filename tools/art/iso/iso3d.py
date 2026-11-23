@@ -3,7 +3,7 @@
 #   設計図：tools/art/furn3d/items/<名前>.py の名前（statue・nat_tree など）か sacred（御神木の切り株〜御神木）。なければ BATCH1。
 #   --chips：チップ（chips.js とアトラス）に、いまと同じ名前で入れかえ、iso:1 の印をつける。落ち影（自然の物 SHADOWS）も :sh を入れかえる。
 # 見え方：物を上から見て45度まわし（正面＝南が左下、東が右下を向く）、見おろし48.59度・遠近なし。
-#   地面の1マスは 128×96 のひし形（よこ:たて＝4:3。sin48.59＝0.75）。高さは、その角度のとおり（1マスの高さは、マスの1辺の cos48.59＝0.66）。
+#   地面の1マスは 128×96 のひし形（よこ:たて＝4:3。sin48.59＝0.75）。高さは、マスの1辺の0.8（72ドット。ほんとうの見え方の0.66より高く。持ち主がきめた）。
 #   1マスの1辺は 90.51 ドット（128/√2）で写す（ひし形のはばが128になる）。
 # かげ・色・あみかけ・輪郭は、それぞれの設計図の設定のまま（furn3d.py・sacred_tripo.py）。かえるのは、まわす角度と見おろしの角度だけ。
 # 置き方（iso-obj.js）：ax・ay は、置いたマス（ゲームの BL の sz。向きでかわる）のまん中の地面の点から、絵の左上までのずれ（g64 のドット。左上は −）。
@@ -14,8 +14,11 @@ for p in(ART,os.path.join(ART,'furn3d'),os.path.join(ART,'furn3d','items'),os.pa
 import numpy as np
 from PIL import Image
 import oblique3d as O
-ISOELEV=math.degrees(math.asin(0.75));ISOANG=45.0;ISOS=128/math.sqrt(2)   # 地面のたては、よこの0.75
-ISOKEEP=math.degrees(math.acos(math.cos(math.radians(ISOELEV))*math.sin(math.radians(51.34))))   # persp の大きさ k を1にする角度（地面0.75・高さ0.66 の、ほんとうの見え方）
+ISOS=128/math.sqrt(2);ISOANG=45.0   # 1マスの1辺（ひし形のはばが128）
+ISOH=72/ISOS   # 1マスの高さは、マスの1辺の0.8（g64 で72ドット＝ゲームの IQL 36。持ち主がきめた）
+ISOLIGHT=math.degrees(math.asin(0.75))   # ほんとうのカメラの見おろし（地面のたては、よこの0.75）。光の向き（sunscreen）はこの角度
+ISOELEV=math.degrees(math.atan(0.75/ISOH));ISOK=0.75/math.sin(math.radians(ISOELEV))   # 地面0.75・高さ ISOH になる、写す角度と大きさ（画面の上下だけ ISOK 倍）
+ISOKEEP=math.degrees(math.acos(ISOH*math.sin(math.radians(51.34))))   # persp の大きさ k を ISOK にする角度（高さの画面の長さが ISOH）
 _persp=O.persp
 def persp(elev=51.34,fov=40.0,frame=None,center=(0.5,0.65,0.3),full=False,keep=None):return _persp(ISOELEV,fov,None,center,False,ISOKEEP)
 O.persp=persp
@@ -83,7 +86,7 @@ def run_item(iid,out):
     """furn3d の設計図を写し、iso の置き方にする。→ {名前: チップの中身}"""
     M=F3.load(iid);add_left(M)
     if M.ID=='wbwork':M.VIEWS=list(M.VIEWS)+[('wbwork>%d#%d'%(k,v),k,v) for k in(1,2,3) for v in range(3)]   # 作業台の上の形：作業台の4つの向きごとに（作業台と同じだけまわす）
-    if hasattr(M,'ELEV'):M.ELEV=ISOELEV   # 光を画面の向きにする所（sunscreen(ELEV)）も、この角度で
+    if hasattr(M,'ELEV'):M.ELEV=ISOLIGHT   # 光を画面の向きにする所（sunscreen(ELEV)）は、ほんとうのカメラの角度で
     F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));parts=getattr(F3.run,'parts',{});R={}
     for nm,(im,ax0,ay0) in CH.items():
         bb,inf=F3.META[nm];k=dict((v[0],v[1]) for v in M.VIEWS).get(nm.rsplit('.',1)[0],0);u,v=anchor(inf,nm,k)
