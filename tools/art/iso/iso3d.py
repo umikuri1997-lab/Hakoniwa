@@ -71,7 +71,7 @@ def run_item(iid,out):
         R[nm]=c;print('iso',nm,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
     if iid in SHADOWS:R.update(shadows(M,R,out))
     return R
-def run_sacred(out):
+def run_sacred(out):   # 落ち影は作らない（御神木は落ち影の描き方を通らない）
     import sacred_tripo as ST
     V,comps=ST.load();R={};SZ['story']=(4,4)
     for name in('stump','bud','leaf','sapling','tree'):
@@ -79,7 +79,6 @@ def run_sacred(out):
         ax-=round(ST.TX*64);ay-=round(ST.TY*64)   # 根もと（4×4のまん中）から
         R[M.ID]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im],'iso':1};print('iso',M.ID,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
         im.save(os.path.join(out,'story_'+name+'.png'))
-        R.update(shadows(M,R,out,anc=(ST.TX,ST.TY)))
     return R
 def shadows(M,R,out,anc=None):
     """落ち影（castshadow.py と同じ作り）を、クォータービューの見え方で。光（natcommon.SUN）は、物といっしょに45度まわす（画面の上で、前と同じ向きに落ちる）"""
@@ -110,12 +109,21 @@ def shadows(M,R,out,anc=None):
 def build(out,ids):
     os.makedirs(out,exist_ok=True);R={}
     for iid in ids:R.update(run_sacred(out) if iid=='sacred' else run_item(iid,out))
-    json.dump({k:[c['ax'],c['ay'],c['w'],c['h']] for k,c in R.items()},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)
+    D=os.path.join(out,'_chips');os.makedirs(D,exist_ok=True)   # チップの絵（--from で、写しなおさずにチップへ入れる）
+    for k,c in R.items():
+        for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
+    json.dump({k:{q:v for q,v in c.items() if q not in('f','parts')}|{'n':len(c['f'])} for k,c in R.items() if not c.get('parts')},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)
+    return R
+def safe(k):import hashlib;return re.sub(r'[^0-9A-Za-z~@_-]','_',k)+'_'+hashlib.md5(k.encode()).hexdigest()[:6]   # ファイルの名前（tree:sh と tree_sh がぶつからないように）
+def load_out(out):
+    """build で書いた絵と _info.json から、チップの中身を作りなおす（写しなおさない）"""
+    I=json.load(open(os.path.join(out,'_info.json'),encoding='utf8'));D=os.path.join(out,'_chips');R={}
+    for k,c in I.items():n=c.pop('n');R[k]=dict(c,f=[Image.open(os.path.join(D,safe(k)+'_%d.png'%i)).convert('RGBA') for i in range(n)])
     return R
 def to_chips(R):
     import chips as CHP
     head,C=CHP.load_imgs();C.update(R);CHP.pack_imgs(head,C)
     open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(R));print('チップに入れた',len(R))
 if __name__=='__main__':
-    a=[q for q in sys.argv[1:] if not q.startswith('--')];R=build(a[0],a[1:] or BATCH1)
+    a=[q for q in sys.argv[1:] if not q.startswith('--')];R=load_out(a[0]) if '--from' in sys.argv else build(a[0],a[1:] or BATCH1)
     if '--chips' in sys.argv:to_chips(R)
