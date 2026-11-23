@@ -70,7 +70,7 @@ function chip(img,name,cost,cls,onClick,mat){
 function lbl(box,t){const s=document.createElement('span');s.className='pallbl';s.textContent=t;box.appendChild(s)}
 
 function updItemInfo(){const ii=$('#itemInfo');if(!(mode==='build'||mode==='bulk')||!S){ii.hidden=true;return}
-  let nm='',ds='';if(mode==='bulk'&&selStamp==='pick'){nm='かたちの筆';ds='タップでつむ・長おしでほる'}else if(mode==='bulk'&&selStamp==='move'){nm='ひっこしミトン';ds=MOVESRC?moveName(MOVESRC)+(MOVESRC.k==='ani'?'を、どの小屋へうつす？':'を、どこへうつす？'):'うつしたい家具・建物・生き物をタップ'}else if(mode==='bulk'&&selStamp){if(selStamp.startsWith('bp:')){const it=(S.bpInv||[])[+selStamp.slice(3)];nm=it?BPS[it.k].name:'設計図';ds='建てたい場所の左上をタップ'}else if(selStamp.startsWith('swap:')){nm=BL[selStamp.slice(5)].name+'につけかえ';ds='つけかえたい物をタップ'}else{nm=STAMPS[selStamp].name;ds='置きたい場所の左上をタップ'}}
+  let nm='',ds='';if(mode==='bulk'&&selStamp==='move'){nm='ひっこしミトン';ds=MOVESRC?moveName(MOVESRC)+(MOVESRC.k==='ani'?'を、どの小屋へうつす？':'を、どこへうつす？'):'うつしたい家具・建物・生き物をタップ'}else if(mode==='bulk'&&selStamp){if(selStamp.startsWith('bp:')){const it=(S.bpInv||[])[+selStamp.slice(3)];nm=it?BPS[it.k].name:'設計図';ds='建てたい場所の左上をタップ'}else if(selStamp.startsWith('swap:')){nm=BL[selStamp.slice(5)].name+'につけかえ';ds='つけかえたい物をタップ'}else{nm=STAMPS[selStamp].name;ds='置きたい場所の左上をタップ'}}
   else if(sel&&BL[sel]){const b=BL[sel];nm=iname(sel);const bm=sel==='tower'?TOWER_MAT():b.mat;ds=(b.kind==='build'?(b.pc?SP(b.pc)+(bm?' '+matHTML(bm):''):''):'所持：'+inv(sel));const hp=withAttr(sel,b.desc||'');if(hp)ds+=' <button class="qbtn" id="iiQ">?</button>';}else ds=esc(ds);
   ii.hidden=!nm;$('#iiName').textContent=nm;$('#iiDesc').innerHTML=ds;const q=$('#iiQ');if(q)q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,withAttr(sel,BL[sel].desc||''))}}
 /* 「おく」のしぼりこみ（PALF：all・recent・タグ）。タグは依頼ボードと同じ tagsOf に、花・木は「ガーデン」、建物は「建物」、たねは「はたけ」。見る人の画面だけの物（セーブしない） */
@@ -88,12 +88,11 @@ function renderPalette(){
     if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらぶ');toast('ぬりたい物をえらんで、なぞる');palOpen=false;renderPalette();return}
     if(b.kind==='furn'&&!inv(id))toast(b.name+'が足りません','warn');
     else if(b.kind==='block'&&!inv(id))toast(b.name+'がありません');
+    else if(b.kind==='cube'&&!inv(id))toast(b.name+'がありません');
     else if(b.kind==='plant'&&!inv(id))toast(iname(id)+'がありません');
     else if(b.kind==='seed'&&!inv(id))toast(iname(id)+'がありません');
     if(b.kind==='build'||inv(id)>0){palOpen=false;renderPalette()}};
   $('#palette').classList.toggle('open',palOpen);
-  if(mode==='bulk'&&selStamp==='pick'){/* かたちの筆：下の列で、つむブロックをえらぶ */palOpen=false;$('#palette').classList.remove('open');
-    for(const k of PICKB){if(k!==SOIL&&!pickHave(k)&&PICKSEL!==k)continue;box.appendChild(chip(iconURL(k),BL[k].name,'×'+pickHave(k),PICKSEL===k?'sel':'',()=>{sfx('tap');PICKSEL=k;renderPalette()}))}return}
   if(!palOpen&&mode==='bulk'){/* ハケ・スタンプ・つけかえも、えらんだら小さくして、マップを見えるように */
     if(selStamp==='move')box.appendChild(chip(toolIcon('mover'),'ひっこしミトン',MOVESRC?moveName(MOVESRC):'うつす','sel',()=>{}));
     else if(selStamp&&selStamp.startsWith('bp:')){const it=(S.bpInv||[])[+selStamp.slice(3)];if(it)box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','sel wide',()=>{}))}/* えらんだ設計図 */
@@ -112,13 +111,13 @@ function renderPalette(){
     if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
   }
   const PF=mode==='build'?PALF:'all',pf=id=>PF==='all'||PF!=='recent'&&palTags(id).includes(PF);
-  if(mode==='build'){const bLock0=id=>!noTemple()&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),cand=[...(noTemple()?[]:BLOCKS.filter(id=>inv(id)>0)),...Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0),...(S.feat.plant?PLANTS.filter(id=>inv(id)>0):[]),...(cnt('farm')?Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0).map(k=>'seed:'+k):[]),...BUILDS.filter(id=>(usable(id)||bLock0(id))&&recShown(id))];
+  if(mode==='build'){const bLock0=id=>!noTemple()&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),cand=[...(noTemple()?[]:BLOCKS.filter(id=>inv(id)>0)),...PICKB.filter(id=>inv(id)>0),...Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0),...(S.feat.plant?PLANTS.filter(id=>inv(id)>0):[]),...(cnt('farm')?Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0).map(k=>'seed:'+k):[]),...BUILDS.filter(id=>(usable(id)||bLock0(id))&&recShown(id))];
     palBar(box,cand);
     if(PF==='bp'){if(!(S.bpInv||[]).length)return palEmpty(box,'設計図は、まだないよ');lbl(box,'設計図');S.bpInv.forEach((it,i)=>box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide',()=>{sfx('tap');bpPop(i)})));return}/* 設計図のしぼりこみ：1まいずつ */
     if(PF==='recent'){const L=(S.got||[]).filter(id=>cand.includes(id));if(!L.length)return palEmpty(box,(S.got||[]).length?'さいきんもらった物は、もう置いたよ':'これからもらった物が、ここにならぶよ');lbl(box,'さいきんもらった');
       for(const id of L){const sd=id.startsWith('seed:'),n=sd?cseed(id.slice(5)):inv(id);box.appendChild(chip(iconURL(id),iname(id),'×'+n,sel===id&&!selStamp?'sel':'',pickItem(id)))}return}}
   const n0=box.children.length;
-  if(mode==='build'&&PF==='all'){lbl(box,'どうぐ');if(fudeHas())box.appendChild(chip(toolIcon('fude'),'かたちの筆','ほる・つむ','wide',()=>{sfx('tap');setMode('bulk');selStamp='pick';palOpen=false;renderPalette();toast('タップでつむ・長おしでほる')}));/* かたちの筆：守り神のどうぐ（草原は神殿を直したあと、カミサマにもらう） */if((S.bpInv||[]).length)box.appendChild(chip(iconURL(bpWall()),'設計図','×'+S.bpInv.length,'wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));/* 道具は「おく」の中でえらぶ */
+  if(mode==='build'&&PF==='all'){if((S.bpInv||[]).length||S.mover||S.bulk||S.stamps||S.swap)lbl(box,'どうぐ');if((S.bpInv||[]).length)box.appendChild(chip(iconURL(bpWall()),'設計図','×'+S.bpInv.length,'wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));/* 道具は「おく」の中でえらぶ */
     if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}));
     if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');setMode('bulk');selStamp=null;toast('ぬりたい物をえらんで、なぞる')}));
     if(S.stamps)box.appendChild(chip(toolIcon('stamp'),'かたどりスタンプ','スタンプ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));
@@ -127,6 +126,7 @@ function renderPalette(){
   if(mode==='bulk'&&!noTemple()&&inv('spike')>0)blocks.push('spike');/* とげの罠も、なぞってまとめて置ける */
   if(blocks.length){lbl(box,'ブロック');for(const id of blocks){const n=inv(id);box.appendChild(chip(iconURL(id),BL[id].name,'×'+n,(n?'':'zero')+(sel===id&&!selStamp?' sel':''),pickItem(id)))}}
   if(mode==='build'){
+    {const g=PICKB.filter(id=>inv(id)>0&&pf(id));if(g.length){lbl(box,'地面のブロック');for(const id of g)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}}/* 土・石のブロック：タップしたマスにつむ */
     for(const [name,ids]of furnitureGroups(Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0&&pf(id)))){lbl(box,name);for(const id of ids)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}
     {const inTab=new Set(CRAFT_TABS.flatMap(([,ids])=>ids)),g=Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0&&!inTab.has(id)&&!GIFTF.includes(id)&&pf(id));if(g.length){lbl(box,'そのほか');for(const id of g)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}}/* 依頼ボードで作らない家具（おそなえのガゼボ・東屋、もらった湯のわき岩など）も、持っていれば置ける */
     {const g=GIFTF.filter(id=>inv(id)>0&&pf(id));if(g.length){lbl(box,'かざり・おみやげ');for(const id of g)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}}/* カミサマのかざり・おまつりのちょうちん（依頼ボードでは作らない物） */
