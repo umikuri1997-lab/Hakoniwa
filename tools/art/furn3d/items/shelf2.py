@@ -8,7 +8,7 @@ from blueprint import Part as P
 from common import *
 ID='shelf2';BOTTOM=42
 VIEWS=[('shelf2',0),('shelf2>1',1)]
-X0,X1,Y0,Y1=0.07,0.93,0.64,0.92;PS=0.05;H=1.34;BT=0.03;ZS=(0.07,0.50,0.93,1.30)
+X0,X1,Y0,Y1=0.0,1.0,0.0,0.28;PS=0.05;H=1.34;BT=0.03;ZS=(0.07,0.50,0.93,1.30)   # はば1.0（マスのはばぴったり）。うしろの面はマスのうしろのふち（壁にそう。持ち主がきめた）
 T='tripo/'
 def M(nm,path,cx,cy,z0,size,on,rot=0,recol=None):
     p=P(nm,'model',(path,cx,cy,z0,size,rot,0),on=(on,),deco=True);p.recol=recol;return p

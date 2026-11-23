@@ -11,7 +11,7 @@ from common import *
 import math
 ID='sink';BOTTOM=43
 VIEWS=[('sink',0),('sink>1',1),('sink>2',2)]   # 前・右・後ろ（左は右の反転）
-X0,X1,Y0,Y1=0.03,0.97,0.28,0.90;T=0.12;CH=0.15;STONE=(208,194,186);BRASS=(222,170,92)
+X0,X1,Y0,Y1=0.0,1.0,0.0,0.62;T=0.12;CH=0.15;STONE=(208,194,186);BRASS=(222,170,92)   # はば1.0（マスのはばぴったり）。うしろの面はマスのうしろのふち（壁にそう。持ち主がきめた）
 WATER=(120,192,236);SKY=(220,240,252)
 def MT(p):p.metal=True;return p
 def ST(p):p.stone=True;return p

@@ -9,7 +9,7 @@ from common import *
 import random
 ID='makidana';BOTTOM=34
 VIEWS=[('makidana',0),('makidana>1',1)]
-X0,X1,Y0,Y1=0.04,0.96,0.58,0.92;PS=0.06;H=0.80;ZS=(0.06,0.42);BT=0.025
+X0,X1,Y0,Y1=0.0,1.0,0.0,0.34;PS=0.06;H=0.80;ZS=(0.06,0.42);BT=0.025   # はば1.0（マスのはばぴったり）。うしろの面はマスのうしろのふち（壁にそう。持ち主がきめた）
 def PARTS():
     L=[]
     for nx,x in(('左',X0),('右',X1-PS)):
