@@ -43,6 +43,7 @@ TYPES=['up','dn','dnc','tent','upe','dne','dnec','fl']
 ENDS=['m','a','b','l','r']
 GTYPES=['up','dn','tent','upe','dne','fl','blk','base','baseupe','basedne','basefl']
 BW,BUP,BDN=0.04,0.02,0.05   # 破風板（けらばの板）：はば・屋根の上の面からの出・屋根の下の面からのたれ（だん）
+SHDN=0.23   # カメラへ下りるけらばの下のかげに、たす深さ（だん）
 SHD,SHDG,SHC,SHA=0.53,0.38,np.array([40.,32.,48.]),0.25   # のき・けらばの下に落ちるかげ：壁の上の、のき・けらばの下の面からのはば（だん。のきの出 0.22 マスにかくれる所＋見える帯）・色・こさ
 EXT=0.45   # 部品を、となりのマスへのばす長さ（写したあと、マスの中だけのこす。マスのさかいに線を出さない）
 def prof(t):
@@ -129,14 +130,17 @@ def rake_shadow(o,t,e,dz=0.0):
     """けらばの下の妻（カメラに見える東・南のはし）に落ちるかげの板：妻の外の面（0.65）の、屋根の下の面から SHDG 下まで（壁の外の面より外へは出さない）"""
     if e!='b':return []
     y0,y1,zf,_,kink=prof(t);y0,y1={'upe':(0.35,y1),'dne':(y0,0.65),'dnec':(y0,0.65),'fl':(0.35,0.65)}.get(t,(y0,y1))
-    ys=sorted({y0,y1}|{k for k in kink if y0<k<y1});top=[(y,dz+Z0+zf(y)-TH) for y in ys];pts=top+[(y,z-SHDG) for y,z in reversed(top)]
-    d=(pts,0.6502,0.6512,'x') if o=='h' else (pts,0.6502,0.6512,'y')
-    return [(Part('けらばのかげ','prism',d,(200,200,200),grp='s'),lambda x,y,z:(255,0,255))]
+    ys=sorted({y0,y1}|{k for k in kink if y0<k<y1});P=[]
+    for ya,yb in zip(ys,ys[1:]):   # 坂の向きごとに：カメラへ下りるけらばは、のきの出にかくれる所が大きいので、深く
+        top=[(y,dz+Z0+zf(y)-TH) for y in(ya,yb)];dd=SHDG+(SHDN if top[1][1]<top[0][1] else 0.0);pts=top+[(y,z-dd) for y,z in reversed(top)]
+        d=(pts,0.6502,0.6512,'x') if o=='h' else (pts,0.6502,0.6512,'y')
+        P.append((Part('けらばのかげ','prism',d,(200,200,200),grp='s'),lambda x,y,z:(255,0,255)))
+    return P
 def with_shadow(P,S_):
     """屋根の絵の下に、のきのかげ（うすい暗さ）をしく"""
     im=render(P)
     if not S_:return im
-    sh=np.array(render(S_,outer=False));m=sh[...,3]>0
+    sh=np.array(render(P+S_,outer=False));r,g,b_=[sh[...,i].astype(int) for i in range(3)];m=(sh[...,3]>0)&(r>150)&(b_>150)&(g<90)   # 屋根の部品といっしょに写して、屋根にかくれない所だけ（谷では、ほかのうでの屋根の中に入る所がある）
     a=np.zeros_like(sh);a[m]=list(SHC.astype(int))+[int(SHA*255)]
     out=Image.fromarray(a);out.alpha_composite(im);return out
 def gable_parts(o,t,p,front,wall):
