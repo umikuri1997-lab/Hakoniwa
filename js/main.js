@@ -37,13 +37,13 @@ function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try
 const WORLDS=[
   {name:'はじまりの草原',sub:'WORLD 1・木',el:'wood',desc:'自然の力がくずれて荒れた草原。せいれいたちと村をつくり、守護の力をとりもどそう。'},
   {name:'火山のふもとの村',sub:'WORLD 2・火',el:'fire',desc:'地面の熱が冷えきった、火の山のふもとの村。こおりかけた温泉に、ぬくもりをとりもどそう。'},
-  {name:'ひびわれた岩の谷',sub:'WORLD 3・土',el:'earth',desc:'大地がひびわれ、くずれかけた谷の村。'},
+  {name:'ひびわれた岩の谷',sub:'WORLD 3・土',el:'earth',desc:'大地がひびわれ、くずれかけた谷の村。ちいさな土のせいれいと、谷をつなぎなおそう。'},
   {name:'霧のみずべの村',sub:'WORLD 4・水',el:'water',desc:'霧が晴れず、水の流れが止まった村。水門をあけて、水路で水をながそう。'},
   {name:'風のやんだ空の村',sub:'WORLD 5・風',el:'wind',desc:'風が止まり、しずみかけた浮き島の村。'},
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
 ];WORLDS[FREE]={name:'フリーモード',sub:'FREE',el:null,desc:''};
 /* ステージの表紙：そのステージのメインのせいれい（キーキャラ）を、ゲームのドット絵（drawSpiritDot）でならべる。会えた子だけ（はじめの子はいつも）。うしろはコードのドット絵の景色（PXSCENE）を3倍に */
-const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];COVER_EL[WIND]=['wind','wood','earth','fire','water'];COVER_EL[MIZU]=['water','earth','wood','fire','wind'];
+const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];COVER_EL[TSUCHI]=['earth','wood','fire','water','wind'];COVER_EL[WIND]=['wind','wood','earth','fire','water'];COVER_EL[MIZU]=['water','earth','wood','fire','wind'];
 function coverCast(d,w){/* セーブのデータ（ぜんぶ読んだ物）から：[名前,属性,見た目] */const all=(d.res||[]).concat(d.buried||[],d.lost||[]),N=d.keyN||{},out=[];
   for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el&&!nm)nm=k}if(!nm)continue;
     const r=all.find(x=>x&&x.name===nm);if(!r&&nm!==KEYS[w][0])continue;out.push([nm,(r&&r.elem)||KEYEL[nm]||el,(r&&r.vr)||KEYVR[nm]||null])}return out}
@@ -71,25 +71,24 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2233;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2231;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
   const list=$('#mList');list.innerHTML='';freeCard(list);
   WORLDS.forEach((wd,k)=>{if(k===FREE)return;
     if(k)list.appendChild(el('<div class="wlink"></div>'));
-    let w2o=false,w5o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1';w5o=KV.getItem('hakoniwa-w5open')==='1'}catch(e){}
+    let w2o=false,w3o=false,w5o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1';w3o=KV.getItem('hakoniwa-w3open')==='1';w5o=KV.getItem('hakoniwa-w5open')==='1'}catch(e){}
     let w6o=false;try{w6o=KV.getItem('hakoniwa-w6open')==='1'}catch(e){}
-    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&(w6o||!!(L&&L.introSeen)))||/* 闇：セーブがあれば（読みこんだ時も）ひらく */(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
+    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&(w6o||!!(L&&L.introSeen)))||/* 闇：セーブがあれば（読みこんだ時も）ひらく */(k===TSUCHI&&!!((LIVE[1]&&LIVE[1].cleared)||L||w3o))||(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 土は、火山でヌシ様をむかえたら、ひらく *//* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
-    const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
+    const hide=!open;/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
     if(play&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
-    if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ ……けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
     if(k>=3&&!(open&&play))info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
-    if(k===WIND&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';if(k===MIZU&&!(L&&L.introSeen))info=wd.desc;
+    if((k===TSUCHI||k===WIND)&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';if(k===MIZU&&!(L&&L.introSeen))info=wd.desc;
     card.querySelector('p').textContent=info;
     const bt=card.querySelector('.wbtns');
     if(play&&open){
@@ -97,7 +96,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
         const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
       else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
     }
-    if((k===1||k===WIND)&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem(k===1?'hakoniwa-w2open':'hakoniwa-w5open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
+    if((k===1||k===TSUCHI||k===WIND)&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem(k===1?'hakoniwa-w2open':k===TSUCHI?'hakoniwa-w3open':'hakoniwa-w5open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
     if(k===YAMI&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w6open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 6を5回タップでひらく */
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });

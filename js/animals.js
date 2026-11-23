@@ -46,7 +46,7 @@ function aniComfort(h){
   if(!pen)return 0;
   return Math.min(100,pen.length*3+15*spotN(h,'makiba')+15*spotN(h,'hidamari'));
 }
-const ANIGRASS=new Set(['weed0g','weed0k','weed1g','weed1k','weed4g','weed4k','weed3g','weed3k','weed5g','weed5k','weedc']);
+const ANIGRASS=new Set(['weed0g','weed0k','weed1g','weed1k','weed4g','weed4k','weed3g','weed3k','weed2g','weed2k','weed5g','weed5k','weedc']);
 function aniGraze(j){return ANIGRASS.has(S.obj[j])}
 function aniEat(a,day){a.fd=day;a.eat=3;a.path=null;a.wt=3;a.fun=Math.min(100,aniFun(a)+4)}
 

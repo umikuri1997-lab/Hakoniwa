@@ -6,10 +6,10 @@
    描くのは地面の描き方（groundTf：せかいの点）のまま。高さ z は画面の点で、せかいの点を左上へ z/(2·IQB) ずらすと、その高さに見える。 */
 const IQWALLH=IQL*2,IQLOWH=6;/* 家の壁の高さ（段差2だん。せいれいの1.6倍。持ち主がきめた）・屋根をはずしたときの手前の壁の高さ（巾木くらい） */
 const IQC={/* 仮の絵の色（もとの色。上の面は明るく、東の面は暗く） */
-  hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',canalwall:'#bcb4a6',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
-  fence:'#c69a62',misugaki:'#c7b27a',ropefence:'#d8c49a',ashifence:'#c8b478',rankan:'#c6c0b4',ibara:'#5f7a46',kuzure:'#a8a296',logfence:'#9a6a3c',bamboofence:'#a9b85e',parkfence:'#f4efe6',hedge:'#6fae4a',
-  gate:'#c69a62',logdoor:'#9a6a3c',loggate:'#9a6a3c',parkdoor:'#f4efe6',parkgate:'#f4efe6',canalgate:'#c6c0b4',irongate:'#5a5d68',sdoor:'#8a5a34',stonegate:'#a9a49a',
-  door:'#8a5a34',yozoradoor:'#3a2418',canvasdoor:'#e9dfc8',archdoor:'#9a6a3c',niwadoor:'#7a6a4a'};
+  hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',adobewall:'#d9b48a',canalwall:'#bcb4a6',rockwall:'#c9a27a',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
+  fence:'#c69a62',misugaki:'#c7b27a',ropefence:'#d8c49a',ashifence:'#c8b478',ishigaki:'#cdb79a',rankan:'#c6c0b4',sagafence:'#dcb98e',ibara:'#5f7a46',kuzure:'#a8a296',logfence:'#9a6a3c',bamboofence:'#a9b85e',parkfence:'#f4efe6',hedge:'#6fae4a',
+  gate:'#c69a62',logdoor:'#9a6a3c',loggate:'#9a6a3c',parkdoor:'#f4efe6',parkgate:'#f4efe6',ishidoor:'#b58a5a',sagadoor:'#dcb98e',canalgate:'#c6c0b4',rockgate:'#c9a27a',irongate:'#5a5d68',sdoor:'#8a5a34',stonegate:'#a9a49a',
+  door:'#8a5a34',yozoradoor:'#3a2418',canvasdoor:'#e9dfc8',archdoor:'#9a6a3c',itado:'#a07448',niwadoor:'#7a6a4a'};
 /* つながる物のなかま：h 家の壁とドア・w 石の塀・f 柵と柵のドア・g 生垣 */
 function iqGrp(id){if(!id)return null;if(id==='wall'||id==='sdoor'||id==='stonegate')return'w';if(HOME_WALLS.has(id)||HOME_DOORS.has(id))return'h';if(FENCE_IDS.has(id))return'f';if(id==='hedge')return'g';return null}
 function iqMask(i,g){const x=i%W,y=(i/W)|0,q=k=>iqGrp(typeAt(k))===g;return(x>0&&q(i-1)?1:0)|(x<W-1&&q(i+1)?2:0)|(y>0&&q(i-W)?4:0)|(y<H-1&&q(i+W)?8:0)}
@@ -37,7 +37,7 @@ function iqWinDraw(c,i,hz,t,lv){const v=S.win&&S.win[i];if(!v||iqChip(c,'iso:win
 /* つながる物を1マス描く（o：そのマスの物、i：マス） */
 /* ドア・門の向き：となりの壁・柵・塀（ドア・門でない物）だけで決める（ドアどうしはつながらない）。2マスの門はよこだけ */
 function iqDoorHz(i,o,g){if(IQBIG.has(o))return true;const q=k=>{const t=typeAt(k);return iqGrp(t)===g&&!HOME_DOORS.has(t)&&!GATE_IDS.has(t)},x=i%W;return(x>0&&q(i-1))||(x<W-1&&q(i+1))||!(q(i-W)||q(i+W))}
-const IQBIG=new Set(['stonegate','loggate','parkgate','canalgate','irongate']);
+const IQBIG=new Set(['stonegate','loggate','parkgate','canalgate','rockgate','irongate']);
 /* 柵のドアは、となりの柵・塀の戸の絵があれば、それ（ロープの手すりのとなりはロープの戸 など） */
 function iqGateId(i,o,hz){if(o!=='gate')return o;for(const k of hz?[i-1,i+1]:[i-W,i+W]){const t=typeAt(k);if(t&&t!=='gate'&&window.CHIPS&&CHIPS['iso:'+t+'.gate:'+(hz?'h':'v')])return t+'.gate'}return o}
 /* マスのさかいにも、くいが立つ柵（ロープの柵）：となりがドアのがわは、くいをぬいた絵（~d<がわ>）。ドアの柱と2本ならばないように */

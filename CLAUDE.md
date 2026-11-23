@@ -74,6 +74,7 @@
 - `code.md`：プログラムの決まり・重さ
 - `gear.md`：そうび
 - `volcano.md`：火山のステージ
+- `tsuchi.md`：土のステージ
 - `wind.md`：風のステージ
 - `mizuyami.md`：水・闇のステージ
 - `cave.md`：洞窟の探検

@@ -41,7 +41,7 @@ function igUpperDraw(g,X0,Y0,X1,Y1){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x+
 function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IGP,w=IGW+2*IGP,h=IGH+2*IGP,Yt=Y-IGM,ht=h+IGM;q.st=false;q.u=RFN;
   const[X0,Y0,X1,Y1]=igRange(X,Yt,w,ht);if(X1<X0||Y1<Y0){igFree(q);q.e=true;return}
   const sw=(X1-X0+1)*TS,sh=(Y1-Y0+1)*TS,sx0=X0*TS,sy0=Y0*TS,src=(fn)=>{const c=document.createElement('canvas');c.width=sw;c.height=sh;const g=c.getContext('2d');g.setTransform(1,0,0,1,-sx0,-sy0);fn(g,X0,Y0,X1,Y1);const d=g.getImageData(0,0,sw,sh).data;c.width=c.height=0;return d};
-  const B=src(igBaseDraw),U=src(igUpperDraw),C=window.CHIPS,GT=igPix(chipImgs(C['tex:grass'],'ground')[0]),WT=igPix(chipImgs(C['tex:water'],'water')[0]),SM=skyM(),ST=SM?igPix(skyTex()):null,SP=WD===KAZAN&&S.st2?sprMap():null,TG=igTG(),TW=igTW();
+  const B=src(igBaseDraw),U=src(igUpperDraw),C=window.CHIPS,GT=igPix(chipImgs(C['tex:grass'],'ground')[0]),WT=igPix(chipImgs(C['tex:water'],'water')[0]),SM=skyM()||riftM(),ST=SM?igPix(WD===TSUCHI?riftTex():skyTex()):null/* 雲の海（風）・地われ（土） */,SP=WD===KAZAN&&S.st2?sprMap():null,TG=igTG(),TW=igTW();
   /* マスの草・水の値（区画のマスのはんい＋まわり1マス） */const gx0=X0-1,gy0=Y0-1,gw=X1-X0+3,gh=Y1-Y0+3,GV=new Uint8Array(gw*gh),WV=new Uint8Array(gw*gh),inM=(x,y)=>x>=0&&y>=0&&x<W&&y<H,land=j=>S.ground[j]!==1&&S.ground[j]<1;
   for(let b=0;b<gh;b++)for(let a=0;a<gw;a++){const x=Math.min(W-1,Math.max(0,gx0+a)),y=Math.min(H-1,Math.max(0,gy0+b)),j=y*W+x,wt=S.ground[j]>=1;WV[b*gw+a]=wt?1:0;
     GV[b*gw+a]=wt?(REV.has(j)&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>inM(x+dx,y+dy)&&land(j+dy*W+dx)&&REV.has(j+dy*W+dx))?1:0):REV.has(j)?1:0}/* 水のマスは、となりの草地の陸があれば草（水の丸い角の外に見える所） */

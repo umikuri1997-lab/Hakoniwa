@@ -193,6 +193,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('神殿。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */
     if(o==='statueb'){templeRuinTap(j);return}
     if(o==='kazaanab'){windHoleTap(j);return}
+    if(o==='anagura'&&tsTap(j))return;/* 土：あなぐまの巣穴（tsuchi.js） */
     if(RIDEB[o]){windRideTap(j);return}/* こわれた遊具：せいれいが直しにくる *//* ふさがった風穴：せいれいが石をどけにくる（wind.js） */
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
     {const c=ty*W+tx,lo=!o||WEEDS.has(o),rc=RFC.has(c)?c:lo&&RFC.has(c+W)?c+W:lo&&RFC.has(c+2*W)?c+2*W:-1;if(rc>=0&&lo)return openSheet('roof',RFC.get(rc))}/* ガゼボ・東屋：下に物がなければ、屋根の説明（屋根の絵はマスの上へはみ出すので、2マス上までみる） */
@@ -200,7 +201,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
     if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
     if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
-    if(S.ground[j]===1)return toast(skyJ(j)?'雲の海。橋をかけると、わたれる':'池。そばでつりができる');
+    if(S.ground[j]===1)return toast(skyJ(j)?'雲の海。橋をかけると、わたれる':riftJ(j)?'地われ。ふかくて、底が見えない':'池。そばでつりができる');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
