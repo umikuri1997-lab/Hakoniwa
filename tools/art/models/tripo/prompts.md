@@ -160,3 +160,16 @@ Style: stylized, slightly chunky, clean simple smooth shapes; pale, light, soft 
 6 small shallow wooden bowl filled with fresh leafy green salad
 Style: stylized, slightly chunky, clean simple smooth shapes; pale, light, soft colors, no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no baked shadows. No base, no ground, no table, no background.
 ```
+
+## 7回め：畑の作物（9こを1つのモデルに。クォータービューの作物 `crop:<作物><だん>` を3Dから写す）
+
+いまの作物の絵（正面から見た平らな絵）と同じデザインで、3だんずつ。土のもりあがりは、こちらで3Dで組むので、たのまない。
+もらったモデルは `tripo_split.py` で切りわけ、左上から順に `crop_mugi1.glb`〜`crop_mugi3.glb`・`crop_imo1.glb`〜`crop_imo3.glb`・`crop_cab1.glb`〜`crop_cab3.glb`（ゲームの id は `tomato` だが、名前も絵もキャベツ）にする。
+
+```
+9 separate cozy farming-game crop plants in one model, in 3 neat rows of 3 with clear space between them, no two touching, the bottom of every plant flat on the same level floor, all upright, perfectly vertical, not tilted:
+row 1 wheat: 1 young tuft of 5-6 thin upright green grass blades in a fan, middle ones tallest / 2 taller thinner tuft of 5 long green blades / 3 ripe golden wheat, 3 upright stalks each with a plump braided grain head, middle tallest, a few thin golden leaves at the base
+row 2 potato: 1 small bushy seedling, one short stem with 5-6 broad rounded oval leaves / 2 slim upright stem with 6-8 small pointed oval leaves in opposite pairs / 3 taller leafy potato bush with side branches, about 10 small oval leaves, 3 small white five-petal flowers with pale yellow centers on top
+row 3 cabbage: 1 sprout with two big rounded spoon-shaped seed leaves spreading left and right and a tiny bud / 2 low rosette of 5-6 broad rounded leaves fanning out / 3 round pale green cabbage head with leaf folds, cupped by 6-8 wavy darker green outer leaves
+Each plant is about as tall as wide (ripe wheat a little taller). Style: stylized, slightly chunky, clean simple smooth shapes, real 3D volume seen from all sides; pale, light, soft colors (fresh light green leaves, soft amber gold wheat, white flowers, pale green cabbage), no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no speckles, no baked lighting or shadows. No soil, no ground, no background.
+```

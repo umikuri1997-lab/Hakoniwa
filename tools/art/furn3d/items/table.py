@@ -1,9 +1,9 @@
-# 食卓（table）：天板・天板の下の幕板（4つの面）・4本の脚。
+# 食卓（table）：天板・天板の下の幕板（4つの面）・4本の脚。天板は1×1マスいっぱい（クォータービューで、マスのひし形と同じ形に見える。持ち主がきめた）。
 from blueprint import Part as P
 from common import *
 ID='table';BOTTOM=64
 VIEWS=[('table',0)]
-X0,X1,Y0,Y1=-0.03,1.03,0.32,0.84;H=0.75;TT=0.07;LG=0.10;IN=0.05;AP=0.07
+X0,X1,Y0,Y1=0.0,1.0,0.0,1.0;H=0.75;TT=0.07;LG=0.10;IN=0.05;AP=0.07
 def PARTS():
     L=[];xs=(X0+IN,X1-IN-LG);ys=(Y0+IN,Y1-IN-LG)
     for nx,x in zip('左右',xs):

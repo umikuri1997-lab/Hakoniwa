@@ -14,6 +14,7 @@ for p in(ART,os.path.join(ART,'furn3d'),os.path.join(ART,'furn3d','items'),os.pa
 import numpy as np
 from PIL import Image
 import oblique3d as O
+import natcommon;natcommon.ISO=True   # 自然の物の、クォータービューだけの形（nat_tree の LIFT）
 ISOS=128/math.sqrt(2);ISOANG=45.0   # 1マスの1辺（ひし形のはばが128）
 ISOH=72/ISOS   # 1マスの高さは、マスの1辺の0.8（g64 で72ドット＝ゲームの IQL 36。持ち主がきめた）
 ISOLIGHT=math.degrees(math.asin(0.75))   # ほんとうのカメラの見おろし（地面のたては、よこの0.75）。光の向き（sunscreen）はこの角度

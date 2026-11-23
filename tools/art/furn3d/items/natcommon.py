@@ -15,10 +15,23 @@ def widen(cx,cy,k):
     """高さはそのまま、よこ・おくゆきを k 倍（太くする）"""
     def f(V):V[:,0]=cx+(V[:,0]-cx)*k;V[:,1]=cy+(V[:,1]-cy)*k;return V
     return f
-def nat(nm,f,size,col,mk,cx=0.5,cy=0.5,rot=0,k=0.0,tex=None,wide=1.0):
+ISO=False   # クォータービューで写すとき（iso3d.py が True にする）
+def lift(zb,dz):
+    """高さ zb より上（葉と、葉の中の幹）を dz 上げ、zb より下の幹はそのぶんのばす（クォータービューで、葉のかげから幹の根もとが見える高さに）"""
+    k=(zb+dz)/zb
+    def f(V):lo=V[:,2]<=zb;V[lo,2]*=k;V[~lo,2]+=dz;return V
+    return f
+def chain(*fs):
+    fs=[f for f in fs if f]
+    def g(V):
+        for f in fs:V=f(V)
+        return V
+    return g if fs else None
+def nat(nm,f,size,col,mk,cx=0.5,cy=0.5,rot=0,k=0.0,tex=None,wide=1.0,warp=None):
     """mk：使う目じるし（'bark'・'leaf'・'cap'・'under'・'stem'・'dot'。岩は 'dot'）。tex：'bark' か 'stone'"""
     d=('tripo/'+f,cx,cy,0,size,rot,0);p=P(nm,'model',d,col,on=('ground',),note='地面に置く');p.recol=col;p.recolk=k
-    if wide!=1.0:p.warp=widen(cx,cy,wide)
+    w=chain(widen(cx,cy,wide) if wide!=1.0 else None,warp)
+    if w:p.warp=w
     if mk:p.fsel=lambda V,F,C,mk=mk:np.array([kind(c)==mk for c in C],bool)
     if tex=='bark':p.barktex=True
     elif tex=='stone':p.stone=True
@@ -55,7 +68,7 @@ def leaves(p,dark,light,cell=0.12,seed=0,needle=False):
         return None
     p.decal=f;return p
 def flat(p):p.soft1=True;return p   # かげは2だん（立体に見えすぎないように）
-def leafballs(sc,glb,size,tones,inner,gap=0.06,L=0.10,W=0.065,cx=0.5,cy=0.5,wide=1.0):
+def leafballs(sc,glb,size,tones,inner,gap=0.06,L=0.10,W=0.065,cx=0.5,cy=0.5,wide=1.0,warp=None):
     """葉のかたまり（モデルの葉の玉）を、御神木と同じやり方で、小さな葉の部品でおおう（sacred_tripo.leafparts）。
     tones：葉の色5つ（明るい→暗い）、inner：かたまりの中の色"""
     import sys,os;sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','sacred-tree'))
@@ -64,7 +77,7 @@ def leafballs(sc,glb,size,tones,inner,gap=0.06,L=0.10,W=0.065,cx=0.5,cy=0.5,wide
     from scipy.sparse import coo_matrix
     from scipy.sparse.csgraph import connected_components
     ST.LEAFTONES=[tuple(t) for t in tones];ST.LEAFIN=tuple(inner);ST.LEAFGAP=gap;ST.LEAFL,ST.LEAFW=L,W
-    V,F,C=model_tris('tripo/'+glb,cx,cy,0,size,0,0);V=widen(cx,cy,wide)(V.copy());sel=np.array([kind(c)=='leaf' for c in C]);F=F[sel]
+    V,F,C=model_tris('tripo/'+glb,cx,cy,0,size,0,0);V=widen(cx,cy,wide)(V.copy());V=warp(V) if warp else V;sel=np.array([kind(c)=='leaf' for c in C]);F=F[sel]
     # 点をわけて持っているので、場所でつなぐ
     key=np.round(V,5);_,inv=np.unique(key,axis=0,return_inverse=True);inv=inv.ravel();Fi=inv[F]
     e=np.r_[Fi[:,[0,1]],Fi[:,[1,2]]];n=inv.max()+1;g=coo_matrix((np.ones(len(e)),(e[:,0],e[:,1])),shape=(n,n))
