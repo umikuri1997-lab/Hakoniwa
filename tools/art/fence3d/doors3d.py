@@ -24,6 +24,8 @@ import numpy as np
 from PIL import Image
 DOORW=(176,118,72);DOORD=(150,98,60)   # 石の塀のドア・石の大門の板戸の木の色
 ANG=[0,30,60,85]
+INPOST=False   # クォータービュー（iso_door.py）：よこ置きも、柱をたて置きと同じくマスの中に立てる（おく行き PW はよこ置きのまま）
+BIGIN=0.0   # クォータービュー：2マスの門の柱を、マスのさかい（0・2）から、この長さだけ中へ
 class B:
     """u・w の向きで部品を書き、よこ置き（x=u,y=w）・たて置き（x=w,y=u）へなおす"""
     def __init__(s,v):s.v=v;s.P=[]
@@ -49,7 +51,7 @@ def leaf(b,rot,fn):
     for i in range(n0,len(b.P)):k,p,_=b.P[i];b.P[i]=(k,p,rot)
 def gate(v,n):
     b=B(v);W0,W1=(0.885,0.945) if not v else (0.45,0.51);PW=0.865 if not v else 0.5;FR=W1
-    posts=[0.0,1.0] if not v else [0.08,0.92];h=0.08
+    posts=[0.0,1.0] if not(v or INPOST) else [0.08,0.92];h=0.08
     for pu in posts:b.box('post','柱',pu-h,PW-h,0,pu+h,PW+h,0.92,FENCEC);b.P.append(('post',Part('柱の先','pyr',(*b.xy(pu,PW),h,h,0.92,1.0),FENCEC),None))
     u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR+0.04,ANG[n])
     def body(b):
@@ -62,7 +64,7 @@ def gate(v,n):
         b.box('iron','取っ手',u1-0.08,FR+0.04,0.42,u1-0.04,FR+0.07,0.50,(96,96,104))
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def logdoor(v,n):
-    b=B(v);PW=0.76 if not v else 0.5;PR=0.2 if not v else 0.15;posts=[0.0,1.0] if not v else [0.15,0.85]
+    b=B(v);PW=0.76 if not v else 0.5;PR=0.2 if not(v or INPOST) else 0.15;posts=[0.0,1.0] if not(v or INPOST) else [0.15,0.85]
     for pu in posts:
         b.log('柱',pu,PW,1.33,PR);b.cyl('iron','鉄の輪',pu,PW,PR+0.018,1.02,1.12,IRON)
         for k in range(5):a=math.pi*(0.1+0.8*k/4);b.ball('石',pu+math.cos(a)*(PR+0.02),PW+math.sin(a)*(PR+0.02),0.02,0.055)
@@ -77,13 +79,13 @@ def logdoor(v,n):
     leaf(b,rot,body);return b.P,((-0.4,1.4) if not v else (0,1))
 def loggate(v,n):
     b=B(0);PW=0.76;PR=0.22
-    for pu in(0.0,2.0):
+    for pu in(BIGIN,2-BIGIN):
         b.log('柱',pu,PW,1.5,PR)
         for z in(1.02,0.4):b.cyl('iron','鉄の輪',pu,PW,PR+0.018,z,z+0.1,IRON)
         for k in range(5):a=math.pi*(0.1+0.8*k/4);b.ball('石',pu+math.cos(a)*(PR+0.02),PW+math.sin(a)*(PR+0.02),0.02,0.06)
     LW=PW+0.06;FR=LW+0.1
     for side in(0,1):
-        u0,u1=(PR,1.0) if side==0 else (1.0,2-PR);hu=u0 if side==0 else u1;rot=('rot',hu,FR,ANG[n] if side==0 else -ANG[n])
+        u0,u1=(BIGIN+PR,1.0) if side==0 else (1.0,2-BIGIN-PR);hu=u0 if side==0 else u1;rot=('rot',hu,FR,ANG[n] if side==0 else -ANG[n])
         def body(b,u0=u0,u1=u1,side=side):
             k=4;r=(u1-u0)/k/2
             for i in range(k):b.log('丸太',u0+r+2*r*i,LW,1.14,r)
@@ -105,7 +107,7 @@ def planks(b,u0,u1,w0,w1,top,col,arch=False):
         else:pts=[(a,0.02),(c,0.02),(c,top),(a,top)]
         b.prism('door','板',pts,w0,w1,col if i%2==0 else DOORD)
 def sdoor(v,n):
-    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not v else 0.15;posts=[0.0,1.0] if not v else [0.15,0.85]
+    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not(v or INPOST) else 0.12 if INPOST else 0.15;posts=[0.0,1.0] if not(v or INPOST) else [0.15,0.85]   # クォータービューは、柱をほそく（とびらを広く）して、かさ石（はみ出し0.03）もマスの中に
     for pu in posts:pillar(b,pu,PW,hw,3,0.32)
     u0,u1=posts[0]+hw,posts[1]-hw;W0,W1=PW-0.03,PW+0.03;rot=b.hinge(u0,W1,ANG[n])
     def body(b):
@@ -115,10 +117,10 @@ def sdoor(v,n):
     leaf(b,rot,body);return b.P,((-0.3,1.3) if not v else (0,1))
 def stonegate(v,n):
     b=B(0);PW=0.8;hw=0.2
-    for pu in(0.0,2.0):pillar(b,pu,PW,hw,3,0.37)
+    for pu in(BIGIN,2-BIGIN):pillar(b,pu,PW,hw,3,0.37)
     W0,W1=PW-0.03,PW+0.03
     for side in(0,1):
-        u0,u1=(hw,1.0) if side==0 else (1.0,2-hw);hu=u0 if side==0 else u1;rot=('rot',hu,W1,ANG[n] if side==0 else -ANG[n])
+        u0,u1=(BIGIN+hw,1.0) if side==0 else (1.0,2-BIGIN-hw);hu=u0 if side==0 else u1;rot=('rot',hu,W1,ANG[n] if side==0 else -ANG[n])
         def body(b,u0=u0,u1=u1,side=side):
             planks(b,u0,u1,W0,W1,1.0,DOORW)
             for z in(0.2,0.7):b.box('iron','鉄の帯',u0+0.01,W1,z,u1-0.01,W1+0.015,z+0.05,IRON)
@@ -126,7 +128,7 @@ def stonegate(v,n):
         leaf(b,rot,body)
     return b.P,(-0.3,2.3)
 def misugate(v,n):
-    b=B(0);PW=0.9;posts=[0.06,0.94];H=0.98
+    b=B(v);PW=0.5 if v else 0.9;posts=[0.06,0.94];H=0.98
     for pu in posts:
         b.tube('crm','親柱',(pu,PW,0),(pu,PW,H+0.08),0.055,CRMP,det=16)
         for z in(0.35,0.7):b.tube('crm','ふし',(pu,PW,z),(pu,PW,z+0.02),0.06,CRMP,det=16)
@@ -148,7 +150,7 @@ def parkpost(b,pu,PW,h,z1):
     b.box('post','柱',pu-h,PW-h,0,pu+h,PW+h,z1,PARKW);x,y=b.xy(pu,PW);b.P.append(('cap',Part('柱の玉','ball',(x,y,z1+0.06,h*0.9,1.0),PARKB),None))
 def parkdoor(v,n):
     b=B(v);W0,W1=(0.885,0.945) if not v else (0.45,0.51);PW=0.865 if not v else 0.5;FR=W1;h=0.09
-    posts=[0.0,1.0] if not v else [0.09,0.91]
+    posts=[0.0,1.0] if not(v or INPOST) else [0.09,0.91]
     for pu in posts:parkpost(b,pu,PW,h,1.02)
     u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR+0.04,ANG[n])
     def body(b):
@@ -157,12 +159,12 @@ def parkdoor(v,n):
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def parkgate(v,n):
     b=B(0);PW=0.865;W0,W1=0.885,0.945;FR=W1;h=0.11
-    for pu in(0.0,2.0):parkpost(b,pu,PW,h,1.6)
-    b.box('railh','上の横木',-0.08,PW-0.06,1.42,2.08,PW+0.06,1.54,PARKW)
+    for pu in(BIGIN,2-BIGIN):parkpost(b,pu,PW,h,1.6)
+    b.box('railh','上の横木',BIGIN-0.08,PW-0.06,1.42,2.08-BIGIN,PW+0.06,1.54,PARKW)
     for i in range(5):   # 布の三角の旗（横木からつるす）
         c=0.3+i*0.35;b.prism('flag','旗',[(c-0.1,1.42),(c+0.1,1.42),(c,1.24)],PW+0.07,PW+0.09,PFLAG[i])
     for side in(0,1):
-        u0,u1=(h,1.0) if side==0 else (1.0,2-h);hu=u0 if side==0 else u1;rot=('rot',hu,FR+0.04,ANG[n] if side==0 else -ANG[n])
+        u0,u1=(BIGIN+h,1.0) if side==0 else (1.0,2-BIGIN-h);hu=u0 if side==0 else u1;rot=('rot',hu,FR+0.04,ANG[n] if side==0 else -ANG[n])
         def body(b,u0=u0,u1=u1,side=side):
             parkboards(b,u0+0.005,u1-0.005,W0,W1,FR,0.96)
             hu2=u1-0.08 if side==0 else u0+0.04;b.box('iron','取っ手',hu2,FR+0.04,0.44,hu2+0.04,FR+0.07,0.52,(150,150,160))
@@ -170,7 +172,7 @@ def parkgate(v,n):
     return b.P,(-0.4,2.4)
 def ropedoor(v,n):   # ロープの戸（風）：アカシアの丸い柱（半径0.08・高さ0.85、たて置きはマスの中）。とびら：アカシアの細いわく（上・下・はし）に、ロープを3本と、なかほどをむすぶロープ
     b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.03;r=0.08
-    posts=[0.0,1.0] if not v else [0.09,0.91]
+    posts=[0.0,1.0] if not(v or INPOST) else [0.09,0.91]
     for pu in posts:
         b.cyl('post','柱',pu,PW,r,0,0.85,F.ACAC,(0,0))
         for z in(0.62,0.34):b.cyl('rope','巻いたロープ',pu,PW,r+0.01,z-0.035,z+0.035,F.ROPED)
@@ -183,7 +185,7 @@ def ropedoor(v,n):   # ロープの戸（風）：アカシアの丸い柱（半
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def ashidoor(v,n):   # あしの戸（水。あしの垣のとなりの柵のドアの絵）：木の丸い柱、とびらは細い木のわくに、あしをならべ、なわでしばる
     b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;r=0.07
-    posts=[0.0,1.0] if not v else [0.09,0.91]
+    posts=[0.0,1.0] if not(v or INPOST) else [0.09,0.91]
     for pu in posts:b.cyl('post','柱',pu,PW,r,0,0.95,F.RPOST,(0,0))
     u0,u1=posts[0]+r,posts[1]-r;rot=b.hinge(u0,FR,ANG[n])
     def body(b):
@@ -194,7 +196,7 @@ def ashidoor(v,n):   # あしの戸（水。あしの垣のとなりの柵のド
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def rankandoor(v,n):   # 欄干の戸（水。運河の石の欄干のとなりの柵のドアの絵）：石の柱（0.2角・高さ0.86、かさ石）、とびらは鉄のわくに、たての鉄の棒
     b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;h=0.10;IR=(150,156,168)
-    posts=[0.0,1.0] if not v else [0.11,0.89]
+    posts=[0.0,1.0] if not(v or INPOST) else [0.12,0.88] if INPOST else [0.11,0.89]   # クォータービューは、かさ石もマスの中に
     for pu in posts:b.box('stone','石の柱',pu-h,PW-h,0,pu+h,PW+h,0.80,F.RSTN);b.box('stone','かさ石',pu-h-0.02,PW-h-0.02,0.80,pu+h+0.02,PW+h+0.02,0.86,F.RSTN)
     u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR,ANG[n])
     def body(b):
@@ -204,7 +206,7 @@ def rankandoor(v,n):   # 欄干の戸（水。運河の石の欄干のとなり�
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def ibaradoor(v,n):   # いばらの戸（闇。いばらの生垣のとなりの柵のドアの絵）：古木のくい、とびらは古木の細いわくに、いばらのくきをからめる
     b=B(v);PW=0.865 if not v else 0.5;FR=PW+0.02;r=0.06;OLD=(150,132,120)
-    posts=[0.0,1.0] if not v else [0.09,0.91]
+    posts=[0.0,1.0] if not(v or INPOST) else [0.09,0.91]
     for pu in posts:b.cyl('post','くい',pu,PW,r,0,0.85,OLD,(0,0))
     u0,u1=posts[0]+r,posts[1]-r;rot=b.hinge(u0,FR,ANG[n])
     def body(b):
@@ -222,12 +224,12 @@ def kuzuredoor(v,n):   # くずれた欄干の戸（闇）：欄干の戸と同�
     return P,xr
 def biggate(n,STN,cap,bars,top):   # 水・闇の大門：石の柱2本（0.24角・高さ1.40、かさ石）と、鉄のとびら2まい（わく・たての棒・上のかざり）
     b=B(0);PW=0.865;FR=0.885;h=0.12;IR=(146,152,164)
-    for pu in(0.0,2.0):
+    for pu in(BIGIN,2-BIGIN):
         b.box('stone','石の柱',pu-h,PW-h,0,pu+h,PW+h,1.40,STN)
         b.box('stone','かさ石',pu-h-0.03,PW-h-0.03,1.40,pu+h+0.03,PW+h+0.03,1.48,STN)
         cap(b,pu,PW)
     for side in(0,1):
-        u0,u1=(h,1.0) if side==0 else (1.0,2-h);hu=u0 if side==0 else u1;rot=('rot',hu,FR,ANG[n] if side==0 else -ANG[n])
+        u0,u1=(BIGIN+h,1.0) if side==0 else (1.0,2-BIGIN-h);hu=u0 if side==0 else u1;rot=('rot',hu,FR,ANG[n] if side==0 else -ANG[n])
         def body(b,u0=u0,u1=u1):
             for z in(1.02,0.10):b.box('iron','わく',u0+0.01,FR-0.015,z,u1-0.01,FR+0.015,z+0.04,IR)
             for uu in(u0+0.01,u1-0.04):b.box('iron','わく',uu,FR-0.015,0.10,uu+0.03,FR+0.015,1.06,IR)

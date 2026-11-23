@@ -31,13 +31,18 @@ function iqFront(j){for(const h of HOUSES){if(!h.set.has(j)||roofAOf(h)>=.5)cont
 function iqChip(c,key,i,lv){const ch=window.CHIPS&&CHIPS[key];if(!ch)return false;const src=ch.src||ch,im=chipImgs(src,key)[0];if(!im.ok)return false;const x=i%W,y=(i/W)|0,wx=(x+.5)*TS,wy=(y+.5)*TS;
   icScreen(c,()=>{const k=src.g===64?.5:1;c.drawImage(im,Math.round(isoX(wx,wy)-src.ax*k),Math.round(isoY(wx,wy)-lv*IQL-src.ay*k),src.w*k,src.h*k)});return true}
 /* 壁にかけた物（窓・カーテン・絵・棚など）：南の面（横の壁）か東の面（たての壁）に */
-function iqWinDraw(c,i,hz,t,lv){const v=S.win&&S.win[i];if(!v||iqChip(c,'iso:win:'+v+':'+(hz?'h':'v'),i,lv))return;const x=i%W,y=(i/W)|0,X=x*TS,Y=y*TS,cx=X+TS/2,cy=Y+TS/2,b=lv*IQL,glass=v==='window'||/^curtain/.test(v),z0=b+(glass?IQWALLH*.35:IQWALLH*.4),z1=b+IQWALLH*.8,a=TS*(glass?.28:.2),col=glass?'#d6ecf4':v==='wreath'?'#5f9a4a':/^paint/.test(v)?'#e8c86a':'#9a6a3c';
+function iqWinDraw(c,i,hz,t,lv){const v=S.win&&S.win[i];if(!v||iqChip(c,'iso:win:'+(v===1?'window':v)+':'+(hz?'h':'v'),i,lv))return;/* 窓は S.win が 1 */const x=i%W,y=(i/W)|0,X=x*TS,Y=y*TS,cx=X+TS/2,cy=Y+TS/2,b=lv*IQL,glass=v==='window'||/^curtain/.test(v),z0=b+(glass?IQWALLH*.35:IQWALLH*.4),z1=b+IQWALLH*.8,a=TS*(glass?.28:.2),col=glass?'#d6ecf4':v==='wreath'?'#5f9a4a':/^paint/.test(v)?'#e8c86a':'#9a6a3c';
   const P=hz?[[cx-a,cy+t/2+.2,z0],[cx+a,cy+t/2+.2,z0],[cx+a,cy+t/2+.2,z1],[cx-a,cy+t/2+.2,z1]]:[[cx+t/2+.2,cy-a,z0],[cx+t/2+.2,cy+a,z0],[cx+t/2+.2,cy+a,z1],[cx+t/2+.2,cy-a,z1]];iqPoly(c,P,col);
   if(/^curtain/.test(v)){const cc=v==='curtain2'?'#8fb86a':'#e8a0a0',w=a*.35;const Q=(u0,u1)=>hz?[[cx+u0,cy+t/2+.3,z0],[cx+u1,cy+t/2+.3,z0],[cx+u1,cy+t/2+.3,z1],[cx+u0,cy+t/2+.3,z1]]:[[cx+t/2+.3,cy+u0,z0],[cx+t/2+.3,cy+u1,z0],[cx+t/2+.3,cy+u1,z1],[cx+t/2+.3,cy+u0,z1]];iqPoly(c,Q(-a,-a+w),cc);iqPoly(c,Q(a-w,a),cc)}}
 /* つながる物を1マス描く（o：そのマスの物、i：マス） */
-function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)|0,lv=Math.max(0,hiAt(i)),b=lv*IQL,m=iqMask(i,g),low=g==='h'&&iqFront(i),hz=!!(m&3)||!(m&12),door=HOME_DOORS.has(o)||GATE_IDS.has(o),
+/* ドア・門の向き：となりの壁・柵・塀（ドア・門でない物）だけで決める（ドアどうしはつながらない）。2マスの門はよこだけ */
+function iqDoorHz(i,o,g){if(IQBIG.has(o))return true;const q=k=>{const t=typeAt(k);return iqGrp(t)===g&&!HOME_DOORS.has(t)&&!GATE_IDS.has(t)},x=i%W;return(x>0&&q(i-1))||(x<W-1&&q(i+1))||!(q(i-W)||q(i+W))}
+const IQBIG=new Set(['stonegate','loggate','parkgate','canalgate','irongate']);
+/* 柵のドアは、となりの柵・塀の戸の絵があれば、それ（ロープの手すりのとなりはロープの戸 など） */
+function iqGateId(i,o,hz){if(o!=='gate')return o;for(const k of hz?[i-1,i+1]:[i-W,i+W]){const t=typeAt(k);if(t&&t!=='gate'&&window.CHIPS&&CHIPS['iso:'+t+'.gate:'+(hz?'h':'v')])return t+'.gate'}return o}
+function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)|0,lv=Math.max(0,hiAt(i)),b=lv*IQL,m=iqMask(i,g),low=g==='h'&&iqFront(i),door=HOME_DOORS.has(o)||GATE_IDS.has(o),hz=door?iqDoorHz(i,o,g):!!(m&3)||!(m&12),
     op=door?(hz?doorOp(i,x*TS,y*TS,.9,2.1):doorOp(i,x*TS,y*TS,2.1,.9)):0,n=Math.min(3,Math.round(op*3));
-  if(iqChip(c,'iso:'+o+':'+(door?(hz?'h':'v'):m)+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv)){if(g==='h'&&!door&&!low)iqWinDraw(c,i,hz,TS*.3,lv);return}/* ドアは向き（h よこ・v たて）と開いたコマ。壁の絵のときも、かけた物は上にかさねる */
+  if(iqChip(c,'iso:'+(door?iqGateId(i,o,hz):o)+':'+(door?(hz?'h':'v'):m)+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv)){if(g==='h'&&!low&&(!door||hz&&S.win&&S.win[i]==='wreath'))door?iqChip(c,'iso:win:wreath:d'+(n?'#'+n:''),i,lv):iqWinDraw(c,i,hz,TS*.3,lv);return}/* ドアは向き（h よこ・v たて）と開いたコマ。壁の絵のときも、かけた物は上にかさねる。ドアのリースは、とびらの面に */
   const col=iqCols(IQC[o]||'#c89a64'),dm=door?(hz?3:12):m;/* ドアは、つながりのむきにまっすぐ */
   if(g==='g'){iqArms(c,x,y,m,TS*.74,b,b+22,col);return}/* 生垣：こんもりした葉のかたまり（仮） */
   if(g==='f'){const pc=iqCols(IQC[o]||'#c69a62',.88),X=x*TS,Y=y*TS,ph=18,pt=TS*.09;/* 柵：柱と、2本の横木 */

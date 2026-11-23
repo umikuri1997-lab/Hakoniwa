@@ -25,6 +25,7 @@ PX0,PY0=108,150   # 絵のわくの中の、マスのまん中の地面の点（
 WP,HP=216,200
 OWN=(0,1,0,1)   # のこすマスのはんい（たしかめるときだけかえる）
 EXT=0.45   # 腕を、となりのマスへのばす長さ
+EDGE=1e-3   # マスの東・南のはしちょうどにある面（柵のドアの柱の東の面など）も、このマスの物にする（ないと、柱の東の面が切れる）
 WALLS=['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']
 WT,WH,LH=0.3,1.0,0.2
 FACE=(1.0,0.97,0.80)   # 面ごとの明るさ：上・南（左下）・東（右下）
@@ -51,21 +52,28 @@ def render(parts,decal):
     O.S=S
     im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.86,lw=1,k2=0.93,merge=0)
     return own_mask(im)
-def own_mask(im):
-    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）"""
+def own_mask(im,free=None):
+    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）。free：マスの外へ出てものこす部品の番号（ひらいたとびら）"""
     a=np.array(im).copy();zb=O.LAST_ZB.copy();obj=zb>-1e8
     wx,wy=world_of(np.where(obj,zb,0))
-    x0,x1,y0,y1=OWN;own=obj&(wx>=x0-1e-6)&(wx<x1-1e-6)&(wy>=y0-1e-6)&(wy<y1-1e-6)
+    x0,x1,y0,y1=OWN;own=obj&(wx>=x0-1e-6)&(wx<x1+EDGE)&(wy>=y0-1e-6)&(wy<y1+EDGE)
+    if free:own|=obj&np.isin(O.LAST_IDS,list(free))
     # まわりの輪郭（透明だった所に引いた線）は、となりの面のドットのマスにしたがう
     lab=np.where(obj,np.where(own,1,2),0)
     for _ in range(3):
         nb=lab.copy()
         for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):
             sh=np.roll(np.roll(lab,dy,0),dx,1);nb=np.where((nb==0)&(sh>0),sh,nb)
+            nb=np.where((lab==0)&(sh==1),1,nb)   # このマスの面ととなりの面の両方にふれる線のドットは、このマスの物にする（どちらのマスにもならず、つなぎ目の足もとに1ドットのすきまが出た）
         lab=nb
     keep=(lab==1)&(a[...,3]>0)
     a[~keep]=0
-    return Image.fromarray(a)
+    return Image.fromarray(notch(a))
+def notch(a):
+    """足もとの1ドットの切れこみ（とがった角を写したときの、左・右・上が絵で、下の3つが透明なドット）を、上のドットの色でうめる"""
+    o=a[...,3]>0;sh=lambda dy,dx:np.roll(np.roll(o,-dy,0),-dx,1)
+    m=~o&sh(0,-1)&sh(0,1)&sh(-1,0)&~sh(1,0)&~sh(1,-1)&~sh(1,1)
+    a[m]=np.roll(a,1,0)[m];return a
 def crop(im):
     bb=im.getbbox()
     if not bb:return im,0,0
