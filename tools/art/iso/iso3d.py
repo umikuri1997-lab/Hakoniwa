@@ -171,7 +171,12 @@ def shadows(M,R,out,anc=None):
     return res
 def build(out,ids):
     os.makedirs(out,exist_ok=True);R={}
-    for iid in ids:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_item(iid,out))
+    bad=[]
+    for iid in ids:   # 1つがこわれても、つづける（こわれた物は _bad.txt に）
+        try:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_item(iid,out))
+        except Exception as e:
+            import traceback;traceback.print_exc();bad.append(iid)
+    if bad:open(os.path.join(out,'_bad.txt'),'w').write('\n'.join(bad));print('写せなかった物',bad)
     D=os.path.join(out,'_chips');os.makedirs(D,exist_ok=True)   # チップの絵（--from で、写しなおさずにチップへ入れる）
     for k,c in R.items():
         for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
