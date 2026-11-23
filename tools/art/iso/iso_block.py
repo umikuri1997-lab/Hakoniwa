@@ -3,8 +3,9 @@
 #
 # 設計図（1マスの1だん。x=東・y=南・z=上。マスの左上が(0,0)、1だんの高さ1）
 #   形は、まるい箱（rounded box）：外に出ている所（となりのマスのそのだんが空・上が空）だけ、箱を R ちぢめた芯から R はなれた面にする。
-#     外に出ている辺は、まるくなる（手前のたての角・左右のはしのたての角・上の面のふち）。となりがつづく向きは、箱を EXT だけ、となりのマスへのばす
-#     （つなぎ目は、iso_conn.py と同じく、写したあと、見えている面がこのマスの中のドットだけのこす。となりも同じ形なので、線もすきまも出ない）。
+#     外に出ている辺は、まるくなる（手前のたての角・左右のはしのたての角・上の面のふち）。となりがつづく向きは、まるめずに平らなふたの面にする。
+#     箱はマスの中だけ（1×1×1）。ゲームと同じに奥から（x+y・下のだんから）かさねると、手前のマスが、ふたの面をかくす。
+#     となりとのさかいの断面は、どちらのマスも同じまるみ・同じでこぼこ（せかいの場所できめる）なので、線もすきまも出ない。
 #   でこぼこ：横の面を、がけの絵（cliff:block・cliff:blockm）の暗い所ほど、面の向きに DEP へこませる（岩のみぞがへこみ、まるい角のふちがガタガタになる）。
 #     上の面はへこませない（まるいふちの上のほうは、少しずつ）。
 #   色：横の面は、がけの絵（いちばん上のだん cliff:block・その下 cliff:blockm。ゲームの icFace と同じ写し方：左の面は x、右の面は 1−y、たては 1−z）。
@@ -20,7 +21,6 @@ import oblique3d as O
 import iso_conn as IC
 R=0.11     # 角のまるみの半径（マス）
 DEP=0.045  # でこぼこのふかさ（マス）
-EXT=0.45   # となりがつづく向きへ、のばす長さ
 NG=44      # 面ごとの、こまかさ
 LEV=(1.0,0.97,0.94,0.86,0.80,0.74)   # 明るさの段
 _C=None
@@ -31,9 +31,13 @@ def chipimgs():
     return _C
 def arr(k):return np.asarray(chipimgs()[k]['f'][0].convert('RGB'),float)
 def lum(a):g=a.mean(2);return (g-g.min())/max(1e-6,g.max()-g.min())
+def soft(L):
+    """でこぼこを、岩のかたまりの大きさのゆるい形に（こまかい点の段を出さない）"""
+    for _ in range(3):L=(np.roll(L,1,0)+np.roll(L,-1,0)+np.roll(L,1,1)+np.roll(L,-1,1)+L)/5
+    return (L-L.min())/max(1e-6,L.max()-L.min())
 def shape(n,s,e,w,top):
-    """芯（ちぢめた箱）と、まるみ。外に出ていない向きは、となりへ EXT のばす"""
-    x0=R if w else -EXT;x1=1-R if e else 1+EXT;y0=R if n else -EXT;y1=1-R if s else 1+EXT
+    """芯（ちぢめた箱）と、まるみ。外に出ていない向きは、マスのふちまで（まるめない）"""
+    x0=R if w else 0.0;x1=1-R if e else 1.0;y0=R if n else 0.0;y1=1-R if s else 1.0
     return (x0,x1,y0,y1,0.0,1-R if top else 1.0),(w,e,n,s,top)
 def surf(core,ex):
     """まるい箱の面の点（下の面はなし）。もどり：[(点, 向き)]の格子のリスト"""
@@ -64,7 +68,7 @@ def facetex(p,nrm,top_tex):
 def build(n,s,e,w,top,var):
     """var：'g' 草・'d' かれた地面・'m' 上につづく"""
     core,ex=shape(n,s,e,w,top)
-    tex=arr('cliff:block' if top else 'cliff:blockm');L=lum(tex)
+    tex=arr('cliff:block' if top else 'cliff:blockm');L=soft(lum(tex))
     gt=arr('tex:grass' if var=='g' else 'tex:dry')
     sc=O.Scene();sc.material('flat')
     def droop(x,y):   # 草が横の面にたれる長さ（だん）
@@ -83,11 +87,11 @@ def build(n,s,e,w,top,var):
             k=(a*0.94+b*0.74+t*1.0)/sm
             if nrm[1]<0 and nrm[0]<0:k=0.9
         k=min(LEV,key=lambda v:abs(v-k))
-        return tuple(np.clip(c0*k,0,255)/255)
+        return np.clip(c0*k,0,255)
     sc.decal(col);sc.part()
     for p,nrm,(ax,sg) in surf(core,ex):
         # でこぼこ：横むきの所だけ、がけの絵の暗い所をへこます
-        side=np.sqrt(nrm[...,0]**2+nrm[...,1]**2)
+        side=sum(np.maximum(0,nrm[...,i]*sg_) for i,sg_,on in((0,1,e),(0,-1,w),(1,1,s),(1,-1,n)) if on)   # 外に出ている向きの面だけ（となりへつづくふたの面はへこまさない）
         P=p.copy()
         if True:
             zz=np.clip(P[...,2],0,1);rr=np.minimum(63,((1-zz)*64).astype(int))
@@ -104,7 +108,7 @@ def build(n,s,e,w,top,var):
     sc.dc={pid:(lambda f:(lambda x,y,z:f(*IC.unrot(x,y),z)))(f) for pid,f in sc.dc.items()}
     O.S=IC.S
     im=O.render_px(sc,IC.PROJ,IC.EXTS,IC.DEPTH,k=0.92,lw=1,k2=0.96,merge=0)
-    return IC.crop(IC.own_mask(im))
+    return IC.crop(im)
 def key(n,s,e,w):return '%d%d%d%d'%(n,s,e,w)
 def tiles_for(cells,var):
     """cells：{(x,y):高さ}。マスごと・だんごとのチップ（同じ形は1回だけ写す）"""
