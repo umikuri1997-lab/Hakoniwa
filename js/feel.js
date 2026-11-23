@@ -1,5 +1,5 @@
 /* 時間・温度・質感の手ざわり（feel.js）。見た目と音だけで、数字・せいれいの行動の計算はかえない。セーブするのは、雨のつぎの朝の印（S.wetD）だけ。
-   時間：窓のあかりが家ごとにともる・消える（feelWin）／雲のかげ（feelClouds）／木もれ日（komorebi）／地面にのこる季節（冬の雪・秋の落ち葉 feelRow、木と岩の雪 feelCap、屋根の雪 feelRoof）／朝もや・朝つゆ
+   時間：窓のあかりが家ごとにともる・消える（feelWin）／雲のかげ（feelClouds）／木もれ日（komorebi）／地面にのこる季節（冬の雪・秋の落ち葉 feelRow、木と岩の雪 feelCap、屋根の雪（iso-conn.js の iqRoofBuild））／朝もや・朝つゆ
    温度：白い息（feelAir）／火のゆらめき（feelFlick）／夏のかげろう・セミ／冬の家の中のぬくもり（feelWarm）
    質感：足音（feelStep・feelStepSnd）／足もとの反応（波紋・土ぼこり・雪の足あと・草のかけら・ふんだ花がゆれる feelKick）／雨のぬれ（水面の波紋・のきのしずく・地面のはね・水たまり）／場所の音（feelAmb：川・池・温泉・火・葉・セミ）
    絵は、1マス64ドットのドット絵を1回だけ作って（feelArt）、ならべる。マスごとの出る・出ないは、マスの番号から決まる（hash）ので、しまわない */
@@ -140,28 +140,6 @@ const FEELCAPK=new Set(['furn','build','plant','gift']),FEELCAPNO=new Set(['site
 function feelCapOK(o,i){if(FEELCAPS.has(o))return true;const b=BL[o];if(!b||!FEELCAPK.has(b.kind)||FEELCAPNO.has(o)||FEELIN.has(i))return false;if(typeof RFC!=='undefined'&&RFC.has(i))return false;return true}
 function feelCap(c,o,i,x,y,g){const a=FEELC.snow;if(a<=0||!feelCapOK(o,i))return;if(feelMelt(i))return;const ch=TREES.has(o)?plantChip(o,i,g):chipOf(o,i);if(!ch)return;const src=ch.src||ch,cap=feelCapOf(src,o);if(!cap)return;
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.save();const g0=c.globalAlpha,fa=a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0;c.globalAlpha=g0*Math.min(1,a*2.5);if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}const put=im=>{if(src.g===64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay)};put(cap);if(fa>0&&cap._thick){c.globalAlpha=g0*fa;put(cap._thick)}c.restore();c.imageSmoothingEnabled=sm}
-/* 屋根の雪とつや（クォータービュー）：iqRoofCol（iso-conn.js）が、1列ぶんの屋根を描いたあとによぶ。屋根の坂の面にそって描く（坂の面の上の点を iqPoly で写す）。
-   R：その列の屋根の形（せかいの点）{x0,x1,yr,zr,yN,yS,ze}。かたまり・点の場所は家ごと（せかいの x と、坂の上の場所のわりあい）に決めるので、となりの列とつながる。
-   雪：はじめは、よこに長いかたまりがちらばり（つもるほどこく）、SNOWFULL0 より多くつもると、坂ぜんたい・のき・棟が、だんだん白くなる。
-   つや（あらしの日）：ぬれて光る小さな点が、ゆっくりまたたく */
-const FEELRF_SN=.55,FEELRF_WT=2;/* 1つの坂の、家の広さ（マス）あたりの、雪のかたまり・ぬれた点の数 */
-function feelRoof(c,h,R,A,now){const a=FEELC.snow,wet=FEELC.wet;if(a<=0&&!wet)return;
-  const Y1=sl=>sl?R.yS:R.yN,P=(sl,X,v)=>[X,R.yr+(Y1(sl)-R.yr)*v,R.zr+(R.ze-R.zr)*v],quad=sl=>[P(sl,R.x0,0),P(sl,R.x1,0),P(sl,R.x1,1),P(sl,R.x0,1)];
-  const clip=Q=>{c.beginPath();for(let k=0;k<Q.length;k++){const[x,y,z]=Q[k],q=iqS(z);k?c.lineTo(x-q,y-q):c.moveTo(x-q,y-q)}c.closePath();c.clip()};
-  const HX0=(h.x0-.3)*TS,HW=(h.x1-h.x0+1.6)*TS,cells=Math.max(1,(h.x1-h.x0+1)*(h.y1-h.y0+1)/2),dep=Math.max(1,Math.abs(R.yS-R.yr));
-  for(const sl of[0,1]){c.save();clip(quad(sl));
-    if(a>0){const fa=a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0,sd=h.x0*7+h.y0*13+sl*101;
-      if(fa>0){c.globalAlpha=A*fa*.95;iqPoly(c,quad(sl),sl?'#f3f8ff':'#e4edf7');c.lineWidth=.6;c.strokeStyle='#cfdef0';for(let k=1;k<6;k++){const v=k/6,[X0,Y,Z]=P(sl,R.x0,v),q=iqS(Z);c.beginPath();c.moveTo(X0-q,Y-q);c.lineTo(R.x1-q,Y-q);c.stroke()}}/* 屋根いっぱいの雪（つもりきったとき）と、段のうすいかげ */
-      c.globalAlpha=A*Math.min(1,a*2.5);const n=Math.max(3,Math.round(cells*FEELRF_SN));
-      for(let k=0;k<n;k++){const rx=TS*(.28+hash(sd+k*7)*.34),rv=TS*(.1+hash(sd+k*11)*.07)/dep,cx=HX0+hash(sd+k*13+1)*HW,cv=.12+hash(sd+k*17+2)*.76;if(cx+rx<R.x0||cx-rx>R.x1)continue;/* ふんわりした雪のかたまり（この列にかかる物だけ） */
-        const E=dv=>{const Q=[];for(let m=0;m<14;m++){const t=m/14*Math.PI*2,wob=1+(hash(sd+k*5+m)-.5)*.18;Q.push(P(sl,cx+Math.cos(t)*rx*wob,cv+dv+Math.sin(t)*rv*wob))}return Q};
-        iqPoly(c,E(rv*.35),'#cfdef0');iqPoly(c,E(0),sl?'#ffffff':'#eef4fb')}}
-    if(wet){const sd=h.x0*11+h.y0*17+sl*53,n=Math.max(4,Math.round(cells*FEELRF_WT));c.fillStyle='#eef6ff';/* ぬれて光る点 */
-      for(let k=0;k<n;k++){const X=HX0+hash(sd+k*13+3)*HW,v=.06+hash(sd+k*19+5)*.88;if(X<R.x0-4||X>R.x1)continue;const tw=.35+.25*Math.sin(now/420+h.x0+k*1.7);c.globalAlpha=A*Math.max(0,tw);const w=2+hash(sd+k*7)*2,[x,y,z]=P(sl,X,v),q=iqS(z);c.fillRect(Math.round(x-q),Math.round(y-q),Math.round(w),1)}}
-    c.restore()}
-  if(a>SNOWFULL0){const fa=Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0));c.globalAlpha=A*fa;iqPoly(c,[[R.x0,R.yS,R.ze],[R.x1,R.yS,R.ze],[R.x1,R.yS,R.ze-2],[R.x0,R.yS,R.ze-2]],'#dbe7f3');/* のきにつもった雪 */iqPoly(c,[[R.x0,R.yr-1.4,R.zr+.8],[R.x1,R.yr-1.4,R.zr+.8],[R.x1,R.yr+1.4,R.zr+.8],[R.x0,R.yr+1.4,R.zr+.8]],'#ffffff')/* 棟の雪 */}
-  c.globalAlpha=A}
-
 /* ---------- 雲のかげ（晴れた昼）：1まいの絵をくりかえして、ゆっくり流す ---------- */
 let FEELCL=null;
 function feelCloudPat(c){if(FEELCL)return FEELCL;const N=128,t=document.createElement('canvas');t.width=t.height=N;const g=t.getContext('2d');g.fillStyle='#1e2846';

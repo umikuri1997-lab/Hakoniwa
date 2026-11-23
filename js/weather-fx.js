@@ -3,7 +3,7 @@
    雨の強さ（wxRainK）：村の時計で、強くなったり弱くなったりする（10分ごとの数を、なめらかにつなぐ）。
    突風（wxGust）：あらしの日だけ。実時間で、ときどき風が強くなり、雨がよこへたおれ、木が風下へかたむき（swayK）、葉と小枝がとぶ（wxLeaves）。
    かみなり（wxBolt）：あらしの日だけ。ときどき画面が白く光り、空にドットの稲妻、少しおくれてゴロゴロ（SAMPLES.thunder）。うごきをへらす設定では、光をうすく。
-   雨のもやは hd2d.js（hdPost）、ぬれた地面・屋根のつやは feel.js（feelRow・feelRoofWet）。 */
+   雨のもやは hd2d.js（hdPost）、ぬれた地面は feel.js（feelRow）・屋根の雪とつやは iso-conn.js（iqRoofBuild・iqRoofColDraw）。 */
 const WXP=2;/* 雨つぶのドットの大きさ（画面の点） */
 const WXL=[/* 層：数・ドットの数・こさ・落ちる速さ・カメラについてくるわりあい */
   {n:150,len:2,a:.32,v:.55,par:.15,c:'196,214,240'},

@@ -32,13 +32,14 @@ BIG=['stonegate','loggate','parkgate','canalgate','irongate']
 HANG=['window','curtain1','curtain2','paint1','paint2','paint3','wshelf','wreath','kabebukuro','yonaka']
 ANG=[0,30,60,85]
 JW,LZ,LT=0.15,1.4,0.06   # 柱のはば・とびらの高さ・とびらのあつさ
+CW,CT=0.08,0.025   # ドアの枠（たてわく・かもい）のはば・壁の面から出す長さ
 LEAFN=98   # とびらの絵の行の数（56行の板の、まん中をくりかえして、高さ1.4に）
 HANGZ=1.6   # 壁にかける物の絵の上のはしの高さ（高さ2の壁の、上のほう）
 def frame(px0,py0,wp,hp,own):
     """写すわくをかえる（2マスの門は大きく）"""
     IC.PX0,IC.PY0,IC.WP,IC.HP,IC.OWN=px0,py0,wp,hp,own
     IC.EXTS=(0.5-px0/S,0.5+(wp-px0)/S,0.5-py0/S,0.5+(hp-py0)/S)
-F1=(108,150,216,200,(0,1,0,1));F2=(108,170,300,270,(0,2,0,1))
+F1=(108,220,216,270,(0,1,0,1));F2=(108,240,300,340,(0,2,0,1))   # わくは、高さ2の壁のてっぺんの奥の角（地面の点から約197ドット上）まで入る大きさ
 # ---- 家のドア ----
 def leaf_img(C,iid):
     a=np.array(C['hwall.'+iid+'#h0']['f'][0].convert('RGBA'))[4:60,4:60,:3].astype(float)
@@ -63,6 +64,17 @@ def hdoor_parts(C,iid,v,n,low):
     if low:bx(JW,1-JW,0,0.02);return P   # ひくいドア：柱はひくい壁と同じ高さ（壁の線がとぎれない）と、しきい
     bx(JW,1-JW,LZ,h)
     L=leaf_img(C,iid);edge=np.clip(L.reshape(-1,3).mean(0)*0.78,0,255)
+    # ドアの枠（持ち主：「ドアは枠をつけて」）：入り口のまわりの、壁の両がわの面に、たてわく2本とかもい（はば CW・壁の面から CT 出す）。
+    #   内のふちは入り口のふちにそろえる（ふつうのドアの額縁）。色は、とびらよりこい木（とびら・壁と見分けられる）
+    cc=np.clip(L.reshape(-1,3).mean(0)*0.66,0,255)
+    def cd(x,y,z):
+        U,Wv=(y,x) if v else (x,y);ax=abs(Wv-0.5)
+        if abs(z-(LZ+CW))<2e-3:k=IC.FACE[0]   # かもいの上の面
+        elif abs(ax-(t+CT))<2e-3:k=IC.FACE[2] if v else IC.FACE[1]   # 表の面（壁と同じ向き）
+        else:k=IC.FACE[1] if v else IC.FACE[2]   # 横の面
+        return tuple(np.clip(cc*k,0,255))
+    for w0,w1 in((0.5+t,0.5+t+CT),(0.5-t-CT,0.5-t)):
+        bx(JW-CW,JW,0,LZ+CW,grp='cs',deco=cd,w0=w0,w1=w1);bx(1-JW,1-JW+CW,0,LZ+CW,grp='cs',deco=cd,w0=w0,w1=w1);bx(JW,1-JW,LZ,LZ+CW,grp='cs',deco=cd,w0=w0,w1=w1)
     a=math.radians(ANG[n]);ca,sa=math.cos(a),math.sin(a)
     hu,hw=JW,0.5+LT/2   # ちょうつがい（u：柵ののびる向き、w：おく行き）
     def local(x,y):   # せかいの場所 → とびらの中の場所（u：ちょうつがいからのきょり、w：おもての面からのふかさ）。とびらは、おく（北・西）へ a だけまわす

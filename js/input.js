@@ -72,7 +72,7 @@ cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endP
 cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;FLING=null;const w=toWorld(cX(e),cY(e));cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);camKeep(w,cX(e),cY(e));clampCam(1)},{passive:false});
 
 const bubHit=(r,w)=>r.bubX!=null&&Math.abs(r.bubX-w.x)<33&&Math.abs(r.bubY-w.y)<33;/* 描いた吹き出しをタップ（遊具の上で遊ぶ子は、描く場所がr.x,r.yとずれる） */
-const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
+const tapUp=r=>r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/LIFT*IQD/TS:0,tapX=r=>r.x-tapUp(r),tapY=r=>r.y-tapUp(r);/* クォータービュー：上に描いた高さぶん、せかいの点を左上へ（iso.js の IQD） *//* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
 /* タップした画面の点の、見えている（高い段もふくめた）マスのせかいの点 */
 function tapW(sx,sy){return liftW(toWorld(sx,sy))}
 const ENBOX={};/* コワイノの絵のはば（向き・形ごとに1回はかって、数字だけとっておく） */
@@ -132,10 +132,10 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(STATUE>=0&&(q=>sumHit(q.x/TS,q.y/TS))(tapObj(STATUE)))return doSummon();
     if(TALKW===GOD&&mainStoryBubbleReady()&&godHere()&&Math.hypot(gq.x/TS-godX(),gq.y/TS-(godY()-1.6))<1.2)return startTalk();
     if(SUBW[GOD]&&godHere()&&Math.hypot(gq.x/TS-godX(),gq.y/TS-(godY()-1.6))<1.2)return subTalk(SUBW[GOD]);
-    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&mainStoryBubbleReady(tr)&&(q=>Math.hypot(tr.x-q.x/TS,(tapY(tr)-1)-q.y/TS)<1.4||bubHit(tr,q))(tapPt(tr.x,tr.y))){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
-    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(r.x-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr)return sevTalk(SEVW[tr.name])}
-    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(r.x-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
-    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const q=tapPt(r.x,r.y),d=Math.hypot(r.x-q.x/TS,(tapY(r)-.5)-q.y/TS);if(d<bd){bd=d;best=r}}
+    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&mainStoryBubbleReady(tr)&&(q=>Math.hypot(tapX(tr)-q.x/TS,(tapY(tr)-1)-q.y/TS)<1.4||bubHit(tr,q))(tapPt(tr.x,tr.y))){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
+    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(tapX(r)-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr)return sevTalk(SEVW[tr.name])}
+    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(q=>Math.hypot(tapX(r)-q.x/TS,(tapY(r)-1)-q.y/TS)<1.4||bubHit(r,q))(tapPt(r.x,r.y)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
+    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const q=tapPt(r.x,r.y),d=Math.hypot(tapX(r)-q.x/TS,(tapY(r)-.5)-q.y/TS);if(d<bd){bd=d;best=r}}
     {const cr=typeof critTap==='function'&&(TAPS?CRIT.map(c=>{const q=tapAt(ptFoot(c.x*TS,c.y*TS));const r=critTap(q.x/TS,q.y/TS);return r&&r.c===c?r:null}).filter(Boolean).sort((a,b)=>a.d-b.d)[0]:critTap(w0.x/TS,w0.y/TS));/* 生き物は critTap が自分で高さ（uLift）をひくので、高さをもどす前の場所 */if(cr&&(!best||cr.d<bd)){critPoke(cr.c,w.x/TS,w.y/TS);return}}/* 小さな生き物：せいれいより近ければ、その場で反応して、図鑑に入る */
     if(best&&best.act&&best.act.type==='outing'&&best.act.stage==='do'&&typeof outingTalk==='function'&&outingTalk(best))return;/* おでかけ中の2人：会話を見る（outing.js） */
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const ti=best.act.topic,C=CHATS[ti];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c)).replace(/@G/g,goneTalkName()||'あの子')]}),()=>{if(C.wave){A.waveU=B.waveU=S.t+4}if(C.mem)bondMemNote(A,B,ti)})}}/* なかよしの雑談は、さいごまで見たら思い出になる（消えたときに話す） *//* おしゃべり中の子をタップすると、会話が見られる */
