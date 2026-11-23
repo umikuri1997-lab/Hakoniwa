@@ -1,5 +1,5 @@
 # クォータービューの家の屋根のタイルセット：屋根の部品を3Dで組んで、マスごとの完成したチップに写す（壁の iso_conn.py と同じ写し方・切り方）。
-# 使い方：python3 tools/art/iso/iso_roof.py <出力フォルダ> [--chips]
+# 使い方：python3 tools/art/iso/iso_roof.py <出力フォルダ> [--chips] [--from]（--from：写しなおさずに、出力フォルダの絵をチップに）
 # ゲーム（js/iso-conn.js）は、マスごとにチップをえらんで、列ごとに奥から順に置くだけ（かさねる計算・色の計算はしない。持ち主がきめた）。
 #
 # 屋根の作り（持ち主がえらんだ：うでごとの切妻＋谷）
@@ -259,5 +259,7 @@ def build_all(out):
     return res
 if __name__=='__main__':
     a=[q for q in sys.argv[1:] if not q.startswith('--')];out=a[0];os.makedirs(out,exist_ok=True)
-    res=build_all(out)
+    if '--from' in sys.argv:   # 写しなおさずに、出力フォルダの絵をチップに入れる
+        info=json.load(open(os.path.join(out,'_info.json')))['chips'];res={k:(Image.open(os.path.join(out,k.replace(':','_').replace('+','_')+'.png')).convert('RGBA'),v[0],v[1]) for k,v in info.items()}
+    else:res=build_all(out)
     if '--chips' in sys.argv:IC.to_chips(res)

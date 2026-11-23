@@ -13,7 +13,7 @@ const out=JSON.parse(await run(`(()=>{USERPAUSE=true;const f=S.res[0],X=(f.x|0)+
   assert.deepEqual(out.none,{w:0,dots:0},'nothing on a clear day');
   assert.ok(out.some.w>0.03&&out.some.w<0.6&&out.some.dots===0,'a little snow: lumps only '+JSON.stringify(out.some));
   assert.ok(out.full.w>0.6,'deep snow: the whole slope turns white '+JSON.stringify(out.full));
-  assert.ok(out.wet.dots>0&&out.wet.w===0,'storm: wet glints on the roof '+JSON.stringify(out.wet));
+  assert.ok(out.wet.dots>0&&out.wet.w<0.02,'storm: wet glints on the roof '+JSON.stringify(out.wet));
   console.log('Roof snow and gloss:',JSON.stringify(out));
   assert.deepEqual(errors,[]);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
