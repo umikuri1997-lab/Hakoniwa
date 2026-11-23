@@ -629,8 +629,8 @@ const FESTA={F:{"st_wood":[0,0,94,92,0],"st_fire":[96,0,94,93,0],"st_water":[192
 function drawYatai(px,py,front,now,st){const f=FESTA.F['st_'+st.el];if(!FESTA.ok||!f)return;const[sx,sy,w,h]=f,sp=st.el==='wind'?h:0,x0=Math.round(px-w/2),y0=Math.round(py+28-h);/* わたあめの屋台は、店番の子が前に立つので、ぜんぶうしろにかく。ほかの屋台は、ぜんぶ店番の子の前にかく（うしろの板はない） */
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;if(front){if(h>sp)ctx.drawImage(FESTA.img,sx,sy+sp,w,h-sp,x0,y0+sp,w,h-sp)}else ctx.drawImage(FESTA.img,sx,sy,w,sp,x0,y0,w,sp);ctx.imageSmoothingEnabled=sm}/* front=0は店番のうしろ、1は前 */
 function drawGod(now){
-  if(!godHere())return;const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS+Math.sin(now/700)*3;
-  const FY=0;/* クォータービュー：足もと（台座の上の面のまん中）に、雲の下のはし・かげ（前の見え方では半マス下の +16） */shadow(ctx,px,GY*TS+FY,14,4);
+  if(!godHere())return;const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS-(.5+.5*Math.sin(now/700))*3;/* ふわふわゆれるのは、足もとから上へだけ（台座にしずまない） */
+  const FY=1;/* クォータービュー：足もと（台座の上の面のまん中）に、雲の下のはし・かげ（前の見え方では半マス下の +16） */shadow(ctx,px,GY*TS+FY,10,3);/* 台座の上の面におさまる大きさ */
   if(QUESTCLEARW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
   else if(TALKW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
   else if(SUBW[GOD]){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}/* サブクエスト（交換）：黄色の吹き出し */
