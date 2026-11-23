@@ -98,12 +98,12 @@ function drawStoryTree(c,x,y,j,now,full=false){
   if(!full)sacredGrowWatch(j);
   x+=(sacredSpan()-4)*TS/2;y+=(sacredSpan()-4)*TS;
   const motion=sacredTreeMotion(now),g=motion.growth,p=motion.progress;
-  c.save();c.translate(x+64,y+STUMPBY);c.rotate(motion.sway);c.translate(-x-64,-y-STUMPBY);
+  c.save();c.translate(x+64,y+STUMPBY);c.rotate(motion.sway);c.translate(-x-64,-y-STUMPBY);isoLocal({rot:motion.sway},()=>{/* クォータービューの絵にも、同じゆれ・のびちぢみを、根もとのまわりに（iso-obj.js） */
   if(g&&p<1){/* 育つ：ためる（前の姿が、だんだん明るくかがやく）→ 前の姿がうすれ、新しい姿が根もとから、白くかがやきながら、のびあがる（少しのびすぎて、もどる）。光・輪・葉は sacredGrowSparks */
     const t=Math.min(1,(now-g.at)/g.ms),bx=x+64,by=y+STUMPBY,ch=Math.min(1,t/.35),u=Math.max(0,Math.min(1,(t-.35)/.5)),back=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1,sy=.12+.88*back,sx=.55+.45*Math.min(1,back),fade=Math.max(0,1-u/.5);
     if(fade>0){c.save();c.globalAlpha=fade;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.globalCompositeOperation='lighter';c.globalAlpha=fade*.7*ch*ch;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();}
-    if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));const w=Math.max(0,1-u*1.2)*.8;if(w>0){c.globalCompositeOperation='lighter';c.globalAlpha=w;drawStoryTreeFrame(c,x,y,j,now,g.to,1);}c.restore();}}
-  else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);
+    if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);isoLocal({sx,sy},()=>{drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));const w=Math.max(0,1-u*1.2)*.8;if(w>0){c.globalCompositeOperation='lighter';c.globalAlpha=w;drawStoryTreeFrame(c,x,y,j,now,g.to,1);}});c.restore();}}
+  else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);});
   c.restore();
   if(!full&&!(g&&p<1)&&Math.floor(sacredStage())>=4)drawSacredMotes(c,x,y,now);
   if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+64+dx,y+STUMPBY-10+dy,1);}}

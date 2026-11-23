@@ -4,7 +4,10 @@
    iso の絵の ax・ay は、置いたマス（大きさ w×h）のまん中の地面の点から、絵の左上までのずれ（g64 のドット）。描くときは画面の向き（icScreen と同じ）で、
    その点に、段の高さだけ上げてそのまま描く（のばさない・反転しない。向きは向きごとに写す）。絵がまだの物は、いままでの絵を立てて描く（iso.js の standTf）。 */
 /* 画面の向き（ゲームの点）にする。drawChip の中で、save のあとによぶ */
-function isoScreenTf(c){const k=dpr*cam.z,O=isoOff(k);c.setTransform(k,0,0,k,O[0],O[1])}
+function isoScreenTf(c,P){const k=dpr*cam.z,O=isoOff(k);c.setTransform(k,0,0,k,O[0],O[1]);const L=ISOLOC;if(P&&L){c.translate(P.x,P.y);if(L.rot)c.rotate(L.rot);if(L.sx!=null)c.scale(L.sx,L.sy);c.translate(-P.x,-P.y)}}
+/* いままでの描き方の、物の足もとをもとにした、ゆれ・のびちぢみ（御神木がゆれる・育つ）。クォータービューの絵は画面の向きで描きなおすので、足もとの点（P）のまわりにかけなおす */
+let ISOLOC=null;
+function isoLocal(L,f){const o=ISOLOC;ISOLOC=L?{...(o||{}),...L}:o;try{return f()}finally{ISOLOC=o}}
 /* iso の絵を描く画面の点（ゲームの点）。i：物のマス。描けないとき（アイコン・洞窟）は null で、いままでの描き方 */
 function isoChipAt(c,i,x,y,id){if(ICON||c!==ctx)return null;let A;
   if(id&&S&&S.sacredRoot!=null&&(id.startsWith('story:')||id==='tower'&&WD===KUSA)){const j=S.sacredRoot,n=typeof sacredSpan==='function'?sacredSpan():4,lv=Math.max(0,hiAt(j)),wx=(j%W+n/2)*TS,wy=((j/W|0)+n/2)*TS;return{x:isoX(wx,wy),y:isoY(wx,wy)-lv*IQL}}/* 御神木の切り株〜御神木：切り株の n×n のまん中（幹のまん中）から */
