@@ -48,7 +48,7 @@ def bl_sizes():
     return R
 SZ=bl_sizes()
 def base(nm):return re.split(r'[>#@~:.]',nm)[0]
-FOOTOFF={'wbench':[(0.5,0),(0,0.5),(-0.5,0),(0,-0.5)]}   # 絵は1マス（設計図のマス）で、置く所はもっと大きい物：向きごとの、置く所のまん中の、設計図のマスのまん中からのずれ（ゲームの wbCells）
+FOOTOFF={'wbench':[(0.5,0),(0,0.5),(-0.5,0),(0,-0.5)]};FOOTOFF['wbwork']=FOOTOFF['wbench']   # 絵は1マス（設計図のマス）で、置く所はもっと大きい物：向きごとの、置く所のまん中の、設計図のマスのまん中からのずれ（ゲームの wbCells）
 def anchor(inf,nm,k):
     """置いたマスのまん中の地面の点が、写した絵（切る前）のどこに写るか（ドット）。設計図のマスは左上が (0,0)、大きさはゲームの sz"""
     a,b=SZ.get(base(nm),(1,1));f=inf['fwd']
@@ -72,6 +72,7 @@ def add_left(M):
 def run_item(iid,out):
     """furn3d の設計図を写し、iso の置き方にする。→ {名前: チップの中身}"""
     M=F3.load(iid);add_left(M)
+    if M.ID=='wbwork':M.VIEWS=list(M.VIEWS)+[('wbwork>%d#%d'%(k,v),k,v) for k in(1,2,3) for v in range(3)]   # 作業台の上の形：作業台の4つの向きごとに（作業台と同じだけまわす）
     if hasattr(M,'ELEV'):M.ELEV=ISOELEV   # 光を画面の向きにする所（sunscreen(ELEV)）も、この角度で
     F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));parts=getattr(F3.run,'parts',{});R={}
     for nm,(im,ax0,ay0) in CH.items():
@@ -81,7 +82,7 @@ def run_item(iid,out):
         fr=getattr(F3.run,'frames',{}).get(nm)
         if fr:c['f']=fr
         if nm in parts:c['parts']=[dict(q,ax=q['ax']+dx,ay=q['ay']+dy,px=q['px']+dx,py=q['py']+dy) for q in parts[nm]]
-        if base(nm)=='wbench':c['ay']-=WBUP   # 作業台の絵は、写した位置より10ドット上（CLAUDE.md の WBUP）
+        if base(nm) in('wbench','wbwork'):c['ay']-=WBUP   # 作業台の絵は、写した位置より10ドット上（CLAUDE.md の WBUP）
         if nm in getattr(M,'CUT',()):   # すわった子の足をかくす行：いまのチップの数のまま（せいれいは、いままでの立てる形で描くので）
             import chips as CHP
             old=CHP.load_imgs()[1].get(nm)

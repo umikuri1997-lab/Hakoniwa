@@ -163,7 +163,7 @@ function siteGhost(c,d,x,y,now,i){const id=d&&d.build;if(!id||!BL[id]||id==='sit
 const LOOMSEQ=[0,1,2,3,2,1,0,3],LOOMMS=150;
 function drawObj(c,id,x,y,i,g,now){drawObj0(c,id,x,y,i,g,now);if(id==='boulder'&&!ICON&&i!=null&&rockHot(i))rockHotDraw(c,x,y,now);if(id==='takenoko'&&!ICON&&i!=null&&S.dyn[i]&&S.dyn[i].keep)takenokoKeepDraw(c,x,y)}/* 熱した大岩は、ひびが赤く光る */
 function drawObj0(c,id,x,y,i,g,now){
-  if(id==='wbench'){const ch=window.CHIPS&&(i!=null?chipOf('wbench',i):CHIPS.wbench);/* 向きの絵（左は右の反転） */if(ch)drawChip(c,ch,id,x,y,now,i);const d=ICON||i==null?null:S.dyn[i],o=d&&(S.orders||[]).find(q=>q.id===d.order),st=o&&typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&CHIPS['wbwork#'+st];if(wc)drawChip(c,wc,'wbwork',x,y,now,i);return}/* 作業台。素材がそろったら、天板の上に作っている形（板の山・木のわく・布をかけた形） */
+  if(id==='wbench'){const ch=window.CHIPS&&(i!=null?chipOf('wbench',i):CHIPS.wbench);/* 向きの絵（左は右の反転） */if(ch)drawChip(c,ch,id,x,y,now,i);const d=ICON||i==null?null:S.dyn[i],o=d&&(S.orders||[]).find(q=>q.id===d.order),st=o&&typeof wbworkStage==='function'?wbworkStage(o):-1,rw=(S.rot&&S.rot[i])||0,wc=st>=0&&(rw&&CHIPS['wbwork>'+rw+'#'+st]||CHIPS['wbwork#'+st]);/* クォータービューの絵は、作業台の向きごと（wbwork>1〜3#だん） */if(wc)drawChip(c,wc,'wbwork',x,y,now,i);return}/* 作業台。素材がそろったら、天板の上に作っている形（板の山・木のわく・布をかけた形） */
   if(id==='matyard'){const d=ICON||i==null?null:S.dyn[i],k='matyard#'+(d?yardStage(d.yt):0),ch=window.CHIPS&&CHIPS[k];if(ch)drawChip(c,ch,'matyard',x,y,now,i);return}/* 材料置き場：運んだ素材のわりあいで4まい */
   if(id==='statueb'){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* こわれた神殿 */
   if(id==='fogbox'||id==='nushiprint'||id==='fogspring'){drawFogObj(c,id,x,y,i,now);return}
