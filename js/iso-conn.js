@@ -78,6 +78,8 @@ function iqRoofCol(c,h,I,x,A){const t0=I.top.get(x),b0=I.bot.get(x);if(t0==null)
   iqPoly(c,[[x0,yS,ze],[x1,yS,ze],[x1,yS,ze-2],[x0,yS,ze-2]],T.l);/* 南の、のきのあつみ */
   iqPoly(c,[[x0,yr-1.2,zr+.6],[x1,yr-1.2,zr+.6],[x1,yr+1.2,zr+.6],[x0,yr+1.2,zr+.6]],T.r);/* 棟がわら */
   feelRoof(c,h,{x0,x1,yr,zr,yN,yS,ze},A,performance.now());/* 屋根の雪・あらしの日のつや（feel.js） */
+  {const r=c===ctx&&dcLayer('r');if(r){const L=[[[x0,yN,ze],[x1,yN,ze],[x1,yr,zr+.6],[x0,yr,zr+.6]],[[x0,yr,zr+.6],[x1,yr,zr+.6],[x1,yS,ze],[x1,yS,ze-2],[x0,yS,ze-2],[x0,yS,ze]]];if(!nx)L.push([[x*TS+TS,t0*TS,base],[x*TS+TS,(b0+1)*TS,base],[x1,yS,ze-2],[x1,yS,ze],[x1,yr,zr]]);
+    c.globalCompositeOperation='multiply';c.fillStyle=r;c.beginPath();for(const P of L){const Q=P.map(([px,py,pz])=>{const q=iqS(pz);return[px-q,py-q]});let a=0;for(let k=0;k<Q.length;k++){const p0=Q[k],p1=Q[(k+1)%Q.length];a+=p0[0]*p1[1]-p1[0]*p0[1]}if(a<0)Q.reverse();/* 向きをそろえる（nonzero で、かさなる所もぬる） */Q.forEach(([px,py],k)=>k?c.lineTo(px,py):c.moveTo(px,py));c.closePath()}c.fill('nonzero');c.globalCompositeOperation='source-over'}}/* 屋根の時間の色（daycolor.js の r）：屋根の形ぜんぶを1つの形にして、1回だけかける（かさなる所が2回かからない） */
   c.restore()}
 /* 家ごとに、列の屋根を足もとの順に足す（add は draw-world の D に足す関数）。屋根のすけぐあいは、いままでどおり roofAOf */
 function iqRoofsAdd(add,x0,y0,x1,y1){for(const h of HOUSES){if(h.y1<y0-2||h.y0>y1+2||h.x1<x0-2||h.x0>x1+2)continue;const A=roofAOf(h);if(A<=0)continue;const I=iqRoofCols(h);for(const[x,b0]of I.bot)add(b0+1.001,3,null,()=>iqRoofCol(ctx,h,I,x,A),-1,false,x+b0+1.35)}}
