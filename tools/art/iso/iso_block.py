@@ -65,40 +65,44 @@ def facetex(p,nrm,top_tex):
     side=0 if nrm[1]>=nrm[0] else 1   # 0 左の面（南）・1 右の面（東）
     u=(x%1) if side==0 else (1-(y%1))%1
     return min(63,int((1-min(1,max(0,z)))*64)),min(63,int(u*64)),side
+KEY=(255,0,255)   # 上の面の平らな所の印（ゲームの地面を見せる所。チップ ~top のかたち）
+def tilev(L):
+    """でこぼこの形を、たて64行でくりかえすように（blockm は32行が2つ。つなぎ目の行は、半分ずらした行とまぜる）"""
+    r=np.arange(64);a=(1-np.abs((r%32)-15.5)/16)[:,None]
+    return a*L+(1-a)*np.roll(L,-16,0)
+def pnoise(u):   # 1マスでくりかえす、なめらかなゆらぎ（0〜1）
+    t=2*math.pi*u;return 0.5+0.25*math.sin(3*t+1.3)+0.15*math.sin(7*t+0.4)+0.1*math.sin(11*t+2.1)
 def build(n,s,e,w,top,var):
-    """var：'g' 草・'d' かれた地面・'m' 上につづく"""
+    """var：'g' 草・'d' かれた地面・'m' 上につづく。もどり：(横の面とまるいふちの絵, 上の面のかたち, ax, ay)"""
     core,ex=shape(n,s,e,w,top)
-    tex=arr('cliff:block' if top else 'cliff:blockm');L=soft(lum(tex))
+    tex=arr('cliff:block' if top else 'cliff:blockm');L=tilev(soft(lum(arr('cliff:blockm'))))
     gt=arr('tex:grass' if var=='g' else 'tex:dry')
     sc=O.Scene();sc.material('flat')
-    def droop(x,y):   # 草が横の面にたれる長さ（だん）
-        if var!='g':return 0.0
-        h=(math.sin(x*41.3+y*17.1)*43758.5453)%1;return 0.02+0.05*h
+    lo=np.array(core[0::2]);hi=np.array(core[1::2])
     def col(x,y,z):
-        lo=np.array(core[0::2]);hi=np.array(core[1::2]);p=np.array([x,y,z]);c=np.clip(p,lo,hi);d=p-c;ln=np.linalg.norm(d)
+        p=np.array([x,y,z]);c=np.clip(p,lo,hi);d=p-c;ln=np.linalg.norm(d)
         nrm=d/ln if ln>1e-6 else np.array([0,0,1.0])
-        tz=(R if top else 0)
-        if top and (z>core[5]+R*0.45-droop(x,y) or nrm[2]>0.62):   # 上の面・まるいふちの上のほう：地面の絵
-            sx=((x-y)*32)%gt.shape[1];sy=((x+y)*24)%gt.shape[0];c0=gt[int(sy),int(sx)];k=1.0
-            if nrm[2]<0.9:k=0.97
+        if top and nrm[2]>0.985 and z>core[5]-1e-3:return np.array(KEY,float)   # 上の面の平らな所：ゲームの地面
+        u=(x+y)%1;dr=(0.03+0.09*pnoise(u)) if var=='g' else 0.0   # 草が横の面にたれる長さ（だん）
+        if top and z>core[5]+R*(0.35 if var=='g' else 0.55)-dr:   # まるいふちの上のほう（草は少したれる）：地面の色
+            dep=max(0.0,core[5]+R-z);c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]
+            k=1.0 if nrm[2]>0.8 else 0.94 if nrm[1]>=nrm[0] else 0.8
         else:
             r_,c_,side=facetex(p,nrm,None);c0=tex[r_,c_]
             a=max(0,nrm[1]);b=max(0,nrm[0]);t=max(0,nrm[2]);sm=a+b+t+1e-6
             k=(a*0.94+b*0.74+t*1.0)/sm
             if nrm[1]<0 and nrm[0]<0:k=0.9
-        k=min(LEV,key=lambda v:abs(v-k))
-        return np.clip(c0*k,0,255)
+            k=min(LEV,key=lambda v:abs(v-k))
+        return np.clip(c0*k,0,254)
     sc.decal(col);sc.part()
     for p,nrm,(ax,sg) in surf(core,ex):
-        # でこぼこ：横むきの所だけ、がけの絵の暗い所をへこます
-        side=sum(np.maximum(0,nrm[...,i]*sg_) for i,sg_,on in((0,1,e),(0,-1,w),(1,1,s),(1,-1,n)) if on)   # 外に出ている向きの面だけ（となりへつづくふたの面はへこまさない）
-        P=p.copy()
-        if True:
-            zz=np.clip(P[...,2],0,1);rr=np.minimum(63,((1-zz)*64).astype(int))
-            uu=np.where(nrm[...,1]>=nrm[...,0],P[...,0]%1,(1-(P[...,1]%1))%1);cc=np.minimum(63,(uu*64).astype(int))
-            dd=DEP*(1-L[rr,cc])*np.clip(side*1.25-0.15,0,1)
-            if top:dd=dd*np.clip((core[5]+R*0.7-P[...,2])/(R*0.7),0,1)   # 上の面のまん中はへこまさない
-            P=P-nrm*dd[...,None]
+        # でこぼこ：外に出ている横むきの所だけ、がけの絵の暗い所をへこます（ふたの面・上の面のまん中はへこまさない）
+        side=sum(np.maximum(0,nrm[...,i]*sg_) for i,sg_,on in((0,1,e),(0,-1,w),(1,1,s),(1,-1,n)) if on)
+        P=p.copy();zz=np.clip(P[...,2],0,1);rr=np.minimum(63,((1-zz)*64).astype(int))
+        uu=np.where(nrm[...,1]>=nrm[...,0],P[...,0]%1,(1-(P[...,1]%1))%1);cc=np.minimum(63,(uu*64).astype(int))
+        dd=DEP*(1-L[rr,cc])*np.clip(side*1.25-0.15,0,1)
+        if top:dd=dd*np.clip((core[5]+R*0.7-P[...,2])/(R*0.7),0,1)
+        P=P-nrm*dd[...,None]
         for i in range(NG):
             for j in range(NG):
                 a,b,c,d=P[i,j],P[i,j+1],P[i+1,j+1],P[i+1,j]
@@ -107,8 +111,12 @@ def build(n,s,e,w,top,var):
     sc.t=[(IC.rot(a),IC.rot(b),IC.rot(c),cc,pid) for a,b,c,cc,pid in sc.t]
     sc.dc={pid:(lambda f:(lambda x,y,z:f(*IC.unrot(x,y),z)))(f) for pid,f in sc.dc.items()}
     O.S=IC.S
-    im=O.render_px(sc,IC.PROJ,IC.EXTS,IC.DEPTH,k=0.92,lw=1,k2=0.96,merge=0)
-    return IC.crop(im)
+    im=O.render_px(sc,IC.PROJ,IC.EXTS,IC.DEPTH,outer=False,merge=0)   # まわりに輪郭線を引かない（だん・マスのつなぎ目に線が出る）
+    a=np.array(im);m=(a[...,0]==255)&(a[...,1]==0)&(a[...,2]==255)&(a[...,3]>0)
+    tp=np.zeros_like(a);tp[m]=(255,255,255,255);a[m]=0
+    bb=Image.fromarray(np.maximum(a,tp)).getbbox()
+    A=Image.fromarray(a).crop(bb);T=Image.fromarray(tp).crop(bb)
+    return A,T,IC.PX0-bb[0],IC.PY0-bb[1]
 def key(n,s,e,w):return '%d%d%d%d'%(n,s,e,w)
 def tiles_for(cells,var):
     """cells：{(x,y):高さ}。マスごと・だんごとのチップ（同じ形は1回だけ写す）"""
@@ -123,7 +131,7 @@ def tiles_for(cells,var):
     return out,memo
 def compose(cells,var,pad=40):
     """ゲームと同じならべ方（x+y の順・下のだんから）で、地面の上にならべた見本"""
-    T,_=tiles_for(cells,var);gt=Image.open if False else None
+    T,_=tiles_for(cells,var)
     xs=[x for x,y in cells];ys=[y for x,y in cells];mh=max(cells.values())
     X0=min((x-y)*64 for x,y in cells)-128-pad;X1=max((x-y)*64 for x,y in cells)+128+pad
     Y0=min((x+y)*48 for x,y in cells)-48-mh*72-pad-60;Y1=max((x+y)*48 for x,y in cells)+96+pad
@@ -131,9 +139,11 @@ def compose(cells,var,pad=40):
     can=Image.new('RGBA',(X1-X0,Y1-Y0))
     for yy in range(0,can.height,bg.shape[0]//1):
         for xx in range(0,can.width,bg.shape[1]):can.paste(B.resize((bg.shape[1],bg.shape[0])),(xx,yy))
-    for x,y,L,(im,ax,ay) in sorted(T,key=lambda t:(t[0]+t[1],t[2])):
-        cx=(x-y)*64-X0;cy=(x+y)*48+48-X0*0-Y0-(L-1)*72
-        can.alpha_composite(im,(int(cx-ax),int(cy-ay)))
+    gnd=can.copy()
+    for x,y,L,(im,tp,ax,ay) in sorted(T,key=lambda t:(t[0]+t[1],t[2])):
+        cx=(x-y)*64-X0;cy=(x+y)*48+48-Y0-(L-1)*72;px,py=int(cx-ax),int(cy-ay)
+        can.alpha_composite(im,(px,py))
+        g=gnd.crop((px,py,px+tp.width,py+tp.height));g.putalpha(tp.split()[0]);can.alpha_composite(g,(px,py))   # 上の面：ゲームの地面を、かたちで切って
     return can
 if __name__=='__main__':
     out=sys.argv[1];os.makedirs(out,exist_ok=True)
