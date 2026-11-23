@@ -51,7 +51,12 @@ def scene(M,k,only=None,filt=None,foot=None):
     sc.turn(k,foot);sc.foot=foot;return sc,keep
 TREET=([(-0.62,-0.56),(0.47,0.52),(0.60,0.66),(0.84,0.90)],[(-28,8),(-15,4),0,(10,-4),(19,-8)])   # 木の幹と同じかげ（natcommon.tone5）：色は5つ（こいかげ・かげ・もとの色・ハイライト2つ）、さかいめは あみ
 TREELIGHT=(-0.6,0.5,0.8)   # 光は左上・手前から（木・コワイノと同じ）
+LASTINF={}   # さいごに写したときの見え方（iso3d.py が、マスのまん中の地面の点をもとめるのに使う）
+META={}   # チップの名前 → (絵を切りとったわく bb, 見え方)（iso3d.py が使う）
 def shot(M,k,only=None,S_=64,filt=None,info=None):
+    global LASTINF
+    if info is None:info={}
+    LASTINF=info
     if getattr(M,'TREESHADE',False) and not getattr(M,'_ts',False):   # TREESHADE=True：木の幹と同じかげの付け方（料理の家具など）
         sv=(O.DITHER,O.DITHERT,O.LIGHT,O.GRAD);O.DITHER=1;O.DITHERT=getattr(M,'TREET',TREET);_l=np.array(TREELIGHT,float);O.LIGHT=_l/np.linalg.norm(_l);O.GRAD=True;M._ts=True
         try:return shot(M,k,only,S_,filt,info)
@@ -180,7 +185,7 @@ def run(iid,out,chips=False):
             omask=binary_dilation((zs>-1e8)&(zmd>-1e8)&(zs>zmd),iterations=2)&sa
         bbs=[f[0].getbbox() for f in fr];bb=(min(b[0] for b in bbs),min(b[1] for b in bbs),max(b[2] for b in bbs),max(b[3] for b in bbs))
         if NF>1:CHF[nm]=[f[0].crop(bb) for f in fr]
-        im=im.crop(bb);base-=bb[1]
+        im=im.crop(bb);base-=bb[1];META[nm]=(bb,LASTINF)
         if ref is None:ref=im.height-base   # 前の向きで、地面の行と絵の下のはしの差
         ay=round(M.BOTTOM+rowsh(k)-base-ref);ax=ex0+bb[0];CH[nm]=(im,ax,ay)
         if mv:   # 動く部品の絵と、のびちぢみ・回る支点（ゲームの点。g64のドット、マスの左上から）
@@ -193,7 +198,7 @@ def run(iid,out,chips=False):
         print('%s %dx%d ax %d ay %d'%(nm,im.width,im.height,ax,ay))
     for nm,f in getattr(M,'FRONT',{}).items():
         k=dict(v[:2] for v in M.VIEWS)[nm.rsplit('.',1)[0]];im,ex0,base,yb=shot(M,k,f);full,_,_,_=shot(M,k);bb=full.getbbox()
-        im=im.crop(bb);base-=bb[1];CH[nm]=(im,ex0+bb[0],round(M.BOTTOM+rowsh(k)-base-ref));print('%s %dx%d'%(nm,im.width,im.height))
+        im=im.crop(bb);base-=bb[1];META[nm]=(bb,LASTINF);CH[nm]=(im,ex0+bb[0],round(M.BOTTOM+rowsh(k)-base-ref));print('%s %dx%d'%(nm,im.width,im.height))
     for nm,fs in CHF.items():   # コマをならべた絵
         can=Image.new('RGBA',(sum(f.width+4 for f in fs),fs[0].height),(150,190,120,255));x=0
         for f in fs:can.alpha_composite(f,(x,0));x+=f.width+4
@@ -227,5 +232,5 @@ def run(iid,out,chips=False):
             im,ax,ay=CH[nm];a=np.array(im);col=a[:,a.shape[1]//2,3];t0=next(i for i in range(len(col)) if col[i]>0);row=next(i for i in range(max(10,t0+10),len(col)) if col[i]==0)   # 上のすきとおった所（ひじかけのあいだ など）はとばす
             CC[nm]['cut']=(ay+row)/2;print(nm,'cut',CC[nm]['cut'])
         CHP.pack_imgs(head,CC);open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(CH));print('チップに入れた',len(CH))
-    run.parts=PARTS_OUT;return CH   # run.parts：動く部品の絵（たしかめ用）
+    run.parts=PARTS_OUT;run.frames=CHF;return CH   # run.parts：動く部品の絵（たしかめ用）
 if __name__=='__main__':run(sys.argv[1],sys.argv[2],'--chips' in sys.argv)

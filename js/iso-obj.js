@@ -6,7 +6,8 @@
 /* 画面の向き（ゲームの点）にする。drawChip の中で、save のあとによぶ */
 function isoScreenTf(c){const k=dpr*cam.z,O=isoOff(k);c.setTransform(k,0,0,k,O[0],O[1])}
 /* iso の絵を描く画面の点（ゲームの点）。i：物のマス。描けないとき（アイコン・洞窟）は null で、いままでの描き方 */
-function isoChipAt(c,i,x,y){if(ICON||c!==ctx)return null;let A;
+function isoChipAt(c,i,x,y,id){if(ICON||c!==ctx)return null;let A;
+  if(id&&S&&S.sacredRoot!=null&&(id.startsWith('story:')||id==='tower'&&WD===KUSA)){const j=S.sacredRoot,n=typeof sacredSpan==='function'?sacredSpan():4,lv=Math.max(0,hiAt(j)),wx=(j%W+n/2)*TS,wy=((j/W|0)+n/2)*TS;return{x:isoX(wx,wy),y:isoY(wx,wy)-lv*IQL}}/* 御神木の切り株〜御神木：切り株の n×n のまん中（幹のまん中）から */
   if(i!=null&&i>=0)A=objFootJ(i);else{const tx=Math.floor((x+.5)/TS),ty=Math.floor((y+.5)/TS);A={x:tx,y:ty,w:1,h:1};A.lv=0}/* 置く前の絵など、マスのないとき：x,y のマス */
   const a=i!=null&&i>=0?anc(i):-1,lv=a>=0?Math.max(0,hiAt(a)):0,wx=(A.x+A.w/2)*TS,wy=(A.y+A.h/2)*TS;
   return{x:isoX(wx,wy),y:isoY(wx,wy)-lv*IQL}}
