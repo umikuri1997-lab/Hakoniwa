@@ -41,7 +41,14 @@ function isoTile(c,x,y){icScreen(c,()=>icBlock(c,x,y))}
 /* 物（左上のマス (x,y)、大きさ w×h）の、立てる絵の足もと：
    いまの絵の足もと（下のはしのまん中）を、ひし形のまん中と手前の角のあいだにおく（仮） */
 function objFoot(x,y,w,h,j){const lv=Math.max(0,hiAt(j)),t=.1375*(w+h)*TS,cx=(x+w/2)*TS,cy=(y+h/2)*TS;return{x,y,w,h,fx:(x+w/2)*TS,fy:(y+h)*TS-liftOf(j),px:isoX(cx+t,cy+t),py:isoY(cx+t,cy+t)+IQSY*TS*.12-lv*IQL}}
-function objFootJ(j){const a=anc(j),o=S.obj[a];if(!o||!BL[o])return objFoot(a%W,(a/W)|0,1,1,a);const z=o==='site'&&S.dyn[a]&&BL[S.dyn[a].build]?BL[S.dyn[a].build].sz||[1,1]:szAt(o,a)||[1,1];return objFoot(a%W,(a/W)|0,z[0],z[1],a)}
+function objFootJ(j){const a=anc(j),o=S.obj[a];if(!o||!BL[o])return objFoot(a%W,(a/W)|0,1,1,a);if(o==='lotus')return lotusFoot(a);const z=o==='site'&&S.dyn[a]&&BL[S.dyn[a].build]?BL[S.dyn[a].build].sz||[1,1]:szAt(o,a)||[1,1];return objFoot(a%W,(a/W)|0,z[0],z[1],a)}
+/* ハス：水にうかぶ葉のまん中（いまの絵の LOTUSPAD、芽 bud~w も同じ所）を、マスのひし形のまん中に。
+   池のはしのマスは、水の形がデュアルグリッドで丸くけずれるので、陸のある向きと反対（水のほう）へ LOTUSOFF ずらす（ななめだけ陸のマスは LOTUSOFFD） */
+const LOTUSPAD=[16.5,20.5],LOTUSOFF=.36,LOTUSOFFD=.16;/* 絵の葉のまん中：マスの左上からのせかいの点（lotus の ax・ay と、葉のある行からはかった） */
+function lotusFoot(a){const x=a%W,y=(a/W)|0,lv=Math.max(0,hiAt(a)),dry=(X,Y)=>X<0||Y<0||X>=W||Y>=H||!waterJ(Y*W+X);
+  let ox=(dry(x-1,y)?1:0)-(dry(x+1,y)?1:0),oy=(dry(x,y-1)?1:0)-(dry(x,y+1)?1:0);ox*=LOTUSOFF;oy*=LOTUSOFF;
+  if(!ox&&!oy)for(const[dx,dy]of[[-1,-1],[1,-1],[-1,1],[1,1]])if(dry(x+dx,y+dy)){ox-=dx*LOTUSOFFD;oy-=dy*LOTUSOFFD}
+  const cx=(x+.5+ox)*TS,cy=(y+.5+oy)*TS;/* 絵はマスの左上から描くので、ずらすのは画面の点（px・py）だけ */return{x,y,w:1,h:1,fx:x*TS+LOTUSPAD[0],fy:y*TS+LOTUSPAD[1]-liftOf(a),px:isoX(cx,cy),py:isoY(cx,cy)-lv*IQL}}
 /* せいれい・コワイノなど（足もとの点）の足もと。高さは liftDraw がつける */
 function ptFoot(wx,wy){return{fx:wx,fy:wy,px:isoX(wx,wy),py:isoY(wx,wy)}}
 /* 足もと A で立てて描いた物の、いままでの見え方でのタップの点（せかいの点）。lv：その物の段（タップのときは、絵が上に見える高さ） */
