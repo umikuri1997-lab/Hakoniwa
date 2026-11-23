@@ -34,10 +34,10 @@ function newState(w){w=w||0;
   const s={v:8,mig:SAVE_VER,box:{},pile:{},rsv:{},flags:{blk2:1,route:[],ltWhole1:1,lvPick1:1,dig2:1,gf25:1,windFoe1:1,mizuFoe1:1,mzq3:1,mzq2:1,mzGate3:1,wseed1:1,altarLit1:1,volSub1:1,ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,hun2:1,evOpen1:1,trapSub1:1,board2x1:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,kgIns1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
-    res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:12*60,/* 草原は15時からはじまる */speed:1,
-    unlocked:{floor:true,farm:true,[w===1?'misugaki':w===WIND?'ropefence':w===MIZU?'ashifence':w===YAMI?'ibara':'fence']:true,[w===1?'bamboowall':w===WIND?'canvaswall':w===MIZU?'timberwall':w===YAMI?'mosswall':'hwall']:true,...(w===WIND?{tanpopo:true}:{})},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
+    res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:w===TSUCHI?16*60:12*60,/* 草原は15時・土は夕方16時（はじまりの地ゆれ）からはじまる */speed:1,
+    unlocked:{floor:true,farm:true,[w===1?'misugaki':w===WIND?'ropefence':w===MIZU?'ashifence':w===TSUCHI?'ishigaki':w===YAMI?'ibara':'fence']:true,[w===1?'bamboowall':w===WIND?'canvaswall':w===MIZU?'timberwall':w===TSUCHI?'adobewall':w===YAMI?'mosswall':'hwall']:true,...(w===WIND?{tanpopo:true}:w===TSUCHI?{iwakagami:true}:{})},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
   s.world=w;s.vk=vkNew();/* 村の見分け（photo.js） */if(w===FREE)s.flags.valley=1;/* フリーモード：花の谷（free.js。前のセーブの地形はそのまま） */if(w===MIZU)mzGenWorld(s);else genWorld(s,w);
-  if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else if(w===MIZU)s.res.push(mkRes(s,MIO,'water',CX+.5,CY-1.5,'fountain'));else if(w===WIND){s.res.push(mkRes(s,KAZANE,'wind',CX+.5,CY-1.5,'slide'));s.flags.minaCame=true}/* 風（土台）：はじめはカザネひとり。2人めのキーキャラは、お話を作るときに */else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
+  if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else if(w===MIZU)s.res.push(mkRes(s,MIO,'water',CX+.5,CY-1.5,'fountain'));else if(w===WIND){s.res.push(mkRes(s,KAZANE,'wind',CX+.5,CY-1.5,'slide'));s.flags.minaCame=true}else if(w===TSUCHI){s.res.push(mkRes(s,TOTO,'earth',CX+.5,CY-1.5,'swing'));s.flags.minaCame=true}/* 土：はじめはトトひとり（巣穴からころがり出る。tsuchi.js の tsIntro） *//* 風（土台）：はじめはカザネひとり。2人めのキーキャラは、お話を作るときに */else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
   if(w===FREE)freeSetup(s);if(w===MIZU)mzSetup(s);
   if(w!==FREE)templeRuinPlace(s);/* こわれた神殿は、はじめからある（フリーモードに神殿はない） */
@@ -92,14 +92,14 @@ const VRDEV=[-6,-4,-2,0,2,4,6];/* 個体ごとのばらつき：はたらく速�
 function vrInt(V){if(V&&V.iv!==3){const K=['pow','spd','sta'];if(V.iv!==2){if(!V.iv)for(const k of K)V[k]=Math.round(((V[k]==null?1:V[k])-1)*10);for(const k of K)V[k]=(V[k]||0)*10}for(const k of K)V[k]=Math.round((V[k]||0)/5);V.iv=3}return V}/* 前のセーブ：倍率（1がふつう）・10がふつう・100がふつうだったころの数を、20がふつうの、たす数にかえる（iv が 3 なら、もうかえてある。100がふつうの数（iv 2）は÷5してまるめる） */
 const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat(r).rec*(1+(typeof pathA==='function'?pathA('rec'):0)/100);/* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
 /* せいれいごとのばらつき：色(h色相・l明るさ)、まつ毛・ほっぺ、足の速さ・食べる量・力 */
-const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'ハヤテ':{key:true,tr:'hayaashi',pk:'wind',h:10,l:.02,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.16},'カザネ':{key:true,tr:'nebari',pk:'wind',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.1},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ミオ':{key:true,tr:'nebari',h:-10,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'カガリ':{key:true,tr:'',pk:'fireA',h:4,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
+const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'ハヤテ':{key:true,tr:'hayaashi',pk:'wind',h:10,l:.02,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.16},'カザネ':{key:true,tr:'nebari',pk:'wind',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.1},'トト':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.32},'コノハ':{key:true,tr:'tafu',h:0,l:.02,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.06},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ミオ':{key:true,tr:'nebari',h:-10,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'カガリ':{key:true,tr:'',pk:'fireA',h:4,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1,D=()=>pick(VRDEV);const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:D(),eat:Math.round((1+R()*.2)*100)/100,pow:D(),sta:D(),iv:3,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}
 function mkRes(s,name,elem,x,y,like){
   return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:400,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===WIND)&&!nigate(elem,k))),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:Object.assign(mkVar(name,elem),{tk:tokuiPick(elem)})};/* tk：はじめからの得意な仕事（events.js） */
 }
 
 function genWorld(s,w){
-  const R=mulberry(w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:20261018),V=w===1,K=w===WIND;/* V：火山のふもと。K：風のやんだ空の村（浮き島と雲の海） */
+  const R=mulberry(w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:w===TSUCHI?20261123:20261018),V=w===1,K=w===WIND,T=w===TSUCHI;/* T：ひびわれた岩の谷（地われと、まわりのがけ） *//* V：火山のふもと。K：風のやんだ空の村（浮き島と雲の海） */
   const pond=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.2*Math.sin(2*th+a)+.13*Math.sin(3*th+b)+.07*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim)s.ground[y*W+x]=1}};
   const VL=valleyOn(s,w);/* フリーモードの花の谷（free.js） */
   if(VL){for(const[px,py,rx,ry]of VPONDS)pond(CX+px,CY+py,rx,ry)}
@@ -112,6 +112,7 @@ function genWorld(s,w){
       if(vy-ry>=6&&vy+ry<=H-6)isle((sx>0?x1-3:x0+4),vy,rx,ry);else if(hx-rx>=6&&hx+rx<=W-6)isle(hx,(sy>0?y1-3:y0+4),rx,ry)}
     for(let j=0;j<W*H;j++)s.ground[j]=land[j]?0:1;
     pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(ring[1][0],ring[1][1],2.6,2);pond(ring[4][0],ring[4][1],2.4,1.9)}/* 島の中の池（本物の水） */
+  else if(T){pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);tsRift(s,R)}/* 土：まん中のわき水と、谷をたてに割る地われ（tsuchi.js） */
   else if(V){pond(OFF+12,OFF+58,3.4,2.4);pond(OFF+60,OFF+14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
   else{pond(OFF+8,OFF+10,5,3.6);pond(OFF+11.5,OFF+12.5,3,2.2);pond(OFF+62,OFF+60,6,3.6);pond(OFF+58.5,OFF+58,2.6,2);pond(OFF+60,OFF+8,3,2.4);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(CX+3.6,CY+6.6,1.2,.9);pond(10,30,4,3);pond(96,70,4.5,3);pond(40,98,3.5,2.6);pond(80,6,3,2.2)}/* 外がわにも池 */
   for(let pass=0;pass<2;pass++){const g=s.ground.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]===1)+(g[j+1]===1)+(g[j-W]===1)+(g[j+W]===1);if(g[j]===1&&n<=1)s.ground[j]=0;else if(g[j]!==1&&n>=3)s.ground[j]=1}}
@@ -129,6 +130,7 @@ function genWorld(s,w){
       if(!core&&r<(V?.03:.05))s.obj[i]='deadtree';else if(!core&&r<(V?.09:.08))s.obj[i]='rock';else if(V&&!core&&r<.12)s.obj[i]='bamboo';/* 火山：基地の中にも竹が少し */
       continue}
     if(forest){if(r<.38)s.obj[i]=V&&r>=.19?'bamboo':w===FREE?'ntree':'deadtree';/* 火山の森は、枯れ木と竹が半分ずつ *//* 敷地の外の木は、みんな枯れている（フリーモードはべつ） */else if(r<.42)s.obj[i]='rock';else if(r<.435&&!V){s.obj[i]='berry';s.dyn[i]={g:100}}}/* ベリーの茂みは、前の4分の1（火山にはない） */
+    else if(T){if(r<.05)s.obj[i]='deadtree';else if(r<.16)s.obj[i]='rock'}/* 土：岩が多い。木はオリーブ（STAGE の sx） */
     else if(V){if(r<.05)s.obj[i]='deadtree';else if(r<.13)s.obj[i]='rock';else if(r>=.16&&r<.17)s.obj[i]='deadtree';/* 火山にベリーの茂みはない */else if(r<.19)s.obj[i]='bamboo'}/* 火山のふもとは岩が多い。竹も少し */
     else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.1075){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r>=.13&&r<.15)s.obj[i]=w===FREE?'ntree':'deadtree'}
   }
@@ -147,13 +149,14 @@ function genWorld(s,w){
   for(let d=1;d<=4;d++){const j=hy(CY-4)*W+CX+d;s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
   if(G0){const gap=new Set([(CY)*W+CX-3,(CY-2)*W+CX+2,(CY+2)*W+CX-1,(CY-3)*W+CX-2]);for(let y=CY-3;y<=CY+2;y++)for(let x=CX-3;x<=CX+2;x++){const e=(y===CY-3||y===CY+2)+(x===CX-3||x===CX+2);if(!e||e===2)continue;const j=y*W+x;if(gap.has(j)||s.ground[j]||s.obj[j]==='ntree')continue;if(s.obj[j]&&HI_OK.has(s.obj[j]))s.obj[j]='';if(!s.obj[j])s.floor[j]='path'}}/* 草原：御神木の切り株をかこむ、あぜ道の輪（まわり1マス。角はまるく、ところどころとぎれる。南北のまん中の道とつながる） */
   if(G0)s.flags.home2=1;/* 家・畑・切り株の、まん中のならび（starterGapCells） */
-  if(K){for(let d=3;d<=5;d++){const j=(CY-2)*W+hx(-d);s.obj[j]='canvaswall';s.floor[j]='';s.hp[j]=BL.canvaswall.hp}/* 風（土台）：家はこわれていない。木箱は、道の東に1つ */
+  if(T){for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){const j=y*W+hx(-d);if(s.obj[j]==='hwall'||y===CY-2&&d>=3&&d<=5){s.obj[j]='adobewall';s.floor[j]='';s.hp[j]=BL.adobewall.hp}else if(s.obj[j]==='door')s.obj[j]='itado'}}/* 土：家は日干しれんがの壁と木のいた戸。こわれていない */
+  if(K||T){if(K)for(let d=3;d<=5;d++){const j=(CY-2)*W+hx(-d);s.obj[j]='canvaswall';s.floor[j]='';s.hp[j]=BL.canvaswall.hp}/* 風（土台）：家はこわれていない。木箱は、道の東に1つ */
     const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if(fr(k)&&fr(k-1)&&fr(k+1)){p=k;break}}if(p>=0)s.obj[p]='crate'}
   }
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='crate'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='crate';s.floor[j]='floor'}put('crate');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：木箱は古い家の中と、村の北西に（コワイノは南から来るので） */
   if(VL)wildPurge(s);
   if(K)windGen(s,R);/* 風穴と古い風車（wind.js） */
-  genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;if(VL){valleyPlace(s,VR);wildPurge(s)}/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
+  genLand(s,w);if(T)tsPost(s)/* 土：北のがけのあなぐまの巣穴・自然の岩の橋（段差のあと） *//* 川と段差（いちばん最後：ほかの物をおいたあと） */;if(VL){valleyPlace(s,VR);wildPurge(s)}/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
@@ -341,7 +344,8 @@ let SKYS=null,SKYM=null;
 function skyOf(g){const M=new Uint8Array(W*H),Q=[];const put=j=>{if(g[j]===1&&!M[j]){M[j]=1;Q.push(j)}};for(let x=0;x<W;x++){put(x);put((H-1)*W+x)}for(let y=0;y<H;y++){put(y*W);put(y*W+W-1)}
   while(Q.length){const j=Q.pop(),x=j%W;if(x>0)put(j-1);if(x<W-1)put(j+1);if(j>=W)put(j-W);if(j<W*(H-1))put(j+W)}return M}
 function skyM(){if(WD!==WIND||!S)return null;if(SKYS===S)return SKYM;SKYS=S;SKYM=skyOf(S.ground);return SKYM}
-const skyJ=j=>{const M=skyM();return !!M&&M[j]===1},waterJ=j=>S.ground[j]===1&&!skyJ(j);/* waterJ：本物の水（池・川） */
+let RIFTS=null,RIFTM=null;function riftM(){if(WD!==TSUCHI||!S)return null;if(RIFTS===S)return RIFTM;RIFTS=S;RIFTM=skyOf(S.ground);return RIFTM}/* 土の地われ：マップのはしにつながる ground 1（雲の海と同じ作り。セーブには入れず、地形から作る） */
+const skyJ=j=>{const M=skyM();return !!M&&M[j]===1},riftJ=j=>{const M=riftM();return !!M&&M[j]===1},waterJ=j=>S.ground[j]===1&&!skyJ(j)&&!riftJ(j);/* waterJ：本物の水（池・川） */
 const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||!!fogAt(j);/* 歩けない水 */
 const LIFT=32;/* 段差1だんの高さ（ドット）。正面も1マスの正方形（持ち主がきめた）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
@@ -367,7 +371,7 @@ const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下�
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return liftOf(c)+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return liftOf(c);const d=stairDir(a);if(d<0)return liftOf(c);const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
-const LANDSEED=w=>w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:20261018;
+const LANDSEED=w=>w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:w===TSUCHI?20261123:20261018;
 function landMade(s,j){const o=s.obj[j];return !!s.floor[j]||o==='part'||!!o&&!!BL[o]&&!BL[o].natural&&!WEEDS.has(o)}/* 人の作った物（床・道・家具・建物）がある */
 function genRiver(s,w,o){/* 川：草原（とフリー）は北のはしから南のはしへ、火山は西のはしから東のはしへ（南がわを横切る）。村のまん中から26〜30マスはなれて、くねくね流れる。支流が1本。浅瀬（ground 2）は、本流に3か所・支流に1か所。o.ns：火山でも南北（前の川のマスをしらべるとき）。o.dry：マスをしらべるだけ */
   o=o||{};const R=mulberry(LANDSEED(w)+333),tr=w===1&&!o.ns,side0=R()<.5?-1:1,side=tr?1:side0,base=CX+side*(26+R()*4),p1=R()*6.28,p2=R()*6.28,p3=R()*6.28,riv=new Uint8Array(W*H);
@@ -393,7 +397,7 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   const oct=sc=>{const gw=Math.ceil(W/sc)+2,gh=Math.ceil(H/sc)+2,g=new Float32Array(gw*gh);for(let k=0;k<g.length;k++)g[k]=R();const sm=t=>t*t*(3-2*t);
     return (x,y)=>{const fx=x/sc,fy=y/sc,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),v=(a,b)=>g[(iy+b)*gw+ix+a];return (v(0,0)*(1-tx)+v(1,0)*tx)*(1-ty)+(v(0,1)*(1-tx)+v(1,1)*tx)*ty}};
   const VL=valleyOn(s,w),V=w===1,n1=oct(V?17:30),n2=oct(V?8:13),n3=oct(V?4:6),T=V?[.50,.58,.66]:[.53,.65,.79];/* 草原：大きくゆるやかな丘（3だんは少ない）。火山：こまかく、けわしい */
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x,f=1/* まん中も外と同じ（持ち主がきめた） */,nf=Math.min(1,Math.max(0,(CY+10-y)/50));let v=(.6*n1(x,y)+.3*n2(x,y)+.1*n3(x,y))*(.55+.45*f)+.12*f;if(V)v+=.2*nf-.08*(1-nf);/* 火山：北（火口がわ）へいくほど高い山 */
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x,f=1/* まん中も外と同じ（持ち主がきめた） */,nf=Math.min(1,Math.max(0,(CY+10-y)/50));let v=(.6*n1(x,y)+.3*n2(x,y)+.1*n3(x,y))*(.55+.45*f)+.12*f;if(V)v+=.2*nf-.08*(1-nf);/* 火山：北（火口がわ）へいくほど高い山 */if(w===TSUCHI)v+=tsWallK(x,y);/* 土：谷のまわり（東・西・北）は高いがけ */
     h[j]=VL?valleyLv(x,y,v):v>T[2]?3:v>T[1]?2:v>T[0]?1:0}
   for(let pass=0;pass<2;pass++)for(let lv=1;lv<=HMAX;lv++){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x;let n=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if((a||b)&&g[j+b*W+a]>=lv)n++;if(g[j]>=lv&&n<=2)h[j]=Math.min(h[j],lv-1);else if(g[j]<lv&&n>=6)h[j]=Math.max(h[j],lv)}}/* まわり8マスの多いほうにそろえて、ふちをまるく */
   for(let j=0;j<W*H;j++)if(h[j]&&!ok(j))h[j]=0;
@@ -410,4 +414,4 @@ function treeHighFix(s){/* 木のまわり2マス・岩のまわり1マス（hiR
     for(let dy=-1;dy<=1&&!bad;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;if(!at(x+dx,y+dy)){bad=true;break}const n=(y+dy)*W+x+dx;if(hi(n)===hh)continue;const o=s.obj[n];if((o&&!WEEDS.has(o))||(s.floor&&s.floor[n])||s.ground[n]!==0){bad=true;break}chg.push([n,hi(n)])}
     if(!bad&&chg.length){for(const[n]of chg)h[n]=hh;for(const[n]of chg){const nx=n%W,ny=(n/W)|0;for(let dy=-2;dy<=2&&!bad;dy++)for(let dx=-2;dx<=2;dx++){if(!at(nx+dx,ny+dy))continue;const m=(ny+dy)*W+nx+dx,d=Math.max(Math.abs(dx),Math.abs(dy)),R=hiRad(s.obj[m]);if(Math.abs(hi(m)-hh)>1||(R&&d<=R&&hi(m)<hh)||(FLATR.has(s.obj[m])&&d<=1&&hi(m)!==hh)){bad=true;break}}if(bad)break}if(bad)for(const[n,v]of chg)h[n]=v}
     if(bad){s.obj[j]='';if(s.dyn)delete s.dyn[j]}}}/* ならすと、ほかの木・岩のまわりが高くなることがあるので、かわらなくなるまで */
-function genLand(s,w){if(!valleyOn(s,w)&&w!==WIND)genRiver(s,w);/* 花の谷・風（島のあいだは雲の海）に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
+function genLand(s,w){if(!valleyOn(s,w)&&w!==WIND&&w!==TSUCHI)genRiver(s,w);/* 花の谷・風（島のあいだは雲の海）・土（地われ）に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
