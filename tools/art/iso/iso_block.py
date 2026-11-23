@@ -1,5 +1,5 @@
 # クォータービューの土のブロックのタイルセット：ブロックの1だんを3Dで組んで、角の形ごとの完成したチップに写す（壁の iso_conn.py と同じ写し方・切り方）。
-# 使い方：python3 tools/art/iso/iso_block.py <出力フォルダ> [--sample]（--sample：見本の4つのならびを写す）
+# 使い方：python3 tools/art/iso/iso_block.py <出力フォルダ> [--sample] [--chips [--from]]（--from：写しなおさずに、出力フォルダの絵をチップに。--sample：見本の4つのならびを写す。--chips：角の形ぜんぶを写して chips.js に入れる）
 #
 # 設計図（1マスの1だん。x=東・y=南・z=上。マスの左上が(0,0)、1だんの高さ1）
 #   形は、まるい箱（rounded box）：外に出ている所（となりのマスのそのだんが空・上が空）だけ、箱を R ちぢめた芯から R はなれた面にする。
@@ -11,7 +11,7 @@
 #   色：横の面は、がけの絵（いちばん上のだん cliff:block・その下 cliff:blockm。ゲームの icFace と同じ写し方：左の面は x、右の面は 1−y、たては 1−z）。
 #     上の面と、まるいふちの上のほうは、地面の絵（草 tex:grass・かれた地面 tex:dry。画面の場所でくりかえす）。草は、ふちから少したれる。
 #     明るさ：上 1・左の面（南）.94・右の面（東）.74（ゲームの ICLF・ICRT）。まるい所は、面の向きでまぜて、段にする。
-# チップのなまえ（--chips はまだ）：iso:blk-<g|d|m>:<n><s><e><w>[-<南西><南東><北東>]（g 草の上のだん・d かれた地面の上のだん・m 上にブロックがつづくだん。nsew は外に出ていれば1。
+# チップのなまえ（g64。ax・ay は、そのだんの下の面のまん中の点）：iso:blk-<g|d|m>:<n><s><e><w>[-<南西><南東><北東>]（g 草の上のだん・d 草原のかれた地面・k ほかのステージの地面・v 火山の地面の上のだん・m 上にブロックがつづくだん。nsew は外に出ていれば1。
 #   うしろの3つは、内がわの角になるななめのマスがうまっていれば1）。上の面の平らな所のかたちは <なまえ>~top（ゲームの地面をこのかたちで切って見せる）
 import sys,os,math
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -66,6 +66,7 @@ def facetex(p,nrm,top_tex):
     side=0 if nrm[1]>=nrm[0] else 1   # 0 左の面（南）・1 右の面（東）
     u=(x%1) if side==0 else (1-(y%1))%1
     return min(63,int((1-min(1,max(0,z)))*64)),min(63,int(u*64)),side
+GT={'g':'tex:grass','d':'tex:dry','k':'ground#0','v':'groundr#0'}   # まるいふちの色をとる地面の絵（草・草原のかれた地面・ほかのステージの地面・火山の地面）
 KEY=(255,0,255)   # 上の面の平らな所の印（ゲームの地面を見せる所。チップ ~top のかたち）
 def pnoise(u):   # 1マスでくりかえす、なめらかなゆらぎ（0〜1）
     t=2*math.pi*u;return 0.5+0.25*math.sin(3*t+1.3)+0.15*math.sin(7*t+0.4)+0.1*math.sin(11*t+2.1)
@@ -89,7 +90,7 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         if not s and se:f=np.where(~sf,f*F(1-y),f)
         if not n and ne:f=np.where(~sf,f*F(y),f)
         return f
-    gt=arr('tex:grass' if var=='g' else 'tex:dry')
+    gt=arr(GT.get(var,'tex:dry'))
     sc=O.Scene();sc.material('flat')
     lo=np.array(core[0::2]);hi=np.array(core[1::2])
     def col(x,y,z):
@@ -130,7 +131,7 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
     tp=np.zeros_like(a);tp[m]=(255,255,255,255);a[m]=0
     bb=Image.fromarray(np.maximum(a,tp)).getbbox()
     A=Image.fromarray(a).crop(bb);T=Image.fromarray(tp).crop(bb)
-    return A,T,IC.PX0-bb[0],IC.PY0-bb[1]
+    return A,T,IC.PX0-bb[0],IC.PY0-bb[1]   # T は A と同じわく（ゲームに入れるときは、T だけの大きさに切る：to_chips）
 def dgof(ex,sw,se,ne):
     """ななめのマスのうち、形にかかわる物だけ（内がわの角になる所）。ほかは0にして、同じ形のチップをふやさない"""
     n,s,e,w=ex
@@ -164,6 +165,37 @@ def compose(cells,var,pad=40):
         can.alpha_composite(im,(px,py))
         g=gnd.crop((px,py,px+tp.width,py+tp.height));g.putalpha(tp.split()[0]);can.alpha_composite(g,(px,py))   # 上の面：ゲームの地面を、かたちで切って
     return can
+def allkeys():
+    """出る形ぜんぶ：(だん, 外に出ている向き nsew, ななめ) — ななめは dgof でそろえた物だけ"""
+    K=set()
+    for v in('g','d','k','v','m'):
+        for b in range(16):
+            ex=tuple(bool(b>>i&1) for i in range(4))
+            for d in range(8):K.add((v,ex,dgof(ex,d&1,d>>1&1,d>>2&1)))
+    return sorted(K)
+def _one(k):
+    v,ex,dg=k;A,T,ax,ay=build(*ex,v!='m',v,dg);return k,A,T,ax,ay
+def to_chips(out):
+    from multiprocessing import Pool
+    import chips
+    import json
+    ks=allkeys();print(len(ks),'の形');J=os.path.join(out,'blk.json')
+    if '--from' in sys.argv:   # 写しなおさずに、出力フォルダの絵をチップに
+        M=json.load(open(J));res=[(tuple(m['k'][:1])+(tuple(m['k'][1]),tuple(m['k'][2])),Image.open(os.path.join(out,m['f']+'.png')).copy(),Image.open(os.path.join(out,m['f']+'~top.png')).copy(),m['ax'],m['ay']) for m in M]
+    else:
+        with Pool(min(8,os.cpu_count() or 1)) as P:res=P.map(_one,ks)
+        M=[]
+        for (v,ex,dg),A,T,ax,ay in res:
+            f='blk-%s-%s'%(v,key(ex,dg));A.save(os.path.join(out,f+'.png'));T.save(os.path.join(out,f+'~top.png'))
+            M.append({'k':[v,[int(e) for e in ex],list(dg)],'f':f,'ax':ax,'ay':ay})
+        json.dump(M,open(J,'w'))
+    head,C=chips.load_imgs()
+    for (v,ex,dg),A,T,ax,ay in res:
+        nm='iso:blk-%s:%s'%(v,key(ex,dg))
+        C[nm]={'ax':ax,'ay':ay,'w':A.width,'h':A.height,'g':64,'f':[A]}
+        if v!='m':   # 上の面のかたち：上の面だけの大きさに切る（ゲームは、この大きさの作業用の絵で地面を切りぬく）
+            b=T.getbbox();T2=T.crop(b);C[nm+'~top']={'ax':ax-b[0],'ay':ay-b[1],'w':T2.width,'h':T2.height,'g':64,'f':[T2]}
+    chips.pack_imgs(head,C);print('chips',len(res))
 if __name__=='__main__':
     out=sys.argv[1];os.makedirs(out,exist_ok=True)
     if '--sample' in sys.argv:
@@ -176,3 +208,4 @@ if __name__=='__main__':
             im=compose(c,v);im.save(os.path.join(out,'sample%d.png'%(i+1)))
             im.resize((im.width*2,im.height*2),Image.NEAREST).save(os.path.join(out,'sample%dx2.png'%(i+1)))
             print('sample',i+1,im.size)
+    if '--chips' in sys.argv:to_chips(out)

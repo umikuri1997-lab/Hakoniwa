@@ -107,7 +107,9 @@ function igShimmer(k,O,c0,r0,c1,r1,now){const P=igWaterPat(),t=now/1000,sx=Math.
 /* 1マスの地面を、画面の (ix,iy)（そのマスのひし形の上のかど、ゲームの点）に描く（高い段の上の面）。c は画面の向き（ゲームの点）で描く */
 const IGTZ=.6;/* これより ちぢめたときは、高い段の上の面を、半分の細かさの絵にしてとっておく（IG.tc。1マス 32×24、ちぢめるのをやめたら手ばなす） */
 function igTile(c,x,y,ix,iy){if(cam.z<IGTZ&&c===ctx){const T=igTileLod(x,y);if(T){c.drawImage(T,ix-IQW/2-1,iy-1,IQW+2,IQH+2);return}}igTile0(c,x,y,ix,iy)}
-function igTileLod(x,y){const j=y*W+x,sx=(x-y)*IQW/2,sy=(x+y)*IQH/2;let v='';for(let cy=Math.max(0,Math.floor((sy-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((sy+IQH)/IGH));cy++)for(let cx=Math.max(0,Math.floor((sx-IQW/2-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((sx+IQW/2-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.f)return null;v+=q.v+','}
+/* マス (x,y) の地面がかかる区画の、作りなおした回数（かわったら、とっておいた絵を作りなおす）。区画がまだなければ null */
+function igTileVer(x,y){const sx=(x-y)*IQW/2,sy=(x+y)*IQH/2;let v='';for(let cy=Math.max(0,Math.floor((sy-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((sy+IQH)/IGH));cy++)for(let cx=Math.max(0,Math.floor((sx-IQW/2-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((sx+IQW/2-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.f)return null;v+=q.v+','}return v}
+function igTileLod(x,y){const j=y*W+x,v=igTileVer(x,y);if(v==null)return null;
   const M=IG.tc||(IG.tc=new Map());let e=M.get(j);if(e&&e.v===v)return e.c;if(!e){e={c:document.createElement('canvas'),v:''};e.c.width=IQW/2+1;e.c.height=IQH/2+1;M.set(j,e)}
   const g=e.c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,e.c.width,e.c.height);g.imageSmoothingEnabled=true;g.setTransform(.5,0,0,.5,0,0);igTile0(g,x,y,IQW/2+1,1,1);e.v=v;return e.c}/* まわり1ドット大きく切って、となりの面とのすきまを出さない */
 function igTile0(c,x,y,ix,iy,pad){const sx=(x-y)*IQW/2,sy=(x+y)*IQH/2,p=pad||0;c.save();c.beginPath();c.moveTo(ix,iy-p);c.lineTo(ix+IQW/2+p,iy+IQH/2);c.lineTo(ix,iy+IQH+p);c.lineTo(ix-IQW/2-p,iy+IQH/2);c.closePath();c.clip();
