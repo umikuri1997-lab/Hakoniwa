@@ -322,10 +322,10 @@ function pickCancel(){PICKH=null}
 function blkSrc(id){if(id===SOIL){const ch=(window.CHIPS||{})['cliff:block'],im=ch&&chipImgs(ch,'cliff')[0];if(im&&im.ok)return im}return cubeTex(id)}/* かけらの絵：そのブロックの面の絵（土はがけの正面の絵） */
 function blkChips(j,id,n,brk){/* ブロックのかけら（マイクラと同じ）：ブロックの面の絵から切りとった小さな四角が、とんで、地面ではねて、消える。brk：こわれた（ブロックぜんたいから、多く・大きくとぶ） */
   const im=blkSrc(id);if(!im)return;const x=j%W,y=(j/W)|0,cx=x*TS+16,cy=y*TS+16;
-  for(let i=0;i<n;i++){const r=k=>hash(j*31+i*7+k+(performance.now()|0)),s=brk?3+(r(1)<.5?1:0):2+(r(1)<.4?1:0),sn=6+((r(2)*4)|0);
+  for(let i=0;i<n;i++){const r=k=>hash(j*31+i*7+k+(performance.now()|0)),s=brk?3+(r(1)<.5?1:0):3,sn=s*2;/* 絵は1マス64ドットなので、2ドットを1点に（もようがそのまま見える） */
     const px=brk?(r(3)-.5)*20:(r(3)-.5)*14,py=brk?-4-r(4)*18:-2-r(4)*4;/* こわれたときはブロックのあった所ぜんたいから、たたくときは上の面から */
     fx.push({k:'bc',im,sx:(r(5)*(64-sn))|0,sy:(r(6)*(64-sn))|0,sn,s,x:cx+px,y:cy+py,gx:cx,gy:cy,gnd:cy+(r(7)-.5)*6,vx:px*(brk?4:5)+(r(8)-.5)*30,vy:brk?-60-r(9)*90:-40-r(9)*40,g:brk?420:380,nd:1,life:brk?1.1+r(10)*.5:.5+r(10)*.25})}}
-function blkPutFx(j){const x=j%W,y=(j/W)|0;fxSpr('bdust',x*TS+16,y*TS+16+LIFT,null,1,y*TS+16)}/* おいた：その場にパッと出て、足もとに少しだけ砂ぼこり */
+function blkPutFx(j){const x=j%W,y=(j/W)|0,wx=(x+1)*TS-2,wy=(y+1)*TS-2;fxSpr('bdust',wx,wy);const f=fx[fx.length-1];if(f&&f.n==='bdust')f.A={fx:wx,fy:wy,px:isoX(wx,wy),py:isoY(wx,wy)-(isoLv(j)-1)*IQL}}/* おいた：その場にパッと出て、足もと（手前の角の、1だん下の地面）に少しだけ砂ぼこり */
 const CRACKN=10;/* こわしているあいだのひび（マイクラの destroy_stage と同じ：10まいの絵 bcrack#0〜9。tools/art/crack/bcrack_art.py） */
 function crackImg(st){const ch=(window.CHIPS||{})['bcrack#'+st],im=ch&&chipImgs(ch,'bcrack')[0];return im&&im.ok?im:null}
 function drawPickCrack(now){const P=PICKH;if(!(P&&P.dig&&!P.done))return;const r=Math.min(.999,(now-P.t0-PICKTAP)/P.need),im=crackImg(Math.floor(r*CRACKN));if(!im)return;
