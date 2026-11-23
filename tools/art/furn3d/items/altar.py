@@ -5,7 +5,7 @@
 #   上の段：下の段の上に、ひとまわり小さいまるい石の台（半径0.34・高さ0.08、上の面は z 0.18）。
 #   金の輪：上の段の上のふちに、はめこんだ金の輪（はば0.02・高さ0.03）。
 #   光る円：上の段の上の面に、はめこんだ青い石の円（半径0.26・あつさ0.006）。まん中ほど明るい（コマごとに、ゆっくり明るさがかわる）。
-#   光のつぶ：円のまわり（半径0.30・高さ0.24）を、4つの小さな光のつぶがまわる（FRAMES 12コマで、4分の1まわる＝ループ）。
+#   光のつぶ：光る円のふちの上（半径0.24・高さ0.22。台座の絵の外へ出ない所）を、4つの小さな光のつぶがまわる（FRAMES 12コマで、4分の1まわる＝ループ）。
 from blueprint import Part as P
 from common import *
 import math
@@ -31,7 +31,7 @@ def PARTS():
     g.decal=disc;L.append(g)
     for k in range(4):   # 光のつぶ（台にのらず、うく）
         a=math.radians(90*k+7.5*fr)
-        L.append(GL(P('光のつぶ%d'%(k+1),'ball',(CX+0.30*math.cos(a),CY+0.30*math.sin(a),TOPZ+0.06,0.022),(200,228,255),on=(),deco=True)))
+        L.append(GL(P('光のつぶ%d'%(k+1),'ball',(CX+0.24*math.cos(a),CY+0.24*math.sin(a),TOPZ+0.04,0.022),(200,228,255),on=(),deco=True)))
     return L
 
 TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

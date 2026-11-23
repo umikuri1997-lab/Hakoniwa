@@ -630,7 +630,7 @@ function drawYatai(px,py,front,now,st){const f=FESTA.F['st_'+st.el];if(!FESTA.ok
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;if(front){if(h>sp)ctx.drawImage(FESTA.img,sx,sy+sp,w,h-sp,x0,y0+sp,w,h-sp)}else ctx.drawImage(FESTA.img,sx,sy,w,sp,x0,y0,w,sp);ctx.imageSmoothingEnabled=sm}/* front=0は店番のうしろ、1は前 */
 function drawGod(now){
   if(!godHere())return;const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS-(.5+.5*Math.sin(now/700))*3;/* ふわふわゆれるのは、足もとから上へだけ（台座にしずまない） */
-  const FY=1;/* クォータービュー：足もと（台座の上の面のまん中）に、雲の下のはし・かげ（前の見え方では半マス下の +16） */shadow(ctx,px,GY*TS+FY,10,3);/* 台座の上の面におさまる大きさ */
+  const FY=3;/* クォータービュー：足もと（台座の上の面のまん中）に、雲の下のはし・かげ（前の見え方では半マス下の +16） */shadow(ctx,px,GY*TS+FY,10,3);/* 台座の上の面におさまる大きさ */
   if(QUESTCLEARW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
   else if(TALKW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
   else if(SUBW[GOD]){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}/* サブクエスト（交換）：黄色の吹き出し */
