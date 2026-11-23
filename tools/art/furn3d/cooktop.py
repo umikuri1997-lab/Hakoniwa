@@ -3,7 +3,8 @@
 #   道具（cktool_<家具>_<道具>、調理台は >1・>2 の向きも）：家具の3Dにのせて写し、のせる前の絵とちがうドットだけを切りぬく（家具の絵にぴったりかさなる）。
 #   材料（ckin_<材料>.<大きさ>）・できた料理（ckdish_<料理>）：1つずつ写し、足もとの点を (0,0) にした絵。ゲームは、家具の上の場所（js/cook-top-data.js の CKTOP）に描く。
 #   大きさ：L 台の上（調理台のおく）・S なべ・フライパン・天板・網の上・K くしにさした形。
-#   js/cook-top-data.js（CKTOP：家具・向きごとの道具の名前と、材料・料理を置く場所（g64 のドット、マスの左上から））も書く。
+#   js/cook-top-data.js（CKTOP：家具・向きごとの道具の名前と、材料・料理を置く場所（g64 のドット、家具を置いたマスのまん中の地面の点から））も書く。
+#   見え方は、家具のチップと同じクォータービュー（iso3d.py を読みこむと、写し方がかわる）。道具は iso:1 のチップ（家具と同じ足もと）。
 #   料理は、料理の表の材料（i）から：スープ・のみもののもとの色（BASEC）、のせる具の本物の形（topping）、焼き色・たれ・バター・シロップ・焼き目、かざりの葉（herb）。
 # 設計図（単位はマス。台の上の面：調理台 0.60・かまどの口の床 0.0・たき火の石の上 0.13）
 #   調理台：まな板（0.60×0.30・あつさ0.03、ななめ14度）・ボウル（半径0.15・高さ0.09、うすいクリーム色のやきもの）・ピッチャー（半径0.08・高さ0.22、取っ手）・こねばち（木、半径0.17・高さ0.07）とめんぼう（長さ0.40・半径0.025）。
@@ -17,6 +18,7 @@ import numpy as np
 from PIL import Image
 import furn3d as F
 import oblique3d as O
+sys.path.insert(0,os.path.join(ART,'iso'));import iso3d   # クォータービューの見え方で写す（iso3d.py が、写し方・まわし方・大きさをかえる。家具のチップと同じ）
 from blueprint import Part as P,model_tris
 from common import WOOD,METAL,notex,SOFT
 from scipy.ndimage import binary_dilation
@@ -256,13 +258,14 @@ SLOTS={'cooktable':{'L':[(0.20,0.42,0.60),(0.80,0.42,0.60),(0.50,0.38,0.60)],'D'
        'oven':{'pot':[(0.45,0.85,0.09),(0.55,0.86,0.09),(0.50,0.89,0.09)],'pan':[(0.44,0.85,0.012),(0.53,0.86,0.012),(0.49,0.89,0.012)],'tray':[(0.43,0.85,0.012),(0.57,0.86,0.012),(0.50,0.89,0.012)],'D':[(0.50,0.95,0.0)]},
        'campfire':{'pot':[(0.45,0.51,0.42),(0.55,0.52,0.42),(0.50,0.55,0.42)],'net':[(0.38,0.50,0.145),(0.62,0.50,0.145),(0.50,0.58,0.145)],'K':[(0.32,0.72,0.02),(0.68,0.72,0.02),(0.50,0.78,0.02)],'D':[(0.50,0.87,0.13)]}}
 SIZE={'L':0.26,'S':0.143,'K':0.39,'D':0.39}   # 食べ物の大きさ（よこのはば、マス）
-VIEWK={'cooktable':[0,1,2],'oven':[0],'campfire':[0]}
+VIEWK={'cooktable':[0,1,2,3],'oven':[0],'campfire':[0]}   # クォータービューは反転しないので、調理台は4つの向き。かまどは口の見える前向きだけ
 
 _scene=F.scene
 F.scene=lambda M,k,only=None,filt=None,foot=None:_scene(M,k,only,filt,foot if foot is not None else getattr(M,'FOOT',None))   # まわす中心は、家具だけの床の範囲（道具がはみ出しても、ずれない）
 def furn_module(fid):
     M=importlib.import_module(fid);M.FR=0;base=M.PARTS
     if not hasattr(M,'_BASE'):M._BASE=base
+    if hasattr(M,'ELEV'):M.ELEV=iso3d.ISOLIGHT   # 家具のチップと同じ（iso3d.py の run_item）
     return M
 PBOX=[(x,y,z) for x in(-0.3,1.3) for y in(-0.3,1.4) for z in(-0.05,1.6)]   # 写す範囲をきめる点（どの道具をのせても、ドットのますめがずれない）
 def shot_parts(M,k,parts,info=None):
@@ -296,6 +299,7 @@ def gen_tools(out,CC,res,data):
                 nm='cktool_%s_%s'%(fid,tn)+('>%d'%k if k else '');res[nm]=(oi,x,y);print(nm,oi.size,x,y)
             def proj(p):q=inf['fwd'](p);u,v=inf['PROJ'](q);return tile((u-inf['ext'][0])*inf['S'],(v-inf['ext'][2])*inf['S'])
             for sk,pts in SLOTS[fid].items():D[sk]=[[round(c,1) for c in proj(p)] for p in pts]
+            D['Dz']=SLOTS[fid]['D'][0][2]   # できた料理の場所の高さ（だん）。ゲームは、D とこの高さから、せかいの地面の点をもとめる（湯気を出す所）
         M.PARTS=M._BASE
 
 class _Solo:   # 食べ物も、木の幹と同じかげの付け方。小さいので、かげをこく・あみを広く（持ち主がえらんだ）
@@ -316,7 +320,7 @@ def gen_dishes(res,only=None):   # only：その料理だけ（--dish。料理�
         im,x,y=solo(dish(out,ic,D.get('i',[]),0,0,0,SIZE['D']));res['ckdish_'+out]=(im,x,y)
     print('料理',len(L)+1)
 def write_js(data):
-    s='/* 料理の家具の上にかさねる絵の場所（tools/art/furn3d/cooktop.py で書いた）。CKTOP[家具][向き]：L/S/pot/pan/tray/net/K は材料を置く3つの場所、D はできた料理の場所。どれも g64 のドット、マスの左上から */\nconst CKTOP='+json.dumps(data,separators=(',',':'))+';\n'
+    s='/* 料理の家具の上にかさねる絵の場所（tools/art/furn3d/cooktop.py で書いた）。CKTOP[家具][向き]：L/S/pot/pan/tray/net/K は材料を置く3つの場所、D はできた料理の場所。どれも g64 のドット、家具を置いたマスのまん中の地面の点（クォータービューの絵の足もと）から。Dz は D の高さ（だん） */\nconst CKTOP='+json.dumps(data,separators=(',',':'))+';\n'
     open(os.path.join(ROOT,'js','cook-top-data.js'),'w',encoding='utf8').write(s)
 def main():
     out=sys.argv[1];os.makedirs(out,exist_ok=True);chips='--chips' in sys.argv
@@ -329,6 +333,6 @@ def main():
     json.dump({nm:[x,y] for nm,(im,x,y) in res.items()},open(os.path.join(out,'meta.json'),'w'))
     # たしかめ：家具ごとに、道具と材料と料理をかさねた絵
     if chips:
-        for nm,(im,x,y) in res.items():CC[nm]={'g':64,'ax':x,'ay':y,'w':im.width,'h':im.height,'f':[im]}
+        for nm,(im,x,y) in res.items():CC[nm]={'g':64,'ax':x,'ay':y,'w':im.width,'h':im.height,'f':[im]}|({'iso':1} if nm.startswith('cktool_') else {})   # 道具は家具と同じ足もとから（材料・料理は、ゲームが CKTOP の場所に描く）
         CHP.pack_imgs(head,CC);open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(res));print('チップに入れた',len(res))
 if __name__=='__main__':main()

@@ -25,7 +25,7 @@ O.persp=persp
 _turn=O.Scene.turn
 def turn(self,k,foot=None):
     _turn(self,k,foot);f0,dc0=self.fwd,self.dc
-    V=np.array([v for t_ in self.t for v in t_[:3]]);x0,y0,x1,y1=V[:,0].min(),V[:,1].min(),V[:,0].max(),V[:,1].max();cx,cy=(x0+x1)/2,(y0+y1)/2
+    V=np.array([v for t_ in self.t for v in t_[:3]]);x0,y0,x1,y1=foot if foot else (V[:,0].min(),V[:,1].min(),V[:,0].max(),V[:,1].max());cx,cy=(x0+x1)/2,(y0+y1)/2   # foot（置く物の床の範囲）があれば、そのまん中でまわす（上にのせる物で、まわす中心がずれない。cooktop.py）
     c,s=math.cos(math.radians(ISOANG)),math.sin(math.radians(ISOANG))
     R=lambda v:np.array([cx+c*(v[0]-cx)-s*(v[1]-cy),cy+s*(v[0]-cx)+c*(v[1]-cy),v[2]])
     self.t=[(R(a),R(b),R(d),col,pid) for a,b,d,col,pid in self.t];self.fwd=lambda v:R(f0(v))
