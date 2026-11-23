@@ -15,7 +15,7 @@ const IG={s:null,c:new Map(),tg:null,tw:null,pt:null,tmp:null,n:0};
 function igq(cx,cy){const k=cy*64+cx;let q=IG.c.get(k);if(!q){q={cx,cy,f:null,l:null,w:null,st:false,e:false,u:0};IG.c.set(k,q)}return q}
 function igClear(){for(const q of IG.c.values())igFree(q);IG.c.clear();IG.s=S;IG.pt=null;igTileFree()}
 function igTileFree(){if(IG.tc){for(const e of IG.tc.values())e.c.width=e.c.height=0;IG.tc=null}}
-function igFree(q){for(const k of['f','l','w','ws'])if(q[k]){q[k].width=q[k].height=0;q[k]=null}q.wk=null}
+function igFree(q){for(const k of['f','l','w','ws','k'])if(q[k]){q[k].width=q[k].height=0;q[k]=null}q.wk=null}
 function igOK(){return groundChipsOK()&&waterChipsOK()}
 /* デュアルグリッドのタイル（1まい 64×48。ドットのまん中の点が、そのタイルの四角のどこにあるかで、なかみをきめる）
    角の番号：1 左上のマス・2 右上・4 左下・8 右下（せかいの向き） */
@@ -64,11 +64,12 @@ function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IG
   if(SM)for(let v=IGM;v<ht;v++)for(let u=0;u<w;u++){const p=v*w+u;if(K[p]!==4)continue;let k=0;for(let q2=1;q2<=IGSKYH;q2++){const kk=K[p-q2*w];if(!kk&&O[(p-q2*w)*4+3]){k=q2;break}if(kk&&kk!==4&&kk!==5)break}if(!k)continue;/* 雲の海：画面で、すぐ上が島の陸なら、島のがけ（上から：土のかげ・岩・岩のかげ・うら。いままでの SKYFACE） */
     const c=SKYFACE[k<=3?0:k<=IGSKYH-6?1:k<=IGSKYH-3?2:3],o=p*4;O[o]=c[0];O[o+1]=c[1];O[o+2]=c[2];K[p]=5}
   /* できた絵（上の行 IGM はのぞく）を、色のある所だけに切りつめる */
-  let ax=w,ay=ht,bx=-1,by=-1,wa=w,wb=ht,wc=-1,wd=-1;for(let v=IGM;v<ht;v++)for(let u=0;u<w;u++){const p=v*w+u;if(!O[p*4+3])continue;if(u<ax)ax=u;if(u>bx)bx=u;if(v<ay)ay=v;if(v>by)by=v;if(K[p]===1){if(u<wa)wa=u;if(u>wc)wc=u;if(v<wb)wb=v;if(v>wd)wd=v}}
+  let ax=w,ay=ht,bx=-1,by=-1,wa=w,wb=ht,wc=-1,wd=-1,ka=w,kb=ht,kc=-1,kd=-1;for(let v=IGM;v<ht;v++)for(let u=0;u<w;u++){const p=v*w+u;if(!O[p*4+3])continue;if(u<ax)ax=u;if(u>bx)bx=u;if(v<ay)ay=v;if(v>by)by=v;if(K[p]===1){if(u<wa)wa=u;if(u>wc)wc=u;if(v<wb)wb=v;if(v>wd)wd=v}if(K[p]===4){if(u<ka)ka=u;if(u>kc)kc=u;if(v<kb)kb=v;if(v>kd)kd=v}}
   if(bx<0){igFree(q);q.e=true;IG.n++;return}
   const put=(x0,y0,x1,y1,fn)=>{const cw=x1-x0+1,ch=y1-y0+1,c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d'),id=g.createImageData(cw,ch);for(let v=0;v<ch;v++)for(let u=0;u<cw;u++){const p=(y0+v)*w+x0+u;fn(id.data,(v*cw+u)*4,p)}g.putImageData(id,0,0);return c};
   igFree(q);q.e=false;q.f=put(ax,ay,bx,by,(d,i,p)=>{d[i]=O[p*4];d[i+1]=O[p*4+1];d[i+2]=O[p*4+2];d[i+3]=O[p*4+3]});q.ox=ax-IGP;q.oy=ay-IGM-IGP;
   if(wc>=0){q.w=put(wa,wb,wc,wd,(d,i,p)=>{d[i+3]=K[p]===1?255:0});q.wx=wa-IGP;q.wy=wb-IGM-IGP}/* 水面の形（毎コマ、水の模様を流す所） */
+  if(kc>=0){q.k=put(ka,kb,kc,kd,(d,i,p)=>{d[i+3]=K[p]===4?255:0});q.kx=ka-IGP;q.ky=kb-IGM-IGP}/* 雲の海の形（時間の色を、地面とかえる所。daycolor.js の dcGround） */
   q.v=++IG.n;GRD.bt+=performance.now()-t0}
 /* 区画の左上（ゲームの点） */const igX=q=>IGX0+q.cx*IGW,igY=q=>q.cy*IGH;
 /* 物を置いて変わったマスの四角 R（[x0,y0,x1,y1] の一覧）にかかる区画に、作りなおすしるし */
@@ -85,6 +86,9 @@ function igDraw(k,now){if(IG.s!==S)igClear();if(!igOK())return;const O=isoOff(k)
     let im=q.f;if(lod){if(!q.l&&GRD.bt<GBUD){const t0=performance.now(),l=document.createElement('canvas');l.width=Math.ceil(q.f.width/2);l.height=Math.ceil(q.f.height/2);const g=l.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(q.f,0,0,l.width,l.height);q.l=l;GRD.bt+=performance.now()-t0}if(q.l)im=q.l}
     const x=igX(q)+q.ox,y=igY(q)+q.oy,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(im,a,b,Math.round(O[0]+k*(x+q.f.width))-a,Math.round(O[1]+k*(y+q.f.height))-b)}
   igShimmer(k,O,c0,r0,c1,r1,now);ctx.restore()}
+/* 見えている区画の雲の海の形を、画面（ドット）に描く（c：画面と同じ大きさの絵） */
+function igSkyMask(c,k){if(!igOK())return false;const O=isoOff(k),[c0,r0,c1,r1]=igVis();let any=false;
+  for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.k)continue;const x=igX(q)+q.kx,y=igY(q)+q.ky,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);c.drawImage(q.k,a,b,Math.round(O[0]+k*(x+q.k.width))-a,Math.round(O[1]+k*(y+q.k.height))-b);any=true}return any}
 /* ちぢめていないあいだ、半分の絵を手ばなす */
 function igHalfFree(){if(GLOD){IG.lu=RFN;return}if(RFN-(IG.lu||0)<GHALFT)return;for(const q of IG.c.values()){if(q.l){q.l.width=q.l.height=0;q.l=null}if(q.ws){q.ws.width=q.ws.height=0;q.ws=null;q.wk=null}}igTileFree();IG.lu=RFN}
 /* 水の模様（tex:water）を、ひし形へ写した絵（256×192 でくりかえす） */

@@ -25,7 +25,7 @@ function icSrc(j,L,h){const id=cubeAt(j,L);if(id){const t=cubeTex(id);return t?[
 /* 高い段のマス (x,y)（c は画面の向き、ゲームの点で描く） */
 function icBlock(c,x,y){const j=y*W+x,h=hiAt(j);if(h<=0)return;const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),gr=!top&&REV.has(j)?1+(hash(j)<.5?1:0):0;
   for(const side of[0,1]){const n=side?hv(x+1,y):hv(x,y+1);for(let L=h;L>n;L--){const s=icSrc(j,L,h);if(!s)continue;const f=icFace(side,s[0],s[1],L===h?gr:0);c.drawImage(f,side?ix:ix-IQW/2,iy+IQH/2-L*IQL)}}
-  if(top){const t=cubeTex(top);if(t)c.drawImage(icTop(t,top),ix-IQW/2,iy-h*IQL)}else igTile(c,x,y,ix,iy-h*IQL);
+  if(top){const t=cubeTex(top);if(t)c.drawImage(icTop(t,top),ix-IQW/2,iy-h*IQL)}else igTile(c,x,y,ix,iy-h*IQL);dcTop(c,ix,iy-h*IQL);/* 時間の色（daycolor.js） */
   c.save();c.globalAlpha=Math.min(.24,.06*h);c.fillStyle='#fff8e0';c.beginPath();c.moveTo(ix,iy-h*IQL);c.lineTo(ix+IQW/2,iy+IQH/2-h*IQL);c.lineTo(ix,iy+IQH-h*IQL);c.lineTo(ix-IQW/2,iy+IQH/2-h*IQL);c.closePath();c.fill();c.restore()}/* 上の面は、高いだんほど明るく */
 /* 形の絵：3Dの多角形（[[wx,wy,z],…] と色）を、ゲームの点の画面へぬり、ふちのうすい所を切る（ドットにそろえる） */
 function icShape(K,polys){let c=ICK.get(K);if(c)return c;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const[P]of polys)for(const p of P){const q=icP(...p);x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1])}

@@ -3,7 +3,8 @@
    - dk   夜の暗さの色（画面ぜんたい。物・がけの正面はこれだけ）。こさは darkness() のまま。あかりの所はけずる（draw-world.js の DMK）
    - g    地面（ひし形の地面の区画）。物より先に、かけ算でかさねる（dcGround）
    - w    水（池・川）。水面を流すときにかけ算（iso-ground.js の igShimmer）
-   - s 雲の海・r 屋根：ひし形にしたあと、まだ使っていない（前の見え方の色。かけ算）
+   - s    雲の海（風）。地面の層のかわりに、雲の海の所だけかけ算（dcGround。iso-ground.js の雲の海の形 q.k）
+   - r    屋根。屋根を描いたあと、屋根の形にかけ算（iso-conn.js の iqRoofCol）。高い段の上の面は g（dcTop）
    - win  窓のあかりの強さ（1がふつう）
    - glow 時間の光（HD-2D の入りのときだけ。soft-light、hd2d.js の hdTint）
    色は [赤,緑,青,こさ]。かけ算の層は、こさ0で何もしない。こさ1でその色をそのままかける。時刻のあいだは、なめらかにつなぐ。 */
@@ -30,5 +31,14 @@ function dcNow(){/* いまの時刻の色（同じ時刻なら作りなおさな
   v.win=a.win+(b.win-a.win)*t;v.glow=dcMix(a.glow,b.glow,t);if(v.glow&&v.glow[3]<=.005)v.glow=null;
   return DC.v=v}
 function dcLayer(k){return dcNow()[k]}
-function dcGround(){/* 地面の層：地面の下絵・水・地面の上の物（水たまりなど）を描いたあと、物より先に、画面ぜんたいにかけ算 */const m=dcLayer('g');if(!m)return;
-  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';ctx.fillStyle=m;ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore()}
+const DCL=document.createElement('canvas'),dcl=DCL.getContext('2d');/* 雲の海のある所だけ、色をかえるための絵（画面と同じ大きさ） */
+function dcGround(){/* 地面の層：地面の下絵・水・地面の上の物（水たまりなど）を描いたあと、物より先に、画面ぜんたいにかけ算。雲の海（風）の所は、雲の海の色 s */const m=dcLayer('g'),s=dcLayer('s'),W0=ctx.canvas.width,H0=ctx.canvas.height;if(!m&&!s)return;
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='multiply';
+  if(typeof skyM==='function'&&skyM()){if(DCL.width!==W0||DCL.height!==H0){DCL.width=W0;DCL.height=H0}const k=dpr*cam.z;
+    dcl.globalCompositeOperation='source-over';dcl.clearRect(0,0,W0,H0);if(igSkyMask(dcl,k)){
+      if(s){dcl.globalCompositeOperation='source-in';dcl.fillStyle=s;dcl.fillRect(0,0,W0,H0);ctx.drawImage(DCL,0,0)}/* 雲の海 */
+      if(m){dcl.globalCompositeOperation='source-over';dcl.clearRect(0,0,W0,H0);dcl.fillStyle=m;dcl.fillRect(0,0,W0,H0);dcl.globalCompositeOperation='destination-out';igSkyMask(dcl,k);ctx.drawImage(DCL,0,0)}/* 雲の海のほかの地面 */
+      ctx.restore();return}}
+  if(m){ctx.fillStyle=m;ctx.fillRect(0,0,W0,H0)}ctx.restore()}
+/* 高い段の上の面（段ごとに奥行きの順で描くので、dcGround のあと）：その面のひし形に、地面の層の色をかけ算（iso-cliff.js の icBlock）。ix,iy：ひし形の上のかど */
+function dcTop(c,ix,iy){const m=c===ctx&&dcLayer('g');if(!m)return;c.save();c.globalCompositeOperation='multiply';c.fillStyle=m;c.beginPath();c.moveTo(ix,iy);c.lineTo(ix+IQW/2,iy+IQH/2);c.lineTo(ix,iy+IQH);c.lineTo(ix-IQW/2,iy+IQH/2);c.closePath();c.fill();c.restore()}
