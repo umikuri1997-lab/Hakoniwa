@@ -40,7 +40,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):return _shot(M,k,only,ISOS,fil
 F3.shot=shot
 SKIP={'kabebukuro','wreath','wshelf','nat_eda','g_w_acorn','g_w_clover','g_w_shelf','g_w_stump'}   # 壁にかける物（H-14 の iso:win）・落とし物の枝（物の絵ではない）・トリポの _t がある前の限定の家具
 BATCH2=['crate','bed','wbench','loom','taru','chair','table']   # はじめの家具
-BATCH1=['statue','statueb','obox','board','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
+BATCH1=['statue','statueb','obox','board','altar','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
 WBUP=10
 SHADOWS={'nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush','sacred'}   # 落ち影も写す物
 def bl_sizes():

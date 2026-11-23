@@ -131,7 +131,7 @@ function place(id,x,y){
     else{S.pt-=pc;rsvAdd(bm);/* 素材は、とっておく（せいれいが箱から運ぶ） */S.obj[j]='site';S.dyn[j]={build:id,p:0,need:b.time,mat:bm?Object.assign({},bm):undefined,got:{}};undoStack.push({j,id,pc,mat:bm});
       if(LADDERS.has(id))(S.rot||(S.rot={}))[j]=ladderDir(j);/* ハシゴの向き */
       else if(STAIRS.has(id)){const v=stairRot(id,j),d=SROT[v];(S.rot||(S.rot={}))[j]=v;if(d){const o=stairOut(j,d);S.obj[o]='site2';S.ref[o]=j}}/* 階段：向きをきめて、低いほうのマスも足場に */
-      else if(id==='statue'){for(const k of[j-1,j+1,j+2,j+W]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
+      else if(id==='statue'){for(const k of[j-1,j+1,j+2,j+W,...templeBack(j)]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
     toast(b.kind==='plant'?'せいれいが植えにきてくれる':'せいれいが'+b.name+'を建てにきてくれる');
   }else{
     if(inv(id)<=0){toast(b.name+'が足りません','warn');return}/* 足りないときは、知らせるだけ（おそなえ箱は開かない） */
@@ -244,7 +244,7 @@ function finishBuild(j,r){
   if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound',cube=S.dyn[j].cube;delete S.dyn[j];S.obj[j]='';let got='';if(up){if((S.hi[j]|0)<HMAX)terraUp(j,cube);else if(cube)S.inv[cube]=(S.inv[cube]||0)+1}else if((S.hi[j]|0)>HMIN){got=terraTop(j);terraDown(j)}if(got){if(!(r&&addItem(r,got,1)>0))S.inv[got]=(S.inv[got]||0)+1}/* ほった物は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(d.hole){delete S.dyn[j];S.obj[j]='kazaana';recount();burst(j,'furn');sfx('level');if(r)addSpiritXp(4,r);toast('風穴がひらいた！ 風がふき出した','good');memo('leaf','風穴がひらいて、風がふき出した');checkQuest();return}/* 風穴の石をどけた（wind.js） */if(d.wfix){windFixDone(j,d,r);return}/* こわれた遊具を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
-  if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
+  if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';for(const k of templeBack(j)){S.obj[k]='part';S.ref[k]=j}/* うしろの列も神殿のマス */S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
   if(id==='tower'&&!S.cleared){if(WD===KAZAN){memo('rock','守護の台座が建った');setTimeout(()=>toast('守護の台座が建った','good'),900)}/* 火山：火だねをはめて火を入れるのは、台座をタップしてから（story-stage.js の towerLightTap） */else{memo('grass','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){

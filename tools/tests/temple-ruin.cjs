@@ -1,4 +1,4 @@
-/* 神殿は、はじめからある、こわれた神殿：草原・火山・フリーモードのどれも。「しらべる」でタップすると、せいれいが直して神殿になる。古いセーブにも1回だけ置く */
+/* 神殿は、はじめからある、こわれた神殿（3×2マス）：草原・火山・フリーモードのどれも。「しらべる」でタップすると、せいれいが直して神殿になる。古いセーブにも1回だけ置く */
 const assert=require('node:assert/strict');
 (async()=>{for(const w of [0,1]){/* フリーモードに神殿はない（free-mode.cjs） */const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:w});
   await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+8*60;S.enemyOn=false;S.enemies=[];USERPAUSE=false})()`);
@@ -24,5 +24,10 @@ const assert=require('node:assert/strict');
   /* 古いセーブ（神殿がない）：1回だけ置く。2回めは置かない */
   const m=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));for(let j=0;j<s.obj.length;j++)if(['statue','obox','board','altar'].includes(s.obj[j]))s.obj[j]='';delete s.flags.ruinTemple1;s.quest=0;S=s;LIVE[WD]=S;recount();templeRuinMigrate();const n1=S.obj.filter(o=>o==='statueb').length;delete S.flags.ruinTemple1;templeRuinMigrate();return JSON.stringify({n1,n2:S.obj.filter(o=>o==='statueb').length,flag:!!newState(WD).flags.ruinTemple1})})()`));
   assert.deepEqual(m,{n1:1,n2:1,flag:true});
+  /* 神殿は3×2マス：うしろの列も神殿のマス。前のセーブは、うしろの列の物を近くへうつす（1回だけ） */
+  const g=JSON.parse(await run(`(()=>{const t=STATUE>=0?STATUE:RUINT,B=templeBack(t),own=()=>B.every(k=>(S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===t);const o0=own();
+    for(const k of B){S.obj[k]='';delete S.ref[k]}S.obj[B[1]]='stor';delete S.flags.temple2row;const nb=S.obj.filter(o=>o==='stor').length;templeDeepMigrate();
+    return JSON.stringify({o0,o1:own(),nb,na:S.obj.filter(o=>o==='stor').length,flag:!!S.flags.temple2row})})()`));
+  assert.deepEqual(g,{o0:true,o1:true,nb:g.nb,na:g.nb,flag:true},'back row of the temple: '+JSON.stringify(g));
   assert.deepEqual(errors,[]);console.log('world',w,'ruined temple: placed, tapped, repaired by spirits');await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
