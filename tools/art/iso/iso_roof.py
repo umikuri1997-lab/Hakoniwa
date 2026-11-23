@@ -41,7 +41,9 @@ TONE={'n':1.06,'s':0.94,'w':1.0,'e':0.82}   # 坂の向きの明るさ（光は�
 EDGE,LINE,CAP=0.72,0.72,0.66               # のき・けらばのあつみ・瓦の列の線・棟がわら
 TYPES=['up','dn','dnc','tent','upe','dne','dnec','fl']
 ENDS=['m','a','b','l','r']
-GTYPES=['up','dn','tent','upe','dne','fl','blk']
+GTYPES=['up','dn','tent','upe','dne','fl','blk','base','baseupe','basedne','basefl']
+BW,BUP,BDN=0.04,0.02,0.05   # 破風板（けらばの板）：はば・屋根の上の面からの出・屋根の下の面からのたれ（だん）
+SHD,SHC,SHA=0.08,np.array([40.,32.,48.]),0.25   # のき・けらばの下に落ちるかげ：はば（だん）・色・こさ
 EXT=0.45   # 部品を、となりのマスへのばす長さ（写したあと、マスの中だけのこす。マスのさかいに線を出さない）
 def prof(t):
     """切り口：(y0, y1, 上の面の高さ z(y)（Z0 をのぞく）, 棟がわらの y（なければ None）, 折れる所)。マスの外へは、となりのマスの部品と同じ形でのばす"""
@@ -102,26 +104,54 @@ def roof_parts(o,t,e,col='d',dz=0.0,snow=None):
         return tuple(np.clip(base*k,0,255))
     pts=[(y,z) for y,z in top]+bot
     P=[(Part('屋根','prism',(pts,x0,x1,'x') if o=='h' else ([(a,b) for a,b in pts],x0,x1,'y'),(200,200,200),grp='r'),deco)]
+    if e in('a','b'):   # 破風板：けらばにそって、屋根の上の面から少し出て、屋根の下の面よりたれる、はばのそろった板
+        bx0,bx1=(x0,x0+BW) if e=='a' else (x1-BW,x1)
+        bp=[(y,z+BUP) for y,z in top]+[(y,z-BDN) for y,z in bot]
+        def bdeco(x,y,z):
+            if snow:return KEY
+            X,Y,_=sw(o,x,y,z);zt=dz+Z0+zf(min(y1,max(y0,Y)))+BUP
+            return tuple(np.clip(base*(0.86 if abs(z-zt)<2e-3 else EDGE),0,255))
+        P.append((Part('破風板','prism',(bp,bx0,bx1,'x') if o=='h' else (bp,bx0,bx1,'y'),(200,200,200),grp='h'),bdeco))
     if cap is not None:   # 棟がわら：棟の上の、はば0.08・高さ0.04の角材
         zc=dz+Z0+zf(cap)
         d=(x0,cap-0.04,zc-0.01,x1,cap+0.04,zc+0.04) if o=='h' else (cap-0.04,x0,zc-0.01,cap+0.04,x1,zc+0.04)
         cc=(lambda x,y,z:(255,0,255)) if snow and snow!='f' else (lambda x,y,z:(240,244,250)) if snow else (lambda x,y,z:tuple(np.clip(base*CAP,0,255)))
         P.append((Part('棟がわら','box',d,(200,200,200),grp='c'),cc))
     return P
+def eave_shadow(o,t,e):
+    """のきの下の壁（カメラに見える南・東の面）に落ちるかげの板：壁の外の面（0.65）の、てっぺんから SHD 下まで"""
+    if t not in('dne','dnec','fl'):return []
+    x0,x1=xr(e);x0,x1=max(x0,0.35 if e=='a' else x0),min(x1,0.65 if e=='b' else x1)
+    d=(x0,0.6502,-SHD,x1,0.6512,0.0) if o=='h' else (0.6502,x0,-SHD,0.6512,x1,0.0)
+    return [(Part('のきのかげ','box',d,(200,200,200),grp='s'),lambda x,y,z:(255,0,255))]
+def with_shadow(P,S_):
+    """屋根の絵の下に、のきのかげ（うすい暗さ）をしく"""
+    im=render(P)
+    if not S_:return im
+    sh=np.array(render(S_,outer=False));m=sh[...,3]>0
+    a=np.zeros_like(sh);a[m]=list(SHC.astype(int))+[int(SHA*255)]
+    out=Image.fromarray(a);out.alpha_composite(im);return out
 def gable_parts(o,t,p,front,wall):
-    """妻：h は x 0.63〜0.65 の板（東むき）、v は y 0.63〜0.65（南むき）。下は0（壁のてっぺん）。板は、となりのマスまでのばして写す（マスのさかいに線を出さない）"""
-    ph=p*K/2
-    if t=='blk':y0,y1,zt=-EXT,1+EXT,(lambda y:K/2)
+    """妻：h は x 0.63〜0.65 の板（東むき）、v は y 0.63〜0.65（南むき）。下は0（壁のてっぺん）。板は、となりのマスまでのばして写す（マスのさかいに線を出さない）。
+    base〜：妻の下の壁の上の0.5だん（-0.5〜0）にかさねる板。妻の壁は下の壁と一続きの外壁なので、壁の絵のてっぺんのふちの行を出さず、まん中のくりかえしの模様でつなぐ。
+    屋根の下の面から SHD の所は、のき・けらばのかげ"""
+    ph=p*K/2;rt=t[4:] if t.startswith('base') else t;zb=-0.5 if t.startswith('base') else 0.0
+    yr={'upe':(0.35,1+EXT),'dne':(-EXT,0.65),'fl':(0.35,0.65)}   # のきの行は、壁の外の面まで
+    if t=='blk':y0,y1,zt=-EXT,1+EXT,(lambda y:K/2);ru=None
+    elif t.startswith('base'):
+        y0,y1=yr.get(rt,(-EXT,1+EXT));zt=lambda y:0.0
+        ru=(lambda y,zf=prof(rt)[2]:Z0+zf(y)-TH) if rt else None   # かげを見る、屋根の下の面
     else:
-        _,_,zf,_,_=prof(t);zt=lambda y,zf=zf:Z0+zf(y)-TH   # 屋根の下の面まで
-        y0,y1={'upe':(0.35,1+EXT),'dne':(-EXT,0.65),'fl':(0.35,0.65)}.get(t,(-EXT,1+EXT))   # のきの行は、壁の外の面まで
-    n=96;ys=np.linspace(y0,y1,n+1);top=[(y,max(0.0,zt(y))) for y in ys]
-    if max(z for _,z in top)<=1e-4:return []
-    pts=top+[(y1,0.0),(y0,0.0)]
+        _,_,zf,_,_=prof(t);zt=lambda y,zf=zf:Z0+zf(y)-TH;ru=zt   # 屋根の下の面まで
+        y0,y1=yr.get(t,(-EXT,1+EXT))
+    n=96;ys=np.linspace(y0,y1,n+1);top=[(y,max(zb,zt(y))) for y in ys]
+    if max(z for _,z in top)<=zb+1e-4:return []
+    pts=top+[(y1,zb),(y0,zb)]
     k=IC.FACE[2] if o=='h' else IC.FACE[1]
     def deco(x,y,z):
         U=y if o=='h' else x;za=ph+z
         r=16+int(((-za)%0.5)*64);c=front[min(63,max(0,r)),math.floor(U*64)%64]*k
+        if ru and ru(y if o=='h' else x)-z<SHD:c=c*(1-SHA)+SHC*SHA
         return tuple(np.clip(c,0,255))
     d=(pts,0.63,0.65,'x') if o=='h' else ([(a,b) for a,b in pts],0.63,0.65,'y')
     return [(Part('妻','prism',d,(200,200,200),grp='g'),deco)]
@@ -227,6 +257,11 @@ def jparts(k,col,snow=None):
     for q in k[2:].split('+'):
         o,t,e,d=q.split('-');P+=roof_parts(o,t,e,col,int(d)*K/2,snow)
     return P
+def jshadow(k):
+    P=[]
+    for q in (k[2:].split('+') if k.startswith('x-') else [k+'-0']):
+        o,t,e,d=q.split('-');P+=eave_shadow(o,t,e)   # のきの行は高さ0（ずらさない）
+    return P
 def build_all(out):
     frame(140,120,280,220);res={}
     pieces=['%s-%s-%s'%(o,t,e) for o in('h','v') for t in TYPES for e in ENDS]
@@ -234,7 +269,7 @@ def build_all(out):
     for col in COLS:
         for k in pieces+J:
             P=jparts(k,col) if k.startswith('x-') else roof_parts(*k.split('-'),col)
-            c=crop(render(P))
+            c=crop(with_shadow(P,jshadow(k)))
             if c:res['iso:roof-%s:%s'%(col,k)]=c[:3]
         print('roof',col,flush=True)
     for k in pieces+J:

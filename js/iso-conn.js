@@ -66,7 +66,7 @@ function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)
    絵は、3Dで組んで写した、マスごとの完成したチップ（tools/art/iso/iso_roof.py：坂・棟・のき・けらば・谷・妻の壁・雪。屋根の色ごと）を、
    マスごとにえらんで、棟までのきょりの高さだけ上にずらして置くだけ（かさねる計算・色の計算はしない。持ち主がきめた）。
    2つのうでがかさなって両方が見えるマス（谷・棟がぶつかる所）は、谷のチップ。ない組み合わせ（大きな家・ほかの形）は、2つの部品を低いほうから置く。
-   妻は、うでのはし（東・南。西・北はカメラから見えない）に、その下の壁と同じ絵の板（iso:<壁>:gab-…）：高さ K/2 の四角（blk）をつんでから、三角の部品。
+   妻は、うでのはし（東・南。西・北はカメラから見えない）に、その下の壁と同じ絵の板（iso:<壁>:gab-…）：壁の上の0.5だんにかさねる板（base。下の壁と一続きの模様）・高さ K/2 の四角（blk）をつんでから、三角の部品。
    マスの部品の決め方は iso_roof.py の cells・pick と同じ（かえるときは両方）。
    置いた絵は、家ごと・せかいの列（x）ごとに1まいの絵にまとめておき（家の形・屋根の色・雪・チップの読みこみがかわったら作りなおす。1コマに1けん）、
    列ごとに、その列のいちばん手前の行の順番で描く（となりの物とのかさなり）。時間の色（daycolor.js の r）は、その絵の形にかけ算する。
@@ -113,7 +113,7 @@ function iqRoofBuild(h){
   const snow=FEELC.snow||0,sfull=snow>SNOWFULL0?Math.min(1,(snow-SNOWFULL0)/(1-SNOWFULL0)):0;
   /* マスごとに置くチップ：[マス, チップ, 高さ（だん）, うすさ]。同じマスの中は、妻 → 屋根 → 雪の順 */
   const put=new Map(),add=(cx,cy,k,z,a)=>{const j=cy*W+cx;let L=put.get(j);if(!L)put.set(j,L=[]);L.push([k,z,a==null?1:a])};
-  for(const g of gab){const wl=wallOf(g.cx,g.cy),nb=Math.round(g.z/(IQROOFK/2));for(let i=0;i<nb;i++)add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-blk-'+(i%2),i*IQROOFK/2);add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-'+g.t+'-'+(nb%2),g.z)}
+  for(const g of gab){const wl=wallOf(g.cx,g.cy),nb=Math.round(g.z/(IQROOFK/2));add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-base'+(/^(upe|dne|fl)$/.test(g.t)?g.t:'')+'-0',0);/* 妻の下の壁の上の0.5だんに、一続きの模様の板 */for(let i=0;i<nb;i++)add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-blk-'+(i%2),i*IQROOFK/2);add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-'+g.t+'-'+(nb%2),g.z)}
   const piece=(cx,cy,k,z)=>{add(cx,cy,'iso:roof-'+col+':'+k,z);if(snow>0)add(cx,cy,'iso:roofsn:'+k+'-a',z,Math.min(1,snow*2.5));if(sfull>0)add(cx,cy,'iso:roofsn:'+k+'-f',z,sfull*.95)};
   for(const[j,ps]of cells){const cx=j%W,cy=(j/W)|0;if(ps.length===1){const p=ps[0];piece(cx,cy,p.o+'-'+p.t+'-'+p.e,p.z);continue}
     const q=iqRPick(ps);if(q.p){piece(cx,cy,q.p.o+'-'+q.p.t+'-'+q.p.e,q.p.z);continue}
