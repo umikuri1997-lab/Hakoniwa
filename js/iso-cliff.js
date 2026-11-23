@@ -2,12 +2,12 @@
 /* ---------- クォータービューの段差（ブロック・坂・階段・ハシゴ） ----------
    ふつうのアイソメトリックの作り方：高い段のマスは、上の面を段の高さだけ上に描き、手前のとなり（左下 y+1・右下 x+1）が
    低い所だけ、1だんずつ壁のタイル（左の面・右の面）をならべる。描く順は x+y（D）。
-   壁のタイルは、まうえから見た四角の絵（cliff:block・cliff:blockm・石のブロック cubeTex）を、ドットのまん中の点で面へ写して作り、
+   土のだんは、3Dで写した角の形ごとのチップ（icBlkKey）。石のブロックの壁のタイルは、まうえから見た四角の絵（cubeTex）を、ドットのまん中の点で面へ写して作り、
    とっておく（1マスの1だんぶん：はば 32・高さ 54 のひし形の半分のはば）。左の面は少し明るく、右の面はこい。
    坂・階段・ハシゴは、3Dの点を画面へ写した形をぬり、ふちをぼかさずに切る（ドットにそろえる）。形ごとに1回作ってとっておく。 */
 const ICK=new Map();/* 作った絵（key → canvas） */
 const ICLF=.94,ICRT=.74;/* 左の面・右の面の明るさ */
-function icClear(){for(const c of ICK.values())c.width=c.height=0;ICK.clear()}
+function icClear(){for(const c of ICK.values())c.width=c.height=0;ICK.clear();if(ICTMP){ICTMP.width=ICTMP.height=0;ICTMP=null}}
 /* 3Dの点（せかいの点 wx,wy、高さ z だん）→ 画面の点（ゲームの点） */
 const icP=(wx,wy,z)=>[(wx-wy)*IQA,(wx+wy)*IQB-z*IQL];
 /* 壁のタイル：side 0 左の面（y+1 がわ）・1 右の面（x+1 がわ）。src は 64×64 の絵、g は上の行に草のたれ（0：なし・1〜2：ばらつき） */
@@ -22,9 +22,30 @@ function icTop(src,key){const K='t'+key;let c=ICK.get(K);if(c)return c;const S0=
   x.putImageData(id,0,0);ICK.set(K,c);return c}
 /* そのだんの壁の絵（土は、上にブロックがつづくだんは帯のない絵） */
 function icSrc(j,L,h){const id=cubeAt(j,L);if(id){const t=cubeTex(id);return t?[t,id]:null}const C=window.CHIPS||{},k=L<h?'cliff:blockm':'cliff:block',ch=C[k],im=ch&&chipImgs(ch,'cliff')[0];return im&&im.ok?[im,k]:null}
-/* 高い段のマス (x,y)（c は画面の向き、ゲームの点で描く） */
-function icBlock(c,x,y){const j=y*W+x,h=hiAt(j);if(h<=0)return;const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),gr=!top&&REV.has(j)?1+(hash(j)<.5?1:0):0;
-  for(const side of[0,1]){const n=side?hv(x+1,y):hv(x,y+1);for(let L=h;L>n;L--){const s=icSrc(j,L,h);if(!s)continue;const f=icFace(side,s[0],s[1],L===h?gr:0);c.drawImage(f,side?ix:ix-IQW/2,iy+IQH/2-L*IQL)}}
+/* 土のだんのチップ（tools/art/iso/iso_block.py：3Dで組んだまるい箱を、角の形ごとに写した絵。g64。ax・ay は、そのだんの下の面のまん中の点）
+   なまえ：iso:blk-<だん>:<nsew>[-<南西><南東><北東>]。だん：g 草・d 草原のかれた地面・k ほかのステージの地面・v 火山の地面（いちばん上のだん）・m 上につづくだん。
+   nsew：そのだんで、となりのマスが低い（外に出ている）向き。ななめ：内がわの角になるななめのマスがうまっている（道具の dgof と同じ）。 */
+function icBlkKey(x,y,L,v,hv){const n=hv(x,y-1)<L,s=hv(x,y+1)<L,e=hv(x+1,y)<L,w=hv(x-1,y)<L,
+  sw=hv(x-1,y+1)>=L&&s&&!w,se=hv(x+1,y+1)>=L&&(s&&!e||e&&!s),ne=hv(x+1,y-1)>=L&&e&&!n,b=a=>a?'1':'0';
+  return 'iso:blk-'+v+':'+b(n)+b(s)+b(e)+b(w)+(sw||se||ne?'-'+b(sw)+b(se)+b(ne):'')}
+function icBlkImg(k){const ch=window.CHIPS&&CHIPS[k];if(!ch)return null;const im=chipImgs(ch,k)[0];return im&&im.ok?[ch,im]:null}
+/* 上の面：その所の地面（igTile0）を、3Dで写した上の面のかたち（<なまえ>~top）で切って描く。作業用の絵は1まい（ICTMP）を使いまわす（マスごとにとっておかない） */
+let ICTMP=null;
+function icBlkTop(c,x,y,h,ix,iy,k){const t=icBlkImg(k+'~top');if(!t)return false;const[ch,im]=t,m=c===ctx&&dcLayer('g'),X0=ix-ch.ax/2,Y0=iy+IQH/2-(h-1)*IQL-ch.ay/2;
+  const C=ICTMP||(ICTMP=document.createElement('canvas'));if(C.width<ch.w||C.height<ch.h){C.width=Math.max(C.width,ch.w);C.height=Math.max(C.height,ch.h)}
+  const g=C.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.clearRect(0,0,ch.w,ch.h);g.imageSmoothingEnabled=false;g.setTransform(2,0,0,2,-2*X0,-2*Y0);
+  const tx=ix,ty=iy-h*IQL;igTile0(g,x,y,tx,ty);const dia=()=>{g.beginPath();g.moveTo(tx,ty);g.lineTo(tx+IQW/2,ty+IQH/2);g.lineTo(tx,ty+IQH);g.lineTo(tx-IQW/2,ty+IQH/2);g.closePath()};
+  if(m){g.globalCompositeOperation='multiply';g.fillStyle=m;dia();g.fill()}/* 時間の色（daycolor.js の dcTop と同じ） */
+  g.globalCompositeOperation='source-over';g.globalAlpha=Math.min(.24,.06*h);g.fillStyle='#fff8e0';dia();g.fill();g.globalAlpha=1;/* 上の面は、高いだんほど明るく */
+  g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0);g.globalCompositeOperation='source-over';
+  c.drawImage(C,0,0,ch.w,ch.h,X0,Y0,ch.w/2,ch.h/2);return true}
+/* 高い段のマス (x,y)（c は画面の向き、ゲームの点で描く）。土のだんは、下のだんから、角の形ごとのチップをならべる。石のブロックのだんは、面の絵を写したタイル */
+function icBlock(c,x,y){const j=y*W+x,h=hiAt(j);if(h<=0)return;const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),
+    gv=REV.has(j)?'g':WD===KUSA?'d':WD===KAZAN?'v':'k',gr=!top&&REV.has(j)?1+(hash(j)<.5?1:0):0;let soilTop=null;
+  for(let L=1;L<=h;L++){
+    if(!cubeAt(j,L)){const v=L===h?gv:'m',k=icBlkKey(x,y,L,v,hv),t=icBlkImg(k);if(t){const[ch,im]=t;c.drawImage(im,ix-ch.ax/2,iy+IQH/2-(L-1)*IQL-ch.ay/2,ch.w/2,ch.h/2);if(L===h)soilTop=k;continue}}
+    for(const side of[0,1]){const n=side?hv(x+1,y):hv(x,y+1);if(L<=n)continue;const s=icSrc(j,L,h);if(!s)continue;const f=icFace(side,s[0],s[1],L===h?gr:0);c.drawImage(f,side?ix:ix-IQW/2,iy+IQH/2-L*IQL)}}/* チップがまだないときも、前の面の絵 */
+  if(soilTop&&icBlkTop(c,x,y,h,ix,iy,soilTop))return;
   if(top){const t=cubeTex(top);if(t)c.drawImage(icTop(t,top),ix-IQW/2,iy-h*IQL)}else igTile(c,x,y,ix,iy-h*IQL);dcTop(c,ix,iy-h*IQL);/* 時間の色（daycolor.js） */
   c.save();c.globalAlpha=Math.min(.24,.06*h);c.fillStyle='#fff8e0';c.beginPath();c.moveTo(ix,iy-h*IQL);c.lineTo(ix+IQW/2,iy+IQH/2-h*IQL);c.lineTo(ix,iy+IQH-h*IQL);c.lineTo(ix-IQW/2,iy+IQH/2-h*IQL);c.closePath();c.fill();c.restore()}/* 上の面は、高いだんほど明るく */
 /* 形の絵：3Dの多角形（[[wx,wy,z],…] と色）を、ゲームの点の画面へぬり、ふちのうすい所を切る（ドットにそろえる） */
