@@ -40,20 +40,31 @@ BATCH1=['statue','statueb','obox','board','sacred','nat_tree','nat_tree_aki','na
 WBUP=10
 SHADOWS={'nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush','sacred'}   # 落ち影も写す物
 def bl_sizes():
-    """ゲームの BL の大きさ sz（id → (よこ,たて)）"""
-    s=open(os.path.join(ROOT,'js','data.js'),encoding='utf8').read();R={}
-    for m in re.finditer(r"([A-Za-z_]\w*):\{([^{}]*)\}",s):
-        z=re.search(r"\bsz:\[(\d+),(\d+)\]",m.group(2))
+    """ゲームの BL の大きさ sz（id → (よこ,たて)）。BL は1行に1つ（中に {} がある行も、その行の中の sz を見る）"""
+    R={}
+    for ln in open(os.path.join(ROOT,'js','data.js'),encoding='utf8'):
+        m=re.match(r"\s*([A-Za-z_]\w*):\{",ln);z=m and re.search(r"\bsz:\[(\d+),(\d+)\]",ln)
         if z:R.setdefault(m.group(1),(int(z.group(1)),int(z.group(2))))
     return R
 SZ=bl_sizes()
 def base(nm):return re.split(r'[>#@~:.]',nm)[0]
+FOOTOFF={'wbench':[(0.5,0),(0,0.5),(-0.5,0),(0,-0.5)]}   # 絵は1マス（設計図のマス）で、置く所はもっと大きい物：向きごとの、置く所のまん中の、設計図のマスのまん中からのずれ（ゲームの wbCells）
 def anchor(inf,nm,k):
     """置いたマスのまん中の地面の点が、写した絵（切る前）のどこに写るか（ドット）。設計図のマスは左上が (0,0)、大きさはゲームの sz"""
-    a,b=SZ.get(base(nm),(1,1));P=inf['PROJ'](inf['fwd']((a/2,b/2,0.0)));E=inf['ext'];S_=inf['S']
+    a,b=SZ.get(base(nm),(1,1));f=inf['fwd']
+    if base(nm) in FOOTOFF:
+        A=f((0.5,0.5,0.0));ox,oy=FOOTOFF[base(nm)][k%4];c=s=math.sqrt(0.5);q=np.array([A[0]+c*ox-s*oy,A[1]+s*ox+c*oy,A[2]])
+    else:q=f((a/2,b/2,0.0))
+    P=inf['PROJ'](q);E=inf['ext'];S_=inf['S']
     return (P[0]-E[0])*S_,(P[1]-E[2])*S_
+def rots():
+    """ゲームの向きの数 ROTS（js/world.js）"""
+    m=re.search(r"const ROTS=\{([^}]*)\}",open(os.path.join(ROOT,'js','world.js'),encoding='utf8').read())
+    return {k:int(v) for k,v in re.findall(r"(\w+):(\d+)",m.group(1))} if m else {}
+ROTN=rots()
 def add_left(M):
-    """>1 があって >3 がない物は、>3（左の向き）も写す"""
+    """向きが4つ（ROTS 4）で、>1 があって >3 がない物は、>3（左の向き）も写す。向き3つ（前・右・左）の物の左は、まだ（反転のまま）"""
+    if ROTN.get(M.ID)!=4:return
     V=list(M.VIEWS);have={v[0] for v in V}
     for v in list(V):
         if '>1' in v[0] and v[0].replace('>1','>3') not in have:V.append((v[0].replace('>1','>3'),3)+tuple(v[2:]))
