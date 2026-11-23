@@ -80,3 +80,16 @@ function iqRoofCol(c,h,I,x,A){const t0=I.top.get(x),b0=I.bot.get(x);if(t0==null)
   c.restore()}
 /* 家ごとに、列の屋根を足もとの順に足す（add は draw-world の D に足す関数）。屋根のすけぐあいは、いままでどおり roofAOf */
 function iqRoofsAdd(add,x0,y0,x1,y1){for(const h of HOUSES){if(h.y1<y0-2||h.y0>y1+2||h.x1<x0-2||h.x0>x1+2)continue;const A=roofAOf(h);if(A<=0)continue;const I=iqRoofCols(h);for(const[x,b0]of I.bot)add(b0+1.001,3,null,()=>iqRoofCol(ctx,h,I,x,A),-1,false,x+b0+1.35)}}
+/* 夜の窓のあかり：灯りのある家の、外を向いた窓（よこの壁は南の面・たての壁は東の面）を、夜の暗さの上に描く（iso:win:window:lit）。
+   こさは、家ごとにともる・消える（feelWin）×時刻（DAYC の win）。手前の背の高い物の絵にかさなる窓は描かない（暗さの上なので、かくれずに出てしまう） */
+function iqWinRect(key,i,lv){const ch=CHIPS[key];if(!ch)return null;const k=ch.g===64?.5:1,wx=(i%W+.5)*TS,wy=(((i/W)|0)+.5)*TS,l=isoX(wx,wy)-ch.ax*k,t=isoY(wx,wy)-lv*IQL-ch.ay*k;return[l,t,l+ch.w*k,t+ch.h*k]}
+function iqWinHid(q,R){const x=q%W,y=(q/W)|0;for(let dy=-3;dy<=4;dy++)for(let dx=-3;dx<=4;dx++){if(dx+dy<1)continue;const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;
+  const a=anc(Y*W+X),o=S.obj[a];if(!o||FLAT.has(o)||iqGrp(o)||!BL[o])continue;const c0=window.CHIPS&&CHIPS[o],ch=c0&&(c0.src||c0);if(!ch||!ch.iso)continue;/* クォータービューの絵（iso:1）だけ。足もとの点から ax・ay ずらして描く */
+  const A=objFootJ(a);if(A.x+A.w/2+A.y+A.h/2<=x+y+1)continue;/* 窓よりおくの物 */const P=isoChipAt(ctx,a,0,0,o);if(!P)continue;const k=ch.g===64?.5:1,l=P.x+ch.ax*k,t=P.y+ch.ay*k;
+  if(l<R[2]&&l+ch.w*k>R[0]&&t<R[3]&&t+ch.h*k>R[1])return true}return false}
+function iqWinLit(c,litH){const a0=dcNow().win;if(!(a0>0)||!window.CHIPS||!CHIPS['iso:win:window:lit:h']||!S.win)return;
+  for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;c.globalAlpha=Math.min(1,wa*a0);
+    for(const q of h.set){if(S.win[q]!==1)continue;const o=typeAt(q);if(iqGrp(o)!=='h'||HOME_DOORS.has(o)||iqFront(q))continue;
+      const m=iqMask(q,'h'),hz=!!(m&3)||!(m&12);if(h.inside.has(hz?q+W:q+1))continue;/* 家の中を向いた窓（北・西の壁）は、屋根の下 */
+      if(!isoCellVis(q%W,(q/W)|0,TS*2))continue;const key='iso:win:window:lit:'+(hz?'h':'v'),lv=Math.max(0,hiAt(q)),R=iqWinRect(key,q,lv);if(!R||iqWinHid(q,R))continue;iqChip(c,key,q,lv)}}
+  c.globalAlpha=1}

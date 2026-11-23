@@ -3,7 +3,7 @@
 #   家のドア（door・yozoradoor・canvasdoor・archdoor・niwadoor）：iso:<id>:<h|v>（しまる）・#1〜#3（ひらく）・~low（屋根をはずした手前のドア）
 #   柵・塀のドア（gate・logdoor・parkdoor・sdoor、となりの柵の戸 ropefence.gate など）：iso:<id>:<h|v>・#1〜#3
 #   2マスの門（stonegate・loggate・parkgate・canalgate・irongate）：iso:<id>:h・#1〜#3（左のマスのチップが2マスぶん）
-#   壁にかける物：iso:win:<id>:<h|v>（壁の面）・iso:win:wreath:d・d#1（ドアの板の面のリース）
+#   壁にかける物：iso:win:<id>:<h|v>（壁の面）・iso:win:wreath:d・d#1（ドアの板の面のリース）・iso:win:window:lit:<h|v>（夜の窓のあかり）
 # 設計図（マス。x=東・y=南・z=上。マスのまん中が(0.5,0.5)）
 #   家のドア：わくは家の壁（hwall）と同じあつさ0.3・高さ2.0。両わきの柱（はば0.15。となりの壁と同じく、となりのマスまでのばして切る）・
 #     上のかもい（高さ1.4〜2.0）・しきい（高さ0.03）。わくの面は hwall の壁の絵。
@@ -185,12 +185,14 @@ def hang_render(C,iid,v,plane=None,ang=0):
     ok=(sx>=0)&(sy>=0)&(sx<can.shape[1])&(sy<can.shape[0]);out=np.zeros((IC.HP,IC.WP,4),np.uint8)
     out[ok]=can[sy[ok],sx[ok]]
     nx,ny=(math.sin(a),math.cos(a)) if not v else (math.cos(a),math.sin(a))
-    kf=IC.FACE[2] if v and not ang else IC.FACE[1];out[...,:3]=np.clip(out[...,:3]*kf,0,255).astype(np.uint8)
+    kf=1.0 if iid=='window:lit' else IC.FACE[2] if v and not ang else IC.FACE[1]   # 光る窓のあかりは、面の向きのかげをつけない
+    out[...,:3]=np.clip(out[...,:3]*kf,0,255).astype(np.uint8)
     return IC.crop(Image.fromarray(out))
 def build_hang(C):
     res={}
     for iid in HANG:
         for v in(0,1):res['iso:win:%s:%s'%(iid,'v' if v else 'h')]=hang_render(C,iid,v)
+    for v in(0,1):res['iso:win:window:lit:%s'%('v' if v else 'h')]=hang_render(C,'window:lit',v)   # 夜の窓のあかり（灯りのある家の窓ガラス）
     res['iso:win:wreath:d']=hang_render(C,'wreath',0,plane=0.5+LT/2+0.004)
     for n in(1,2,3):res['iso:win:wreath:d#%d'%n]=hang_render(C,'wreath',0,plane=0.5+LT/2+0.004,ang=ANG[n])
     return res
