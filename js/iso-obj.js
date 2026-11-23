@@ -12,6 +12,7 @@ function isoLocal(L,f){const o=ISOLOC;ISOLOC=L?{...(o||{}),...L}:o;try{return f(
 function isoChipAt(c,i,x,y,id){if(ICON||c!==ctx)return null;let A;
   if(id&&S&&(id.startsWith('story:')||id==='tower'&&WD===KUSA)&&(i!=null&&i>=0||S.sacredRoot!=null)){const j=i!=null&&i>=0?anc(i):S.sacredRoot,n=typeof sacredSpan==='function'?sacredSpan():4,lv=Math.max(0,hiAt(j)),wx=(j%W+n/2)*TS,wy=((j/W|0)+n/2)*TS;return{x:isoX(wx,wy),y:isoY(wx,wy)-lv*IQL}}/* 御神木の切り株〜御神木：切り株（i。なければ S.sacredRoot）の n×n のまん中（幹のまん中）から */
   if(id==='matyard'&&i!=null&&i>=0){const lv=Math.max(0,hiAt(i)),wx=(i%W+.5)*TS,wy=((i/W|0)+.5)*TS;return{x:isoX(wx,wy),y:isoY(wx,wy)-lv*IQL}}/* 材料置き場：そのマス（作業台の置き場は、作業台の part のマス）のまん中から */
+  if((i==null||i<0)&&typeof caveOn==='function'&&caveOn()&&y>=H*TS){const wx=x+TS/2,wy=y+TS/2;return{x:isoX(wx,wy),y:isoY(wx,wy)-cvqLvAt(wx,wy)*IQL}}/* 洞窟の物（cvChip）：x,y はマスの左上（すべる岩などは、とちゅうの場所）。段は洞窟の段 */
   if(i!=null&&i>=0)A=objFootJ(i);else{const tx=Math.floor((x+.5)/TS),ty=Math.floor((y+.5)/TS);A={x:tx,y:ty,w:1,h:1};A.lv=0}/* 置く前の絵など、マスのないとき：x,y のマス */
   const a=i!=null&&i>=0?anc(i):-1,lv=a>=0?Math.max(0,hiAt(a)):0,wx=(A.x+A.w/2)*TS,wy=(A.y+A.h/2)*TS;
   return{x:isoX(wx,wy),y:isoY(wx,wy)-lv*IQL}}

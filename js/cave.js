@@ -391,7 +391,7 @@ function fossilGive(k,n){if(!CVFOS[k]||!(n>0))return;const R=S.fosRec||(S.fosRec
 function fossilZukan(d,add){const R=d.fosRec||{};for(const k of CVFOSK)if(R[k]>0)add(CVFOS[k],CVFOSD[k]+'見つけた数 '+R[k],fossilIcon(k),'i:mat:stone')}
 const CVFOES={c:'basic',i:'rockc'};
 let CV=null;
-const caveOn=()=>!!CV;
+const caveOn=()=>!!CV;/* 洞窟の物の左右反転は、クォータービューの絵にも isoLocal でかける（iso-obj.js） */
 const cvJ=(x,y)=>y*CVW+x,cvX=j=>j%CVW,cvY=j=>(j/CVW)|0;
 const cvCell=e=>cvJ(e.x|0,(e.y|0)-CVOY);
 const cvAdj=(j,k)=>Math.abs(cvX(j)-cvX(k))+Math.abs(cvY(j)-cvY(k))===1;
@@ -766,16 +766,16 @@ const CVCRYSP=[0,3,5,7,7,0,5,3];/* 床のまだらの上の水晶の形（小さ
 function cvDrawDeco(d,now){const C=CV,ox=cvX(d.j)*TS+d.dx,oy=(cvY(d.j)+CVOY)*TS,t=now/1000+d.j;
   if(d.k==='crys'){const c=cvCrysImg(d.v,d.m);if(c){ctx.save();if(d.flip){ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}ctx.drawImage(c,ox+c.ax/2,oy+(d.dy||0)+c.ay/2-4,c.width/2,c.height/2);ctx.restore()}
     const p=(t*.6)%2.6;if(p<.6){const s=Math.sin(p/.6*Math.PI),q=cvTheme().crys[d.v][5];ctx.globalAlpha=s;const sx=ox+4+((d.j*7)%24),sy=oy-8+((d.j*3)%18);P4(q,sx,sy,1,1);if(s>.6){P4(q,sx-1,sy,3,1);P4(q,sx,sy-1,1,3)}ctx.globalAlpha=1}return}/* きらっ */
-  if(d.k==='shroom'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}cvChip(ctx,'cave:kinoko#'+d.v,ox,oy,now);if(d.flip)ctx.restore();const p=(t*.35)%1;ctx.globalAlpha=Math.sin(p*Math.PI)*.8;P4('#b6fff0',ox+14+Math.round(Math.sin(t*2)*4),oy-6-Math.floor(p*20),1,1);P4('#b6fff0',ox+4+Math.round(Math.cos(t*1.7)*3),oy+2-Math.floor(((p+.5)%1)*14),1,1);ctx.globalAlpha=1;return}
-  if(d.k==='bone'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}cvChip(ctx,'cave:bone#'+d.v,ox,oy+(d.dy||0),now);if(d.flip)ctx.restore()}
-  if(d.k==='big'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}cvChip(ctx,'cave:bigstal',ox,oy,now);if(d.flip)ctx.restore();return}
+  if(d.k==='shroom'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:kinoko#'+d.v,ox,oy,now));if(d.flip)ctx.restore();const p=(t*.35)%1;ctx.globalAlpha=Math.sin(p*Math.PI)*.8;P4('#b6fff0',ox+14+Math.round(Math.sin(t*2)*4),oy-6-Math.floor(p*20),1,1);P4('#b6fff0',ox+4+Math.round(Math.cos(t*1.7)*3),oy+2-Math.floor(((p+.5)%1)*14),1,1);ctx.globalAlpha=1;return}
+  if(d.k==='bone'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:bone#'+d.v,ox,oy+(d.dy||0),now));if(d.flip)ctx.restore()}
+  if(d.k==='big'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:bigstal',ox,oy,now));if(d.flip)ctx.restore();return}
   if(d.k==='vine'){const G=cvTheme().glow;for(let v=0;v<d.n;v++){const hs=n=>hash(((d.j*29+v*313+n*57)>>>0)),L=16+((hs(1)*20)|0);let x=ox+4+((hs(2)*24)|0);const y0=oy-26;/* 光るつた：岩の正面の上からたれる。くき・葉・光る実 */
       for(let i=0;i<L;i++){const sw=Math.round(Math.sin(t*1.3+v+i*.25)*(i/L)*1.5);P4('#1f4a44',x+sw,y0+i,1,1);if(i%5===2){P4('#3f8f6a',x+sw+1,y0+i,2,1);P4('#3f8f6a',x+sw-2,y0+i+1,2,1)}if(i%7===5)P4(G,x+sw,y0+i,1,1);if(hs(10+i)<.12)x+=hs(20+i)<.5?-1:1}
       const sw=Math.round(Math.sin(t*1.3+v+1)*1.5);P4(G,x+sw-1,y0+L,3,2);P4('#ffffff',x+sw,y0+L,1,1)}return}
   if(d.k==='gmoss'){const G=cvTheme().glow,hs=n=>hash(((d.j*31+n*97)>>>0)),cx=ox+16,cy=oy+20+(d.dy||0);/* 光るこけ：床の上の、ふちのでこぼこな、ひくいかたまりと光るつぶ */
     for(let i=0;i<14;i++){const a=hs(i)*6.283,r=hs(i+40)*7;P4(i%3?'#2f6a52':'#3f8f6a',cx+Math.cos(a)*r*1.4-1,cy+Math.sin(a)*r*.6,3,2)}
     for(let i=0;i<6;i++){const a=hs(i+80)*6.283,r=hs(i+90)*6,tw=.5+.5*Math.sin(t*2+i*1.7);ctx.globalAlpha=.5+.5*tw;P4(G,cx+Math.cos(a)*r*1.5,cy+Math.sin(a)*r*.55-1,1,1);ctx.globalAlpha=1}return}
-  if(d.k==='plant'){const y=oy+(d.dy||0);if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}cvChip(ctx,'cave:plant#'+d.v,ox,y,now);if(d.flip)ctx.restore()}}/* ほね：3Dから写した絵（tools/art/furn3d/items/cave_bone0〜2） */
+  if(d.k==='plant'){const y=oy+(d.dy||0);if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:plant#'+d.v,ox,y,now));if(d.flip)ctx.restore()}}/* ほね：3Dから写した絵（tools/art/furn3d/items/cave_bone0〜2） */
 function cvSpark(x,y,col,n){const C=CV,t0=performance.now();for(let i=0;i<n;i++){const an=i/n*6.283+Math.random()*.6,v=.8+Math.random()*1.6;C.sparks.push({x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v*.6-1.2,t0,col})}}
 const P4=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)};
 function cvRockArt(ox,oy){if(CV&&cvTheme().icec){P4('rgba(10,20,40,.2)',ox+9,oy+27,14,3);P4('#7cc0e0',ox+12,oy+4,8,8);P4('#9ccae6',ox+13,oy+12,6,8);P4('#c0e2f6',ox+14,oy+20,4,6);P4('#e6f8ff',ox+15,oy+26,2,3);P4('#ffffff',ox+13,oy+5,1,12);return}/* 氷のほらあなは、つらら */P4('rgba(40,25,10,.2)',ox+4,oy+27,24,3);P4('#5e5246',ox+4,oy+8,24,20);P4('#5e5246',ox+7,oy+5,18,26);P4('#85776a',ox+6,oy+7,20,18);P4('#85776a',ox+8,oy+5,16,3);P4('#a3957f',ox+9,oy+8,9,2);P4('#a3957f',ox+8,oy+10,3,4);P4('#6f6253',ox+17,oy+17,6,2);P4('#6f6253',ox+11,oy+21,4,1)}

@@ -35,6 +35,7 @@ import furn3d as F3
 _shot=F3.shot
 def shot(M,k,only=None,S_=64,filt=None,info=None):return _shot(M,k,only,ISOS,filt,info)
 F3.shot=shot
+SKIP={'kabebukuro','wreath','wshelf','nat_eda','g_w_acorn','g_w_clover','g_w_shelf','g_w_stump','cave_cols','cave_ccols','cave_steps','cave_down','cave_stalac0','cave_stalac1'}|{'cave_crys%d'%n for n in range(8)}   # 壁にかける物（H-14 の iso:win）・落とし物の枝（物の絵ではない）・トリポの _t がある前の限定の家具・洞窟の、かべの帯と、こさの番号でぬりかえる物（cave_tex.py を通る）と、かべの正面のつらら石
 BATCH2=['crate','bed','wbench','loom','taru','chair','table']   # はじめの家具
 BATCH1=['statue','statueb','obox','board','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
 WBUP=10
@@ -48,10 +49,15 @@ def bl_sizes():
     return R
 SZ=bl_sizes()
 def base(nm):return re.split(r'[>#@~:.]',nm)[0]
+SZN={'site:s1':(1,1),'site:s2':(2,1),'site:s2d':(2,2),'site:s2t':(2,1),'site:s3':(1,1)}   # 足場：建てる物の大きさ（siteKey・siteSpan。s2t は風車の1マスの足場で、絵はそのマスから左右へ半マスずつ＝設計図の2マスのまん中。s3 は神殿の1マス）
+def szof(nm):
+    for k,v in SZN.items():
+        if nm==k or nm.startswith(k+'#') or nm.startswith(k+'>'):return v
+    return SZ.get(base(nm),(1,1))
 FOOTOFF={'wbench':[(0.5,0),(0,0.5),(-0.5,0),(0,-0.5)]};FOOTOFF['wbwork']=FOOTOFF['wbench']   # 絵は1マス（設計図のマス）で、置く所はもっと大きい物：向きごとの、置く所のまん中の、設計図のマスのまん中からのずれ（ゲームの wbCells）
 def anchor(inf,nm,k):
     """置いたマスのまん中の地面の点が、写した絵（切る前）のどこに写るか（ドット）。設計図のマスは左上が (0,0)、大きさはゲームの sz"""
-    a,b=SZ.get(base(nm),(1,1));f=inf['fwd']
+    a,b=szof(nm);f=inf['fwd']
     if base(nm) in FOOTOFF:
         A=f((0.5,0.5,0.0));ox,oy=FOOTOFF[base(nm)][k%4];c=s=math.sqrt(0.5);q=np.array([A[0]+c*ox-s*oy,A[1]+s*ox+c*oy,A[2]])
     else:q=f((a/2,b/2,0.0))
@@ -64,8 +70,12 @@ def rots():
 ROTN=rots()
 def add_left(M):
     """向きが4つ（ROTS 4）で、>1 があって >3 がない物は、>3（左の向き）も写す。向き3つ（前・右・左）の物の左は、まだ（反転のまま）"""
-    if ROTN.get(M.ID)!=4:return
     V=list(M.VIEWS);have={v[0] for v in V}
+    if ROTN.get(M.ID)==3:   # 向き3つ（前・右・左）：左（r 2）は >2 の名前で、左を向いた絵（k 3）
+        for v in list(V):
+            if '>1' in v[0] and v[0].replace('>1','>2') not in have:V.append((v[0].replace('>1','>2'),3)+tuple(v[2:]))
+        M.VIEWS=V;return
+    if ROTN.get(M.ID)!=4:return
     for v in list(V):
         if '>1' in v[0] and v[0].replace('>1','>3') not in have:V.append((v[0].replace('>1','>3'),3)+tuple(v[2:]))
     M.VIEWS=V
@@ -88,7 +98,9 @@ def run_item(iid,out):
             old=CHP.load_imgs()[1].get(nm)
             if old and 'cut' in old:c['cut']=old['cut']
         R[nm]=c;print('iso',nm,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
-    if iid in SHADOWS:R.update(shadows(M,R,out))
+    import chips as CHP
+    if not hasattr(run_item,'old'):run_item.old=CHP.load_imgs()[1]
+    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old})   # 落ち影：いま落ち影のある物だけ
     return R
 def run_sacred(out):   # 落ち影は作らない（御神木は落ち影の描き方を通らない）
     import sacred_tripo as ST
@@ -143,7 +155,7 @@ def shadows(M,R,out,anc=None):
         if nm not in R:continue
         sc,_=F3.scene(M,k);T=np.array([[a,b,c_] for a,b,c_,col,pid in sc.t])
         inf={};F3.shot(M,k,info=inf);P,E,S_=inf['PROJ'],inf['ext'],inf['S']
-        a,b=anc or SZ.get(base(nm),(1,1));A=P(inf['fwd']((a if anc else a/2,b if anc else b/2,0.0)))
+        a,b=anc or szof(nm);A=P(inf['fwd']((a if anc else a/2,b if anc else b/2,0.0)))
         G=T-T[...,2:3]/L[2]*L;G[...,2]=0
         Q=np.array([[((P(g)[0]-A[0])*S_,(P(g)[1]-A[1])*S_) for g in t] for t in G])
         x0,y0=int(np.floor(Q[...,0].min()))-1,int(np.floor(Q[...,1].min()))-1;x1,y1=int(np.ceil(Q[...,0].max()))+1,int(np.ceil(Q[...,1].max()))+1
@@ -159,17 +171,26 @@ def shadows(M,R,out,anc=None):
     return res
 def build(out,ids):
     os.makedirs(out,exist_ok=True);R={}
-    for iid in ids:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_item(iid,out))
+    bad=[]
+    for iid in ids:   # 1つがこわれても、つづける（こわれた物は _bad.txt に）
+        try:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_item(iid,out))
+        except Exception as e:
+            import traceback;traceback.print_exc();bad.append(iid)
+    if bad:open(os.path.join(out,'_bad.txt'),'w').write('\n'.join(bad));print('写せなかった物',bad)
     D=os.path.join(out,'_chips');os.makedirs(D,exist_ok=True)   # チップの絵（--from で、写しなおさずにチップへ入れる）
     for k,c in R.items():
         for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
-    json.dump({k:{q:v for q,v in c.items() if q not in('f','parts')}|{'n':len(c['f'])} for k,c in R.items() if not c.get('parts')},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)
+        for pi,q in enumerate(c.get('parts') or []):
+            for n,im in enumerate(q['f']):im.save(os.path.join(D,safe(k)+'_p%d_%d.png'%(pi,n)))
+    json.dump({k:{q:v for q,v in c.items() if q not in('f','parts')}|{'n':len(c['f'])}|({'parts':[{a:b for a,b in q.items() if a!='f'}|{'n':len(q['f'])} for q in c['parts']]} if c.get('parts') else {}) for k,c in R.items()},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)
     return R
 def safe(k):import hashlib;return re.sub(r'[^0-9A-Za-z~@_-]','_',k)+'_'+hashlib.md5(k.encode()).hexdigest()[:6]   # ファイルの名前（tree:sh と tree_sh がぶつからないように）
 def load_out(out):
     """build で書いた絵と _info.json から、チップの中身を作りなおす（写しなおさない）"""
     I=json.load(open(os.path.join(out,'_info.json'),encoding='utf8'));D=os.path.join(out,'_chips');R={}
-    for k,c in I.items():n=c.pop('n');R[k]=dict(c,f=[Image.open(os.path.join(D,safe(k)+'_%d.png'%i)).convert('RGBA') for i in range(n)])
+    for k,c in I.items():
+        n=c.pop('n');R[k]=dict(c,f=[Image.open(os.path.join(D,safe(k)+'_%d.png'%i)).convert('RGBA') for i in range(n)])
+        for pi,q in enumerate(R[k].get('parts') or []):m=q.pop('n');q['f']=[Image.open(os.path.join(D,safe(k)+'_p%d_%d.png'%(pi,i))).convert('RGBA') for i in range(m)]
     return R
 def to_chips(R):
     import chips as CHP
