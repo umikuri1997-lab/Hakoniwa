@@ -88,7 +88,7 @@ function cvqRockDeco(x,y){const C=CV,ox=x*TS,oy=(y+CVOY)*TS,IN=(a,b)=>a>=0&&b>=0
     {const D=cvTheme().deco||{};if(D.roots&&h(120)<D.roots){/* 天井からたれる根：岩の正面の上から、まがりながら下へ。ところどころ小さな葉 */const n=1+((h(121)*2)|0);for(let r=0;r<n;r++){let px=4+((h(122+r)*22)|0),py=-12;const L=22+((h(130+r)*18)|0);for(let i=0;i<L;i++){const w=i<L*.6?2:1;F(i%6===5?'#7a5634':'#9a7046',px,py+i,w,1);if(w>1)F('#c0905a',px,py+i,1,1);if(h(140+r*31+i)<.16)px+=h(150+r+i)<.5?-1:1;if(i>8&&h(160+r*17+i)<.14){F('#4f8a30',px+w,py+i,3,2);F('#86c25a',px+w,py+i,2,1)}}F('#9a7046',px,py+L,1,2)}}
       if(D.moss&&h(170)<D.moss){const px=2+((h(171)*20)|0);F('#4f7f34',px,26,8,2);F('#6faa48',px+1,25,5,1);F('#86c25a',px+2,24,2,1)}}/* こけ：岩の正面の下 */
     if(C.ore.has(j)&&!cvChip(ctx,'cave:ore',ox,oy)){F('#3f8f8a',9,14,4,5);F('#7fe0d2',10,15,2,2);F('#3f8f8a',19,19,5,4);F('#7fe0d2',20,20,2,2);F('#7fe0d2',15,24,2,2)}
-    if(h(110)<.3&&!cvChip(ctx,'cave:stalac#'+(h(111)<.5?0:1),ox,oy+4)){const px=5+((h(112)*18)|0);F('#5a4d43',px,7,5,6);F('#5a4d43',px+1,13,3,4);F('#5a4d43',px+2,17,1,3)}
+    if(h(110)<.3&&!cvChip(ctx,'cave:stalac#'+(h(111)<.5?0:1),ox,oy)){const px=5+((h(112)*18)|0);F('#5a4d43',px,7,5,6);F('#5a4d43',px+1,13,3,4);F('#5a4d43',px+2,17,1,3)}
     return}
 }
 /* 床のくずれた小石（そのマスの地面に） */

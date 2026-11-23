@@ -759,12 +759,14 @@ function cvDecoPlace(){const C=CV,TH=cvTheme(),D=TH.deco||{},L=[];
 /* こさの番号の絵（3Dで写した水晶・岩の段）を、階の色のならびでぬりかえる（1回だけ。C.crysImg にためて、洞窟を出るとき手ばなす） */
 function cvToneImg(id,R,key){const C=CV;if(!C.crysImg)C.crysImg={};if(C.crysImg[key])return C.crysImg[key];const ch=cvChipOf(id);if(!ch)return null;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
   const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);const d=g.getImageData(0,0,c.width,c.height),Q=R.map(cvRGB);
-  for(let i=0;i<d.data.length;i+=4){if(!d.data[i+3])continue;const l=Math.min(5,Math.round(d.data[i]/50)),q=Q[l];d.data[i]=q[0];d.data[i+1]=q[1];d.data[i+2]=q[2]}g.putImageData(d,0,0);c.ax=ch.ax;c.ay=ch.ay;return C.crysImg[key]=c}
-const cvCrysImg=(v,m)=>cvToneImg('cave:crys#'+m,cvTheme().crys[v],'c'+v+'_'+m);/* m：水晶の形（0 小さい1本・1と2 かたまり・3 細長い1本・4 とても大きなかたまり・5 ひくいかたまり・6 おうぎ・7 かけら） */
+  for(let i=0;i<d.data.length;i+=4){if(!d.data[i+3])continue;const l=Math.min(5,Math.round(d.data[i]/50)),q=Q[l];d.data[i]=q[0];d.data[i+1]=q[1];d.data[i+2]=q[2]}g.putImageData(d,0,0);c.ax=ch.ax;c.ay=ch.ay;c.iso=ch.iso;return C.crysImg[key]=c}
+/* こさの番号の絵に色をぬったチップ（クォータービューの絵 iso:1 は、drawChip で、マスのまん中の地面の点から描く） */
+function cvToneChip(id,R,key){const c=cvToneImg(id,R,key);if(!c)return null;if(!c._ch){c.ok=1;c._ch={g:64,ax:c.ax,ay:c.ay,w:c.width,h:c.height,iso:c.iso,f:[],_im:[c]}}return c._ch}
+/* 水晶の形 cave:crys#m（0 小さい1本・1と2 かたまり・3 細長い1本・4 とても大きなかたまり・5 ひくいかたまり・6 おうぎ・7 かけら） */
 const CVCRYSM=[0,1,2,3,4,5,7,1,2,3,4,5,1,2,3,0,5,4,2,6];/* かべぎわの水晶の形（大きな物が多め。おうぎの3本 6 は、自然に見えないので少しだけ。持ち主） */
 const CVCRYSP=[0,3,5,7,7,0,5,3];/* 床のまだらの上の水晶の形（小さな物が多め。おうぎ 6 は使わない） */
 function cvDrawDeco(d,now){const C=CV,ox=cvX(d.j)*TS+d.dx,oy=(cvY(d.j)+CVOY)*TS,t=now/1000+d.j;
-  if(d.k==='crys'){const c=cvCrysImg(d.v,d.m);if(c){ctx.save();if(d.flip){ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}ctx.drawImage(c,ox+c.ax/2,oy+(d.dy||0)+c.ay/2-4,c.width/2,c.height/2);ctx.restore()}
+  if(d.k==='crys'){const c=cvToneChip('cave:crys#'+d.m,cvTheme().crys[d.v],'c'+d.v+'_'+d.m);if(c)isoLocal(d.flip?{sx:-1,sy:1}:null,()=>drawChip(ctx,c,'cave:crys#'+d.m,ox,oy+(d.dy||0),now));/* 左右反対は、足もとのまわりで（isoLocal） */
     const p=(t*.6)%2.6;if(p<.6){const s=Math.sin(p/.6*Math.PI),q=cvTheme().crys[d.v][5];ctx.globalAlpha=s;const sx=ox+4+((d.j*7)%24),sy=oy-8+((d.j*3)%18);P4(q,sx,sy,1,1);if(s>.6){P4(q,sx-1,sy,3,1);P4(q,sx,sy-1,1,3)}ctx.globalAlpha=1}return}/* きらっ */
   if(d.k==='shroom'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:kinoko#'+d.v,ox,oy,now));if(d.flip)ctx.restore();const p=(t*.35)%1;ctx.globalAlpha=Math.sin(p*Math.PI)*.8;P4('#b6fff0',ox+14+Math.round(Math.sin(t*2)*4),oy-6-Math.floor(p*20),1,1);P4('#b6fff0',ox+4+Math.round(Math.cos(t*1.7)*3),oy+2-Math.floor(((p+.5)%1)*14),1,1);ctx.globalAlpha=1;return}
   if(d.k==='bone'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:bone#'+d.v,ox,oy+(d.dy||0),now));if(d.flip)ctx.restore()}
@@ -785,7 +787,7 @@ function cvDrawObj(j,o,now){const C=CV,ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS,k=o.k,hs
   if(k==='g'){const p=.5+.5*Math.sin(now/700+j);if(!cvChip(ctx,'cave:kinoko#2',ox,oy,now)){/* 光るきのこのマス（歩ける）：ひくい小さなきのこ */P4('#2f6f6a',ox+8,oy+20,3,6);P4('#2f6f6a',ox+18,oy+17,3,8);P4('#2f6f6a',ox+13,oy+23,2,4);P4('#58c9b8',ox+5,oy+16,9,5);P4('#58c9b8',ox+15,oy+13,9,5);P4('#58c9b8',ox+11,oy+21,6,3);P4('#b6fff0',ox+7,oy+17,3,1);P4('#b6fff0',ox+17,oy+14,3,1)}
     ctx.globalAlpha=.35+.4*p;P4('#b6fff0',ox+6+hs(1)*18,oy+8-p*5,1,1);P4('#b6fff0',ox+10+hs(2)*12,oy+11-p*3,1,1);ctx.globalAlpha=1;return}
   if(k==='A'){P4('rgba(20,14,10,.3)',ox+7,oy+26,18,3);P4('#5a4d43',ox+9,oy+14,14,14);P4('#5a4d43',ox+11,oy+6,10,10);P4('#5a4d43',ox+13,oy,6,8);P4('#7a6a5c',ox+10,oy+15,6,12);P4('#7a6a5c',ox+12,oy+7,4,9);P4('#7a6a5c',ox+14,oy+1,2,7);P4('#9b8b78',ox+11,oy+16,2,8);P4('#9b8b78',ox+13,oy+8,1,6);return}
-  if(k==='R'){const c=cvToneImg('cave:down',cvTheme().rock,'down');if(c){ctx.drawImage(c,ox+c.ax/2,oy+c.ay/2,c.width/2,c.height/2);const t=now/1000;for(let i=0;i<3;i++){const p=(t*.4+i*.33)%1;ctx.globalAlpha=(1-p)*.8;P4('#fff3c4',ox+11+hs(i)*10,oy-2-p*16,1,1)}ctx.globalAlpha=1;return}/* 下へおりる所：岩山の暗い入り口へ下る岩の段（3Dから写した絵、cave_down.py） */
+  if(k==='R'){const c=cvToneChip('cave:down',cvTheme().rock,'down');if(c){drawChip(ctx,c,'cave:down',ox,oy,now);const t=now/1000;for(let i=0;i<3;i++){const p=(t*.4+i*.33)%1;ctx.globalAlpha=(1-p)*.8;P4('#fff3c4',ox+11+hs(i)*10,oy-2-p*16,1,1)}ctx.globalAlpha=1;return}/* 下へおりる所：岩山の暗い入り口へ下る岩の段（3Dから写した絵、cave_down.py） */
     P4('#1d1713',ox+2,oy+4,28,24);P4('#40352c',ox+2,oy+4,28,3);for(let i=0;i<4;i++){P4('#75655a',ox+5+i*2,oy+9+i*5,22-i*4,3);P4('#8a7968',ox+5+i*2,oy+9+i*5,22-i*4,1)}
     const t=now/1000;for(let i=0;i<4;i++){const p=(t*.4+i*.25)%1;ctx.globalAlpha=1-p;P4('#fff3c4',ox+8+hs(i)*16,oy+14-p*22,2,2)}ctx.globalAlpha=1;return}
   if(k==='^')return;
@@ -804,7 +806,7 @@ function cvDrawObj(j,o,now){const C=CV,ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS,k=o.k,hs
     let x=ox+3+hs2(1)*6,y=oy+6+hs2(2)*8;for(let i=0;i<10;i++){P4('#ff6a2a',x,y,2,1);x+=2.5;y+=hs2(i+3)<.5?1:-1}x=ox+8+hs2(4)*10;y=oy+4;for(let i=0;i<9;i++){P4('#ffa040',x,y,1,2);y+=2.6;x+=hs2(i+9)<.5?1:-1}ctx.globalAlpha=1;return}
   if(k==='z'){if(o.gone)return;const n=o.n||0;for(let r=0;r<3;r++){P4('#3a2a22',ox+1,oy+2+r*10,30,9);P4('#6a5446',ox+2,oy+2+r*10,28,7);P4('#86705e',ox+3,oy+2+r*10,26,2)}/* ゆらぐ岩の橋：わたるたびに、ひびがふえる */
     for(let i=0;i<n*4;i++)P4('#2a1c16',ox+4+hs(i+1)*24,oy+3+hs(i+20)*26,3,1);if(n>=2&&Math.sin(now/70)>.3)P4('#ff8a3d',ox+14,oy+28,4,2);return}
-  if(k==='F'){if(o.done)return;const c=cvToneImg('cave:crys#1',cvTheme().crys[0],'F');if(c){ctx.drawImage(c,ox+c.ax/2,oy+c.ay/2-2,c.width/2,c.height/2);return}P4('#b4e4f6',ox+2,oy-8,28,38);return}/* 氷のかべ */
+  if(k==='F'){if(o.done)return;const c=cvToneChip('cave:crys#1',cvTheme().crys[0],'F');if(c){drawChip(ctx,c,'cave:crys#1',ox,oy,now);return}P4('#b4e4f6',ox+2,oy-8,28,38);return}/* 氷のかべ */
   if(k==='Z'){cvChip(ctx,'cave:chest',ox,oy,now);ctx.globalAlpha=.55;P4('#cfefff',ox+3,oy-2,26,30);ctx.globalAlpha=.9;P4('#ffffff',ox+5,oy,2,14);P4('#ffffff',ox+5,oy,10,2);P4('#9cd8f0',ox+3,oy+27,26,1);ctx.globalAlpha=1;return}/* 氷づけの宝箱 */
   if(k==='S'){const t=now/1000;for(let i=0;i<12;i++){const an=i/12*6.283+t*.6;P4(i%2?'#fff3c4':'#ffe08a',ox+16+Math.cos(an)*11-1,oy+18+Math.sin(an)*5-1,2,2)}
     for(let i=0;i<5;i++){const p=(t*.5+i*.2)%1;ctx.globalAlpha=1-p;P4('#fff3c4',ox+8+hs(i)*16,oy+16-p*26,2,2)}ctx.globalAlpha=1;return}
