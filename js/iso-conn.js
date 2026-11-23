@@ -4,7 +4,7 @@
    家の屋根は、列ごとの切妻（棟は東西）。屋根をはずした家（roofAOf が .5 より小さい）は、手前の2つの壁（南・東）をひくい壁（巾木くらい）にする（iqFront）。
    絵がとどくまでは、コードの仮の絵（面の色だけの箱）。3Dから写した絵がとどいたら、チップ iso:<id>:<つなぎ方>（ひくい壁は ~low。ドアはつなぎ方のかわりに向き h・v、開いたコマは #1〜3。壁にかける物は iso:win:<id>:<h|v>）を、そのまま描く（iqChip）。
    描くのは地面の描き方（groundTf：せかいの点）のまま。高さ z は画面の点で、せかいの点を左上へ z/(2·IQB) ずらすと、その高さに見える。 */
-const IQWALLH=IQL,IQLOWH=6;/* 家の壁の高さ（段差1だんと同じ）・屋根をはずしたときの手前の壁の高さ（巾木くらい） */
+const IQWALLH=IQL*2,IQLOWH=6;/* 家の壁の高さ（段差2だん。せいれいの1.6倍。持ち主がきめた）・屋根をはずしたときの手前の壁の高さ（巾木くらい） */
 const IQC={/* 仮の絵の色（もとの色。上の面は明るく、東の面は暗く） */
   hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',canalwall:'#bcb4a6',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
   fence:'#c69a62',misugaki:'#c7b27a',ropefence:'#d8c49a',ashifence:'#c8b478',rankan:'#c6c0b4',ibara:'#5f7a46',kuzure:'#a8a296',logfence:'#9a6a3c',bamboofence:'#a9b85e',parkfence:'#f4efe6',hedge:'#6fae4a',
@@ -53,11 +53,11 @@ function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)
     if(door){const wide=S.obj[i+1]==='part'&&S.ref[i+1]===i,L=hz?[[X+2,Y+TS/2],[X+(wide?2:1)*TS-2,Y+TS/2]]:[[X+TS/2,Y+2],[X+TS/2,Y+TS-2]];for(const[px,py]of L)iqPrism(c,px-pt,py-pt,px+pt,py+pt,b,b+ph+3,pc);/* 柵のドア：両はしの柱と、とびら */
       if(n<2){const a=TS*.05;for(const zz of[5,13])hz?iqPrism(c,X+2+pt,Y+TS/2-a,X+(wide?2:1)*TS-2-pt,Y+TS/2+a,b+zz,b+zz+3,col):iqPrism(c,X+TS/2-a,Y+2+pt,X+TS/2+a,Y+TS-2-pt,b+zz,b+zz+3,col)}return}
     for(const zz of[6,13])iqArms(c,x,y,m,TS*.07,b+zz,b+zz+3,col,.01);iqPrism(c,X+TS/2-pt,Y+TS/2-pt,X+TS/2+pt,Y+TS/2+pt,b,b+ph,pc);return}
-  const t=g==='w'?TS*.4:TS*.3,zt=b+(g==='w'?IQWALLH*.8:low?IQLOWH:IQWALLH);/* 家の壁・石の塀 */
+  const t=g==='w'?TS*.4:TS*.3,zt=b+(g==='w'?IQL*.8:low?IQLOWH:IQWALLH);/* 家の壁・石の塀 */
   if(!door){iqArms(c,x,y,m,t,b,zt,col);if(g==='h'&&!low)iqWinDraw(c,i,!!(m&3)||!(m&12),t,lv);return}
   const fc=iqCols(IQC[[i-1,i+1,i-W,i+W].map(typeAt).find(k=>HOME_WALLS.has(k))]||'#c89a64'),X=x*TS,Y=y*TS,cx=X+TS/2,cy=Y+TS/2,h=t/2,jb=TS*.16;/* ドア：両わきの柱・上のかもい・とびら。わくは、となりの壁の色 */
   if(low){iqArms(c,x,y,dm,t,b,b+2,fc);return}/* 手前のドアは、しきいだけ */
-  const zl=b+IQWALLH*.78;
+  const zl=b+IQWALLH*.7;
   if(hz){iqPrism(c,X-.5,cy-h,X+jb,cy+h,b,zt,fc);if(n<2)iqPrism(c,X+jb,cy-h*.4,X+TS-jb,cy+h*.4,b,zl,col);iqPrism(c,X+TS-jb,cy-h,X+TS+.5,cy+h,b,zt,fc);iqPrism(c,X+jb,cy-h,X+TS-jb,cy+h,zl,zt,fc)}
   else{iqPrism(c,cx-h,Y-.5,cx+h,Y+jb,b,zt,fc);if(n<2)iqPrism(c,cx-h*.4,Y+jb,cx+h*.4,Y+TS-jb,b,zl,col);iqPrism(c,cx-h,Y+TS-jb,cx+h,Y+TS+.5,b,zt,fc);iqPrism(c,cx-h,Y+jb,cx+h,Y+TS-jb,zl,zt,fc)}}
 /* ---- 屋根：家の列（x）ごとの切妻。棟は東西にのび、南北の2面が坂 ---- */

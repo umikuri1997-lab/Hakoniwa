@@ -8,8 +8,9 @@
 #   そのマス（0〜1）の中の面のドットだけをのこす。となりのマスも同じ物を写すので、つなぎ目に線もすきまも出ない
 #   （となりとの画面のずれは、ちょうど 64・48 ドットなので、ドットのます目もそろう）。
 # 設計図（マス。x=東・y=南・z=上。マスの左上が(0,0)、まん中が(0.5,0.5)）
-#   家の壁：あつさ 0.3・高さ 1.0（段差1だんと同じ）。ひくい壁：高さ 0.2。
+#   家の壁：あつさ 0.3・高さ 2.0（段差2だん。持ち主がきめた）。ひくい壁：高さ 0.2。
 #   表の面（南・東・はしの面）：いまの壁の正面の絵（<id>:ext。なければ <id>:HLR の正面の行）を、1マス64ドットで世界の場所にはる。
+#     絵は高さ1の64行なので、高さ2の壁は、下の32行（巾木）・まん中の32行（16〜47行）のくりかえし・上の32行（frow）。
 #     ext は1マスでくりかえすように、左右のはしがいちばんにている64ドットを切りとる（レンガは2つぶんを64に）。
 #   上の面：<id>:HLR の断面の行（てっぺん）を、壁ののびる向きにはる。
 import sys,os,math,json
@@ -27,7 +28,13 @@ OWN=(0,1,0,1)   # のこすマスのはんい（たしかめるときだけか�
 EXT=0.45   # 腕を、となりのマスへのばす長さ
 EDGE=1e-3   # マスの東・南のはしちょうどにある面（柵のドアの柱の東の面など）も、このマスの物にする（ないと、柱の東の面が切れる）
 WALLS=['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']
-WT,WH,LH=0.3,1.0,0.2
+WT,WH,LH=0.3,2.0,0.2
+def frow(z,h):
+    """壁の正面の絵（高さ1の64行）の、高さ z の行。h が1より高い壁は、上の0.5・下の0.5はそのまま、あいだは16〜47行をくりかえす"""
+    if h<=1.0:return int((1.0-z)*64)
+    if h-z<=0.5:return int((h-z)*64)
+    if z<0.5:return int((1.0-z)*64)
+    return 16+int(((h-0.5-z)%0.5)*64)
 FACE=(1.0,0.97,0.80)   # 面ごとの明るさ：上・南（左下）・東（右下）
 def rot(p):   # 45度まわす（マスのまん中のまわり）
     c=s=math.sqrt(0.5);dx,dy=p[0]-0.5,p[1]-0.5;return np.array([0.5+c*dx-s*dy,0.5+s*dx+c*dy,p[2]])
@@ -38,7 +45,7 @@ EXTS=(0.5-PX0/S,0.5+(WP-PX0)/S,0.5-PY0/S,0.5+(HP-PY0)/S)
 def world_of(zb):
     """ドットごとの、見えている面のせかいの場所（x, y）。zb は奥行き（DEPTH との内積）"""
     gx,gy=np.meshgrid(np.arange(WP)+0.5,np.arange(HP)+0.5);X=EXTS[0]+gx/S;Y=EXTS[2]+gy/S
-    h=(Y-0.5);d=zb-(0.5*CT+0.0*ST)   # proj の y＝0.5+h（k＝1）。h＝a·sinT−b·cosT、d＝a·cosT+b·sinT（a=y'−0.5・b=z）
+    h=(Y-0.5)/I.ISOK;d=zb-(0.5*CT+0.0*ST)   # proj の y＝0.5+h·ISOK（画面の上下は ISOK 倍）。h＝a·sinT−b·cosT、d＝a·cosT+b·sinT（a=y'−0.5・b=z）
     a=h*ST+d*CT;yr=0.5+a;xr=X
     return unrot(xr,yr)
 def render(parts,decal):
@@ -110,7 +117,7 @@ def wall_parts(m,top,front,h):
             else:
                 if axis=='x':u=x if abs(y-y1f)<1e-4 or abs(y-y0f)<1e-4 else y;k=FACE[1] if abs(y-y1f)<1e-4 else FACE[2]
                 else:u=y if abs(x-y1f)<1e-4 or abs(x-y0f)<1e-4 else x;k=FACE[2] if abs(x-y1f)<1e-4 else FACE[1]
-                r=int((1.0-z)*64);c=front[min(63,max(0,r)),math.floor(u*64)%64]*k
+                r=frow(z,h);c=front[min(63,max(0,r)),math.floor(u*64)%64]*k
             return tuple(np.clip(c,0,255))
         return f
     def bx(x0,y0,x1,y1,axis,z1=None):
