@@ -99,8 +99,8 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         u=(x+y)%1;dr=(0.03+0.09*pnoise(u)) if var=='g' else 0.0   # 草が横の面にたれる長さ（だん）
         if top and z>core[5]+R*(0.35 if var=='g' else 0.55)-dr:   # まるいふちの上のほう（草は少したれる）：地面の色
             dep=max(0.0,core[5]+R-z);c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]
-            k=1.0 if nrm[2]>0.8 else 1.08 if nrm[0]<-0.3 or nrm[1]<-0.3 else 0.94 if nrm[1]>=nrm[0] else 0.8   # 光は左上：奥（北・西）のまるいふちは明るい
-        elif not top and nrm[2]>0.985 and z>0.999:c0=led;k=0.94   # 上にだんがある所のふたの面
+            k=1.14 if nrm[0]<-0.1 or nrm[1]<-0.1 else 1.0 if nrm[2]>0.8 else 0.94 if nrm[1]>=nrm[0] else 0.8   # 光は左上：奥（北・西）のまるいふちは明るい
+        elif not top and z>0.999:c0=led;k=0.94   # 上にだんがある所のふたの面
         else:
             r_,c_,side=facetex(p,nrm,None);c0=tex[r_,c_]
             a=max(0,nrm[1]);b=max(0,nrm[0]);t=max(0,nrm[2]);sm=a+b+t+1e-6
