@@ -45,16 +45,17 @@ function newState(w){w=w||0;
 }
 /* こわれた神殿：まん中の道（x=CX）の北のはしの先に置く。像のマスと左右（おそなえ箱・依頼ボードになる所）、手前（台座になる所）の4マス。
    水・浅瀬・道や床・人の作った物があるときや、高さがそろわないときは、北のはしに近い所をさがす。自然の物（木・岩・草）はどける */
-function templeRuinCells(j){return [j,j-1,j+1,j+W,j+2,j+3]}/* 神殿・おそなえ箱・神殿の右（神殿の絵の下）・台・依頼ボード（2マス、j+2 と j+3。絵のある所） */
+function templeRuinCells(j){return [j,j-1,j+1,j+W,j+2,j+3,...templeBack(j)]}/* 神殿・おそなえ箱・神殿の右（神殿の絵の下）・台・依頼ボード（2マス、j+2 と j+3。絵のある所）・神殿のうしろの列 */
+const templeBack=j=>[j-W-1,j-W,j-W+1];/* 神殿は3×2マス（持ち主がきめた）：像のマスの列と、そのうしろ（北）の列 */
 const RUIN_CLEAR=new Set(['deadtree','rock','bamboo','berry','ntree','takenoko','kinoko']),ruinClearable=o=>!o||RUIN_CLEAR.has(o)||WEEDS.has(o);/* こわれた神殿のためにどけてよい自然の物 */
-function templeRuinOK(s,j){const x=j%W,y=(j/W)|0;if(x<2||x>W-3||y<2||y>H-3)return false;const h=s.hi?s.hi[j]|0:0;
+function templeRuinOK(s,j){const x=j%W,y=(j/W)|0;if(x<2||x>W-3||y<3||y>H-3)return false;const h=s.hi?s.hi[j]|0:0;
   for(const k of templeRuinCells(j)){const o=s.obj[k];if(s.ground[k]||s.floor[k]||(s.hi?s.hi[k]|0:0)!==h)return false;if(!ruinClearable(o))return false}
-  for(let dy=-2;dy<=1;dy++)for(let dx=-2;dx<=3;dx++)if(s.ground[j+dy*W+dx]===1)return false;/* 絵は2マス上・左右へはみ出すので、そこも水でない所 */return true}
+  for(let dy=-3;dy<=1;dy++)for(let dx=-2;dx<=3;dx++)if(s.ground[j+dy*W+dx]===1)return false;/* 絵は3マス上・左右へはみ出すので、そこも水でない所 */return true}
 function templeRuinPlace(s){if(s.obj.includes('statue')||s.obj.includes('statueb'))return -1;
   let y=(s.world||0)===0?CY-4:CY;/* 草原は、まん中が御神木の切り株なので、切り株のうしろの道から */while(y>1&&s.floor[(y-1)*W+CX])y--;/* 道の北のはし */
   const ty=y-2;let best=-1,bd=1e9;for(let dy=-12;dy<=12;dy++)for(let dx=-12;dx<=12;dx++){const j=(ty+dy)*W+CX+dx;if(!templeRuinOK(s,j))continue;const d=Math.hypot(dx,dy*2);if(d<bd){bd=d;best=j}}/* 道のはしからずれるときは、北や南より、よこ */
   if(best<0)return -1;
-  const bx=best%W,by=(best/W)|0;for(let y=by-2;y<=by+1;y++)for(let x=bx-2;x<=bx+2;x++){const k=y*W+x,o=s.obj[k];if(!o||!ruinClearable(o))continue;/* 絵がかかる所の自然の物（木・岩・草）もどける */s.obj[k]='';if(s.dyn)delete s.dyn[k];if(s.hp){delete s.hp[k];delete s.hp['n'+k]}if(s.regrow)s.regrow=s.regrow.filter(g=>g.j!==k)}
+  const bx=best%W,by=(best/W)|0;for(let y=by-3;y<=by+1;y++)for(let x=bx-2;x<=bx+2;x++){const k=y*W+x,o=s.obj[k];if(!o||!ruinClearable(o))continue;/* 絵がかかる所の自然の物（木・岩・草）もどける */s.obj[k]='';if(s.dyn)delete s.dyn[k];if(s.hp){delete s.hp[k];delete s.hp['n'+k]}if(s.regrow)s.regrow=s.regrow.filter(g=>g.j!==k)}
   s.obj[best]='statueb';for(const k of templeRuinCells(best).slice(1)){s.obj[k]='part';s.ref[k]=best}return best}
 function boardMigrate(){/* 依頼ボードは神殿の右の2マス。前のセーブは、右どなりの1マスを1回だけあける（どかせない物があれば、つぎの読みこみでまたためす） */
   if(S.flags.board2x1)return;const t=STATUE>=0?STATUE:RUINT;if(t<0)return;const k=t+2,site=S.obj[t]==='site';
@@ -71,6 +72,16 @@ function boardShift(){/* 依頼ボードの2マスを、絵のある所（神殿
     const dy=S.dyn[t+1],hp=S.hp[t+1];S.obj[t+1]='part';S.ref[t+1]=t;delete S.dyn[t+1];delete S.hp[t+1];S.obj[t+2]='board';delete S.ref[t+2];if(dy)S.dyn[t+2]=dy;if(hp!=null)S.hp[t+2]=hp;S.obj[k]='part';S.ref[k]=t+2}
   else{if(!boardFree(k))return;S.obj[k]=S.obj[t]==='site'?'site2':'part';S.ref[k]=t}/* こわれた神殿：直すまでは神殿のマス */
   S.flags.board3=1;recount()}
+function templeDeepMigrate(){/* 神殿を3×2マスにした（うしろの列も神殿のマス）。前のセーブは1回だけ：うしろの列の物は、近くのあいた所へうつす（うつせない物は、もちものへ） */
+  if(S.flags.temple2row)return;const t=STATUE>=0?STATUE:RUINT;if(t<0){S.flags.temple2row=1;return}const site=S.obj[t]==='site',pt=site?'site2':'part';
+  for(const k of templeBack(t)){if((S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===t)continue;const o=S.obj[k];
+    if(o&&!ruinClearable(o)){const mv=o!=='part'&&o!=='site2'&&!NOMOVE.has(o)&&!(BL[o]&&BL[o].sz)&&!iqGrp(o)&&templeMoveTo(k);if(!mv)removeAt(k%W,(k/W)|0);if(S.obj[k]&&!ruinClearable(S.obj[k]))return}/* どかせない物がのこれば、つぎの読みこみでまた */
+    S.obj[k]=pt;S.ref[k]=t;delete S.dyn[k];if(S.hp){delete S.hp[k];delete S.hp['n'+k]}if(S.rot)delete S.rot[k]}
+  S.flags.temple2row=1;recount()}
+function templeMoveTo(k){/* 1マスの物を、近くのあいた所へ（向き・状態・じょうぶさもいっしょに） */const x=k%W,y=(k/W)|0;
+  for(let r=1;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const q=(y+dy)*W+x+dx;if(q<0||q>=W*H||S.obj[q]||S.ground[q]===1||S.floor[q]||(S.hi?S.hi[q]|0:0)!==(S.hi?S.hi[k]|0:0))continue;
+    S.obj[q]=S.obj[k];S.obj[k]='';for(const T of[S.dyn,S.hp,S.rot])if(T&&T[k]!=null){T[q]=T[k];delete T[k]}if(S.hp&&S.hp['n'+k]!=null){S.hp['n'+q]=S.hp['n'+k];delete S.hp['n'+k]}return true}
+  return false}
 function templeRuinMigrate(){if(S.flags.ruinTemple1)return;S.flags.ruinTemple1=1;if(STATUE<0&&!statueSite()&&templeRuinPlace(S)>=0)recount()}/* 神殿を建てる前の古いセーブに、こわれた神殿を1回だけ（recount のあとによぶ） */
 /* 「しらべる」でこわれた神殿をタップ：せいれいが直しにいく（神殿を建てる足場と同じ。絵は、こわれた神殿のまま） */
 function templeRuinTap(j){j=anc(j);if(S.obj[j]!=='statueb')return false;

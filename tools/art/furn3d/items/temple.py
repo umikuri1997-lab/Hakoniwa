@@ -1,16 +1,17 @@
 # 神殿（statue）と、こわれた神殿（statueb）の共通の設計図。いまの絵と同じデザイン：白い石の基壇と段・前の2本の柱（金の輪）・左右とおくのかべ・
 # 柱の上のはり・前うしろへのびる切妻の屋根（前の三角に金の星・てっぺんに金の星）・左右の青い旗（金の星）・まるい台の上にうかぶ水色の水晶・つた。
 # 設計図（じっさいに建てられる組み方。単位はマス。神殿のマス（像のマス）の左上が(0,0)。大きさは、いまの絵（176×233ドット）に合わせる）
-#   基壇の下段：石板（よこ0.34・おく0.29・あつさ0.13）を、よこ8まい×おく5まい、目地0.004であけてならべる。地面にすえる（x −0.86〜1.86）。
-#   基壇の上段：同じ大きさの石板（あつさ0.16）を、よこ7まい×おく4まい。下段の上（x −0.69〜1.69・y −0.46〜0.70）。手前の0.26は下段がふみ段になる。
-#   柱：前に2本（中心 x −0.17・1.17、y 0.50）。四角い台石（0.42角・0.10）→ まるい柱（半径0.15。石のつつ0.355ずつ4こ）→ 金の輪（下と上）→ 四角い柱頭（0.40角）。
-#   かべ：おくだけ（x −0.66〜1.66・y −0.24〜−0.14）。左右はかべにしない。はりは、前の2本の柱とおくのかべにのり、左右のはしは、はり出す。かべ石（高さ0.2375・おく0.32）を6だん、だんごとに半分ずらしてつむ。
+#   神殿は3×2マス（持ち主がきめた）：像のマスの列（y 0〜1）と、そのうしろ（北）の列（y −1〜0）。おく行きは、前の段から、おくのかべまで約2.3マス。
+#   基壇の下段：石板（よこ0.34・おく0.33・あつさ0.10）を、よこ8まい×おく7まい、目地0.004であけてならべる。地面にすえる（x −0.86〜1.86・y −1.36〜0.96）。
+#   基壇の中段・上段：同じように、下の段の上に（上段は y −1.30〜0.72、よこ7まい×おく6まい）。手前は下の段がふみ段になる。
+#   柱：前に2本（中心 x −0.17・1.17、y 0.50）と、左右に2本ずつ（同じ x、y −0.17・−0.84。柱のあいだは0.67）。四角い台石（0.42角・0.10）→ まるい柱（半径0.15。石のつつ0.355ずつ4こ）→ 金の輪（下と上）→ 四角い柱頭（0.40角）。
+#   かべ：おくだけ（x −0.66〜1.66・y −1.24〜−1.14）。左右は柱だけ（柱のあいだから、中の水晶が見える）。かべ石（高さ0.2375・おく0.32）を6だん、だんごとに半分ずらしてつむ。
 #     おくのかべの内がわには、青みのある灰色のしっくい（光がとどかない神殿の中）。
-#   はり：柱頭とかべの上にのる石のはり（x −0.82〜1.82・y −0.46〜0.76、高さ1.72〜1.96）。石材を、よこ4本にわけてのせる（つなぎ目は柱・かべの上）。
+#   はり：柱頭とかべの上にのる石のはり（x −0.82〜1.82・y −1.30〜0.76、高さ1.72〜1.96）。石材を、よこ4本にわけてのせる（つなぎ目は柱・かべの上）。
 #   屋根：むねから青い帯までは勾配、青い帯（軒の石板）の所でくっきり折れて、ほぼ平ら。はりの上に、前の三角（ペディメント）とおくの三角をのせ、そのあいだに、左右の屋根の石板（ながれ4まい×おく4まい、あつさ0.06）をはる。むね石を上に。
 #   金の星：前の三角のまん中（うすい金の板）と、むねの前のはしの上（金の玉の上に、4つのとがりの星）。
 #   旗：はりの前の左右のはしから、金のさおでつるす青い布（下はつばめの尾の形）。金の星のもよう。
-#   水晶の台：神殿の中のまん中。まるい石の台2だん。その上に、ひし形の水晶がうく（光る）。
+#   水晶の台：神殿の中のまん中（y −0.35）。まるい石の台2だん。その上に、ひし形の水晶がうく（光る）。
 #   つた・草：段・柱の下に、小さな葉の玉。
 from blueprint import Part as P
 from common import *
@@ -25,7 +26,8 @@ CRY=(118,192,248);CRY0=(176,192,204)
 LEAF=(126,184,92);LEAF2=(150,200,104)
 CL,CR,CYC,COLR=-0.17,1.17,0.50,0.15
 EZ0,EZ1=1.66,1.82
-RX0,RX1,RY0,RY1,RZ=-0.80,1.80,-0.30,0.80,2.36
+RX0,RX1,RY0,RY1,RZ=-0.80,1.80,-1.30,0.80,2.36
+SIDEY=(-0.17,-0.84);BY0=-1.30;CRY_Y=-0.35   # 左右の柱の y・はりのおくのはし・水晶の台の y
 MX=0.5
 def S_(p):p.texobj=STONETEX;p.soft1=True;p.olk=0.96;return p   # 白い石：うすい石の質感（STONETEX）
 def MT(p):p.metal=True;p.tex=False;return p
@@ -46,9 +48,9 @@ def roofpath(sx):
     def path(seg,t):
         a,b=((P0,P1),(P1,P2),(P2,P3))[seg];return (a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,nrm(a,b))
     return path
-def flute(cx):
+def flute(cx,cy=CYC):
     def f(x,y,z):   # 柱のたてのみぞ（16本）：みぞは、少しくらい石の色
-        a=math.atan2(y-CYC,x-cx)
+        a=math.atan2(y-cy,x-cx)
         return (226,214,212) if math.cos(16*a)>0.82 and 0.48<z<EZ0-0.30 else None
     return f
 def slabs(name,x0,x1,nx,y0,y1,ny,z0,z1,col,on,skip=()):
@@ -74,32 +76,34 @@ def wall(name,x0,x1,y0,y1,z0,z1,col,top=None,on=()):
     return L
 def PARTS_T(ruin=False):
     s,s2=(OLD,OLD2) if ruin else (ST,ST2);L=[]
-    L+=slabs('下段',-0.86,1.86,8,-0.36,0.96,4,0.0,0.10,s2,('ground',));LOW=tuple(p.name for p in L)
-    L+=slabs('中段',-0.78,1.78,8,-0.33,0.84,4,0.10,0.20,s,LOW);MID=tuple(p.name for p in L if p.name.startswith('中段'))
-    L+=slabs('上段',-0.70,1.70,7,-0.30,0.72,3,0.20,0.30,s2,MID);UP=tuple(p.name for p in L if p.name.startswith('上段'))
-    for nm,x in(('左',CL),('右',CR)):   # 前の2本のまるい柱（はりの左右のはしは、柱とおくのかべから、はり出す）
-        broken=ruin and nm in('右','右はし');nb=1 if nm=='右はし' else 2
-        L.append(S_(P('%sの台石'%nm,'box',(x-0.21,CYC-0.21,0.30,x+0.21,CYC+0.21,0.40),s2,on=UP,bevel=0.015)))
+    L+=slabs('下段',-0.86,1.86,8,-1.36,0.96,7,0.0,0.10,s2,('ground',));LOW=tuple(p.name for p in L)
+    L+=slabs('中段',-0.78,1.78,8,-1.33,0.84,7,0.10,0.20,s,LOW);MID=tuple(p.name for p in L if p.name.startswith('中段'))
+    L+=slabs('上段',-0.70,1.70,7,-1.30,0.72,6,0.20,0.30,s2,MID);UP=tuple(p.name for p in L if p.name.startswith('上段'))
+    cols=[('左',CL,CYC),('右',CR,CYC)]+[('%s%d'%(nm,k+2),x,y) for k,y in enumerate(SIDEY) for nm,x in(('左',CL),('右',CR))]   # 前の2本と、左右に2本ずつ（はりの左右のはしは、柱とおくのかべから、はり出す）
+    for nm,x,cy in cols:
+        nb={'右':1,'右2':2,'右3':0}.get(nm) if ruin else None   # こわれた神殿：右がわの柱は、おれた（右3は台石だけのこって、ぜんぶたおれた）
+        broken=nb is not None
+        L.append(S_(P('%sの台石'%nm,'box',(x-0.21,cy-0.21,0.30,x+0.21,cy+0.21,0.40),s2,on=UP,bevel=0.015)))
         top=EZ0-0.12;nd=4;dh=(top-0.40)/nd
         for d in range(nd if not broken else nb):
-            L.append(S_(P('%sの柱%d'%(nm,d+1),'cyl',(x,CYC,COLR,0.40+d*dh+0.002,0.40+(d+1)*dh),s,on=('%sの台石'%nm,) if d==0 else ('%sの柱%d'%(nm,d),),detail=40,grp='柱'+nm,note='石のつつ')));L[-1].texobj=None;L[-1].tex=False;L[-1].decal=flute(x)
-        if broken:
-            L.append(S_(P('%sの柱（おれた所）'%nm,'lathe',(x,CYC,[(0.0,0.40+nb*dh+0.10),(COLR*0.6,0.40+nb*dh+0.08),(COLR,0.40+nb*dh+0.03),(COLR,0.40+nb*dh)]),s,on=('%sの柱%d'%(nm,nb),),detail=40,grp='柱'+nm,note='おれた上')))
-        L.append(MT(P('%sの金の輪（下）'%nm,'ring',(x,CYC,COLR-0.01,COLR+0.018,0.42,0.47),GOLD0 if ruin else GOLD,on=('%sの台石'%nm,),detail=40)))
+            L.append(S_(P('%sの柱%d'%(nm,d+1),'cyl',(x,cy,COLR,0.40+d*dh+0.002,0.40+(d+1)*dh),s,on=('%sの台石'%nm,) if d==0 else ('%sの柱%d'%(nm,d),),detail=40,grp='柱'+nm,note='石のつつ')));L[-1].texobj=None;L[-1].tex=False;L[-1].decal=flute(x,cy)
+        if broken and nb:
+            L.append(S_(P('%sの柱（おれた所）'%nm,'lathe',(x,cy,[(0.0,0.40+nb*dh+0.10),(COLR*0.6,0.40+nb*dh+0.08),(COLR,0.40+nb*dh+0.03),(COLR,0.40+nb*dh)]),s,on=('%sの柱%d'%(nm,nb),),detail=40,grp='柱'+nm,note='おれた上')))
+        if not broken or nb:L.append(MT(P('%sの金の輪（下）'%nm,'ring',(x,cy,COLR-0.01,COLR+0.018,0.42,0.47),GOLD0 if ruin else GOLD,on=('%sの台石'%nm,),detail=40)))
         if not broken:
-            L.append(MT(P('%sの金の輪（上）'%nm,'ring',(x,CYC,COLR-0.01,COLR+0.02,top-0.17,top-0.11),GOLD0 if ruin else GOLD,on=('%sの柱%d'%(nm,nd),),detail=40)))
-            L.append(S_(P('%sの柱頭'%nm,'box',(x-0.20,CYC-0.20,top,x+0.20,CYC+0.20,EZ0),s,on=('%sの柱%d'%(nm,nd),),bevel=0.015)))
+            L.append(MT(P('%sの金の輪（上）'%nm,'ring',(x,cy,COLR-0.01,COLR+0.02,top-0.17,top-0.11),GOLD0 if ruin else GOLD,on=('%sの柱%d'%(nm,nd),),detail=40)))
+            L.append(S_(P('%sの柱頭'%nm,'box',(x-0.20,cy-0.20,top,x+0.20,cy+0.20,EZ0),s,on=('%sの柱%d'%(nm,nd),),bevel=0.015)))
     rtop=lambda t:EZ0 if t<0.40 else max(0.62,EZ0-1.6*(t-0.40)+0.10*math.sin(t*41))   # こわれたおくのかべの高さ（右ほどくずれた。ぎざぎざ）
-    L+=wall('おくのかべ',-0.66,1.66,-0.24,-0.14,0.30,EZ0,s2,top=rtop if ruin else None,on=UP)
-    if not ruin:b=P('おくのかべの中','box',(-0.66,-0.14,0.30,1.66,-0.135,EZ0-0.002),BACK,on=UP,note='しっくい')
+    L+=wall('おくのかべ',-0.66,1.66,-1.24,-1.14,0.30,EZ0,s2,top=rtop if ruin else None,on=UP)
+    if not ruin:b=P('おくのかべの中','box',(-0.66,-1.14,0.30,1.66,-1.135,EZ0-0.002),BACK,on=UP,note='しっくい')
     else:   # こわれた神殿：しっくいは、のこったかべ石の上のはしより低く、ぎざぎざにはがれた形
         xs=[-0.66+2.32*k/40 for k in range(41)];top=[(x,rtop((x+0.66)/2.32)-0.10-0.05*abs(math.sin(x*23))) for x in xs]
-        b=P('おくのかべの中','prism',([(-0.66,0.30),(1.66,0.30)]+top[::-1],-0.14,-0.135),BACKO,on=UP,note='しっくい（はがれた）')
+        b=P('おくのかべの中','prism',([(-0.66,0.30),(1.66,0.30)]+top[::-1],-1.14,-1.135),BACKO,on=UP,note='しっくい（はがれた）')
     b.tex=False;b.soft1=True
     if not ruin:b.decal=lambda x,y,z:(206,220,246) if math.hypot(x-MX,(z-0.84)*0.8)<0.20 else (190,200,234) if math.hypot(x-MX,(z-0.84)*0.8)<0.33 else None   # 水晶の光が、おくのかべを明るくする
     L.append(b)
     # はり：石材4本（つなぎ目は柱・かべの上）
-    cut=[RX0+0.04,CL,0.5,CR,RX1-0.04];by=(-0.30,0.76)
+    cut=[RX0+0.04,CL,0.5,CR,RX1-0.04];by=(BY0,0.76)
     for i in range(4):
         xa,xb=cut[i],cut[i+1]
         if ruin and i==3:continue   # 右はしの石材はおちた
@@ -115,9 +119,9 @@ def PARTS_T(ruin=False):
         tri=[(MX-hw,EZ1),(MX+0.26,EZ1),(MX+0.20,EZ1+0.07),(MX+0.24,EZ1+0.13),(MX+0.10,EZ1+0.22),(MX+0.12,RZ-0.16),(MX,RZ-0.04)]
         tri0=[(MX-hw,EZ1),(MX+0.34,EZ1),(MX+0.42,EZ1+0.08),(MX+0.30,EZ1+0.16),(MX+0.32,RZ-0.24),(MX+0.18,RZ-0.12),(MX,RZ-0.04)]
     L.append(S_(P('前の三角','prism',(tri,0.70,0.76),s,bevel=0.012,on=('はり2',),note='はりの上')))
-    L.append(S_(P('おくの三角','prism',(tri0,-0.30,-0.24),s2,on=('はり2',),note='はりの上')))
+    L.append(S_(P('おくの三角','prism',(tri0,BY0,BY0+0.06),s2,on=('はり2',),note='はりの上')))
     # 屋根の石板：むねから青い帯までは勾配（ながれ4まい・おく2まいを半分ずらす）。青い帯（軒の石板）の所でくっきり折れて、ほぼ平ら
-    nr,nc=5,2;th=0.06;BEV=0.012
+    nr,nc=5,4;th=0.06;BEV=0.012
     for side,sx in(('左',-1),('右',1)):
         ex=RX0 if sx<0 else RX1;path=roofpath(sx)
         ys=[RY0+(RY1-RY0)*c/nc for c in range(nc+1)]
@@ -154,15 +158,15 @@ def PARTS_T(ruin=False):
         L.append(MT(P('てっぺんの玉','ball',(MX,RY0+0.06,RZ+0.13,0.06),GOLD,on=('むね',),deco=True)))
         L.append(MT(P('前の玉','ball',(MX,RY1+0.05,RZ+0.11,0.055),GOLD,on=('むね',),deco=True)))
         # 水晶の台と水晶
-        L.append(S_(P('水晶の台（下）','cyl',(MX,0.20,0.26,0.30,0.38),s2,on=UP,detail=40)))
-        L.append(S_(P('水晶の台（上）','cyl',(MX,0.20,0.19,0.38,0.47),s,on=('水晶の台（下）',),detail=40)));L[-1].decal=lambda x,y,z:((210,236,252) if math.hypot(x-MX,y-0.20)<0.08 else (226,238,248) if math.hypot(x-MX,y-0.20)<0.13 else None) if z>0.465 else None
+        L.append(S_(P('水晶の台（下）','cyl',(MX,CRY_Y,0.26,0.30,0.38),s2,on=UP,detail=40)))
+        L.append(S_(P('水晶の台（上）','cyl',(MX,CRY_Y,0.19,0.38,0.47),s,on=('水晶の台（下）',),detail=40)));L[-1].decal=lambda x,y,z:((210,236,252) if math.hypot(x-MX,y-CRY_Y)<0.08 else (226,238,248) if math.hypot(x-MX,y-CRY_Y)<0.13 else None) if z>0.465 else None
         for k,(dx,dz,r) in enumerate(((-0.25,0.80,0.022),(0.25,0.84,0.022),(-0.20,1.08,0.016),(0.22,1.04,0.016))):
-            L.append(GL(P('光のつぶ%d'%(k+1),'ball',(MX+dx,0.20,dz-0.08,r),(214,240,255),on=(),deco=True)))
-        cr=GL(P('水晶','lathe',(MX,0.20,[(0.0,1.06),(0.16,0.79),(0.0,0.52)]),CRY,detail=4,on=(),deco=True,note='台の上にうく'))
+            L.append(GL(P('光のつぶ%d'%(k+1),'ball',(MX+dx,CRY_Y,dz-0.08,r),(214,240,255),on=(),deco=True)))
+        cr=GL(P('水晶','lathe',(MX,CRY_Y,[(0.0,1.06),(0.16,0.79),(0.0,0.52)]),CRY,detail=4,on=(),deco=True,note='台の上にうく'))
         cr.decal=lambda x,y,z:(226,246,255) if (x-MX)<-0.01 and z>0.79 else (170,222,252) if (x-MX)<0.02 else (92,162,234) if z<0.79 else None;L.append(cr)
     else:
-        L.append(S_(P('水晶の台（下）','cyl',(MX,0.20,0.26,0.30,0.38),s2,on=UP,detail=40)))
-        L.append(S_(P('水晶の台（上）','cyl',(MX,0.20,0.19,0.38,0.47),s,on=('水晶の台（下）',),detail=40)))
+        L.append(S_(P('水晶の台（下）','cyl',(MX,CRY_Y,0.26,0.30,0.38),s2,on=UP,detail=40)))
+        L.append(S_(P('水晶の台（上）','cyl',(MX,CRY_Y,0.19,0.38,0.47),s,on=('水晶の台（下）',),detail=40)))
     # 旗
     for nm,x in(('左',-0.66),('右',1.66)):
         if ruin and nm=='右':continue
@@ -253,7 +257,7 @@ def moss(ruin,seed=11):
     if ruin:vine(0.92,1.0,0.15,1.5,0.05);vine(-0.20,1.0,0.60,2.5,0.04)
     for x,y,z,sz in((CL-0.17,CYC+0.17,0.40,0.06),(CR+0.17,CYC+0.17,0.40,0.05),(-0.70,0.93,0.10,0.04),(1.72,0.93,0.10,0.045),(-0.62,0.70,0.30,0.035)):leaf(x,y,z,sz)   # 柱の下・段のすみのコケ
     if ruin:
-        for x,z in((-0.50,0.9),(-0.20,1.2),(1.20,0.7),(1.45,0.55)):leaf(x,-0.13,z,0.045)   # おくのかべをつたうコケ
+        for x,z in((-0.50,0.9),(-0.20,1.2),(1.20,0.7),(1.45,0.55)):leaf(x,-1.13,z,0.045)   # おくのかべをつたうコケ
     return out
 def grass(spots,seed,flowers=(),n=200,R=0.13,H=0.22):
     """足もとの草むら（粒）：地面から、こんもりした葉の粒。下はこい色、上ほど明るい。flowers：白い花（花びら5つと黄色いしん）の場所"""
