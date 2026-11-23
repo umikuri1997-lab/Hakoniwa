@@ -51,11 +51,12 @@ def render(parts,decal):
     O.S=S
     im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.86,lw=1,k2=0.93,merge=0)
     return own_mask(im)
-def own_mask(im):
-    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）"""
+def own_mask(im,free=None):
+    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）。free：マスの外へ出てものこす部品の番号（ひらいたとびら）"""
     a=np.array(im).copy();zb=O.LAST_ZB.copy();obj=zb>-1e8
     wx,wy=world_of(np.where(obj,zb,0))
     x0,x1,y0,y1=OWN;own=obj&(wx>=x0-1e-6)&(wx<x1-1e-6)&(wy>=y0-1e-6)&(wy<y1-1e-6)
+    if free:own|=obj&np.isin(O.LAST_IDS,list(free))
     # まわりの輪郭（透明だった所に引いた線）は、となりの面のドットのマスにしたがう
     lab=np.where(obj,np.where(own,1,2),0)
     for _ in range(3):
