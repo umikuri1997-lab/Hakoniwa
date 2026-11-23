@@ -194,7 +194,7 @@ def run_band(iid,out):
                 if 0<=X<A.shape[1] and 0<=Y<A.shape[0]:at[dv,n*64+du]=A[Y,X]
     o=CT.tone(at).astype(np.uint8)
     for c in range(256):
-        du=c%64;r0=int(round(du*0.75));r1=r0+72;o[:r0,c,3]=0;o[r1:,c,3]=0   # 面のわくの外はすかす
+        du=c%64;r0=max(0,int(round(du*0.75))-2);r1=min(120,int(round(du*0.75))+74);o[:r0,c,3]=0;o[r1:,c,3]=0   # 面のわくの外はすかす（ゲームのドットの丸めで、ふちが1ドットずれても、すきまが出ないよう、上下2ドットのゆとり）
         ys=np.nonzero(o[r0:r1,c,3]>0)[0]
         if len(ys):m=o[r0+ys[0]:r1,c,3]==0;o[r0+ys[0]:r1,c][m]=[CT.LV[1],CT.LV[1],CT.LV[1],255]
     img=Image.fromarray(o,'RGBA');img.save(os.path.join(out,iid,iid+'_face.png'))
