@@ -61,75 +61,75 @@ function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)
   if(hz){iqPrism(c,X-.5,cy-h,X+jb,cy+h,b,zt,fc);if(n<2)iqPrism(c,X+jb,cy-h*.4,X+TS-jb,cy+h*.4,b,zl,col);iqPrism(c,X+TS-jb,cy-h,X+TS+.5,cy+h,b,zt,fc);iqPrism(c,X+jb,cy-h,X+TS-jb,cy+h,zl,zt,fc)}
   else{iqPrism(c,cx-h,Y-.5,cx+h,Y+jb,b,zt,fc);if(n<2)iqPrism(c,cx-h*.4,Y+jb,cx+h*.4,Y+TS-jb,b,zl,col);iqPrism(c,cx-h,Y+TS-jb,cx+h,Y+TS+.5,b,zt,fc);iqPrism(c,cx-h,Y+jb,cx+h,Y+TS-jb,zl,zt,fc)}}
 /* ---- 屋根：うでごとの切妻（持ち主がえらんだ）を、屋根のタイルセットで（持ち主がえらんだ） ----
-   家の形（壁と中のマス）を、いちばん大きな長方形（うで）に分けて（iqRoofRects）、うでごとに切妻。棟は、うでの長いほうの向き（正方形は東西）。
-   部品は3Dで組んで写したチップ（tools/art/iso/iso_roof.py：坂・棟・のき・けらば・妻の壁。勾配はどれも IQROOFK）。
-   マスごとに、うでの中の場所で部品をえらび、棟までのきょりの高さだけ上にずらしてならべる（iqRoofCells）。
-   2つのうでがかさなるマスは、部品の奥行きの絵（iso:roofz、カメラに近いほど大きい x+y）で、近いほうをのこす（入隅に谷ができる）。
-   低いほう（同じ高さなら小さいほう）のうでは、高いうでの棟の所で止める（クロスゲーブル。とおすと、棟が外の壁までとび出す）。
-   妻は、うでのはし（東・南。西・北はカメラから見えない）に、その下の壁と同じ絵の板（iso:<壁>:gab-…）。屋根の下の面までの高さを、四角（blk）をつんでから、三角の部品をのせる。
-   できた絵は家ごとに作っておき（家の形・屋根の色・雪・部品の読みこみがかわったら作りなおす。1コマに1けん）、当たった所のせかいの列（x）ごとに分けて、
-   列ごとに、その列のいちばん手前の行の順番で描く（となりの物とのかさなり）。
-   雪（feel.js の FEELC.snow）は、屋根の場所できめたかたまり・つもりきったら屋根ぜんたいを白く。あらしの日のぬれた点（FEELC.wet）は、またたくので毎コマ描く。
-   時間の色（daycolor.js の r）は、屋根の形にかけ算する。 */
-const IQROOFK=.5;/* 勾配：水平に1マスで、高さ .5 だん（iso_roof.py の K） */
-const IQRS=2;/* 屋根の絵の細かさ（ゲームの1点を2×2。チップの g64 と同じ） */
-function iqRoofTone(h){const rc=S.roofCol&&S.roofCol[hKey(h)];return rc==='red'?'#b0584c':rc==='blue'?'#5a78a0':rc==='green'?'#6a9058':rc==='brown'?'#7a5238':WD===KAZAN?'#3d3f48':'#a86858'}
+   家の形（壁と中のマス）を、いちばん大きな長方形（うで）に分けて、うでごとに切妻。棟は、うでの長いほうの向き（正方形は東西）。
+   かさなる2つのうでが同じ向きなら、小さいほうを直角に（クロスゲーブル）。低いほう（同じ高さなら小さいほう）のうでは、高いうでの棟の所で止める。
+   絵は、3Dで組んで写した、マスごとの完成したチップ（tools/art/iso/iso_roof.py：坂・棟・のき・けらば・谷・妻の壁・雪。屋根の色ごと）を、
+   マスごとにえらんで、棟までのきょりの高さだけ上にずらして置くだけ（かさねる計算・色の計算はしない。持ち主がきめた）。
+   2つのうでがかさなって両方が見えるマス（谷・棟がぶつかる所）は、谷のチップ。ない組み合わせ（大きな家・ほかの形）は、2つの部品を低いほうから置く。
+   妻は、うでのはし（東・南。西・北はカメラから見えない）に、その下の壁と同じ絵の板（iso:<壁>:gab-…）：高さ K/2 の四角（blk）をつんでから、三角の部品。
+   マスの部品の決め方は iso_roof.py の cells・pick と同じ（かえるときは両方）。
+   置いた絵は、家ごと・せかいの列（x）ごとに1まいの絵にまとめておき（家の形・屋根の色・雪・チップの読みこみがかわったら作りなおす。1コマに1けん）、
+   列ごとに、その列のいちばん手前の行の順番で描く（となりの物とのかさなり）。時間の色（daycolor.js の r）は、その絵の形にかけ算する。
+   あらしの日のぬれた点（FEELC.wet）は、またたくので毎コマ描く。 */
+const IQROOFK=.5,IQROVR=.37,IQREXT=.45;/* 勾配（水平に1マスで .5 だん）・のきとけらばのふち（壁のまん中の線から）・部品をのばす長さ（iso_roof.py の K・OVR・EXT） */
+const IQRS=2;/* 屋根の絵の細かさ（チップの g64 と同じ。ゲームの1点を2×2） */
+function iqRoofCol(h){const rc=S.roofCol&&S.roofCol[hKey(h)];return rc&&ROOFCOL[rc]?rc:WD===KAZAN?'k':'d'}/* チップの色の名前 */
 /* 家の形の中の、いちばん大きな長方形（ほかの長方形の中に入らない物）ぜんぶ。[x0,y0,x1,y1]（マス、両はしをふくむ） */
 function iqRoofRects(F,X0,Y0,X1,Y1){const w=X1-X0+1,hh=Y1-Y0+1,P=new Int32Array((w+1)*(hh+1));
   for(let y=0;y<hh;y++)for(let x=0;x<w;x++)P[(y+1)*(w+1)+x+1]=(F.has((Y0+y)*W+X0+x)?1:0)+P[y*(w+1)+x+1]+P[(y+1)*(w+1)+x]-P[y*(w+1)+x];
-  const full=(a,b,c,d)=>P[(d+1)*(w+1)+c+1]-P[b*(w+1)+c+1]-P[(d+1)*(w+1)+a]+P[b*(w+1)+a]===(c-a+1)*(d-b+1),R=[];
+  const full=(a,b,c,d)=>a>=0&&b>=0&&c<w&&d<hh&&P[(d+1)*(w+1)+c+1]-P[b*(w+1)+c+1]-P[(d+1)*(w+1)+a]+P[b*(w+1)+a]===(c-a+1)*(d-b+1),R=[];
   for(let b=0;b<hh;b++)for(let a=0;a<w;a++){if(!F.has((Y0+b)*W+X0+a))continue;for(let d=b;d<hh;d++){if(!full(a,b,a,d))break;for(let c=a;c<w;c++){if(!full(a,b,c,d))break;
-    if(a>0&&full(a-1,b,c,d)||c<w-1&&full(a,b,c+1,d)||b>0&&full(a,b-1,c,d)||d<hh-1&&full(a,b,c,d+1))continue;R.push([a+X0,b+Y0,c+X0,d+Y0])}}}
+    if(full(a-1,b,c,d)||full(a,b,c+1,d)||full(a,b-1,c,d)||full(a,b,c,d+1))continue;R.push([a+X0,b+Y0,c+X0,d+Y0])}}}
   return R}
-/* うでごとの部品の一覧：{k チップ, cx,cy マス, z 高さ（だん）, g 妻なら面（'x' 東むき・'y' 南むき）と、その面の場所} */
-function iqRoofCells(h,F){const K=IQROOFK,R=iqRoofRects(F,h.x0,h.y0,h.x1,h.y1).map(([a,b,c,d])=>{const ew=c-a>=d-b,n=ew?d-b+1:c-a+1;return{a,b,c,d,ew,n,m:ew?(b+d+1)/2:(a+c+1)/2,D:(n-1)/2,ar:(c-a+1)*(d-b+1)}});
-  const pri=(p,q)=>p.D!==q.D?p.D>q.D:p.ar!==q.ar?p.ar>q.ar:p.ew!==q.ew?p.ew:false,out=[];
-  const wallOf=(cx,cy)=>{const o=typeAt(cy*W+cx);return HOME_WALLS.has(o)?o:h._rw.find(id=>HOME_WALLS.has(id))||'hwall'};
-  for(const r of R){/* 棟の向きにそった場所（u：東西のうでは x）・切り口の向きの場所（v） */const U0=r.ew?r.a:r.b,U1=r.ew?r.c:r.d,V0=r.ew?r.b:r.a,V1=r.ew?r.d:r.c,o=r.ew?'h':'v';
-    let lo=U0,hi=U1,cutLo=-1,cutHi=-1;/* 高いうでの棟で止める：のこす u のはんい（はんぶんのマスは cutLo・cutHi） */
-    for(const q of R){if(q===r||q.ew===r.ew||!pri(q,r))continue;const qa=r.ew?q.a:q.b,qc=r.ew?q.c:q.d,qv0=r.ew?q.b:q.a,qv1=r.ew?q.d:q.c;if(qv1<V0||qv0>V1||qc<U0||qa>U1)continue;
-      const mq=q.m;if(U0<qa&&U1<=qc){/* 高いうでの手前（u の小さいがわ）にある */const e=Math.floor(mq-.5);if(mq%1===0){hi=Math.min(hi,mq-1)}else{hi=Math.min(hi,e);cutHi=e}}
-      else if(U1>qc&&U0>=qa){const e=Math.floor(mq);if(mq%1===0){lo=Math.max(lo,mq)}else{lo=Math.max(lo,e);cutLo=e}}}
+/* 部品の切り口（iso_roof.py の prof・xr）：[y0, y1, 高さの式] と、棟の向きにそったはんい */
+function iqRProf(t){const K=IQROOFK,E=IQREXT,O=IQROVR;switch(t){case'up':return[-E,1+E,y=>K*y];case'dn':return[-E,1+E,y=>K*(1-y)];case'dnc':return[-E,1+E,y=>K*(1-Math.abs(y))];
+  case'tent':return[-E,1+E,y=>K*(.5-Math.abs(y-.5))];case'upe':return[.5-O,1+E,y=>K*(y-.5)];case'dne':return[-E,.5+O,y=>K*(.5-y)];case'dnec':return[-E,.5+O,y=>K*(.5-Math.abs(y))];default:return[.5-O,.5+O,()=>0]}}
+function iqRXr(e){const E=IQREXT,O=IQROVR;return e==='a'?[.5-O,1+E]:e==='b'?[-E,.5+O]:e==='l'?[.5,1+E]:e==='r'?[-E,.5]:[-E,1+E]}
+function iqRHgt(p,x,y){const P=iqRProf(p.t),X=p.o==='h'?x:y,Y=p.o==='h'?y:x,R=iqRXr(p.e);if(!(P[0]<=Y&&Y<=P[1]&&R[0]<=X&&X<=R[1]))return null;return p.z+P[2](Y)}
+/* うでごとの部品の一覧：{cells:Map(マス→[{o,t,e,z}]), gab:[{cx,cy,o,t,z}]} */
+function iqRoofCells(h,F){const K=IQROOFK,R=iqRoofRects(F,h.x0,h.y0,h.x1,h.y1).map(([a,b,c,d])=>({a,b,c,d,ew:c-a>=d-b,ar:(c-a+1)*(d-b+1)}));
+  const ov=(p,q)=>!(p.c<q.a||q.c<p.a||p.d<q.b||q.d<p.b);
+  for(let i=0;i<R.length;i++)for(let j=0;j<i;j++){const p=R[i],q=R[j];if(ov(p,q)&&p.ew===q.ew){const sm=p.ar<q.ar?p:q;sm.ew=!sm.ew}}/* 同じ向きでかさなる：小さいほうを直角に */
+  for(const r of R){r.n=r.ew?r.d-r.b+1:r.c-r.a+1;r.m=r.ew?(r.b+r.d+1)/2:(r.a+r.c+1)/2;r.D=(r.n-1)/2}
+  const pri=(p,q)=>p.D!==q.D?p.D>q.D:p.ar!==q.ar?p.ar>q.ar:p.ew&&!q.ew,cells=new Map(),gab=[];
+  for(const r of R){const U0=r.ew?r.a:r.b,U1=r.ew?r.c:r.d,V0=r.ew?r.b:r.a,V1=r.ew?r.d:r.c,o=r.ew?'h':'v';let lo=U0,hi=U1,cl=null,ch=null;
+    for(const q of R){if(q===r||q.ew===r.ew||!pri(q,r))continue;const qa=r.ew?q.a:q.b,qc=r.ew?q.c:q.d,qv0=r.ew?q.b:q.a,qv1=r.ew?q.d:q.c;if(qv1<V0||qv0>V1||qc<U0||qa>U1)continue;const mq=q.m;
+      if(U0<qa&&U1<=qc){if(mq%1===0)hi=Math.min(hi,mq-1);else{hi=Math.min(hi,mq-.5);ch=mq-.5}}/* 高いうでの棟まで */
+      else if(U1>qc&&U0>=qa){if(mq%1===0)lo=Math.max(lo,mq);else{lo=Math.max(lo,mq-.5);cl=mq-.5}}}
     const hv=v=>K*(r.D-Math.abs(v-r.m));
-    for(let v=V0;v<=V1;v++){let t,z;/* 切り口の向きの部品と、ずらす高さ */
-      if(r.n===1){t='fl';z=0}else if(v===V0){t='upe';z=0}else if(v===V1){t=r.n===2?'dnec':'dne';z=0}
-      else if(r.m===v+.5){t='tent';z=hv(v)}else if(r.m===v){t='dnc';z=hv(v+1)}else if(v+1<=r.m){t='up';z=hv(v)}else{t='dn';z=hv(v+1)}
-      for(let u=lo;u<=hi;u++){const e=u===cutLo?'l':u===cutHi?'r':u===U0&&U0===lo?'a':u===U1&&U1===hi?'b':'m',cx=r.ew?u:v,cy=r.ew?v:u;out.push({k:o+'-'+t+'-'+e,cx,cy,z})}
-      if(hi===U1){/* 妻：東（南）のはしの、壁の外の面に */const cx=r.ew?U1:v,cy=r.ew?v:U1,wl=wallOf(cx,cy),gt=t==='dnc'?'dn':t==='dnec'?'dne':t,nb=Math.round(z/(K/2)),gx=r.ew?cx+.65:cy+.65;
-        for(let i=0;i<nb;i++)out.push({k:wl+':gab-'+o+'-blk-'+(i%2),cx,cy,z:i*K/2,g:r.ew?'x':'y',gp:gx});
-        out.push({k:wl+':gab-'+o+'-'+gt+'-'+(nb%2),cx,cy,z,g:r.ew?'x':'y',gp:gx})}}}
-  return out}
-/* チップのドットの色（読みこむまでは null） */
-const IQRPX=new Map();
-function iqChipPx(k){let p=IQRPX.get(k);if(p)return p;const ch=window.CHIPS&&CHIPS[k];if(!ch)return null;const im=chipImgs(ch,k)[0];if(!im||!im.ok)return null;
-  const g=im.getContext?im.getContext('2d'):null;if(!g)return null;p={w:im.width,h:im.height,ax:ch.ax,ay:ch.ay,d:g.getImageData(0,0,im.width,im.height).data};IQRPX.set(k,p);return p}
-function iqVN(x,y){const X=Math.floor(x),Y=Math.floor(y),fx=x-X,fy=y-Y,a=hash(X*57+Y*131),b=hash((X+1)*57+Y*131),c=hash(X*57+(Y+1)*131),d=hash((X+1)*57+(Y+1)*131),sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy}/* なめらかなむら（0〜1） */
-function iqHex(s){if(s[0]==='#'){const n=parseInt(s.slice(1),16);return[n>>16,n>>8&255,n&255]}const m=s.match(/\d+/g);return[+m[0],+m[1],+m[2]]}
-/* 家の屋根の絵を作る（列ごと）。もどすのは {cols:[{x,b0,cv,x0,y0}], glint:[[列,x,y]]}。部品がまだ読みこめていなければ null */
+    for(let v=V0;v<=V1;v++){let t,z;if(r.n===1){t='fl';z=0}else if(v===V0){t='upe';z=0}else if(v===V1){t=r.n===2?'dnec':'dne';z=0}else if(r.m===v+.5){t='tent';z=hv(v)}else if(r.m===v){t='dnc';z=hv(v+1)}else if(v+1<=r.m){t='up';z=hv(v)}else{t='dn';z=hv(v+1)}
+      for(let u=lo;u<=hi;u++){const e=u===cl?'l':u===ch?'r':u===U0&&U0===lo?'a':u===U1&&U1===hi?'b':'m',cx=r.ew?u:v,cy=r.ew?v:u,k=cy*W+cx;let L=cells.get(k);if(!L)cells.set(k,L=[]);L.push({o,t,e,z})}
+      if(hi===U1)gab.push({cx:r.ew?U1:v,cy:r.ew?v:U1,o,t:t==='dnc'?'dn':t==='dnec'?'dne':t,z})}}
+  return{cells,gab}}
+/* かさなるマス：見える部品が1つならその部品、2つ以上なら谷のチップの名前（iso_roof.py の pick と同じ） */
+function iqRPick(ps){const win=new Set();for(let i=0;i<8;i++)for(let j=0;j<8;j++){const x=i/8+1/16,y=j/8+1/16;let bh=null,bk=-1;for(let k=0;k<ps.length;k++){const hh=iqRHgt(ps[k],x,y);if(hh!=null&&(bh==null||hh>bh||hh===bh&&k>bk)){bh=hh;bk=k}}if(bk>=0)win.add(bk)}
+  if(win.size<=1)return{p:ps[win.size?[...win][0]:0]};const vs=[...win].sort((a,b)=>a-b).map(k=>ps[k]),zm=Math.min(...vs.map(p=>p.z));
+  return{j:'x-'+vs.map(p=>p.o+'-'+p.t+'-'+p.e+'-'+Math.round((p.z-zm)/(IQROOFK/2))).sort().join('+'),z:zm,vs}}
+/* 家の屋根の絵を作る（列ごと）。チップがまだ読みこめていなければ null */
 const IQROOF=new Map();
 function iqRoofBuild(h){
-  const F=new Set([...h.set,...h.inside]);let lv=0;for(const j of h.set)lv=Math.max(lv,hiAt(j));const base=lv*IQL+IQWALLH,L=iqRoofCells(h,F);if(!L.length)return null;
-  const P=[];for(const q of L){const k='iso:'+(q.g?'':'roof:')+q.k;if(!CHIPS[k])continue;/* ない部品はとばす */const c=iqChipPx(k),dz=q.g?null:iqChipPx('iso:roofz:'+q.k);if(!c||!q.g&&!dz)return null;P.push([q,c,dz])}
-  /* 画面のはんい（絵のドット。ゲームの点×IQRS） */
-  let X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;const at=q=>[((q.cx-q.cy)*32)*IQRS,(((q.cx+q.cy+1)*24)-base-q.z*IQL)*IQRS];
-  for(const[q,c]of P){const[ax,ay]=at(q);X0=Math.min(X0,ax-c.ax);Y0=Math.min(Y0,ay-c.ay);X1=Math.max(X1,ax-c.ax+c.w);Y1=Math.max(Y1,ay-c.ay+c.h)}
-  X0=Math.floor(X0);Y0=Math.floor(Y0);const BW=Math.ceil(X1)-X0,BH=Math.ceil(Y1)-Y0,px=new Uint8ClampedArray(BW*BH*4),dep=new Float32Array(BW*BH).fill(-1e9),gab=new Uint8Array(BW*BH);
-  for(const[q,c,dz]of P){const[ax,ay]=at(q),ox=Math.round(ax-c.ax)-X0,oy=Math.round(ay-c.ay)-Y0,dc=q.cx+q.cy;
-    for(let y=0;y<c.h;y++){const by=oy+y;if(by<0||by>=BH)continue;for(let x=0;x<c.w;x++){const s=(y*c.w+x)*4;if(!c.d[s+3])continue;const bx=ox+x;if(bx<0||bx>=BW)continue;
-      const d=q.g?(q.g==='x'?2*q.gp-(X0+bx+.5)/IQRS/32:2*q.gp+(X0+bx+.5)/IQRS/32):dz.d[s]/255*3-.5+dc,b=by*BW+bx;/* 奥行き：x+y（大きいほどカメラに近い）。妻は面の式で */
-      if(d<=dep[b]+1e-4)continue;dep[b]=d;gab[b]=q.g?1:0;px[b*4]=c.d[s];px[b*4+1]=c.d[s+1];px[b*4+2]=c.d[s+2];px[b*4+3]=255}}}
-  /* 屋根の色（灰色 200 がもとの色）・雪・ぬれた点・列 */
-  const tone=iqHex(iqRoofTone(h)),snow=FEELC.snow||0,sfull=snow>SNOWFULL0?Math.min(1,(snow-SNOWFULL0)/(1-SNOWFULL0)):0,sd=h.x0*7+h.y0*13,colOf=new Int16Array(BW*BH).fill(-1),glint=[];
-  for(let b=0;b<BW*BH;b++){if(!px[b*4+3])continue;const ix=(X0+b%BW+.5)/IQRS/32,d=dep[b],x=(d+ix)/2,y=(d-ix)/2;colOf[b]=Math.min(h.x1,Math.max(h.x0,Math.floor(x)));if(gab[b])continue;
-    let r=px[b*4]*tone[0]/200,g=px[b*4+1]*tone[1]/200,bl=px[b*4+2]*tone[2]/200;
-    if(snow>0){const n=iqVN(x*2.4+sd,y*2.4);if(sfull>0||n<snow*1.2){const k=Math.max(sfull*.95,n<snow*1.2?.92:0),l=px[b*4]/200;r+=(255*Math.min(1,l*1.02)-r)*k;g+=(255*Math.min(1,l*1.02)-g)*k;bl+=(255-bl)*k}}/* 雪：屋根の場所できめた、ふんわりしたかたまり（つもるほど広がる）・つもりきったら屋根ぜんたい。かげの明るさはのこす */
-    px[b*4]=r;px[b*4+1]=g;px[b*4+2]=bl;if(hash(b*7+sd)<.0016)glint.push([colOf[b],b%BW,(b/BW)|0])}
-  /* 列ごとの絵 */
-  const cols=[];for(let cx=h.x0;cx<=h.x1;cx++){let a0=1e9,a1=-1,b0_=1e9,b1=-1;for(let p=0;p<BW*BH;p++)if(colOf[p]===cx){const X=p%BW,Y=(p/BW)|0;if(X<a0)a0=X;if(X>a1)a1=X;if(Y<b0_)b0_=Y;if(Y>b1)b1=Y}
-    if(a1<0)continue;const cw=a1-a0+1,chh=b1-b0_+1,cv=document.createElement('canvas');cv.width=cw;cv.height=chh;const g=cv.getContext('2d'),id=g.createImageData(cw,chh);
-    for(let Y=0;Y<chh;Y++)for(let X=0;X<cw;X++){const p=(Y+b0_)*BW+X+a0;if(colOf[p]!==cx)continue;const s4=p*4,d4=(Y*cw+X)*4;id.data[d4]=px[s4];id.data[d4+1]=px[s4+1];id.data[d4+2]=px[s4+2];id.data[d4+3]=255}
-    g.putImageData(id,0,0);let rb=-1;for(const j of F)if(j%W===cx)rb=Math.max(rb,(j/W)|0);cols.push({x:cx,b0:rb,cv,x0:(X0+a0)/IQRS,y0:(Y0+b0_)/IQRS,tint:null,tk:''})}
-  return{cols,glint:glint.map(([cx,X,Y])=>[cx,(X0+X)/IQRS,(Y0+Y)/IQRS])}}
+  const F=new Set([...h.set,...h.inside]);let lv=0;for(const j of h.set)lv=Math.max(lv,hiAt(j));const base=lv*IQL+IQWALLH,{cells,gab}=iqRoofCells(h,F),col=iqRoofCol(h),C=window.CHIPS;if(!C)return null;
+  const wallOf=(cx,cy)=>{const o=typeAt(cy*W+cx);return HOME_WALLS.has(o)?o:h._rw.find(id=>HOME_WALLS.has(id))||'hwall'};
+  const snow=FEELC.snow||0,sfull=snow>SNOWFULL0?Math.min(1,(snow-SNOWFULL0)/(1-SNOWFULL0)):0;
+  /* マスごとに置くチップ：[マス, チップ, 高さ（だん）, うすさ]。同じマスの中は、妻 → 屋根 → 雪の順 */
+  const put=new Map(),add=(cx,cy,k,z,a)=>{const j=cy*W+cx;let L=put.get(j);if(!L)put.set(j,L=[]);L.push([k,z,a==null?1:a])};
+  for(const g of gab){const wl=wallOf(g.cx,g.cy),nb=Math.round(g.z/(IQROOFK/2));for(let i=0;i<nb;i++)add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-blk-'+(i%2),i*IQROOFK/2);add(g.cx,g.cy,'iso:'+wl+':gab-'+g.o+'-'+g.t+'-'+(nb%2),g.z)}
+  const piece=(cx,cy,k,z)=>{add(cx,cy,'iso:roof-'+col+':'+k,z);if(snow>0)add(cx,cy,'iso:roofsn:'+k+'-a',z,Math.min(1,snow*2.5));if(sfull>0)add(cx,cy,'iso:roofsn:'+k+'-f',z,sfull*.95)};
+  for(const[j,ps]of cells){const cx=j%W,cy=(j/W)|0;if(ps.length===1){const p=ps[0];piece(cx,cy,p.o+'-'+p.t+'-'+p.e,p.z);continue}
+    const q=iqRPick(ps);if(q.p){piece(cx,cy,q.p.o+'-'+q.p.t+'-'+q.p.e,q.p.z);continue}
+    if(C['iso:roof-'+col+':'+q.j]){piece(cx,cy,q.j,q.z);continue}
+    for(const p of q.vs.slice().sort((a,b)=>a.z-b.z))piece(cx,cy,p.o+'-'+p.t+'-'+p.e,p.z)}/* 谷のチップのない組み合わせ：低いほうから */
+  /* 列ごとに、奥の行から置いて、1まいの絵に */
+  const cols=[];for(let cx=h.x0;cx<=h.x1;cx++){const rows=[];for(let cy=h.y0;cy<=h.y1;cy++){const L=put.get(cy*W+cx);if(L)rows.push([cy,L])}if(!rows.length)continue;
+    let X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;const it=[];
+    for(const[cy,L]of rows)for(const[k,z,a]of L){const ch=C[k];if(!ch)continue;const im=chipImgs(ch,k)[0];if(!im||!im.ok)return null;const ax=(cx-cy)*32*IQRS-ch.ax,ay=((cx+cy+1)*24-base-z*IQL)*IQRS-ch.ay;
+      X0=Math.min(X0,ax);Y0=Math.min(Y0,ay);X1=Math.max(X1,ax+ch.w);Y1=Math.max(Y1,ay+ch.h);it.push([im,ax,ay,a])}
+    if(!it.length)continue;X0=Math.floor(X0);Y0=Math.floor(Y0);const cv=document.createElement('canvas');cv.width=Math.ceil(X1)-X0;cv.height=Math.ceil(Y1)-Y0;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
+    for(const[im,ax,ay,a]of it){g.globalAlpha=a;g.drawImage(im,Math.round(ax-X0),Math.round(ay-Y0))}
+    let rb=-1;for(const j of F)if(j%W===cx)rb=Math.max(rb,(j/W)|0);cols.push({x:cx,b0:rb,cv,x0:X0/IQRS,y0:Y0/IQRS,tint:null,tk:''})}
+  /* あらしの日のぬれた点の場所：列の絵の中の、屋根のドット（妻はのぞかない。少しだけ） */
+  const glint=[];for(const c of cols){const w=c.cv.width,hh=c.cv.height,d=c.cv.getContext('2d').getImageData(0,0,w,hh).data,n=Math.max(2,Math.round(w*hh/2600));for(let i=0;i<n*3&&glint.length<1e4;i++){const X=Math.floor(hash(c.x*31+i*7+h.y0)*w),Y=Math.floor(hash(c.x*17+i*13+h.x0)*hh);if(d[(Y*w+X)*4+3]>200&&d[(Y*w+X)*4+3]<256&&i%3===0)glint.push([c.x,c.x0+X/IQRS,c.y0+Y/IQRS])}}
+  return{cols,glint}}
 /* 屋根の絵（作りなおしが要るときだけ作る） */
 function iqRoofOf(h,now){if(!h._rk){h._rw=[...h.set].map(typeAt).filter((v,i,a)=>a.indexOf(v)===i);h._rk=[...h.set,...h.inside].sort((a,b)=>a-b).join(',')+'|'+[...h.set].reduce((m,j)=>Math.max(m,hiAt(j)),0)}/* 家の形（HOUSES を作りなおすまで同じ） */
   const key=h._rk+'|'+(S.roofCol&&S.roofCol[hKey(h)]||'')+'|'+WD+'|'+Math.round((FEELC.snow||0)*20);
