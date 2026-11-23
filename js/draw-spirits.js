@@ -630,13 +630,13 @@ function drawYatai(px,py,front,now,st){const f=FESTA.F['st_'+st.el];if(!FESTA.ok
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;if(front){if(h>sp)ctx.drawImage(FESTA.img,sx,sy+sp,w,h-sp,x0,y0+sp,w,h-sp)}else ctx.drawImage(FESTA.img,sx,sy,w,sp,x0,y0,w,sp);ctx.imageSmoothingEnabled=sm}/* front=0は店番のうしろ、1は前 */
 function drawGod(now){
   if(!godHere())return;const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS+Math.sin(now/700)*3;
-  shadow(ctx,px,GY*TS+16,14,4);
+  const FY=0;/* クォータービュー：足もと（台座の上の面のまん中）に、雲の下のはし・かげ（前の見え方では半マス下の +16） */shadow(ctx,px,GY*TS+FY,14,4);
   if(QUESTCLEARW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
   else if(TALKW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
   else if(SUBW[GOD]){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}/* サブクエスト（交換）：黄色の吹き出し */
   else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='9px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
   const g=ctx.createRadialGradient(px,py-12,4,px,py-12,36);g.addColorStop(0,'rgba(255,250,210,.4)');g.addColorStop(1,'rgba(255,250,210,0)');ctx.fillStyle=g;ctx.fillRect(px-36,py-48,72,72);
-  const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+16)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
+  const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+FY)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+FY-h,w,h)}else{
   circ(ctx,px-10,py+6,7,'#fff');circ(ctx,px+10,py+6,7,'#fff');circ(ctx,px,py+4,9,'#fff');circ(ctx,px-4,py+9,6,'#eef4ff');circ(ctx,px+5,py+9,6,'#eef4ff');
   circ(ctx,px,py-7,8,'#f6d6b0');
   ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(px-7,py-5);ctx.quadraticCurveTo(px,py+8,px+7,py-5);ctx.quadraticCurveTo(px,py-1,px-7,py-5);ctx.fill();
