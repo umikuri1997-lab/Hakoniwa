@@ -82,6 +82,7 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 | `nat_oak.glb` | 水の木・オーク（tree~m・deadtree~m） | 立つ | 目じるしの色（幹・葉）。`oak.glb` から `tools/art/nature3d/tree_prep.py` で作る |
 | `nat_maple.glb` | 水の木・メープル（maple~m） | 立つ | 目じるしの色。`maple.glb` から `tree_prep.py` |
 | `nat_deadoak.glb` | 闇の木・枯れたオーク（tree~y・deadtree~y） | 立つ | 目じるしの色（幹だけ）。`oak_dead.glb` から `tree_prep.py` |
+| `crop_mugi1〜3.glb`・`crop_imo1〜3.glb`・`crop_cab1〜3.glb` | 畑の作物（麦・いも・キャベツの3だん） | 立つ | 目じるしの色（葉・茎・実・花びら・花のまん中）をマテリアルで。`crop_prep.py` で作る |
 | `nat_kinoko0〜2.glb` | きのこ（kinoko#0〜2） | 立つ | 目じるしの色（かさ・かさのうら・じく） |
 | `ck_mugi.glb`・`ck_imo.glb`・`ck_sashimi.glb` | むぎのたば・いも・さかなの切り身（料理の家具の上の材料・さしみ） | ねかせた形 | 色なし。`furn3d/cooktop.py` で `recol` |
 | `ck_berry.glb`・`ck_milk.glb`・`ck_salad.glb` | ブルーベリー・ミルクのびん・サラダのボウル | 立つ | 色なし。`cooktop.py` の `model2` で、高さ・場所で2つの色にぬりわける（葉・ふた・ボウル） |
@@ -93,5 +94,7 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 3回め（`stump` から下）は、色のない FBX（y が上）。`tripo_split.py` は、上の向きを自分でみつけ、面の向きをそろえ、面を3000までへらす。色は設計図で `recol` する。
 
 6回め（`ck_*`）は、料理の家具の上の材料・料理用。色のない glb を `tripo_split.py` で切りわけた（プロンプトは `prompts.md` の「6回め」）。
+
+作物（`crop_*`）は、`prompts.md` の「7回め：畑の作物」。色のない glb（もとは `tools/art/crop3d/src/crops_tripo.glb`）を `tools/art/crop3d/crop_prep.py` で切りわけ、部品ごとに目じるしのマテリアルをつけた（じゃがいも1の大きい葉をちぢめ、キャベツ2の立った葉をひくくした。持ち主がきめた）。設計図は `furn3d/items/crop.py`（土のもりあがりもいっしょに、クォータービューで写す）。
 
 7回め（`gf/`）は、限定の家具25こ（`g_w_*`・`g_e_*`・`g_f_*`・`g_k_*`・`g_s_*`、設計図は `furn3d/items/g_*_t.py`）。作りなおしは `python3 tools/art/models/tripo/gf_build.py <出力>`（`gf_bake.py` → `gf_edit.py` → `furn3d.py` → `check.png`）。`gf/orig/`：持ち主の1つの glb を `tripo_split.py --wall --tex --keepuv` で切りわけた物（形はへらさない。UV つき）。`gf/tex.png`：トリポのテクスチャ。`gf/design.png`：持ち主のデザインの絵。`gf/tex2.png`：デザインの絵を焼いたテクスチャ（`gf_bake.py`）。`gf/base/`：天板を水平にした物（`gf_level.py`）。`gf/*.glb`：持ち主の直しを入れた物（`gf_edit.py`）。それぞれの家具の専用なので、`catalog` には入れない。
