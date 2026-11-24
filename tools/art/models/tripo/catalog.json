@@ -179,6 +179,18 @@
   "tris": 1288,
   "catalog_h": 0.35
  },
+ "iwakagami": {
+  "w_per_h": 1.072,
+  "d_per_h": 1.047,
+  "tris": 6527,
+  "catalog_h": 0.5
+ },
+ "iwakusa": {
+  "w_per_h": 1.829,
+  "d_per_h": 1.823,
+  "tris": 1118,
+  "catalog_h": 0.32
+ },
  "jar_band": {
   "w_per_h": 1.227,
   "d_per_h": 1.227,
@@ -305,6 +317,12 @@
   "tris": 1463,
   "catalog_h": 2.2
  },
+ "olive": {
+  "w_per_h": 1.275,
+  "d_per_h": 0.962,
+  "tris": 8000,
+  "catalog_h": 1.75
+ },
  "pebble_a": {
   "w_per_h": 1.427,
   "d_per_h": 1.378,
@@ -389,11 +407,23 @@
   "tris": 45754,
   "catalog_h": 0.5
  },
+ "sagan": {
+  "w_per_h": 1.052,
+  "d_per_h": 1.2,
+  "tris": 1746,
+  "catalog_h": 0.5
+ },
  "salvia": {
   "w_per_h": 0.827,
   "d_per_h": 0.912,
   "tris": 4695,
   "catalog_h": 0.45
+ },
+ "sandrock": {
+  "w_per_h": 1.926,
+  "d_per_h": 1.481,
+  "tris": 3004,
+  "catalog_h": 0.78
  },
  "sprig": {
   "w_per_h": 1.227,
@@ -436,6 +466,12 @@
   "d_per_h": 2.501,
   "tris": 3000,
   "catalog_h": 0.43
+ },
+ "susuki": {
+  "w_per_h": 0.892,
+  "d_per_h": 0.923,
+  "tris": 7601,
+  "catalog_h": 0.85
  },
  "takenoko": {
   "w_per_h": 0.558,

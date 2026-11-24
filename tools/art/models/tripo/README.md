@@ -80,6 +80,12 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 | `nat_cedar.glb`・`nat_cedar2.glb` | とんがりの木（tree~v・deadtree~v） | 立つ | 同上 |
 | `nat_acacia.glb` | 風の木・アカシア（tree~k・deadtree~k） | 立つ | 目じるしの色（幹・葉）。`acacia.glb` の色から `tools/art/nature3d/acacia_prep.py` で作る |
 | `nat_oak.glb` | 水の木・オーク（tree~m・deadtree~m） | 立つ | 目じるしの色（幹・葉）。`oak.glb` から `tools/art/nature3d/tree_prep.py` で作る |
+| `olive.glb` | 土の木・オリーブ（tree~t・枯れ木 deadtree~t は幹だけ） | 立つ | 8回め。目じるしの色（幹・葉・実）。`tools/art/tsuchi/tsuchi_prep.py`。葉は1まいずつ大きいので、かたまりにまとめて小さな葉でおおう |
+| `iwakusa.glb` | 土の雑草・いわ草（weed2g） | 立つ | 8回め。葉が長いので、高さ0.75倍で使う |
+| `susuki.glb` | 土の雑草・かれすすき（weed2k） | 立つ | 8回め。穂はかたい形なので、粒（PWATER）にかえる |
+| `iwakagami.glb` | 土の花・いわかがみ | 立つ | 8回め。目じるしの色（葉・じく・花） |
+| `sandrock.glb` | 土の岩・砂岩の大岩（rock~t） | 立つ | 8回め。色なし（しまは設計図の decal） |
+| `sagan.glb` | 砂岩のかけら（素材のアイコンだけ） | 立つ | 8回め。色なし |
 | `nat_maple.glb` | 水の木・メープル（maple~m） | 立つ | 目じるしの色。`maple.glb` から `tree_prep.py` |
 | `nat_deadoak.glb` | 闇の木・枯れたオーク（tree~y・deadtree~y） | 立つ | 目じるしの色（幹だけ）。`oak_dead.glb` から `tree_prep.py` |
 | `crop_mugi1〜3.glb`・`crop_imo1〜3.glb`・`crop_cab1〜3.glb` | 畑の作物（麦・いも・キャベツの3だん） | 立つ | 目じるしの色（葉・茎・実・花びら・花のまん中）をマテリアルで。`crop_prep.py` で作る |

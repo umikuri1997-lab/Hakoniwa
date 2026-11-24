@@ -188,3 +188,18 @@ Each plant is about as tall as wide (ripe wheat a little taller). Style: stylize
 6 small sandstone chunk: one small blocky piece of sandstone, about as tall as wide, layered bands
 Style: stylized, slightly chunky, clean simple smooth shapes, real 3D volume seen from all sides; pale, light, soft colors (silvery light green olive leaves, warm light brown bark, fresh light green grass, pale straw and cream, soft pink flowers, warm pale peach-beige sandstone with light orange bands), no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no speckles, no baked lighting or shadows. No soil, no ground, no base, no background.
 ```
+
+### 8回めをもらって、うまく使えなかった所
+- 2だんが上下にかさなり、上のだんが宙にういて来た（`tsuchi_prep.py floor` で床におろした）。色のない形だけだった。
+- オリーブ：葉が1まいずつ大きく、ふちに切れこみのあるカエデのような形で、樹冠がすかすか。枝の先に葉が幹とつながってついている（枯れ木では、へらの形のこぶに見える）。葉の場所をかたまりにまとめ、小さな細い葉でおおって使った。
+- かれすすき：穂が、ふしのあるかたい紡錘形（とうもろこしのよう）。粒にかえて使った。
+- いわかがみ：いちばん上の花が、まるい玉。
+
+### 9回め（作りなおすとき。オリーブ・すすき・いわかがみの3こを1つのモデルに）
+```
+3 separate cozy-game plants for a dry, sunny rocky canyon, in one model, in a single row from left to right with clear space between them, no two touching, all standing on the same flat floor at the same height (nothing floating), all upright, perfectly vertical, not tilted:
+1 olive tree: short thick gnarled trunk that splits into 2-3 crooked branches, the branches end inside the crown; a loose rounded crown made of 6-8 separate soft clumps of very many tiny narrow willow-like leaves (each leaf much smaller than the trunk is thick), the clumps clearly above the trunk with the lower trunk visible; a few small round olives
+2 dry pampas grass tuft: clump of thin long arching straw-colored leaves, with 3 separate tall thin stems spreading apart, each topped by a soft loose feathery plume that droops slightly (no segments, no hard core)
+3 iwakagami flower: low rosette of 5-6 round glossy leaves with softly toothed edges lying almost flat, 3 short arching reddish stems, each ending in 2-3 small nodding open bell-shaped flowers with fringed edges (no round balls)
+Style: stylized, slightly chunky, clean simple smooth shapes, real 3D volume seen from all sides; pale, light, soft colors, no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no speckles, no baked lighting or shadows. No soil, no ground, no base, no background.
+```
