@@ -53,11 +53,11 @@ def ball(name, c, r, m, seg=4, rot=None, subsurf=1, taper=0.0):
     bmesh.ops.transform(bm, matrix=Matrix.Translation(c) @ R @ S, verts=bm.verts)
     return obj(name, bm, [m], subsurf)
 
-def lathe(name, prof, depth, m, seg=32, gold=None, cap_top=True):
-    """たての軸のまわりにまわした面（prof：[(z, 半径)]、おくは半径×depth）。gold：(z0, z1) の帯の面を金色に"""
+def lathe(name, prof, depth, m, seg=32, gold=None, cap_top=True, yoff=0.0):
+    """たての軸のまわりにまわした面（prof：[(z, 半径)]、おくは半径×depth、まん中は y＋yoff）。gold：(z0, z1) の帯の面を金色に"""
     bm = bmesh.new(); rings = []
     for z, r in prof:
-        rings.append([bm.verts.new((r*math.cos(2*math.pi*i/seg), r*depth*math.sin(2*math.pi*i/seg), z)) for i in range(seg)])
+        rings.append([bm.verts.new((r*math.cos(2*math.pi*i/seg), yoff+r*depth*math.sin(2*math.pi*i/seg), z)) for i in range(seg)])
     for a, b in zip(rings, rings[1:]):
         for i in range(seg):
             bm.faces.new((a[i], a[(i+1) % seg], b[(i+1) % seg], b[i]))
@@ -120,45 +120,45 @@ def join(name, obs, voxel=0.03):
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     # 服：上がせまく、すそが広がる台形（正面の絵のはば。そでが体のよこにかさなる）。すそに金色の帯（z 0.30〜0.42）
-    lathe('robe', [(0.0, 1.30), (0.12, 1.33), (0.38, 1.33), (0.40, 1.33), (0.62, 1.32), (0.64, 1.32), (0.90, 1.28), (1.20, 1.22), (1.60, 1.10),
-                   (2.00, 0.97), (2.30, 0.88), (2.60, 0.80), (2.85, 0.68), (3.05, 0.48), (3.15, 0.30)], 0.86, 'robe', gold=(0.39, 0.63))
-    # えり：肩をおおう、はばの広いえり（z 2.45〜3.05）
-    lathe('collar', [(2.42, 0.92), (2.50, 1.02), (2.65, 1.04), (2.82, 0.94), (2.97, 0.76), (3.06, 0.52)], 0.95, 'robe', cap_top=False)
+    # 服：三面図からはかった、すそのはば（正面±1.25・うしろ±1.53 の絵のちがいの、まん中）・前は−0.85／うしろは＋1.12（まん中がうしろへ0.13）。すそは z 0.12（その下はつえだけ）
+    lathe('robe', [(0.12, 1.36), (0.30, 1.37), (0.32, 1.37), (0.60, 1.35), (0.62, 1.35), (1.00, 1.26), (1.50, 1.30), (1.90, 1.20),
+                   (2.20, 1.00), (2.50, 0.92), (2.80, 0.78), (3.00, 0.55), (3.12, 0.30)], 0.78, 'robe', gold=(0.31, 0.61), yoff=0.13)
+    lathe('collar', [(2.42, 0.82), (2.55, 0.90), (2.75, 0.94), (2.92, 0.98), (3.04, 0.92), (3.12, 0.60)], 0.95, 'robe', cap_top=False, yoff=0.08)
     # うしろのフード：せなかの上にたれるV字の形と、そのふちの金色の線
-    ball('hood', (0, 0.78, 2.58), (1.22, 0.30, 0.56), 'robe', taper=0.85)   # かたはばいっぱいの、せなかにたれるV字のフード
+    ball('hood', (0, 0.84, 2.58), (1.22, 0.30, 0.56), 'robe', taper=0.85)   # かたはばいっぱいの、せなかにたれるV字のフード
     hp = []
     for z in [3.04-0.07*i for i in range(14)]:   # V字の金色のふち（フードのふちの少し内がわ、フードの面の上）
-        q = (z-2.58)/0.56; w = math.sqrt(max(0.0, 1-q*q))*(1+min(q, 0)*0.85); hp.append((-1.04*w, 0.95, z))
+        q = (z-2.58)/0.56; w = math.sqrt(max(0.0, 1-q*q))*(1+min(q, 0)*0.85); hp.append((-1.04*w, 1.01, z))
     hp = hp+[(-x, y, z) for x, y, z in reversed(hp[:-1])]
     tube('hood_trim', hp, [0.035]*len(hp), 'gold', seg=6, caps=False)
     # そで：かたから前へ下りる、大きくたれたそで。そで口はたてのだ円で、内がわに金色のふち
     for sx, nm in ((-1, 'sleeve_r'), (1, 'sleeve_l')):
-        SP = [(sx*0.88, 0.05, 2.62), (sx*0.98, -0.30, 2.20), (sx*0.80, -0.66, 1.70), (sx*0.52, -0.87, 1.48), (sx*0.49, -0.89, 1.46)]
-        tube(nm, SP, [0.32, 0.40, 0.50, 0.57, 0.57], 'robe', seg=16, zsc=[1, 1, 1.45, 1.8, 1.8])
+        SP = [(sx*0.70, 0.05, 2.62), (sx*0.76, -0.22, 2.20), (sx*0.66, -0.48, 1.70), (sx*0.46, -0.64, 1.48), (sx*0.43, -0.66, 1.46)]
+        tube(nm, SP, [0.30, 0.36, 0.48, 0.55, 0.55], 'robe', seg=16, zsc=[1, 1, 1.45, 1.8, 1.8])
         # そで口のふち（金色）：そでのさいごの輪にそった輪。正面からは、たてにのびた線に見える
         P = [Vector(p) for p in SP]; t = (P[-1]-P[-2]).normalized(); u = t.cross(Vector((0, 0, 1))).normalized(); v = t.cross(u)
-        rim = [P[-1]+Matrix.Diagonal((1, 1, 1.8))@((u*math.cos(2*math.pi*k/24)+v*math.sin(2*math.pi*k/24))*0.57) for k in range(25)]
+        rim = [P[-1]+Matrix.Diagonal((1, 1, 1.8))@((u*math.cos(2*math.pi*k/24)+v*math.sin(2*math.pi*k/24))*0.55) for k in range(25)]
         tube(nm+'_rim', [tuple(q) for q in rim], [0.05]*25, 'gold', seg=6, caps=False)
     # つえ：体の前の地面から立つ柄（下は平ら）と、くびれのある、スプーンの形の頭
-    tube('staff', [(0, -1.16, 0.0), (0, -1.16, 0.04), (0, -1.14, 1.2), (0, -1.12, 2.20), (0, -1.12, 2.26)], [0.10]*5, 'wood', seg=12, subsurf=0)
-    ball('staff_top', (0, -1.12, 2.60), (0.34, 0.32, 0.40), 'wood')
+    tube('staff', [(0, -1.02, 0.0), (0, -1.02, 0.04), (0, -1.0, 1.2), (0, -1.04, 2.20), (0, -1.05, 2.26)], [0.10]*5, 'wood', seg=12, subsurf=0)
+    ball('staff_top', (0, -1.05, 2.60), (0.34, 0.32, 0.40), 'wood')
     # 体（ベースの体）：頭・首・どう体・あし・うで・手・耳をかさねて、ボクセルリメッシュで1つの体にする。首で頭と体がつながり、うではそでの中をとおって手につながる
-    B = [ball('head', (0, 0, 4.17), (1.17, 1.15, 1.05), 'skin', seg=6),                       # 頭（あご z 3.12・てっぺん z 5.22）
+    B = [ball('head', (0, 0.04, 4.10), (1.20, 1.19, 1.12), 'skin', seg=6),                       # 頭（あご z 2.98・てっぺん z 5.22・はば2.48）
          tube('neck', [(0, 0, 2.70), (0, 0, 3.55)], [0.42, 0.42], 'skin'),                       # 首
          ball('torso', (0, 0, 1.75), (0.80, 0.62, 1.15), 'skin'),                                # どう体（服の中）
          tube('leg_r', [(-0.34, 0, 0.05), (-0.34, 0, 1.0)], [0.28, 0.28], 'skin'), tube('leg_l', [(0.34, 0, 0.05), (0.34, 0, 1.0)], [0.28, 0.28], 'skin'),
-         ball('hands', (0, -1.10, 1.86), (0.24, 0.20, 0.22), 'skin')]                            # 前であわせた手
+         ball('hands', (0, -0.98, 1.86), (0.24, 0.20, 0.22), 'skin')]                            # 前であわせた手
     for sx, s_ in ((-1, 'r'), (1, 'l')):
-        B.append(tube('arm_'+s_, [(sx*0.78, 0, 2.62), (sx*0.90, -0.40, 2.10), (sx*0.42, -0.90, 1.76), (sx*0.12, -1.06, 1.84)], [0.24, 0.21, 0.17, 0.16], 'skin'))   # かた→ひじ→手くび→手
-        B.append(ball('ear_'+s_, (sx*1.15, 0.08, 3.80), (0.22, 0.14, 0.26), 'skin'))            # 耳
+        B.append(tube('arm_'+s_, [(sx*0.72, 0, 2.62), (sx*0.80, -0.35, 2.10), (sx*0.40, -0.78, 1.76), (sx*0.12, -0.94, 1.84)], [0.24, 0.21, 0.17, 0.16], 'skin'))   # かた→ひじ→手くび→手
+        B.append(ball('ear_'+s_, (sx*1.25, 0.08, 3.78), (0.23, 0.14, 0.26), 'skin'))            # 耳
     join('body', B)
     # 顔：まゆ・目・口ひげは、顔の面にはりつける（面の高さに合わせて、半分うめる）
     for sx, s_ in ((-1, 'r'), (1, 'l')):
         ball('brow_'+s_, (sx*0.58, -0.95, 4.14), (0.34, 0.13, 0.18), 'white', rot=Matrix.Rotation(math.radians(sx*-12), 3, 'Y'))
         arc('eye_'+s_, (sx*0.46, -1.0, 3.88), 0.12, 0.035, 'eye')
-        ball('mus_'+s_, (sx*0.45, -0.80, 3.40), (0.52, 0.32, 0.30), 'white', rot=Matrix.Rotation(math.radians(sx*10), 3, 'Y'))   # 口ひげ（左右のふくらみ）
-    ball('mus_c', (0, -0.92, 3.46), (0.34, 0.26, 0.24), 'white')
-    torus('halo', (0, 0.2, 5.63), 0.90, 0.08, 'halo', seg=(40, 8))   # 天使の輪（頭の上に、うく）
+        ball('mus_'+s_, (sx*0.76, -0.95, 3.42), (0.55, 0.38, 0.30), 'white', rot=Matrix.Rotation(math.radians(sx*10), 3, 'Y'))   # 口ひげ（左右のふくらみ）
+    ball('mus_c', (0, -1.08, 3.46), (0.42, 0.30, 0.25), 'white')
+    torus('halo', (0, 0.18, 5.63), 0.90, 0.08, 'halo', seg=(40, 8))   # 天使の輪（頭の上に、うく）
 
 def export():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -193,7 +193,56 @@ def check(od):
         sheet.paste(r, (i*310, 0)); sheet.paste(bgc, (i*310, 637)); sheet.paste(Image.blend(r, bgc, 0.5), (i*310, 1274))
     sheet.save(os.path.join(od, 'check.png'))   # 上：参考の絵・まん中：モデル・下：かさねた絵
 
+CLS = {'skin': 'skin', 'robe': 'light', 'white': 'light', 'gold': 'gold', 'halo': 'gold', 'wood': 'wood', 'eye': 'dark'}
+REFPAL = [('skin', (240, 208, 176)), ('skin', (240, 216, 176)), ('light', (240, 232, 216)), ('light', (248, 240, 232)), ('light', (248, 240, 224)),
+          ('gold', (248, 224, 160)), ('gold', (240, 208, 152)), ('wood', (168, 128, 96)), ('dark', (152, 136, 112)), ('dark', (110, 80, 60))]   # 参考の絵の、多い色
+def ref_class(a):
+    """参考の絵のドットを、いちばん近い多い色の種類にわける（はだ・服とひげの白・金色・木・こい線）"""
+    fg = np.abs(a.astype(int)-a[5, 5].astype(int)).sum(-1) > 40
+    d = np.stack([np.abs(a.astype(int)-np.array(c)).sum(-1) for _, c in REFPAL]); out = np.array([n for n, _ in REFPAL], object)[d.argmin(0)]
+    out[~fg] = ''; return out
+
+def fit(od):
+    """三面図に合わせるための数字：正面・よこ・うしろを、材質の色そのまま（光なし）で写し、参考の絵と、色の種類ごとに、行ごとの左右のはしをくらべる"""
+    global np
+    import numpy as np
+    from PIL import Image
+    sc = bpy.context.scene; sc.view_settings.view_transform = 'Standard'; sc.cycles.samples = 1; sc.render.filter_size = 0.01
+    for m in bpy.data.materials:   # 光なしの色（エミッション）
+        nt = m.node_tree; out_ = next(n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'); em = nt.nodes.new('ShaderNodeEmission')
+        em.inputs['Color'].default_value = srgb(COL[m.name]); nt.links.new(em.outputs[0], out_.inputs['Surface'])
+    sc.world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.0
+    for o in list(bpy.data.objects):
+        if o.type == 'LIGHT': bpy.data.objects.remove(o)
+    co = sc.camera; shots = {'front': ((0, -20, 3.115), (math.radians(90), 0, 0)), 'side': ((20, 0, 3.115), (math.radians(90), 0, math.radians(90))),
+                             'back': ((0, 20, 3.115), (math.radians(90), 0, math.radians(180)))}
+    ref = np.array(Image.open(os.path.join(HERE, 'ref.jpg')).convert('RGB')); CX = {'front': 232, 'side': 597, 'back': 971}
+    pal = {k: np.array(v) for k, v in COL.items()}
+    for k, (loc, rot) in shots.items():
+        co.location = loc; co.rotation_euler = rot; sc.render.filepath = os.path.join(od, 'fit_'+k+'.png'); bpy.ops.render.render(write_still=True)
+        m = np.array(Image.open(sc.render.filepath).convert('RGBA')).astype(int)
+        names = list(pal); d = np.stack([np.abs(m[..., :3]-pal[n]).sum(-1) for n in names]); mc = np.array([CLS[n] for n in names], object)[d.argmin(0)]
+        mc[m[..., 3] < 128] = ''
+        rc = ref_class(ref[:, CX[k]-155:CX[k]+155])
+        from scipy.ndimage import binary_erosion
+        def clean(c, cl): return binary_erosion((c != '') if cl == 'all' else (c == cl), np.ones((3, 3)))   # ふちのまざった色の点は、数えない
+        print('=== '+k+'（行：参考の絵の y。数字はドット。−は左へ・＋は右へ。モデル−参考）')
+        for cl in ('all', 'skin', 'light', 'gold', 'wood'):
+            A = clean(rc, cl); Bm = clean(mc, cl); rows = []
+            for y0 in range(0, 637, 16):
+                ra = A[y0:y0+16].any(0); ma = Bm[y0:y0+16].any(0)
+                if not ra.any() and not ma.any(): continue
+                if ra.sum() < 3 and ma.sum() < 3: continue
+                if not ra.any(): rows.append('%d:モデルだけ[%d,%d]' % (y0, np.nonzero(ma)[0].min(), np.nonzero(ma)[0].max())); continue
+                if not ma.any(): rows.append('%d:参考だけ[%d,%d]' % (y0, np.nonzero(ra)[0].min(), np.nonzero(ra)[0].max())); continue
+                rl, rr = np.nonzero(ra)[0][[0, -1]]; ml, mr = np.nonzero(ma)[0][[0, -1]]
+                if abs(ml-rl) > 4 or abs(mr-rr) > 4: rows.append('%d:左%+d右%+d(参考%d〜%d)' % (y0, ml-rl, mr-rr, rl, rr))
+            print(' ', cl, ' '.join(rows) if rows else 'ずれなし')
+
 if __name__ == '__main__':
     argv = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
     build(); export()
     if '--check' in argv: check(argv[argv.index('--check')+1])
+    if '--fit' in argv:
+        if '--check' not in argv: check(argv[argv.index('--fit')+1])
+        fit(argv[argv.index('--fit')+1])
