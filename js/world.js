@@ -360,7 +360,8 @@ const SEATF=new Set(['bed','yorubed','chair','achair','stool','pouf','kagoisu','
 const seatJ=j=>j>=0&&j<W*H&&SEATF.has(typeAt(j));
 function walkR(j){return walk(j)&&!seatJ(j)}/* せいれいが、使わずに立ってよいマス */
 function seatBackStep(i,j){/* i→j が、いす・ベンチの背もたれのがわからの乗りおり（その家具のマスどうしは、のぞく） */if(typeof seatBack!=='function')return false;const ci=seatCell(i),cj=seatCell(j);if(cj&&!ci&&seatBack(j)===i)return true;if(ci&&!cj&&seatBack(i)===j)return true;return false}
-function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||STUMPB.has(j)||j===GODJ||fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
+function noPassJ(j){return STUMPB.has(j)||j===GODJ}/* だれも通れないマス（切り株の根もと・守り神の像）。せいれい（walk）とコワイノ（bfs0・bfsE）で同じ */
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||noPassJ(j)||fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
 /* 雲の海（風のステージ）：マップのはしにつながる ground 1 のマス。歩けない・置けない・橋はかけられるのは水と同じ。水としてのふるまい（水をくむ・つり・水あび・水べの生き物など）は waterJ で見て、雲の海ではしない */
 let SKYS=null,SKYM=null;
 function skyOf(g){const M=new Uint8Array(W*H),Q=[];const put=j=>{if(g[j]===1&&!M[j]){M[j]=1;Q.push(j)}};for(let x=0;x<W;x++){put(x);put((H-1)*W+x)}for(let y=0;y<H;y++){put(y*W);put(y*W+W-1)}

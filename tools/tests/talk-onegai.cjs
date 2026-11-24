@@ -1,0 +1,21 @@
+/* お話のおねがい（talk-onegai.js）：1日1つ・村にある物だけ・とどけるとたのしさ+30と、たのんだ物できまるお礼（素材 能力+1・食べ物 ひみつの好み・おくりもの 手紙）・3日でとりやめ */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;
+    const a=S.res[0];a.hunger=hMax(a);a.energy=100;a.came=0;a.grief=0;a.fun=20;a.ong=null;a.ongD=null;a.onb=null;a.kn={};S.letterQ=[];
+    for(const k in S.mat)S.mat[k]=0;S.fs={};for(const id of GIFTIDS)delete S.inv[id];syncFood&&syncFood();
+    const none=ongOK(a);S.mat.stone=3;const L=ongLine(a),o=Object.assign({},a.ong),again=ongOK(a),note=ongNote(a);
+    const sw=staOf(a),w0=rStat(a).work+rStat(a).move+staOf(a);a.care={};const f0=a.fun;const G=presentGive(a,'m:stone');document.querySelector('#dialog').hidden=true;
+    const fun=a.fun-f0,onb=onbSum(a),w1=rStat(a).work+rStat(a).move+staOf(a),left=!!a.ong;
+    a.ongD=null;a.ong={t:'food',k:'apple',d:dayNo()};const Lf=ongGot(a,'food','apple');ongRead(a);const kn=['lk','lf','ng'].filter(x=>prefKnown(a,x)).length;
+    a.ong={t:'gift',k:'gf_kirei',d:dayNo()};ongGot(a,'gift','gf_kirei');const lt=(S.letterQ||[]).some(q=>q.id===a.id&&q.k==='ask');
+    a.ong={t:'mat',k:'stone',d:dayNo()-3};const exp=ongNow(a);
+    return JSON.stringify({none,L,o,again,note,G,fun,onb,dw:w1-w0,left,Lf,kn,lt,exp})})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.none,false,'nothing to ask when the village has nothing');assert.ok(r.L&&r.L[0].includes('石材'),'asks for a material');assert.equal(r.o.t,'mat');
+  assert.equal(r.again,false,'one request a day');assert.ok(/おねがい：石材（あと3日）/.test(r.note));
+  assert.ok(r.G);assert.ok(r.fun>=30,'fun +30 (+ gift)');assert.equal(r.onb,1);assert.equal(r.dw,1,'one stat +1');assert.equal(r.left,false);
+  assert.ok(r.Lf&&r.Lf.length>=3,'food thanks with a secret');assert.ok(r.kn>=1,'a secret preference is known after reading');
+  assert.ok(r.lt,'thank-you letter for a gift');assert.equal(r.exp,null,'request expires after 3 days');
+  assert.deepEqual(errors,[]);await browser.close();console.log('Talk: requests OK');
+})().catch(e=>{console.error(e);process.exit(1)});
