@@ -24,11 +24,22 @@ def breathe(p, w, k=1.0):
     p['z'] = p.get('z', 0)+0.4*k*S(w); p['top'] = p.get('top', 0)+0.08*S(w-0.6); p['tail'] = p.get('tail', 0)+0.15*S(w+0.8); p['wing'] = p.get('wing', 0)+0.1*S(w*2); return p
 
 # ---- 歩く ----
+# ふつうの歩き方（コンタクト → ダウン → パッシング → アップ）：足をついたすぐあとに体がいちばん下がり、足がすれちがうときにいちばん上がる（1まわりに2回）。
+# ついている足は、地面の上をまっすぐうしろへ（すべらない）・うかせた足は、前へふりながら上げる。足の高さは体といっしょに動かさない。
+# 足をつく所：−x の足（M）は w=3π/2、+x の足（P）は w=π/2（うで・ひねりは、前からの向きのまま）。
+# WSTEP：足先の前後のはば（ドット。1まわりで 4×WSTEP 進む。ゲームの WALKPT はこの数から）・WLIFT：うかせる高さ・WBOB：体の上下（かた方）・WDOWN：足をついてから、いちばん下がるまで
+WSTEP, WLIFT, WBOB, WDOWN, WHIP = 4.5, 2.5, 1.5, 0.3, 11.0
+def foot(ph):
+    """足をつく所からの場所 ph（0〜2π）→ (足のふり角, 上げる高さ)。前半はついて、まっすぐうしろへ・後半はうかせて前へ"""
+    ph %= 2*PI
+    if ph < PI: y, h = WSTEP*(1-2*ph/PI), 0.0
+    else: y, h = -WSTEP*C(ph-PI), WLIFT*S(ph-PI)
+    a = math.asin(y/WHIP); return a, h-WHIP*(1-C(a))   # 足をふると足先が上がる分だけ下げて、ついている足を地面からうかせない
 def walk(w, face):
-    bob = -abs(C(w))+0.5; down = armdown(face, {0: 1.15, 2: 0.95, 1: PI/2}[face])
-    sN, sF = sides(face, 0.8*S(w), 0.8*S(w+PI))
-    return dict(z=bob, legz=bob*0.3, yaw=0.12*S(w), roll=0.07*S(w), legM=-0.5*S(w), legP=-0.5*S(w+PI), liftM=2.5*max(0, C(w)), liftP=2.5*max(0, C(w+PI)),
-                sN=sN, sF=sF, bN=down, bF=down, hy=0.07*S(w), hr=0.03*S(w), hp=0.025*C(2*w), top=0.12*S(w-0.6), topz=1.2*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
+    bob = -WBOB*C(2*(w-PI/2-WDOWN)); down = armdown(face, {0: 1.15, 2: 0.95, 1: PI/2}[face])
+    sN, sF = sides(face, 0.8*S(w), 0.8*S(w+PI)); lM, hM = foot(w-3*PI/2); lP, hP = foot(w-PI/2)
+    return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=0.12*S(w), roll=0.07*S(w),
+                sN=sN, sF=sF, bN=down, bF=down, hy=0.07*S(w), hr=0.03*S(w), hp=0.025*C(2*w), top=0.12*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
 M('walk', 8, 9/(2*PI), walk)
 # ---- 立つ（クォータービューの絵で、3Dの絵のない立ち姿のかわり。js の spMotion） ----
 M('stand', 4, 0.5, lambda w, face: breathe({}, w))
@@ -578,7 +589,7 @@ M('play_g_hammock', 8, 0.3, hammock)
 # 体が大きく上下する動き（FOLLOW）は、頭巾の先（topz）としっぽ（tail）が、体よりおくれて動き、とまる所で行きすぎてもどる。
 # 頭巾の先・しっぽを、体の高さ z にばねでつながった物として、動きの1まわりをくりかえし計算し、おちついた形の、体とのずれ d を使う。
 # FOLW：ばねの速さ（動きの1まわりに何回ゆれるか）・FOLZ：ゆれのとまりやすさ・FOLTOP：頭巾の先の上下（火・水。d の何倍のドット）・FOLTILT：頭巾の先のかたむき（土・木・風。ラジアン）・FOLTAIL：しっぽ（ラジアン）・FOLMAX：ずれの上（ドット）
-FOLLOW = ('play_slide', 'play', 'qrain', 'chase', 'raise', 'storeh', 'draw')
+FOLLOW = ('walk', 'carry', 'play_slide', 'play', 'qrain', 'chase', 'raise', 'storeh', 'draw')
 FOLW, FOLZ, FOLTOP, FOLTILT, FOLTAIL, FOLMAX = 1.6, 0.3, 0.9, 0.06, 0.07, 3.0
 def _follow(name):
     m = MOTIONS[name]; f0 = m['f']; N = 256; cache = {}
