@@ -48,7 +48,7 @@ const assert=require('node:assert/strict');
       LIGHTCD=0;cvLightHit(s.x,s.y,1);out.teStun=s.stun>0;C.seen.fill(1);caveRender(performance.now());caveAbort()}
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.deepEqual(r.types,['bk_kui','bk_yoru','bk_sui',null,null,null,null,'bk_tame',null,null],'地図のある階のバケモノ');assert.deepEqual(r.bkfl,['bk_kui','bk_yoru','bk_sui',null,null,null,'bk_mi','bk_tame','bk_hone','bk_ro'],'階ごとのバケモノ（STORY.md）');assert.equal(r.kui,true);assert.equal(r.chips,true,'バケモノのチップ（3Dから写した絵）');
+  assert.deepEqual(r.types,['bk_kui','bk_yoru','bk_sui','bk_kuzu',null,null,null,'bk_tame',null,null],'地図のある階のバケモノ');assert.deepEqual(r.bkfl,['bk_kui','bk_yoru','bk_sui','bk_kuzu',null,null,'bk_mi','bk_tame','bk_hone','bk_ro'],'階ごとのバケモノ（STORY.md）');assert.equal(r.kui,true);assert.equal(r.chips,true,'バケモノのチップ（3Dから写した絵）');
   assert.ok(r.lr1<r.lr0,'光すいのそばで、光の広さが小さくなる');assert.deepEqual(r.split,[2,90],'わかれる（のこりを半分ずつ）');assert.equal(r.split2,2,'わかれた子は、もうわかれない');
   assert.equal(r.thaw0,true,'火のせいれいでなければ、目をさまさない');assert.equal(r.thaw1,true,'火のせいれいが近づくと、とける');
   assert.deepEqual(r.down,[true,true],'くずれる');assert.deepEqual(r.up,[true,true],'組みなおす');assert.equal(r.final,true,'まもりの光でとどめ');

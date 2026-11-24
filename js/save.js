@@ -9,6 +9,7 @@ const MIGRATIONS = [
   {v: 14, f(S) { if (S.cvClr > 3) S.cvClr = 3; if (S.ts && S.ground && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 洞窟は10階：いま行けるのは3階まで（cave.js の cvFlOpen）・くずれた岩の山は10（tsuchi.js） */
   {v: 15, f(S) { daichiMig(S); }}, /* フタバの特性「ねばりづよい」は「だいちのちから」になった（daichi.js） */
   {v: 16, f(S) { kiriIns(S); }}, /* 草原の転「霧のむこうの影」（kiri）を、なかよしの想いと花畑のあいだに足した（kiri.js） */
+  {v: 17, f(S) { kdIshiMig(S); }}, /* もりのこだまの、欠けた石の輪をなくした（kodama.js） */
 ];
 const SAVE_VER = MIGRATIONS.length ? MIGRATIONS[MIGRATIONS.length - 1].v : 10;
 function runMigrations(S) {
