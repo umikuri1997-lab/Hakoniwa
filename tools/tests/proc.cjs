@@ -16,7 +16,8 @@ const assert=require('node:assert/strict');
   const dt=JSON.parse(await run(`JSON.stringify({bed:BL.bed.mat,rug:BL.rug1.mat,pouf:BL.pouf.mat,cur:BL.curtain1.mat,bread:ALLRECIPES.find(R=>R.out==='bread').need,dango:ALLRECIPES.find(R=>R.out==='dango'),nuno:MATN.nuno,ko:FOODS.komugiko.name,loomLock:RLOCK.has('loom'),insp:QUEST_INSPIRATIONS.bed})`));
   assert.deepEqual(dt.bed,{wood:6,nuno:1});assert.deepEqual(dt.rug,{nuno:3});assert.deepEqual(dt.pouf,{wood:1,nuno:2});assert.deepEqual(dt.cur,{wood:10,nuno:2});
   assert.deepEqual(dt.bread,{komugiko:1});assert.equal(dt.dango.st,'cooktable');assert.deepEqual(dt.dango.need,{komugiko:1});
-  assert.equal(dt.nuno,'布');assert.equal(dt.ko,'こむぎこ');assert.equal(dt.loomLock,true);assert.deepEqual(dt.insp,['loom','bed']);
+  assert.equal(dt.nuno,'布');assert.equal(dt.ko,'こむぎこ');assert.equal(dt.loomLock,true);assert.deepEqual(dt.insp,['bed','loom']);
+  {const d=JSON.parse(await run(`(()=>{const g=S.guardianIdeas;S.guardianIdeas={};const q=QUESTS.find(q=>q.id==='bed'),L=ideaDialogue(q,q.talk.lines);S.guardianIdeas=g;return JSON.stringify(L.map(l=>l[0]==='@idea'?'@'+l[1].join(','):l[1].includes('布がいる')?'cloth':'-'))})()`));assert.deepEqual(d.filter(x=>x!=='-'),['@bed','cloth','@loom'],'ベッドを思いつき、布がいるとなってから、はたおり機')}
   /* はたおり機：タップで数をえらぶ（かさかさ草7こ→2つまで。しなやかな草2こは出ない） */
   await run(`prPop(${lj});1`);
   const pop=await page.evaluate(()=>[...document.querySelectorAll('.pxcard .nm')].map(e=>e.textContent));
