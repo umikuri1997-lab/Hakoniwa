@@ -22,8 +22,8 @@ const assert=require('node:assert/strict');
   assert.equal(r.one,'iso:blk-d:1111','1マスのブロックは、ぜんぶの向きが外');
   assert.equal(r.L1,'iso:blk-d:1101-010','東につづき南東がうまっている所は、内がわの角の印');
   for(let i=0;i<20;i++){await page.evaluate(()=>{camAnim=null});await page.waitForTimeout(100)}
-  const d=JSON.parse(await run(`JSON.stringify({ict:!!ICTMP,w:ICTMP&&ICTMP.width})`));
+  const d=JSON.parse(await run(`(()=>{const e=ICT.c.values().next().value;return JSON.stringify({ict:ICT.c.size,w:e&&e.c.width})})()`));
   console.log(d);
-  assert.ok(d.ict&&d.w>0,'上の面のかたちで切った地面を作った');
+  assert.ok(d.ict>0&&d.w>0,'上の面のかたちで切った地面を、マスごとにとっておいた');
   assert.deepEqual(errors,[],'エラーなし');
   console.log('OK iso-cliff');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
