@@ -76,7 +76,11 @@ function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IG
 function igDirty(R){if(IG.s!==S)return;for(const r of R){const a=Math.max(0,r[0]-2),b=Math.max(0,r[1]-2),c=Math.min(W,r[2]+3),d=Math.min(H,r[3]+3),xs=[isoX(a*TS,d*TS),isoX(c*TS,b*TS)],ys=[isoY(a*TS,b*TS)-IGM,isoY(c*TS,d*TS)];
   for(let cy=Math.max(0,Math.floor((ys[0]-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((ys[1]+IGP+IGM)/IGH));cy++)for(let cx=Math.max(0,Math.floor((xs[0]-IGP-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((xs[1]+IGP-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(q)q.st=true}}}
 /* ステージを開くときに作る仕事の一覧 */
-function igJobs(L){L.push(()=>{if(IG.s!==S)igClear()});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))igBuild(q)})}
+function igJobs(L){L.push(()=>{if(IG.s!==S)igClear()});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{if(!igNear(cx,cy,IGRING))return;const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))igBuild(q)})}/* 作るのは、画面のまわりの区画だけ */
+/* 区画は、画面に見えている所と、そのまわり IGRING 区画だけ作っておく。見えなくなって IGFREE コマたち、まわり IGRING 区画より外になった区画は手ばなす（とおい所は、近づいたときに作りなおす） */
+const IGRING=1,IGFREE=300;
+function igNear(cx,cy,m){const[c0,r0,c1,r1]=igVis();return cx>=c0-m&&cx<=c1+m&&cy>=r0-m&&cy<=r1+m}
+function igFar(){if(RFN%60)return;const[c0,r0,c1,r1]=igVis(),m=IGRING;for(const q of IG.c.values()){if(RFN-q.u<IGFREE||q.cx>=c0-m&&q.cx<=c1+m&&q.cy>=r0-m&&q.cy<=r1+m)continue;if(q.f||q.w||q.k||q.l){igFree(q);q.e=false}}}
 /* 画面に見えている区画 */
 function igVis(){const P=[s2w(0,0),s2w(VW,0),s2w(0,VH),s2w(VW,VH)].map(p=>[isoX(p.x,p.y),isoY(p.x,p.y)]),xa=Math.min(...P.map(p=>p[0])),xb=Math.max(...P.map(p=>p[0])),ya=Math.min(...P.map(p=>p[1])),yb=Math.max(...P.map(p=>p[1]))+HMAX*IQL;/* 高い段は、下の区画の地面を上に描く */
   return[Math.max(0,Math.floor((xa-IGX0)/IGW)),Math.max(0,Math.floor(ya/IGH)),Math.min(IGNX-1,Math.floor((xb-IGX0)/IGW)),Math.min(IGNY-1,Math.floor(yb/IGH))]}
@@ -85,7 +89,8 @@ function igDraw(k,now){if(IG.s!==S)igClear();if(!igOK())return;const O=isoOff(k)
   for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=igq(cx,cy);if((!q.f&&!q.e||q.st)&&(fresh||!built||GRD.bt<GBUD)){igBuild(q);built++}q.u=RFN;if(!q.f)continue;
     let im=q.f;if(lod){if(!q.l&&GRD.bt<GBUD){const t0=performance.now(),l=document.createElement('canvas');l.width=Math.ceil(q.f.width/2);l.height=Math.ceil(q.f.height/2);const g=l.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(q.f,0,0,l.width,l.height);q.l=l;GRD.bt+=performance.now()-t0}if(q.l)im=q.l}
     const x=igX(q)+q.ox,y=igY(q)+q.oy,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(im,a,b,Math.round(O[0]+k*(x+q.f.width))-a,Math.round(O[1]+k*(y+q.f.height))-b)}
-  igShimmer(k,O,c0,r0,c1,r1,now);ctx.restore()}
+  for(let cy=Math.max(0,r0-IGRING);cy<=Math.min(IGNY-1,r1+IGRING)&&GRD.bt<GBUD;cy++)for(let cx=Math.max(0,c0-IGRING);cx<=Math.min(IGNX-1,c1+IGRING)&&GRD.bt<GBUD;cx++){if(cx>=c0&&cx<=c1&&cy>=r0&&cy<=r1)continue;const q=igq(cx,cy);if(!q.f&&!q.e||q.st)igBuild(q)}/* 時間があまったら、まわりの区画も作っておく（動かしたとき、まだない区画が見えないように） */
+  igFar();igShimmer(k,O,c0,r0,c1,r1,now);ctx.restore()}
 /* 見えている区画の雲の海の形を、画面（ドット）に描く（c：画面と同じ大きさの絵） */
 function igSkyMask(c,k){if(!igOK())return false;const O=isoOff(k),[c0,r0,c1,r1]=igVis();let any=false;
   for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.k)continue;const x=igX(q)+q.kx,y=igY(q)+q.ky,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);c.drawImage(q.k,a,b,Math.round(O[0]+k*(x+q.k.width))-a,Math.round(O[1]+k*(y+q.k.height))-b);any=true}return any}
