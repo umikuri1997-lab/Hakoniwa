@@ -17,7 +17,7 @@ GW,GH=190,70
 CAM=np.array((0.0,-15.0,7.0));LOOK=np.array((1.0,7.0,0.4));FOV=56.0   # カメラ（よこの見える角度）
 LIGHT=np.array((-0.55,-0.45,0.70));LIGHT/=np.linalg.norm(LIGHT)
 GROUND=np.array((190,170,132.0));SOIL=np.array((172,132,98.0))
-STRATA=[np.array(c,float) for c in((214,178,146),(200,164,136),(226,192,158),(192,156,130))]
+STRATA=[np.array(c,float) for c in((216,178,144),(194,156,128),(230,194,158),(184,146,120))]
 DARKC=np.array((46,34,28.0));HOLE=np.array((64,46,36.0));SKY=np.array((214,228,232.0))
 TONE=(1.0,0.86,0.72,0.60)
 RX=lambda y:6.2+0.7*np.sin(y*0.42+0.5)   # 地われのまん中
@@ -86,7 +86,7 @@ def render():
     rgb=np.where(hole[:,None],HOLE*(1.25-0.45*dh)[:,None],rgb)
     soil=(np.hypot((x-BUR[0])/1.4,(y-yb0+1.0)/0.9)<1)&(z<0.3)&~hole   # ほり出した土
     rgb=np.where(soil[:,None],SOIL*k[:,None],rgb)
-    far=np.clip((y-2)/14,0,1)*0.12;far=np.round(far*20)/20
+    far=np.clip((y-2)/14,0,1)*0.06;far=np.round(far*20)/20
     rgb=rgb*(1-far[:,None])+SKY*far[:,None]
     out=np.zeros((n,4));out[i,:3]=rgb;out[i,3]=255
     return Image.fromarray(np.clip(out,0,255).astype(np.uint8).reshape(GH,GW,4))
