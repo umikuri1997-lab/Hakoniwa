@@ -13,6 +13,12 @@ VIEWS=[('hotaru',0)]
 CX,CY=0.5,0.5
 DARK=(84,150,104);LITE=(150,204,128)   # 葉（根もと→さき）。草原のベリーの茂みより少し青みの緑
 STEM=(110,168,108);CALYX=(118,176,108);BUD=[(214,232,150),(234,244,182)]
+def POST(im):   # 葉のさきが、はなれた小さな点（＋の形）になった所をけす（6ドットまでの、はなれたかたまり）
+    from scipy.ndimage import label
+    from PIL import Image
+    a=np.array(im);L_,n=label(a[...,3]>0,structure=np.ones((3,3)));sz=np.bincount(L_.ravel())
+    for j in np.flatnonzero(sz[1:]<=6)+1:a[L_==j]=0
+    return Image.fromarray(a)
 def PARTS():return[]
 def blade(sc,az,r0,L,th0,bend,w0,seed):
     n=9;pts=[];a=th0;p=np.array([CX+r0*math.cos(az),CY+r0*math.sin(az),0.0]);d=np.array([math.cos(az),math.sin(az),0.0])
