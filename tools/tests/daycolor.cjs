@@ -1,6 +1,6 @@
 /* 時間の色（daycolor.js）：時刻ごとに、層ごとの色がかわる。昼は地面・水・屋根に何もかけない。ブルーアワーと夜は、地面が寒色・夜の暗さが青、窓のあかりはのこる。いろいろな時刻・段差・遠くの画面で描いてもエラーが出ない */
 const assert=require('node:assert/strict');
-(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')();
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;`);
   const at=async h=>JSON.parse(await run(`(()=>{S.t=1440*3+${h}*60;DC.h=-1;const v=dcNow();render(performance.now());return JSON.stringify(v)})()`));
   const noon=await at(12);assert.equal(noon.g,null,'noon: no ground tint');assert.equal(noon.w,null);assert.equal(noon.r,null);
@@ -12,6 +12,7 @@ const assert=require('node:assert/strict');
   await run(`(()=>{for(let i=0;i<W*H;i+=97)if(!S.obj[i]&&S.ground[i]===0)S.hi[i]=1;dirty=true;recount()})()`);
   for(const z of [1.6,.4]){await run(`cam.z=${z}`);for(const h of [12,19.3,23])await at(h)}
   /* 高い段の上の面（dcTop）と屋根（iqRoofColDraw の r）にも、時間の色がかかる */
+  await run(`(()=>{for(const k in CHIPS)if(k.startsWith('iso:roof-'))chipImgs(CHIPS[k],k)})()`);await page.waitForFunction(()=>sacredEval('chaReady()'));/* 屋根の絵は、使うときに読む（アトラスのページ）。読みおわってからはかる */
   const tint=JSON.parse(await run(`(()=>{S.t=1440*3+23*60;DC.h=-1;const v=dcNow(),px=(x,y)=>Array.from(ctx.getImageData(x,y,1,1).data).slice(0,3);
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,40,40);dcTop(ctx,20,4);const top=px(20,20);ctx.restore();
     const f=S.res[0],X=(f.x|0)+6,Y=(f.y|0)+3;for(let y=Y-1;y<Y+7;y++)for(let x=X-1;x<X+7;x++){const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0}
