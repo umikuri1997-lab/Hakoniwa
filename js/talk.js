@@ -142,6 +142,7 @@ function smallTalk(r){const P=[],m=bestMate(r),fav=FOODS[favDish(r)],lf=BL[likeF
   if(rLv(r)>=5)tAdd(P,'lv',['ぼく、前より、いろんなことができるようになった気がするんだ。']);
   if(r.came&&dayNo()-r.came>=10)tAdd(P,'ld',['この村に来て、もうずいぶんたつね。あっというまだったよ。']);
   if((r.beat||0)>=3)tAdd(P,'bt',['夜の「コワイノ」、なんどもおいはらったよ。ちょっとは、強くなれたかな。']);
+  askMemTopics(r,P);/* 前に聞いた答えを思い出す（talk-ask.js） */
   if((r.made||0)>=5)tAdd(P,'md',['ぼく、いろんな物を作ったんだ。村のあちこちに、ぼくの作った物があるよ。']);
   return talkFresh(r,P)}
 const TALKHI={mo:['あ、守り神さま。おはよう！','#joy|おはよう、守り神さま！','守り神さま、おはよう。よくねむれた？','ふあぁ……あ、守り神さま。おはよう。','おはよう！ きょうも、いい天気になるといいね。'],
@@ -158,10 +159,11 @@ function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALK
   else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');C.push('chat','chat');
     const C2=C.filter(c=>c!==r.tlk),k=pick(C2.length?C2:C);r.tlk=k;/* 前と同じ種類の話題は、つづけない */
     if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:funHead(tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'))}else if(k==='day'){L=dayLine(r,evPick(r,work))}
+    if(!L&&k==='chat'&&Math.random()<ASKP)L=askLine(r);/* 4回に1回くらい、守り神さまに質問する（talk-ask.js） */
     if(!L){L=smallTalk(r);pk=prefOfTopic(r.tlast)}}
   TALKPK=pk;/* 好みを話した話：さいごまで読んだら、わかる（prefs.js） */
   const out=[hiLine(r),...L];if(Math.random()<.35)out.push(tkFresh('bye',TALKBYE));
-  return out.map((t,i)=>[r.name,chatTone(t,r,i)])}
+  return out.map((t,i)=>Array.isArray(t)?t:[r.name,chatTone(t,r,i)])}/* 質問の行（@choice）は、そのまま */
 let TALKID=null,TALKPK=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
 function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();TALKID=id;
   const TL=talkLines(r),pk=TALKPK;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;funAdd(q,TALKFUN,'care');addFloatG(q.x,q.y,-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
