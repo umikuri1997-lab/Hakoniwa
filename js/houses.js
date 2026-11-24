@@ -138,7 +138,7 @@ const DRYT={i:null,v:[]};function dryTex(px,py){/* 草原のあれ地（224×224
   const im=chipImgs(window.CHIPS['tex:dry'],'ground')[0];if(!im.ok)return im;if(DRYT.i!==im){DRYT.i=im;DRYT.v=[im];for(let f=1;f<4;f++){const c=document.createElement('canvas');c.width=c.height=DRTEX;const g=c.getContext('2d');g.translate(f&1?DRTEX:0,f&2?DRTEX:0);g.scale(f&1?-1:1,f&2?-1:1);g.drawImage(im,0,0,DRTEX,DRTEX);DRYT.v.push(c)}}
   const bx=Math.floor(px/DRTEX),by=Math.floor(py/DRTEX);return DRYT.v[(hash(bx*131+17)<.5?1:0)|(hash(by*137+29)<.5?2:0)]}
 const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),...Array.from({length:8},(_,i)=>'groundr#'+i),...['U','D','L','R','c0','c1','c2','c3'].map(k=>'fringeg:'+k)];
-const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
+const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water','cliff:block');/* 岸の岩（iso-ground.js） */
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
 const GRT=.5/* 草地のさかいのしきい */
