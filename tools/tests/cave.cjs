@@ -15,11 +15,11 @@ const assert=require('node:assert/strict');
       backAll=()=>{const S0=one('S'),R0=one('R'),from=new Set([S0]),q=[S0];for(let h=0;h<q.length;h++){const j=q[h];for(const[dx,dy]of DIRS){const k=J(cvX(j)+dx,cvY(j)+dy);if(from.has(k)||!cvWalk(k)||!cvStepOK(j,k))continue;from.add(k);q.push(k)}}
         let bad=0;for(const j of from)if(!(CV.ice[j])&&!cvBfs(j,k=>k===S0||k===R0))bad++;return[!!cvBfs(S0,j=>j===R0),bad,from.size>200]},
       tierPair=()=>{for(let j=0;j<CVW*CVH-CVW;j++){const k=j+CVW,o=CV.ob.get(k);if(cvWalk(j)&&cvWalk(k)&&CV.lv[j]===CV.lv[k]+1&&!(o&&o.k==='^'))return[j,k]}return null};
-    /* 夜は出かけられない */{const t=S.t;S.t=Math.floor(S.t/1440)*1440+22*60;cavePrep();out.nightPop=!!document.querySelector('.pxpopw');S.t=t}
+    /* 夜も出かけられる */{const t=S.t;S.t=Math.floor(S.t/1440)*1440+22*60;cavePrep();const P=document.querySelector('.pxpopw');out.nightPop=!!P;if(P)P.remove();S.t=t}
     /* えらぶ画面 */cavePrep();{const P=document.querySelector('.pxpopw');out.prep=!!P;out.slots=P.querySelectorAll('.grid')[0].children.length;P.remove()}
     const t0=S.t,f0=S.fs.imo;
     /* ===== 1回め：土・火・水 ===== */
-    out.enter=caveEnter([by('earth'),by('fire'),by('water')],{imo:2});let C=CV;out.paused=paused();out.cls=document.body.classList.contains('cave');out.hud=!!document.querySelector('#caveHud');
+    out.enter=caveEnter([by('earth'),by('fire'),by('water')],{imo:2});let C=CV;out.paused=paused();out.away=[S.res.some(q=>CV.party.some(a=>a.r===q)),S.cvAway.length];out.cls=document.body.classList.contains('cave');out.hud=!!document.querySelector('#caveHud');
     const S0=one('S'),R0=one('R');out.seenStart=!!C.seen[S0];out.unseenFar=!C.seen[R0];
     /* 大穴：歩けない・むこうが見える（見とおせる） */{const a=C.ab.indexOf(1);out.abyss=[C.ab.reduce((s,v)=>s+v,0)>150,!cvWalk(a),!cvOpaque(a)]}
     /* 門をひらかなくても、かえりの光まで行ける。宝箱は、どれも属性の道・うすい壁の先 */out.mainPath=!!cvBfs(S0,j=>j===R0);out.closed=chests(0).map(c=>reachAdj(S0,c));
@@ -57,7 +57,7 @@ const assert=require('node:assert/strict');
     /* 消える */const wr=by('water'),wn=wr.name;wr.hunger=.001;step(.2);out.gone=!S.res.includes(wr)&&!C.party.some(a=>a.r===wr);out.lost=(S.lost||[]).concat(S.buried||[]).some(q=>q.name===wn);document.querySelector('#dialog').hidden=true;
     /* 下へおりる坂：そばまで来ると、その階はクリア。つぎの階がひらく */out.clr0=S.cvClr||0;putJ(act('earth'),R0-CVW);step(.5);out.clr=S.cvClr;out.clrF=C.clr;
     /* ひし形のマス（iso-cave.js）：大穴は低い・岩は高い。タップした所は、見えている高い段のマス */C.seen.fill(1);caveRender(performance.now());{const a=C.ab.indexOf(1),rk=[...C.g.keys()].find(j=>cvqRock(j)),fl=C.g.indexOf(1);out.abyssPath=cvqH(cvX(a),cvY(a))<cvqLv(a)&&cvqH(cvX(rk),cvY(rk))===cvqLv(rk)+CVQL;const tx=cvX(fl),ty=cvY(fl),p=w2s((tx+.5)*TS,(ty+CVOY+.5)*TS,cvqH(tx,ty)),w=cvqTapW(p.x,p.y);out.tapLv=[Math.floor(w.x/TS)===tx,Math.floor(w.y/TS)-CVOY===ty]}
-    /* 帰る */C.t=120;const lt=C.loot.pt,pb=S.pt;caveExit(true);out.exit=!CV&&!document.body.classList.contains('cave')&&!document.querySelector('#caveHud');out.pt=S.pt-pb-lt;out.dt=Math.round(S.t-t0);out.pop=!!document.querySelector('.pxpopw');document.querySelectorAll('.pxpopw').forEach(p=>p.remove());
+    /* 帰る */C.t=120;const lt=C.loot.pt,pb=S.pt;caveExit(true);out.exit=!CV&&!document.body.classList.contains('cave')&&!document.querySelector('#caveHud');out.pt=S.pt-pb-lt;out.dt=[S.cvAway.length,C.party.every(a=>S.res.includes(a.r))];out.pop=!!document.querySelector('.pxpopw');document.querySelectorAll('.pxpopw').forEach(p=>p.remove());
     out.inv=S.inv.doki||0;out.fosRec=Object.values(S.fosRec||{}).reduce((a,b)=>a+b,0);out.zk=zkCount(10);out.zkAll=zkTotal(10);out.ico=String(fossilIcon('kai')).slice(0,10);{const L=[];fossilZukan(S,(n,d)=>L.push(n));out.zkList=L.length}out.lit=LIGHTQ.includes('oldlantern')&&INDL.has('oldlantern')&&DECOQ.includes('doki');
     /* ===== 2回め：風・木 ===== */S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter([by('wind'),by('wood')],{});C=CV;out.fl0=C.fl;C.en=[];C.seen.fill(1);
     /* 家具は1回だけ。2回めはパワー */cvLoot({item:'doki'});out.again=[C.loot.items.doki||0,C.loot.pt];C.loot.pt=0;
@@ -97,8 +97,8 @@ const assert=require('node:assert/strict');
     out.nFl=CVFLOORS.length;out.themes=CVFLOORS.map(f=>f.theme).join(',');
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.equal(r.nightPop,false,'夜は出かけられない');assert.equal(r.prep,true);assert.equal(r.slots,5);
-  assert.equal(r.enter,true);assert.equal(r.paused,true,'洞窟のあいだ村は止まる');assert.equal(r.cls,true);assert.equal(r.hud,true);assert.equal(r.seenStart,true);assert.equal(r.unseenFar,true);
+  assert.equal(r.nightPop,true,'夜も出かけられる');assert.equal(r.prep,true);assert.equal(r.slots,5);
+  assert.equal(r.enter,true);assert.equal(r.paused,false,'洞窟のあいだも村は動く');assert.deepEqual(r.away,[false,3],'つれていった子は村のせいれいの外');assert.equal(r.cls,true);assert.equal(r.hud,true);assert.equal(r.seenStart,true);assert.equal(r.unseenFar,true);
   assert.deepEqual(r.abyss,[true,true,true],'大穴：大きい・歩けない・見とおせる');assert.equal(r.abyssPath,true,'大穴は低く、岩は高い');assert.deepEqual(r.tapLv,[true,true],'タップした所のマス');
   assert.equal(r.mainPath,true,'どのパーティでも、かえりの光まで行ける');assert.ok(r.closed.every(v=>v===false),'宝箱は、どれも門の先');assert.equal(r.walked,true);assert.deepEqual([r.tapDark,r.tapRock,r.tapGate,r.look],[true,-1,true,true],'タップで歩く先・見回し');
   assert.equal(r.windNo,true);assert.equal(r.woodNo,true);
@@ -110,7 +110,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.wall0,true);assert.equal(r.wall,true);assert.equal(r.hidden,true);
   assert.equal(r.dimSleep,true,'光をしぼると、そばでも起きない');assert.equal(r.ambush,true);assert.equal(r.wokeHit,true);assert.equal(r.wideWake,true);assert.equal(r.noStack,true);
   assert.equal(r.ate,true);assert.equal(r.hunAte,400);assert.equal(r.fsAte,1);assert.equal(r.gone,true);assert.equal(r.lost,true);
-  assert.equal(r.exit,true);assert.ok(r.pt>=0&&r.pt<=3);assert.equal(r.dt,120,'洞窟にいた時間ぶん、村の時計が進む');assert.equal(r.pop,true);
+  assert.equal(r.exit,true);assert.ok(r.pt>=0&&r.pt<=3);assert.deepEqual(r.dt,[0,true],'もどったら村のせいれいにもどる');assert.equal(r.pop,true);
   assert.equal(r.inv,1,'ほりだした土器');assert.equal(r.fosRec,1);assert.equal(r.zk,1);assert.equal(r.zkAll,5);assert.equal(r.ico,'data:image');assert.equal(r.zkList,1);assert.equal(r.lit,true);assert.deepEqual(r.again,[0,30]);
   assert.equal(r.blowOff,null,'まっすぐ先でない');assert.equal(r.blowWall,false,'岩のむこう');assert.equal(r.millNo,true);assert.equal(r.blowHit,true);assert.equal(r.mill,true);
   assert.deepEqual(r.back0,[true,0,true],'1階：どこからでも入口か坂へもどれる');assert.deepEqual(r.terr,[false,false,true]);assert.deepEqual(r.step,[true,false,true,true],'とびおりる・坂からのぼる');assert.equal(r.ore,true);assert.equal(r.top,3);

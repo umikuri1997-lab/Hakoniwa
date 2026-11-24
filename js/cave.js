@@ -1,11 +1,11 @@
 'use strict';
 /* 洞窟の探検（土のステージの核。いまは、テスト用のボタンから入る1階だけ）
-   ・村は止めたまま（paused）、洞窟だけを、このファイルで動かして描く。村の S はそのまま
+   ・洞窟にいるあいだも、村はうしろで動く（main.js の VBG）。洞窟は、このファイルで動かして描く
    ・洞窟のマスは、村のマップの外（y が H より下、CVOY から）に置く。村のマスを見る共通の描き方（段差の高さなど）が、何もない所を見る
-   ・パーティは、村のせいれい（S.res）そのもの。おなかは本物がへる。場所だけ、洞窟の中の物（actor）で持つ
+   ・パーティは、村のせいれいそのもの（洞窟にいるあいだは S.res から S.cvAway へ出す）。おなかは本物がへる。場所だけ、洞窟の中の物（actor）で持つ
    ・たたかいの数字は村と同じ（攻撃力・SORTIE・EN の hitF・hitN・まもりの光の GUP）。ダメージは hurtEn を通す
    ・属性の道は、5つとも、することがちがう（土 岩をおす・火 消えるたいまつをともして回る・水 2つの水門の片方・風 風車のまっすぐ先に立つ・木 葉を3まい置く）
-   ・洞窟にいた時間（CV.t、村の時間 S.t と同じ単位）は、出たときに村を進める（夜20時まで）
+   ・時刻は村の時計（cvHour）。CV.t は洞窟の中だけの時計
    たしかめは tools/tests/cave.cjs */
 const CVW=56,CVH=44,CVOY=H+8;/* 地図は tools/cave/cave_maps.py で作る（どの階も、まん中の大穴のまわりをおりていく） */
 /* # 岩・. 床・S 入口の光・R 下へおりる坂・T 宝箱・o 化石のうまった石・c コカゲ・i イワカゲ
@@ -351,12 +351,13 @@ const CVFLOORS=[
  lv:['22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','22222222222222222222221111111111112222222222222222222222','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111'],
  theme:'cradle',chest:{'2,22':{fukuro:1,pt:80},'41,22':{item:'oldlantern',pt:80},'2,33':{fukuro:1,pt:90},'49,33':{mapPc:1,pt:90}}}];
 const CVPARTY=3,CVFOOD=6;/* つれていく人数・持っていく食べ物の数 */
-const CVH0=6,CVH1=16,CVNIGHT=20;/* 出かけられる時刻（6時〜16時）・夜20時には村へもどる */
+/* 洞窟には、いつでも出かけられる。洞窟にいるあいだも、村は動きつづける（夜は、村にいるせいれいだけでまもる。持ち主がきめた） */
 const CVWALK=2.6,CVFOE=1.5;/* 1秒に歩くマス：せいれい（移動速度20のとき）・コワイノ（EN の sp 1のとき） */
 const CVSEE=4.2,CVLIGHT=4.4,CVWAKE=3.6,CVAGGRO=6;/* マス：見える・光の絵の半径・コワイノが目をさます・せいれいがねらう */
 const CVSEED=2,CVLIGHTD=2.4,CVWAKED=1.2;/* 光をしぼったとき：見える・光の絵の半径・コワイノが目をさます */
 const CVAMBUSH=50;/* ふいうち：ねているコワイノへのはじめの一撃にたすダメージ */
 const CVHUN={walk:.2,stand:.05,work:1.5};/* おなかのへり（村と同じ数。コードの1分ごと） */
+const CVDEEP=[0,0,0,.05,.1,.15,.2,.25,.3,.35];/* 4階から下は、人の装置が力をすいとるので、いるだけで、おなかがこれだけへる（階ごと。コードの1分ごと。持ち主がきめた） */
 const CVPUSHT=2,CVSLUICET=4,CVLEAFT=3;/* 作業の時間（コードの分）：岩を1マスおす・水門をあける・葉を置く */
 const CVTORCH=14;/* たいまつがともっている時間（時計の分） */
 const CVLEAF=3;/* 足場の葉の数 */
@@ -397,7 +398,7 @@ const cvCell=e=>cvJ(e.x|0,(e.y|0)-CVOY);
 const cvAdj=(j,k)=>Math.abs(cvX(j)-cvX(k))+Math.abs(cvY(j)-cvY(k))===1;
 const cvNear=(j,k)=>j!==k&&Math.max(Math.abs(cvX(j)-cvX(k)),Math.abs(cvY(j)-cvY(k)))<=1;/* ななめもふくめて、となり */
 const cvName=r=>typeof nickTx==='function'?nickTx(r.name):r.name;/* つけた名前（nick.js） */
-const cvHour=()=>((clk()+(CV?CV.t:0))/60)%24;
+const cvHour=()=>hour();/* 村の時計（洞窟にいるあいだも村は動く） */
 const cvSeeR=()=>(CV.dim?CVSEED:CVSEE)*(CV.lrK||1);
 /* 会話・ポップアップ・レベルアップの画面が出ているあいだは、洞窟も止める */
 function cvHold(){return !$('#dialog').hidden||sheet!=null||!$('#rlv').hidden||!$('#lvup').hidden||!!document.querySelector('.pxpopw')||GIFT_ACTIVE||USERPAUSE}
@@ -425,7 +426,6 @@ function cvMove(e,v){/* v：このコマに進むマスの数 */
 
 /* ---------- 出かける前：パーティと食べ物をえらぶ ---------- */
 function cavePrep(){if(!S||!started||CV)return;const h=hour();
-  if(h<CVH0||h>=CVH1)return toast('洞窟へ出かけられるのは、朝6時から夕方4時までです');
   if((S.enemies||[]).some(e=>e.spawned&&!e.dead))return toast('コワイノがいるあいだは出かけられません');
   const L=S.res.filter(r=>!r.hidden&&!r.coffin&&!r.tsWait&&!(r.act&&r.act.type==='faint'));if(!L.length)return toast('つれていけるせいれいがいません');
   const must=typeof tsCaveMust==='function'?tsCaveMust():null;/* 土：まだ見ていない彫り絵の階へは、トトもいっしょ */
@@ -461,20 +461,34 @@ function caveEnter(list,food,fl){if(CV||!list.length)return false;fl=clamp(fl|0,
   C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function'){tsCaveCarve(C);tsCaveIbuki(C)}/* 土：彫り絵のかべ・2階のイブキ（tsuchi.js） */
   cvDecoPlace();cvBakeEnter(C);C.hud=cvHudMake();document.body.appendChild(C.hud);document.body.classList.add('cave');
   if(typeof followEnd==='function')followEnd();if(camAnim&&!camAnim.done)camAnim=null;LIGHTARM=false;if(typeof setMode==='function')setMode('look');
-  cam.z=clamp(cam.z,1.15,1.8);cvCamTo(1);for(const a of C.party)cvReveal(a.x,a.y-CVOY,cvSeeR());cvHudUpd();sfx('next');toast('洞窟の'+(fl+1)+'階に入った');return true}
+  cam.z=clamp(cam.z,1.15,1.8);cvCamTo(1);for(const a of C.party)cvReveal(a.x,a.y-CVOY,cvSeeR());cvHudUpd();sfx('next');cvAwayOut(list);cvVNoteInit(C);toast('洞窟の'+(fl+1)+'階に入った');return true}
 function cvBfsRing(tj,n){/* tj から近い順に、歩けるマスを n こ（氷の上は止まれないので、のぞく） */const out=[],seen=new Set([tj]),q=[tj];for(let h=0;h<q.length&&out.length<n;h++){const j=q[h];if(!(CV&&CV.ice&&CV.ice[j]))out.push(j);for(const[dx,dy]of DIRS){const a=cvX(j)+dx,b=cvY(j)+dy;if(a<0||b<0||a>=CVW||b>=CVH)continue;const k=cvJ(a,b);if(seen.has(k)||!cvWalk(k)||!cvStepOK(k,j))continue;seen.add(k);q.push(k)}}return out}
 function cvLootText(L){const t=[];for(const k in L.items)if(L.items[k])t.push(BL[k].name);for(const k in L.fos)if(L.fos[k])t.push(CVFOS[k]+' '+L.fos[k]+'こ');for(const k in L.mat)if(L.mat[k])t.push(MATN[k]+' '+L.mat[k]+'こ');if(L.fukuro)t.push('ふしぎなふくろ '+L.fukuro+'こ');if(L.mapPc)t.push('地図の切れはし '+L.mapPc+'こ');if(L.pt)t.push('パワー '+L.pt);return t}
 function cvClose(C){CV=null;cvqFree();document.body.classList.remove('cave');if(C.hud)C.hud.remove();if(C.dk)C.dk.width=C.dk.height=0;C.tx=C.qT=null;for(const c of C.abi||[])c.width=c.height=0;C.abi=C.abp=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null;for(const c of Object.values(C.gls||{}))c.width=c.height=0;C.gls=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=C.shafts=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;/* 作業用のキャンバスは、すぐ手ばなす */
   EVAP=[];LIGHTARM=false;if(typeof dockSync==='function')dockSync();cam.x=C.cam0.x;cam.y=C.cam0.y;cam.z=C.cam0.z;clampCam()}
-function caveAbort(){if(CV)cvClose(CV)}/* 村を切りかえるとき：何もわたさずにおわる */
+function caveAbort(){if(CV){cvClose(CV);cvAwayBack()}}/* 村を切りかえるとき：何もわたさずにおわる（せいれいは村へもどす） */
+/* つれていったせいれいは、洞窟にいるあいだ、村のせいれい（S.res）から出しておく（S.cvAway。セーブにも入る）。村は、のこった子だけで動く */
+const cvAll=()=>S.res.concat((S&&S.cvAway)||[]);
+/* 洞窟にいるあいだの村（main.js が、うしろで stepWorld を動かす）：村のカメラの動きは、洞窟のカメラにもちこまない。大事なことだけ、洞窟の画面に知らせる（持ち主がきめた） */
+function cvVSnap(){return{night:isNight(),en:(S.enemies||[]).some(e=>e.spawned&&!e.dead),br:(S.broken||[]).length,res:S.res.map(r=>r.name)}}
+function cvVNoteInit(C){C.vn=cvVSnap()}
+function cvVFront(){return{x:cam.x,y:cam.y,z:cam.z,ca:camAnim}}
+function cvVBack(b){const C=CV;cam.x=b.x;cam.y=b.y;cam.z=b.z;if(camAnim!==b.ca){const a=camAnim;camAnim=b.ca;if(a&&a.done&&!a.fin){a.fin=1;try{a.done()}catch(e){}}}/* 村のカメラの動きは、すぐおわらせる */
+  if(!C||!C.vn)return;const o=C.vn,n=cvVSnap();C.vn=n;
+  if(n.night&&!o.night)toast('村は、夜になった','warn');else if(!n.night&&o.night)toast('村に、朝が来た');
+  if(n.en&&!o.en)toast('村に、コワイノが来た','warn');
+  if(n.br>o.br){const B=S.broken.slice(o.br).map(b=>BL[b.id]&&BL[b.id].name).filter(Boolean);toast('村の'+(B[0]||'物')+'が、こわされた','warn')}
+  for(const nm of o.res)if(!n.res.includes(nm)&&!(S.cvAway||[]).some(r=>r.name===nm))toast(nm+'が、村で消えてしまった','warn')}
+function cvAwayOut(list){for(const r of list){if(!S.res.includes(r))continue;endAct(r);r.path=[];r.hidden=false;r.nap=false;(S.cvAway||(S.cvAway=[])).push(r)}S.res=S.res.filter(r=>!list.includes(r))}
+function cvAwayBack(){const L=(S&&S.cvAway)||[];if(!L.length)return;S.cvAway=[];const h=S.ts&&S.ts.hole!=null?S.ts.hole+W:STATUE>=0?STATUE+W:((H/2)|0)*W+(W>>1),seen=new Set([h]),q=[h],out=[];/* 巣穴の前から、近い順に歩けるマス */
+  for(let i=0;i<q.length&&out.length<L.length;i++){const j=q[i];if(walk(j)&&!S.obj[j])out.push(j);for(const[dx,dy]of DIRS){const x=j%W+dx,y=((j/W)|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!seen.has(k)&&(walk(k)||i<9)){seen.add(k);q.push(k)}}}
+  L.forEach((r,i)=>{if(S.res.includes(r))return;const j=out[i]!=null?out[i]:h;r.x=j%W+.5;r.y=((j/W)|0)+.5;r.act=null;r.path=[];S.res.push(r)})}
 function caveExit(ok){const C=CV;if(!C)return;cvClose(C);const L=C.loot;
   if(ok){for(const k in L.mat)S.mat[k]=(S.mat[k]||0)+L.mat[k];if(L.pt){S.pt+=L.pt;PTW.q=true}if(L.fukuro){S.fukuro=(S.fukuro||0)+L.fukuro;(S.seenIt||(S.seenIt={}))['x:fukuro']=1}if(L.mapPc){S.mapPc=(S.mapPc||0)+L.mapPc;(S.seenIt||(S.seenIt={}))['x:mapPc']=1}
     for(const k in L.items){giveItem(k,L.items[k]);(S.flags.cvItem||(S.flags.cvItem={}))[k]=1;if(BL[k]&&BL[k].relic)(S.relRec||(S.relRec={}))[k]=1}
     if(typeof fossilGive==='function')for(const k in L.fos)fossilGive(k,L.fos[k])}
-  /* 村の時計を、洞窟にいた時間ぶん進める（夜20時まで）。つれていったせいれいは、そのあいだ何もしていない */
-  const hold=C.all.filter(r=>S.res.includes(r));for(const r of hold)RHOLD.set(r,performance.now()+6e5);
-  let g=C.t*DAYLEN;try{while(g>0&&!paused()&&hour()>=CVH0&&hour()<CVNIGHT){const s=Math.min(g,2);stepWorld(s);g-=s}}catch(e){if(typeof frameErr==='function')frameErr('cave',e)}
-  for(const r of hold)RHOLD.delete(r);try{save()}catch(e){}
+  /* つれていったせいれいを村へもどす（巣穴の前）。村で待たせた会話は、そのあとに出す */
+  cvAwayBack();try{save()}catch(e){}setTimeout(()=>{if(!CV&&typeof dlgLaterFlush==='function')dlgLaterFlush()},ok?2600:900);/* 村で待たせた会話（もどったカードのあと） */
   if(!ok)return toast('洞窟から、だれももどらなかった','warn');
   sfx('arrive');const P=pxPop('洞窟からもどった'),T=cvLootText(L),R=el('<div class="recs"></div>');if(!T.length)T.push('なにもひろわなかった');for(const t of T){const d=el('<div class="st"><span></span></div>');d.firstChild.textContent=t;R.appendChild(d)}P.body.appendChild(R)}
 function cvHomeAsk(){const P=pxPop('村へかえる'),T=cvLootText(CV.loot),R=el('<div class="recs"></div>'),b=el('<button class="btn pri" style="width:100%;margin-top:10px">村へかえる</button>');
@@ -496,7 +510,7 @@ function cvEat(a,k){const C=CV,r=a.r;if(!C||!(C.food[k]>0)||!(S.fs[k]>0))return 
 /* ---------- たたかい ---------- */
 function cvSup(a){/* ならんで戦う力（support.js と同じ数）：3マス以内の、なかよしのなかま */let b=0;for(const q of CV.party)if(q!==a&&Math.hypot(q.x-a.x,q.y-a.y)<=SUPR)b=Math.max(b,supAtkOf(bondOf(a.r,q.r)));return b}
 function cvDefeat(e,a){if(e.dead||cvBakeDown(e,a))return;e.dead=true;const D=EN[e.type],C=CV;EVAP.push({e,t0:performance.now()+HIT_LAG,dur:1300,die:true});setTimeout(()=>{if(CV===C)sfx('defeat')},HIT_LAG+KO_HOLD);
-  C.loot.pt+=D.pw;if(a&&S.res.includes(a.r)){a.r.beat=(a.r.beat||0)+1;addSpiritXp(D.xp,a.r)}if(C.focus===e)C.focus=null}
+  C.loot.pt+=D.pw;if(a&&(S.cvAway||[]).includes(a.r)){a.r.beat=(a.r.beat||0)+1;addSpiritXp(D.xp,a.r)}if(C.focus===e)C.focus=null}
 function cvAttack(a,en){const r=a.r,C=CV,G=gearStat(r),lv=rLv(r),amb=en.asleep?CVAMBUSH:0;/* ふいうち */
   a.face=en.x>=a.x?1:-1;a.turn=Math.abs(en.x-a.x)>Math.abs(en.y-a.y)*.6?1:0;a.fback=en.y<a.y-.3&&Math.abs(en.y-a.y)>Math.abs(en.x-a.x)*.6;a.back=a.fback;a.swing=performance.now();a.path=[];a.chase=false;
   if(r.elem==='fire'){a.fatk=C.t+5*G.iv/rMul(r,'work');const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),dmg=Math.max(5,Math.round((fAtk(r,lv)+ba+G.atk+cvSup(a))*fireMul(r)))+amb;
@@ -509,7 +523,7 @@ function cvAttack(a,en){const r=a.r,C=CV,G=gearStat(r),lv=rLv(r),amb=en.asleep?C
 function cvHurtRes(a,n,sx,sy){a.r.hunger=Math.max(0,a.r.hunger-n);a.hurtU=performance.now()+3000;if(n>0)hitFx(a,n,{sx,sy,silent:1});cvHudUpd()}
 function cvHit(e,a){const D=EN[e.type],r=a.r,G=gearStat(r),n=Math.max(0,Math.round((r.elem==='fire'?D.hitF:D.hitN)-G.hun));
   enAim(e,a.x,a.y);sfx('hit');e.swing=performance.now();enLunge(e,a);cvHurtRes(a,n,e.x,e.y)}
-function cvDie(a){const C=CV,r=a.r;C.party=C.party.filter(q=>q!==a);
+function cvDie(a){const C=CV,r=a.r;C.party=C.party.filter(q=>q!==a);S.cvAway=(S.cvAway||[]).filter(q=>q!==r);
   if(STATUE>=0){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.5}/* 村の神殿の前で消えたのと同じ */die(r);cvHudUpd();
   if(!C.party.length)setTimeout(()=>{if(CV===C)caveExit(false)},600)}
 function cvTarget(a){const C=CV;let b=null,bd=CVAGGRO;const f=C.focus;if(f&&!f.dead&&!f.down&&Math.hypot(f.x-a.x,f.y-a.y)<CVAGGRO+4)return f;/* タップしたコワイノは、ねていてもねらう */
@@ -627,7 +641,7 @@ function cvRocks(now){const C=CV;for(const[j,o]of C.ob){if(o.k==='!'&&o.fall&&no
       for(const a of C.party.slice())if(Math.hypot(a.x-x,a.y-y)<.7){cvHurtRes(a,CVVENTHUN,x,y-1);a.shockU=now+900}
       for(const e of C.en)if(!e.dead&&Math.hypot(e.x-x,e.y-y)<.7){hurtEn(e,CVROCKDMG,{sx:x,sy:y-1});e.asleep=false;if(e.hp<=0)cvDefeat(e,null)}}}}
   if(C.gust&&(now-C.gust.t0)/1000*CVGUST>=C.gust.n)cvGustEnd()}
-function cvActor(a,cdt,mv,now){const C=CV,r=a.r;if(a.eatU>now||a.frzU>now)return;/* すくんでいる（声のこだま） */
+function cvActor(a,cdt,mv,now){const C=CV,r=a.r;r.hunger-=(CVDEEP[C.fl]||0)*cdt;/* 深い階は、いるだけでへる */if(a.eatU>now||a.frzU>now)return;/* すくんでいる（声のこだま） */
   if(cvStep(a,now,true))cvReveal(a.x,a.y-CVOY,cvSeeR());const cj=a.cj;
   if(a.path.length&&!cvWalk(a.path[0])){const d=a.path[a.path.length-1],p=cvBfs(cj,q=>q===d);a.path=p||[];if(!p)a.mv=false}/* 道がふさがった（くずれた床など）：まわり道をさがす */
   if(!a.job&&a.jq.length&&!a.path.length){const J=a.jq.shift(),p=cvBfs(cj,q=>cvAdj(q,J.j));if(p){a.job=J;a.path=p}}
@@ -657,7 +671,6 @@ function caveFrame(rdt,now){const C=CV;if(!C||cvHold())return;const sp=S.speed||
   for(const e of C.en)cvFoe(e,cdt,mv,now);if(typeof tsCaveTick==='function')tsCaveTick(C,now);cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
   if(C.en.some(e=>e.dead))C.en=C.en.filter(e=>!e.dead);
   if(C.askHome>=0&&C.party.every(a=>!a.path.length)){const j=C.askHome;C.askHome=-1;if(C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6))cvHomeAsk()}
-  const h=cvHour();if(!C.eve&&h>=17){C.eve=true;toast('外は夕方です','warn')}if(h>=CVNIGHT||h<CVH0){toast('夜になるので、村へもどります','warn');return caveExit(true)}
   if((C.hudT+=rdt)>.3){C.hudT=0;cvClearCheck();cvHudUpd()}
   cvDripTick(now)}
 /* 下へおりる坂まで来たら、その階はクリア。つぎの階がひらく（S.cvClr：ひらいた階の数。出かけるときに、ひらいた階からえらぶ） */
