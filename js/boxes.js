@@ -21,6 +21,7 @@ const stackPart=n=>n>0&&n%STACK?STACK-n%STACK:0;/* つみかけのわくの、�
 function boxOK(j,key){/* その箱に、この物を入れてよいか */const O=BOXONLY[boxTypeAt(j)];if(O&&!O[key])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(isFK(key)?F.food:F.mat)return true;return !!(F.it&&F.it[key])}
 function boxCat(j,food){/* その箱に、食べ物（素材）のどれかを入れてよいか（その物しか入らない家具は、数えない） */if(BOXONLY[boxTypeAt(j)])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(food?F.food:F.mat)return true;for(const k in F.it||{})if(isFK(k)===food)return true;return false}
 const boxRoom=(j,key)=>boxOK(j,key)?Math.max(0,boxSlots(j)-slotUsed(j))*STACK+stackPart(boxHas(j,key)):0;/* あいたわく＋その物のつみかけのわく */
+function dropFits(q){/* 落とし物 q が入る箱が、いまあるか（食べ物・素材。入らなければ、ひろわない。ほかの物は、箱にしまわないので、いつも入る） */const f=q.id.startsWith('food:'),m=q.id.startsWith('mat:');if(!f&&!m)return true;const key=f?fkey(q.id.slice(5)):q.id.slice(4);return BOXL.some(j=>boxRoom(j,key)>0)}
 function boxHas(j,key){const b=j===PILE?PIL():BOX()[j];return b?b[key]||0:0}
 function roomFor(food){/* 食べ物（素材）を、あといくつしまえるか（あいたわく＋つみかけのわく） */let n=0;for(const j of BOXL){if(!boxCat(j,food))continue;n+=Math.max(0,boxSlots(j)-slotUsed(j))*STACK;const b=BOX()[j];if(b)for(const k in b)if(isFK(k)===food&&boxOK(j,k))n+=stackPart(b[k])}return n}
 function totKey(key){let n=boxHas(PILE,key);for(const j of BOXL)n+=boxHas(j,key);return n}
