@@ -86,7 +86,8 @@ function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id=
   if(r.came===dayNo()&&!r.back)return{u:1,L:tkFresh('u:new',TALKU.new)};
   {const a=annivTopic(r);if(a)return a}/* 村に来て〇日の記念日 */
   {const d=typeof dreamTopic==='function'?dreamTopic(r):null;if(d)return d}/* ゆうべのゆめ */
-  {const e=typeof evTopic==='function'?evTopic(r):null;if(e)return e}/* きのう・きょうのイベントの思い出（ev-show.js） */
+  {const e=typeof evTopic==='function'?evTopic(r):null;if(e)return e}
+  {const s=srTopic(r);if(s)return s}/* つづきものの話（talk-serial.js） *//* きのう・きょうのイベントの思い出（ev-show.js） */
   if(r.grief&&gn)return{u:1,L:tkFresh('u:grief',TALKU.grief).map(t=>t.split('@G').join(gn))};
   if(r.hunger<250)return{u:1,L:tkFresh('u:hungry',TALKU.hungry)};
   if(r.energy<30)return{u:1,L:tkFresh('u:tired',TALKU.tired)};
@@ -155,8 +156,8 @@ const TALKBYE=['お話できて、うれしかったよ。','また、お話し�
 const evPick=(r,L)=>{const k=e=>e[0]+':'+e[1],C=L.filter(e=>k(e)!==r.tle),e=pick(C.length?C:L);r.tle=k(e);return e};/* 前に話したことは、つづけて話さない */
 /* 「きょうのいちばんはね……」と、たのしかったこと：60字までなら1ページに（印は前へ） */
 function funHead(h,b){const m=LOOKRX.exec(b),t=m?b.replace(m[0],''):b;if((h+t).length>60)return[h,b];return[(m?m[0]:'')+h+(/[！？]$/.test(h)?' ':'')+t]}
-function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALKPK=null;
-  if(now&&now.u)L=now.L;
+function talkLines(r){srDay(r);const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALKPK=null;TALKSR=0;
+  if(now&&now.u){L=now.L;TALKSR=now.sr||0}
   else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');if(rumorOK(r))C.push('rumor');if(ongOK(r))C.push('oneg');/* おねがい（talk-onegai.js） *//* ほかのせいれいのうわさ（talk-rumor.js） */C.push('chat','chat');
     const C2=C.filter(c=>c!==r.tlk),k=pick(C2.length?C2:C);r.tlk=k;/* 前と同じ種類の話題は、つづけない */
     if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:funHead(tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'))}else if(k==='day'){L=dayLine(r,evPick(r,work))}else if(k==='rumor'){L=rumorLine(r)}else if(k==='oneg'){L=ongLine(r)}
@@ -165,9 +166,9 @@ function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALK
   TALKPK=pk;/* 好みを話した話：さいごまで読んだら、わかる（prefs.js） */
   const out=[hiLine(r),...L];if(Math.random()<.35)out.push(tkFresh('bye',TALKBYE));
   return out.map((t,i)=>Array.isArray(t)?t:[r.name,chatTone(t,r,i)])}/* 質問の行（@choice）は、そのまま */
-let TALKID=null,TALKPK=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
+let TALKID=null,TALKPK=null,TALKSR=0;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
 function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();TALKID=id;
-  const TL=talkLines(r),pk=TALKPK;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;funAdd(q,TALKFUN,'care');addFloatG(q.x,q.y,-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
+  const TL=talkLines(r),pk=TALKPK,sr=TALKSR;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);if(sr)srRead(q,sr);/* つづきものの回を読んだ */const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;funAdd(q,TALKFUN,'care');addFloatG(q.x,q.y,-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
 /* いまのようすのうち、ほかの話題より先に話すこと（tkFresh で、ぜんぶ出すまで同じ物を出さない）。@G は、いなくなったせいれいの名前 */
 const TALKU={
  foeF:[['#danger|「コワイノ」が来てる……！ だいじょうぶ、村はぼくたちが守るから。'],['#danger|みんな、気をつけて！ ぼくが、前に出るよ。'],['こわくなんか、ないよ。守り神さまが、見ててくれるもん。'],['#danger|足音が、ちかづいてくる。守り神さまは、うしろにいてね。'],['夜の影が、ゆれてる……。だいじょうぶ。ぼくが、ここにいるよ。'],['みんなが寝てる家は、ぜったい守るんだ。守り神さま、光をかしてね。'],['#danger|しっ……あっちに、なにかいる。ぼく、見てくるよ。'],['夜明けまで、もうすこし。それまで、みんなを守りきろうね。']],
