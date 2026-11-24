@@ -225,8 +225,8 @@ def build_fillet(cor,tA,tB,tC,var):
             if not inE(x,y):
                 inB=(y-Py)*uy<0;inC=(x-Px)*ux<0
                 if inB and inC or not((inB and abs(y-Py)<R) or (inC and abs(x-Px)<R)):return np.array(KEY,float)   # まわりのマスの平らな上の面：描かない（そのマスの地面が見える）
-                return np.clip(gt[40,int(((x+y)%1)*gt.shape[1])%gt.shape[1]],0,254)   # そのマスのまるいふちの上：平らにうめる（地面の色）
-            return np.clip((gt[40,int(((x+y)%1)*gt.shape[1])%gt.shape[1]] if (tB or tC) else led)*(1.0 if (tB or tC) else 0.94),0,254)   # E の中の平らな所：B か C がいちばん上なら、その上の面とつづく地面。どちらも上につづくなら、ふたの色
+                return np.clip(gt[min(gt.shape[0]-1,40),int(((x+y)%1)*gt.shape[1])%gt.shape[1]],0,254)   # そのマスのまるいふちの上：平らにうめる（地面の色）
+            return np.clip((gt[min(gt.shape[0]-1,40),int(((x+y)%1)*gt.shape[1])%gt.shape[1]] if (tB or tC) else led)*(1.0 if (tB or tC) else 0.94),0,254)   # E の中の平らな所：B か C がいちばん上なら、その上の面とつづく地面。どちらも上につづくなら、ふたの色
         u=float(uof(np.array(a)));ci=min(63,int(u*64));lt=LT[ci]
         zb=zc+r*0.55+(JUP*lt-JDN*(1-lt)-(JGR if var=='g' else 0.0))*(r/R)
         if r>1e-4 and z>zb:
