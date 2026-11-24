@@ -26,7 +26,7 @@ function klotski(P){const W=4,H=5,key=s=>{const g=Array(20).fill('.');s.forEach(
     const fr=fukuroRoll;fukuroRoll=()=>[['orgel',1]];S.fukuro=1;fukuroOpen();fukuroRoll=fr;const st=document.querySelector('.pxcard .st');let taps=0;while(!document.querySelector('.pxcard .it img')&&taps<20){st.click();taps++}
     out.fukTaps=taps;out.fukItem=[...document.querySelectorAll('.pxcard .it span')].map(e=>e.textContent).join();document.querySelectorAll('.pxcard').forEach(e=>e.parentNode.remove());
     /* 草原のそうび */
-    const g0=GEAR_IDS.filter(id=>BL[id].g.gr&&!BL[id].g.sp&&S.recipes&&S.recipes[id]).length;const gN=()=>GEAR_IDS.filter(id=>BL[id].g.gr&&!BL[id].g.sp&&S.recipes[id]).length;giveItem('gg09',1);const g1=gN();S.mat.wood=Math.max(S.mat.wood||0,1);gearIdea('wood');out.gearLearn=[g0,g1,gN()];out.gearHas=gearCount('gg09');out.ggKnown=recipeKnown('gg01');
+    const g0=GEAR_IDS.filter(id=>BL[id].g.gr&&!BL[id].g.sp&&S.recipes&&S.recipes[id]).length;const gN=()=>GEAR_IDS.filter(id=>BL[id].g.gr&&!BL[id].g.sp&&S.recipes[id]).length;giveItem('gg09',1);const g1=gN();S.mat.wood=Math.max(S.mat.wood||0,19);gearIdea('wood');out.gearLow=GEAR_IDS.filter(id=>BL[id].g.gr&&!BL[id].g.sp&&S.recipes[id]).length;S.mat.wood=20;gearIdea('wood');out.gearLearn=[g0,g1,gN()];out.gearHas=gearCount('gg09');out.ggKnown=recipeKnown('gg01');
     /* 図鑑の節目 */
     S.flags.zkMs=null;delete S.flags.zkMs;zkMsTick(1e9);const pt0=S.pt;S.fishRec={funa:1,koi:1,nijimasu:1,yumasu:1,namazu:1};zkMsTick(2e9);out.zk=[S.flags.zkMs[6],S.pt-pt0];out.zkNext=zkNext(6);
     /* 宝箱だけの家具 */
@@ -40,7 +40,7 @@ function klotski(P){const W=4,H=5,key=s=>{const g=Array(20).fill('.');s.forEach(
   console.log(JSON.stringify(r));
   for(const k in r.pz)assert.equal(r.pz[k],true,k);
   assert.equal(r.fukTaps,6,'家具はタップ6回');assert.equal(r.fukItem,'古いオルゴール');
-  assert.equal(r.gearLearn[1],r.gearLearn[0],'そうびをもらっただけでは思いつかない');assert.equal(r.gearLearn[2],r.gearLearn[0]+1,'素材を手に入れたら、1つだけ思いつく');assert.equal(r.gearHas,1);assert.equal(r.ggKnown,true);
+  assert.equal(r.gearLearn[1],r.gearLearn[0],'そうびをもらっただけでは思いつかない');assert.equal(r.gearLow,r.gearLearn[0],'木材19こでは、まだ思いつかない');assert.equal(r.gearLearn[2],r.gearLearn[0]+1,'木材を20こ手に入れたら、1つだけ思いつく');assert.equal(r.gearHas,1);assert.equal(r.ggKnown,true);
   assert.deepEqual(r.zk,[1,50]);assert.deepEqual(r.zkNext,{v:6,left:1,all:true});
   assert.deepEqual(r.chestRec,[false,false,false,false]);assert.equal(r.chestPool,false);
   assert.equal(r.bud,false,'水ばちのそばの芽は育つ');assert.equal(r.budFar,true);assert.equal(r.star,true);
