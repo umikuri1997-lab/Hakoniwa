@@ -173,3 +173,18 @@ row 2 potato: 1 small bushy seedling, one short stem with 5-6 broad rounded oval
 row 3 cabbage: 1 sprout with two big rounded spoon-shaped seed leaves spreading left and right and a tiny bud / 2 low rosette of 5-6 broad rounded leaves fanning out / 3 round pale green cabbage head with leaf folds, cupped by 6-8 wavy darker green outer leaves
 Each plant is about as tall as wide (ripe wheat a little taller). Style: stylized, slightly chunky, clean simple smooth shapes, real 3D volume seen from all sides; pale, light, soft colors (fresh light green leaves, soft amber gold wheat, white flowers, pale green cabbage), no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no speckles, no baked lighting or shadows. No soil, no ground, no background.
 ```
+
+## 8回め：土のステージの自然の物（6こを1つのモデルに。`tree~t`・`deadtree~t`・`weed2g`・`weed2k`・`iwakagami`・砂岩の岩とアイコン）
+
+ひびわれた岩の谷（洋風・かわいた土地）の物。もらったモデルは `tripo_split.py` で切りわけ、左上から順に `olive.glb`・`iwakusa.glb`・`susuki.glb`・`iwakagami.glb`・`sandrock.glb`・`sagan.glb` にする。枯れたオリーブ（`deadtree~t`）は、`olive.glb` の幹だけを使う。
+
+```
+6 separate cozy-game nature objects for a dry, sunny rocky canyon, in one model, in 2 neat rows of 3 with clear space between them, no two touching, the bottom of every object flat on the same level floor, all upright, perfectly vertical, not tilted:
+1 olive tree: short thick gnarled trunk that twists and splits into 2-3 crooked branches, a loose rounded crown of several soft clumps of small narrow silvery-green leaves, a few small round olives; the crown is about as wide as the tree is tall
+2 rock grass tuft: low clump of 8-10 short stiff fresh green leaves fanning out from one base, a little wider than tall
+3 dry pampas grass tuft: clump of thin long arching straw-colored leaves, with 3 tall stems each topped by a soft fluffy pale cream plume
+4 iwakagami flower: low rosette of 5-6 round glossy green leaves with softly toothed edges lying almost flat, 3 short reddish stems each with 2-3 small nodding pink bell flowers with fringed edges
+5 sandstone boulder: one chunky rounded boulder, about twice as wide as tall, soft horizontal layered bands, a few gentle cracks
+6 small sandstone chunk: one small blocky piece of sandstone, about as tall as wide, layered bands
+Style: stylized, slightly chunky, clean simple smooth shapes, real 3D volume seen from all sides; pale, light, soft colors (silvery light green olive leaves, warm light brown bark, fresh light green grass, pale straw and cream, soft pink flowers, warm pale peach-beige sandstone with light orange bands), no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no speckles, no baked lighting or shadows. No soil, no ground, no base, no background.
+```

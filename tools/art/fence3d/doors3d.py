@@ -15,6 +15,11 @@
 #   御簾垣の戸：竹の柱（マスの中）、とびらは竹のわくに御簾（細い竹をよこにつむ）。
 #   白い塀のドア（風）：白い柱 0.18角・高さ1.02、上に水色の玉（たて置きはマスの中）。とびら：上のまるい白い板3まい・水色の横木・白い横木・取っ手。
 #   ロープの戸（風。ロープの手すりのとなりの柵のドアの絵 ropefence.gate#h0〜3・#v0〜3）：アカシアの丸い柱、とびらは細いわくにロープ3本。
+#   石ころの垣の戸（土 ishidoor）：柱は、石ころの垣の柱と同じ、ひらたい石を5まいつんだ物（よこ置きはマスのさかい、たて置き・iso はマスの中）。
+#     とびら：オリーブの木の板4まい（はば0.15・あつさ0.05・高さ0.64、上は少し山形）・横木2本・すじかい・鉄のちょうつがいと取っ手。垣（高さ0.5）より少し高い。
+#   砂岩の塀のドア（土 sagadoor）：石の塀のドアと同じ形で、柱の石・かさ石を谷の砂岩に。
+#   岩のアーチの門（土 rockgate、2マス）：砂岩の柱2本（0.4角・石3だん・高さ1.11）に、くさびの形のアーチ石7こ（内の半径は柱のあいだの半分・あつさ0.18。
+#     まん中のアーチ石が、てっぺんのまん中）。アーチの両はしは柱の上にのる（柱とアーチのおく行きをそろえる）。とびらは2まい、木の板戸で、上のはしはアーチの内がわの円にそう。
 #   入場ゲート（風）：白い柱 0.22角・高さ1.6、水色の玉。上に白い横木（高さ1.42〜1.54）と、そこからつるした布の三角の旗5まい（うすい色）。とびら2まい（白い板・水色の横木）。
 import sys,os,math
 HERE=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,HERE)
@@ -253,7 +258,48 @@ def irongate(v,n):   # 古い庭の鉄の門（闇）：こけむした灰色の
         b.P.append(('iron',F.Part('三日月','tube',([(*b.xy(p[0],p[1]),p[2]) for p in pts],0.016),IR),None))
         for uu in(u0+0.06,u1-0.06):b.P.append(('iron',F.Part('やりの先','cone',(*b.xy(uu,FR),0.02,1.06,1.16),IR),None))
     return biggate(n,F.MSTONE,cap,5,top)
-DOORS={'canalgate':(canalgate,False),'irongate':(irongate,False),'ibara.gate':(ibaradoor,True),'kuzure.gate':(kuzuredoor,True),'ashifence.gate':(ashidoor,True),'rankan.gate':(rankandoor,True),'ropefence.gate':(ropedoor,True),'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False)}
+OLV=(214,172,116);OLVD=(196,154,100)   # オリーブの木の板（土）
+def ishidoor(v,n):   # 石ころの垣の戸（土）
+    b=B(v);PW=0.865 if not v else 0.5;posts=[0.0,1.0] if not(v or INPOST) else [0.14,0.86]
+    for pu in posts:
+        F.post_pile(b.P,*b.xy(pu,PW))
+    r0=0.13 if not(v or INPOST) else 0.12;u0,u1=posts[0]+r0,posts[1]-r0;W0,W1=PW-0.025,PW+0.025;rot=b.hinge(u0,W1+0.04,ANG[n])
+    def body(b):
+        k=4;wd=(u1-u0-0.02)/k
+        for i in range(k):
+            a=u0+0.01+i*wd;c=a+wd-0.006;m_=(a+c)/2;tp=0.60+0.04*(1-abs(m_-(u0+u1)/2)/((u1-u0)/2))   # 上は少し山形
+            b.prism('picket','板',[(a,0.05),(c,0.05),(c,tp),(a,tp)],W0,W1,OLV if i%2==0 else OLVD)
+        for z0,z1 in((0.44,0.54),(0.12,0.22)):b.box('railh','横木',u0+0.02,W1,z0,u1-0.02,W1+0.04,z1,OLV)
+        b.plate('railh','すじかい',(u0+0.06,W1+0.02,0.22),(u1-0.06,W1+0.02,0.44),0.04,0.08,OLV)
+        for z in(0.49,0.17):b.box('iron','ちょうつがい',u0,W1+0.04,z-0.03,u0+0.09,W1+0.055,z+0.03,(140,140,148))
+        b.box('iron','取っ手',u1-0.08,W1+0.04,0.32,u1-0.04,W1+0.07,0.40,(140,140,148))
+    leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
+def sagadoor(v,n):   # 砂岩の塀のドア（土）：石の塀のドアと同じ形で、谷の砂岩
+    P,xr=sdoor(v,n)
+    for k,p,o in P:p.col=F.SAGC if p.col==STC else F.SAG if p.col==ST else OLV if p.col==DOORW else OLVD if p.col==DOORD else p.col   # 板戸はオリーブの木
+    return P,xr
+def rockgate(v,n):   # 岩のアーチの門（土、2マス）
+    b=B(0);PW=0.8;hw=0.2;ZS=1.11
+    for pu in(BIGIN,2-BIGIN):
+        for c in range(3):b.box('stone','柱の石',pu-hw,PW-hw,c*0.37,pu+hw,PW+hw,(c+1)*0.37,(F.SAG,F.SAGD,F.SAGL)[c%3],org=(pu%1,20+c))
+    ri=(2-2*BIGIN-2*hw)/2;ro=ri+0.18;NV=7   # アーチの内・外の半径、アーチ石の数（奇数）
+    for k in range(NV):
+        a0=math.pi*k/NV;a1=math.pi*(k+1)/NV;g=0.004
+        pts=[(1+ri*math.cos(a0+g),ZS+ri*math.sin(a0+g)),(1+ro*math.cos(a0+g),ZS+ro*math.sin(a0+g)),(1+ro*math.cos(a1-g),ZS+ro*math.sin(a1-g)),(1+ri*math.cos(a1-g),ZS+ri*math.sin(a1-g))]
+        b.prism('stone','アーチ石',pts[::-1],PW-hw,PW+hw,(F.SAGL,F.SAG,F.SAGD)[k%3],org=(k/NV,40+k))
+    W0,W1=PW-0.03,PW+0.03;rr=ri-0.02
+    for side in(0,1):
+        u0,u1=(BIGIN+hw,1.0) if side==0 else (1.0,2-BIGIN-hw);hu=u0 if side==0 else u1;rot=('rot',hu,W1,ANG[n] if side==0 else -ANG[n])
+        def body(b,u0=u0,u1=u1,side=side):
+            k=max(3,round((u1-u0)/0.11));wd=(u1-u0)/k
+            for i in range(k):
+                a,c=u0+i*wd,u0+(i+1)*wd;f=lambda u:ZS+math.sqrt(max(0,rr*rr-(u-1)**2))
+                b.prism('door','板',[(a,0.02),(c,0.02)]+[(c-(c-a)*j/4,f(c-(c-a)*j/4)) for j in range(5)],W0,W1,OLV if i%2==0 else OLVD)   # 板戸はオリーブの木
+            for z in(0.25,0.85):b.box('iron','鉄の帯',u0+0.01,W1,z,u1-0.01,W1+0.015,z+0.05,IRON)
+            hu2=u1-0.08 if side==0 else u0+0.08;b.cyl('iron','輪の取っ手',hu2,W1+0.03,0.03,0.52,0.54,IRON)
+        leaf(b,rot,body)
+    return b.P,(-0.3,2.3)
+DOORS={'canalgate':(canalgate,False),'irongate':(irongate,False),'ibara.gate':(ibaradoor,True),'kuzure.gate':(kuzuredoor,True),'ashifence.gate':(ashidoor,True),'rankan.gate':(rankandoor,True),'ropefence.gate':(ropedoor,True),'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False),'ishidoor':(ishidoor,True),'sagadoor':(sagadoor,True),'rockgate':(rockgate,False)}
 def build_door(iid):
     fn,hasv=DOORS[iid];out={}
     for o in(['h','v'] if hasv else ['h']):
@@ -273,5 +319,5 @@ if __name__=='__main__':
         head,CC=CHP.load_imgs();names=[]
         for iid,res in R.items():
             for k,(im,ax,ay) in res.items():CC[k]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(k)
-            if iid+'#h0' in res and (iid in CC or iid in('parkdoor','parkgate','canalgate','irongate')):im,ax,ay=res[iid+'#h0'];CC[iid]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(iid)
+            if iid+'#h0' in res and (iid in CC or iid in('parkdoor','parkgate','canalgate','irongate','ishidoor','sagadoor','rockgate')):im,ax,ay=res[iid+'#h0'];CC[iid]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(iid)
         CHP.pack_imgs(head,CC);open(os.path.join(F.ROOT,'.chips_changed'),'a').write('\n'+'\n'.join(names));print('チップに入れた',len(names))

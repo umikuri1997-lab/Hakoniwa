@@ -38,8 +38,8 @@ function iqWinDraw(c,i,hz,t,lv){const v=S.win&&S.win[i];if(!v||iqChip(c,'iso:win
 /* ドア・門の向き：となりの壁・柵・塀（ドア・門でない物）だけで決める（ドアどうしはつながらない）。2マスの門はよこだけ */
 function iqDoorHz(i,o,g){if(IQBIG.has(o))return true;const q=k=>{const t=typeAt(k);return iqGrp(t)===g&&!HOME_DOORS.has(t)&&!GATE_IDS.has(t)},x=i%W;return(x>0&&q(i-1))||(x<W-1&&q(i+1))||!(q(i-W)||q(i+W))}
 const IQBIG=new Set(['stonegate','loggate','parkgate','canalgate','rockgate','irongate']);
-/* 柵のドアは、となりの柵・塀の戸の絵があれば、それ（ロープの手すりのとなりはロープの戸 など） */
-function iqGateId(i,o,hz){if(o!=='gate')return o;for(const k of hz?[i-1,i+1]:[i-W,i+W]){const t=typeAt(k);if(t&&t!=='gate'&&window.CHIPS&&CHIPS['iso:'+t+'.gate:'+(hz?'h':'v')])return t+'.gate'}return o}
+/* 柵のドアは、となりの柵・塀の戸の絵があれば、それ（ロープの手すりのとなりはロープの戸 など）。家のドアは、となりの壁ごとのわく */
+function iqGateId(i,o,hz){if(HOME_DOORS.has(o)){for(const k of hz?[i-1,i+1]:[i-W,i+W]){const t=typeAt(k);if(HOME_WALLS.has(t)&&window.CHIPS&&CHIPS['iso:'+t+'.'+o+':'+(hz?'h':'v')])return t+'.'+o}return o}/* 家のドアは、となりの壁ごとのわくの絵があれば、それ（岩の壁の木のいた戸 など） */if(o!=='gate')return o;for(const k of hz?[i-1,i+1]:[i-W,i+W]){const t=typeAt(k);if(t&&t!=='gate'&&window.CHIPS&&CHIPS['iso:'+t+'.gate:'+(hz?'h':'v')])return t+'.gate'}return o}
 /* マスのさかいにも、くいが立つ柵（ロープの柵）：となりがドアのがわは、くいをぬいた絵（~d<がわ>）。ドアの柱と2本ならばないように */
 const IQSTAKE=new Set(['ropefence']);
 function iqNoStake(i,o,m){if(!IQSTAKE.has(o))return m;let d=0;for(const[b,k]of[[1,i-1],[2,i+1],[4,i-W],[8,i+W]])if(m&b&&GATE_IDS.has(typeAt(k)))d|=b;
