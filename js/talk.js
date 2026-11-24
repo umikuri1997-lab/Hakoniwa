@@ -96,6 +96,7 @@ function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id=
   if(T==='fav'){const f=BL[likeF(r)].name;tAll(P,'t:fv',[[f+'が、ずっとほしいんだ。あったら、毎日ながめちゃうな。'],['ねえ、'+f+'って、すてきだと思わない？ 村にあったら、うれしいなあ。']])}
   if(T==='want'&&FOODS[S.trouble.f]){const f=FOODS[S.trouble.f].name;tAll(P,'t:wt',[[f+'が、食べたいなあ。思いうかべたら、おなかが鳴っちゃった。'],['ねえ、'+f+'って、おいしいよね。ひとくちでいいから、食べたいなあ。']])}
   if(r.trs&&r.trs.length){const g=BL[r.trs[r.trs.length-1]];if(g)tAll(P,'t:tr',[[g.name+'、だいじにしてるんだ。ときどき、そっとながめてるよ。'],['ねえ、ぼくのたからもの、知ってる？ '+g.name+'なんだ。えへへ。']])}/* たからもの（gifts.js） */
+  ongNowTopics(r,P);/* たのんでいるおねがい（talk-onegai.js） */
   if(T==='far')tAll(P,'t:fa',[['ごはんの箱まで、ちょっと遠いんだ。おなかがすくと、たどりつくまでがたいへん。'],['おきてすぐ、ごはんの箱まで歩くとね、とちゅうで、おなかが鳴っちゃうんだ。']]);
   if(isNight())tAll(P,'n:nt',[['夜はしずかだね。耳をすますと、だれかのいびきが聞こえるよ。'],['夜の空、見た？ 星が、いっぱい出てたよ。'],['ねむれないときは星を数えるんだ。いつも、十をこえる前にねちゃう。']]);
   else if(S.rain)tAll(P,'n:rn',r.elem==='water'?[['#joy|雨の日って、うれしくなっちゃう。ぽつぽつって、だれかが歌ってるみたい。'],['#joy|雨のにおいって、いいにおいだね。からだが、しゃきっとするんだ。']]:[['雨、なかなかやまないね。でも、葉っぱが雨をうけて、ぴんとのびてきたよ。'],['雨の日は、なんだかねむくなっちゃう。ざあざあって音、子もり歌みたい。'],['雨のあとは、虹が出るかな。出たら、いっしょに見ようね。']]);
@@ -156,9 +157,9 @@ const evPick=(r,L)=>{const k=e=>e[0]+':'+e[1],C=L.filter(e=>k(e)!==r.tle),e=pick
 function funHead(h,b){const m=LOOKRX.exec(b),t=m?b.replace(m[0],''):b;if((h+t).length>60)return[h,b];return[(m?m[0]:'')+h+(/[！？]$/.test(h)?' ':'')+t]}
 function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALKPK=null;
   if(now&&now.u)L=now.L;
-  else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');if(rumorOK(r))C.push('rumor');/* ほかのせいれいのうわさ（talk-rumor.js） */C.push('chat','chat');
+  else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');if(rumorOK(r))C.push('rumor');if(ongOK(r))C.push('oneg');/* おねがい（talk-onegai.js） *//* ほかのせいれいのうわさ（talk-rumor.js） */C.push('chat','chat');
     const C2=C.filter(c=>c!==r.tlk),k=pick(C2.length?C2:C);r.tlk=k;/* 前と同じ種類の話題は、つづけない */
-    if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:funHead(tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'))}else if(k==='day'){L=dayLine(r,evPick(r,work))}else if(k==='rumor'){L=rumorLine(r)}
+    if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:funHead(tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'))}else if(k==='day'){L=dayLine(r,evPick(r,work))}else if(k==='rumor'){L=rumorLine(r)}else if(k==='oneg'){L=ongLine(r)}
     if(!L&&k==='chat'&&Math.random()<ASKP)L=askLine(r);/* 4回に1回くらい、守り神さまに質問する（talk-ask.js） */
     if(!L){L=smallTalk(r);pk=prefOfTopic(r.tlast)}}
   TALKPK=pk;/* 好みを話した話：さいごまで読んだら、わかる（prefs.js） */
