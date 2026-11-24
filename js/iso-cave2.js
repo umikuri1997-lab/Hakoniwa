@@ -90,5 +90,5 @@ function cvqRockDeco(x,y){const C=CV,ox=x*TS,oy=(y+CVOY)*TS,IN=(a,b)=>a>=0&&b>=0
     return}
 }
 /* 床のくずれた小石（そのマスの地面に） */
-function cvqPebble(x,y){const C=CV,ox=x*TS,oy=(y+CVOY)*TS,j=cvJ(x,y),o=C.ob.get(j),h=n=>hash(((y*CVW+x)*7+n*131+977)>>>0),F=(c,a,b,w,hh)=>{ctx.fillStyle=c;ctx.fillRect(ox+a,oy+b,w,hh)};if(C.wt[j]||!C.g[j])return;
+function cvqPebble(x,y){if(CV.hf[cvJ(x,y)]||CV.fd[cvJ(x,y)]){cvHsGround(x,y);return}/* 家のゆか・畑（cave-haison.js） */const C=CV,ox=x*TS,oy=(y+CVOY)*TS,j=cvJ(x,y),o=C.ob.get(j),h=n=>hash(((y*CVW+x)*7+n*131+977)>>>0),F=(c,a,b,w,hh)=>{ctx.fillStyle=c;ctx.fillRect(ox+a,oy+b,w,hh)};if(C.wt[j]||!C.g[j])return;
   if(h(90)<.16&&!o){const px=4+((h(91)*20)|0),py=8+((h(92)*16)|0);F('#6f6152',px,py+1,5,3);F('#6f6152',px+1,py,3,1);F('#a39581',px+1,py+1,2,1);if(h(93)<.5){F('#6f6152',px+7,py+3,3,2);F('#a39581',px+7,py+3,1,1)}}}
