@@ -1,0 +1,21 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+/* フタバの特性「だいちのちから」（daichi.js）：おなか0で、近いみどりをつかってもちこたえる・木は枯れ木・花は枯れた草・植えなおすともどる・みどりがなければ消える */
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/opt/pw-browsers/chromium')?'/opt/pw-browsers/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.dcEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.dcEval);
+await page.waitForFunction(()=>dcEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
+const out=await page.evaluate(()=>dcEval(`(()=>{const o={};S=newState(0);setWorld(0);S.fog=null;S.fogc=null;S.obj.fill('');S.floor.fill('');S.ground.fill(0);S.grn={};S.kare={};S.enemyOn=1;
+ const f=S.res.find(r=>r.name===POKO);o.tr=f.vr.tr;o.trName=TRAITS[f.vr.tr][0];f.x=40.5;f.y=40.5;
+ const tj=40*W+43,fj=40*W+41;S.obj[tj]='tree';S.obj[fj]='clover';S.bud={};recount();o.g0=GRASSN;
+ f.hunger=0;o.ok=daichiUse(f);o.h=f.hunger;o.kN=Object.keys(S.kare).length;o.g1=GRASSN;o.near=Object.keys(S.kare).map(Number).every(j=>Math.hypot(j%W-40,(j/W|0)-40)<=1.5);o.q=(S.sevQ||[]).includes('d_F');
+ daichiTake(40,40,40);o.dead=S.obj[tj];o.weed=/^weed.k$/.test(S.obj[fj]);o.kare=!!S.kare[tj];
+ S.obj[tj]='tree';recount();o.back=!S.kare[tj];
+ const a=Object.keys(S.kare).length;daichiTake(40,40,9999);o.allGone=GRASSN===0;f.hunger=0;o.die=daichiUse(f);
+ S.res=S.res.filter(r=>r!==f);const m=S.res.find(r=>r.name!==POKO);o.other=m?daichiUse(m):false;
+ const sv={res:[{name:POKO,vr:{tr:'nebari'}}]};daichiMig(sv);o.mig=sv.res[0].vr.tr;
+ return o})()`));
+assert.equal(out.tr,'daichi','フタバは、はじめから「だいちのちから」');assert.equal(out.trName,'だいちのちから');
+assert.equal(out.ok,true,'みどりがあれば、もちこたえる');assert.equal(out.h,10,'みどり1マスで、おなか10');assert.equal(out.kN,1,'つかうのは1マス');assert.ok(out.near,'フタバのすぐそばのマスから');assert.ok(out.g1<out.g0,'みどりがへる');assert.ok(out.q,'はじめてのときは会話');
+assert.equal(out.dead,'deadtree','木は枯れ木になる');assert.ok(out.weed,'花は枯れた草になる');assert.ok(out.kare);
+assert.ok(out.back,'かれたマスに植えなおすと、もどる');
+assert.ok(out.allGone);assert.equal(out.die,false,'みどりがなければ、もちこたえない');assert.equal(out.other,false,'ほかのせいれいは、つかえない');
+assert.equal(out.mig,'daichi','前のセーブのフタバは「だいちのちから」に');
+assert.deepEqual(errors,[]);await browser.close();console.log('daichi ok')})().catch(e=>{console.error(e);process.exit(1)});
