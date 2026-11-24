@@ -127,6 +127,7 @@ function tsuyaDots(c,x,y,i,now){/* つやつやの作物：2点のドットの�
 function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(ICON||i==null||!S){const ch=C.farm;return !!ch&&drawChip(c,ch,'farm',x,y,now,i)}
   const n=k=>S.obj[k]==='farm',gx=i%W,gy=(i/W)|0,m=(gx>0&&n(i-1)?1:0)|(gx<W-1&&n(i+1)?2:0)|(gy>0&&n(i-W)?4:0)|(gy<H-1&&n(i+W)?8:0),d=S.dyn[i],wet=!!d&&d.wet>0,base=C[(wet?'farmw:':'farm:')+m];
   if(!base||!chipImgs(base,'farm')[0].ok)return false;drawChip(c,base,'farm',x,y,now,i);/* 畑の土：となりの畑とのつながり・ぬれているか */
+  {const rg=C[(wet?'farm.ridgew:':'farm.ridge:')+(m&3)];if(rg)drawChip(c,rg,'farm',x,y,now,i)}/* 畝（東西の立体。西1・東2の畑へつなげる。tools/art/furn3d/items/farm.py）：平らな土の絵の上にかさね、草とのさかいは平らな絵のふちのまま */
   const ov=k=>{const ch=(wet&&C[k+'w'])||C[k];if(ch)drawChip(c,ch,'farm',x,y,now,i)};/* ぬれている畑は、土がぬれた絵（<k>w） */
   if(d&&d.crop&&d.sown===false)ov(wet?'farm.moundw':'farm.mound');/* たねをえらんだ畑は、土がこんもり */
   if(d&&d.sown!==false&&!(g>0))ov('farm.sprout');/* 植え付けたら、土のもりあがりに小さい芽（育ちはじめたら作物の絵だけ） */
