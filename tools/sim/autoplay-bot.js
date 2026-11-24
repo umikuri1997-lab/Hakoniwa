@@ -84,7 +84,7 @@ Object.assign(B.SUB,{
 });
 
 /* 属性の力をためて、なかまをふやす：呼べる属性のうち、いちばん力が足りる見こみのある属性の物（花・家具）を置く */
-B.attrTick=()=>{if(isNight()||S.summon||S.res.length>=30)return;let c=null;try{c=sumCands().filter(x=>!x.cap&&x.v<x.n&&storySummonOK(x.el)).sort((a,b)=>b.v/b.n-a.v/a.n)[0]}catch(e){}if(!c)return;const el=c.el;
+B.attrTick=()=>{if(isNight()||S.summon||S.res.length>=30)return;let c=null;try{c=sumCands().filter(x=>!x.cap&&x.v<x.n).sort((a,b)=>b.v/b.n-a.v/a.n)[0]}catch(e){}if(!c)return;const el=c.el;
   const ids=Object.keys(BL).filter(id=>{const b=BL[id];return b&&b.attr&&b.attr[el]>0&&!b.offerOnly&&!b.trap&&!(BEDSET.has(id)&&houseBedCount()<1)});/* 家にまだベッドがなければ、ベッドは家の中へ（H.bed） */
   for(const id of ids)if(BL[id].kind==='plant'&&inv(id)>0&&cnt('sprout')<10){B.plantAll(id,50,46);return}/* 持っている花・苗を植える */
   if(S.feat.shop&&godHere()){for(const id of ids){if(BL[id].kind!=='plant')continue;try{const p=shopPrice(id,1);if(p>0&&S.pt>p+40){S.pt-=p;S.inv[id]=(S.inv[id]||0)+1;return}}catch(e){}}}

@@ -92,19 +92,19 @@ for(const [qid,parts] of [['earthListen',['earthListen']],['fireRoot',['fireRoot
 console.log('Four investigation goals (eight investigations) require their own progress; stock cannot complete them; save round-trip preserves progress');
 
 run(`setWorld(0);S={world:0,flags:{},res:[{elem:'wood'}],quest:0,qTalked:false,qStory:null};`);
-for(const [el,id]of [['earth','summon'],['fire','fire'],['water','water'],['wind','wind']]){
-  run(`S.quest=questIndexOf('${id}');S.qTalked=false`);assert.equal(run(`!!storySummonOK('${el}')`),false);
-  run('S.qTalked=true');assert.equal(run(`!!storySummonOK('${el}')`),true);
-  run('S.qStory=S.quest-1');assert.equal(run(`!!storySummonOK('${el}')`),false);
-  run('S.qStory=null;S.quest--;');assert.equal(run(`!!storySummonOK('${el}')`),false);
-  run(`S.res.push({elem:'${el}'})`);assert.equal(run(`!!storySummonOK('${el}')`),true);
-  run('S.res.pop()');
+for(const [el,id]of [['fire','fire'],['water','water'],['wind','wind']]){/* よべる元素のしばりはない。キーキャラ（FIXK0）が来るのは、その目標で話を聞いたあとだけ */
+  run(`S.quest=questIndexOf('${id}');S.qTalked=false`);assert.equal(run(`!!fixKeyOK('${el}')`),false);
+  run('S.qTalked=true');assert.equal(run(`!!fixKeyOK('${el}')`),true);
+  run('S.qStory=S.quest-1');assert.equal(run(`!!fixKeyOK('${el}')`),false);
+  run('S.qStory=null;S.quest--;');assert.equal(run(`!!fixKeyOK('${el}')`),false);
+  run(`S.quest+=2`);assert.equal(run(`!!fixKeyOK('${el}')`),true);
 }
+assert.equal(run(`!!fixKeyOK('earth')`),false);
 for(const [from,to]of [['summon','fire'],['fire','water'],['water','wind']]){
   /* あいだの目標の数：あいだのメインの目標と、むかえる目標の中で、むかえるより前にある小さな目標 */
   const gap=run(`(()=>{const a=questIndexOf('${from}'),b=questIndexOf('${to}'),q=QUESTS1[b];return QUESTS1.slice(a+1,b).filter(q=>!q.skip).length+(q.steps?q.steps.findIndex(s=>s.id==='${to}'):0)})()`);assert(gap>=2,from+' to '+to);
 }
-console.log('First attribute summons: story gate, pending dialogue, repeat residents; at least two main quests between introductions');
+console.log('Key spirits of the first attribute summons come only after their goal talk; at least two main quests between introductions');
 // Exercise the real morning spawner on an empty, fully usable map for two days.
 const acts=fs.readFileSync(path.join(root,'js/spirit-act.js'),'utf8');
 const morning=acts.slice(acts.indexOf('const AREAW='),acts.indexOf('function takenokoMorning'));
