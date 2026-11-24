@@ -1,4 +1,4 @@
-/* 土のステージのお話の前半（PR2a・PR2b）：巣穴から洞窟へ → 1階の坂のかべの彫り絵1 → 村の、くずれた岩の山がくずれて土地がひらく → そこにいるコノハをむかえる → ひらいた土地にオリーブの苗をうえる。
+/* 土のステージのお話の前半（PR2a・PR2b）：巣穴から洞窟へ → 1階の坂のかべの彫り絵1 → 村の、くずれた岩の山がくずれて土地がひらく → そこにいるハニをむかえる → ひらいた土地にオリーブの苗をうえる。
    → 2階の坂の手前でイブキに会う → 彫り絵2 → その夜ツチノオオカゲ（まもりの光を3回で巣穴へにげる）。
    岩の山は7つ（階ごとに1つ）・こわせない・まだ見ていない彫り絵の階へはトトもいっしょ・巣穴から、見つけた彫り絵をまた見られる */
 const assert=require('node:assert/strict');
@@ -21,19 +21,19 @@ const assert=require('node:assert/strict');
   await talk();await page.waitForTimeout(1800);
   const v2=await J(`(()=>{const c=document.querySelector('.idea-reveal');const h=c&&c.querySelector('h2').textContent;if(c){c.remove();GIFT_ACTIVE=false}const seen=(S.ts.carve||[]).slice();caveExit(true);document.querySelectorAll('.pxpopw').forEach(e=>e.remove());return{h,seen,clr:S.cvClr}})()`);
   console.log(JSON.stringify(v2));assert.equal(v2.h,'下へおりる坂を見つけた！');assert.deepEqual(v2.seen,[0]);assert.equal(v2.clr,1);
-  /* 村にもどると、1つめの岩の山がくずれて、コノハがいる */
+  /* 村にもどると、1つめの岩の山がくずれて、ハニがいる */
   await run(`(()=>{if(!TSOPEN){camAnim=null;tsTick()}})()`);await page.waitForTimeout(5000);
-  const o1=await J(`(()=>{const P=S.ts.rub[0],k=S.res.find(r=>r.name===KONOHA);return{open:P.open,left:P.cells.filter(j=>S.obj[j]==='tsrubble').length,ko:S.obj[P.c],kon:!!k&&k.tsWait===1,others:S.ts.rub.slice(1).every(p=>!p.open),q:S.quest,qs:S.qStory}})()`);
-  console.log(JSON.stringify(o1));assert.equal(o1.open,1);assert.equal(o1.left,0,'岩がのこらない');assert.equal(o1.ko,'tskonoki');assert.ok(o1.kon,'コノハが待っている');assert.ok(o1.others);assert.equal(o1.q,2);assert.equal(o1.qs,1);
+  const o1=await J(`(()=>{const P=S.ts.rub[0],k=S.res.find(r=>r.name===HANI);return{open:P.open,left:P.cells.filter(j=>S.obj[j]==='tsrubble').length,ko:S.obj[P.c],kon:!!k&&k.tsWait===1,others:S.ts.rub.slice(1).every(p=>!p.open),q:S.quest,qs:S.qStory}})()`);
+  console.log(JSON.stringify(o1));assert.equal(o1.open,1);assert.equal(o1.left,0,'岩がのこらない');assert.equal(o1.ko,'tskonoki');assert.ok(o1.kon,'ハニが待っている');assert.ok(o1.others);assert.equal(o1.q,2);assert.equal(o1.qs,1);
   await run(`startTalk()`);await talk();
-  /* コノハは、話しかけるまで、たおれたオリーブのそばから動かない */
+  /* ハニは、話しかけるまで、たおれたオリーブのそばから動かない */
   await run(`(()=>{for(let i=0;i<60;i++)stepWorld(2)})()`);
-  const k1=await J(`(()=>{const k=S.res.find(r=>r.name===KONOHA),j=S.ts.kon;checkQuest();return{at:Math.floor(k.y)*W+Math.floor(k.x)===j,talkw:TALKW}})()`);
-  console.log(JSON.stringify(k1));assert.ok(k1.at,'コノハは待っている');assert.equal(k1.talkw,'コノハ');
+  const k1=await J(`(()=>{const k=S.res.find(r=>r.name===HANI),j=S.ts.kon;checkQuest();return{at:Math.floor(k.y)*W+Math.floor(k.x)===j,talkw:TALKW}})()`);
+  console.log(JSON.stringify(k1));assert.ok(k1.at,'ハニは待っている');assert.equal(k1.talkw,'ハニ');
   await run(`startTalk()`);await talk();
-  const k2=await J(`(()=>{const k=S.res.find(r=>r.name===KONOHA);const nq=NEWQ.length;NEWQ.length=0;NEWRES=null;HOLD.clear();checkQuest();return{wait:k.tsWait,nq,q:QUESTS[S.quest].id}})()`);
+  const k2=await J(`(()=>{const k=S.res.find(r=>r.name===HANI);const nq=NEWQ.length;NEWQ.length=0;NEWRES=null;HOLD.clear();checkQuest();return{wait:k.tsWait,nq,q:QUESTS[S.quest].id}})()`);
   console.log(JSON.stringify(k2));assert.equal(k2.wait,0);assert.equal(k2.nq,1,'なかまの紹介');assert.equal(k2.q,'tsolive');
-  /* オリーブの苗：コノハの会話で3本もらい、ひらいた土地に3本育ったら */
+  /* オリーブの苗：ハニの会話で3本もらい、ひらいた土地に3本育ったら */
   await run(`(()=>{checkQuest();startTalk()})()`);await talk();
   const l1=await J(`(()=>{const inv=S.inv&&S.inv.tree;const P=S.ts.rub[0];let n=0;for(const j of P.cells)if(n<3&&!S.obj[j]&&j!==S.ts.kon){S.obj[j]='tree';n++}const pg=QUESTS[S.quest].prog();checkQuest();return{inv,pg,q:S.quest,qs:S.qStory}})()`);
   console.log(JSON.stringify(l1));assert.ok(l1.inv>=3,'オリーブの苗3本');assert.equal(l1.pg,'ひらいた土地のオリーブ 3/3');assert.equal(l1.qs,3);
@@ -83,5 +83,8 @@ const assert=require('node:assert/strict');
   /* 古いセーブ（岩の山のない土のセーブ）：読みかえで岩の山ができる */
   const m1=await J(`(()=>{const s=JSON.parse(JSON.stringify({ts:{hole:S.ts.hole},ground:S.ground,hi:S.hi,obj:S.obj.map(o=>o==='tsrubble'||o==='tskonoki'?'':o),floor:S.floor,dyn:{},hp:{},mig:10}));runMigrations(s);return{n:s.ts.rub&&s.ts.rub.length,mig:s.mig,ver:SAVE_VER}})()`);
   console.log(JSON.stringify(m1));assert.equal(m1.n,7);assert.equal(m1.mig,m1.ver);
+  /* 古いセーブの木のせいれいコノハは、土のせいれいハニになる */
+  const m2=await J(`(()=>{const s={ts:{hole:1},flags:{},res:[{name:'コノハ',elem:'wood'},{name:TOTO,elem:'earth'}],mig:12};runMigrations(s);return s.res.map(r=>r.name+':'+r.elem)})()`);
+  console.log(JSON.stringify(m2));assert.deepEqual(m2,['ハニ:earth','トト:earth']);
   await page.waitForTimeout(300);assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
