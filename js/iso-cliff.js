@@ -7,7 +7,7 @@
    坂・階段・ハシゴは、3Dの点を画面へ写した形をぬり、ふちをぼかさずに切る（ドットにそろえる）。形ごとに1回作ってとっておく。 */
 const ICK=new Map();/* 作った絵（key → canvas） */
 const ICLF=.94,ICRT=.74;/* 左の面・右の面の明るさ */
-function icClear(){for(const c of ICK.values())c.width=c.height=0;ICK.clear();if(ICTMP){ICTMP.width=ICTMP.height=0;ICTMP=null}}
+function icClear(){for(const c of ICK.values())c.width=c.height=0;ICK.clear();for(const e of ICT.c.values())e.c.width=e.c.height=0;ICT.c.clear();for(const e of ICT.m.values())e.width=e.height=0;ICT.m.clear()}
 /* 3Dの点（せかいの点 wx,wy、高さ z だん）→ 画面の点（ゲームの点） */
 const icP=(wx,wy,z)=>[(wx-wy)*IQA,(wx+wy)*IQB-z*IQL];
 /* 壁のタイル：side 0 左の面（y+1 がわ）・1 右の面（x+1 がわ）。src は 64×64 の絵、g は上の行に草のたれ（0：なし・1〜2：ばらつき） */
@@ -29,16 +29,25 @@ function icBlkKey(x,y,L,v,hv){const n=hv(x,y-1)<L,s=hv(x,y+1)<L,e=hv(x+1,y)<L,w=
   sw=hv(x-1,y+1)>=L&&s&&!w,se=hv(x+1,y+1)>=L&&(s&&!e||e&&!s),ne=hv(x+1,y-1)>=L&&e&&!n,b=a=>a?'1':'0';
   return 'iso:blk-'+v+':'+b(n)+b(s)+b(e)+b(w)+(sw||se||ne?'-'+b(sw)+b(se)+b(ne):'')}
 function icBlkImg(k){const ch=window.CHIPS&&CHIPS[k];if(!ch)return null;const im=chipImgs(ch,k)[0];return im&&im.ok?[ch,im]:null}
-/* 上の面：その所の地面（igTile0）を、3Dで写した上の面のかたち（<なまえ>~top）で切って描く。作業用の絵は1まい（ICTMP）を使いまわす（マスごとにとっておかない） */
-let ICTMP=null;
-function icBlkTop(c,x,y,h,ix,iy,k){const t=icBlkImg(k+'~top');if(!t)return false;const[ch,im]=t,m=c===ctx&&dcLayer('g'),X0=ix-ch.ax/2,Y0=iy+IQH/2-(h-1)*IQL-ch.ay/2;
-  const C=ICTMP||(ICTMP=document.createElement('canvas'));if(C.width<ch.w||C.height<ch.h){C.width=Math.max(C.width,ch.w);C.height=Math.max(C.height,ch.h)}
-  const g=C.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.clearRect(0,0,ch.w,ch.h);g.imageSmoothingEnabled=false;g.setTransform(2,0,0,2,-2*X0,-2*Y0);
-  const tx=ix,ty=iy-h*IQL;igTile0(g,x,y,tx,ty);const dia=()=>{g.beginPath();g.moveTo(tx,ty);g.lineTo(tx+IQW/2,ty+IQH/2);g.lineTo(tx,ty+IQH);g.lineTo(tx-IQW/2,ty+IQH/2);g.closePath()};
-  if(m){g.globalCompositeOperation='multiply';g.fillStyle=m;dia();g.fill()}/* 時間の色（daycolor.js の dcTop と同じ） */
-  g.globalCompositeOperation='source-over';g.globalAlpha=Math.min(.24,.06*h);g.fillStyle='#fff8e0';dia();g.fill();g.globalAlpha=1;/* 上の面は、高いだんほど明るく */
-  g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0);g.globalCompositeOperation='source-over';
-  c.drawImage(C,0,0,ch.w,ch.h,X0,Y0,ch.w/2,ch.h/2);return true}
+/* 上の面：その所の地面（igTile0）を、3Dで写した上の面のかたち（<なまえ>~top）で切った絵を、マスごとにとっておく（ICT。地面の区画がかわったら作りなおす。igTileVer）。
+   毎コマ描くのは、とっておいた絵と、上の面のかたちの色の絵（時間の色・高いだんほど明るく。かたちと色ごとに1まい）だけ */
+const ICT={s:null,c:new Map(),m:new Map(),f:-1};
+function icCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function icMask(k,ch,im,col){/* 上の面のかたちを、色 col でぬった絵 */const K=k+'|'+col;let c=ICT.m.get(K);if(c)return c;if(col!=='#fff8e0'&&ICT.mc!==col){for(const[q,e]of ICT.m)if(!q.endsWith('|#fff8e0')){e.width=e.height=0;ICT.m.delete(q)}ICT.mc=col}/* 時間の色がかわったら、前の色の絵は手ばなす（かたちごとに、いまの色と明るさの2まいだけ） */
+  c=icCanvas(ch.w,ch.h);const g=c.getContext('2d');g.fillStyle=col;g.fillRect(0,0,ch.w,ch.h);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0);ICT.m.set(K,c);return c}
+function icTopImg(x,y,h,k,ch,im){/* マス (x,y) の上の面の地面を、かたちで切った絵。拡大0.6より小さいときは、ゲームの点と同じ細かさ（4分の1の大きさ）、それより大きいときは2倍の細かさ */const j=y*W+x,v=igTileVer(x,y);if(v==null)return null;
+  if(ICT.s!==S){for(const e of ICT.c.values())e.c.width=e.c.height=0;ICT.c.clear();ICT.s=S}
+  if(ICT.f!==RFN){ICT.f=RFN;if(RFN%30===0)for(const[q,f]of ICT.c)if(RFN-f.t>60){f.c.width=f.c.height=0;ICT.c.delete(q)}}/* 60コマ描いていないマスは手ばなす（画面に見えているマスだけのこす） */
+  const r=cam.z<IGTZ?1:2,w=ch.w*r/2,hh=ch.h*r/2;let e=ICT.c.get(j);if(e&&e.v===v&&e.k===k&&e.h===h&&e.r===r){e.t=RFN;return e.c}
+  if(!e){e={c:icCanvas(w,hh)};ICT.c.set(j,e)}else if(e.c.width!==w||e.c.height!==hh){e.c.width=w;e.c.height=hh}
+  const X0=(x-y)*IQW/2-ch.ax/2,Y0=(x+y)*IQH/2+IQH/2-(h-1)*IQL-ch.ay/2,g=e.c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,hh);g.imageSmoothingEnabled=false;g.setTransform(r,0,0,r,-r*X0,-r*Y0);
+  igTile0(g,x,y,(x-y)*IQW/2,(x+y)*IQH/2-h*IQL);g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(im,0,0,w,hh);g.globalCompositeOperation='source-over';
+  e.v=v;e.k=k;e.h=h;e.r=r;e.t=RFN;return e.c}
+function icBlkTop(c,x,y,h,ix,iy,k){const t=icBlkImg(k+'~top');if(!t)return false;const[ch,im]=t,G=icTopImg(x,y,h,k,ch,im);if(!G)return false;const m=c===ctx&&dcLayer('g'),X0=ix-ch.ax/2,Y0=iy+IQH/2-(h-1)*IQL-ch.ay/2,w=ch.w/2,hh=ch.h/2;
+  c.drawImage(G,X0,Y0,w,hh);c.save();
+  if(m){c.globalCompositeOperation='multiply';c.drawImage(icMask(k,ch,im,m),X0,Y0,w,hh)}/* 時間の色（daycolor.js の dcTop と同じ） */
+  c.globalCompositeOperation='source-over';c.globalAlpha=Math.min(.24,.06*h);c.drawImage(icMask(k,ch,im,'#fff8e0'),X0,Y0,w,hh);c.restore();/* 上の面は、高いだんほど明るく */
+  return true}
 /* 高い段のマス (x,y)（c は画面の向き、ゲームの点で描く）。土のだんは、下のだんから、角の形ごとのチップをならべる。石のブロックのだんは、面の絵を写したタイル */
 function icBlock(c,x,y){const j=y*W+x,h=hiAt(j);if(h<=0)return;const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),
     gv=REV.has(j)?'g':WD===KUSA?'d':WD===KAZAN?'v':'k',gr=!top&&REV.has(j)?1+(hash(j)<.5?1:0):0;let soilTop=null;

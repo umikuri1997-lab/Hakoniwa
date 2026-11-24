@@ -16,6 +16,7 @@ const W=108,H=108,TS=32,CX=54,CY=54,OW=72,OFF=18;/* マップは108×108マス�
 const SP=n=>'パワー'+n;
 let VILL=new Uint8Array(0);/* 村（家・置いた物のまわり3マス）。夜ににげる・見まわる所。recount で作る */
 const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
+let VBG=false;/* 洞窟にいるあいだ、うしろで村を動かしているとき（会話・音・知らせを出さない。main.js・cave.js） */
 const FREE=6,YAMI=5;/* YAMI：闇のステージ（忘れられた神々の庭） *//* フリーモードのステージ番号 */
 let MZLANE=null;/* 舟の道のマス（mizube.js。道さがしで見るので、ここに置く） */
 const KUSA=0,KAZAN=1,TSUCHI=2;/* ステージの番号：草原・火山・土（番号をじかに書かない） */const MIZU=3;/* 水のステージ（霧のみずべの村）の番号。ならびは 草原0・火山1・土2・水3・風4 */

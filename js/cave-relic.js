@@ -5,7 +5,7 @@
    ・せいれいは人間の字を読めない。図鑑にも、道具の意味は書かない（形だけ）
    ・バケモノの図鑑（S.bkRec）：会った、たたかえるバケモノと、こわい物
    たしかめは tools/tests/cave-relic.cjs */
-const CVREL={roots:'kui',crystal:'suisho',lake:'bin',ice:'nafuda',fossil:'sekiban',magma:'fuigo',cradle:'suzu'};/* 階 → 道具 */
+const CVREL=['kui','bin','suisho',null,null,null,'fuigo','nafuda','sekiban','suzu'];/* 階（1〜10階） → 道具（STORY.md）。4〜6階は R4 で作る */
 const CVRELFOS=.5,CVRELSUZU=3;/* 組み立ての石板：化石がもう1つ出るわりあい・ゆりかごのすず：えさが正体をあらわすマス */
 /* 図鑑の文（形だけ。意味は書かない） */
 const CVRELD={kui:'木の根に、まっすぐ打ちこまれていた鉄のくい。細い管が、根の中へのびている。',
@@ -19,14 +19,11 @@ const CVRELD={kui:'木の根に、まっすぐ打ちこまれていた鉄のく�
 const CVRELSEE={kui:['根に、なにかが打ちこまれてる…','根が、ここだけ、しおれてる','このくい、どこへつながってるのかな'],
   crystal:['水晶が、ずらっとならんでる','光ってるのは、はしの1つだけ…','ほかのは、灰色だね'],
   lake:['この水、まっくら','水の中のしみが、光をのんでる','さわらないほうが、いいよね'],
-  ice:['氷の中に、かげがならんでる','ちいさいのから、だんだん大きく…','さいごの1つだけ、からっぽ'],
-  fossil:['大きなほねを、ならべかけてある','この絵、ほねの組み方みたい','この足のほね…どこかで見た形'],
-  magma:['炉が、まっぷたつにわれてる','かべに絵がある。光が、黒いかげとひとつに…','ひびが、上のほうまでつづいてる'],
   cradle:['ゆりかごが、たくさん…','どれも、からっぽだね','あの大きなかげ、根でくるまれてる']};
 CVRELSEE.roots=CVRELSEE.kui;
 function relOn(k){return !!(S&&S.flags&&S.flags.cvItem&&S.flags.cvItem['rel_'+k])||!!(typeof CV!=='undefined'&&CV&&CV.loot&&CV.loot.items&&CV.loot.items['rel_'+k])}
 /* 手がかりの物をしらべた */
-function cvRelicLook(a,j,now){const C=CV,th=C.F.theme,k=CVREL[th],L=CVRELSEE[th]||[];a.joyU=0;a.shockU=now+500;
+function cvRelicLook(a,j,now){const C=CV,th=C.F.theme,k=CVREL[C.fl],L=CVRELSEE[th]||[];a.joyU=0;a.shockU=now+500;
   C.relI=(C.relI||0);if(L.length){toast(L[C.relI%L.length]);C.relI++}
   if(k&&!relOn(k)&&BL['rel_'+k]){C.loot.items['rel_'+k]=1;bkNote();setTimeout(()=>{if(CV!==C)return;toast(BL['rel_'+k].name+'を見つけた','good');sfx('quest');cvSpark(cvX(j)+.5,cvY(j)+.4,'#ffe58a',14);a.joyU=performance.now()+1400;a.jumpT=performance.now()},900)}}
 function bkNote(){}/* 見つけた数のメモ（いまは何もしない。図鑑は caveExit の S.relRec） */
@@ -40,5 +37,5 @@ const BKSCPX={/* チップのない物の図鑑の絵（16×16。o ふち・h �
   sc_me:['................','................','................','................','..oooo....oooo..','.ohhhho..ohhhho.','.ohmmdo..ohmmdo.','.ohmmdo..ohmmdo.','..oooo....oooo..','................','................','................','................','................','................','................']};
 function bkChipURL(id){const g=typeof GICON!=='undefined'?GICON:{};if(g['bkz:'+id])return g['bkz:'+id];const ch=typeof cvChipOf==='function'?cvChipOf(id):null;if(!ch)return null;const im=chipImgs(ch,id)[0];if(!im||!im.ok)return null;
   const c=document.createElement('canvas');c.width=c.height=144;const x=c.getContext('2d');x.imageSmoothingEnabled=false;const s=Math.max(1,Math.floor(Math.min(132/ch.w,132/ch.h)*2)/2);x.drawImage(im,(144-ch.w*s)/2,(144-ch.h*s)/2,ch.w*s,ch.h*s);const u=c.toDataURL();c.width=c.height=0;return g['bkz:'+id]=u}
-function relZukan(d,add){const R=d.relRec||{};for(const th in CVREL){const id='rel_'+CVREL[th];if(R[id]&&BL[id])add(BL[id].name,CVRELD[CVREL[th]]+' 洞窟で：'+BL[id].desc.split('洞窟で：')[1],iconURL(id),'i:'+id)}}
+function relZukan(d,add){const R=d.relRec||{};for(const k of CVREL){if(!k)continue;const id='rel_'+k;if(R[id]&&BL[id])add(BL[id].name,CVRELD[k]+' 洞窟で：'+BL[id].desc.split('洞窟で：')[1],iconURL(id),'i:'+id)}}
 function bkZukan(d,add){const R=d.bkRec||{};for(const k in CVBK)if(R[k])add(EN[k].name,BKZK[k],bkChipURL('bk'+k.slice(3)+'#0'),'k:tfoe');for(const k in BKSC)if(R[k])add(BKSC[k],BKZK[k],BKSCCH[k]?bkChipURL(BKSCCH[k]):pixURL('bkz:'+k,BKSCPX[k],k==='sc_me'?'#ffe08a':'#b8b0e0'),'k:tfoe')}

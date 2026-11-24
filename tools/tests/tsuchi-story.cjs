@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
   const J=async s=>JSON.parse(await run(`JSON.stringify(${s})`));
   const talk=async()=>{for(let k=0;k<200;k++){const st=await run(`(()=>{if(!document.querySelector('#dialog').hidden||DLGQ.length){DLGGAP=0;DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;const c=!document.querySelector('#dialog').hidden&&document.querySelector('#dialog button');if(c){c.disabled=false;c.click()}else dlgNext();return 'dlg'}return 'none'})()`);if(st==='none')return;await page.waitForTimeout(150)}throw new Error('会話がおわらない '+await run(`JSON.stringify({h:document.querySelector('#dialog').hidden,q:DLGQ.length,t:(document.querySelector('#dialog')||{}).textContent.slice(0,120),btn:[...document.querySelectorAll('#dialog button')].map(b=>b.textContent+(b.disabled?'x':''))})`))};
   const r0=await J(`(()=>{const R=S.ts.rub,j=R[1].cells[0];removeAt(j%W,(j/W)|0);return{n:R.length,cells:R.map(p=>p.cells.length),west:R[0].c%W<tsRiftAt((R[0].c/W)|0),obj:R.every(p=>p.cells.every(k=>S.obj[k]==='tsrubble')),noRm:S.obj[j]==='tsrubble',noWalk:!walk(j),quests:QUESTS.map(q=>q.id)}})()`);
-  console.log(JSON.stringify(r0));assert.equal(r0.n,7,'岩の山は7つ');assert.ok(r0.cells.every(n=>n>=26));assert.ok(r0.west,'1つめは地われの西がわ');assert.ok(r0.obj&&r0.noRm&&r0.noWalk,'岩の山はこわせない・歩けない');
+  console.log(JSON.stringify(r0));assert.equal(r0.n,10,'岩の山は10（洞窟の階の数）');assert.ok(r0.cells.every(n=>n>=26));assert.ok(r0.west,'1つめは地われの西がわ');assert.ok(r0.obj&&r0.noRm&&r0.noWalk,'岩の山はこわせない・歩けない');
   assert.deepEqual(r0.quests,['statue','tscave1','tskonoha','tsolive','tscave2','tsookage']);
   /* 神殿のあと：トトの「巣穴のおくへ」 */
   await run(`(()=>{S.quest=1;S.qTalked=false;S.qStory=null;S.t=Math.floor(S.t/1440)*1440+1440+9*60;checkQuest();if(TALKW!==TOTO)throw new Error('TALKW '+TALKW);startTalk()})()`);await talk();
@@ -48,7 +48,7 @@ const assert=require('node:assert/strict');
     return{ib:!!I,st0,st1:I.st,d0,n:fs.length,hold:fs.every(e=>e.asleep&&e.tsHold),nearR:Math.hypot(I.a.x-cvX(R)-.5,I.a.y-CVOY-cvY(R)-.5),drawn:cvActorsL(C).length}})()`);
   console.log(JSON.stringify(b0));assert.ok(b0.ib);assert.equal(b0.st0,0,'遠いうちは会わない');assert.equal(b0.st1,1);assert.equal(b0.n,3);assert.ok(b0.hold,'会話までコワイノは起きない');assert.ok(b0.nearR<9,'坂の手前');
   await talk();
-  const b1=await J(`(()=>{const C=CV,I=C.ib;const fs=C.en.filter(e=>I.ids.includes(e.id));const r={st:I.st,party:C.party.map(a=>a.r.name),res:S.res.some(r=>r.name===IBUKI),awake:fs.every(e=>!e.asleep&&!e.tsHold),key:S.keyN.fire};for(const e of fs)cvDefeat(e,null);C.en=C.en.filter(e=>!e.dead);tsCaveTick(C,performance.now());r.st2=I.st;return r})()`);
+  const b1=await J(`(()=>{const C=CV,I=C.ib;const fs=C.en.filter(e=>I.ids.includes(e.id));const r={st:I.st,party:C.party.map(a=>a.r.name),res:S.cvAway.some(r=>r.name===IBUKI)&&!S.res.some(r=>r.name===IBUKI),awake:fs.every(e=>!e.asleep&&!e.tsHold),key:S.keyN.fire};for(const e of fs)cvDefeat(e,null);C.en=C.en.filter(e=>!e.dead);tsCaveTick(C,performance.now());r.st2=I.st;return r})()`);
   console.log(JSON.stringify(b1));assert.equal(b1.st,2);assert.deepEqual(b1.party,['トト','イブキ']);assert.ok(b1.res&&b1.awake);assert.equal(b1.key,'イブキ');assert.equal(b1.st2,3);
   await page.waitForTimeout(900);await talk();
   /* 坂：彫り絵2（トトがふるえる・イブキの声） */
@@ -82,7 +82,11 @@ const assert=require('node:assert/strict');
   const n5=await J(`(()=>({q:S.quest,len:QUESTS.length,qs:S.qStory}))()`);console.log(JSON.stringify(n5));assert.equal(n5.q,n5.len);assert.equal(n5.qs,null);
   /* 古いセーブ（岩の山のない土のセーブ）：読みかえで岩の山ができる */
   const m1=await J(`(()=>{const s=JSON.parse(JSON.stringify({ts:{hole:S.ts.hole},ground:S.ground,hi:S.hi,obj:S.obj.map(o=>o==='tsrubble'||o==='tskonoki'?'':o),floor:S.floor,dyn:{},hp:{},mig:10}));runMigrations(s);return{n:s.ts.rub&&s.ts.rub.length,mig:s.mig,ver:SAVE_VER}})()`);
-  console.log(JSON.stringify(m1));assert.equal(m1.n,7);assert.equal(m1.mig,m1.ver);
+  console.log(JSON.stringify(m1));assert.equal(m1.n,10);assert.equal(m1.mig,m1.ver);
+  /* 7階の洞窟のころのセーブ：岩の山7つに、のこりの3つを足す・ひらいた階は3階まで */
+  const m3=await J(`(()=>{const R7=S.ts.rub.slice(0,7),keep=new Set(R7.flatMap(p=>p.cells)),s=JSON.parse(JSON.stringify({ts:{hole:S.ts.hole,rub:R7},ground:S.ground,hi:S.hi,obj:S.obj.map((o,k)=>o==='tsrubble'&&!keep.has(k)?'':o),floor:S.floor,dyn:{},hp:{},cvClr:6,mig:13}));const c7=R7.map(p=>p.c).join();runMigrations(s);
+    const gap=Math.min(...s.ts.rub.slice(7).flatMap(p=>s.ts.rub.slice(0,7).map(q=>Math.hypot(p.c%W-q.c%W,((p.c/W)|0)-((q.c/W)|0)))));return{n:s.ts.rub.length,same:s.ts.rub.slice(0,7).map(p=>p.c).join()===c7,cvClr:s.cvClr,gap,obj:s.ts.rub.slice(7).every(p=>p.cells.every(k=>s.obj[k]==='tsrubble'))}})()`);
+  console.log(JSON.stringify(m3));assert.deepEqual([m3.n,m3.same,m3.cvClr,m3.obj],[10,true,3,true],'古いセーブ：岩の山を3つ足す・ひらいた階は3階まで');assert.ok(m3.gap>=13,'足した岩の山も、ほかとはなれている');
   /* 古いセーブの木のせいれいコノハは、土のせいれいハニになる */
   const m2=await J(`(()=>{const s={ts:{hole:1},flags:{},res:[{name:'コノハ',elem:'wood'},{name:TOTO,elem:'earth'}],mig:12};runMigrations(s);return s.res.map(r=>r.name+':'+r.elem)})()`);
   console.log(JSON.stringify(m2));assert.deepEqual(m2,['ハニ:earth','トト:earth']);

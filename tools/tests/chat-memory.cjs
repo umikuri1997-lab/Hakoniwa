@@ -1,0 +1,20 @@
+/* むかしを覚えているせいれい（生きのこった子）が話す側・聞く側にいたら、「むかしをおぼえていない」雑談は出ない（STORY.md「せいれいの記憶と生まれ」、spirit-life.js の noOld） */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')();
+  const o=JSON.parse(await run(`(()=>{const T=['おぼえてないのに、知ってる感じ','もっと花がいっぱいだった','むかしはにぎやかだった','ここに来るまえ、どこにいたか'];
+    const ix=T.map(t=>CHATS.findIndex(c=>c.some(l=>String(l[1]).includes(t))));
+    const F=mkRes(S,POKO,'wood',CX+.5,CY+.5),N=mkRes(S,MINA,'earth',CX+1.5,CY+.5),X=mkRes(S,'テスト','water',CX+2.5,CY+.5),H=mkRes(S,HOMURA,'fire',CX+3.5,CY+.5);S.res=[F,N,X,H];
+    const out={ix,st:ix.map(i=>CHATS[i]&&CHATS[i].st),key:ix.map(i=>CHATS[i]&&!!CHATS[i].key)};
+    out.withF=ix.map(i=>CHATS[i].ok(F,N)||CHATS[i].ok(N,F));out.withH=ix.map(i=>CHATS[i].ok(H,X)||CHATS[i].ok(X,H));
+    out.free=ix.map(i=>CHATS[i].ok(N,X)&&CHATS[i].ok(X,N));out.noArg=ix.map(i=>CHATS[i].ok());
+    const seen=new Set();for(let k=0;k<400;k++){seen.add(chatTopic(F,N));seen.add(chatTopic(N,F))}out.picked=ix.filter(i=>seen.has(i));
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(o));
+  assert.ok(o.ix.every(i=>i>=0),'4つの雑談がある');
+  assert.equal(o.st[1],0,'花の雑談は草原だけ（もとの組の st:0）');assert.equal(o.key[0],true,'「おぼえてないのに」はキーキャラどうしのまま');
+  assert.deepEqual(o.withF,[false,false,false,false],'フタバと話すときは出ない');
+  assert.deepEqual(o.withH,[false,false,false,false],'ホムラと話すときも出ない');
+  assert.deepEqual(o.free,[true,true,true,true],'ノドカと新しいせいれいなら出る');
+  assert.deepEqual(o.noArg,[true,true,true,true],'引数なしでもエラーにならない');
+  assert.deepEqual(o.picked,[],'フタバとノドカの雑談に、えらばれない');
+  assert.deepEqual(errors,[]);console.log('ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

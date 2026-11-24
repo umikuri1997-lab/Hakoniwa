@@ -6,6 +6,7 @@ const MIGRATIONS = [
   {v: 11, f(S) { if (S.ts && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 土：谷のはしの、くずれた岩の山（tsuchi.js） */
   {v: 12, f(S) { if (S.ts && S.flags && S.flags.tsOokDown) S.enemyOn = true; }}, /* 土：ツチノオオカゲを追いかえしたあとは、夜に地われから来る（tsuchi-night.js） */
   {v: 13, f(S) { if (!S.ts || !S.res) return; for (const r of S.res) if (r.name === 'コノハ') { r.name = 'ハニ'; r.elem = 'earth'; } }}, /* 土：2人めのキーキャラのコノハ（木）は、土のせいれいハニになった */
+  {v: 14, f(S) { if (S.cvClr > 3) S.cvClr = 3; if (S.ts && S.ground && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 洞窟は10階：いま行けるのは3階まで（cave.js の cvFlOpen）・くずれた岩の山は10（tsuchi.js） */
 ];
 const SAVE_VER = MIGRATIONS.length ? MIGRATIONS[MIGRATIONS.length - 1].v : 10;
 function runMigrations(S) {
@@ -20,7 +21,7 @@ function runMigrations(S) {
 
 /* ---------- 保存 ---------- */
 let NOSAVE=false;/* 読みこみ直後は、いまの状態で上書きしない */
-function save(){if(IS_STORY_REPLAY||(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL)||NOSAVE||!S||!S.introSeen)return false;recSync();playFlush();try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='watchpost'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}/* 見張り台の上の子は、のぼる前の場所でしまう */if(r.act&&r.act.type==='eat'&&r.act.stage==='do'&&r.act.m&&!c.meal){const m=r.act.m;c.meal=Object.assign({},m,{u:Math.max(0,(r.act.to-r.hunger)*fullN(r)/500)})}/* 食べているとちゅう：のこりの分を持ったまましまう（読みこんだら食べなおす。食べ物だけへらない） */c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});const ok=KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d));coverNote(S);return ok}catch(e){return false}}
+function save(){if(IS_STORY_REPLAY||(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL)||NOSAVE||!S||!S.introSeen)return false;recSync();playFlush();try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.concat(S.cvAway||[]).map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='watchpost'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}/* 見張り台の上の子は、のぼる前の場所でしまう */if(r.act&&r.act.type==='eat'&&r.act.stage==='do'&&r.act.m&&!c.meal){const m=r.act.m;c.meal=Object.assign({},m,{u:Math.max(0,(r.act.to-r.hunger)*fullN(r)/500)})}/* 食べているとちゅう：のこりの分を持ったまましまう（読みこんだら食べなおす。食べ物だけへらない） */c.act=null;c.path=[];c.hidden=false;return c}),cvAway:[],orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});const ok=KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d));coverNote(S);return ok}catch(e){return false}}
 /* 72×72マスのセーブを、108×108マスに広げる（いまの村は、まん中にそのままのこす。外がわは、新しい土地） */
 function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{const x=j%W,y=(j/W)|0;return x>=O&&x<O+OW&&y>=O&&y<O+OW};
   const t={ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},ref:{},hp:{},rot:{},regrow:[],flags:{},res:[],world:d.world||0};genWorld(t,d.world||0);

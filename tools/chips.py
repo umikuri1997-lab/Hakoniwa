@@ -8,6 +8,7 @@
   python3 tools/chips.py kobo-sync <工房のファイルのフォルダ> [names.json]  # 工房を、いまの chips.js にそろえる（ないチップを足し、なくなったチップをけす）
   python3 tools/chips.py kobo-extra <工房のファイルのフォルダ> <kobo_extra.js の出力.json>  # チップでない絵（ヌシ様・アイテムなど）のジャンルを書く  # 工房の g/*.json の、かわったチップだけを書きかえる
 
+アトラスは、物の種類（fam）ごとにならべた1024のページ。ゲームは、使う物のページだけを読む。
 chips.js は、絵の場所だけを持つ：window.CHIPA=[アトラスのファイル]、window.CHIPS={id:{ax,ay,w,h,...,f:[[ページ,x,y,w,h],...]}}。
 絵をかえるときは、unpack → JSON を直す → pack。pack は、作った絵が元の絵とドットまで同じかたしかめる。
 """
@@ -15,7 +16,15 @@ import sys, json, base64, io, hashlib, os, re, subprocess
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE = 2048
+PAGE = 1024   # アトラスの1ページ（ひろげると4MB）。ゲームは使う物のページだけ読むので、小さいほうがむだがない
+NSFAM = {'iso', 'story', 'crop', 'ani', 'cave', 'fx', 'drop', 'mat', 'cover', 'tex', 'kg', 'sp', 'crit'}
+def fam(k):
+    """チップの種類（ページにまとめる単位）：id の : の前（向き・コマ・部品の印はのぞく）。iso: などは2つめまで（屋根は色ごと）"""
+    a = k.split(':')
+    b = re.split(r'[#.>]', a[0])[0]
+    if b == 'iso' and len(a) > 1: return 'iso:' + re.split(r'[#.>~]', a[1])[0]  # 屋根は色ごと・土のだんはだんの種類ごと
+    if b in NSFAM and len(a) > 1: return b + ':' + re.split(r'[#.>~-]', a[1])[0]
+    return b
 HEAD_END = 'window.CHIPA='
 
 def load_js():
@@ -127,22 +136,30 @@ def pack_imgs(head, C):
     for k, c in C.items():
         c['f'] = [add(im) for im in c['f']]
         for p in c.get('parts', []) or []: p['f'] = [add(im) for im in p['f']]
-    order = sorted(range(len(frames)), key=lambda i: (-frames[i].height, -frames[i].width))
+    # 物の種類（fam）ごとにならべてつめる。ゲームは、描く物の絵があるページだけを読むので、同じ種類の絵が同じページにあると、読む量がへる
+    fid = {}
+    for k, c in C.items():
+        for i in c['f']: fid.setdefault(i, fam(k))
+        for p in c.get('parts', []) or []:
+            for i in p['f']: fid.setdefault(i, fam(k))
+    order = sorted(range(len(frames)), key=lambda i: (fid.get(i, ''), -frames[i].height, -frames[i].width))
     pages, pos = [], {}
-    x = y = sh = 0
+    x = y = sh = 0; cur = None  # いまつめているページ（ページより大きい絵のページには、ほかの絵をつめない）
     for i in order:
         w, h = frames[i].size
-        if not pages or x + w > PAGE:
+        if w > PAGE or h > PAGE:  # ページより大きい絵は、その大きさの1ページ
+            pages.append(Image.new('RGBA', (max(w, PAGE), h), (0, 0, 0, 0))); pages[-1].paste(frames[i], (0, 0)); pos[i] = (len(pages) - 1, 0, 0, w, h); cur = None; continue
+        if cur is not None and x + w > PAGE:
             x = 0; y += sh + 1; sh = 0
-        if not pages or y + h > PAGE:
-            pages.append(Image.new('RGBA', (PAGE, PAGE), (0, 0, 0, 0))); x = y = sh = 0
-        pages[-1].paste(frames[i], (x, y)); pos[i] = (len(pages) - 1, x, y, w, h)
+        if cur is None or y + h > PAGE:
+            pages.append(Image.new('RGBA', (PAGE, PAGE), (0, 0, 0, 0))); cur = len(pages) - 1; x = y = sh = 0
+        pages[cur].paste(frames[i], (x, y)); pos[i] = (cur, x, y, w, h)
         x += w + 1; sh = max(sh, h)
     os.makedirs(os.path.join(ROOT, 'assets', 'chips'), exist_ok=True)
     old = set(os.listdir(os.path.join(ROOT, 'assets', 'chips')))
     names = []
     for n, pg in enumerate(pages):
-        bbox = pg.getbbox(); pg = pg.crop((0, 0, PAGE, bbox[3] if bbox else 1)) if n == len(pages) - 1 else pg
+        bbox = pg.getbbox(); pg = pg.crop((0, 0, pg.width, bbox[3] if bbox else 1))  # 下のあいた所は切る
         b = io.BytesIO(); pg.save(b, 'WEBP', lossless=True, exact=True, quality=100, method=2); data = b.getvalue()  # method 6 は1ページ25秒かかり、小さくもならない
         name = 'assets/chips/' + hashlib.sha1(data).hexdigest()[:10] + '.webp'
         open(os.path.join(ROOT, name), 'wb').write(data); names.append(name)

@@ -1,27 +1,29 @@
-/* 洞窟の探検（cave.js）：入る・歩く・見える所・大穴・属性の道（土 岩をおす・火 たいまつ・水 水門・風 風車・木 葉）・光をしぼる・ふいうち・せまい道・
-   ひびの床・うすい壁・落ちてくる岩・食べる・消える・帰る（ひろった物・村の時計）・7つの階（大穴の上の橋・滝・大穴の氷・山道・ゆりかごのへや）・氷の階（すべる氷・氷のかべ・氷づけの宝箱）・マグマの階（冷やす溶岩・ふきだす溶岩・岩の橋・あつい床）。
+/* 洞窟の探検（cave.js）：入る・歩く・見える所・属性の道（土 岩をおす・火 たいまつ・水 水門・風 風車・木 葉）・光をしぼる・ふいうち・せまい道・
+   ひびの床・うすい壁・落ちてくる岩・食べる・消える・帰る（ひろった物・村の時計）・10の階（1〜3階は大穴のない自然の洞窟：根の空洞・小川のとびいし・水晶の柱の林／地図のまだない4階から先は行けない／8階 ゆりかごのへや）。
    地図は tools/cave/cave_maps.py で作るので、場所は数字でなく、物のしゅるい（S・R・b・t・x・m・k など）でさがす */
 const assert=require('node:assert/strict');
-(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
+  /* 洞窟の絵（アトラスのページ）は、使うときに読む。1回入って描いて、読みおわってからたしかめる */
+  await run(`(()=>{const r=mkRes(S,'pre','earth',CX+.5,CY+2.5);r.nap=false;r.hunger=hMax(r);S.res.push(r);caveEnter([r],{},0);CV.seen.fill(1);caveRender(performance.now());caveAbort();S.res.splice(S.res.indexOf(r),1);return 1})()`);await page.waitForFunction(()=>sacredEval('chaReady()'));
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;{const ce=caveEnter;caveEnter=(...q)=>{const v=ce(...q);if(CV)CV.sc=[];return v}}/* こわい物（cave-bake.js）は tools/tests/cave-bake.cjs でたしかめる */S.introSeen=true;S.flags.tapped=1;const out={};
     for(const el of ['earth','fire','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const q of S.res){q.nap=false;q.hunger=hMax(q)}
     S.t=Math.floor(S.t/1440)*1440+9*60;S.hold=0;S.fs.imo=5;syncFood();S.pt=50;
-    const by=el=>S.res.find(q=>q.elem===el),step=(sec)=>{for(let i=0;i<sec*30;i++)caveFrame(1/30,performance.now())},J=cvJ,act=el=>CV.party.find(a=>a.elem===el),
+    const by=el=>cvAll().find(q=>q.elem===el),step=(sec)=>{for(let i=0;i<sec*30;i++)caveFrame(1/30,performance.now())},J=cvJ,act=el=>CV.party.find(a=>a.elem===el),
       put=(a,x,y)=>{a.x=x+.5;a.y=y+.5+CVOY;a.path=[];a.job=null;a.jq=[];a.mv=false;a.cj=J(x,y)},putJ=(a,j)=>put(a,cvX(j),cvY(j)),full=()=>{for(const a of CV.party)a.r.hunger=hMax(a.r)},
       fk=k=>[...CV.ob].filter(([,o])=>o.k===k).map(([j])=>j).sort((a,b)=>a-b),one=k=>fk(k)[0],
       nb=j=>DIRS.map(([dx,dy])=>J(cvX(j)+dx,cvY(j)+dy)).filter(k=>cvWalk(k)),nb8=j=>[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]].map(([dx,dy])=>J(cvX(j)+dx,cvY(j)+dy)).filter(k=>cvWalk(k)),
       reachAdj=(from,j)=>!!cvBfs(from,k=>cvAdj(k,j)),
       chests=fl=>Object.keys(CVFLOORS[fl].chest).map(s=>{const[x,y]=s.split(',').map(Number);return J(x,y)}),
       backAll=()=>{const S0=one('S'),R0=one('R'),from=new Set([S0]),q=[S0];for(let h=0;h<q.length;h++){const j=q[h];for(const[dx,dy]of DIRS){const k=J(cvX(j)+dx,cvY(j)+dy);if(from.has(k)||!cvWalk(k)||!cvStepOK(j,k))continue;from.add(k);q.push(k)}}
-        let bad=0;for(const j of from)if(!(CV.ice[j])&&!cvBfs(j,k=>k===S0||k===R0))bad++;return[!!cvBfs(S0,j=>j===R0),bad,from.size>200]},
+        let bad=0;for(const j of from)if(!cvBfs(j,k=>k===S0||k===R0))bad++;return[!!cvBfs(S0,j=>j===R0),bad,from.size>200]},
       tierPair=()=>{for(let j=0;j<CVW*CVH-CVW;j++){const k=j+CVW,o=CV.ob.get(k);if(cvWalk(j)&&cvWalk(k)&&CV.lv[j]===CV.lv[k]+1&&!(o&&o.k==='^'))return[j,k]}return null};
-    /* 夜は出かけられない */{const t=S.t;S.t=Math.floor(S.t/1440)*1440+22*60;cavePrep();out.nightPop=!!document.querySelector('.pxpopw');S.t=t}
+    /* 夜も出かけられる */{const t=S.t;S.t=Math.floor(S.t/1440)*1440+22*60;cavePrep();const P=document.querySelector('.pxpopw');out.nightPop=!!P;if(P)P.remove();S.t=t}
     /* えらぶ画面 */cavePrep();{const P=document.querySelector('.pxpopw');out.prep=!!P;out.slots=P.querySelectorAll('.grid')[0].children.length;P.remove()}
     const t0=S.t,f0=S.fs.imo;
     /* ===== 1回め：土・火・水 ===== */
-    out.enter=caveEnter([by('earth'),by('fire'),by('water')],{imo:2});let C=CV;out.paused=paused();out.cls=document.body.classList.contains('cave');out.hud=!!document.querySelector('#caveHud');
+    out.enter=caveEnter([by('earth'),by('fire'),by('water')],{imo:2});let C=CV;out.paused=paused();out.away=[S.res.some(q=>CV.party.some(a=>a.r===q)),S.cvAway.length];out.cls=document.body.classList.contains('cave');out.hud=!!document.querySelector('#caveHud');
     const S0=one('S'),R0=one('R');out.seenStart=!!C.seen[S0];out.unseenFar=!C.seen[R0];
-    /* 大穴：歩けない・むこうが見える（見とおせる） */{const a=C.ab.indexOf(1);out.abyss=[C.ab.reduce((s,v)=>s+v,0)>150,!cvWalk(a),!cvOpaque(a)]}
+    /* 1〜3階は自然の洞窟で、大穴はない */out.abyss=C.ab.reduce((s,v)=>s+v,0);
     /* 門をひらかなくても、かえりの光まで行ける。宝箱は、どれも属性の道・うすい壁の先 */out.mainPath=!!cvBfs(S0,j=>j===R0);out.closed=chests(0).map(c=>reachAdj(S0,c));
     out.back0=backAll();
     /* 水は歩けない・石じゅんは歩けない・光るきのこは歩ける */out.terr=[cvWalk(C.wt.indexOf(1)),cvWalk(one('A')),cvWalk(one('g'))];
@@ -56,8 +58,8 @@ const assert=require('node:assert/strict');
     /* 食べる */const fr=by('fire');fr.hunger=150;out.ate=cvEat(act('fire'),'imo');out.hunAte=fr.hunger;out.fsAte=f0-S.fs.imo;
     /* 消える */const wr=by('water'),wn=wr.name;wr.hunger=.001;step(.2);out.gone=!S.res.includes(wr)&&!C.party.some(a=>a.r===wr);out.lost=(S.lost||[]).concat(S.buried||[]).some(q=>q.name===wn);document.querySelector('#dialog').hidden=true;
     /* 下へおりる坂：そばまで来ると、その階はクリア。つぎの階がひらく */out.clr0=S.cvClr||0;putJ(act('earth'),R0-CVW);step(.5);out.clr=S.cvClr;out.clrF=C.clr;
-    /* ひし形のマス（iso-cave.js）：大穴は低い・岩は高い。タップした所は、見えている高い段のマス */C.seen.fill(1);caveRender(performance.now());{const a=C.ab.indexOf(1),rk=[...C.g.keys()].find(j=>cvqRock(j)),fl=C.g.indexOf(1);out.abyssPath=cvqH(cvX(a),cvY(a))<cvqLv(a)&&cvqH(cvX(rk),cvY(rk))===cvqLv(rk)+CVQL;const tx=cvX(fl),ty=cvY(fl),p=w2s((tx+.5)*TS,(ty+CVOY+.5)*TS,cvqH(tx,ty)),w=cvqTapW(p.x,p.y);out.tapLv=[Math.floor(w.x/TS)===tx,Math.floor(w.y/TS)-CVOY===ty]}
-    /* 帰る */C.t=120;const lt=C.loot.pt,pb=S.pt;caveExit(true);out.exit=!CV&&!document.body.classList.contains('cave')&&!document.querySelector('#caveHud');out.pt=S.pt-pb-lt;out.dt=Math.round(S.t-t0);out.pop=!!document.querySelector('.pxpopw');document.querySelectorAll('.pxpopw').forEach(p=>p.remove());
+    /* ひし形のマス（iso-cave.js）：岩は高い。タップした所は、見えている高い段のマス */C.seen.fill(1);caveRender(performance.now());{const rk=[...C.g.keys()].find(j=>cvqRock(j)),fl=C.g.indexOf(1);out.abyssPath=cvqH(cvX(rk),cvY(rk))===cvqLv(rk)+CVQL;const tx=cvX(fl),ty=cvY(fl),p=w2s((tx+.5)*TS,(ty+CVOY+.5)*TS,cvqH(tx,ty)),w=cvqTapW(p.x,p.y);out.tapLv=[Math.floor(w.x/TS)===tx,Math.floor(w.y/TS)-CVOY===ty]}
+    /* 帰る */C.t=120;const lt=C.loot.pt,pb=S.pt;caveExit(true);out.exit=!CV&&!document.body.classList.contains('cave')&&!document.querySelector('#caveHud');out.pt=S.pt-pb-lt;out.dt=[S.cvAway.length,C.party.every(a=>S.res.includes(a.r))];out.pop=!!document.querySelector('.pxpopw');document.querySelectorAll('.pxpopw').forEach(p=>p.remove());
     out.inv=S.inv.doki||0;out.fosRec=Object.values(S.fosRec||{}).reduce((a,b)=>a+b,0);out.zk=zkCount(10);out.zkAll=zkTotal(10);out.ico=String(fossilIcon('kai')).slice(0,10);{const L=[];fossilZukan(S,(n,d)=>L.push(n));out.zkList=L.length}out.lit=LIGHTQ.includes('oldlantern')&&INDL.has('oldlantern')&&DECOQ.includes('doki');
     /* ===== 2回め：風・木 ===== */S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter([by('wind'),by('wood')],{});C=CV;out.fl0=C.fl;C.en=[];C.seen.fill(1);
     /* 家具は1回だけ。2回めはパワー */cvLoot({item:'doki'});out.again=[C.loot.items.doki||0,C.loot.pt];C.loot.pt=0;
@@ -73,33 +75,26 @@ const assert=require('node:assert/strict');
       out.island=reachAdj(J(x0-1,ky),KT);out.far=!!cvBfs(J(x0-1,ky),j=>j===J(x2+2,ky));const kk=[...C.ob].find(([j,o])=>o.k==='k'&&!o.done)[0];cvUse(kk,C.ob.get(kk));out.noLeaf=!wo.job}
     /* しずく・下絵の区画 */for(let i=0;i<30&&!C.drips.length;i++){C.dripT=0;cvDripTick(performance.now())}out.drip=C.drips.length;if(C.drips[0])C.drips[0].t0=performance.now()-400;caveRender(performance.now());out.dripS=!!(C.drips[0]&&C.drips[0].s);/* 落ちたら音（cvqDrips） */out.chunks=[...CVQK.keys()].some(k=>k[0]==='t')&&[...CVQK.keys()].some(k=>k[0]==='f');caveAbort();out.abort=!CV;
     /* ===== 2階：ひらいた階からえらべる ===== */cavePrep();{const P=document.querySelector('.pxpopw');out.flBtn=[...P.querySelectorAll('button')].filter(b=>/^[12]階$/.test(b.textContent)).length;P.remove()}
-    S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter([by('earth'),by('fire')],{},2);C=CV;{const S1=one('S'),R1=one('R');out.fl1=C.fl;out.main2=!!cvBfs(S1,j=>j===R1);
-      out.closed2=chests(2).map(c=>reachAdj(S1,c));out.falls=[...C.wt.keys()].some(j=>C.wt[j]&&C.ab[j+CVW]);C.seen.fill(1);caveRender(performance.now());out.back1=backAll()[1];
+    S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter([by('earth'),by('fire')],{},1);C=CV;{const S1=one('S'),R1=one('R');out.fl1=C.fl;out.main2=!!cvBfs(S1,j=>j===R1);
+      out.closed2=chests(1).map(c=>reachAdj(S1,c));{const p=cvBfs(S1,j=>j===R1)||[];out.falls=[C.ab.reduce((s,v)=>s+v,0),p.some(j=>C.wt[j-CVW]&&C.wt[j+CVW])]}/* 大穴はない・坂への道は、小川のとびいしをわたる */C.seen.fill(1);caveRender(performance.now());out.back1=backAll()[1];
       /* だんだんの広間：上から下へは行ける。下から上は、坂を通る */{const[hj,lj]=tierPair();out.tier=[cvStepOK(hj,lj),cvStepOK(lj,hj),(cvBfs(lj,j=>j===hj)||[]).length>2]}
       /* 島：岩を水の上へはおせない。くぼみへおすと、島へわたれる */{const B1=one('b'),H1=one('h');out.dirs2=cvPushDirs(B1).map(d=>d.t);C.en=[];const a=act('earth'),st=J(2*cvX(B1)-cvX(H1),cvY(B1));putJ(a,st);a.job={k:'push',j:B1,to:H1,s:st,t:0};step(6);
-        const IT=chests(2).find(j=>Math.abs(cvX(j)-cvX(H1))<4&&cvY(j)===cvY(H1));out.isle=reachAdj(st,IT)}}
+        const IT=chests(1).find(j=>Math.abs(cvX(j)-cvX(H1))<4&&cvY(j)===cvY(H1));out.isle=reachAdj(st,IT)}}
     caveAbort();
     const nw=el=>{const r=mkRes(S,'n'+el,el,CX+.5,CY+2.5);r.nap=false;r.hunger=hMax(r);S.res.push(r);return r},P3=()=>[nw('fire'),nw('water'),nw('earth')];/* 前のたしかめで消えた子がいても、べつの子でたしかめる */
-    /* ===== 3階（氷）：すべる氷・氷のかべ・氷づけの宝箱 ===== */{S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter(P3(),{},3);C=CV;C.en=[];const b=backAll();out.iceB=[b[0],b[1]];const S2=one('S'),R2=one('R');out.iceSheet=(cvBfs(S2,j=>j===R2)||[]).some(j=>C.br[j]===2);
-      /* すべる：氷の上には止まれない（道さがしの行き先にならない）。すべった道は、氷のマスをとおる */{const p=cvBfs(S2,j=>j===R2)||[];
-        let mid=-1;for(let j=0;j<CVW*CVH&&mid<0;j++)if(C.ice[j]&&C.ice[j-1]&&C.ice[j+1]&&C.ice[j-CVW]&&C.ice[j+CVW]&&!cvBfs(S2,k=>k===j))mid=j;out.slide=[p.length>0,p.some(j=>C.ice[j]),mid>=0]}
-      const WT=chests(3).find(j=>{const o=C.ob.get(j);return o&&o.k==='T'&&cvX(j)<20});out.westNo=!reachAdj(S2,WT);const f=act('fire');const FW=fk('F');putJ(f,nb(FW[0]).find(j=>!FW.includes(j)));cvUse(FW[0],C.ob.get(FW[0]));step(12);out.melt=!!C.ob.get(FW[0]).done;
-      for(const j of FW)C.ob.get(j).done=true;out.westOk=reachAdj(S2,WT);
-      const z=fk('Z').find(j=>cvX(j)<20);putJ(f,nb(z)[0]);cvUse(z,C.ob.get(z));step(10);out.thaw=C.ob.get(z).k==='T';caveAbort()}
-    /* ===== 4階（マグマ）：冷やす溶岩・ふきだす溶岩・ゆらぐ岩の橋・あつい床 ===== */{S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter(P3(),{},5);C=CV;C.en=[];const S3=one('S'),R3=one('R');{const Z=fk('z').map(j=>C.ob.get(j));for(const o of Z)o.gone=true;const p=cvBfs(S3,j=>j===R3)||[];for(const o of Z)o.gone=false;out.zig=[p.some(j=>C.ab[j-1]&&C.ab[j+1]),p.some(j=>C.ab[j-CVW]&&C.ab[j+CVW])]}
-      out.mainM=!!cvBfs(S3,j=>j===R3);const LL=fk('L'),IT=chests(5).find(j=>cvX(j)>cvX(LL[LL.length-1]));out.islNo=!reachAdj(S3,IT);const w=act('water');putJ(w,LL[0]-1);cvUse(LL[0],C.ob.get(LL[0]));step(12);out.cool=[!!C.ob.get(LL[0]).done,!C.wt[LL[LL.length-1]]];out.islOk=reachAdj(S3,IT);
-      /* ふきだす：上にいると、おなかがへる */const V=one('V');let tn=performance.now();while(cvVent(V,tn)!==2)tn+=50;const e=act('earth');full();putJ(e,V);const h0=e.r.hunger;caveFrame(1/30,tn);out.vent=e.r.hunger<h0;
-      /* 橋：3回わたると、くずれる */const zb=one('z'),zo=C.ob.get(zb),zn=nb(zb).find(j=>!C.ob.get(j));for(let i=0;i<3;i++){putJ(e,zb);e.cj=zb;putJ(e,zn);e.cj=zb;cvStep(e,performance.now(),true)}out.bridge=[!!zo.gone,!!C.wt[zb],!cvWalk(zb)];
-      /* あつい床：火のせいれいのほかは、おなかがへる */full();const f=act('fire'),HH=fk('H');putJ(e,HH[0]);putJ(f,HH[1]);const he=e.r.hunger,hf=f.r.hunger;step(2);out.hot=(he-e.r.hunger)>(hf-f.r.hunger)+1;caveAbort()}
-    /* ===== 水晶（2階）・化石（5階）：大穴の上の橋をわたる。ゆりかごのへや（7階）：まっすぐなかべの施設 ===== */
-    for(const[fl,key]of[[1,'crys'],[4,'fosF'],[6,'cra']]){S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter(P3(),{},fl);C=CV;C.en=[];const S4=one('S'),R4=one('R'),p=cvBfs(S4,j=>j===R4)||[],b=backAll();
-      out[key]=[p.length>0,b[1],p.some(j=>C.br[j]===1),fk('K').length+fk('Y').length,fk('K').concat(fk('Y'),fk('N')).every(j=>!cvWalk(j)),CV.F.theme];C.seen.fill(1);caveRender(performance.now());caveAbort()}
-    out.nFl=CVFLOORS.length;out.themes=CVFLOORS.map(f=>f.theme).join(',');
+    /* ===== 水晶（3階）：水晶の柱の林。ゆりかごのへや（8階）：まっすぐなかべの施設 ===== */
+    for(const[fl,key]of[[2,'crys'],[7,'cra']]){S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter(P3(),{},fl);C=CV;C.en=[];const S4=one('S'),R4=one('R'),p=cvBfs(S4,j=>j===R4)||[],b=backAll();
+      let pil=0;for(let j=CVW;j<CVW*CVH-CVW;j++)if(!C.g[j]&&!C.ob.has(j)&&(cvWalk(j-1)&&cvWalk(j+1)||cvWalk(j-CVW)&&cvWalk(j+CVW)))pil++;/* 柱：両がわが床の、うすい岩 */
+      out[key]=[p.length>0,b[1],C.ab.reduce((s,v)=>s+v,0),fk('K').length+fk('Y').length,fk('K').concat(fk('Y'),fk('N')).every(j=>!cvWalk(j)),CV.F.theme,pil];C.seen.fill(1);caveRender(performance.now());
+      /* 3階の坂：つぎの階（4階）は、まだ地図がないので、ひらかない */if(fl===2){putJ(act('earth'),R4-CVW);step(.5);out.clr3=S.cvClr;document.querySelectorAll('.idea-reveal').forEach(e=>e.remove());GIFT_ACTIVE=false}
+      if(fl===7){putJ(act('earth'),R4-CVW);step(.5);out.clr8=S.cvClr;document.querySelectorAll('.idea-reveal').forEach(e=>e.remove());GIFT_ACTIVE=false}caveAbort()}
+    out.nFl=CVFLOORS.length;out.themes=CVFLOORS.map(f=>f?f.theme:'-').join(',');out.open=cvFlOpen();out.noMap=caveEnter(P3(),{},3);caveAbort();
+    cavePrep();{const P=document.querySelector('.pxpopw');out.flBtn3=[...P.querySelectorAll('button')].filter(b=>/^[0-9]+階$/.test(b.textContent)).length;P.remove()}
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.equal(r.nightPop,false,'夜は出かけられない');assert.equal(r.prep,true);assert.equal(r.slots,5);
-  assert.equal(r.enter,true);assert.equal(r.paused,true,'洞窟のあいだ村は止まる');assert.equal(r.cls,true);assert.equal(r.hud,true);assert.equal(r.seenStart,true);assert.equal(r.unseenFar,true);
-  assert.deepEqual(r.abyss,[true,true,true],'大穴：大きい・歩けない・見とおせる');assert.equal(r.abyssPath,true,'大穴は低く、岩は高い');assert.deepEqual(r.tapLv,[true,true],'タップした所のマス');
+  assert.equal(r.nightPop,true,'夜も出かけられる');assert.equal(r.prep,true);assert.equal(r.slots,5);
+  assert.equal(r.enter,true);assert.equal(r.paused,false,'洞窟のあいだも村は動く');assert.deepEqual(r.away,[false,3],'つれていった子は村のせいれいの外');assert.equal(r.cls,true);assert.equal(r.hud,true);assert.equal(r.seenStart,true);assert.equal(r.unseenFar,true);
+  assert.equal(r.abyss,0,'1階に大穴はない');assert.equal(r.abyssPath,true,'岩は高い');assert.deepEqual(r.tapLv,[true,true],'タップした所のマス');
   assert.equal(r.mainPath,true,'どのパーティでも、かえりの光まで行ける');assert.ok(r.closed.every(v=>v===false),'宝箱は、どれも門の先');assert.equal(r.walked,true);assert.deepEqual([r.tapDark,r.tapRock,r.tapGate,r.look],[true,-1,true,true],'タップで歩く先・見回し');
   assert.equal(r.windNo,true);assert.equal(r.woodNo,true);
   assert.equal(r.sel,'b');assert.equal(r.dirs.length,2,'左はでっぱり・右は立つ所がない：上と下にだけおせる');assert.equal(r.pushed,true);assert.equal(r.reset,1);assert.equal(r.home,true);assert.equal(r.hole,true);assert.equal(r.earthOpen,true);
@@ -110,20 +105,17 @@ const assert=require('node:assert/strict');
   assert.equal(r.wall0,true);assert.equal(r.wall,true);assert.equal(r.hidden,true);
   assert.equal(r.dimSleep,true,'光をしぼると、そばでも起きない');assert.equal(r.ambush,true);assert.equal(r.wokeHit,true);assert.equal(r.wideWake,true);assert.equal(r.noStack,true);
   assert.equal(r.ate,true);assert.equal(r.hunAte,400);assert.equal(r.fsAte,1);assert.equal(r.gone,true);assert.equal(r.lost,true);
-  assert.equal(r.exit,true);assert.ok(r.pt>=0&&r.pt<=3);assert.equal(r.dt,120,'洞窟にいた時間ぶん、村の時計が進む');assert.equal(r.pop,true);
+  assert.equal(r.exit,true);assert.ok(r.pt>=0&&r.pt<=3);assert.deepEqual(r.dt,[0,true],'もどったら村のせいれいにもどる');assert.equal(r.pop,true);
   assert.equal(r.inv,1,'ほりだした土器');assert.equal(r.fosRec,1);assert.equal(r.zk,1);assert.equal(r.zkAll,5);assert.equal(r.ico,'data:image');assert.equal(r.zkList,1);assert.equal(r.lit,true);assert.deepEqual(r.again,[0,30]);
   assert.equal(r.blowOff,null,'まっすぐ先でない');assert.equal(r.blowWall,false,'岩のむこう');assert.equal(r.millNo,true);assert.equal(r.blowHit,true);assert.equal(r.mill,true);
   assert.deepEqual(r.back0,[true,0,true],'1階：どこからでも入口か坂へもどれる');assert.deepEqual(r.terr,[false,false,true]);assert.deepEqual(r.step,[true,false,true,true],'とびおりる・坂からのぼる');assert.equal(r.ore,true);assert.equal(r.top,3);
   assert.equal(r.clr0,0);assert.equal(r.clr,1,'坂まで来ると、つぎの階がひらく');assert.equal(r.clrF,true);assert.equal(r.fl0,0);assert.equal(r.drip,1);assert.equal(r.dripS,true,'しずくが落ちた音');assert.equal(r.chunks,true);
-  assert.equal(r.flBtn,2,'出かける階をえらべる');assert.equal(r.fl1,2);assert.equal(r.main2,true,'2階：どのパーティでも坂まで行ける');assert.ok(r.closed2.every(v=>v===false));assert.equal(r.back1,0);assert.deepEqual(r.tier,[true,false,true]);assert.equal(r.dirs2.length,1);assert.equal(r.isle,true);
+  assert.equal(r.flBtn,2,'出かける階をえらべる');assert.equal(r.fl1,1);assert.equal(r.main2,true,'2階：どのパーティでも坂まで行ける');assert.ok(r.closed2.every(v=>v===false));assert.equal(r.back1,0);assert.deepEqual(r.tier,[true,false,true]);assert.equal(r.dirs2.length,1);assert.equal(r.isle,true);
   assert.equal(r.leaf0,3);assert.equal(r.leaf,0);assert.equal(r.island,true);assert.equal(r.far,true);assert.equal(r.noLeaf,true);assert.equal(r.abort,true);
-  assert.deepEqual(r.iceB,[true,0],'氷の階：坂まで行ける・どこからでももどれる');assert.deepEqual(r.slide,[true,true,true],'氷の上は、すべって、とちゅうで止まれない');
-  assert.equal(r.westNo,true);assert.equal(r.melt,true,'火のせいれいが氷のかべをとかす');assert.equal(r.westOk,true);assert.equal(r.thaw,true,'氷づけの宝箱がとける');
-  assert.equal(r.mainM,true,'マグマの階：坂まで行ける');assert.equal(r.islNo,true);assert.deepEqual(r.cool,[true,true],'水のせいれいが溶岩を冷やす（つながった所みな）');assert.equal(r.islOk,true);
-  assert.equal(r.vent,true,'ふきだす溶岩にあたると、おなかがへる');assert.deepEqual(r.bridge,[true,true,true],'岩の橋は3回でくずれる');assert.equal(r.hot,true,'あつい床');
-  assert.equal(r.nFl,7);assert.equal(r.themes,'roots,crystal,lake,ice,fossil,magma,cradle','階のならび：神をつくる仕事のじゅん');
-  assert.equal(r.falls,true,'みずうみ：大穴へおちる滝');assert.equal(r.iceSheet,true,'氷：大穴にはった氷をすべってわたる');assert.deepEqual(r.zig,[true,true],'マグマ：岩の橋がくずれても、大穴のかべの細い山道を、じぐざぐにおりられる');
-  for(const k of['crys','fosF'])assert.deepEqual(r[k].slice(0,3).concat(r[k][4]),[true,0,true,true],k+'：大穴の上の橋をわたって坂へ・どこからでももどれる・手がかりは歩けない');
+  assert.equal(r.nFl,10);assert.equal(r.themes,'roots,lake,crystal,-,-,-,-,cradle,-,-','階のならび（STORY.md）：地図のまだない階は null');assert.equal(r.open,3,'行けるのは3階まで');assert.equal(r.noMap,false,'地図のない階には入れない');
+  assert.deepEqual(r.falls,[0,true],'2階：大穴はない・小川のとびいしをわたって坂へ');
+  assert.deepEqual(r.crys.slice(0,3).concat(r.crys[4],r.crys[5]),[true,0,0,true,'crystal'],'3階：坂へ行ける・どこからでももどれる・大穴はない・手がかりは歩けない');assert.ok(r.crys[6]>=40,'水晶の柱の林：'+r.crys[6]);
+  assert.equal(r.clr3,3,'3階をクリアすると3');assert.equal(r.clr8,3,'4階より下はひらかない');assert.equal(r.flBtn3,3,'えらべるのは3階まで');
   assert.deepEqual([r.cra[0],r.cra[1],r.cra[4],r.cra[5]],[true,0,true,'cradle'],'ゆりかごのへや');assert.ok(r.cra[3]>=20,'ゆりかごが、ならぶ');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
