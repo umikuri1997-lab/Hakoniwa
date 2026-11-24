@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2323;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2326;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -189,6 +189,7 @@ function updTut(){
     if(inv('bed')>0){if(pp){el=pp.querySelector('.x');lbl='とじる'}else placeHint('bed')}
     else if(S.orders.some(o=>o.type==='bed')){if(sheet==='craft'){el=$('#sheetX');lbl='依頼ボードをとじる'}}
     else if((S.mat.nuno||0)>0){const g=orderTut('bed');if(pp){el=pp.querySelector('.x');lbl='とじる'}else if(g&&g.kind==='close'){el=$('#sheetX');lbl='とじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.bed.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'ベッドの「はる」をタップ'}}
+    else if(nunoLying()){if(pp){el=pp.querySelector('.x');lbl='とじる'}}/* 布はもうおった。箱がいっぱいで地面にあるときは、はたおり機をささない */
     else if(L<0){if(inv('loom')>0)placeHint('loom')}
     else if(busy){if(pp){el=pp.querySelector('.x');lbl='布ができるまで待とう'}}/* 布をおっているあいだは待つ */
     else if(pp){const go=pp.querySelector('.go'),pl=pp.querySelector('.ks .p');if(!pl){el=pp.querySelector('.x');lbl='草が集まるまで待とう'}else if(go.disabled||go.classList.contains('lack')){el=pl;lbl='「＋」で数をえらぶ'}else{el=go;lbl='「おる」をタップ'}}
