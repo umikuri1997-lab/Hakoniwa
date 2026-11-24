@@ -13,6 +13,7 @@ const prOf=f=>S[f]||(S[f]={});
 const suiOn=j=>{const a=anc(j),z=BL[S.obj[a]]&&BL[S.obj[a]].sz||[1,1];for(let b=0;b<z[1];b++)for(let c=0;c<z[0];c++)if(NEARSUI.has(a+b*W+c))return true;return false};/* 水車のまわり5マスにあるか（2×2は、どこかのマスが入っていれば） */
 const procOK=(r,o)=>{const P=PROC[o];return !!P&&(r.elem===P.el||elemCount(P.el)===0)};/* 加工するのは、その属性のせいれい（いなければ、だれでも） */
 function prCount(j){/* 入った・運ぶのを待つ・運んでいる物で、あといくつ作るか（せいれいが分けて運ぶので、物ごとに合わせてから数える） */const P=PROC[S.obj[j]];if(!P)return 0;const t={},add=m=>{if(m)for(const k in m)t[k]=(t[k]||0)+m[k]};for(const f of['prIn','prQ'])add((S[f]||{})[j]);for(const r of S.res)if(r.ppk&&r.ppk.j===j)add(r.ppk.m);let n=0;for(const k in t)n+=Math.floor(t[k]/prN(P,k));return n}
+const nunoLying=()=>(S.drops||[]).some(d=>d.id==='mat:nuno'&&d.n>0);/* はじめのベッド：おった布が、入る箱がなくて地面にある（箱があけば、せいれいがひろってしまう） */
 function loomWait(){/* はじめのベッド：どれかのはたおり機で布をおっている・できた布をせいれいが箱へ運んでいる */for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='loom'&&(prCount(j)>0||!!(S.prOut||{})[j]))return true;return S.res.some(r=>((r.cmat||{}).nuno||0)>0)}
 const prReady=j=>{const P=PROC[S.obj[j]],d=(S.prIn||{})[j];return P&&d?Object.keys(d).find(k=>d[k]>=prN(P,k))||null:null};
 function prRefund(m){for(const k in m||{})if(m[k]>0)availAdd(k,m[k])}
