@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2267;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2268;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -119,7 +119,7 @@ window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;$('#tBtns'
 /* ---------- ループ ---------- */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
 let STLD=false;let USERPAUSE=false;/* 「とめる」ボタン：ゲームの時間を止めて、ゆっくり配置を考える */
-const paused=()=>(typeof caveOn==='function'&&caveOn())/* 洞窟のあいだ、村は止める（cave.js） */||(typeof sacredPlayActive==='function'&&sacredPlayActive())||sacredQuietActive()||USERPAUSE||!stageReady()||performance.now()<BOSSHOLD||performance.now()<SCENEHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
+const paused=()=>(typeof sacredPlayActive==='function'&&sacredPlayActive())||sacredQuietActive()||USERPAUSE||!stageReady()||performance.now()<BOSSHOLD||performance.now()<SCENEHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
@@ -229,8 +229,8 @@ function frame(now){
   followTick(rdt);/* 見守る */flingTick(rdt);/* 地図の慣性（input.js） */
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
-  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();if(typeof gfShowTick==='function')gfShowTick();showSpotPop();reflectNoteTick();windTick();oreWakeTick();if(typeof tsTick==='function')tsTick();if(typeof aniBirthTick==='function')aniBirthTick();if(typeof starWishTick==='function')starWishTick()}
-  if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
+  if(started&&!(typeof caveOn==='function'&&caveOn())&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();if(typeof gfShowTick==='function')gfShowTick();showSpotPop();reflectNoteTick();windTick();oreWakeTick();if(typeof tsTick==='function')tsTick();if(typeof aniBirthTick==='function')aniBirthTick();if(typeof starWishTick==='function')starWishTick()}
+  if(!paused()){const vbg=typeof caveOn==='function'&&caveOn();/* 洞窟にいるあいだも、村は動く（会話・カメラ・音・知らせは出さない。cave.js の cvVBack） */if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();if(!vbg)LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));/* 洞窟では、洞窟がへらす */AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);const vb0=vbg?cvVFront():null;VBG=vbg;try{while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}finally{VBG=false}if(vb0)cvVBack(vb0)}
   if(typeof caveOn==='function'&&caveOn()){try{caveFrame(prdt,now)}catch(e){frameErr('cave',e)}}/* 洞窟の探検（cave.js） */
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();

@@ -48,7 +48,7 @@ const assert=require('node:assert/strict');
     return{ib:!!I,st0,st1:I.st,d0,n:fs.length,hold:fs.every(e=>e.asleep&&e.tsHold),nearR:Math.hypot(I.a.x-cvX(R)-.5,I.a.y-CVOY-cvY(R)-.5),drawn:cvActorsL(C).length}})()`);
   console.log(JSON.stringify(b0));assert.ok(b0.ib);assert.equal(b0.st0,0,'遠いうちは会わない');assert.equal(b0.st1,1);assert.equal(b0.n,3);assert.ok(b0.hold,'会話までコワイノは起きない');assert.ok(b0.nearR<9,'坂の手前');
   await talk();
-  const b1=await J(`(()=>{const C=CV,I=C.ib;const fs=C.en.filter(e=>I.ids.includes(e.id));const r={st:I.st,party:C.party.map(a=>a.r.name),res:S.res.some(r=>r.name===IBUKI),awake:fs.every(e=>!e.asleep&&!e.tsHold),key:S.keyN.fire};for(const e of fs)cvDefeat(e,null);C.en=C.en.filter(e=>!e.dead);tsCaveTick(C,performance.now());r.st2=I.st;return r})()`);
+  const b1=await J(`(()=>{const C=CV,I=C.ib;const fs=C.en.filter(e=>I.ids.includes(e.id));const r={st:I.st,party:C.party.map(a=>a.r.name),res:S.cvAway.some(r=>r.name===IBUKI)&&!S.res.some(r=>r.name===IBUKI),awake:fs.every(e=>!e.asleep&&!e.tsHold),key:S.keyN.fire};for(const e of fs)cvDefeat(e,null);C.en=C.en.filter(e=>!e.dead);tsCaveTick(C,performance.now());r.st2=I.st;return r})()`);
   console.log(JSON.stringify(b1));assert.equal(b1.st,2);assert.deepEqual(b1.party,['トト','イブキ']);assert.ok(b1.res&&b1.awake);assert.equal(b1.key,'イブキ');assert.equal(b1.st2,3);
   await page.waitForTimeout(900);await talk();
   /* 坂：彫り絵2（トトがふるえる・イブキの声） */
