@@ -3,10 +3,10 @@
 作りかた：`python3 tools/art/spirit3d/model_blend.py handoff/files/spirit-model`
 
 ## ファイル
+- `spirit.fbx`：持ち主にわたす物（`python3 tools/art/spirit3d/model_fbx.py handoff/files/spirit-model/spirit_model.blend handoff/files/spirit-model/spirit.fbx`）。体・ずきん（土の形）・頭の上の物（土の芽）・しっぽ（土）・目・ほっぺ・骨。マテリアル・テクスチャはなし。ミラーは適用、サブディビジョンは適用しない（ポリゴンの少ない形）。
 - `spirit_model.blend`：5つの属性ぜんぶ。はじめは土だけ見えている。
   - コレクション `common`：体（`body`、1つのメッシュ）・アーマチュア（`spirit_rig`）・下絵（`ref_front`・`ref_side`）
   - コレクション `earth`・`water`・`fire`・`wind`・`wood`：ずきん・頭の上の物・しっぽ（風ははね）・目・ほっぺ
-- `spirit_<属性>.glb`：属性ごと（モディファイアは適用ずみ）。
 - `ref_front.png`・`ref_side.png`：下絵（いまのゲームの土のせいれい）。
 
 ## 体（`body`）
