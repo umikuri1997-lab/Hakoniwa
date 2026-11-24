@@ -58,9 +58,10 @@ def render(parts,decal):
     sc.dc={pid:(lambda f:(lambda x,y,z:f(*unrot(x,y),z)))(f) for pid,f in sc.dc.items()}
     O.S=S
     im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.86,lw=1,k2=0.93,merge=0)
-    return own_mask(im)
-def own_mask(im,free=None):
-    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）。free：マスの外へ出てものこす部品の番号（ひらいたとびら）"""
+    return own_mask(im,bleed=BLEED)
+BLEED=1   # マスのさかいの外へ、1ドットのこす（タイルのはみ出し）。ゲームはマスごとの絵を、はんぱな倍率でならべるので、絵のはしがうすくなり、うしろの地面がすけて、つなぎ目に線が出た（iPhone の Safari）。となりの絵にかさなる所は、同じ場所の同じ色
+def own_mask(im,free=None,bleed=0):
+    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）。free：マスの外へ出てものこす部品の番号（ひらいたとびら）。bleed：マスの外へ、そのドット数だけのこす（つながる腕の所だけ。腕のない所には絵がない）"""
     a=np.array(im).copy();zb=O.LAST_ZB.copy();obj=zb>-1e8
     wx,wy=world_of(np.where(obj,zb,0))
     x0,x1,y0,y1=OWN;own=obj&(wx>=x0-1e-6)&(wx<x1+EDGE)&(wy>=y0-1e-6)&(wy<y1+EDGE)
@@ -74,6 +75,10 @@ def own_mask(im,free=None):
             nb=np.where((lab==0)&(sh==1),1,nb)   # このマスの面ととなりの面の両方にふれる線のドットは、このマスの物にする（どちらのマスにもならず、つなぎ目の足もとに1ドットのすきまが出た）
         lab=nb
     keep=(lab==1)&(a[...,3]>0)
+    for _ in range(bleed):
+        d=keep.copy()
+        for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):d|=np.roll(np.roll(keep,dy,0),dx,1)
+        keep=d&(a[...,3]>0)
     a[~keep]=0
     return Image.fromarray(notch(a))
 def notch(a):
@@ -216,7 +221,7 @@ def fence_render(iid,m,nod=0):
     sc.txax={pid:rot(np.array(v)+np.array([0.5,0.5,0]))-np.array([0.5,0.5,0]) for pid,v in sc.txax.items()}
     O.S=S;im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.80,lw=2,k2=0.90,merge=4)
     import furntone;im=furntone.tone(im)
-    return own_mask(im)
+    return own_mask(im,bleed=BLEED)
 # ---- 生垣（hedge）：あつさ 0.74・高さ 0.73。こい緑の中身の箱を、小さな葉の部品（板）でおおう（玉にしない） ----
 # 葉は、せかいのます目の点に、場所から決まるずれ・向き・色でならべる（1マスでくりかえすので、となりとつながる）。
 HT,HH,HL=0.74,0.73,0.075
@@ -271,7 +276,7 @@ def hedge_render(m):
     for p,_ in hedge_parts(m):build(sc,[p])
     sc.t=[(rot(a),rot(b),rot(c),col,pid) for a,b,c,col,pid in sc.t]
     O.S=S;im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.84,lw=1,k2=0.92,merge=4)
-    return own_mask(im)
+    return own_mask(im,bleed=BLEED)
 def build_all(out,ids):
     """ids の物を、つなぎ方 m 0〜15（家の壁は ~low も）ぜんぶ写す"""
     res={};C=None
