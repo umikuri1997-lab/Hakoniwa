@@ -1,135 +1,201 @@
-"""カミサマのクォータービューの絵（前ななめ＝左下を向く）を、いまの正面のドット絵から3Dに組んで写す。
+"""カミサマのクォータービューの絵（前ななめ＝左下を向く・家具と同じ見おろし）を、部品ごとの3Dで組んで写す。
 
-  python3 tools/art/god3d/god3d.py <出力フォルダ>            # god_iso.png・ならべた絵（cmp_x4.png）を書く
+  python3 tools/art/god3d/god3d.py <出力フォルダ>            # god_iso.png・ならべた絵（cmp_x4.png）・10倍の絵を書く
   python3 tools/art/god3d/god3d.py <出力フォルダ> --chips    # ゲームのチップ god にも入れる
 
-もとの絵は、正面の絵 tools/art/god3d/god_front.png（入れかえる前のチップ god、56×116、1ドット＝ゲームの半分の点）。
-組み方（せいれいの spirit3d と同じ考え方：正面の絵の形と色を、体の面にうつす）：
-  体（頭・ひげ・服）：絵の行ごとの切り口をだ円にする（はば＝その行の絵のはば、おくゆき＝はばの BD）。色は、正面の絵の同じ (x, 高さ) の色。
-    つえ・手の所は、体の色では、となりの色でうめる（つえ・手はべつの部品）。
-  つえ（上の丸い頭・柄）と手：絵の行ごとのはばの、まるい棒。体の前（STAFFY）に、まっすぐ立てる。色は、正面の絵の色。
-  天使の輪：まうえから見て丸い輪なので、たての軸のまわりに回しても同じ形。正面の絵のまま。
-写し方：たての軸のまわりに45度まわして（せいれいの build.py --iso の ISOY と同じ）、まっすぐよこから写す。かげは足さない（色はもとの絵の色のまま）。
+お手本は、持ち主の参考の絵 tools/art/god3d/ref.jpg（正面・よこ・うしろ）。色と輪の大きさは、前の正面の絵 god_front.png（1ドット＝ゲームの半分の点）から。
+単位は絵のドット（x＝右・y＝カミサマの前・z＝上。足もと（台座の上の面のまん中）が原点）。
+設計図（部品・形・寸法・どこにつくか。参考の絵の2頭身）：
+  服：すその広がる短いベルの形。たての軸のまわりのだ円（おくゆきは BODYD）。半径はすそ24・胸20・かた17・首9。足もとから首（z 45）まで。すそに金色の帯（z 3〜5）。
+  えり：首まわりの、肩にかかる太い輪（z 41.5）。うしろはフード（うしろの玉）。
+  そで：かた（±15, 3, 38）から、手（±6.5, 12, 20）へ下りるつつ。かたで半径6、そで口で8.5。そで口に金色のふち。
+  手：そで口の前で、つえの柄を左右からにぎる玉（±3.2, 18.5, 21.5）。
+  つえ：体の前の地面（y 22）から、手の間をとおって、少し体へかたむけて立てる木の柄（半径2）。上はスプーンの形の頭（胸の前、口ひげの下）。
+  頭：首の上の、まるい頭（はば22。画面でまるく見えるよう、たては KC）。耳（±22.5）・白いまゆ（±8.5）・小さな鼻・大きな口ひげ（左右とまん中のふくらみ）。あごひげはない。
+    目：とじた目（∩の形の線）を、顔の面にのるもよう（こげ茶）で入れる。
+  天使の輪：頭の上に、はなしてうく、細くうすい平らな輪（金色）。
+写し方：たての軸のまわりに45度まわし、家具・建物（iso3d.py）と同じ見おろしの角度で写す（地面のおくゆきは0.75・高さは ISOH）。
+  かげは左上の光で3だん（もとの色・半かげ・かげ。かげは明るさ−SHL。はだ・白いひげがオレンジにならないよう、家具よりうすく）。輪の色はかげなし。
+  輪郭：外がわに1ドット（となりの色を少し暗く。黒にしない）。手前の部品がうしろにかさなる所も1ドット。
 """
-import os, sys, math
+import os, sys, math, colorsys
 import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 SRC = os.path.join(HERE, 'god_front.png')
-AXIS = 28            # たての軸（絵の x）
-HALO = 12            # この行より上は天使の輪
-STAFF = (184, 142, 104)
-LIT = {(247, 206, 153), (251, 211, 163), (244, 219, 195)}   # つえの光の当たったふちの色
-SIDE = 0.75          # 横・うしろの面（正面の絵の、はしから外の所）は、はばの SIDE の所の色（はしの色をのばすと、よこすじになる）
-BD = 0.72            # 体のおくゆき（はばに対して）
-STAFFY = 21.0        # つえの軸の、体のまん中からの前への出（ドット）
-YAW = math.pi/4      # 前ななめ（左下を向く）
-SSN = 4              # 写すときの細かさ（1ドットを SSN×SSN）
+YAW = math.pi/4                         # 前ななめ（左下を向く）
+ELEV = math.degrees(math.asin(0.75))    # 見おろし：家具・建物の iso3d.py と同じ（ほんとうのカメラ48.59度）
+KD = 0.75                               # 地面のおくゆき → 画面の上下（ひし形 128×96）
+KZ = 72/0.8/(128/math.sqrt(2))          # 高さ → 画面の上下（iso3d.py の ISOH：1マスの高さはマスの1辺の0.8）
+SSN = 4                                 # 写すときの細かさ（1ドットを SSN×SSN）
+STEP = 0.2                              # 面の点のあいだ（ドット）
+DZ = 3.0                                # この奥行きの差より大きく、手前の部品がかさなる所に線
+BODYD = 0.85
+SHL = 18; SHS = 0.0         # かげの明るさ・あざやかさのかわり
+OLK = 0.9                    # 輪郭線＝となりの色×OLK
 
-def load():
-    a = np.array(Image.open(SRC).convert('RGBA')); H, W = a.shape[:2]
-    al = a[..., 3] > 0
-    st = al & np.all(a[..., :3] == STAFF, -1)
-    st[:45] = False                                             # 上のほうの茶色は、目
-    # つえ・手のまとまり：つえの色の所と、その間の手（はだ色、つえの行の左右のつえにはさまれた所）
-    prop = st.copy()
-    rows = np.nonzero(st.any(1))[0]; r0, r1 = rows.min(), rows.max()
-    for r in range(r0, r1+1):
-        if st[r].any():
-            c = np.nonzero(st[r])[0]; x1 = c.max()+1
-            if tuple(int(v) for v in a[r, x1, :3]) in LIT: x1 += 1   # つえの右の、光の当たったふち（はだ色ににている）
-            prop[r, c.min():x1] = True
-    # 手：つえの頭と柄のあいだの行（つえの色がない行）のはだ色
-    skin = al & (np.abs(a[..., 0].astype(int)-251) < 8) & (np.abs(a[..., 1].astype(int)-211) < 10) & (a[..., 2] < 175)
-    for r in range(r0, r1+1):
-        if not st[r].any() and skin[r].any():
-            c = np.nonzero(skin[r])[0]; prop[r, c.min():c.max()+1] = True
-    # 体の色：つえ・手の所を、その行の左右のいちばん近い体の色でうめる
-    body = a.copy()
-    bal = al.copy()
-    for r in range(H):
-        cs = np.nonzero(prop[r])[0]
-        if not len(cs): continue
-        L, R = cs.min()-1, cs.max()+1
-        if not (al[r, L] and al[r, R]): bal[r, cs] = False; continue   # 服のすそより下のつえの先：体はない
-        for c in cs:
-            body[r, c] = a[r, L] if c-L <= R-c else a[r, R]
-    return a, bal, prop, body
+# 色（前の正面の絵の色）
+SKIN = (251, 211, 163); ROBE = (244, 237, 225); SLEEVE = (240, 232, 218); BEARD = (252, 246, 236); HAIR = (252, 244, 235)
+WOOD = (176, 124, 84); EYE = (130, 90, 66); HALO = (250, 222, 150); TRIM = (244, 214, 150)   # 輪・ふちは、うすい金色
 
-def shell(al, col, rows, depth, cy_of, edge=0, rot=0.0):
-    """行ごとのだ円の面の点 (x, y, z) と色。cy_of(r)：その行のだ円のまん中の y。
-    rot：色をとる角度のずらし（まるい棒は、カメラから見える半分に、正面の絵をそのままうつす）
-    edge：色をとるとき、絵のはしの何ドットを使わないか（はしのうすいふちの色が、まわした横の面にのびて、よこすじになる）"""
-    P = []; C = []
-    for r in rows:
-        cs = np.nonzero(al[r])[0]
-        if not len(cs): continue
-        x0, x1 = cs.min(), cs.max()+1; ax = (x1-x0)/2; cx = (x0+x1)/2-AXIS; by = max(ax*depth(r), 0.5); cy = cy_of(r)
-        n = max(32, int(2*math.pi*max(ax, by)/0.2))
-        th = np.linspace(0, 2*math.pi, n, endpoint=False)
-        for sz in np.arange(0.125, 1, 0.25):
-            for shrink in (1.0, 0.9, 0.8):   # 面の内がわも少し（すきまが出ないように）
-                x = cx+ax*shrink*np.cos(th); y = cy+by*shrink*np.sin(th)
-                xs = cx+ax*np.clip(np.cos(th-rot), -SIDE if edge else -1, SIDE if edge else 1)   # 色をとる所
-                e = edge if x1-x0 > 4*edge+2 else 0; ci = np.clip(np.floor(xs+AXIS).astype(int), x0+e, x1-1-e)
-                cc = col[r, ci, :3].copy()
-                if edge:   # 横・うしろの面は、上下5行でいちばん多い色（1行だけのまゆ・ふちの色が、横にのびない）
-                    sd = np.abs(np.cos(th)) >= SIDE
-                    for c0 in np.unique(ci[sd]):
-                        cand = [tuple(int(v) for v in col[q, c0, :3]) for q in range(max(0, r-2), min(al.shape[0], r+3)) if al[q, c0]]
-                        if cand: cc[sd & (ci == c0)] = max(set(cand), key=cand.count)
-                P.append(np.stack([x, y, np.full(n, (al.shape[0]-r)-sz)], 1)); C.append(cc)
-    return np.concatenate(P), np.concatenate(C)
+def shade(c, k):
+    """k：0 もとの色・1 かげ（明るさ−SHL・あざやかさ+SHS）・0.5 半かげ。家具（−35・+10）より、うすく（はだ・白いひげが、こいオレンジ・ピーチにならない）"""
+    r, g, b = [v/255 for v in c]; h, l, s = colorsys.rgb_to_hls(r, g, b)
+    l2 = max(0, l-SHL/255*k); s2 = min(1, s+SHS*k); r, g, b = colorsys.hls_to_rgb(h, l2, s2)
+    return tuple(int(round(v*255)) for v in (r, g, b))
 
-def render(a, al, prop, body):
-    H, W = a.shape[:2]
-    bal = al.copy(); bal[:HALO] = False
-    al = a[..., 3] > 0
-    Pb, Cb = shell(bal, body, range(HALO, H), lambda r: BD, lambda r: 0.0, edge=2)
-    pal = prop.copy()
-    Pp, Cp = shell(pal, a, range(HALO, H), lambda r: 1.0, lambda r: STAFFY, rot=-YAW)   # つえ・手は、まわしても正面の絵と同じに見える
-    c, s = math.cos(YAW), math.sin(YAW)
-    OW = W+8; ox = OW/2
-    zb = np.full((H*SSN, OW*SSN), -1e9); cb = np.zeros((H*SSN, OW*SSN, 3), np.uint8); ib = np.full((H*SSN, OW*SSN), -1)
-    for k, (P, C) in enumerate(((Pb, Cb), (Pp, Cp))):
-        X = c*P[:, 0]-s*P[:, 1]; D = s*P[:, 0]+c*P[:, 1]; Y = H-P[:, 2]
-        cc = np.floor((X+ox)*SSN).astype(int); rr = np.floor(Y*SSN).astype(int)
-        ok = (cc >= 0) & (cc < OW*SSN) & (rr >= 0) & (rr < H*SSN)
-        cc, rr, D, C = cc[ok], rr[ok], D[ok], C[ok]
-        o = np.argsort(D); cc, rr, D, C = cc[o], rr[o], D[o], C[o]   # 奥から手前へ（手前があとで上書き）
-        m = D > zb[rr, cc]; zb[rr[m], cc[m]] = D[m]; cb[rr[m], cc[m]] = C[m]; ib[rr[m], cc[m]] = k
-    out = np.zeros((H, OW, 4), np.uint8)
-    for y in range(H):
+class Model:
+    def __init__(self): self.P = []; self.N = []; self.C = []; self.I = []; self.flat = []
+    def add(self, P, N, col, pid, flat=False):
+        P = np.asarray(P, float); N = np.asarray(N, float); N = N/np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-9)
+        C = np.tile(np.array(col, np.uint8), (len(P), 1)) if np.ndim(col) == 1 else np.asarray(col, np.uint8)
+        self.P.append(P); self.N.append(N); self.C.append(C); self.I.append(np.full(len(P), pid)); self.flat.append(np.full(len(P), flat))
+    def ellipsoid(self, c, r, col, pid, decal=None):
+        a, b, cc = r; n_u = max(24, int(2*math.pi*max(a, b)/STEP)); n_v = max(12, int(math.pi*max(a, b, cc)/STEP))
+        u, v = np.meshgrid(np.linspace(0, 2*math.pi, n_u, endpoint=False), np.linspace(0, math.pi, n_v))
+        u = u.ravel(); v = v.ravel()
+        X = np.stack([a*np.sin(v)*np.cos(u), b*np.sin(v)*np.sin(u), cc*np.cos(v)], 1)
+        N = np.stack([X[:, 0]/a**2, X[:, 1]/b**2, X[:, 2]/cc**2], 1); P = X+np.array(c)
+        C = np.tile(np.array(col, np.uint8), (len(P), 1))
+        if decal is not None:
+            m, dc = decal(P); C[m] = dc
+        self.add(P, N, C, pid)
+    def revolve(self, prof, depth, col, pid, decal=None):
+        """たての軸のまわりのだ円の面（prof：[(z, 半径)]、おくゆきは半径×depth）"""
+        z0, z1 = prof[0][0], prof[-1][0]; zs = np.arange(z0, z1, STEP/2)
+        R = np.interp(zs, [p[0] for p in prof], [p[1] for p in prof]); dR = np.gradient(R, zs)
+        P = []; N = []
+        for z, r, dr in zip(zs, R, dR):
+            n = max(24, int(2*math.pi*r/STEP)); t = np.linspace(0, 2*math.pi, n, endpoint=False)
+            x = r*np.cos(t); y = r*depth*np.sin(t)
+            P.append(np.stack([x, y, np.full(n, z)], 1)); N.append(np.stack([np.cos(t), np.sin(t)/depth, np.full(n, -dr)], 1))
+        P = np.concatenate(P); C = np.tile(np.array(col, np.uint8), (len(P), 1))
+        if decal is not None:
+            m, dc = decal(P); C[m] = dc
+        self.add(P, np.concatenate(N), C, pid)
+    def tube(self, a, b, ra, rb, col, pid, cap=True, band=None):
+        a = np.array(a, float); b = np.array(b, float); d = b-a; L = np.linalg.norm(d); w = d/L
+        u = np.cross(w, [0, 0, 1.]); u = u/np.linalg.norm(u) if np.linalg.norm(u) > 1e-6 else np.array([1., 0, 0]); v = np.cross(w, u)
+        P = []; N = []
+        for s in np.arange(0, L, STEP/2):
+            r = ra+(rb-ra)*s/L; n = max(16, int(2*math.pi*r/STEP)); t = np.linspace(0, 2*math.pi, n, endpoint=False)
+            o = np.outer(np.cos(t), u)+np.outer(np.sin(t), v); P.append(a+w*s+o*r); N.append(o-w*(rb-ra)/L)
+        nb = sum(len(q) for q in P)
+        if cap:   # そで口のふた（中は手でうまる）
+            r = rb; g = np.mgrid[-r:r:STEP, -r:r:STEP].reshape(2, -1).T; g = g[np.hypot(g[:, 0], g[:, 1]) <= r]
+            P.append(b+np.outer(g[:, 0], u)+np.outer(g[:, 1], v)-w*0.6); N.append(np.tile(w, (len(g), 1)))
+        P = np.concatenate(P); C = np.tile(np.array(col, np.uint8), (len(P), 1))
+        if band is not None:   # そで口の金色のふち（はしから band[0] の長さ）
+            C[:nb][((P[:nb]-a)@w) > L-band[0]] = band[1]
+        self.add(P, np.concatenate(N), C, pid)
+    def sweep(self, C, r, col, pid):
+        """点の列 C（中心の線）にそった、太さ r（数か列）のつつ"""
+        C = np.asarray(C, float); R = np.broadcast_to(np.asarray(r, float), (len(C),)); P = []; N = []
+        for i in range(len(C)):
+            t = C[min(i+1, len(C)-1)]-C[max(i-1, 0)]; t /= np.linalg.norm(t)
+            u = np.cross(t, [0, 1., 0]); u = u/np.linalg.norm(u) if np.linalg.norm(u) > 1e-6 else np.array([1., 0, 0]); v = np.cross(t, u)
+            n = max(16, int(2*math.pi*R[i]/STEP)); a = np.linspace(0, 2*math.pi, n, endpoint=False); o = np.outer(np.cos(a), u)+np.outer(np.sin(a), v)
+            P.append(C[i]+o*R[i]); N.append(o)
+        self.add(np.concatenate(P), np.concatenate(N), col, pid)
+    def torus(self, c, R, r, axis, col, pid, arc=(0, 2*math.pi)):
+        c = np.array(c, float); ax = np.array(axis, float); ax /= np.linalg.norm(ax)
+        e1 = np.cross(ax, [0, 0, 1.]) if abs(ax[2]) < 0.9 else np.cross(ax, [1., 0, 0]); e1 /= np.linalg.norm(e1); e2 = np.cross(ax, e1)
+        nu = max(16, int((arc[1]-arc[0])*(R+r)/STEP)); nv = max(16, int(2*math.pi*r/STEP))
+        u, v = np.meshgrid(np.linspace(arc[0], arc[1], nu), np.linspace(0, 2*math.pi, nv, endpoint=False)); u = u.ravel(); v = v.ravel()
+        rad = np.outer(np.cos(u), e1)+np.outer(np.sin(u), e2); n = rad*np.cos(v)[:, None]+ax*np.sin(v)[:, None]
+        self.add(c+rad*R+n*r, n, col, pid)
+    def ring(self, c, Ro, Ri, th, col, pid):
+        g = np.mgrid[-Ro:Ro:STEP, -Ro:Ro:STEP].reshape(2, -1).T; rr = np.hypot(g[:, 0], g[:, 1]); g = g[(rr >= Ri) & (rr <= Ro)]
+        P = [np.stack([c[0]+g[:, 0], c[1]+g[:, 1], np.full(len(g), c[2]+dz)], 1) for dz in np.arange(-th, th+0.01, 0.25)]
+        P = np.concatenate(P); self.add(P, np.tile([0, 0, 1.], (len(P), 1)), col, pid, flat=True)
+
+def build():
+    """参考の絵（持ち主がくれた正面・よこ・うしろの絵）：大きなまるい頭（2.3頭身）・白いまゆ・とじた目・大きな白い口ひげ（あごひげはない）・耳・
+    首まわりの大きなえり（うしろはフード）・すそが広がる長い服（すそに金色の帯）・大きなそで（そで口に金色のふち）で、前で両手をあわせて、
+    スプーンの形の頭の木のつえを、体の前の地面に立ててにぎる・頭の上にはなれてうく、うすい金色の輪"""
+    M = Model(); pid = iter(range(100))
+    hem = lambda P: ((P[:, 2] > 3.0) & (P[:, 2] < 5.0), np.array(TRIM, np.uint8))
+    M.revolve([(0, 24), (6, 23.5), (18, 22), (30, 20), (38, 17), (42, 13), (45, 9)], BODYD, ROBE, next(pid), decal=hem)   # 服（2頭身の、短いベルの形）
+    M.torus((0, -1, 41.5), 14.5, 6.0, (0, 0, 1), ROBE, next(pid))                     # えり（肩にかかる、おりかえし）
+    M.ellipsoid((0, -13, 37), (13, 5, 9), ROBE, next(pid))                            # うしろのフード
+    for sx in (-1, 1):
+        M.tube((sx*15, 3, 38), (sx*6.5, 12, 20), 6, 8.5, SLEEVE, next(pid), band=(2.6, TRIM))   # そで（そで口に金色のふち）
+    for sx in (-1, 1): M.ellipsoid((sx*3.2, 18.5, 21.5), (4.6, 4, 4.6), SKIN, next(pid))   # 手（柄を左右からにぎる）
+    bot = np.array([0.0, 22.0, 0.3]); top = np.array([0.0, 20.0, 30.0])
+    M.tube(bot, top, 2.0, 2.0, WOOD, next(pid), cap=False)                            # つえの柄（体の前の地面に立てる）
+    M.ellipsoid(top+np.array([0, 0, 6.0]), (4.6, 2.2, 6.8), WOOD, next(pid))          # つえの頭（スプーンの形。胸の前、口ひげの下）
+    # 頭：この見え方（高さ KZ・おくゆき KD）では、まるい玉はたてに1.25倍にのびて見えるので、画面でまるく見えるよう、たてを KC にする
+    HZ = 60; HA = 22; KC = math.sqrt(max(HA**2-(KD*HA)**2, 1))/KZ/HA
+    def eyes(P):   # とじた目（∩）：顔の前の面
+        m = np.zeros(len(P), bool)
+        for ex in (-6.8, 6.8):
+            dx = P[:, 0]-ex; dz = (P[:, 2]-HZ)/KC; rr_ = np.hypot(dx, dz)
+            m |= (P[:, 1] > 8) & (np.abs(rr_-2.8) < 0.8) & (dz > -0.4)
+        return m, np.array(EYE, np.uint8)
+    M.ellipsoid((0, 0, HZ), (HA, HA-1, HA*KC), SKIN, next(pid), decal=eyes)     # 頭
+    for sx in (-1, 1):
+        M.ellipsoid((sx*22.5, 0, HZ-2), (4, 6, 6.5), SKIN, next(pid))          # 耳
+        M.ellipsoid((sx*8.5, 16.5, HZ+4.5), (6, 3.2, 3), HAIR, next(pid))        # まゆ
+        M.ellipsoid((sx*7, 17.5, HZ-8), (7, 6, 6), BEARD, next(pid))             # 口ひげ（左右のふくらみ）
+    M.ellipsoid((0, 18.5, HZ-7), (5, 4.5, 4), BEARD, next(pid))                  # 口ひげ（まん中）
+    M.ellipsoid((0, 20, HZ-3), (2.8, 2.6, 2.4), SKIN, next(pid))                 # 鼻
+    M.ring((0, 0, HZ+HA*KC+22), 14, 11.8, 0.5, HALO, next(pid))                # 天使の輪：細く、頭の上に、はなしてうかす
+    return M
+
+def render(M):
+    P = np.concatenate(M.P); N = np.concatenate(M.N); C = np.concatenate(M.C); I = np.concatenate(M.I); FL = np.concatenate(M.flat)
+    c, s = math.cos(YAW), math.sin(YAW); ce, se = math.cos(math.radians(ELEV)), math.sin(math.radians(ELEV))
+    X = c*P[:, 0]-s*P[:, 1]; D = s*P[:, 0]+c*P[:, 1]; Y = -KZ*P[:, 2]+KD*D; Z = D*ce+P[:, 2]*se
+    nX = c*N[:, 0]-s*N[:, 1]; nD = s*N[:, 0]+c*N[:, 1]; nup = N[:, 2]*ce-nD*se; ncam = nD*ce+N[:, 2]*se   # 面の向き（画面のよこ・上・カメラへ）
+    L = np.array([-0.45, 0.55, 0.70]); L /= np.linalg.norm(L)   # 左上の光（家具と同じ。少し手前から）
+    k = nX*L[0]+nup*L[1]+ncam*L[2]
+    lv = np.where(k > 0.10, 0, np.where(k > -0.30, 1, 2)); lv[FL] = 0
+    keys = (C[:, 0].astype(np.int64) << 16 | C[:, 1].astype(np.int64) << 8 | C[:, 2])*4+lv
+    uk, inv = np.unique(keys, return_inverse=True)
+    tab = np.array([shade(((q//4) >> 16 & 255, (q//4) >> 8 & 255, (q//4) & 255), (q % 4)/2) for q in uk], np.uint8); C2 = tab[inv]
+    x0 = math.floor(X.min())-2; x1 = math.ceil(X.max())+2; y0 = math.floor(Y.min())-2; y1 = math.ceil(Y.max())+2; OW, OH = x1-x0, y1-y0
+    zb = np.full((OH*SSN, OW*SSN), -1e9); cb = np.zeros((OH*SSN, OW*SSN, 3), np.uint8); ib = np.full((OH*SSN, OW*SSN), -1)
+    cc = np.floor((X-x0)*SSN).astype(int); rr = np.floor((Y-y0)*SSN).astype(int)
+    o = np.argsort(Z); cc, rr, Z, C2, I = cc[o], rr[o], Z[o], C2[o], I[o]   # 奥から手前へ（手前があとで上書き）
+    zb[rr, cc] = Z; cb[rr, cc] = C2; ib[rr, cc] = I
+    out = np.zeros((OH, OW, 4), np.uint8); ids = np.full((OH, OW), -1); dep = np.full((OH, OW), -1e9)
+    for y in range(OH):
         for x in range(OW):
-            blk = ib[y*SSN:(y+1)*SSN, x*SSN:(x+1)*SSN]
-            if (blk >= 0).sum()*2 < SSN*SSN: continue
-            col = cb[y*SSN:(y+1)*SSN, x*SSN:(x+1)*SSN][blk >= 0].reshape(-1, 3)
+            blk = ib[y*SSN:(y+1)*SSN, x*SSN:(x+1)*SSN]; m = blk >= 0
+            if m.sum()*2 < SSN*SSN: continue
+            v, n = np.unique(blk[m], return_counts=True); i = v[np.argmax(n)]; mm = blk == i
+            col = cb[y*SSN:(y+1)*SSN, x*SSN:(x+1)*SSN][mm].reshape(-1, 3)
             pk = (col[:, 0].astype(int) << 16) | (col[:, 1].astype(int) << 8) | col[:, 2]
-            v, n = np.unique(pk, return_counts=True); p = v[np.argmax(n)]
-            out[y, x] = (p >> 16 & 255, p >> 8 & 255, p & 255, 255)
-    # 天使の輪：正面の絵のまま（まわしても同じ形）
-    d = int(round(ox-AXIS))
-    out[:HALO, d:d+W] = a[:HALO]
-    return out, d
+            u, n2 = np.unique(pk, return_counts=True); p = u[np.argmax(n2)]
+            out[y, x] = (p >> 16 & 255, p >> 8 & 255, p & 255, 255); ids[y, x] = i; dep[y, x] = zb[y*SSN:(y+1)*SSN, x*SSN:(x+1)*SSN][mm].mean()
+    # 輪郭：外がわ1ドット（となりの色を少し暗く）・手前の部品がうしろにかさなる所（うしろがわのドット）
+    solid = out[..., 3] > 0; line = np.zeros_like(solid); srcc = np.zeros((OH, OW, 3), np.uint8); inner = np.zeros_like(solid)
+    for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+        nb = np.roll(np.roll(solid, dy, 0), dx, 1); nbc = np.roll(np.roll(out[..., :3], dy, 0), dx, 1)
+        m = ~solid & nb & ~line; line |= m; srcc[m] = nbc[m]
+        nid = np.roll(np.roll(ids, dy, 0), dx, 1); nd = np.roll(np.roll(dep, dy, 0), dx, 1)
+        inner |= solid & (nid >= 0) & (nid != ids) & (nd-dep > DZ)
+    out[inner, :3] = (out[inner, :3].astype(float)*OLK).astype(np.uint8)
+    out[line, :3] = (srcc[line].astype(float)*OLK).astype(np.uint8); out[line, 3] = 255
+    return out, x0, y0   # x0・y0：足もと（原点）から絵の左上までのずれ
 
 def main():
     args = sys.argv[1:]; chips = '--chips' in args; args = [x for x in args if x != '--chips']
     od = args[0]; os.makedirs(od, exist_ok=True)
-    a, al, prop, body = load()
-    out, d = render(a, al, prop, body)
-    im = Image.fromarray(out); im.save(os.path.join(od, 'god_iso.png'))
-    src = Image.open(SRC).convert('RGBA'); H = src.height
-    cmp = Image.new('RGBA', ((src.width+out.shape[1])*4+16, H*4), (200, 220, 180, 255))
-    cmp.alpha_composite(src.resize((src.width*4, H*4), Image.NEAREST), (0, 0))
-    cmp.alpha_composite(im.resize((im.width*4, H*4), Image.NEAREST), (src.width*4+16, 0))
+    out, ox0, oy0 = render(build())
+    im = Image.fromarray(out); im.save(os.path.join(od, 'god_iso.png')); im.resize((im.width*10, im.height*10), Image.NEAREST).save(os.path.join(od, 'god_x10.png'))
+    src = Image.open(SRC).convert('RGBA'); below = out.shape[0]+oy0; H = max(src.height, -oy0)+max(0, below)
+    cmp = Image.new('RGBA', ((src.width+out.shape[1])*4+16, H*4), (200, 220, 180, 255)); fy = H-max(0, below)   # 足もとの行をそろえる
+    cmp.alpha_composite(src.resize((src.width*4, src.height*4), Image.NEAREST), (0, (fy-src.height)*4))
+    cmp.alpha_composite(im.resize((im.width*4, im.height*4), Image.NEAREST), (src.width*4+16, (fy+oy0)*4))
     cmp.save(os.path.join(od, 'cmp_x4.png'))
-    print('色の数', len({tuple(p) for p in out.reshape(-1, 4) if p[3]}), '大きさ', im.size)
+    print('色の数', len({tuple(p) for p in out.reshape(-1, 4) if p[3]}), '大きさ', im.size, 'ax,ay', ox0, oy0)
     if chips:
         import chips as CH
         head, C = CH.load_imgs(); g = C['god']
-        C['god'] = dict(ax=g['ax']-d+(AXIS-src.width//2), ay=g['ay'], w=im.width, h=im.height, r=g.get('r', 2), f=[im])
+        C['god'] = dict(ax=ox0, ay=oy0, w=im.width, h=im.height, r=g.get('r', 2), f=[im])   # ax・ay：足もと（台座の上の面のまん中）から絵の左上へ
         CH.pack_imgs(head, C)
         open(os.path.join(ROOT, '.chips_changed'), 'w').write('god'); print('チップ god に入れた')
 
