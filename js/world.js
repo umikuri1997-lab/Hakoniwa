@@ -379,6 +379,8 @@ function ladderDir(j){/* ハシゴの向き（0：うしろが上のマス、1�
 const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];
 function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LADDERS.has(S.obj[b]))return false;const d=ladderDir(b);return d>=0&&ladderTop(b,d)===a}
 const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
+const CLB=new WeakMap(),CLBM=.1,CLBD=4;/* 段差をよじのぼる・おりるせいれい：{a:もとのマス,n:つぎのマス,px,py:よじのぼる所,k:0〜1}。ふちまでふつうに歩き、低いマスのがわ（壁の前、マスのさかいから CLBM）で、まっすぐ上・下へよじのぼる（歩く CLBD マスぶんの時間。歩く1マスとあわせて5倍） */
+function clbPt(a,n){/* よじのぼる所：マスのさかいから、低いマスのがわへ CLBM */const ax=a%W+.5,ay=((a/W)|0)+.5,sx=n%W-a%W,sy=((n/W)|0)-((a/W)|0),m=hiAt(a)<hiAt(n)?-CLBM:CLBM;return{px:ax+sx*(.5+m),py:ay+sy*(.5+m)}}
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return liftOf(c)+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return liftOf(c);const d=stairDir(a);if(d<0)return liftOf(c);const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
