@@ -8,8 +8,10 @@
 #     となりとのさかいの断面は、どちらのマスも同じまるみ・同じでこぼこ（せかいの場所できめる）なので、線もすきまも出ない。
 #   でこぼこ：横の面を、がけの絵（cliff:block・cliff:blockm）の暗い所ほど、面の向きに DEP へこませる（岩のみぞがへこみ、まるい角のふちがガタガタになる）。
 #     上の面はへこませない（まるいふちの上のほうは、少しずつ）。
+#   てっぺんのふち：がけの絵の上の帯の明るさ（toprof）に合わせて、地面の色とのさかいを上下させ（明るい岩は上へ・われめには地面がたれる）、
+#     われめでは、手前（南・東）のまるいふちを下げて、かたちもかけさせる（まっすぐなふちにしない。うしろのふちは下げない）。
 #   色：横の面は、がけの絵（いちばん上のだん cliff:block・その下 cliff:blockm。ゲームの icFace と同じ写し方：左の面は x、右の面は 1−y、たては 1−z）。
-#     上の面と、まるいふちの上のほうは、地面の絵（草 tex:grass・かれた地面 tex:dry。画面の場所でくりかえす）。草は、ふちから少したれる。
+#     上の面と、まるいふちの上のほうは、地面の絵（草 tex:grass・かれた地面 tex:dry。画面の場所でくりかえす）。草は、ふちから少し長くたれる。
 #     明るさ：上 1・左の面（南）.94・右の面（東）.74（ゲームの ICLF・ICRT）。まるい所は、面の向きでまぜて、段にする。
 # チップのなまえ（g64。ax・ay は、そのだんの下の面のまん中の点）：iso:blk-<g|d|m>:<n><s><e><w>[-<南西><南東><北東>]（g 草の上のだん・d 草原のかれた地面・k ほかのステージの地面・v 火山の地面の上のだん・m 上にブロックがつづくだん。nsew は外に出ていれば1。
 #   うしろの3つは、内がわの角になるななめのマスがうまっていれば1）。上の面の平らな所のかたちは <なまえ>~top（ゲームの地面をこのかたちで切って見せる）
@@ -22,6 +24,10 @@ import oblique3d as O
 import iso_conn as IC
 R=0.11     # 角のまるみの半径（マス）
 DEP=0.045  # でこぼこのふかさ（マス）
+JUP=0.035  # てっぺんのふち：岩の明るい所は、地面の色のさかいが上へ出る（だん）
+JDN=0.11   # てっぺんのふち：岩のわれめ（暗い所）は、地面の色が下へたれる（だん）
+JGR=0.04   # 草は、もう少したれる（だん）
+DEPZ=0.10  # てっぺんのふち：岩のわれめで、まるいふちを下げて、かたちをかけさせる（だん）
 NG=44      # 面ごとの、こまかさ
 LEV=(1.0,0.97,0.94,0.86,0.80,0.74)   # 明るさの段
 _C=None
@@ -68,8 +74,13 @@ def facetex(p,nrm,top_tex):
     return min(63,int((1-min(1,max(0,z)))*64)),min(63,int(u*64)),side
 GT={'g':'tex:grass','d':'tex:dry','k':'ground#0','v':'groundr#0'}   # まるいふちの色をとる地面の絵（草・草原のかれた地面・ほかのステージの地面・火山の地面）
 KEY=(255,0,255)   # 上の面の平らな所の印（ゲームの地面を見せる所。チップ ~top のかたち）
-def pnoise(u):   # 1マスでくりかえす、なめらかなゆらぎ（0〜1）
-    t=2*math.pi*u;return 0.5+0.25*math.sin(3*t+1.3)+0.15*math.sin(7*t+0.4)+0.1*math.sin(11*t+2.1)
+def toprof(tex):
+    """がけの絵の上の帯（0〜14行）の、列ごとの明るさ（0〜1。となりの列となめらかにつなぐ。1マスでくりかえす）。てっぺんのふちのでこぼこ"""
+    L=tex[:15].mean(2).mean(0)
+    for _ in range(3):L=(np.roll(L,1)+np.roll(L,-1)+L)/3
+    return (L-L.min())/max(1e-6,L.max()-L.min())
+def texcol(x,y,nrm):   # 横の面の絵の列（facetex と同じ。左の面は x、右の面は 1−y）
+    return min(63,int(((x%1) if nrm[1]>=nrm[0] else (1-(y%1))%1)*64))
 def midtex():
     """下のだんの岩の絵（64×64）：がけの正面の24〜46行を、うら返し＋そのまま にならべる（上は46行め＝いちばん上のだんの下はしの行、まん中は24行め、下はまた46行め）。
     だんのさかいでも、上下に何だんつんでも、もようがとぎれない"""
@@ -80,6 +91,7 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
     もどり：(横の面とまるいふちの絵, 上の面のかたち, ax, ay)"""
     core,ex=shape(n,s,e,w,top)
     tex=arr('cliff:block') if top else midtex();L=soft(lum(tex))   # でこぼこは、その面の岩の絵の明るさから（色とでこぼこがそろう）
+    LT=toprof(arr('cliff:block'))   # てっぺんのふちのでこぼこ（岩の絵の上の帯の明るさ）
     led=arr('cliff:block')[2:5].reshape(-1,3).mean(0)   # 上にだんがある所の上の面（だんの角から少し見える）：岩のいちばん上の明るい帯の色
     sw,se,ne=dg
     def cfade(x,y,nrm):   # 内がわの角の手前で、へこみをなくす（へこんだ面の角から、うしろのマスの角がのぞいて、明るい線に見えた）
@@ -91,21 +103,30 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         if not n and ne:f=np.where(~sf,f*F(y),f)
         return f
     gt=arr(GT.get(var,'tex:dry'))
+    if var!='g':   # かれた地面の小石（まわりと色のちがう点）は、まわりの色に（ふちのたれた所に、小石が点でならんだ）
+        med=np.median(gt,axis=1,keepdims=True);dif=np.abs(gt.mean(2,keepdims=True)-med.mean(2,keepdims=True))
+        gt=np.where(dif>12,np.broadcast_to(med,gt.shape),gt)
     sc=O.Scene();sc.material('flat')
     lo=np.array(core[0::2]);hi=np.array(core[1::2])
     def col(x,y,z):
         p=np.array([x,y,z]);c=np.clip(p,lo,hi);d=p-c;ln=np.linalg.norm(d)
         nrm=d/ln if ln>1e-6 else np.array([0,0,1.0])
+        if ln<=1e-6 and z<core[5]-1e-3:   # へこませて芯の中に入った点（てっぺんのふちを下げた所）：いちばん近い外の面の向き（上向きにすると、明るい点が出た）
+            cand=[(hi[0]-x,(1,0,0),e),(hi[1]-y,(0,1,0),s),(x-lo[0],(-1,0,0),w),(y-lo[1],(0,-1,0),n)]
+            cand=[c_ for c_ in cand if c_[2]] or cand
+            nrm=np.array(min(cand,key=lambda c_:c_[0])[1],float)
         if top and nrm[2]>0.985 and z>core[5]-1e-3:return np.array(KEY,float)   # 上の面の平らな所：ゲームの地面
-        u=(x+y)%1;dr=(0.03+0.09*pnoise(u)) if var=='g' else 0.0   # 草が横の面にたれる長さ（だん）
-        if top and z>core[5]+R*(0.35 if var=='g' else 0.55)-dr:   # まるいふちの上のほう（草は少したれる）：地面の色
-            dep=max(0.0,core[5]+R-z);c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]
+        u=(x+y)%1;lt=LT[texcol(x,y,nrm)]
+        zb=core[5]+R*0.55+JUP*lt-JDN*(1-lt)-(JGR if var=='g' else 0.0)   # 地面の色と岩のさかい：岩の絵に合わせて、明るい岩は上へ出て、われめには地面がたれる
+        if top and z>zb:   # まるいふちの上のほう：地面の色
+            dep=min(R*0.65,max(0.0,core[5]+R-z));c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]   # たれた所も、まえと同じ行の色（下の行の小石が、ふちに点でならんだ）
             k=1.14 if nrm[0]<-0.1 or nrm[1]<-0.1 else 1.0 if nrm[2]>0.8 else 0.94 if nrm[1]>=nrm[0] else 0.8   # 光は左上：奥（北・西）のまるいふちは明るい
         elif not top and z>0.999:c0=led;k=0.94   # 上にだんがある所のふたの面
         else:
             r_,c_,side=facetex(p,nrm,None);c0=tex[r_,c_]
             a=max(0,nrm[1]);b=max(0,nrm[0]);t=max(0,nrm[2]);sm=a+b+t+1e-6
-            k=(a*0.94+b*0.74+t*1.0)/sm
+            if top and a+b>0.15:t=0.0   # てっぺんの岩の頭は、横の面の明るさのまま（上向きの明るさをまぜると、でこぼこの頭ごとに明るい点が出た）
+            sm=a+b+t+1e-6;k=(a*0.94+b*0.74+t*1.0)/sm
             if nrm[1]<0 and nrm[0]<0:k=0.9
             k=min(LEV,key=lambda v:abs(v-k))
         return np.clip(c0*k,0,254)
@@ -118,6 +139,15 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         dd=DEP*(1-L[rr,cc])*np.clip(side*1.25-0.15,0,1)*cfade(P[...,0],P[...,1],nrm)
         if top:dd=dd*np.clip((core[5]+R*0.7-P[...,2])/(R*0.7),0,1)
         P=P-nrm*dd[...,None]
+        if top:   # てっぺんのふち：岩のわれめで、まるいふちを下げる（かたちが岩の絵に合わせてかける。上の面のまん中・ふたの面は下げない）
+            ci=np.minimum(63,(np.where(np.abs(nrm[...,1])>=np.abs(nrm[...,0]),p[...,0]%1,(1-(p[...,1]%1))%1)*64).astype(int))   # 南の面は x、東の面は 1−y
+            fr=sum(np.maximum(0,nrm[...,i]) for i,on in((0,e),(1,s)) if on)   # 手前（南・東）のふちだけ（うしろのふちは、明るい線がとぎれて、こわれて見えた）
+            X_,Y_=p[...,0],p[...,1];F=lambda d:np.clip(d/0.12,0,1);sf=nrm[...,1]>=nrm[...,0];ef=np.ones_like(X_)   # となりにつづくはし・うしろのふちとあう角の手前では下げない（ふたの面・うしろのふちとのあいだに、すきまが出た）
+            ef=np.where(sf,ef*F(X_),ef*F(Y_))   # 西・北のはしは、うしろのふち・つづきのふたの面とあう所なので、いつも
+            if not e:ef=np.where(sf,ef*F(1-X_),ef)
+            if not s:ef=np.where(~sf,ef*F(1-Y_),ef)
+            wz=np.clip((p[...,2]-core[5])/R,0,1)*np.clip(fr*2,0,1)*cfade(X_,Y_,nrm)*ef
+            P[...,2]=P[...,2]-DEPZ*(1-LT[ci])*wz
         for i in range(NG):
             for j in range(NG):
                 a,b,c,d=P[i,j],P[i,j+1],P[i+1,j+1],P[i+1,j]

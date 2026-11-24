@@ -13,10 +13,10 @@ const CVQK=new Map();/* 作ったタイルと、色をぬったテクスチャ�
 function cvqFree(){for(const c of CVQK.values())if(c&&c.getContext)c.width=c.height=0;CVQK.clear()}
 const cvqIn=(x,y)=>x>=0&&y>=0&&x<CVW&&y<CVH;
 /* マスの床の段（その階のいちばん低い床が0） */
-function cvqLv(j){const C=CV;if(!C||j<0||j>=CVW*CVH)return 0;if(C.lv0==null){let m=99;for(let i=0;i<CVW*CVH;i++)if(C.g[i]||C.ab[i])m=Math.min(m,C.lv[i]);C.lv0=m<99?m:0}return C.lv[j]-C.lv0}
+function cvqLv(j){const C=CV;if(!C||j<0||j>=CVW*CVH)return 0;if(C.lv0==null){let m=99;for(let i=0;i<CVW*CVH;i++)if(C.g[i]||C.ab[i])m=Math.min(m,C.lv[i]);C.lv0=m<99?m:0}if(C.lift&&C.lift.set.has(j))return C.lift.h-C.lv0;/* まきあげの足場（うごいているあいだは、とちゅうの高さ） */return C.lv[j]-C.lv0}
 const cvqRock=j=>{const C=CV;return !C.g[j]&&!C.ab[j]&&!C.ob.has(j)};
 /* マスの上の面の高さ（段）：岩は床より CVQL 高い・大穴は CVQAB 低い。洞窟の外は、かべを出さない高さ */
-function cvqH(x,y){if(!cvqIn(x,y))return 99;const C=CV,j=cvJ(x,y),l=cvqLv(j);return C.ab[j]?l-CVQAB:cvqRock(j)?l+CVQL:l}
+function cvqH(x,y){if(!cvqIn(x,y))return 99;const C=CV,j=cvJ(x,y);if(C.lift&&C.lift.set.has(j)){cvqLv(0);return C.lift.b-C.lv0-CVQAB}/* 足場の下は、たて穴 */const l=cvqLv(j);return C.ab[j]?l-CVQAB:cvqRock(j)?l+CVQL:l}
 /* せかいの点 (wx,wy)（y は CVOY をふくむ）の床の段 */
 function cvqLvAt(wx,wy){const x=Math.floor(wx/TS),y=Math.floor(wy/TS)-CVOY;return cvqIn(x,y)?Math.max(0,cvqLv(cvJ(x,y))):0}
 /* 足もと：点（せいれい・コワイノ・粒）と、物（マス x,y から w×h） */
@@ -49,7 +49,7 @@ function cvqFace(side,P,ox,key,k){const K='f'+side+key+'|'+ox+'|'+k;let c=CVQK.g
 function cvqFlat(x,y){const C=CV,j=cvJ(x,y);if(!C.g[j])return false;const h=cvqH(x,y);for(const[dx,dy]of[[1,0],[0,1],[-1,0],[0,-1],[-1,-1]])if(cvqH(x+dx,y+dy)<h)return false;return true}
 /* マス (x,y) を描く（c は画面の向き、ゲームの点） */
 function cvqCell(c,x,y,now,T){const C=CV,j=cvJ(x,y),Y=y+CVOY,ix=(x-Y)*IQW/2,iy=(x+Y)*IQH/2,h=cvqH(x,y);
-  if(C.ab[j]){/* 大穴の底：暗い（かべは、うしろのマスが下へのばす） */c.fillStyle=T.void;c.beginPath();c.moveTo(ix,iy-h*IQL);c.lineTo(ix+IQW/2,iy+IQH/2-h*IQL);c.lineTo(ix,iy+IQH-h*IQL);c.lineTo(ix-IQW/2,iy+IQH/2-h*IQL);c.closePath();c.fill();return}
+  if(C.ab[j]||C.lift&&C.lift.set.has(j)){/* 大穴の底・足場のたて穴の底：暗い（かべは、うしろのマスが下へのばす） */c.fillStyle=T.void;c.beginPath();c.moveTo(ix,iy-h*IQL);c.lineTo(ix+IQW/2,iy+IQH/2-h*IQL);c.lineTo(ix,iy+IQH-h*IQL);c.lineTo(ix-IQW/2,iy+IQH/2-h*IQL);c.closePath();c.fill();return}
   const F=T.face;if(F)for(const side of[0,1]){const n=side?cvqH(x+1,y):cvqH(x,y+1);for(let L=h;L>n&&L>h-8;L--){const kk=(side?ICRT:ICLF)*(L<=0?Math.max(.2,1+(L-1)*.24):1);
     c.drawImage(cvqFace(side,F,((side?y:x)*64)%F.w,T.fk,Math.round(kk*100)/100),side?ix:ix-IQW/2,iy+IQH/2-L*IQL)}}
   let P=T.floor,key='fl';if(cvqRock(j)){P=T.rock;key='rk'}else if(C.wt[j]){P=T.water;key='wt'}else if(C.br[j]===1){P=T.br;key='br'}else if(T.moss&&cvMossAt(x,y)){P=T.moss;key='ms'}
@@ -59,7 +59,7 @@ function cvqCell(c,x,y,now,T){const C=CV,j=cvJ(x,y),Y=y+CVOY,ix=(x-Y)*IQW/2,iy=(
 function cvqSteps(c,x,y){const C=CV,l=cvqH(x,y);let d=-1;for(const q of[0,1,3,2]){const bx=x-SDIR[q][0],by=y-SDIR[q][1];if(cvqIn(bx,by)&&C.g[cvJ(bx,by)]&&cvqH(bx,by)===l+1){d=q;break}}if(d<0)return;
   const TH=cvTheme(),R=TH.rock,id='cv_'+C.F.theme;if(!STPAL[id])STPAL[id]=[R[4],R[2],R[1]];const sh=icShape('s'+id+d+1,icStairPolys(id,d,1)),P=icP(x*TS,(y+CVOY)*TS,l);c.drawImage(sh,P[0]+sh.ox,P[1]+sh.oy)}
 /* タップした画面の点の、せかいの点（見えている、いちばん手前の高い段のマスで、高さのぶん右下へもどす） */
-function cvqTapW(sx,sy){const w=s2w(sx,sy),C=CV;if(!C)return w;cvqLv(0);for(let lv=(C.top-(C.lv0||0))+CVQL;lv>=-CVQAB;lv--){const x=w.x+lv*IQD,y=w.y+lv*IQD,tx=Math.floor(x/TS),ty=Math.floor(y/TS)-CVOY;if(cvqIn(tx,ty)&&C.seen[cvJ(tx,ty)]&&cvqH(tx,ty)===lv)return{x,y,lv}}return w}
+function cvqTapW(sx,sy){const w=s2w(sx,sy),C=CV;if(!C)return w;cvqLv(0);for(let lv=(C.top-(C.lv0||0))+CVQL;lv>=-CVQAB;lv--){const x=w.x+lv*IQD,y=w.y+lv*IQD,tx=Math.floor(x/TS),ty=Math.floor(y/TS)-CVOY;if(cvqIn(tx,ty)&&C.seen[cvJ(tx,ty)]&&(cvqH(tx,ty)===lv||cvIsP(cvJ(tx,ty))&&Math.round(cvqLv(cvJ(tx,ty)))===lv))return{x,y,lv}}return w}
 /* せいれい・コワイノの、画面の点（CSS の px）：足もとから h マス上 */
 function cvqScrPt(wx,wy,h){const A=cvqPt(wx,wy),cx=camCX(),cy=camCY();return{x:VW/2+(A.px-isoX(cx,cy))*cam.z,y:VH/2+(A.py-(h||0)*TS*IQSY-isoY(cx,cy))*cam.z}}
 /* カメラ：パーティのまん中（段の高さのぶん、左上へずらした地面の点）を、画面のまん中へ */
@@ -80,6 +80,7 @@ function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);
   /* 物（地面にはりつく物は、地面の描き方で） */
   const FL='SRkh12q!^LVHz';for(const[j,o]of C.ob){if(!C.seen[j]&&!(o.k==='g'&&cvLureOn(j)))continue;if(o.k==='N'&&!o.top)continue;const x=cvX(j),y=cvY(j);if(!inV(x,y))continue;
     if(o.k==='^'){add(x+y+.55,()=>cvqScr(ctx,()=>cvqSteps(ctx,x,y)));continue}
+    if(o.k==='P'){if(o.top)add(x+y+.58,()=>cvqScr(ctx,()=>cvLiftDraw(ctx,now)));continue}/* まきあげの足場（cave-mine.js） */
     if(FL.includes(o.k)&&!(o.k==='!'&&o.fall))add(x+y+.6,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvDrawObj(j,o,now)));
     else{const w=o.k==='N'?o.w:1,h=o.k==='N'?o.h:1;add(x+y+w+h-2+.8,()=>cvqAt(ctx,cvqObj(x,y,w,h),()=>cvDrawObj(j,o,now)))}}
   for(const d of C.deco||[]){const x=cvX(d.j),y=cvY(d.j);if(C.seen[d.j]&&inV(x,y))add(x+y+.7,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvDrawDeco(d,now)))}

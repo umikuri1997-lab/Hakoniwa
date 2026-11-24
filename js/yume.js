@@ -1,8 +1,8 @@
-/* ---------- 村のゆめボード ----------
-   依頼ボードの「ゆめ」から、自分でえらんだやりこみ目標を3つまでかかげる（どのステージでも、はじめから）。
-   かかげた目標は、たっせいしたら、ごほうび（むずかしさでパワー50・100・200、むずかしい目標は設計図も）とハンコ。思い出帳にものこる。
+/* ---------- やりこみ目標 ----------
+   メニューの「やりこみ」から、自分でえらんだやりこみ目標を3つまでえらぶ（どのステージでも、はじめから）。
+   えらんだ目標は、たっせいしたら、ごほうび（むずかしさでパワー50・100・200、むずかしい目標は設計図も）とハンコ。思い出帳にものこる。
    S.yume：{on:[id,...], done:{id:日}}。目標の数はどれも実数で書く。 */
-const YUMEMAX=3,YUMEPT=[50,100,200];/* かかげられる数・むずかしさごとのパワー */
+const YUMEMAX=3,YUMEPT=[50,100,200];/* えらべる数・むずかしさごとのパワー */
 const yCnt=(o,f)=>{let n=0;for(const k in o||{})if(!f||f(o[k]))n++;return n};
 const yHouseStar=()=>{let m=0;for(const h of typeof HOUSES!=='undefined'?HOUSES:[])m=Math.max(m,j4Stars(houseComfort(h).v));return m};
 const ySpots=()=>new Set((SPOTI||[]).map(x=>x.sp.k)).size;
@@ -38,13 +38,13 @@ let YUMET=0;
 function yumeTick(){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const t=performance.now();if(t-YUMET<2000)return;YUMET=t;const M=YM();if(!M.on.length)return;/* 2秒に1回たしかめる */
   for(const id of M.on.slice()){const Y=YUMEBY[id];if(!Y){yumeOff(id);continue}if(yumeNow(Y)<Y.need)continue;yumeOff(id);M.done[id]=dayNo();yumeReward(Y);break}}
 function yumeReward(Y){const pt=YUMEPT[Y.d];rewardPower(pt);let bp=null;if(Y.d===2&&typeof bpGiveNext==='function')bp=bpGiveNext(null);if(Y.d===2&&!bp)rewardPower(YUMEPT[1]);/* 設計図がもう出ないときは、かわりにパワー */
-  memo('star','ゆめ「'+Y.n.replace(/う$/,'')+'」がかなった');toast('ゆめがかなった！「'+Y.n+'」','good');if(typeof juiceCheer==='function')juiceCheer();if(sheet==='yume')renderSheet()}
-function yumeSheet(body){$('#sheetTitle').textContent='ゆめ';
-  {const bk=el('<button class="btn back" aria-label="依頼ボードにもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('craft')};$('#sheetTitle').before(bk)}
+  memo('star','目標「'+Y.n+'」をたっせいした');toast('目標たっせい！「'+Y.n+'」','good');if(typeof juiceCheer==='function')juiceCheer();if(sheet==='yume')renderSheet()}
+function yumeSheet(body){$('#sheetTitle').textContent='やりこみ目標';
+  {const bk=el('<button class="btn back" aria-label="メニューにもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};$('#sheetTitle').before(bk)}
   const M=YM();
-  {const s=el('<div class="sec"><h3>かかげているゆめ（'+M.on.length+'/'+YUMEMAX+'）</h3><div class="rows"></div></div>'),R=s.querySelector('.rows');
-    if(!M.on.length)R.appendChild(nodata('paper','まだ、かかげていないよ'));
-    for(const id of M.on){const Y=YUMEBY[id];if(!Y)continue;const r=rowEl(Y.n,Y.c+'　'+yumeNow(Y)+'/'+Y.need,null),b=el('<button class="btn">おろす</button>');b.onclick=()=>{sfx('tap');yumeOff(id);renderSheet()};r.appendChild(b);R.appendChild(r)}body.appendChild(s)}
+  {const s=el('<div class="sec"><h3>えらんだ目標（'+M.on.length+'/'+YUMEMAX+'）</h3><div class="rows"></div></div>'),R=s.querySelector('.rows');
+    if(!M.on.length)R.appendChild(nodata('paper','まだ、えらんでいないよ'));
+    for(const id of M.on){const Y=YUMEBY[id];if(!Y)continue;const r=rowEl(Y.n,Y.c+'　'+yumeNow(Y)+'/'+Y.need,null),b=el('<button class="btn">やめる</button>');b.onclick=()=>{sfx('tap');yumeOff(id);renderSheet()};r.appendChild(b);R.appendChild(r)}body.appendChild(s)}
   for(const c of['村づくり','地形づくり','せいれい','あつめる']){const s=el('<div class="sec"><h3></h3><div class="rows"></div></div>'),R=s.querySelector('.rows');s.querySelector('h3').textContent=c;
-    for(const Y of YUME){if(Y.c!==c||M.on.includes(Y.id))continue;const done=!!M.done[Y.id],r=rowEl(Y.n,done?'かなった':'ごほうび：パワー'+YUMEPT[Y.d]+(Y.d===2?'・設計図':''),null);
-      if(done)r.classList.add('done');else{const b=el('<button class="btn pri">かかげる</button>');lackOn(b,M.on.length>=YUMEMAX?'かかげられるのは'+YUMEMAX+'つまで':'');b.onclick=()=>{if(M.on.length>=YUMEMAX)return;sfx('tap');yumeOn(Y.id);renderSheet()};r.appendChild(b)}R.appendChild(r)}body.appendChild(s)}}
+    for(const Y of YUME){if(Y.c!==c||M.on.includes(Y.id))continue;const done=!!M.done[Y.id],r=rowEl(Y.n,done?'たっせいした':'ごほうび：パワー'+YUMEPT[Y.d]+(Y.d===2?'・設計図':''),null);
+      if(done)r.classList.add('done');else{const b=el('<button class="btn pri">えらぶ</button>');lackOn(b,M.on.length>=YUMEMAX?'えらべるのは'+YUMEMAX+'つまで':'');b.onclick=()=>{if(M.on.length>=YUMEMAX)return;sfx('tap');yumeOn(Y.id);renderSheet()};r.appendChild(b)}R.appendChild(r)}body.appendChild(s)}}
