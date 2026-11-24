@@ -2,10 +2,10 @@
 # 植物の作り（持ち主がきめた：ほんとうの植物の作りで組む）
 #   株もと（クラウン）：3つ（大きい株1・小さい株2）。葉も花のくきも、ここからだけ出る。
 #   葉：株ごとに、1まいの面（扇）にそって、左右にかわるがわる出る（2列にならぶ葉）。根もとは、さや（はば0.018）で、たがいにかさなる。中ほど（長さの3わり）がいちばん広く（0.046）、さきへ細くとがる。
-#       まん中にすじがあり、少しV字におれる（すじを0.006もちあげる）。うちがわの葉ほど立ち、そとの葉ほど外へ弓なりにたれる（重さで、さきほどまがる）。
+#       まん中にすじがあり、少しV字におれる（すじを0.006もちあげる）。うちがわの葉ほど立ち、そとの葉ほど外へ弓なりにたれる（重さで、さきほどまがる。さきは水平より下へたらしすぎない）。
 #   花のくき（花茎）：大きい株のまん中（葉のさやの中）から2本。根もとが太く（0.011）さきほど細い（0.006）。葉より上へのび、ゆるくまがる（まっすぐにしない）。
-#   枝分かれ：くきのさきで、2〜3本の短い枝にわかれる。わかれ目に、小さな葉（苞）。
-#   つぼみ：枝のさきに、短い柄（小花柄）で2つずつ。がくにつつまれた細長い形で、さきがとがる（まるい玉にしない）。大きさがちがう（さきにひらく物ほど大きい）。根もとは緑、さきほどうすい黄緑。
+#   枝分かれ：くきのさきで、2〜3本の短い枝にわかれる。わかれ目に、小さな葉（苞）。枝は、画面のよこへひらく。
+#   つぼみ：枝のさきに、短い柄（小花柄）で2つずつ。がくにつつまれた細長い形（はば0.026・長さ0.12）で、さきがとがる（まるい玉にしない）。大きさがちがう（さきにひらく物ほど大きい）。根もとは緑、さきほどうすい黄緑。
 import math,random
 import numpy as np
 ID='hotaru';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=25;BOTTOM=60
@@ -42,7 +42,7 @@ def fan(sc,c,az,nl,L,rd):
     for j in range(nl):
         s=1 if j%2 else -1;r=j//2/max(1,(nl-1)//2)   # 0：うち 1：そと
         b=c+e*s*0.004*(j//2)
-        leaf(sc,b,e*s,n,L*(0.72+0.28*r)*rd.uniform(0.94,1.06),math.radians(6+30*r),math.radians(24+56*r),0.046)
+        leaf(sc,b,e*s,n,L*(0.72+0.28*r)*rd.uniform(0.94,1.06),math.radians(6+26*r),math.radians(20+38*r),0.046)
 def taper(sc,pts,r0,r1,col):   # くき：根もとが太く、さきほど細い管
     sc.part()
     for k in range(len(pts)-1):
@@ -59,10 +59,10 @@ def curve(p0,d0,L,bend_axis,ang,m=8):   # 長さ L を、bend_axis のまわり�
     return pts,d
 def bract(sc,p,d,side):   # 苞：わかれ目の、小さなとがった葉
     u=unit(np.cross(d,[0,0,1.0])) if abs(d[2])<0.99 else V(1,0,0);q=unit(d*0.5+u*side*0.9)
-    sc.decal(None);sc.part();sc.tri(p-u*0.007,p+u*0.007,p+q*0.03,BRACT)
+    sc.decal(None);sc.part();sc.tri(p-u*0.009,p+u*0.009,p+q*0.045,BRACT)
 def bud(sc,b,d,s):
     """つぼみ：がくにつつまれた、さきのとがった細長い形。s：大きさ（1が、いちばん大きい）"""
-    PROF=[(0.0,0.0),(0.008,0.006),(0.014,0.020),(0.017,0.040),(0.016,0.062),(0.011,0.082),(0.005,0.096),(0.0,0.104)]
+    PROF=[(0.0,0.0),(0.007,0.006),(0.011,0.022),(0.013,0.045),(0.012,0.070),(0.008,0.094),(0.004,0.110),(0.0,0.120)]
     u=np.cross(d,[0,0,1.0]);u=unit(u) if np.linalg.norm(u)>1e-6 else V(1,0,0);v=np.cross(d,u);n=10;Ln=PROF[-1][1]*s
     def col(x,y,z):
         t=float(np.dot(V(x,y,z)-b,d))/Ln;return BUD[0] if t<0.25 else BUD[1] if t<0.62 else BUD[2]
@@ -80,7 +80,7 @@ def scape(sc,c,lean_az,H,rd,seed):
     pts,d=curve(c+V(0,0,0.01),V(0,0,1)+la*0.08,H,ax,math.radians(22))
     sc.decal(None);taper(sc,pts,0.011,0.006,STEM);top=pts[-1]
     for k,(off,ang,ln,bs) in enumerate(((-1,40,0.08,(1.0,0.62)),(1,35,0.07,(0.92,0.55)),(0,8,0.05,(0.78,0.5)))):   # 枝：左・右・まん中
-        side=unit(np.cross(d,V(0,0,1))) if abs(d[2])<0.99 else V(1,0,0);side=unit(side*math.cos(seed)+np.cross(d,side)*math.sin(seed))
+        sr=V(math.cos(SCR),math.sin(SCR),0);side=unit(sr-d*np.dot(sr,d))   # 枝は、画面のよこへひらく（おくへひらくと、画面でかさなる）
         bd=unit(d*math.cos(math.radians(ang))+side*off*math.sin(math.radians(ang)))
         bp,bdir=curve(top,bd,ln,np.cross(bd,V(0,0,1)) if abs(bd[2])<0.99 else V(1,0,0),math.radians(-18*abs(off)),m=4)
         taper(sc,bp,0.006,0.0045,STEM);bract(sc,top,bd,off or 1)
@@ -91,8 +91,8 @@ def scape(sc,c,lean_az,H,rd,seed):
             bud(sc,pp[-1],pd,sz)
 def EXTRA(sc):
     rd=random.Random(7);sc.smooth(True);sc.outline(None,0.86)
-    fan(sc,V(CX,CY,0),SCR,8,0.50,rd)   # 大きい株：扇の面は画面のよこ
-    fan(sc,V(CX-0.10,CY+0.06,0),SCR+math.radians(55),6,0.40,rd)
-    fan(sc,V(CX+0.09,CY-0.07,0),SCR-math.radians(50),6,0.40,rd)
+    fan(sc,V(CX,CY,0),SCR,8,0.60,rd)   # 大きい株：扇の面は画面のよこ
+    fan(sc,V(CX-0.10,CY+0.06,0),SCR+math.radians(55),6,0.50,rd)
+    fan(sc,V(CX+0.09,CY-0.07,0),SCR-math.radians(50),6,0.50,rd)
     scape(sc,V(CX,CY,0),SCR+math.radians(180),0.66,rd,0.0)
     scape(sc,V(CX+0.01,CY-0.005,0),SCR+math.radians(20),0.56,rd,1.2)
