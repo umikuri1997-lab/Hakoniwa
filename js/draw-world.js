@@ -210,6 +210,7 @@ function render(now){RFN++;hdFrame();
   if(typeof shopRows==='function')shopRows(add,now);/* 水のステージの食堂のお客さん */if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die||it.home?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>liftDraw(uLift(e),()=>drawEnemy(e,now)),(e.y|0)*W+(e.x|0))}
+  if(KIRI)kiriDrawAdd(add,now);/* 草原の転：霧の中の影（kiri.js） */
   if(WD===YAMI)yamiDrawAdd(add,now);/* 闇のステージ：ヨリ・夜の仕事のあと */
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=godOnAltar(),gk=onA?((STATUE/W)|0)+2.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 台座の上：神殿・台座より手前 */[px-36,py-64,px+36,py+24],()=>liftDraw(onA?GODALTARZ:0,()=>drawGod(now)),(GY|0)*W+(GX|0),ptFoot(px,py));}
   if(festOn())for(const st of festStalls()){const px=(st.x+.5)*TS,py=(st.y+.5)*TS-4;if(!vis({x:st.x+.5,y:st.y+.5}))continue;add(st.y+.3,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,0,now,st),-1,ptFoot(px,py));add(st.y+.75,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,1,now,st),-1,ptFoot(px,py))}/* せいれいの屋台（屋根は店番のうしろ、台は前） */
@@ -308,7 +309,7 @@ function render(now){RFN++;hdFrame();
   drawHanabi(now);
   drawRainbow(now);
   seasonDraw(ctx,now,dk);/* 季節の色と粒（冬の雨の日は雪） */
-  if(typeof drawStorm==='function')drawStorm(now);if(typeof wxRainDraw==='function')wxRainDraw(now);/* 雨つぶ・とぶ葉・かみなり（weather-fx.js） */if(typeof drawStar==='function')drawStar(now);
+  if(typeof drawStorm==='function')drawStorm(now);drawKiriFog();/* その日だけの霧（kiri.js） */if(typeof wxRainDraw==='function')wxRainDraw(now);/* 雨つぶ・とぶ葉・かみなり（weather-fx.js） */if(typeof drawStar==='function')drawStar(now);
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);
   if(typeof juiceDraw==='function')juiceDraw(now);/* ごほうびの紙ふぶき（juice.js） */

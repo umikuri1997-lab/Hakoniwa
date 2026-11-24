@@ -43,7 +43,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await run(`sacredTreeTap(S.obj.indexOf('tower'))`);await talkOut();
  assert(await run('QUESTS[S.quest].check()'));
  await clear('omoi');await read();
- assert.equal(await run('S.shards'),2);assert(await run('S.flags.sh_land&&S.flags.sh_key'));assert.equal(await run('QUESTS[S.quest].id'),'wood6');
+ assert.equal(await run('S.shards'),2);assert(await run('S.flags.sh_land&&S.flags.sh_key'));assert.equal(await run('QUESTS[S.quest].id'),'kiri','つぎは霧のむこうの影（kiri.cjs）');await run(`S.quest=questIndexOf('wood6');S.qTalked=false;S.qStory=null`);
  /* きょうだいの花畑：晴れた土地にかくれた、えらんだ花のたね5つを見つけ、御神木のそばに5本咲かせ、フタバとなかま（村にいる5人）が1人ずつ世話をする */
  await read();assert(await run(`S.qTalked&&QUESTS[S.quest].id==='wood6'`));const fl=await run('wflKind()');assert(await run(`!!S.unlocked['${fl}']`),'chosen flower unlocked');
  assert.deepEqual(JSON.parse(await run(`JSON.stringify((()=>{const L=S.drops.filter(d=>d.ws),j=S.sacredRoot;return [L.length,L.every(d=>d.id===wflKind()&&!fogAt(d.y*W+d.x)&&!VILL[d.y*W+d.x]&&Math.hypot(d.x-j%W,d.y-(j/W|0))>=WSEED_FAR)]})())`)),[5,true],'5 seeds on cleared land, away from the village');
@@ -56,7 +56,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  const need=await run('wflNeed()');assert.equal(need,5);
  for(let i=0;i<need;i++){assert(await run(`(()=>{const r=wflWho().filter(r=>!wflT().includes(r.id))[0];endAct(r);r.carry=null;r.cmat=null;r.citem=null;r.meal=null;r.cing=null;r.avoidJ=-1;r.x=S.sacredRoot%W+.5;r.y=(S.sacredRoot/W|0)+sacredSpan()+3.5;if(!wflJob(r,bfs(r.x|0,r.y|0))||r.act.type!=='fltend')return false;ACT.fltend.end(r,r.act);endAct(r);return true})()`),'tend '+i);}
  assert.equal(await run('wflTN()'),5);assert(await run('QUESTS[S.quest].check()'),'wood6 clears');
- assert.match(await run(`QUESTS[S.quest].story[0][1]`),new RegExp(await run('wflName()')));
+ assert.match(await run(`QUESTS[S.quest].story.map(l=>l[1]).join()`),new RegExp(await run('wflName()')));
  /* なかよしがもう、ぜんぶそろっているとき：なかよし60になった組を数える */
  assert.equal(await run(`(()=>{S.quest=questIndexOf('omoi');S.qTalked=false;S.qStory=null;S.flags.omoiP=[];const R=S.res;for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)bondSet(R[i],R[k],30);S.qTalked=true;S.flags.omoiW=[];omoiSeed();return (S.flags.omoiW||[]).length})()`),3);
  /* 古いセーブ：今のならび（farmFirst1）で、omoi のない番号 */
