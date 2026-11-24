@@ -33,12 +33,12 @@ SSN = 4                                 # 写すときの細かさ（1ドット�
 STEP = 0.2                              # 面の点のあいだ（ドット）
 DZ = 3.0                                # この奥行きの差より大きく、手前の部品がかさなる所に線
 BODYD = 0.85
-SHL = 28; SHS = 0.03         # かげの明るさ・あざやかさのかわり
+SHL = 22; SHS = 0.0         # かげの明るさ・あざやかさのかわり
 OLK = 0.9                    # 輪郭線＝となりの色×OLK
 
 # 色（前の正面の絵の色）
 SKIN = (251, 211, 163); ROBE = (244, 237, 225); SLEEVE = (240, 232, 218); BEARD = (252, 246, 236); HAIR = (252, 244, 235)
-WOOD = (176, 124, 84); EYE = (130, 90, 66); HALO = (250, 222, 150); TRIM = (240, 205, 130)   # 輪・ふちは、うすい金色
+WOOD = (176, 124, 84); EYE = (130, 90, 66); HALO = (250, 222, 150); TRIM = (244, 214, 150)   # 輪・ふちは、うすい金色
 
 def shade(c, k):
     """k：0 もとの色・1 かげ（明るさ−SHL・あざやかさ+SHS）・0.5 半かげ。家具（−35・+10）より、うすく（はだ・白いひげが、こいオレンジ・ピーチにならない）"""
@@ -116,31 +116,32 @@ def build():
     首まわりの大きなえり（うしろはフード）・すそが広がる長い服（すそに金色の帯）・大きなそで（そで口に金色のふち）で、前で両手をあわせて、
     スプーンの形の頭の木のつえを、体の前の地面に立ててにぎる・頭の上にはなれてうく、うすい金色の輪"""
     M = Model(); pid = iter(range(100))
-    hem = lambda P: ((P[:, 2] > 3.5) & (P[:, 2] < 7.5), np.array(TRIM, np.uint8))
-    M.revolve([(0, 25), (8, 24.5), (24, 23), (40, 21), (50, 19), (55, 15), (58, 10)], BODYD, ROBE, next(pid), decal=hem)   # 服
-    M.torus((0, -1, 55.5), 13.5, 4.5, (0, 0, 1), ROBE, next(pid))                     # えり（首まわり）
-    M.ellipsoid((0, -14, 49), (13, 5, 10), ROBE, next(pid))                            # うしろのフード
+    hem = lambda P: ((P[:, 2] > 3.0) & (P[:, 2] < 5.0), np.array(TRIM, np.uint8))
+    M.revolve([(0, 24), (6, 23.5), (18, 22), (30, 20), (38, 17), (42, 13), (45, 9)], BODYD, ROBE, next(pid), decal=hem)   # 服（2頭身の、短いベルの形）
+    M.torus((0, -1, 42.5), 13.5, 5.0, (0, 0, 1), ROBE, next(pid))                     # えり（肩にかかる、おりかえし）
+    M.ellipsoid((0, -13, 37), (13, 5, 9), ROBE, next(pid))                            # うしろのフード
     for sx in (-1, 1):
-        M.tube((sx*16, 1, 50), (sx*5.5, 14, 31), 6.5, 8.5, SLEEVE, next(pid), band=(1.6, TRIM))   # そで
-    for sx in (-1, 1): M.ellipsoid((sx*3.4, 17.5, 32), (4, 3.6, 4.2), SKIN, next(pid))   # 手（柄を左右からにぎる）
-    bot = np.array([0.0, 23.5, 0.3]); top = np.array([0.0, 21.0, 58.0])
-    M.tube(bot, top, 2.1, 2.1, WOOD, next(pid), cap=False)                            # つえの柄（体の前の地面に立てる）
-    M.ellipsoid(top+np.array([0, 0, 6.5]), (5, 2.6, 7.5), WOOD, next(pid))            # つえの頭（スプーンの形）
-    HZ = 80   # 頭のまん中の高さ
+        M.tube((sx*16, 1, 39), (sx*6, 13, 21), 6, 8.5, SLEEVE, next(pid), band=(2.0, TRIM))   # そで（そで口に金色のふち）
+    for sx in (-1, 1): M.ellipsoid((sx*3.4, 16, 21.5), (4, 3.6, 4), SKIN, next(pid))   # 手（柄を左右からにぎる）
+    bot = np.array([0.0, 22.0, 0.3]); top = np.array([0.0, 20.0, 30.0])
+    M.tube(bot, top, 2.0, 2.0, WOOD, next(pid), cap=False)                            # つえの柄（体の前の地面に立てる）
+    M.ellipsoid(top+np.array([0, 0, 6.0]), (4.6, 2.2, 6.8), WOOD, next(pid))          # つえの頭（スプーンの形。胸の前、口ひげの下）
+    # 頭：この見え方（高さ KZ・おくゆき KD）では、まるい玉はたてに1.25倍にのびて見えるので、画面でまるく見えるよう、たてを KC にする
+    HZ = 60; HA = 22; KC = math.sqrt(max(HA**2-(KD*HA)**2, 1))/KZ/HA
     def eyes(P):   # とじた目（∩）：顔の前の面
         m = np.zeros(len(P), bool)
-        for ex in (-8.0, 8.0):
-            dx = P[:, 0]-ex; dz = P[:, 2]-(HZ-1); rr_ = np.hypot(dx, dz)
-            m |= (P[:, 1] > 8) & (np.abs(rr_-3.0) < 0.65) & (dz > -0.4)
+        for ex in (-6.8, 6.8):
+            dx = P[:, 0]-ex; dz = (P[:, 2]-HZ)/KC; rr_ = np.hypot(dx, dz)
+            m |= (P[:, 1] > 8) & (np.abs(rr_-2.8) < 0.8) & (dz > -0.4)
         return m, np.array(EYE, np.uint8)
-    M.ellipsoid((0, 0, HZ), (22, 21, 21), SKIN, next(pid), decal=eyes)       # 頭
+    M.ellipsoid((0, 0, HZ), (HA, HA-1, HA*KC), SKIN, next(pid), decal=eyes)     # 頭
     for sx in (-1, 1):
-        M.ellipsoid((sx*21.5, 0, HZ-3), (3, 4, 4.5), SKIN, next(pid))            # 耳
-        M.ellipsoid((sx*9, 16.5, HZ+5), (6, 3.2, 3.2), HAIR, next(pid))          # まゆ
-        M.ellipsoid((sx*7, 17.5, HZ-8.5), (8, 5, 4.5), BEARD, next(pid))         # 口ひげ（左右）
-    M.ellipsoid((0, 19.5, HZ-8), (5, 4, 4), BEARD, next(pid))                    # 口ひげ（まん中）
-    M.ellipsoid((0, 20, HZ-4), (2.8, 2.6, 2.6), SKIN, next(pid))                 # 鼻
-    M.ring((0, 0, HZ+21+10), 15, 10.5, 0.9, HALO, next(pid))                     # 天使の輪：頭の上に、はなしてうかす
+        M.ellipsoid((sx*21.5, 0, HZ-2), (3.5, 5, 5.5), SKIN, next(pid))          # 耳
+        M.ellipsoid((sx*8.5, 16.5, HZ+4.5), (6, 3.2, 3), HAIR, next(pid))        # まゆ
+        M.ellipsoid((sx*7.5, 17, HZ-8), (8, 6, 5), BEARD, next(pid))             # 口ひげ（左右のふくらみ）
+    M.ellipsoid((0, 18.5, HZ-7), (5, 4.5, 4), BEARD, next(pid))                  # 口ひげ（まん中）
+    M.ellipsoid((0, 20, HZ-3), (2.8, 2.6, 2.4), SKIN, next(pid))                 # 鼻
+    M.ring((0, 0, HZ+HA*KC+12), 14.5, 11.5, 0.5, HALO, next(pid))                # 天使の輪：細く、頭の上に、はなしてうかす
     return M
 
 def render(M):
