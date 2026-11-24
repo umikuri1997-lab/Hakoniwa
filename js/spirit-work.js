@@ -121,7 +121,7 @@ const WOODLOW=10;/* 木材がこれより少ないときは、雑草・枝ひろ
 let BOXFULL=0;/* 箱がいっぱいを知らせたときの、しまえる数（セーブしない） */
 function boxFullNote(){/* 箱がいっぱいで、木・石をあつめられないとき、1回だけ知らせる。しまえる数がふえるか、2わり空いたら、また知らせる */
   if(IS_STORY_REPLAY||MEMRUN||matCap()<=0||BOXFULL)return;BOXFULL=matCap();toast('箱がいっぱいです','warn')}
-function boxFullReset(){if(BOXFULL&&(matCap()>BOXFULL||matTot()<=matCap()*.8))BOXFULL=0}
+function boxFullReset(){if(BOXFULL&&(matCap()>BOXFULL||matTot()<=matCap()*.8))BOXFULL=0;for(const k of NOBOXN)if(BOXL.some(j=>boxRoom(j,k)>0))NOBOXN.delete(k)}
 function goWork(r,G,nw){boxFullReset();
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
