@@ -175,6 +175,8 @@ const BL={
   oldlantern:{chest:1,shopOnly:1,hp:5,brk:1,fix:2,fixm:{can:1},name:'古いカンテラ',kind:'furn',cat:'light',f2:1,pc:3,solid:1,attr:{fire:1},mat:{can:2},mat1:{can:2},desc:'洞窟にのこっていたあかり。住み心地+6'},
   doki:{chest:1,shopOnly:1,hp:5,brk:1,fix:1,fixm:{stone:2},name:'ほりだした土器',kind:'furn',pc:1,solid:1,attr:{earth:2},mat:{stone:3},desc:'洞窟からほりだしたかざり。住み心地+6'},
   rel_kui:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'さびたくい',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：岩をおす速さ2倍'},
+  rel_ningyo:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{wood:1},name:'木のにんぎょう',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{wood:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：ねているねずみが目をさます広さ1.8マス'},
+  rel_kagami:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'おひさまのかがみ',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：光をしぼっていないとき、見える広さ5.4マス'},
   rel_tsuru:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'かけたつるはし',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：うすい壁を、たたいてくずせる'},
   rel_suisho:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'からの水晶',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：光すいに光をすわれない'},
   rel_bin:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'黒い水のびん',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：夜の水のかたまりが、わかれない'},

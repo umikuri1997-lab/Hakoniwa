@@ -6,17 +6,8 @@ function drawWin(c,i,x,y){const C=window.CHIPS,wk='window',wt=i!=null&&!ICON&&S&
 function drawWin0(c,i,x,y){const wa=HOUSEART&&HOUSEART['wall-window'];if(wa&&wa.complete&&wa.naturalWidth){c.drawImage(wa,x+5,y+9,22,19.3);return}/* 窓は、壁のまん中に小さめに */c.fillStyle='rgba(68,43,28,.28)';rr(c,x+5,y+10,22,16,2.5);c.fillStyle='#70482e';rr(c,x+6,y+8,20,16,2.5);c.fillStyle='#d3a06c';rr(c,x+7.5,y+9.5,17,12.5,1.4);c.fillStyle='#a9d7e8';rr(c,x+9,y+11,14,9.5,1);c.fillStyle='rgba(255,255,255,.7)';c.beginPath();c.moveTo(x+10,y+12);c.lineTo(x+15,y+12);c.lineTo(x+11,y+17);c.lineTo(x+9.5,y+17);c.closePath();c.fill();c.fillStyle='#795033';rr(c,x+15.5,y+10.5,1.6,10.5,.7);rr(c,x+8.5,y+15.4,15,1.5,.7);c.fillStyle='#d8aa71';rr(c,x+5,y+21,22,3,1.4);c.fillStyle='#f0d3a3';rr(c,x+6,y+21,20,1,0.5)}
 
 // 送ってもらった家づくりパーツ画像から切り出した質感を、壁・扉・窓に使用。
-const HOUSEART={};for(const k of ['wall-log','post-log','wall-plaster','post-plaster','wall-brick','post-brick','gate-stone-left','gate-stone-right','post-stone','wall-door','wall-window','wall-wood','floor-wood','floor-brick','floor-stone','floor-wood-render','floor-brick-render','floor-stone-render','hedge-atlas','wall-window-lit']){const im=new Image();im.src='assets/'+k+'.png?v=102';im.onload=()=>artLoaded();HOUSEART[k]=im}
+const HOUSEART={};for(const k of ['wall-window','wall-wood']){const im=new Image();im.src='assets/'+k+'.png?v=102';im.onload=()=>artLoaded();HOUSEART[k]=im}
 
-/* 苔の石垣は横面・縦面・柱を別々に継ぐ。画像全体を回転・反転しない。 */
-function drawMossGate(c,x,y,i,ver,op){
-  const p=HOUSEART['post-stone'],a=HOUSEART['gate-stone-left'],b=HOUSEART['gate-stone-right'];
-  if(!p||!p.complete||!p.naturalWidth||!a||!a.complete||!a.naturalWidth||!b||!b.complete||!b.naturalWidth)return false;
-  c.save();c.beginPath();c.rect(x,y,32,32);c.clip();const w=10*(1-op*.91);
-  if(!ver){c.drawImage(a,x+6,y+5,w,25);c.drawImage(b,x+26-w,y+5,w,25);c.drawImage(p,x-2,y-2,8,33);c.drawImage(p,x+26,y-2,8,33)}
-  else{c.drawImage(p,x+8,y-3,16,13);c.drawImage(p,x+8,y+24,16,13);const h=7*(1-op*.91);c.drawImage(a,x+8,y+10,16,h);c.drawImage(b,x+8,y+24-h,16,h)}/* たてむきも、両はしの柱のあいだにとびら */
-  c.restore();return true;
-}
 
 const WALLMAT={plasterwall:'plaster',logwall:'log',brickwall:'brick',yozorawall:'night'};
 function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28が板、その下が巾木）。世界の座標で模様をつなぐので、マスのさかいめに継ぎ目が出ない */
@@ -51,7 +42,7 @@ function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形�
   c.drawImage(sp,X,Y)}
 /* ドット絵（chips.js）：ある物は、プログラムの絵のかわりにこれを使う。1ドット＝ゲームの1（ぼかさない） */
 function drawChipFix(c,id,i){/* 動く部品より手前の本体（parts の fix）だけを、もう1回重ねる（縦のブランコに乗る子の手前） */const ch=chipOf(id,i);const src=ch&&(ch.src||ch);if(!src||!src.parts)return;const x=(i%W)*TS,y=((i/W)|0)*TS,q=src.g===64?.5:1;for(const p of src.parts){if(!p.fix)continue;const pm=partImg(p,id);if(pm.ok)c.drawImage(pm,x+p.ax*q,y+p.ay*q,p.w*q,p.h*q)}}
-function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='tower'&&WD===KUSA&&C['story:tree']&&C['story:tree'].iso)return C['story:tree'];/* クォータービューの絵は、切り株の n×n のまん中から（iso-obj.js） */if(id==='tower'&&WD===KUSA&&C['story:tree'])return {...C['story:tree'],ax:C['story:tree'].ax+(sacredSpan()-4)*TS,ay:C['story:tree'].ay+(sacredSpan()-4)*TS*2};const L0=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1,L=id==='watch'?watchArt(L0):L0;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;if(id==='rock'&&!sf&&S){const sx=stg().sx,q=sx&&C['rock'+sx];if(q)ch=q}/* 土の谷の岩は、砂岩の大岩（rock~t、tools/art/furn3d/items/nat_sandrock.py） */
+function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='tower'&&WD===KUSA&&C['story:tree']&&C['story:tree'].iso)return C['story:tree'];/* クォータービューの絵は、切り株の n×n のまん中から（iso-obj.js） */if(id==='tower'&&WD===KUSA&&C['story:tree'])return {...C['story:tree'],ax:C['story:tree'].ax+(sacredSpan()-4)*TS,ay:C['story:tree'].ay+(sacredSpan()-4)*TS*2};const L0=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1,L=id==='watch'?watchArt(L0):L0;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;if(id==='rock'&&!sf&&i!=null){const n=(hash(i*7+131)*5)|0,q=n&&C['rock#'+n];if(q)ch=q}/* 岩は5とおり（rock・rock#1〜#4、tools/art/furn3d/items/nat_rock.py）をマスごとに */if(id==='rock'&&!sf&&S){const sx=stg().sx,q=sx&&C['rock'+sx];if(q)ch=q}/* 土の谷の岩は、砂岩の大岩（rock~t、tools/art/furn3d/items/nat_sandrock.py） */
   const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if((t===4&&r===3||t===3&&r===2)&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
@@ -61,7 +52,7 @@ const CRATEFILL=[.4,.8];/* 木箱の中身の絵のさかい（しまえる数�
 function crateFill(i){if(typeof boxSlots!=='function')return 0;const c=boxSlots(i),n=slotUsed(i);if(!c||n<=0)return 0;const r=n/c;return r<CRATEFILL[0]?1:r<CRATEFILL[1]?2:3}
 function crateLid(i){const T=performance.now(),o=CRATEO[i]||(CRATEO[i]={v:0,t:T}),dt=Math.min(.1,Math.max(0,(T-o.t)/1000));o.t=T;const on=crateUsing(i);if(on&&!o.s){o.s=1;if(typeof sfxAt==='function')sfxAt('lid',i%W,(i/W)|0)}else if(!on&&o.v===0)o.s=0;/* しまっていたふたが開きはじめたら、ぎぃ（しまりきるまで鳴らさない） */o.v=Math.max(0,Math.min(1,o.v+(on?dt:-dt)/CRATESP));if(on?o.v<1:o.v>0)dirty=true;return Math.round(o.v*3)}/* ふたの開きぐあい（0しまった〜3開いた）。開け閉めは実時間で、絵は crate#o1〜#o3 */
 let CHPN=0;/* 読みこみ中のページのチップを描こうとした回数（地面の区画は、これがふえたら、ページがとどいたときに作りなおす） */
-const CHA={};function chipPage(n){/* マップチップのアトラス（大きな絵）。1まいごとに1回だけ読みこむ */let a=CHA[n];if(!a){a=CHA[n]={im:new Image(),ok:false,q:[]};a.im.onload=()=>{a.ok=true;const q=a.q;a.q=[];for(const f of q)f();if(typeof igPendDone==='function')igPendDone();dirty=true};a.im.onerror=()=>{a.bad=true};a.im.src=(window.CHIPA||[])[n]}return a}
+const CHA={};function chipPage(n,hi){/* マップチップのアトラス（大きな絵）。1まいごとに1回だけ読みこむ。hi：ほかの絵より先に読む（fetchPriority） */let a=CHA[n];if(!a){a=CHA[n]={im:new Image(),ok:false,q:[]};if(hi)a.im.fetchPriority='high';a.im.onload=()=>{a.ok=true;const q=a.q;a.q=[];for(const f of q)f();if(typeof igPendDone==='function')igPendDone();dirty=true};a.im.onerror=()=>{a.bad=true};a.im.src=(window.CHIPA||[])[n]}return a}
 function chipPend(ch){const r=ch.f&&ch.f[0],a=r&&CHA[r[0]];return !!a&&!a.ok&&!a.bad}/* チップのページを読みこみ中か */
 function atlasFrame(r,id){/* アトラスの (x,y,w,h) を、1まいの絵（キャンバス）に切り出す。読みこむまでは ok=0 */const[n,x,y,w,h]=r,c=document.createElement('canvas');c.width=w;c.height=h;c.ok=0;const a=chipPage(n),done=()=>{const g=c.getContext('2d');g.drawImage(a.im,x,y,w,h,0,0,w,h);if(id==='hwall'||id.startsWith('hwall:')){/* 木の壁だけを明るい黄褐色に。木目と透明度は保つ */const img=g.getImageData(0,0,w,h),d=img.data;for(let k=0;k<d.length;k+=4){if(!d[k+3])continue;const l=.299*d[k]+.587*d[k+1]+.114*d[k+2];d[k]=Math.min(255,l*1.12+18);d[k+1]=Math.min(255,l*.88+14);d[k+2]=Math.min(255,l*.57+10)}g.putImageData(img,0,0)}if(id==='ground')nmBake(g,w,h);c.ok=1;try{delete iconCache[id]}catch(e){}};if(a.ok)done();else a.q.push(done);return c}
 const NMK=2.2,NMS=.55;/* ノーマルマップ：絵の明るさを高さとみる強さ NMK・光とかげのこさ NMS。光は左上 */
@@ -115,10 +106,10 @@ function castShadowChip(o,i){/* 落ち影：3Dで根もとに見えない平面�
   let ch;if(o==='kinoko'){const x=(i%W)*TS,y=((i/W)|0)*TS-liftOf(i);ch=C['kinoko#'+((hash(((x*7+y*13)|0)+7*131)*3)|0)]||C.kinoko}/* きのこは drawWeed と同じえらび方 */else if(PCH.has(o))ch=plantChip(o,i,0);else ch=o==='rock'?chipOf(o,i):C[o];if(!ch)return null;
   if(!CHNAME){CHNAME=new Map();for(const k in C)CHNAME.set(C[k],k)}const k=CHNAME.get(ch.src||ch);return k&&C[k+(ch.flip?':shf':':sh')]||null}
 const AKITREE=new Set(['tree','ntree','fruit']);/* 秋に紅葉する木（草原の絵の木。火山・風・水・闇は、ステージの木の絵のまま） */
-const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','tanpopo','ayame','iwakagami','tsukimi','lotus','nebari','hotaru','drum','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
+const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','tanpopo','ayame','iwakagami','tsukimi','lotus','nebari','hotaru','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||(FLOWERS.has(id)&&C['bud~f'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽。花の芽は花と同じだけ上の bud~f） */
   if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);return C['hedge:'+m]||null}/* 生け垣は、となりとのつながりの形で（tools/art/hedge/hedge_art.py） */
-  if(id==='nebari')return C.nebari||C['weedc#1']||null;if(id==='hotaru')return C.berry||null;if(id==='drum')return C.taru||null;/* 仮の絵：合図の太鼓は、たるの絵 *//* 仮の絵：ねばり草はふんばり草、ほたるの草むらは茂みの絵（その上に、しずく・ほたるのドット） */
+  if(id==='nebari')return C.nebari||C['weedc#1']||null;/* 仮の絵：ねばり草はふんばり草（その上に、しずくのドット） */
   {const sx=stg().sx;if(sx==='~m'&&id==='deadtree'&&i!=null&&hash(i*131+7)<.4&&C['maple~m'])return C['maple~m'];/* 水の自然の木は、4わりがメープル */if(sx&&(id==='deadtree'||id==='tree')&&C[id+sx])return C[id+sx]}/* 火山はとんがりの木（~v）・風はアカシア（~k、tools/art/furn3d/items/nat_acacia.py） */
   if(AKITREE.has(id)&&!ICON&&i!=null&&S&&seasonNow()===2&&WD!==YAMI){const k=C['tree~aki'+(hash(i*29+11)<.5?0:1)];if(k)return k}/* 秋：草原の木は紅葉（赤とオレンジ・黄色を、マスごとに。tools/art/furn3d/items/nat_tree_aki.py） */
   if(id==='deadtree'&&!ICON&&i!=null&&S){const h=hash(i*7+3),ch=C['deadtree'+(DTV[Math.floor(h*DTV.length)])]||C.deadtree;if(!ch||h*6%1<.5)return ch;return ch._fl||(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw:TS})}/* 枯れ木：同じ木をまわした3つの絵（tools/art/furn3d/items/nat_deadtree.py）を、マスごとにえらび、半分は左右反対に *//* 火山：自然の木も植えた木も、とんがりの木（tools/art/furn3d/items/nat_cedar.py） */
@@ -160,7 +151,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   c.fillStyle=R[2];c.fillRect(x-2,y+8,68,2);c.fillRect(x+12,y-15,40,1.5);
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
-function drawWbYard(c,i,x,y,now,k){/* 作業台についた材料置き場：いまの依頼で運んだ素材のわりあいで4まい。k：置き場のマス（クォータービューの絵は、そのマスのまん中から） */const d=S.dyn[i],st=d&&d.order!=null?yardStage('o'+d.order):0,ch=window.CHIPS&&CHIPS['matyard#'+st];if(ch)drawChip(c,ch,'matyard',x,y,now,k!=null?k:i)}
+function drawWbYard(c,i,x,y,now,k){/* 作業台についた材料置き場：いまの依頼で運んだ素材のわりあいで4まい。k：置き場のマス（クォータービューの絵は、そのマスのまん中から） */const d=S.dyn[i],st=d&&d.order!=null?yardStage('o'+d.order):0,r=(S.rot&&S.rot[i])||0,ch=window.CHIPS&&(CHIPS['matyard>'+r+'#'+st]||CHIPS['matyard#'+st]);/* 作業台と同じ向き・同じ高さ（うしろを同じ壁にそわせる） */if(ch)drawChip(c,ch,'matyard',x,y,now,k!=null?k:i)}
 /* 建てている所：足場の上に、できあがる物の絵をうすく出す。建てるほど、こくなる（0%で.3・100%で.65） */
 function siteGhost(c,d,x,y,now,i){const id=d&&d.build;if(!id||!BL[id]||id==='site'||id==='statue'||STAIRS.has(id)||LADDERS.has(id)||id==='bridge'||TERRA.has(id))return;const p=Math.min(1,d.p/(d.need||1)),rot=S.rot&&i!=null?S.rot[i]:0,rch=ROTS[id]&&rot&&chipOf(id,null,rot);c.save();c.globalAlpha*=.3+.35*p;if(rch)drawChip(c,rch,id,x,y,now);else drawObj(c,id,x,y,null,100,now);c.restore()}
 const LOOMSEQ=[0,1,2,3,2,1,0,3],LOOMMS=150;
@@ -201,11 +192,6 @@ function drawObj0(c,id,x,y,i,g,now){
   if(!c._chip&&SEATS.includes(id)){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}
   if((HOME_WALLS.has(id)||HOME_DOORS.has(id)&&S&&S.win&&S.win[i]==='wreath')&&!ICON&&!c._win&&S&&S.win&&S.win[i]){c._win=1;drawObj(c,id,x,y,i,g,now);c._win=0;c.save();c.translate(0,-1.5);if(S.win[i]===1)drawWin(c,i,x,y);else{const p=S.win[i];c._onWall=1;try{if(p==='curtain1'||p==='curtain2'){drawWin(c,i,x,y);const ch=chipOf(p);c.save();if(ch){if(!drawChip(c,ch,p,x,y,now,i)){c.translate(x+16,y-3);c.scale(1.35,.7);drawF2(c,p,-16,-3,i,now)}}else{c.translate(x+16,y+3);c.scale(1.07,.7);drawF2(c,p,-16,-3,i,now)}c.restore()}/* カーテンのチップを、窓の上に重ねる（大きさはチップそのもの） */else if(p==='wshelf'){c.save();c.translate(0,4);wallArt(c,p,x,y,i,now);c.restore()}else if(p==='wreath'&&HOME_DOORS.has(id)){const up=HOME_WALLS.has(S.obj[i-W])||HOME_DOORS.has(S.obj[i-W]),dn=HOME_WALLS.has(S.obj[i+W])||HOME_DOORS.has(S.obj[i+W]),lf=HOME_WALLS.has(S.obj[i-1])||HOME_DOORS.has(S.obj[i-1]),rt=HOME_WALLS.has(S.obj[i+1])||HOME_DOORS.has(S.obj[i+1]),vertical=(up||dn)&&!(lf||rt),op=DOOROP.get(i)||0;c.save();if(vertical){c.translate(x+16,y+3.5);c.rotate(op*Math.PI*.45);c.translate(-x-16,-y-3.5)}else{c.translate(x+7,y);c.scale(1-op*.78,1);c.translate(-x-7,-y)}wallArt(c,p,x,y,i,now);c.restore()}else wallArt(c,p,x,y,i,now)}finally{c._onWall=0}}c.restore();return}/* 壁にかけた絵・カーテン（窓つき）・かべ棚・ドアのリース */
   if(BL[id]&&BL[id].f2){const z=BL[id].sz;if(BL[id].dsc&&!ICON&&!c._sc){const k=BL[id].dsc;c.save();c.translate(x+16,y+31);c.scale(k,k);c._sc=1;drawF2(c,id,-16,-31,i,now);c._sc=0;c.restore();return}/* 絵だけ大きく（判定はそのまま） */if(z&&BL[id].nosc&&!ICON)return drawF2(c,id,x+16*(z[0]-1),y+32*(z[1]-1),i,now);/* マスは広いけど絵はそのまま */if(z&&!ICON&&!c._sc){c.save();c.translate(x,y);c.scale(z[0],z[1]);drawF2(c,id,0,0,i,now);c.restore();return}return drawF2(c,id,x,y,i,now)}/* 大きい家具は、マスに合わせて絵も大きく */
-  if(id==='stonegate'&&!ICON&&!c._sc){
-    const wide=S.obj[i]!==id||(S.obj[i+1]==='part'&&S.ref[i+1]===i),ver=!wide&&(HOME_WALLS.has(typeAt(i-W))||HOME_WALLS.has(typeAt(i+W)));
-    const nw=wide?2:1,op=doorOp(i,x+(nw-1)*16,y,nw*.9,2.1);
-    c.save();c.translate(x,y);c.scale(nw,1);const drawn=drawMossGate(c,0,0,i,ver,op);c.restore();if(drawn)return
-  }
   if(id==='window'){drawObj(c,'hwall',x,y,i,g,now);c.save();c.translate(0,-1.5);drawWin(c,i,x,y);c.restore();return}
   if((BIG.has(id)||BIG2.has(id))&&!ICON&&!c._big){const z=BL[id].sz||[1,1],ax=x+16*z[0],ay=y+31*z[1],k=BIG2.has(id)?2:TREES.has(id)?2.25:(id==='stor'||id==='mbox')?32/26:(BIGK[id]||1.5);/* 箱は幅1マスぴったり */c.save();c.translate(ax,ay);c.scale(k,k);c.translate(-ax,-ay);c._big=1;drawObj(c,id,x+(id==='watch'||id==='yogan'?16:0),y+(id==='watch'||id==='yogan'?31:0),i,g,now);c._big=0;/* 見張り台は2×2マスのまんなかに、今までと同じ大きさで */c.restore();if(id==='statue'&&i!=null)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 大きな女神像の横の箱・ボードを手前に */return}
   {const FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=FK[id]?FK[id]:id==='tree'||id==='ntree'||id==='fruit'?'tree':id==='deadtree'?'dead':id==='rock'?'rock':id==='berry'?'bush':null,a=key&&ART[key];
@@ -258,7 +244,7 @@ function drawObj0(c,id,x,y,i,g,now){
     if(g>=100)for(const[dx,dy]of[[-6,-12],[5,-8],[-3,-2],[8,-15]]){circ(c,x+16+dx,y+24+dy,3,'#5b6fd1');c.fillStyle='#3f50a8';c.fillRect(x+15+dx,y+21.6+dy,2,1.2)}break}
   case'bamboowall':case'canvaswall':case'acaciawall':case'timberwall':case'adobewall':case'canalwall':case'rockwall':case'mosswall':case'moonwall':case'logwall':case'plasterwall':case'brickwall':case'yozorawall':{/* 丸太・しっくい・レンガ・よぞらの壁も、木の壁と同じ形（柱・断面・巾木・つなぎめなし）で、正面の帯だけ材質を変える */if(id==='yozorawall'&&!(i!=null&&!ICON&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)))){drawObj(c,'hwall',x,y,i,g,now);break}/* よぞらの壁：家の外がわから見える面は、木の壁と同じ。家の角の壁も、中から見える面は夜空の色にして、はしまでつなげる */c._mat=id==='logwall'||id==='acaciawall'?'log':id==='plasterwall'||id==='bamboowall'||id==='canvaswall'||id==='timberwall'?'plaster':id==='yozorawall'?'night':'brick';{const ck=c._chip;if(id==='yozorawall')c._chip=1;/* 家の中から見える面だけ夜空の色（木の壁のドット絵は使わない） */drawObj(c,'hwall',x,y,i,g,now);c._chip=ck}c._mat=0;break}
   case'door':case'hwall':{/* 壁：正面は1マスの高さ（y〜y+32）、断面（てっぺん）はその上（y-9〜y）にブラウン1色 */
-    const door=id==='door';if(ICON&&door){const art=HOUSEART&&HOUSEART['wall-door'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,x+2,y+1,28,30);break}}
+    const door=id==='door';
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
     const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||!door&&HOME_DOORS.has(t))};/* 家の壁・ドアは、柵や石の塀とはつながらない。ドアどうしはつながらない */const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);
     const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L||ICON?x:x+5,hx1=R||ICON?x+TS:x+27;
@@ -269,10 +255,9 @@ function drawObj0(c,id,x,y,i,g,now){
     if(door&&hasV&&!hasH){let op=0;if(!ICON)op=doorOp(i,x,y,2.1,.9);/* 縦の壁のドア：断面のまま。戸口に断面の輪郭線を出し、戸板は線1本（開くと内がわへ回る） */
       drawSection(c,x,y-T,[[x+5,y-T-2,x+27,y-T+3,x+5,y-T,x+27,y-T+3],[x+5,y+TS-T-3,x+27,y+TS-T+2,x+5,y+TS-T-3,x+27,y+TS-T]]);
       {const Ln=TS-6,an=op*Math.PI*.45;c.save();c.translate(x+16,y-T+3);c.rotate(an);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(-1,1,5,Ln);c.fillStyle='#8a5a33';c.fillRect(-2,0,4,Ln);c.fillStyle='#b88550';c.fillRect(-2,0,1.3,Ln);c.restore()}if(ICON)c.restore();break}
-    if(door&&hasH){/* 正面のドア：1マスぴったり。絵の左はし（ちょうつがい）と右はし（取っ手）はそのまま、まん中の板だけのばす */const art=HOUSEART&&HOUSEART['wall-door'];let op=0;if(!ICON)op=doorOp(i,x,y,.9,2.1);
+    if(door&&hasH){/* 正面のドア：1マスぴったり。絵の左はし（ちょうつがい）と右はし（取っ手）はそのまま、まん中の板だけのばす */let op=0;if(!ICON)op=doorOp(i,x,y,.9,2.1);
       c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x,y+TS,TS,2);c.fillStyle='#8a5e3c';c.fillRect(x,y,TS,TS);c.fillStyle='#a8784e';c.fillRect(x,y,TS,1);c.fillStyle='#4f3527';c.fillRect(x+2,y+2,TS-4,TS-2);
-      if(art&&art.complete&&art.naturalWidth){const dw=TS-4,dy=y+2,dh=TS-2;c.save();c.translate(x+2,0);c.scale(1-op*.78,1);c.drawImage(art,19,18,26,149,0,dy,5,dh);c.drawImage(art,45,18,40,149,5,dy,dw-13,dh);c.drawImage(art,85,18,28,149,dw-8,dy,8,dh);c.restore()}
-      else{c.fillStyle='#b77a49';c.fillRect(x+2,y+2,(TS-4)*(1-op*.78),TS-2)}
+      c.fillStyle='#b77a49';c.fillRect(x+2,y+2,(TS-4)*(1-op*.78),TS-2);
       if(ICON){top();c.restore()}break}
     if(ICON)front(x,x+TS);/* アイコンは、柱ではなく壁の正面を見せる */
     else if(hasH){if(!D){if(L&&R&&!U)front(x,x+TS);else{side(x+5,x+27);if(L)front(x,x+5);if(R)front(x+27,x+TS)}}else{if(L)front(x,x+5);if(R)front(x+27,x+TS)}}
@@ -284,7 +269,7 @@ function drawObj0(c,id,x,y,i,g,now){
     else{c.fillStyle=sto;rr(c,x+2,y-2,28,8,2);rr(c,x+2,y+25,28,7,2);const ph=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+9,y+6,14,ph);c.fillStyle='#6e4c32';c.fillRect(x+9,y+6+ph/2,14,1.5)}break}
   case'gate':case'stonegate':case'logdoor':case'loggate':{const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)&&!GATE_IDS.has(t)||t==='wall'};/* 柵・石の塀どうしはつながる。家の壁とはつながらない */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);
-    if(id==='stonegate'&&drawMossGate(c,x,y,i,ver,op))break;shadow(c,x+16,y+28,12,3);const P=id==='stonegate'?'#77756f':'#a0703f',PC=id==='stonegate'?'#c3bfb6':'#d6a874',RL=id==='stonegate'?'#9a978f':'#c08a55',SL=id==='stonegate'?'#c3bfb6':'#cf9c66';
+    shadow(c,x+16,y+28,12,3);const P=id==='stonegate'?'#77756f':'#a0703f',PC=id==='stonegate'?'#c3bfb6':'#d6a874',RL=id==='stonegate'?'#9a978f':'#c08a55',SL=id==='stonegate'?'#c3bfb6':'#cf9c66';
     if(!ver){const pw=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+7,y+12,pw,4);c.fillRect(x+7,y+20,pw,4);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+7+pw*(k+.5)/3-1.5,y+10,3,16);
       c.fillStyle=P;c.fillRect(x+1,y+7,6,21);c.fillRect(x+25,y+7,6,21);c.fillStyle=PC;c.fillRect(x+1,y+7,6,3);c.fillRect(x+25,y+7,6,3)}
     else{const ph=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+12,y+7,3,ph);c.fillRect(x+17,y+7,3,ph);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+11,y+7+ph*(k+.5)/3-1.5,10,3);

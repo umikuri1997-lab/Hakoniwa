@@ -56,48 +56,25 @@ function igUpperDraw(g,X0,Y0,X1,Y1,inC){let n=0;for(let y=Y0;y<=Y1;y++)for(let x
   const fixed=[];for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o)||!(FLAT.has(o)||BL[o].floor)||FLAT.has(o)&&RUGC.has(i))continue;fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
   fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);for(const{i,o}of fixed)drawObj(g,o,(i%W)*TS,((i/W)|0)*TS,i);return n+fixed.length>0}/* 何か描いたか（描く物がない区画は、上の絵を作らない） */
 /* 区画 q を作る */
-function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IGP,w=IGW+2*IGP,h=IGH+2*IGP,Yt=Y-IGM,ht=h+IGM;q.st=false;q.u=RFN;
-  const[X0,Y0,X1,Y1]=igRange(X,Yt,w,ht);if(X1<X0||Y1<Y0){igFree(q);q.e=true;return}
+function igPrep(q){/* 区画 q を作るじゅんび：下の地面・上の物の絵と、マスの草・水の値。ドットごとの計算（igPixels）にわたす物をかえす（何もない区画は null） */const X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IGP,w=IGW+2*IGP,h=IGH+2*IGP,Yt=Y-IGM,ht=h+IGM;q.st=false;q.u=RFN;
+  const[X0,Y0,X1,Y1]=igRange(X,Yt,w,ht);if(X1<X0||Y1<Y0){igFree(q);q.e=true;return null}
   const sw=(X1-X0+1)*TS,sh=(Y1-Y0+1)*TS,sx0=X0*TS,sy0=Y0*TS,inC=(x,y)=>{const a=(x-y)*IQW/2,b=(x+y)*IQH/2;return a+3*IQW/2>=X&&a-3*IQW/2<=X+w&&b+4*IQH/2>=Yt&&b-2*IQH/2<=Yt+ht},/* マス (x,y) が、この区画の画面の四角にかかるか（まわり1マスもふくめる）。四角のマスのはんいのうち、かからないマスは描かない */
     sc=document.createElement('canvas'),src=(fn)=>{const g=sc.getContext('2d',{willReadFrequently:true});if(sc.width!==sw||sc.height!==sh){sc.width=sw;sc.height=sh}else{g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,sw,sh)}g.setTransform(1,0,0,1,-sx0,-sy0);return fn(g,X0,Y0,X1,Y1,inC)===false?null:g.getImageData(0,0,sw,sh).data};/* 描いて読むだけの絵なので、読みとりの速い形（willReadFrequently）。下の地面と上の物で、1まいを使いまわす。何も描かなかったら null */
   const p0=CHPN,B=src(igBaseDraw),U=src(igUpperDraw);sc.width=sc.height=0;q.pend=CHPN>p0;/* 読みこみ中のページの絵（道・畑など）は、仮の絵か、なにもない。ページがとどいたら作りなおす（igPendDone。しないと、となりの区画とのさかいに、たての線が出る） */const C=window.CHIPS,GT=igPix(chipImgs(C['tex:grass'],'ground')[0]),WT=igPix(chipImgs(C['tex:water'],'water')[0]),SM=skyM(),ST=SM?igPix(skyTex()):null/* 雲の海（風） */,RM=riftM()/* 土の地われ：陸の地面に作り、上に地われのタイル（tsuchi.js の tsRiftDraw） */,SP=WD===KAZAN&&S.st2?sprMap():null,TG=igTG(),TW=igTW();
   /* マスの草・水の値（区画のマスのはんい＋まわり1マス） */const gx0=X0-1,gy0=Y0-1,gw=X1-X0+3,gh=Y1-Y0+3,GV=new Uint8Array(gw*gh),WV=new Uint8Array(gw*gh),inM=(x,y)=>x>=0&&y>=0&&x<W&&y<H,land=j=>S.ground[j]!==1&&S.ground[j]<1;
   for(let b=0;b<gh;b++)for(let a=0;a<gw;a++){const x=Math.min(W-1,Math.max(0,gx0+a)),y=Math.min(H-1,Math.max(0,gy0+b)),j=y*W+x,wt=S.ground[j]>=1&&!(RM&&RM[j]===1);WV[b*gw+a]=wt?1:0;
     GV[b*gw+a]=wt?(REV.has(j)&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>inM(x+dx,y+dy)&&land(j+dy*W+dx)&&REV.has(j+dy*W+dx))?1:0):REV.has(j)?1:0}/* 水のマスは、となりの草地の陸があれば草（水の丸い角の外に見える所） */
-  const N=w*ht,O=new Uint8ClampedArray(N*4),K=new Uint8Array(N);/* K：1 水面・2 水の線・3 浅瀬・4 雲の海・5 岸・6 水の中の岩・0 そのほか */
-  const AU=new Float64Array(w);for(let u=0;u<w;u++)AU[u]=(X+u+.5)/IQA;/* 列ごとの割り算は1回だけ */
-  const WTS=W*TS,HTS=H*TS,SG=S.ground,GD=GT.d,GTW=GT.w,GTH=GT.h,WTD=WT.d,WTW=WT.w,WTH=WT.h,WB0=WBAND[0];/* ドットごとに見る物は、先に手もとへ */
-  for(let v=0;v<ht;v++){const iy=Yt+v,bv=(iy+.5)/IQB;for(let u=0;u<w;u++){const ix=X+u,au=AU[u],wx=(au+bv)/2,wy=(bv-au)/2;if(wx<0||wy<0||wx>=WTS||wy>=HTS)continue;
-    const p=v*w+u,o=p*4,fx=wx|0,fy=wy|0,tx=(fx/TS)|0,ty=(fy/TS)|0,vx=(wx/TS+.5)|0,vy=(wy/TS+.5)|0,lu=ix-((vx-vy)*IQW/2-IQW/2),lv=iy-(vx+vy-1)*IQH/2,li=lv*IQW+lu;
-    const ca=vx-1-gx0,cb=vy-1-gy0,c1=cb*gw+ca,c2=c1+1,c3=c1+gw,c4=c3+1,mg=GV[c1]|GV[c2]<<1|GV[c3]<<2|GV[c4]<<3,mw=WV[c1]|WV[c2]<<1|WV[c3]<<2|WV[c4]<<3;
-    const si=((fy-sy0)*sw+(fx-sx0))*4;let r=B[si],g=B[si+1],b=B[si+2];
-    const kg=mg?TG[mg][li]:0;if(kg===1||kg===2){const ti=((fy%GTH)*GTW+fx%GTW)*4;r=GD[ti];g=GD[ti+1];b=GD[ti+2];if(kg===2){r=r*.89;g=g*.92;b=b*.89}}/* 草の葉のかげの色（道のふちの葉と同じくらい） */
-    const kw=mw?TW[mw][li]:0,j=ty*W+tx,sky=SM&&SM[j]===1;
-    if(kw===1||kw===2){if(sky){const ti=((fy%ST.h)*ST.w+fx%ST.w)*4;r=ST.d[ti];g=ST.d[ti+1];b=ST.d[ti+2];K[p]=4}else{const ti=((fy%WTH)*WTW+fx%WTW)*4;r=WTD[ti];g=WTD[ti+1];b=WTD[ti+2];K[p]=1;
-      if(SP&&springOn(SP[j])){r=r+(232-r)*.6;g=g+(238-g)*.6;b=b+(232-b)*.6;K[p]=3}/* よみがえった温泉：乳白色の湯 */
-      if(SG[j]===2){r=r+(226-r)*.45;g=g+(214-g)*.45;b=b+(170-b)*.45;K[p]=3}/* 浅瀬：水の底の砂がすける */
-      if(kw===2){r=WB0[0];g=WB0[1];b=WB0[2];K[p]=2}}}
-    else if(kw>10&&(kg===1||kg===2)){const c=WBAND[kw-10],a=WBANDA[kw-10]/255;r=r+(c[0]-r)*a;g=g+(c[1]-g)*a;b=b+(c[2]-b)*a}/* 草地の岸：水からの帯 */
-    const ua=U?U[si+3]:0;if(ua){const a=ua/255;r=r+(U[si]-r)*a;g=g+(U[si+1]-g)*a;b=b+(U[si+2]-b)*a}
-    O[o]=r;O[o+1]=g;O[o+2]=b;O[o+3]=255}}
-  const BK=igBankTex(),WA=new Uint8Array(N);/* WA：水の中の岩の所の、水のうすさ */
-  for(let v=IGM;v<ht;v++)for(let u=0;u<w;u++){const p=v*w+u;if(K[p]!==1&&K[p]!==2&&K[p]!==3)continue;let k=0;for(let q2=1;q2<=IGBDRIP+WBANK+IGBSUB;q2++){const kk=K[p-q2*w];if(!kk&&O[(p-q2*w)*4+3]){k=q2;break}if(kk===4)break}if(!k)continue;/* 水は岸より一段ひくい：画面で水のすぐ上が陸なら、岸の断面 */
-    const o=p*4;if(!BK){if(k>WBANK+WBSH)continue;if(k<=WBANK){const c=WBANKC[k-1];O[o]=c[0];O[o+1]=c[1];O[o+2]=c[2]}else{const a=WBSHA[k-WBANK-1]/255;O[o]=O[o]+(24-O[o])*a;O[o+1]=O[o+1]+(52-O[o+1])*a;O[o+2]=O[o+2]+(70-O[o+2])*a}K[p]=5;continue}/* がけの絵がまだのとき */
-    const T=BK.T,tc=(((X+u)*2)%T.w+T.w)%T.w,r=k-Math.round((1-BK.L[tc])*IGBDRIP);/* 岩の絵の列（がけの面と同じ、1点に2ドット）。上のふちは、われめほど地面がたれる */
-    if(r<=0){const l=(p-k*w)*4;O[o]=O[l];O[o+1]=O[l+1];O[o+2]=O[l+2];K[p]=5;continue}/* たれた地面 */
-    if(r>WBANK+IGBSUB)continue;const ti=(Math.min(T.h-1,((r-1)*64/IQL)|0)*T.w+tc)*4,f=ICLF*(1-.12*Math.min(1,(r-1)/WBANK));let R=T.d[ti]*f,G=T.d[ti+1]*f,B2=T.d[ti+2]*f;/* がけの左の面と同じ明るさ。下ほど少し暗く */
-    if(r<=WBANK){O[o]=R;O[o+1]=G;O[o+2]=B2;K[p]=5;continue}
-    const t=(r-WBANK-1)/(IGBSUB-1),a=.35+.3*t;O[o]=R+(40-R)*a;O[o+1]=G+(88-G)*a;O[o+2]=B2+(110-B2)*a;K[p]=6;WA[p]=Math.round((.5+.4*t)*255)}/* 水の中の岩：深いほど水の色に。上に、うすい水面を流す */
-  if(SM)for(let v=IGM;v<ht;v++)for(let u=0;u<w;u++){const p=v*w+u;if(K[p]!==4)continue;let k=0;for(let q2=1;q2<=IGSKYH;q2++){const kk=K[p-q2*w];if(!kk&&O[(p-q2*w)*4+3]){k=q2;break}if(kk&&kk!==4&&kk!==5)break}if(!k)continue;/* 雲の海：画面で、すぐ上が島の陸なら、島のがけ（上から：土のかげ・岩・岩のかげ・うら。いままでの SKYFACE） */
-    const c=SKYFACE[k<=3?0:k<=IGSKYH-6?1:k<=IGSKYH-3?2:3],o=p*4;O[o]=c[0];O[o+1]=c[1];O[o+2]=c[2];K[p]=5}
-  /* できた絵（上の行 IGM はのぞく）を、色のある所だけに切りつめる */
-  let ax=w,ay=ht,bx=-1,by=-1,wa=w,wb=ht,wc=-1,wd=-1,ka=w,kb=ht,kc=-1,kd=-1;for(let v=IGM;v<ht;v++)for(let u=0;u<w;u++){const p=v*w+u;if(!O[p*4+3])continue;if(u<ax)ax=u;if(u>bx)bx=u;if(v<ay)ay=v;if(v>by)by=v;if(K[p]===1||K[p]===6){if(u<wa)wa=u;if(u>wc)wc=u;if(v<wb)wb=v;if(v>wd)wd=v}if(K[p]===4){if(u<ka)ka=u;if(u>kc)kc=u;if(v<kb)kb=v;if(v>kd)kd=v}}
+  return {w,ht,X,Yt,IGM,W,H,TS,IQA,IQB,IQW,IQH,sx0,sy0,sw,B,U,GV,WV,gw,gx0,gy0,TG,TW,GT,WT,ST,SM,SPR:SP?Uint8Array.from(SP,k=>springOn(k)?1:0):null,SG:S.ground,WBAND,WBANDA,WBANK,WBSH,WBANKC,WBSHA,IGSKYH,SKYFACE,BK:igBankTex(),IGBDRIP,IGBSUB,ICLF,IQL}}
+/* 区画 q を作る（その場で） */
+function igBuild(q){const t0=performance.now(),P=igPrep(q);if(P)igFinish(q,igPixels(P));GRD.bt+=performance.now()-t0}
+/* ドットごとの計算の結果（R）から、区画の絵を作る */
+function igFinish(q,R){const{O,K,w,ax,ay,bx,by,wa,wb,wc,wd,ka,kb,kc,kd}=R;
   if(bx<0){igFree(q);q.e=true;IG.n++;return}
-  const put=(x0,y0,x1,y1,fn)=>{const cw=x1-x0+1,ch=y1-y0+1,c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d'),id=g.createImageData(cw,ch);for(let v=0;v<ch;v++)for(let u=0;u<cw;u++){const p=(y0+v)*w+x0+u;fn(id.data,(v*cw+u)*4,p)}g.putImageData(id,0,0);return c};
+  const put=(x0,y0,x1,y1,kv)=>{const cw=x1-x0+1,ch=y1-y0+1,c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d'),id=g.createImageData(cw,ch),d=id.data;for(let v=0;v<ch;v++){let p=(y0+v)*w+x0,i=v*cw*4+3;for(let u=0;u<cw;u++,p++,i+=4)if(K[p]===kv)d[i]=255}g.putImageData(id,0,0);return c};/* 水面・雲の海の形（K が kv の所だけ、うすさ255） */
   igFree(q);q.e=false;{const cw=bx-ax+1,ch=by-ay+1,c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d'),id=g.createImageData(cw,ch);for(let v=0;v<ch;v++){const p=((ay+v)*w+ax)*4;id.data.set(O.subarray(p,p+cw*4),v*cw*4)}g.putImageData(id,0,0);q.f=c}/* 地面の絵：行ごとにまとめてうつす */q.ox=ax-IGP;q.oy=ay-IGM-IGP;
-  if(wc>=0){q.w=put(wa,wb,wc,wd,(d,i,p)=>{d[i+3]=K[p]===1?255:0});q.wx=wa-IGP;q.wy=wb-IGM-IGP}/* 水面の形（毎コマ、水の模様を流す所） */
-  if(kc>=0){q.k=put(ka,kb,kc,kd,(d,i,p)=>{d[i+3]=K[p]===4?255:0});q.kx=ka-IGP;q.ky=kb-IGM-IGP}/* 雲の海の形（時間の色を、地面とかえる所。daycolor.js の dcGround） */
-  q.v=++IG.n;GRD.bt+=performance.now()-t0}
+  if(wc>=0){q.w=put(wa,wb,wc,wd,1);q.wx=wa-IGP;q.wy=wb-IGM-IGP}/* 水面の形（毎コマ、水の模様を流す所） */
+  if(kc>=0){q.k=put(ka,kb,kc,kd,4);q.kx=ka-IGP;q.ky=kb-IGM-IGP}/* 雲の海の形（時間の色を、地面とかえる所。daycolor.js の dcGround） */
+  q.v=++IG.n}
 /* アトラスのページがとどいた：読みこみ中の絵で作った区画に、作りなおすしるし */
 function igPendDone(){for(const q of IG.c.values())if(q.pend)q.st=true}
 /* 区画の左上（ゲームの点） */const igX=q=>IGX0+q.cx*IGW,igY=q=>q.cy*IGH;
@@ -105,7 +82,21 @@ function igPendDone(){for(const q of IG.c.values())if(q.pend)q.st=true}
 function igDirty(R){if(IG.s!==S)return;for(const r of R){const a=Math.max(0,r[0]-2),b=Math.max(0,r[1]-2),c=Math.min(W,r[2]+3),d=Math.min(H,r[3]+3),xs=[isoX(a*TS,d*TS),isoX(c*TS,b*TS)],ys=[isoY(a*TS,b*TS)-IGM,isoY(c*TS,d*TS)];
   for(let cy=Math.max(0,Math.floor((ys[0]-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((ys[1]+IGP+IGM)/IGH));cy++)for(let cx=Math.max(0,Math.floor((xs[0]-IGP-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((xs[1]+IGP-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(q)q.st=true}}}
 /* ステージを開くときに作る仕事の一覧 */
-function igJobs(L){L.push(()=>{if(IG.s!==S)igClear()});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{if(!igNear(cx,cy,IGRING))return;const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))igBuild(q)})}/* 作るのは、画面のまわりの区画だけ */
+function igJobs(L){L.push(()=>{if(IG.s!==S)igClear();IGWK.sk++});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{if(!igNear(cx,cy,IGRING))return;const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))return igJob(q)})}/* 作るのは、画面のまわりの区画だけ */
+/* マップの読みこみ中は、区画のドットごとの計算を、ワーカー（iso-ground-worker.js）にまかせて、いくつも同時に作る。
+   ws：ワーカー（読みこみがおわったら、igWorkEnd で手ばなす）・sk：ステージの番号（かわったら init をおくりなおす）・q：計算中の区画（番号 → 区画） */
+const IGWK={ws:null,sk:0,id:0,q:new Map()},IGWKS=['TG','TW','GT','WT','ST','SM','SG','BK','IGBDRIP','IGBSUB','ICLF','IQL','W','H','TS','IQA','IQB','IQW','IQH','IGM','WBAND','WBANDA','WBANK','WBSH','WBANKC','WBSHA','IGSKYH','SKYFACE'];/* init でおくる物 */
+function igWorkers(){if(IGWK.ws)return IGWK.ws;IGWK.ws=[];if(typeof Worker!=='function')return IGWK.ws;const v=window.JSV,n=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1));/* 画面のスレッドのぶんを1つのこす */
+  try{for(let i=0;i<n;i++){const wk=new Worker('js/iso-ground-worker.js'+(v?'?'+v:''));wk.jobs=0;wk.sk=-1;wk.last={};wk.onmessage=e=>igWorkDone(wk,e.data);wk.onerror=()=>igWorkFail();IGWK.ws.push(wk)}}catch(e){igWorkFail()}return IGWK.ws}
+function igJob(q){/* 区画 q を、ワーカーで作る（ワーカーがないときは、その場で）。ワーカーがどれも2つずつかかえていたら false（読みこみの仕事を、つぎのコマにまわす） */const ws=igWorkers();if(!ws.length){igBuild(q);return}
+  let wk=ws[0];for(const x of ws)if(x.jobs<wk.jobs)wk=x;if(wk.jobs>=2)return false;
+  const t0=performance.now(),P=igPrep(q);if(P){if(wk.sk!==IGWK.sk||IGWKS.some(k=>wk.last[k]!==P[k])){const I={};for(const k of IGWKS){I[k]=P[k];wk.last[k]=P[k]}if(Array.isArray(I.SG))I.SG=Float32Array.from(I.SG);wk.postMessage({init:I});wk.sk=IGWK.sk}/* ステージがかわった・とちゅうで絵がとどいた（岸の絵など）ときは、おくりなおす */
+    const D={};for(const k in P)if(!IGWKS.includes(k))D[k]=P[k];const id=++IGWK.id;IGWK.q.set(id,{q,s:S});wk.jobs++;wk.postMessage({id,P:D},[D.B.buffer].concat(D.U?[D.U.buffer]:[]))}
+  GRD.bt+=performance.now()-t0}
+function igWorkDone(wk,d){wk.jobs--;const e=IGWK.q.get(d.id);IGWK.q.delete(d.id);if(!e||e.s!==S||IG.s!==S)return;igFinish(e.q,d.R);dirty=true}/* ステージがかわっていたら、すてる */
+function igWorkFail(){const L=[...IGWK.q.values()];igWorkEnd();IGWK.ws=[];for(const e of L)if(e.s===S&&IG.s===S)igBuild(e.q)}/* ワーカーが使えないときは、のこりをその場で作る */
+const igWorkBusy=()=>IGWK.q.size>0;
+function igWorkEnd(){if(IGWK.ws)for(const wk of IGWK.ws)wk.terminate();IGWK.ws=null;IGWK.q.clear()}/* 読みこみがおわったら、ワーカーを手ばなす */
 /* 区画は、画面に見えている所と、そのまわり IGRING 区画だけ作っておく。見えなくなって IGFREE コマたち、まわり IGRING 区画より外になった区画は手ばなす（とおい所は、近づいたときに作りなおす） */
 const IGRING=1,IGFREE=300;
 function igNear(cx,cy,m){const[c0,r0,c1,r1]=igVis();return cx>=c0-m&&cx<=c1+m&&cy>=r0-m&&cy<=r1+m}
@@ -114,7 +105,7 @@ function igFar(){if(RFN%60)return;const[c0,r0,c1,r1]=igVis(),m=IGRING;for(const 
 function igVis(){const P=[s2w(0,0),s2w(VW,0),s2w(0,VH),s2w(VW,VH)].map(p=>[isoX(p.x,p.y),isoY(p.x,p.y)]),xa=Math.min(...P.map(p=>p[0])),xb=Math.max(...P.map(p=>p[0])),ya=Math.min(...P.map(p=>p[1])),yb=Math.max(...P.map(p=>p[1]))+HMAX*IQL;/* 高い段は、下の区画の地面を上に描く */
   return[Math.max(0,Math.floor((xa-IGX0)/IGW)),Math.max(0,Math.floor(ya/IGH)),Math.min(IGNX-1,Math.floor((xb-IGX0)/IGW)),Math.min(IGNY-1,Math.floor(yb/IGH))]}
 /* 地面を描く（k：画面のドットの倍率）。区画は、画面のドットのさかいに合わせ、のりしろごと描いて、となりとかさねる */
-function igDraw(k,now){if(IG.s!==S)igClear();if(!igOK())return;const O=isoOff(k),[c0,r0,c1,r1]=igVis(),lod=k<1.2,fresh=!IG.c.size;let built=0;ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
+function igDraw(k,now){if(IG.s!==S)igClear();if(!igOK()||GRD.nob)return;const O=isoOff(k),[c0,r0,c1,r1]=igVis(),lod=k<1.2,fresh=!IG.c.size;let built=0;ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
   for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=igq(cx,cy);if((!q.f&&!q.e||q.st)&&(fresh||!built||GRD.bt<GBUD)){igBuild(q);built++}q.u=RFN;if(!q.f)continue;
     let im=q.f;if(lod){if(!q.l&&GRD.bt<GBUD){const t0=performance.now(),l=document.createElement('canvas');l.width=Math.ceil(q.f.width/2);l.height=Math.ceil(q.f.height/2);const g=l.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(q.f,0,0,l.width,l.height);q.l=l;GRD.bt+=performance.now()-t0}if(q.l)im=q.l}
     const x=igX(q)+q.ox,y=igY(q)+q.oy,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(im,a,b,Math.round(O[0]+k*(x+q.f.width))-a,Math.round(O[1]+k*(y+q.f.height))-b)}
