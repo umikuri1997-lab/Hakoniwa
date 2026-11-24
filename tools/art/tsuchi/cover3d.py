@@ -71,9 +71,10 @@ def render():
     N=-g/np.maximum(np.linalg.norm(g,axis=1,keepdims=True),1e-9)
     dl=N@LIGHT;lv=np.select([dl>0.75,dl>0.45,dl>0.15],[0,1,2],3);k=np.array(TONE)[lv]
     # 色
-    yb=back(x);band=((z+0.12*np.sin(x*1.7+y))/0.38).astype(int)%len(STRATA)
+    yb=back(x);band=((z+0.12*np.sin(x*1.7+y)+0.9*(y>back(x)+2.4))/0.38).astype(int)%len(STRATA)   # 2だんめは、しまをずらす
     rock=np.stack(STRATA)[band]
     col=np.where((z>0.12)[:,None]|(N[:,2]<0.75)[:,None],rock,GROUND)
+    col=np.where(((z>0.5)&(N[:,2]>0.8))[:,None],np.array((228,206,170.0)),col)   # がけのだんの上の面：白っぽい、かわいた土（だんが分かるように）
     inrift=np.abs(x-RX(y))<RW+0.02
     isb=inrift&(y>=BY0-0.02)&(y<=BY1+0.02)&(z>-1.0)
     col=np.where(isb[:,None],np.array((206,174,144.0)),col)

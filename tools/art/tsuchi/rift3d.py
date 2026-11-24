@@ -127,7 +127,7 @@ def render(C,own=(0,0)):
             mid=(lo+hi)/2;f,_,_=field(C,xs-0.75*mid,ys-0.75*mid,-mid)
             hi=np.where(m&(f>0),mid,hi);lo=np.where(m&(f<=0),mid,lo)
         dd=np.where(m,hi,dd);px=xs-0.75*dd;py=ys-0.75*dd;pz=-dd
-    f0,U,isb=field(C,px,py,pz)
+    f0,U,isb=field(C,px,py,pz);isb=isb&~none   # どこにもあたらない線（まっくら）は、橋ではない
     e=0.004
     gx=(field(C,px+e,py,pz)[0]-field(C,px-e,py,pz)[0])/(2*e)
     gy=(field(C,px,py+e,pz)[0]-field(C,px,py-e,pz)[0])/(2*e)
