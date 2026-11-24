@@ -141,7 +141,7 @@ const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),..
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
-const GRT=.5,GRRIM=.07,GRSH=.06
+const GRT=.5/* 草地のさかいのしきい */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;isoGroundLv(ctx,isoLv(j));/* クォータービュー：その段の高さの地面に */drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}groundTf(ctx,dpr*cam.z)}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
 let SSIG=null,SSIG_S=null,SSIG_G='';
