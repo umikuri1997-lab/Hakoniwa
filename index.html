@@ -1017,7 +1017,7 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
 function size(){var w=T.clientWidth||innerWidth,h=T.clientHeight||innerHeight;P=Math.max(4,Math.round(Math.min(w,h)/80));var ngw=Math.ceil(w/P),ngh=Math.ceil(h/P);if(ngw!==gw||ngh!==gh){gw=ngw;gh=ngh;cv.width=gw;cv.height=gh;cv.style.width=gw*P+'px';cv.style.height=gh*P+'px'}
  dpr=window.devicePixelRatio||1;K=Math.max(1,Math.round(Math.min(w,h)*dpr/700));var nw=Math.round(w*dpr),nh=Math.round(h*dpr);if(cs&&(nw!==cw||nh!==ch)){cw=nw;ch=nh;cs.width=cw;cs.height=ch;cs.style.width=w+'px';cs.style.height=h+'px';SC=null}}
 var PG=null;function ready(){try{if(typeof drawObj!=='function'||typeof drawSpiritDot!=='function'||typeof KEYS==='undefined'||!window.CHIPS)return false;
- if(!PG){PG={};for(var id in CHIPS){var f=CHIPS[id].f;if(f&&f[0]&&PG[f[0][0]]==null)PG[f[0][0]]=id}}for(var p in PG)if(!chipImgs(CHIPS[PG[p]],PG[p])[0].ok)return false;return spDotReady('wood')}catch(e){return false}}
+ if(!PG){PG=1;ART.forEach(function(it){bbox(it)})}if(!chaReady())return false;if(PG===1){PG=2;BB={}}return spDotReady('wood')}catch(e){return false}}/* 場面の物を1回ずつ描いて、その絵のページだけを読む（ほかのページは読まない）。そろったら、読みこみ中に描いた絵のはんい（BB）をすてて、はかりなおす */
 /* 場面の物：o＝ゲームの物（drawObj）、c＝チップ、p＝部品の組み合わせ。t＝出てくる段階（0：はじめ・1：草原クリア・2：火山に来た・3：火山クリア）、m＝この段階から消す。L・V＝よこ画面・たて画面の場所 [よこ 0〜1, 地面の上の下はし 0（地平線）〜1（画面の下）]。bg＝地平線のうしろ（s：大きさ） */
 var ART=[
  {o:'deadtree',t:0,m:1,L:[.2,.3],V:[.12,.2]},{o:'deadtree',t:0,m:1,L:[.88,.2],V:[.86,.14]},{o:'weedc',t:0,m:1,L:[.4,.7],V:[.6,.55]},{o:'weed0k',t:0,m:1,L:[.62,.85],V:[.3,.85]},{o:'bud',t:0,m:1,L:[.75,.6],V:[.75,.7]},{o:'kinoko',t:0,m:1,L:[.12,.75],V:[.2,.6]},{o:'weedc',t:0,m:1,L:[.93,.9],V:[.85,.95]},
