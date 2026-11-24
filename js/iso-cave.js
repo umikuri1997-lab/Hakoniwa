@@ -75,7 +75,7 @@ function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);
   if(T)cvqScr(ctx,()=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(!C.seen[cvJ(x,y)])continue;const j=cvJ(x,y);if(cvqFlat(x,y)||C.ab[j]){cvqCell(ctx,x,y,now,T);if(C.g[j])cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvqPebble(x,y))}else{add(x+y+.5,()=>cvqScr(ctx,()=>cvqCell(ctx,x,y,now,T)));if(C.g[j])add(x+y+.51,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvqPebble(x,y)))}
     /* マスにかさねる絵（iso-cave2.js）：水・橋・滝・岩の正面のかざり */
     if(C.wt[j]){add(x+y+.52,()=>cvqWaterCell(x,y,now));if(cvqIn(x,y+1)&&C.ab[j+CVW]||cvqIn(x+1,y)&&C.ab[j+1])add(x+y+.53,()=>cvqScr(ctx,()=>cvqFalls(ctx,x,y,now)))}
-    if(C.br[j])add(x+y+.52,()=>cvqBridge(ctx,x,y,now));if(C.sb&&C.sb[j])add(x+y+.52,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvSkBackDraw(x,y)));/* たおれた石像のせなか（cave-shinden.js） */if(cvqRock(j)&&cvqIn(x,y+1)&&C.g[j+CVW])add(x+y+.52,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvqRockDeco(x,y)))}});
+    if(C.br[j])add(x+y+.52,()=>cvqBridge(ctx,x,y,now));if(C.sb&&C.sb[j])add(x+y+.52,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>C.kui?cvKuiBridgeDraw(x,y):cvSkBackDraw(x,y)));/* たおれた石像のせなか（cave-shinden.js）・根の橋（cave-shisetsu.js） */if(cvqRock(j)&&cvqIn(x,y+1)&&C.g[j+CVW])add(x+y+.52,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvqRockDeco(x,y)))}});
   if(T){cvqAbyssDraw(V,now);cvqReflect(V,now)}/* 大穴の底・水のうつりこみ（うしろのかべ・物は、このあと上に） */
   /* 物（地面にはりつく物は、地面の描き方で） */
   const FL='SRkh12q!^LVHz';for(const[j,o]of C.ob){if(!C.seen[j]&&!(o.k==='g'&&cvLureOn(j)))continue;if(o.k==='N'&&!o.top||o.sub)continue;const x=cvX(j),y=cvY(j);if(!inV(x,y))continue;
