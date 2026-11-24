@@ -2,7 +2,9 @@
    ひびの床・うすい壁・落ちてくる岩・食べる・消える・帰る（ひろった物・村の時計）・10の階（1〜3階は大穴のない自然の洞窟：根の空洞・小川のとびいし・水晶の柱の林／地図のまだない4階から先は行けない／8階 ゆりかごのへや）。
    地図は tools/cave/cave_maps.py で作るので、場所は数字でなく、物のしゅるい（S・R・b・t・x・m・k など）でさがす */
 const assert=require('node:assert/strict');
-(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
+  /* 洞窟の絵（アトラスのページ）は、使うときに読む。1回入って描いて、読みおわってからたしかめる */
+  await run(`(()=>{const r=mkRes(S,'pre','earth',CX+.5,CY+2.5);r.nap=false;r.hunger=hMax(r);S.res.push(r);caveEnter([r],{},0);CV.seen.fill(1);caveRender(performance.now());caveAbort();S.res.splice(S.res.indexOf(r),1);return 1})()`);await page.waitForFunction(()=>sacredEval('chaReady()'));
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;{const ce=caveEnter;caveEnter=(...q)=>{const v=ce(...q);if(CV)CV.sc=[];return v}}/* こわい物（cave-bake.js）は tools/tests/cave-bake.cjs でたしかめる */S.introSeen=true;S.flags.tapped=1;const out={};
     for(const el of ['earth','fire','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const q of S.res){q.nap=false;q.hunger=hMax(q)}
     S.t=Math.floor(S.t/1440)*1440+9*60;S.hold=0;S.fs.imo=5;syncFood();S.pt=50;
