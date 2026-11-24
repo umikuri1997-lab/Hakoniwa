@@ -6,8 +6,6 @@ paths:
   - "js/support.js"
   - "js/pace.js"
   - "js/fall.js"
-  - "js/spirit-*.js"
-  - "js/data.js"
 ---
 # 夜・守り・戦い
 

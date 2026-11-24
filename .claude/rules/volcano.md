@@ -3,7 +3,6 @@ paths:
   - "js/kagari.js"
   - "js/story-stage.js"
   - "js/sacred-play.js"
-  - "js/world.js"
   - "js/quests.js"
 ---
 # 火山のステージ

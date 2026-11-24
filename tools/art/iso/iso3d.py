@@ -43,6 +43,7 @@ SKIP={'kabebukuro','wreath','wshelf','nat_eda','g_w_acorn','g_w_clover','g_w_she
 BATCH2=['crate','bed','wbench','loom','taru','chair','table']   # はじめの家具
 BATCH1=['statue','statueb','obox','board','altar','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
 WBUP=10
+FRONT={'nat_tree','nat_tree_aki'}   # 48度にせず、設計図の見え方（ELEV）のまま、まわさずに写す物（草原の木：モデルは正面から見る形・まるい。持ち主がきめた）。大きさ・置き方（iso:1）と落ち影は、ほかと同じクォータービュー
 SHADOWS={'nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush','sacred'}   # 落ち影も写す物
 def bl_sizes():
     """ゲームの BL の大きさ sz（id → (よこ,たて)）。BL は1行に1つ（中に {} がある行も、その行の中の sz を見る）"""
@@ -87,8 +88,11 @@ def run_item(iid,out):
     """furn3d の設計図を写し、iso の置き方にする。→ {名前: チップの中身}"""
     M=F3.load(iid);add_left(M)
     if M.ID=='wbwork':M.VIEWS=list(M.VIEWS)+[('wbwork>%d#%d'%(k,v),k,v) for k in(1,2,3) for v in range(3)]   # 作業台の上の形：作業台の4つの向きごとに（作業台と同じだけまわす）
-    if hasattr(M,'ELEV'):M.ELEV=ISOLIGHT   # 光を画面の向きにする所（sunscreen(ELEV)）は、ほんとうのカメラの角度で
-    F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));parts=getattr(F3.run,'parts',{});R={}
+    fr=iid in FRONT
+    if hasattr(M,'ELEV') and not fr:M.ELEV=ISOLIGHT   # 光を画面の向きにする所（sunscreen(ELEV)）は、ほんとうのカメラの角度で
+    if fr:O.persp,O.Scene.turn=_persp,_turn   # FRONT：設計図の見え方のまま（大きさ ISOS の shot はそのまま）
+    try:F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));parts=getattr(F3.run,'parts',{});R={}
+    finally:O.persp,O.Scene.turn=persp,turn
     for nm,(im,ax0,ay0) in CH.items():
         bb,inf=F3.META[nm];k=dict((v[0],v[1]) for v in M.VIEWS).get(nm.rsplit('.',1)[0],0);u,v=anchor(inf,nm,k)
         ax,ay=round(bb[0]-u),round(bb[1]-v);dx,dy=ax-ax0,ay-ay0
@@ -104,7 +108,7 @@ def run_item(iid,out):
         R[nm]=c;print('iso',nm,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
     import chips as CHP
     if not hasattr(run_item,'old'):run_item.old=CHP.load_imgs()[1]
-    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old})   # 落ち影：いま落ち影のある物だけ
+    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old or re.sub(r'#\d+(?=:)','',k) in run_item.old})   # 落ち影：いま落ち影のある物だけ（足したならび #n は、もとの物に落ち影があれば）
     return R
 def run_sacred(out):   # 落ち影は作らない（御神木は落ち影の描き方を通らない）
     import sacred_tripo as ST

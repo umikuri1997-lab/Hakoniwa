@@ -57,6 +57,7 @@ class Part:
             if len(d)>3 and d[3]=='z':return(a[:,0].min(),a[:,1].min(),c0,a[:,0].max(),a[:,1].max(),c1)
             return(a[:,0].min(),c0,a[:,1].min(),a[:,0].max(),c1,a[:,1].max())
         if k=='lathe':cx,cy,pr=d;r=max(q[0] for q in pr);return(cx-r,cy-r,min(q[1] for q in pr),cx+r,cy+r,max(q[1] for q in pr))
+        if k=='mesh':V=np.array(d[0],float);return(*V.min(0),*V.max(0))
         pts=s.corners();a=np.array(pts);return(*a.min(0),*a.max(0))
     def corners(s):
         k,d=s.kind,s.dims
@@ -92,6 +93,9 @@ def build(sc,parts):
         k,d,c=p.kind,p.dims,np.array(p.col,float);sc.group(p.grp)
         if k=='box':sc.box(*d,tuple(c),bevel=p.bevel)
         elif k=='lathe':cx,cy,pr=d;sc.revolve(cx,cy,pr,lambda k_,i:tuple(c),n=p.detail)
+        elif k=='mesh':   # 三角の面をじかに（dims＝(点の一覧, 面の一覧(3つの点の番号), 面ごとの色)。畑の畝のような、高さの表の形）
+            V,F,FC=d;sc.part()
+            for f,cc in zip(F,FC):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc))
         elif k=='model':
             V,F,C=model_tris(*d);sc.part()
             pt=getattr(p,'paint',None)

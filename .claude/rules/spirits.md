@@ -28,8 +28,6 @@ paths:
   - "js/fish.js"
   - "js/yume.js"
   - "js/nick.js"
-  - "js/data.js"
-  - "js/level.js"
   - "js/draw-spirits.js"
 ---
 # せいれいのくらし・仕事・遊び

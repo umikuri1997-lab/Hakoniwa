@@ -6,7 +6,6 @@ paths:
   - "js/scroll.js"
   - "js/input.js"
   - "js/dialog.js"
-  - "js/main.js"
   - "js/follow.js"
   - "js/manfig.js"
   - "tools/ui/**"

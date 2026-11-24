@@ -5,12 +5,7 @@ paths:
   - "js/sacred*.js"
   - "js/route.js"
   - "js/companion-story.js"
-  - "js/dialog.js"
-  - "js/data.js"
   - "js/reflect.js"
-  - "js/talk.js"
-  - "js/level.js"
-  - "js/save.js"
   - "STORY.md"
 ---
 # クエスト・お話・会話
