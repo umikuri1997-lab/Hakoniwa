@@ -21,6 +21,8 @@ SRC = os.path.join(HERE, 'god_front.png')
 AXIS = 28            # たての軸（絵の x）
 HALO = 12            # この行より上は天使の輪
 STAFF = (184, 142, 104)
+LIT = {(247, 206, 153), (251, 211, 163), (244, 219, 195)}   # つえの光の当たったふちの色
+SIDE = 0.75          # 横・うしろの面（正面の絵の、はしから外の所）は、はばの SIDE の所の色（はしの色をのばすと、よこすじになる）
 BD = 0.72            # 体のおくゆき（はばに対して）
 STAFFY = 21.0        # つえの軸の、体のまん中からの前への出（ドット）
 YAW = math.pi/4      # 前ななめ（左下を向く）
@@ -36,7 +38,9 @@ def load():
     rows = np.nonzero(st.any(1))[0]; r0, r1 = rows.min(), rows.max()
     for r in range(r0, r1+1):
         if st[r].any():
-            c = np.nonzero(st[r])[0]; prop[r, c.min():c.max()+1] = True
+            c = np.nonzero(st[r])[0]; x1 = c.max()+1
+            if tuple(int(v) for v in a[r, x1, :3]) in LIT: x1 += 1   # つえの右の、光の当たったふち（はだ色ににている）
+            prop[r, c.min():x1] = True
     # 手：つえの頭と柄のあいだの行（つえの色がない行）のはだ色
     skin = al & (np.abs(a[..., 0].astype(int)-251) < 8) & (np.abs(a[..., 1].astype(int)-211) < 10) & (a[..., 2] < 175)
     for r in range(r0, r1+1):
@@ -54,8 +58,9 @@ def load():
             body[r, c] = a[r, L] if c-L <= R-c else a[r, R]
     return a, bal, prop, body
 
-def shell(al, col, rows, depth, cy_of, edge=0):
+def shell(al, col, rows, depth, cy_of, edge=0, rot=0.0):
     """行ごとのだ円の面の点 (x, y, z) と色。cy_of(r)：その行のだ円のまん中の y。
+    rot：色をとる角度のずらし（まるい棒は、カメラから見える半分に、正面の絵をそのままうつす）
     edge：色をとるとき、絵のはしの何ドットを使わないか（はしのうすいふちの色が、まわした横の面にのびて、よこすじになる）"""
     P = []; C = []
     for r in rows:
@@ -67,8 +72,15 @@ def shell(al, col, rows, depth, cy_of, edge=0):
         for sz in np.arange(0.125, 1, 0.25):
             for shrink in (1.0, 0.9, 0.8):   # 面の内がわも少し（すきまが出ないように）
                 x = cx+ax*shrink*np.cos(th); y = cy+by*shrink*np.sin(th)
-                e = edge if x1-x0 > 4*edge+2 else 0; ci = np.clip(np.floor(x+AXIS).astype(int), x0+e, x1-1-e)
-                P.append(np.stack([x, y, np.full(n, (al.shape[0]-r)-sz)], 1)); C.append(col[r, ci, :3])
+                xs = cx+ax*np.clip(np.cos(th-rot), -SIDE if edge else -1, SIDE if edge else 1)   # 色をとる所
+                e = edge if x1-x0 > 4*edge+2 else 0; ci = np.clip(np.floor(xs+AXIS).astype(int), x0+e, x1-1-e)
+                cc = col[r, ci, :3].copy()
+                if edge:   # 横・うしろの面は、上下5行でいちばん多い色（1行だけのまゆ・ふちの色が、横にのびない）
+                    sd = np.abs(np.cos(th)) >= SIDE
+                    for c0 in np.unique(ci[sd]):
+                        cand = [tuple(int(v) for v in col[q, c0, :3]) for q in range(max(0, r-2), min(al.shape[0], r+3)) if al[q, c0]]
+                        if cand: cc[sd & (ci == c0)] = max(set(cand), key=cand.count)
+                P.append(np.stack([x, y, np.full(n, (al.shape[0]-r)-sz)], 1)); C.append(cc)
     return np.concatenate(P), np.concatenate(C)
 
 def render(a, al, prop, body):
@@ -77,7 +89,7 @@ def render(a, al, prop, body):
     al = a[..., 3] > 0
     Pb, Cb = shell(bal, body, range(HALO, H), lambda r: BD, lambda r: 0.0, edge=2)
     pal = prop.copy()
-    Pp, Cp = shell(pal, a, range(HALO, H), lambda r: 1.0, lambda r: STAFFY)
+    Pp, Cp = shell(pal, a, range(HALO, H), lambda r: 1.0, lambda r: STAFFY, rot=-YAW)   # つえ・手は、まわしても正面の絵と同じに見える
     c, s = math.cos(YAW), math.sin(YAW)
     OW = W+8; ox = OW/2
     zb = np.full((H*SSN, OW*SSN), -1e9); cb = np.zeros((H*SSN, OW*SSN, 3), np.uint8); ib = np.full((H*SSN, OW*SSN), -1)
