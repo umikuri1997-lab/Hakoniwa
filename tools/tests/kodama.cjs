@@ -1,5 +1,5 @@
 /* もりのこだま・霧の中の手がかり・属性のはたらきあい（風の日のはたおり機・雨のたき火・火のせいれいで雪がとける）
-   草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・花の輪（同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
+   草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・花の輪（霧が晴れたエリアだけ。はじめの4エリアは草むら・切り株の2こずつ。同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
    火山：はじめから16エリアに3こずつ（48こ。置けなかった分は、つぎの朝に）。 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
@@ -14,7 +14,10 @@ const assert=require('node:assert/strict');
     /* もう一度タップ：なにもしない */kdTap(e1.j%W,(e1.j/W)|0);out.again=S.kodama;
     /* 欠けた石の輪はない */out.noIshi=!S.kd.some(e=>e.k==='ishi')&&!S.obj.includes('kdishi');
     /* 前のセーブ：まだの石の輪は、小石も記録もけす・見つけた輪は、小石だけけして記録をのこす・はこんでいた石材は箱へ */{const s={kd:[],obj:new Array(W*H).fill(''),mat:{stone:0},res:[{kdst:9}]},j1=40*W+40,j2=60*W+60;for(const[j,st,id]of[[j1,0,9],[j2,2,10]]){s.kd.push({id,k:'ishi',a:0,j,gap:j-W,st,ws:1});for(const[dx,dy]of KDRING)s.obj[j+dy*W+dx]='kdishi'}s.obj[j1-W]='';kdIshiMig(s);out.mig=[s.kd.length,s.kd[0]&&s.kd[0].st,s.obj.includes('kdishi'),s.mat.stone,s.res[0].kdst,'ws' in (s.kd[0]||{})]}
-    /* 花の輪：すきまに同じ花が咲くと、見にいく */
+    /* 花の輪：はじめの4エリアには置かない。前のセーブの、まだ見つけていない花の輪はけして、べつのしゅるいを置く */out.midHana=S.kd.filter(e=>e.k==='hana').length;
+    {const a5=S.kd.filter(e=>e.a===5&&e.st===0)[0];if(a5){for(const c of kdCells(a5))if(S.obj[c]===KDK[a5.k].o)S.obj[c]='';S.kd=S.kd.filter(e=>e!==a5);const h={id:S.kdN=(S.kdN||0)+1,k:'hana',a:5,j:a5.j,gap:a5.j-W,st:0,fl:'clover'};for(const c of kdCells(h))if(c!==h.gap)S.obj[c]='kdhana';S.kd.push(h);KDMN=-1;kdInit();out.oldHana=S.kd.some(e=>e===h)||kdCells(h).some(c=>S.obj[c]==='kdhana');out.a5n=S.kd.filter(e=>e.a===5).length}}
+    /* 花の輪：すきまに同じ花が咲くと、見にいく（タップしても、ふつうの花と同じ） */
+    {const h={id:S.kdN=(S.kdN||0)+1,k:'hana',a:5,j:0,gap:0,st:0,fl:'clover'};const sv=S.kd;S.kd=[h];KDMN=-1;out.hanaTap=kdTap(0,0);S.kd=sv;KDMN=-1}
     const e3=S.kd.find(e=>e.k==='hana'&&e.st===0);if(e3){S.obj[e3.gap]=e3.fl;recount();out.hanaSt=e3.st;walkN();out.found3=e3.st}
     out.kodama=S.kodama;
     /* こわせない */const before=S.obj[e1.j];removeAt(e1.j%W,(e1.j/W)|0);out.keep=S.obj[e1.j]===before;
@@ -29,9 +32,10 @@ const assert=require('node:assert/strict');
     return JSON.stringify(out)})()`));
   await new Promise(f=>setTimeout(f,400));Object.assign(r,JSON.parse(await run(`JSON.stringify({fogAdd:S.kd.length-__n1,fogArea:S.kd.slice(__n1).every(e=>e.a===__fa)})`)));
   console.log(JSON.stringify(r));
-  assert.equal(r.n0,12,'はじめは晴れた4エリアに3こずつ');assert.deepEqual(r.areas,[5,6,9,10]);assert.equal(r.objOK,true);
+  assert.equal(r.n0,8,'はじめは晴れた4エリアに2こずつ（草むら・切り株）');assert.deepEqual(r.areas,[5,6,9,10]);assert.equal(r.objOK,true);
   assert.equal(r.st1,1);assert.equal(r.found1,2,'せいれいが見つける');assert.equal(r.kodama1,1);assert.ok(r.pt1>=5,'パワー+5');assert.equal(r.again,1);
   assert.equal(r.noIshi,true,'欠けた石の輪は出ない');assert.deepEqual(r.mig,[1,2,false,1,null,false],'前のセーブの石の輪');
+  assert.equal(r.midHana,0,'はじめの4エリアに花の輪はない');if(r.oldHana!==undefined){assert.equal(r.oldHana,false,'前のセーブの花の輪はけす');assert.equal(r.a5n,2)}assert.equal(r.hanaTap,false,'花の輪のタップは、ふつうの花と同じ');
   if(r.hanaSt!==undefined){assert.equal(r.hanaSt,1);assert.equal(r.found3,2)}
   assert.equal(r.keep,true,'こわせない');
   assert.equal(r.owe+r.bp,1,'10こめで設計図');assert.equal(r.oweAfter,0);assert.equal(r.bpAfter,1);
