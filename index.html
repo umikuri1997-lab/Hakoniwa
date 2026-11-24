@@ -984,6 +984,10 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
  if(kind==='lock'){R(0,0,gw,gh,'#1e2230');for(var s=0;s<40;s++)R(hsh(s)*gw|0,hsh(s+99)*gh|0,1,1,s%3?'#4a5068':'#8a90a8');spr(LOCK,(gw-10)/2|0,(gh-11)/2|0,{'#':'#c9a46a'});return}
  var TL=kind==='title';if(TL)kind='meadow';/* タイトル：木とせいれいは、ゲームの絵で上に描く */
  var V=kind==='volcano',W=kind==='water';
+ if(kind==='earth'){/* 土：空の色と雲は、ここで描き、谷は3Dから写した絵（main.js の pxCover） */var im=window.pxCover&&window.pxCover('cover:tsuchi');
+  var ske=['#b9d5e2','#c3dae2','#cddfe1','#d7e3de','#e0e6da','#e9e9d4'],gy0=Math.round(gh*.62);for(var b0=0;b0<6;b0++)R(0,b0*gy0/6|0,gw,Math.ceil(gy0/6)+1,ske[b0]);
+  for(var k0=0;k0<3;k0++){var cx0=((hsh(k0)*gw+t*(1+k0*.5))%(gw+30))-15|0,cy0=(3+hsh(k0+7)*gy0*.3)|0,cw0=8+(hsh(k0+3)*8|0);R(cx0,cy0,cw0,2,'#f4fbfd');R(cx0+2,cy0-1,cw0-5,1,'#f4fbfd')}
+  if(im){c.drawImage(im,0,0,gw*P,gh*P);return}kind='meadow'}
  var sky=V?['#e48a66','#ea9670','#efa274','#f3b17e','#f6c08a','#f8cf9c']:W?['#a6d6ec','#b2dcef','#bfe2f2','#cbe8f4','#d6edf5','#e0f2f6']:['#a9d8ea','#b5ddec','#c1e3ee','#cde8f0','#d8eef1','#e3f3f0'];
  var gy=Math.round(gh*(gh>gw*1.2?0.7:0.62));
  for(var b=0;b<6;b++)R(0,b*gy/6|0,gw,Math.ceil(gy/6)+1,sky[b]);

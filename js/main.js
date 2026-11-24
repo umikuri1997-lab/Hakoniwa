@@ -53,8 +53,10 @@ function coverLast(w){/* さいごにあそんだ時刻 */if(S&&S.introSeen&&(S.
 function coverOf(k){const L=LIVE[k];if(L&&!L.summary)return coverCast(L,k);const m=coverMeta()[k];if(m&&m.c&&m.c.length)return m.c;
   /* しるしがない前のセーブ：名前の決まった子だけ、セーブの文字からさがす */let raw='';try{raw=KV.getItem(SAVE_KEYS[k])||''}catch(e){}const fx=k===0?['フタバ','ノドカ','ホノ','アオ','フウ']:KEYS[k]||[];
   return fx.filter((n,i)=>!i||raw.indexOf('"name":"'+n+'"')>=0).map(n=>[n,KEYEL[n]||Object.keys(FIXK0).find(e=>FIXK0[e]===n)||'wood',KEYVR[n]||null])}
+function pxCover(id){/* 表紙の、3Dから写した景色（tools/art/tsuchi/cover3d.py。空はすける）。まだ読めていなければ null（いままでの絵） */const ch=window.CHIPS&&CHIPS[id];if(!ch)return null;const im=chipImgs(ch,id)[0];return im&&im.ok?im:null}
+window.pxCover=pxCover;
 function thumb(cv2,k,open,hide){
-  const kind=k===1?'volcano':k===MIZU?'water':k===FREE?'free':'meadow',cast=hide||!open||k===FREE?[]:coverOf(k);
+  const kind=k===1?'volcano':k===MIZU?'water':k===FREE?'free':k===TSUCHI&&pxCover('cover:tsuchi')?'earth':'meadow',cast=hide||!open||k===FREE?[]:coverOf(k);
   cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
   if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
   if(hide)return PXSCENE(c,190,70,1,'lock',0);
