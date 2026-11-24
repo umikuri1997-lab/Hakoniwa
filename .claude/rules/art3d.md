@@ -1,6 +1,8 @@
 ---
 paths:
-  - "tools/art/**"
+  - "tools/art/*3d*/**"
+  - "tools/art/*3d*.py"
+  - "tools/art/models/**"
   - "js/spirit-motions*.js"
   - "js/iso*.js"
 ---
