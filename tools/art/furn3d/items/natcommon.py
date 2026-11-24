@@ -117,21 +117,16 @@ def barkdecal(p,pal,step=0.045,seg=0.16):
         if 0.5<fs<0.72 and h2<0.5:return pal[0]
         return pal[1]
     p.decal=f;notex(p);return p
-HULLRING=((0,1.0,9),(0.45,0.82,7),(0.8,0.45,5),(1.0,0.08,2))
-def hullpts(c,r,h,seed=0,peak=(0,0),ring=HULLRING):
-    """hullrock の岩の点（つつむ前）。足もとの形をしらべるときにも使う（nat_rock.py）"""
+def hullrock(sc,c,r,h,pal,seed=0,peak=(0,0),gi='r',ring=((0,1.0,9),(0.45,0.82,7),(0.8,0.45,5),(1.0,0.08,2)),crack=None):
+    """角ばった岩を、点をつつむ形（凸包）で組む：c=(x,y) 置く所、r 半径（よこ・おく）、h 高さ、peak：てっぺんのずれ。面ごとに光の向きで pal の色（facets と同じ）"""
+    import oblique3d as O
+    from scipy.spatial import ConvexHull
     rs=np.random.RandomState(seed);P=[]
     for z,k,n in ring:
         for i in range(n):
             a=2*np.pi*(i+rs.uniform(-0.3,0.3))/n;rr=k*rs.uniform(0.85,1.08)
             P.append((c[0]+peak[0]*z+np.cos(a)*r[0]*rr,c[1]+peak[1]*z+np.sin(a)*r[1]*rr,h*min(1,z*rs.uniform(0.95,1.05))))
-    return np.array(P)
-def hullrock(sc,c,r,h,pal,seed=0,peak=(0,0),gi='r',ring=HULLRING,crack=None,P=None):
-    """角ばった岩を、点をつつむ形（凸包）で組む：c=(x,y) 置く所、r 半径（よこ・おく）、h 高さ、peak：てっぺんのずれ。面ごとに光の向きで pal の色（facets と同じ）"""
-    import oblique3d as O
-    from scipy.spatial import ConvexHull
-    if P is None:P=hullpts(c,r,h,seed,peak,ring)   # P：つつむ点を、じかにわたす（nat_rock.py の小さな岩の形）
-    P=np.asarray(P,float);H=ConvexHull(P);t=P[H.simplices];c0=P.mean(0)
+    P=np.array(P);H=ConvexHull(P);t=P[H.simplices];c0=P.mean(0)
     n=np.cross(t[:,1]-t[:,0],t[:,2]-t[:,0]);n/=np.linalg.norm(n,axis=1,keepdims=True)+1e-12;n*=np.sign(((t.mean(1)-c0)*n).sum(1))[:,None]
     keep=n[:,2]>-0.5;t,n=t[keep],n[keep];d=n@O.LIGHT;cut=np.quantile(d,np.linspace(1,0,len(pal)+1)[1:-1])
     if crack:   # ひび：手前の面に、上から下へ、まがった線と、えだわかれ（お手本の大岩）
