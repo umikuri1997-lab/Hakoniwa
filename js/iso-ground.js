@@ -4,7 +4,7 @@
    ステージを開くときに、ぜんぶ作って、すてない（作りなおすのは、物を置いて変わった区画だけ）。
    1. 下の地面（あれ地・火山の地面）と、上の平らな物（床・道・畑・平らな物）は、いままでの上から見た絵を、ひし形へ写す（ひし形の絵がとどくまでの仮）。
       写すのは、ドットのまん中の点がどのマスのどこかを見て、その色をとる（ドットのますめにそろう。まわして描かない）。
-   2. 草地とあれ地のさかい・水と岸は、デュアルグリッドのオートタイル：マスの角（となり4マスのまん中）ごとに、4マスの草（水）のあるなし（16とおり）で
+   2. 草地とあれ地のさかい（ふちは、道と同じ草の葉）・水と岸は、デュアルグリッドのオートタイル：マスの角（となり4マスのまん中）ごとに、4マスの草（水）のあるなし（16とおり）で
       えらんだタイル（IGTG・IGTW）をならべる。タイルの形は、4マスの値をなめらかにつないだ面を、しきいでくぎる（マーチングスクエア）。
    3. 水は岸より一段ひくい：画面で水のすぐ上が陸なら、岸の断面（WBANKC）とそのかげ。水面は、毎コマ、水の模様をゆっくり流す（igShimmer）。 */
 const IGSKYH=18;/* 浮き島のがけ（雲の海の上、画面で島のすぐ下）の高さ（ゲームの点） */
@@ -21,8 +21,18 @@ function igOK(){return groundChipsOK()&&waterChipsOK()}
    角の番号：1 左上のマス・2 右上・4 左下・8 右下（せかいの向き） */
 function igTiles(fn){const T=[];for(let m=0;m<16;m++){const a=new Uint8Array(IQW*IQH);for(let v=0;v<IQH;v++)for(let u=0;u<IQW;u++){const ix=u-IQW/2+.5,iy=v+.5,wx=(ix/IQA+iy/IQB)/2,wy=(iy/IQB-ix/IQA)/2;if(wx<0||wy<0||wx>=TS||wy>=TS){a[v*IQW+u]=255;continue}/* この点は、となりのタイル */
   const s=wx/TS,t=wy/TS,f=(m&1)*(1-s)*(1-t)+(m>>1&1)*s*(1-t)+(m>>2&1)*(1-s)*t+(m>>3&1)*s*t;a[v*IQW+u]=fn(f)}T.push(a)}return T}
-/* 草：1 草・2 草のふち（こい緑）・3 あれ地がわのかげ・0 あれ地 */
-const igTG=()=>IG.tg||(IG.tg=igTiles(f=>f>=GRT+GRRIM?1:f>=GRT?2:f>=GRT-GRSH?3:0));
+/* 草：1 草・2 草の葉のかげの色・0 あれ地。ふちは、あぜ道・砂利道の草のふち（draw-ground.js の roadGrassEdge）と同じ：
+   さかいの線から、あれ地のほうへ、まるいふくらみと、とがった草の葉がはみ出す。葉は、さかいにそった向き（4マスの値の面の、等高線の向き）にならべる。
+   ならびは1マス（TS）でくりかえすので、まっすぐなさかいは、となりのタイルとつながる。 */
+const GRBN=19,GRBS=TS/GRBN;/* 1マスの葉の数・葉のあいだ（道のふちと同じ、ほぼ1.7） */
+function igBlade(u,e){const k0=Math.floor(u/GRBS);for(let k=k0-3;k<=k0+3;k++){const n=((k%GRBN)+GRBN)%GRBN,v=hash(n*71+3),pos=k*GRBS-1+hash(n*37+1)*1.8,dep=2+v*4.3,rx=2+hash(n*17+2)*1.6,ry=dep*.7;
+  if(((u-pos)/rx)**2+((e-.6)/ry)**2<=1)return 1;/* ふくらみ */const L=dep+1.5;if(e<L){const w=1.7*(1-e/L),c=pos+(v-.5)*3*(e/L);if(Math.abs(u-c)<=w)return n%4?1:2}}/* とがった葉（4本に1本はかげの色） */
+  return 0}
+function igGrassTiles(){const T=[];for(let m=0;m<16;m++){const a=new Uint8Array(IQW*IQH),c0=m&1,c1=m>>1&1,c2=m>>2&1,c3=m>>3&1;for(let v=0;v<IQH;v++)for(let u=0;u<IQW;u++){const ix=u-IQW/2+.5,iy=v+.5,wx=(ix/IQA+iy/IQB)/2,wy=(iy/IQB-ix/IQA)/2;if(wx<0||wy<0||wx>=TS||wy>=TS){a[v*IQW+u]=255;continue}
+  const s=wx/TS,t=wy/TS,f=c0*(1-s)*(1-t)+c1*s*(1-t)+c2*(1-s)*t+c3*s*t;if(f>=GRT){a[v*IQW+u]=1;continue}
+  const fx=((1-t)*(c1-c0)+t*(c3-c2))/TS,fy=((1-s)*(c2-c0)+s*(c3-c1))/TS,g=Math.hypot(fx,fy);if(g<1e-6){a[v*IQW+u]=0;continue}/* 草のほうへの向き */
+  const e=(GRT-f)/g;a[v*IQW+u]=e>9?0:igBlade(-wx*fy/g+wy*fx/g,e)}T.push(a)}return T}/* e：さかいの線からの、あれ地がわのきょり（ゲームの点） */
+const igTG=()=>IG.tg||(IG.tg=igGrassTiles());
 /* 水：1 水・2 陸にとなる水の線・10+k 陸の、水からの帯（k＝1〜3）・0 陸 */
 const igTW=()=>IG.tw||(IG.tw=igTiles(f=>{if(f>=IGWT+1/TS)return 1;if(f>=IGWT)return 2;for(let k=1;k<WBAND.length;k++)if(f>=IGWT-k/TS)return 10+k;return 0}));
 /* 絵の画素をとっておく（テクスチャ・上から見た絵） */
@@ -50,7 +60,7 @@ function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IG
     const p=v*w+u,o=p*4,fx=Math.floor(wx),fy=Math.floor(wy),tx=(fx/TS)|0,ty=(fy/TS)|0,vx=Math.floor(wx/TS+.5),vy=Math.floor(wy/TS+.5),lu=ix-((vx-vy)*IQW/2-IQW/2),lv=iy-(vx+vy-1)*IQH/2,li=lv*IQW+lu;
     const ca=vx-1-gx0,cb=vy-1-gy0,c1=cb*gw+ca,c2=c1+1,c3=c1+gw,c4=c3+1,mg=GV[c1]|GV[c2]<<1|GV[c3]<<2|GV[c4]<<3,mw=WV[c1]|WV[c2]<<1|WV[c3]<<2|WV[c4]<<3;
     const si=((fy-sy0)*sw+(fx-sx0))*4;let r=B[si],g=B[si+1],b=B[si+2];
-    const kg=mg?TG[mg][li]:0;if(kg===1||kg===2){const ti=((fy%GT.h)*GT.w+fx%GT.w)*4;r=GT.d[ti];g=GT.d[ti+1];b=GT.d[ti+2];if(kg===2){r=r*.78;g=g*.84;b=b*.74}}else if(kg===3){const a=38/255;r=r+(40-r)*a;g=g+(46-g)*a;b=b+(24-b)*a}/* 草地のふちはこい緑・あれ地がわにうすいかげ */
+    const kg=mg?TG[mg][li]:0;if(kg===1||kg===2){const ti=((fy%GT.h)*GT.w+fx%GT.w)*4;r=GT.d[ti];g=GT.d[ti+1];b=GT.d[ti+2];if(kg===2){r=r*.89;g=g*.92;b=b*.89}}/* 草の葉のかげの色（道のふちの葉と同じくらい） */
     const kw=mw?TW[mw][li]:0,j=ty*W+tx,sky=SM&&SM[j]===1;
     if(kw===1||kw===2){if(sky){const ti=((fy%ST.h)*ST.w+fx%ST.w)*4;r=ST.d[ti];g=ST.d[ti+1];b=ST.d[ti+2];K[p]=4}else{const ti=((fy%WT.h)*WT.w+fx%WT.w)*4;r=WT.d[ti];g=WT.d[ti+1];b=WT.d[ti+2];K[p]=1;
       if(SP&&springOn(SP[j])){r=r+(232-r)*.6;g=g+(238-g)*.6;b=b+(232-b)*.6;K[p]=3}/* よみがえった温泉：乳白色の湯 */
