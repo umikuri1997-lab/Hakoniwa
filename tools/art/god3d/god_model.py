@@ -105,34 +105,60 @@ def arc(name, c, rad, thick, m):
         a = math.pi*(0.1+0.8*i/(n-1)); pts.append((c[0]+rad*math.cos(a), c[1], c[2]+rad*math.sin(a)))
     return tube(name, pts, [thick]*n, m, seg=8)
 
+def join(name, obs, voxel=0.03):
+    """部品をかさねた形を、1つの体にする（ボクセルリメッシュ：かさなった所がつながった、1まいの面になる）"""
+    for o in obs: o.modifiers.clear()
+    with bpy.context.temp_override(active_object=obs[0], object=obs[0], selected_objects=obs, selected_editable_objects=obs):
+        assert bpy.ops.object.join() == {'FINISHED'}
+    ob = obs[0]; ob.name = name; ob.data.name = name
+    md = ob.modifiers.new('remesh', 'REMESH'); md.mode = 'VOXEL'; md.voxel_size = voxel; md.use_smooth_shade = True
+    dm = ob.modifiers.new('decimate', 'DECIMATE'); dm.ratio = 0.3   # 面の数をへらす（写すのが重くならないように）
+    return ob
+
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     # 服：上がせまく、すそが広がる台形（正面の絵のはば。そでが体のよこにかさなる）。すそに金色の帯（z 0.30〜0.42）
-    lathe('robe', [(0.0, 1.30), (0.12, 1.33), (0.28, 1.33), (0.30, 1.33), (0.42, 1.32), (0.44, 1.32), (0.80, 1.29), (1.20, 1.22), (1.60, 1.12),
-                   (2.00, 1.00), (2.30, 0.92), (2.60, 0.85), (2.85, 0.72), (3.05, 0.50), (3.15, 0.30)], 0.92, 'robe', gold=(0.29, 0.43))
+    lathe('robe', [(0.0, 1.30), (0.12, 1.33), (0.38, 1.33), (0.40, 1.33), (0.62, 1.32), (0.64, 1.32), (0.90, 1.28), (1.20, 1.22), (1.60, 1.10),
+                   (2.00, 0.97), (2.30, 0.88), (2.60, 0.80), (2.85, 0.68), (3.05, 0.48), (3.15, 0.30)], 0.86, 'robe', gold=(0.39, 0.63))
     # えり：肩をおおう、はばの広いえり（z 2.45〜3.05）
-    lathe('collar', [(2.42, 1.02), (2.50, 1.12), (2.65, 1.14), (2.82, 1.02), (2.97, 0.80), (3.06, 0.55)], 0.95, 'robe', cap_top=False)
+    lathe('collar', [(2.42, 0.92), (2.50, 1.02), (2.65, 1.04), (2.82, 0.94), (2.97, 0.76), (3.06, 0.52)], 0.95, 'robe', cap_top=False)
     # うしろのフード：せなかの上にたれるV字の形と、そのふちの金色の線
-    ball('hood', (0, 1.02, 2.45), (0.80, 0.26, 0.66), 'robe', rot=Matrix.Rotation(math.radians(-8), 3, 'X'))
-    hp = [(0.78*math.sin(t), 1.22, 2.45+0.62*math.cos(t)) for t in [math.radians(a) for a in range(-110, 111, 10)]]
+    ball('hood', (0, 0.80, 2.42), (1.00, 0.30, 0.66), 'robe')   # かたはばいっぱいの、せなかにたれるフード
+    hp = []
+    for a in range(-125, 126, 8):   # V字（りょうはしが上・まん中が下）の金色のふち。フードの面の上
+        t = math.radians(a); x = 0.84*math.sin(t); z = 2.42-0.55*math.cos(t)
+        hp.append((x, 0.80+0.30*math.sqrt(max(0.0, 1-(x/1.0)**2-((z-2.42)/0.66)**2))+0.01, z))
     tube('hood_trim', hp, [0.035]*len(hp), 'gold', seg=6, caps=False)
+    # 服の前の、えりから手までの2本の金色の線（服の面の上）
+    PR = [(0.0, 1.30), (0.12, 1.33), (0.38, 1.33), (0.62, 1.32), (0.90, 1.28), (1.20, 1.22), (1.60, 1.10), (2.00, 0.97), (2.30, 0.88), (2.60, 0.80), (2.85, 0.68), (3.05, 0.48)]
+    rz = lambda z: next(r0+(r1-r0)*(z-z0)/(z1-z0) for (z0, r0), (z1, r1) in zip(PR, PR[1:]) if z0 <= z <= z1)
+    for sx in (-1, 1):
+        lp = [(sx*0.26, -0.86*rz(z)*math.sqrt(max(0.0, 1-(0.26/rz(z))**2))-0.012, z) for z in [1.80+0.1*i for i in range(10)]]
+        tube('front_trim_'+('r' if sx < 0 else 'l'), lp, [0.035]*len(lp), 'gold', seg=6, caps=False)
     # そで：かたから前へ下りる、大きくたれたそで。そで口はたてのだ円で、内がわに金色のふち
     for sx, nm in ((-1, 'sleeve_r'), (1, 'sleeve_l')):
-        tube(nm, [(sx*0.92, 0.05, 2.62), (sx*1.02, -0.30, 2.20), (sx*0.82, -0.66, 1.72), (sx*0.50, -0.88, 1.50)],
-             [0.32, 0.40, 0.50, 0.56], 'robe', seg=16, gold_last=1, zsc=[1, 1, 1.4, 1.6])
-    ball('hands', (0, -1.10, 1.86), (0.24, 0.20, 0.22), 'skin')                               # 前であわせた手
+        tube(nm, [(sx*0.88, 0.05, 2.62), (sx*0.98, -0.30, 2.20), (sx*0.80, -0.66, 1.70), (sx*0.52, -0.87, 1.48), (sx*0.49, -0.89, 1.46)],
+             [0.32, 0.40, 0.50, 0.57, 0.60], 'robe', seg=16, gold_last=1, zsc=[1, 1, 1.45, 1.8, 1.8])   # さいごの短いだんが、そで口の金色のふち
     # つえ：体の前の地面から立つ柄（下は平ら）と、くびれのある、スプーンの形の頭
-    tube('staff', [(0, -1.30, 0.0), (0, -1.30, 0.04), (0, -1.27, 1.2), (0, -1.24, 2.20), (0, -1.24, 2.26)], [0.10]*5, 'wood', seg=12, subsurf=0)
-    ball('staff_top', (0, -1.24, 2.60), (0.34, 0.28, 0.40), 'wood')
-    # 頭：まるい頭（あご z 3.12・てっぺん z 5.22）
-    ball('head', (0, 0, 4.17), (1.17, 1.15, 1.05), 'skin', seg=6)
+    tube('staff', [(0, -1.16, 0.0), (0, -1.16, 0.04), (0, -1.14, 1.2), (0, -1.12, 2.20), (0, -1.12, 2.26)], [0.10]*5, 'wood', seg=12, subsurf=0)
+    ball('staff_top', (0, -1.12, 2.60), (0.34, 0.32, 0.40), 'wood')
+    # 体（ベースの体）：頭・首・どう体・あし・うで・手・耳をかさねて、ボクセルリメッシュで1つの体にする。首で頭と体がつながり、うではそでの中をとおって手につながる
+    B = [ball('head', (0, 0, 4.17), (1.17, 1.15, 1.05), 'skin', seg=6),                       # 頭（あご z 3.12・てっぺん z 5.22）
+         tube('neck', [(0, 0, 2.70), (0, 0, 3.55)], [0.42, 0.42], 'skin'),                       # 首
+         ball('torso', (0, 0, 1.75), (0.80, 0.62, 1.15), 'skin'),                                # どう体（服の中）
+         tube('leg_r', [(-0.34, 0, 0.05), (-0.34, 0, 1.0)], [0.28, 0.28], 'skin'), tube('leg_l', [(0.34, 0, 0.05), (0.34, 0, 1.0)], [0.28, 0.28], 'skin'),
+         ball('hands', (0, -1.10, 1.86), (0.24, 0.20, 0.22), 'skin')]                            # 前であわせた手
     for sx, s_ in ((-1, 'r'), (1, 'l')):
-        ball('ear_'+s_, (sx*1.15, 0.08, 3.80), (0.22, 0.14, 0.26), 'skin')                       # 耳（頭に半分うめる）
-        ball('brow_'+s_, (sx*0.60, -0.96, 4.38), (0.34, 0.15, 0.15), 'white', rot=Matrix.Rotation(math.radians(sx*-12), 3, 'Y'))
-        arc('eye_'+s_, (sx*0.46, -1.04, 3.88), 0.12, 0.035, 'eye')
-        ball('mus_'+s_, (sx*0.50, -1.08, 3.40), (0.60, 0.32, 0.30), 'white', rot=Matrix.Rotation(math.radians(sx*10), 3, 'Y'))   # 口ひげ（左右のふくらみ）
-    ball('mus_c', (0, -1.20, 3.46), (0.34, 0.24, 0.24), 'white')
-    torus('halo', (0, 0, 5.63), 0.90, 0.08, 'halo', seg=(40, 8))   # 天使の輪（頭の上に、うく）
+        B.append(tube('arm_'+s_, [(sx*0.78, 0, 2.62), (sx*0.90, -0.40, 2.10), (sx*0.42, -0.90, 1.76), (sx*0.12, -1.06, 1.84)], [0.24, 0.21, 0.17, 0.16], 'skin'))   # かた→ひじ→手くび→手
+        B.append(ball('ear_'+s_, (sx*1.15, 0.08, 3.80), (0.22, 0.14, 0.26), 'skin'))            # 耳
+    join('body', B)
+    # 顔：まゆ・目・口ひげは、顔の面にはりつける（面の高さに合わせて、半分うめる）
+    for sx, s_ in ((-1, 'r'), (1, 'l')):
+        ball('brow_'+s_, (sx*0.60, -0.90, 4.38), (0.34, 0.11, 0.15), 'white', rot=Matrix.Rotation(math.radians(sx*-12), 3, 'Y'))
+        arc('eye_'+s_, (sx*0.46, -1.0, 3.88), 0.12, 0.035, 'eye')
+        ball('mus_'+s_, (sx*0.45, -0.80, 3.40), (0.52, 0.32, 0.30), 'white', rot=Matrix.Rotation(math.radians(sx*10), 3, 'Y'))   # 口ひげ（左右のふくらみ）
+    ball('mus_c', (0, -0.92, 3.46), (0.34, 0.26, 0.24), 'white')
+    torus('halo', (0, 0.2, 5.63), 0.90, 0.08, 'halo', seg=(40, 8))   # 天使の輪（頭の上に、うく）
 
 def export():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -154,6 +180,8 @@ def check(od):
     co = bpy.data.objects.new('cam', cam); sc.collection.objects.link(co); sc.camera = co
     shots = {'front': ((0, -20, 3.115), (math.radians(90), 0, 0)), 'side': ((20, 0, 3.115), (math.radians(90), 0, math.radians(90))),
              'back': ((0, 20, 3.115), (math.radians(90), 0, math.radians(180)))}
+    for o in bpy.data.objects:
+        if o.type == 'MESH': o.visible_shadow = False   # たしかめの絵は、かげを落とさない（輪のかげが頭にみぞのように出る）
     for k, (loc, rot) in shots.items():
         co.location = loc; co.rotation_euler = rot; sc.render.filepath = os.path.join(od, k+'.png'); bpy.ops.render.render(write_still=True)
     from PIL import Image
