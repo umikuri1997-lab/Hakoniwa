@@ -402,7 +402,7 @@ function departDone(){return !!(S&&S.flags&&S.flags.ret1)}/* お見送りを見�
 function departDue(){if(WD!==KUSA||!S||S.free||!S.cleared||isNight()||departDone())return false;if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return false;
   return S.res.some(r=>r.name===POKO&&!r.hidden)}
 function departTick(){if(!departDue())return false;if(DEPART_RUN||NUSHI_RUN||performance.now()<DEPART_RETRY||!$('#dialog').hidden)return true;departScene();return true}/* 出発の場面がのこっているあいだは、クリア後のクエストを出さない */
-function departToVolcano(){const ov=document.getElementById('deptLd');const L=loadStage(1);if(L&&L.introSeen){continueGame(L);if(ov){ov.style.opacity='0';setTimeout(()=>ov.remove(),900)}}else newGame(1)}
+function departToVolcano(){const ov=document.getElementById('deptLd');const L=loadStage(1);if(!L&&LOADBAD[1]){if(ov)ov.remove();saveBadAsk(1);return}/* 火山のセーブが読めないときは、上書きしないで聞く */if(L&&L.introSeen){continueGame(L);if(ov){ov.style.opacity='0';setTimeout(()=>ov.remove(),900)}}else newGame(1)}
 function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session,f=S.res.find(r=>r.name===POKO&&!r.hidden);if(!f)return;
   const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
