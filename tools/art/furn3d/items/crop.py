@@ -10,8 +10,7 @@ from blueprint import Part as P
 from natcommon import nat,flat,SUN
 import farm
 ID='crop';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=25;BOTTOM=64;LIGHT=SUN
-MR=0.20;MH=0.07;SINK=0.01;K=2.2   # もりあがりの半径・高さ、作物を土にうめる深さ（マス）、モデルの大きさ→マス
-SOIL=farm.TOP[False];SOILW=farm.TOP[True]   # 畝のてっぺんと同じ土の色
+MR=0.17;MH=0.12;SINK=0.01;K=2.2   # もりあがりの半径・高さ、作物を土にうめる深さ（マス）、モデルの大きさ→マス
 H={'mugi1':0.229,'mugi2':0.331,'mugi3':0.335,'imo1':0.223,'imo2':0.277,'imo3':0.318,'cab1':0.171,'cab2':0.174,'cab3':0.248}   # モデルの高さ（crop_prep.py が出す）
 COL={'mugi':{'leaf':(150,200,92),'stem':(232,192,100),'cap':(226,162,56)},   # 麦：若い葉はうすい緑、実ると茎も穂も金色
      'imo':{'leaf':(122,172,64),'dot':(246,242,232),'under':(242,212,96)},   # いも：葉・白い花びら・花のまん中の黄色
@@ -21,9 +20,7 @@ GAME={'mugi':'mugi','imo':'imo','cab':'tomato'}   # ゲームの作物の id（�
 VIEWS=[('farm.mound',0,(None,0,False)),('farm.moundw',0,(None,0,True)),('farm.sprout',0,('sprout',0,False)),('farm.sproutw',0,('sprout',0,True))]
 VIEWS+=[('crop:%s%d%s'%(GAME[c],s,'w' if w else ''),0,(c,s,w)) for c in('mugi','imo','cab') for s in(1,2,3) for w in(False,True)]
 VAR=None
-def mound(wet):
-    z0=farm.H-0.01;pr=[(0.0,z0)]+[(MR*(1-(i/8)**2)**0.5,z0+MH*(i/8)**0.9) for i in range(9)]   # すそが広く、てっぺんがまるい（だ円の丘）。すそは畝に少しうめる
-    p=P('土のもりあがり','lathe',(0.5,0.5,pr),SOILW if wet else SOIL,detail=48,on=(),note='畝のてっぺん');p.tex=False;p.soft=True;p.curve=True;return p
+def mound(wet):return farm.dome('土のもりあがり',0.5,0.5,farm.H-0.01,MR,MH,wet)   # 畝と同じ、面の向きのかげ（ふつうのかげだと、くぼみに見えた）
 def lift(dz):
     def f(V):V[:,2]+=dz;return V
     return f
