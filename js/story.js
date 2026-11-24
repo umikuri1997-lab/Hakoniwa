@@ -168,7 +168,7 @@ const QUESTS2=[
     [HOMURA,'#think|宿のすぐそばに、岩でかこんだ湯船もほしいね。空を見ながら、のんびりつかれるやつさ。'],
     [SHIZUKU,'守り神さま、なにか、よい形はありませんか。'],['@idea']],gives:{flags:['lv_onsen']}},
    story:[[HOMURA,'温泉宿のできあがりだ！ 宿を出たら、すぐ露天ぶろさ。','vol:innFront'],[SHIZUKU,'露天ぶろは、岩のかげのほうが少しぬるいです。'],[HOMURA,'あたいは、わき口のそばだね。','vol:soakBoth'],[SHIZUKU,'#joy|……同じお湯に、ちがう場所で入れますね。'],[HOMURA,'#joy|今夜は、あたいも泊まってみようかな。']]},
-  {id:'guest',text:'草原からのお客さんを、露天ぶろでもてなそう',check:()=>!!S.flags.guestDone,how:'温泉宿の露天ぶろで、お客さんをもてなす',
+  {id:'guest',text:'草原からのお客さんを、露天ぶろでもてなそう',check:()=>!!S.flags.guestDone,tick:()=>{if(S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene()}/* 話したあと、昼に、お客さんの場面 */,how:'温泉宿の露天ぶろで、お客さんをもてなす',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'温泉宿も、露天ぶろもできて、村じゅうに湯けむりがただようようになりましたね。'],
     [HOMURA,'こうなったら、だれかに入ってもらいたいねえ。'],
