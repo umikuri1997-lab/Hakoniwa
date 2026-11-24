@@ -103,11 +103,18 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         if not n and ne:f=np.where(~sf,f*F(y),f)
         return f
     gt=arr(GT.get(var,'tex:dry'))
+    if var!='g':   # かれた地面の小石（まわりと色のちがう点）は、まわりの色に（ふちのたれた所に、小石が点でならんだ）
+        med=np.median(gt,axis=1,keepdims=True);dif=np.abs(gt.mean(2,keepdims=True)-med.mean(2,keepdims=True))
+        gt=np.where(dif>12,np.broadcast_to(med,gt.shape),gt)
     sc=O.Scene();sc.material('flat')
     lo=np.array(core[0::2]);hi=np.array(core[1::2])
     def col(x,y,z):
         p=np.array([x,y,z]);c=np.clip(p,lo,hi);d=p-c;ln=np.linalg.norm(d)
         nrm=d/ln if ln>1e-6 else np.array([0,0,1.0])
+        if ln<=1e-6 and z<core[5]-1e-3:   # へこませて芯の中に入った点（てっぺんのふちを下げた所）：いちばん近い外の面の向き（上向きにすると、明るい点が出た）
+            cand=[(hi[0]-x,(1,0,0),e),(hi[1]-y,(0,1,0),s),(x-lo[0],(-1,0,0),w),(y-lo[1],(0,-1,0),n)]
+            cand=[c_ for c_ in cand if c_[2]] or cand
+            nrm=np.array(min(cand,key=lambda c_:c_[0])[1],float)
         if top and nrm[2]>0.985 and z>core[5]-1e-3:return np.array(KEY,float)   # 上の面の平らな所：ゲームの地面
         u=(x+y)%1;lt=LT[texcol(x,y,nrm)]
         zb=core[5]+R*0.55+JUP*lt-JDN*(1-lt)-(JGR if var=='g' else 0.0)   # 地面の色と岩のさかい：岩の絵に合わせて、明るい岩は上へ出て、われめには地面がたれる
@@ -118,7 +125,8 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         else:
             r_,c_,side=facetex(p,nrm,None);c0=tex[r_,c_]
             a=max(0,nrm[1]);b=max(0,nrm[0]);t=max(0,nrm[2]);sm=a+b+t+1e-6
-            k=(a*0.94+b*0.74+t*1.0)/sm
+            if top and a+b>0.15:t=0.0   # てっぺんの岩の頭は、横の面の明るさのまま（上向きの明るさをまぜると、でこぼこの頭ごとに明るい点が出た）
+            sm=a+b+t+1e-6;k=(a*0.94+b*0.74+t*1.0)/sm
             if nrm[1]<0 and nrm[0]<0:k=0.9
             k=min(LEV,key=lambda v:abs(v-k))
         return np.clip(c0*k,0,254)
