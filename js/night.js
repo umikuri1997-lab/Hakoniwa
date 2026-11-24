@@ -241,7 +241,7 @@ function enemyFallback(e,D){/* 行き先に行けないコワイノは、ワー�
   if(best>=0&&bd<Math.hypot(e.x-CX,e.y-CY)-1){e.path=pathTo(G,best);return}e.flee=true;const eb=edgeOf(G);if(eb>=0)e.path=pathTo(G,eb);else e.dead=true}
 function updEnemy(e,dt){
   const D=EN[e.type];if(D.tsOok){tsOokUpd(e,dt);return}if(e.down){tsBoneUpd(e);return}/* 土：くずれた組みかけのほね（tsuchi-night.js） *//* 土のツチノオオカゲ（tsuchi.js） */
-  if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=(D.dev||D.vol)&&WD===KAZAN?volSpot():WD===WIND&&typeof windSpot==='function'?windSpot():WD===TSUCHI&&S.ts&&typeof tsRiftSpot==='function'?tsRiftSpot()/* 土：谷の地われから（群れの夜も、地われの1か所から） */:e.side?sideSpot(e.side):nightVarNow()==='mure'?mureSpot():spawnSpot();e.spawned=true;if(typeof seaFoeInit==='function')seaFoeInit(e);/* 冬は体力・攻撃・速さ0.8倍 */(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
+  if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=(D.dev||D.vol)&&WD===KAZAN?volSpot():WD===WIND&&typeof windSpot==='function'?windSpot():WD===TSUCHI&&S.ts&&typeof tsRiftSpot==='function'?tsRiftSpot(e)/* 土：谷の地われから（群れの夜も、地われの1か所から） */:e.side?sideSpot(e.side):nightVarNow()==='mure'?mureSpot():spawnSpot();e.spawned=true;if(typeof seaFoeInit==='function')seaFoeInit(e);/* 冬は体力・攻撃・速さ0.8倍 */(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
   if(e.flash>0)e.flash-=dt;
   if(gearEnemyTick(e,dt))return;/* やけど */
   if(e.stun>0||e.rest>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
