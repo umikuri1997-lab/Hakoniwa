@@ -1,5 +1,5 @@
 # クォータービューの、つながる物（H-14）を3Dで組んで写す：家の壁 12しゅるい（つなぎ方 m 0〜15 と、ひくい壁 ~low）。
-# 使い方：python3 tools/art/iso/iso_conn.py <出力フォルダ> [id...] [--chips]
+# 使い方：python3 tools/art/iso/iso_conn.py <出力フォルダ> [id...] [--chips]（--cut：家の壁の切り口 iso:<id>:cut-e・cut-s だけ）
 #   --chips：チップ iso:<id>:<m>・iso:<id>:<m>~low を chips.js に入れる（g64。ax・ay はマスのまん中の地面の点）。
 #
 # 見え方は iso3d.py と同じ（物を上から見て45度まわす：南が左下・東が右下。見おろし48.59度・遠近なし。1マスの1辺 90.51 ドット）。
@@ -136,6 +136,29 @@ def wall_parts(m,top,front,h):
         if D:bx(0.5-t,0.5 if hz else 0.5-t,0.5+t,1+EXT,'y',zt)
     if not(hz or U or D):bx(0.5-t,0.5-t,0.5+t,0.5+t,'x')
     return P
+CUTD=0.004   # 断面の板のあつさ（マス）
+def cut_parts(top,d):
+    """屋根をはずした家で、高い壁がとなりのひくい壁（手前）にかわる所の切り口（断面）：マスの東（d='e'）か南（'s'）のはしに立つ、うすい板。
+    色は断面の行（てっぺんの絵の、あつさの向きの行）を、のびる向きにならした色（ドアの上の断面と同じ、となりの壁の断面の色）"""
+    t=WT/2;row=top.mean(axis=1)
+    def f(x,y,z):
+        v=(y-(0.5-t))/(2*t) if d=='e' else (x-(0.5-t))/(2*t)
+        c=row[min(row.shape[0]-1,max(0,int(v*row.shape[0])))]*(FACE[2] if d=='e' else FACE[1])
+        return tuple(np.clip(c,0,255))
+    box=(1-CUTD,0.5-t,0,1,0.5+t,WH) if d=='e' else (0.5-t,1-CUTD,0,0.5+t,1,WH)
+    return [(Part('断面','box',box,(200,200,200),grp='w'),f)]
+def build_cuts(ids,C=None):
+    """家の壁の切り口の絵 iso:<id>:cut-e・cut-s。色は、いまの壁の絵の色からえらぶ（色をふやすと、256色にへらすときに、いまの壁の絵の色までかわる）"""
+    C=C or chipsrc();res={}
+    for iid in ids:
+        top,_=wall_tex(C,iid)
+        pal=np.concatenate([np.array(f.convert('RGBA')).reshape(-1,4) for k,v in C.items() if k.startswith('iso:%s:'%iid) and ':cut-' not in k for f in v['f']])
+        pal=np.unique(pal[pal[:,3]>0][:,:3],axis=0).astype(float)
+        for d in('e','s'):
+            im,ax,ay=crop(render(cut_parts(top,d),None));a=np.array(im);o=a[...,3]>0;X=a[o][:,:3].astype(float)
+            a[o,:3]=pal[((X[:,None,:]-pal[None])**2).sum(2).argmin(1)].astype(np.uint8)
+            res['iso:%s:cut-%s'%(iid,d)]=(Image.fromarray(a),ax,ay)
+    return res
 def build_walls(out,ids,chips_=False):
     C=chipsrc();res={}
     for iid in ids:
@@ -286,6 +309,7 @@ def build_all(out,ids):
                 if C is None:C=chipsrc()
                 top,front=wall_tex(C,iid)
                 for low in(False,True):res['iso:%s:%d%s'%(iid,m,'~low' if low else '')]=crop(render(wall_parts(m,top,front,LH if low else WH),None))
+                if m==0:res.update(build_cuts([iid],C))
             elif iid=='hedge':res['iso:hedge:%d'%m]=crop(hedge_render(m))
             else:
                 res['iso:%s:%d'%(iid,m)]=crop(fence_render(iid,m));sd=stake_sides(iid,m)
@@ -298,6 +322,11 @@ def build_all(out,ids):
 ALL=WALLS+FENCES+['hedge']
 if __name__=='__main__':
     a=[q for q in sys.argv[1:] if not q.startswith('--')];out=a[0];ids=a[1:] or ALL;os.makedirs(out,exist_ok=True)
+    if '--cut' in sys.argv:   # 家の壁の切り口の絵だけ（ほかの絵は写しなおさない）
+        res=build_cuts([q for q in ids if q in WALLS])
+        for k,(im,ax,ay) in res.items():im.save(os.path.join(out,k.replace(':','_')+'.png'))
+        if '--chips' in sys.argv:to_chips(res)
+        sys.exit()
     res=build_all(out,ids)
     for n in range(0,len(ids),4):sheet(res,os.path.join(out,'_sheet%d.png'%(n//4)),ids[n:n+4])
     if '--chips' in sys.argv:to_chips(res)
