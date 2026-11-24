@@ -836,10 +836,10 @@ function cvDrawObj(j,o,now){const C=CV,ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS,k=o.k,hs
     else if(o.hitT&&now-o.hitT<400){ctx.globalAlpha=1-(now-o.hitT)/400;cvRockArt(ox,oy);ctx.globalAlpha=1}}}
 function cvDrawActor(a,now){const C=CV,r=a.r,eat=a.eatU>now,walking=a.path.length>0&&!eat,sd=now-a.swing;let px=a.x*TS,py=a.y*TS;
   if(a.swing&&sd>=0&&sd<400)px+=(a.face<0?-1:1)*atkLunge(sd);px+=hitOff(a,now,1)[0];
-  const jd=now-(a.jumpT||-1e9),hop=jd>=0&&jd<1000?Math.abs(Math.sin(jd/130))*9*(1-jd/1000):0,fy=py+9-(walking?Math.abs(Math.sin(now/110+a.id))*2.5:0)-hop;
+  const jd=now-(a.jumpT||-1e9),hop=jd>=0&&jd<1000?Math.abs(Math.sin(jd/130))*9*(1-jd/1000):0,fy=py+9-hop,wd=spWalkD(a,a.x,a.y,walking);/* 歩く絵の上下は絵の中（コードでは上下させない）・コマは歩いた道のりで */
   shadow(ctx,px,py+8,12,3.6);
   const pk=a.swing&&sd>=0&&sd<420?sd/420:null,J=a.job&&!walking?a.job:null,job=J&&CVJOBANIM[J.k]&&(J.k==='push'||J.k==='topple'?cvCell(a)===J.s:true)?CVJOBANIM[J.k]:a.blowU>now?'point':'',joy=a.joyU>now,fight=C.en.some(e=>!e.dead&&!e.asleep&&Math.hypot(e.x-a.x,e.y-a.y)<CVAGGRO);
-  drawSpirit(ctx,r.elem,px,fy,.435,a.face<0?-1:1,{dot:1,t:now/1000+a.id*1.7,vr:r.vr,pp:pk,anim:pk!=null?'punch':eat?'eat':joy?'clap':job,food:eat?a.eatE:'',walk:walking,work:!!job,back:joy||eat?false:a.back,turn:joy||eat?0:a.turn,mood:a.shockU>now?'shock':joy||eat?'joy':r.hunger<HUNGRYF?'hungry':fight?'brave':'',blink:(now/1000+a.id*1.3)%3.4<.13});
+  drawSpirit(ctx,r.elem,px,fy,.435,a.face<0?-1:1,{dot:1,t:now/1000+a.id*1.7,vr:r.vr,pp:pk,anim:pk!=null?'punch':eat?'eat':joy?'clap':job,food:eat?a.eatE:'',walk:walking,wd,work:!!job,back:joy||eat?false:a.back,turn:joy||eat?0:a.turn,mood:a.shockU>now?'shock':joy||eat?'joy':r.hunger<HUNGRYF?'hungry':fight?'brave':'',blink:(now/1000+a.id*1.3)%3.4<.13});
   if(a.hurtU>now){const m=hMax(r),v=clamp(r.hunger/m,0,1);P4('rgba(0,0,0,.6)',px-12,py+11,24,5);P4(v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b',px-11,py+12,Math.max(2,Math.round(22*v)),3)}
   if(J&&J.t>0){const T=J.k==='topple'?CVSKPUSH:J.k==='push'?CVPUSHT:J.k==='sluice'?CVSLUICET:CVLEAFT,f=clamp(J.t/T,0,1);P4('rgba(150,115,75,.6)',px-17,py+17,34,7);P4('#e8dcc0',px-16,py+18,32,5);P4('#e0a43a',px-16,py+18,Math.max(2,Math.round(32*f)),5)}}
 const cvLureOn=j=>{const x=cvX(j)+.5,y=cvY(j)+.5+CVOY;return CV.party.some(a=>Math.hypot(a.x-x,a.y-y)<=CVLURE)};
