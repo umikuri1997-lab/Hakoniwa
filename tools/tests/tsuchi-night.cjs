@@ -41,5 +41,11 @@ const assert=require('node:assert/strict');
   /* 古いセーブ：追いかえしたあとのセーブは、夜が来るようになる */
   const g1=await J(`(()=>{const s={ts:{hole:1},flags:{tsOokDown:1},enemyOn:false,mig:11};runMigrations(s);const t={flags:{},enemyOn:false,mig:11};runMigrations(t);return{a:s.enemyOn,b:t.enemyOn}})()`);
   console.log(JSON.stringify(g1));assert.deepEqual(g1,{a:true,b:false});
+  /* 光をおがむせきぞう（6階）：村のあかりへよってきて、その前でおがんで止まる（たたかない物はこわさない） */
+  const pr=await J(`(()=>{S.enemies=[];const L0=LITP.slice();let lj=-1;for(let j=0;j<W*H&&lj<0;j++){if(!walk(j)||S.obj[j])continue;const x=j%W,y=(j/W)|0;if(Math.hypot(x-CX,y-CY)<12&&walk(j+1)&&walk(j+4))lj=j}
+    LITP.length=0;LITP.push(lj);const e={id:S.nid++,type:'bk_seki',x:lj%W+4.5,y:((lj/W)|0)+.5,hp:420,max:420,delay:0,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0};S.enemies.push(e);for(const r of S.res)r.hidden=true;
+    const g=tsPrayGoal(e),gl=g>=0&&[1,-1,W,-W,W+1,W-1,-W+1,-W-1].includes(g-lj);EREACH.delete(e);e.x=g%W+.5;e.y=((g/W)|0)+.5;const x0=e.x,y0=e.y;updEnemy(e,1);updEnemy(e,1);
+    const out={gl,stay:e.x===x0&&e.y===y0,pray:e.pray===1};for(const r of S.res)r.hidden=false;LITP.length=0;LITP.push(...L0);S.enemies=[];return out})()`);
+  console.log(JSON.stringify(pr));assert.deepEqual(pr,{gl:true,stay:true,pray:true},'せきぞうは、村のあかりのそばへ行き、おがんで止まる');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
