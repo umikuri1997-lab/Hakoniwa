@@ -13,6 +13,11 @@ const assert=require('node:assert/strict');
   for(const L of w){const bk=L.filter(t=>t.startsWith('bk_'));assert.equal(bk.length,Math.floor(L.length/3),'3びきに1ぴきがバケモノ');assert.ok(bk.every(t=>['bk_kui','bk_sui','bk_yoru'].includes(t)),'ひらいた階のバケモノだけ');assert.ok(!L.includes('boss'),'オオカゲは来ない')}
   {const all=w.flat().filter(t=>t.startsWith('bk_'));for(const t of['bk_kui','bk_sui','bk_yoru'])assert.ok(all.includes(t),'どの階のバケモノも来る '+t)}
   const w0=await J(`(()=>{S.cvClr=0;S.nights=8;const L=waveFor(12);S.cvClr=3;return L})()`);assert.ok(!w0.some(t=>t.startsWith('bk_')),'洞窟をひらいていなければ、コワイノだけ');
+  /* うえたちねずみ（5階）：3びきで来て、来る数の3つ分。むれは同じ所のそばから */
+  const wn=await J(`(()=>{S.cvClr=5;const out=[];for(let d=10;d<20;d++){S.nights=d;out.push(waveFor(d))}S.cvClr=3;return out})()`);
+  {const L=wn.find(L=>L.includes('bk_nezu'));assert.ok(L,'5階をひらくと、ねずみも来る');const i=L.indexOf('bk_nezu');assert.deepEqual(L.slice(i,i+3),['bk_nezu','bk_nezu','bk_nezu'],'3びきで来る');
+    for(const L of wn){const n=L.filter(t=>t==='bk_nezu').length;assert.equal(n%3,0,'ねずみは3びきずつ')}}
+  const sp=await J(`(()=>{TSPACK.n=0;const P=[0,1,2].map(()=>tsRiftSpot({type:'bk_nezu'}));return Math.max(...P.map(p=>Math.hypot(p[0]-P[0][0],p[1]-P[0][1])))})()`);assert.ok(sp<=3,'むれは同じ所のそばから '+sp);
   /* 来る所：地われのふち */
   const s1=await J(`(()=>{S.enemies=[];S.t=Math.floor(S.t/1440)*1440+1440;spawnWave(['basic','bk_kui','fast','bk_sui']);document.querySelectorAll('#dialog').forEach(d=>d.hidden=true);DLGQ.length=0;for(const e of S.enemies){e.delay=0;updEnemy(e,.1)}return S.enemies.map(e=>({sp:e.spawned,rift:[1,-1,W,-W].some(d=>riftJ((e.y|0)*W+(e.x|0)+d)),far:Math.hypot(e.x-CX,e.y-CY)}))})()`);
   console.log(JSON.stringify(s1));assert.ok(s1.every(e=>e.sp&&e.rift),'地われのふちから来る');

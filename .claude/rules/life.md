@@ -14,8 +14,6 @@ paths:
   - "js/reveal.js"
   - "js/fogpuzzle.js"
   - "js/zukanms.js"
-  - "js/world.js"
-  - "js/data.js"
 ---
 # 天気・季節・手ざわり・日記
 

@@ -1,7 +1,6 @@
 ---
 paths:
   - "js/wind*.js"
-  - "js/core.js"
 ---
 # 風のステージ
 

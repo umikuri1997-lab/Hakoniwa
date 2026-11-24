@@ -175,6 +175,7 @@ const BL={
   oldlantern:{chest:1,shopOnly:1,hp:5,brk:1,fix:2,fixm:{can:1},name:'古いカンテラ',kind:'furn',cat:'light',f2:1,pc:3,solid:1,attr:{fire:1},mat:{can:2},mat1:{can:2},desc:'洞窟にのこっていたあかり。住み心地+6'},
   doki:{chest:1,shopOnly:1,hp:5,brk:1,fix:1,fixm:{stone:2},name:'ほりだした土器',kind:'furn',pc:1,solid:1,attr:{earth:2},mat:{stone:3},desc:'洞窟からほりだしたかざり。住み心地+6'},
   rel_kui:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'さびたくい',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：岩をおす速さ2倍'},
+  rel_ningyo:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{wood:1},name:'木のにんぎょう',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{wood:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：ねているねずみが目をさます広さ1.8マス'},
   rel_tsuru:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'かけたつるはし',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：うすい壁を、たたいてくずせる'},
   rel_suisho:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'からの水晶',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：光すいに光をすわれない'},
   rel_bin:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'黒い水のびん',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：夜の水のかたまりが、わかれない'},
@@ -456,8 +457,9 @@ const QUESTS1=[
   {id:'bed',text:'家にベッドを置こう',how:'「おく」→「はたおり機」を置き、はたおり機をタップして布をたのむ。布ができたら、神殿の依頼ボードをタップ →「家具」→「ベッド」をはり、できたら壁で囲まれた家の中に置く',check:()=>houseBedCount()>=1,prog:()=>bedStep(),
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#think|草の上はごつごつするし、ゆっくり休めなくて……。休める場所があったらいいな。'],
-    ['@idea'],[GOD,'#think|そうか……。安心して休める寝床もいるのう。ふかふかの寝床を「ベッド」と呼ぼうかの。'],
-    [GOD,'ふかふかにするには、布がいるんじゃ。布をおる「はたおり機」と、木と草を、おそなえ箱に入れておいたぞい。'],
+    ['@idea',['bed']],[GOD,'#think|そうか……。安心して休める寝床もいるのう。ふかふかの寝床を「ベッド」と呼ぼうかの。'],
+    [GOD,'#think|じゃが、ふかふかにするには、布がいるのう。草から布をおる物があれば……。'],
+    ['@idea',['loom']],[GOD,'布をおる「はたおり機」じゃ。はたおり機と、木と草を、おそなえ箱に入れておいたぞい。'],
     [GOD,'布ができたら、ベッドは、せいれいたちの手で形にしてもらうんじゃ。'],
     [POKO,'#joy|草が、布になるの？ やってみる！ ふかふかの寝床、作ろうね。']],gives:{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}}},
    story:[
