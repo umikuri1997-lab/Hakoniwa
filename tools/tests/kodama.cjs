@@ -1,5 +1,5 @@
 /* もりのこだま・霧の中の手がかり・属性のはたらきあい（風の日のはたおり機・雨のたき火・火のせいれいで雪がとける）
-   草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・石の輪（石材をはこぶ）・花の輪（同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
+   草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・花の輪（同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
    火山：はじめから16エリアに3こずつ（48こ。置けなかった分は、つぎの朝に）。 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
@@ -7,14 +7,13 @@ const assert=require('node:assert/strict');
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;S.enemyOn=false;const a=S.res[0];S.res=[a];endAct(a);a.act=null;S.t=1440*3+8*60;
     const out={};out.n0=S.kd.length;out.areas=[...new Set(S.kd.map(e=>e.a))].sort((x,y)=>x-y);out.kinds=S.kd.map(e=>e.k);
     out.objOK=S.kd.every(e=>kdCells(e).every(c=>c===e.gap?!S.obj[c]||WEEDS.has(S.obj[c]):S.obj[c]===KDK[e.k].o));
-    const walkN=()=>{for(let i=0;i<30000;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(!S.kd.some(e=>e.st===1||e.ws))break}for(let i=0;i<20000&&(roomN(a)<1e9)&&(a.citem&&Object.keys(a.citem).some(k=>a.citem[k]>0)||a.cmat&&Object.keys(a.cmat).some(k=>a.cmat[k]>0)||a.carry&&carryN(a)>0);i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90}};
+    const walkN=()=>{for(let i=0;i<30000;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(!S.kd.some(e=>e.st===1))break}for(let i=0;i<20000&&(roomN(a)<1e9)&&(a.citem&&Object.keys(a.citem).some(k=>a.citem[k]>0)||a.cmat&&Object.keys(a.cmat).some(k=>a.cmat[k]>0)||a.carry&&carryN(a)>0);i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90}};
     /* 箱を近くに */const bx=(a.y|0)*W+(a.x|0)+2;S.obj[bx]='crate';recount();boxSync();
     /* 草むら・切り株：タップで見にいく */
     const e1=S.kd.find(e=>e.k==='kusa'||e.k==='kabu');out.k1=e1.k;const pt0=S.pt;kdTap(e1.j%W,(e1.j/W)|0);out.st1=e1.st;walkN();out.found1=e1.st;out.kodama1=S.kodama;out.pt1=S.pt-pt0;
     /* もう一度タップ：なにもしない */kdTap(e1.j%W,(e1.j/W)|0);out.again=S.kodama;
-    /* 石の輪：石材がないと、はこばない */
-    let e2=S.kd.find(e=>e.k==='ishi');if(!e2){e2=S.kd.find(e=>e.st===0);}
-    if(e2&&e2.k==='ishi'){const st0=S.mat.stone||0;S.mat.stone=0;boxSync();kdTap(e2.j%W,(e2.j/W)|0);out.noStone=e2.ws||0;S.mat.stone=st0+5;boxSync();const s1=availOf('stone');kdTap(e2.j%W,(e2.j/W)|0);out.ws=e2.ws;out.rsv=s1-availOf('stone');walkN();out.found2=e2.st;out.gapObj=S.obj[e2.gap];out.stoneUsed=st0+5-(S.mat.stone||0)}
+    /* 欠けた石の輪はない */out.noIshi=!S.kd.some(e=>e.k==='ishi')&&!S.obj.includes('kdishi');
+    /* 前のセーブ：まだの石の輪は、小石も記録もけす・見つけた輪は、小石だけけして記録をのこす・はこんでいた石材は箱へ */{const s={kd:[],obj:new Array(W*H).fill(''),mat:{stone:0},res:[{kdst:9}]},j1=40*W+40,j2=60*W+60;for(const[j,st,id]of[[j1,0,9],[j2,2,10]]){s.kd.push({id,k:'ishi',a:0,j,gap:j-W,st,ws:1});for(const[dx,dy]of KDRING)s.obj[j+dy*W+dx]='kdishi'}s.obj[j1-W]='';kdIshiMig(s);out.mig=[s.kd.length,s.kd[0]&&s.kd[0].st,s.obj.includes('kdishi'),s.mat.stone,s.res[0].kdst,'ws' in (s.kd[0]||{})]}
     /* 花の輪：すきまに同じ花が咲くと、見にいく */
     const e3=S.kd.find(e=>e.k==='hana'&&e.st===0);if(e3){S.obj[e3.gap]=e3.fl;recount();out.hanaSt=e3.st;walkN();out.found3=e3.st}
     out.kodama=S.kodama;
@@ -32,7 +31,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(r));
   assert.equal(r.n0,12,'はじめは晴れた4エリアに3こずつ');assert.deepEqual(r.areas,[5,6,9,10]);assert.equal(r.objOK,true);
   assert.equal(r.st1,1);assert.equal(r.found1,2,'せいれいが見つける');assert.equal(r.kodama1,1);assert.ok(r.pt1>=5,'パワー+5');assert.equal(r.again,1);
-  if(r.ws!==undefined){assert.equal(r.noStone,0,'石材がないと、はこばない');assert.equal(r.ws,1);assert.equal(r.rsv,1,'石材を1こ、とっておく');assert.equal(r.found2,2);assert.equal(r.gapObj,'kdishi');assert.equal(r.stoneUsed,1)}
+  assert.equal(r.noIshi,true,'欠けた石の輪は出ない');assert.deepEqual(r.mig,[1,2,false,1,null,false],'前のセーブの石の輪');
   if(r.hanaSt!==undefined){assert.equal(r.hanaSt,1);assert.equal(r.found3,2)}
   assert.equal(r.keep,true,'こわせない');
   assert.equal(r.owe+r.bp,1,'10こめで設計図');assert.equal(r.oweAfter,0);assert.equal(r.bpAfter,1);

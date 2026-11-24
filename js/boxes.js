@@ -33,7 +33,7 @@ const distJ=(a,b)=>a<0||b<0?0:Math.abs(a%W-b%W)+Math.abs(((a/W)|0)-((b/W)|0));
 function rsvNeed(){/* とっておく数：建てる所・依頼のまだ運んでいない素材と、炉・コンポスター・おたきあげのたのまれた分 */const R={},add=(key,n)=>{if(n>0)R[key]=(R[key]||0)+n};
   for(const k in S.dyn){if(S.obj[k]!=='site')continue;const d=S.dyn[k];if(!d||!d.mat)continue;if(d.bid==null)d.bid='s'+k;const m=needLeft(d);for(const key in m)add(key,m[key])}
   for(const o of S.orders||[]){if(!o.mat&&!o.food)continue;if(o.bid==null)o.bid='o'+o.id;const m=needLeft(o);for(const key in m)add(key,m[key])}
-  for(const Q of[S.cmpQ,S.smQ,S.prQ])for(const j in Q||{})for(const k in Q[j])add(k,Q[j][k]);for(const k in S.otakiQ||{})add(k,S.otakiQ[k]);for(const a in S.otakiB||{})for(const k in S.otakiB[a])add(k,S.otakiB[a][k]);/* 箱の画面からの、おたきあげ */for(const k in S.sasaQ||{})add(k,S.sasaQ[k]);/* 季節のささげもの */if(typeof kdRsv==='function')kdRsv(add);/* もりのこだまの石の輪へはこぶ石材 */return R}
+  for(const Q of[S.cmpQ,S.smQ,S.prQ])for(const j in Q||{})for(const k in Q[j])add(k,Q[j][k]);for(const k in S.otakiQ||{})add(k,S.otakiQ[k]);for(const a in S.otakiB||{})for(const k in S.otakiB[a])add(k,S.otakiB[a][k]);/* 箱の画面からの、おたきあげ */for(const k in S.sasaQ||{})add(k,S.sasaQ[k]);/* 季節のささげもの */return R}
 function boxSync(){if(!S)return;S.box=S.box||{};S.pile=S.pile||{};S.rsv=S.rsv||{};
   for(const k in S.box){const j=+k;if(!boxTypeAt(j)||!BOXL.includes(j))boxSpill(j)}/* なくなった箱の中身は、その場所に落とす */
   for(const k in S.boxF||{})if(!boxTypeAt(+k))delete S.boxF[k];
