@@ -29,8 +29,12 @@ def mark(src):
             elif nm=='susuki':C[fi]=MK['under'] if nf[c]>=170 and vv[:,1].min()>0.12 else MK['leaf']   # 穂：高い所の大きな部品
             elif nm=='iwakagami':   # 葉はひくい部品。じくのある部品は、高い所が花（つりがね）
                 if vv[:,1].max()<0.13:C[fi]=MK['leaf']
-                else:
-                    f=np.where(fi)[0];C[f]=np.where((ctr[f,1]>0.135)[:,None],MK['cap'],MK['stem'])
+                elif nf[c]<=150:C[fi]=MK['cap']   # はなれた小さな部品：つりがねの花
+                else:   # じく（長い部品）：太い所（つけねについた花）だけ花。太さは、まわりの点のちらばりの2ばんめの広がり
+                    from scipy.spatial import cKDTree
+                    f=np.where(fi)[0];P=V[np.unique(F[f])];t=cKDTree(P);idx=t.query_ball_point(ctr[f],0.014)
+                    th=np.array([np.linalg.svd(P[i]-P[i].mean(0),compute_uv=False)[1]/np.sqrt(len(i)) if len(i)>3 else 0 for i in idx])
+                    C[f]=np.where((th>0.0036)[:,None],MK['cap'],MK['stem'])
             else:C[fi]=MK['rock']
         VV=V[F].reshape(-1,3);FF=np.arange(len(VV)).reshape(-1,3);CC=np.repeat(C,3,0)   # 面ごとの色を、点をわけて持たせる
         trimesh.Trimesh(VV,FF,vertex_colors=np.c_[CC,np.full(len(CC),255)].astype(np.uint8),process=False).export(os.path.join(OUT,nm+'.glb'))

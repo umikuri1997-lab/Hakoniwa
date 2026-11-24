@@ -7,6 +7,7 @@
 #   岩の橋：地われの上の、うすい岩の板（y 3〜4.4、あつさは まん中0.35・はし0.9 のアーチ）。
 #   あなぐまの巣穴：おくのがけのふもと（x≒−4）の、まるい穴と、まわりの岩・ほり出した土。
 #   ころがる岩：谷の地面に、いくつか。
+#   オリーブ：谷の木（tree~t の設計図 furn3d/items/nat_olive.py）を、その場所の大きさ（1マスのドット数）で写して立てる（ちぢめない）。
 #   色：岩は、谷のがけの絵（cliff:block）と同じ、すなの岩。光は左上の手前から（夕方の16時）。かげは4だん。遠い所は、空の色へ少しまぜる。
 import sys,os,math
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -91,9 +92,31 @@ def render():
     rgb=rgb*(1-far[:,None])+SKY*far[:,None]
     out=np.zeros((n,4));out[i,:3]=rgb;out[i,3]=255
     return Image.fromarray(np.clip(out,0,255).astype(np.uint8).reshape(GH,GW,4))
+OLIVES=[(-7.2,3.2),(-10.6,7.4),(3.2,8.4)]   # オリーブの木の場所（根もと）
+def project(p):
+    fwd=LOOK-CAM;fwd/=np.linalg.norm(fwd);rt=np.cross(fwd,(0,0,1.0));rt/=np.linalg.norm(rt);up=np.cross(rt,fwd)
+    tw=math.tan(math.radians(FOV/2));th=tw*GH/GW;d=np.asarray(p,float)-CAM;z=d@fwd
+    return ((d@rt)/z/tw+1)/2*GW,(1-(d@up)/z/th)/2*GH,GW/(2*tw*z)   # 画面の点・1マスのドット数
+_OL={}
+def olive(px):
+    """オリーブを、1マス px ドットで写した絵と、根もとの点"""
+    if px in _OL:return _OL[px]
+    sys.path.insert(0,os.path.join(ART,'furn3d'));sys.path.insert(0,os.path.join(ART,'furn3d','items'))
+    import tempfile,furn3d as F3
+    _s=F3.shot;F3.shot=lambda M,k,only=None,S_=64,filt=None,info=None:_s(M,k,only,px,filt,info)
+    try:
+        F3.META.clear();d=tempfile.mkdtemp();CH=F3.run('nat_olive',d);im,ax,ay=CH['tree~t'];bb,inf=F3.META['tree~t']
+        P=inf['PROJ'](inf['fwd']((0.5,0.5,0.0)));E=inf['ext'];S_=inf['S'];fx=(P[0]-E[0])*S_-bb[0];fy=(P[1]-E[2])*S_-bb[1]
+    finally:F3.shot=_s
+    _OL[px]=(im,fx,fy);return _OL[px]
+def add_olives(im):
+    for x,y in sorted(OLIVES,key=lambda q:-q[1]):   # おくから
+        sx,sy,px=project((x,y,height(np.array([x]),np.array([y]))[0]));o,fx,fy=olive(max(4,int(round(px))))
+        im.alpha_composite(o,(int(round(sx-fx)),int(round(sy-fy))))
+    return im
 if __name__=='__main__':
     out=sys.argv[1];os.makedirs(out,exist_ok=True)
-    im=render();im.save(os.path.join(out,'cover_tsuchi.png'))
+    im=add_olives(render());im.save(os.path.join(out,'cover_tsuchi.png'))
     bg=Image.new('RGBA',im.size,tuple(int(c) for c in SKY)+(255,));bg.alpha_composite(im)
     bg.resize((GW*4,GH*4),Image.NEAREST).save(os.path.join(out,'cover_tsuchi_x4.png'))
     if '--chips' in sys.argv:
