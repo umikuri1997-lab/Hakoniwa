@@ -51,7 +51,7 @@ function igUpperDraw(g,X0,Y0,X1,Y1){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x+
 function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IGP,w=IGW+2*IGP,h=IGH+2*IGP,Yt=Y-IGM,ht=h+IGM;q.st=false;q.u=RFN;
   const[X0,Y0,X1,Y1]=igRange(X,Yt,w,ht);if(X1<X0||Y1<Y0){igFree(q);q.e=true;return}
   const sw=(X1-X0+1)*TS,sh=(Y1-Y0+1)*TS,sx0=X0*TS,sy0=Y0*TS,src=(fn)=>{const c=document.createElement('canvas');c.width=sw;c.height=sh;const g=c.getContext('2d');g.setTransform(1,0,0,1,-sx0,-sy0);fn(g,X0,Y0,X1,Y1);const d=g.getImageData(0,0,sw,sh).data;c.width=c.height=0;return d};
-  const B=src(igBaseDraw),U=src(igUpperDraw),C=window.CHIPS,GT=igPix(chipImgs(C['tex:grass'],'ground')[0]),WT=igPix(chipImgs(C['tex:water'],'water')[0]),SM=skyM(),ST=SM?igPix(skyTex()):null/* 雲の海（風） */,RM=riftM()/* 土の地われ：陸の地面に作り、上に地われのタイル（tsuchi.js の tsRiftDraw） */,SP=WD===KAZAN&&S.st2?sprMap():null,TG=igTG(),TW=igTW();
+  const p0=CHPN,B=src(igBaseDraw),U=src(igUpperDraw);q.pend=CHPN>p0;/* 読みこみ中のページの絵（道・畑など）は、仮の絵か、なにもない。ページがとどいたら作りなおす（igPendDone。しないと、となりの区画とのさかいに、たての線が出る） */const C=window.CHIPS,GT=igPix(chipImgs(C['tex:grass'],'ground')[0]),WT=igPix(chipImgs(C['tex:water'],'water')[0]),SM=skyM(),ST=SM?igPix(skyTex()):null/* 雲の海（風） */,RM=riftM()/* 土の地われ：陸の地面に作り、上に地われのタイル（tsuchi.js の tsRiftDraw） */,SP=WD===KAZAN&&S.st2?sprMap():null,TG=igTG(),TW=igTW();
   /* マスの草・水の値（区画のマスのはんい＋まわり1マス） */const gx0=X0-1,gy0=Y0-1,gw=X1-X0+3,gh=Y1-Y0+3,GV=new Uint8Array(gw*gh),WV=new Uint8Array(gw*gh),inM=(x,y)=>x>=0&&y>=0&&x<W&&y<H,land=j=>S.ground[j]!==1&&S.ground[j]<1;
   for(let b=0;b<gh;b++)for(let a=0;a<gw;a++){const x=Math.min(W-1,Math.max(0,gx0+a)),y=Math.min(H-1,Math.max(0,gy0+b)),j=y*W+x,wt=S.ground[j]>=1&&!(RM&&RM[j]===1);WV[b*gw+a]=wt?1:0;
     GV[b*gw+a]=wt?(REV.has(j)&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>inM(x+dx,y+dy)&&land(j+dy*W+dx)&&REV.has(j+dy*W+dx))?1:0):REV.has(j)?1:0}/* 水のマスは、となりの草地の陸があれば草（水の丸い角の外に見える所） */
@@ -81,6 +81,8 @@ function igBuild(q){const t0=performance.now(),X=IGX0+q.cx*IGW-IGP,Y=q.cy*IGH-IG
   if(wc>=0){q.w=put(wa,wb,wc,wd,(d,i,p)=>{d[i+3]=K[p]===1?255:0});q.wx=wa-IGP;q.wy=wb-IGM-IGP}/* 水面の形（毎コマ、水の模様を流す所） */
   if(kc>=0){q.k=put(ka,kb,kc,kd,(d,i,p)=>{d[i+3]=K[p]===4?255:0});q.kx=ka-IGP;q.ky=kb-IGM-IGP}/* 雲の海の形（時間の色を、地面とかえる所。daycolor.js の dcGround） */
   q.v=++IG.n;GRD.bt+=performance.now()-t0}
+/* アトラスのページがとどいた：読みこみ中の絵で作った区画に、作りなおすしるし */
+function igPendDone(){for(const q of IG.c.values())if(q.pend)q.st=true}
 /* 区画の左上（ゲームの点） */const igX=q=>IGX0+q.cx*IGW,igY=q=>q.cy*IGH;
 /* 物を置いて変わったマスの四角 R（[x0,y0,x1,y1] の一覧）にかかる区画に、作りなおすしるし */
 function igDirty(R){if(IG.s!==S)return;for(const r of R){const a=Math.max(0,r[0]-2),b=Math.max(0,r[1]-2),c=Math.min(W,r[2]+3),d=Math.min(H,r[3]+3),xs=[isoX(a*TS,d*TS),isoX(c*TS,b*TS)],ys=[isoY(a*TS,b*TS)-IGM,isoY(c*TS,d*TS)];
