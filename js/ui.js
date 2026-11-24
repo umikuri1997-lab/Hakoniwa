@@ -637,7 +637,7 @@ function renderSheet(){
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
     qmarkify(body);
   }else if(sheet==='box'){const j=sheetArg,t=boxTypeAt(j);if(!t)return closeSheet();T.textContent=BL[t].name;body.appendChild(rowEl(BL[t].name,withAttr(t,BL[t].desc||''),iconURL(t)));boxSec(body,j);
-  }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}if(WORKF.has(o)&&S.obj[j]===o&&o!=='sink'&&!workOK(j)){const p=el('<p class="note" style="color:#c0392b"></p>');p.textContent='前がふさがっています';body.appendChild(p)}/* 作業するマス（その向きの前）に物がある */
+  }else if(sheet==='furn'){const j=sheetArg,o=(typeof kdFl==='function'&&kdFl(j))||S.obj[j]||(S.rug||{})[j];/* 花の輪の花は、その花として */if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}if(WORKF.has(o)&&S.obj[j]===o&&o!=='sink'&&!workOK(j)){const p=el('<p class="note" style="color:#c0392b"></p>');p.textContent='前がふさがっています';body.appendChild(p)}/* 作業するマス（その向きの前）に物がある */
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     if(o==='jar'&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('水',Math.max(0,Math.floor((S.dyn[j]||{}).w||0))+' / '+JARW+'マスぶん'));/* みずがめにいまある水 */
     if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
