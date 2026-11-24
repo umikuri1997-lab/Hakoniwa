@@ -450,7 +450,7 @@ function renderSheet(){
   }else if(sheet==='yume'){yumeSheet(body);
   }else if(sheet==='craft'){
     T.textContent='依頼ボード';
-    {const eb=el('<button class="btn" id="evBtn" style="width:100%;margin-bottom:8px">イベント</button>');eb.onclick=()=>{sfx('tap');openSheet('event')};body.appendChild(eb)}{const yb=el('<button class="btn" id="yumeBtn" style="width:100%;margin-bottom:8px">ゆめ</button>');yb.onclick=()=>{sfx('tap');openSheet('yume')};body.appendChild(yb)}/* 村のゆめボード（yume.js） *//* 強化のイベント（events.js） */
+    {const eb=el('<button class="btn" id="evBtn" style="width:100%;margin-bottom:8px">イベント</button>');eb.onclick=()=>{sfx('tap');openSheet('event')};body.appendChild(eb)}/* 強化のイベント（events.js） */
     body.appendChild(el('<p class="note">'+(orderLock()?'いまは「'+BL[orderLock()].name+'」だけたのめます。':'できたものはおそなえ箱に入ります。')+'</p>'));
     const bd=el('<div class="board"></div>');
     for(let n=0;n<boardMax();n++){const o=S.orders[n];
@@ -637,7 +637,7 @@ function renderSheet(){
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
     qmarkify(body);
   }else if(sheet==='box'){const j=sheetArg,t=boxTypeAt(j);if(!t)return closeSheet();T.textContent=BL[t].name;body.appendChild(rowEl(BL[t].name,withAttr(t,BL[t].desc||''),iconURL(t)));boxSec(body,j);
-  }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}if(WORKF.has(o)&&S.obj[j]===o&&o!=='sink'&&!workOK(j)){const p=el('<p class="note" style="color:#c0392b"></p>');p.textContent='前がふさがっています';body.appendChild(p)}/* 作業するマス（その向きの前）に物がある */
+  }else if(sheet==='furn'){const j=sheetArg,o=(typeof kdFl==='function'&&kdFl(j))||S.obj[j]||(S.rug||{})[j];/* 花の輪の花は、その花として */if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}if(WORKF.has(o)&&S.obj[j]===o&&o!=='sink'&&!workOK(j)){const p=el('<p class="note" style="color:#c0392b"></p>');p.textContent='前がふさがっています';body.appendChild(p)}/* 作業するマス（その向きの前）に物がある */
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     if(o==='jar'&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('水',Math.max(0,Math.floor((S.dyn[j]||{}).w||0))+' / '+JARW+'マスぶん'));/* みずがめにいまある水 */
     if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
@@ -698,13 +698,13 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[...(S.feat.people?[['people','spirit','せいれい']]:[]),['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['work','hammer','しごと'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
+    const MI=[...(S.feat.people?[['people','spirit','せいれい']]:[]),['goal','target','目標'],['yume','star','やりこみ'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['work','hammer','しごと'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
       const g=el('<div class="mgrid"></div>'),g2=el('<div class="mgrid msub"></div>');
       for(const[k,ic,nm,sub]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
-        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='people')return openSheet('people');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}GOALCHIP=false;openSheet('menu',k)};(sub?g2:g).appendChild(b)}
+        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='people')return openSheet('people');if(k==='yume')return openSheet('yume');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}GOALCHIP=false;openSheet('menu',k)};(sub?g2:g).appendChild(b)}
       body.appendChild(g);body.appendChild(g2);return}
     T.textContent=sub[2];
     if(!(sheetArg==='goal'&&GOALCHIP))sheetBack();/* 上の目標の札からひらいたときは、メニューへもどるボタンを出さない */

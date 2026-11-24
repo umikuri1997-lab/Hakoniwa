@@ -379,6 +379,8 @@ function ladderDir(j){/* ハシゴの向き（0：うしろが上のマス、1�
 const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];
 function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LADDERS.has(S.obj[b]))return false;const d=ladderDir(b);return d>=0&&ladderTop(b,d)===a}
 const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
+const CLB=new WeakMap(),CLBM=.1,CLBD=4;/* 段差をよじのぼる・おりるせいれい：{a:もとのマス,n:つぎのマス,px,py:よじのぼる所,k:0〜1}。ふちまでふつうに歩き、低いマスのがわ（壁の前、マスのさかいから CLBM）で、まっすぐ上・下へよじのぼる（歩く CLBD マスぶんの時間。歩く1マスとあわせて5倍） */
+function clbPt(a,n){/* よじのぼる所：マスのさかいから、低いマスのがわへ CLBM */const ax=a%W+.5,ay=((a/W)|0)+.5,sx=n%W-a%W,sy=((n/W)|0)-((a/W)|0),m=hiAt(a)<hiAt(n)?-CLBM:CLBM;return{px:ax+sx*(.5+m),py:ay+sy*(.5+m)}}
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return liftOf(c)+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return liftOf(c);const d=stairDir(a);if(d<0)return liftOf(c);const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
@@ -417,12 +419,20 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   for(let pass=0;pass<3;pass++)for(let lv=HMAX;lv>=1;lv--){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]>=lv)+(g[j+1]>=lv)+(g[j-W]>=lv)+(g[j+W]>=lv);if(g[j]>=lv&&n<2)h[j]=lv-1;else if(g[j]===lv-1&&n>=3&&ok(j))h[j]=lv}}/* ほそい所はけす、くぼみはうめる */
   fix();
   s.hi=h;treeHighFix(s)}
-function treeHighFix(s){/* 木のまわり2マス・岩のまわり1マス（hiRad）は、その物より高くしない。茂み・竹（FLATR）と岩のまわり1マスは同じ高さ（岩は、はじめの地形だけ。ほる・つむの決まりは treeNextHigh）。新しいゲームの地形を作ったあと（霧・お屋敷で高さがかわったあとも）によぶ。がけのそばの枯れ木はけし、生きた木・岩は、まわりをその高さにならして、その外を2マスに1だんずつ上げる（段々。2マス以内との差は1だんまでの決まりのまま） */const h=s.hi;if(!h)return;const hi=n=>h[n]|0;const high=(j,R)=>{const x=j%W,y=(j/W)|0,hh=hi(j);for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<W&&yy>=0&&yy<H&&hi(yy*W+xx)>hh)return true}return false};
-  for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree'&&high(j,TREER)){s.obj[j]='';if(s.dyn)delete s.dyn[j]}/* 枯れ木はけす */
+function treeHighFix(s){/* 木のまわり2マス・岩のまわり1マス（hiRad）は、その物より高くしない。茂み・竹（FLATR）と岩・枯れ木のまわり1マスは同じ高さ（岩・枯れ木は、はじめの地形だけ。ほる・つむの決まりは treeNextHigh）。新しいゲームの地形を作ったあと（霧・お屋敷で高さがかわったあとも）によぶ。がけのそばの枯れ木はけし、生きた木・岩は、まわりをその高さにならして、その外を2マスに1だんずつ上げる（段々。2マス以内との差は1だんまでの決まりのまま） */const h=s.hi;if(!h)return;const hi=n=>h[n]|0;const high=(j,R)=>{const x=j%W,y=(j/W)|0,hh=hi(j);for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<W&&yy>=0&&yy<H&&hi(yy*W+xx)>hh)return true}return false};
+  for(let round=0;round<6;round++){/* 1マスはばの段（hiThinFix）をけすと、木・岩のまわりがかわるので、かわらなくなるまで */for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree'&&high(j,TREER)){s.obj[j]='';if(s.dyn)delete s.dyn[j]}/* 枯れ木はけす */
   for(let pass=0;pass<8;pass++){let ch=0;for(let j=0;j<W*H;j++){const R=hiRad(s.obj[j]);if(!R||!high(j,R))continue;const F=R+2*(HMAX-HMIN),x=j%W,y=(j/W)|0,hh=hi(j);for(let dy=-F;dy<=F;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-F;dx<=F;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const d=Math.max(Math.abs(dx),Math.abs(dy)),cap=hh+(d<=R?0:Math.ceil((d-R)/2)),n=yy*W+xx;if(hi(n)>cap){h[n]=cap;ch=1}}}}if(!ch)break}
-  /* 茂み・竹（FLATR）・岩：まわり1マスを同じ高さにならす（岩のとなりに段差を作らない）。ならせない（水・物がある・2マス以内の差が1だんをこえる・木と岩の決まりにあわない）ときは、その物をけす */
-  const flat=o=>FLATR.has(o)||o==='rock',at=(x,y)=>x>=0&&x<W&&y>=0&&y<H;for(let j=0;j<W*H;j++){if(!flat(s.obj[j]))continue;const x=j%W,y=(j/W)|0,hh=hi(j),chg=[];let bad=false;
+  /* 茂み・竹（FLATR）・岩・枯れ木：まわり1マスを同じ高さにならす（岩・枯れ木のとなりに段差を作らない）。ならせない（水・物がある・2マス以内の差が1だんをこえる・木と岩の決まりにあわない）ときは、その物をけす */
+  const flat=o=>FLATR.has(o)||o==='rock'||o==='deadtree',at=(x,y)=>x>=0&&x<W&&y>=0&&y<H;for(let j=0;j<W*H;j++){if(!flat(s.obj[j]))continue;const x=j%W,y=(j/W)|0,hh=hi(j),chg=[];let bad=false;
     for(let dy=-1;dy<=1&&!bad;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;if(!at(x+dx,y+dy)){bad=true;break}const n=(y+dy)*W+x+dx;if(hi(n)===hh)continue;const o=s.obj[n];if((o&&!WEEDS.has(o))||(s.floor&&s.floor[n])||s.ground[n]!==0){bad=true;break}chg.push([n,hi(n)])}
     if(!bad&&chg.length){for(const[n]of chg)h[n]=hh;for(const[n]of chg){const nx=n%W,ny=(n/W)|0;for(let dy=-2;dy<=2&&!bad;dy++)for(let dx=-2;dx<=2;dx++){if(!at(nx+dx,ny+dy))continue;const m=(ny+dy)*W+nx+dx,d=Math.max(Math.abs(dx),Math.abs(dy)),R=hiRad(s.obj[m]);if(Math.abs(hi(m)-hh)>1||(R&&d<=R&&hi(m)<hh)||(flat(s.obj[m])&&d<=1&&hi(m)!==hh)){bad=true;break}}if(bad)break}if(bad)for(const[n,v]of chg)h[n]=v}
-    if(bad){s.obj[j]='';if(s.dyn)delete s.dyn[j]}}}/* ならすと、ほかの木・岩のまわりが高くなることがあるので、かわらなくなるまで */
+    if(bad){s.obj[j]='';if(s.dyn)delete s.dyn[j]}}/* ならすと、ほかの木・岩のまわりが高くなることがあるので、かわらなくなるまで */
+  if(!hiThinFix(s))break}}
+function hiThinFix(s){/* はじめの地形：1マスはばの段（2×2のかたまりに入らない高いマス。1マスのブロックが1つ・2つならぶ所など）を1だん下げる。オートタイルの地形と同じく、段はどこも2×2以上。下げたあと、2マス以内との差は1だんまで（genHeights の fix と同じ）。かえたら true */
+  const h=s.hi,hv=(x,y)=>x<0||y<0||x>=W||y>=H?-99:h[y*W+x]|0;let any=false;
+  for(let it=0;it<20;it++){let ch=0;const g=h.slice(),gv=(x,y)=>x<0||y<0||x>=W||y>=H?-99:g[y*W+x]|0;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=gv(x,y);if(v<=0)continue;let ok=false;for(let b=-1;b<=0&&!ok;b++)for(let a=-1;a<=0;a++)if(gv(x+a,y+b)>=v&&gv(x+a+1,y+b)>=v&&gv(x+a,y+b+1)>=v&&gv(x+a+1,y+b+1)>=v){ok=true;break}if(!ok){h[y*W+x]=v-1;ch=1}}
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;let m=h[j]|0;for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const q=hv(x+a,y+b);if(q!==-99&&q<m)m=q}if((h[j]|0)>m+1){h[j]=m+1;ch=1}}
+    if(!ch)break;any=true}
+  return any}
 function genLand(s,w){if(!valleyOn(s,w)&&w!==WIND&&w!==TSUCHI)genRiver(s,w);/* 花の谷・風（島のあいだは雲の海）・土（地われ）に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
