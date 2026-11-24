@@ -38,7 +38,7 @@ function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.
 function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastRopes();toastNext()},180)},TOASTMS[kind||'']||2000)}
 function toastNext(){const box=$('#toasts');while(TOASTQ.length&&box.querySelectorAll('.toast:not(.out):not(#playHint)').length<TOASTMAX)toastShow(TOASTQ.shift())}
 let TOASTN=0;/* 知らせを出した数（ことわったかを見る build.js の removeAt） */
-function toast(msg,kind,stamp){kind=kind||'';TOASTN++;const box=$('#toasts');
+function toast(msg,kind,stamp){if(VBG)return;/* 洞窟にいるあいだの村の知らせは出さない（大事なことは cave.js の cvVBack） */kind=kind||'';TOASTN++;const box=$('#toasts');
   for(const t of box.querySelectorAll('.toast:not(.out):not(#playHint)'))if(t._msg===msg){t._n++;t.querySelector('.ttx').firstChild.nodeValue=msg+'（'+t._n+'）';t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');toastTimer(t,kind);return}
   const q=TOASTQ.find(it=>it.msg===msg);if(q){q.n++;return}
   if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');

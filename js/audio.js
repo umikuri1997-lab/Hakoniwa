@@ -256,6 +256,7 @@ let SFXV=1,SFXP=0,SFXL=0,SFXO=null,SFXR=1,SFXTAB=0,SFXTABD=0;/* SFXP：左右（
 function sfxOut(){let n=AC.createGain(),h=n;n.gain.value=SFXV;if(SFXP&&AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=SFXP;h.connect(p);h=p}if(SFXL){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=SFXL;f.Q.value=.5;h.connect(f);h=f}h.connect(sfxBus());return n}
 let TAPOBJ=0,TAPMAT=0;const TAPK=new Set(['tpuni','twood','tgrass','tcan','tstone','tfoe','tweb','tani','tbell','tplace','tcloth','tsoil','twater','tsacred','fgrass','fsoil','fwood','fstone','fcloth','fsnow','fwet']);
 function sfx(k){
+  if(VBG)return;/* 洞窟にいるあいだの村の音は鳴らさない */
   if(k==='open'||k==='crit'||TAPK.has(k))TAPOBJ=performance.now();if(TAPK.has(k))TAPMAT=TAPOBJ;else if(k==='open'&&(TAPOBJ-TAPMAT<120||typeof TAPPEND!=='undefined'&&TAPPEND&&TAPOBJ-TAPPEND<120))return;/* 「みる」で物の音が鳴ったタップは、画面がひらく音をかさねない *//* 地図の物にさわった音が鳴ったら、葉・火の粉の音は出さない（tapFx） */
   if(!AC||!SND.sfx)return;if(AC.state!=='running'){/* iPhone などは、さわってすぐは音がまだ止まっている（resume があとで終わる）。ボタンの音は、うごきだしてから鳴らす（マップの場所の音はすてる） */if(AC.state==='suspended'&&SFXV===1&&!SFXP&&!SFXL&&!SFXTAB){const t0=performance.now();AC.resume().then(()=>{if(performance.now()-t0<600&&AC.state==='running')sfx(k)}).catch(()=>{})}return}const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
   if(DUCKK.has(k)&&!SFXBUS)lowDuck();const t=now+.01,o=SFXV!==1||SFXP||SFXL?sfxOut():sfxBus(),seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
@@ -483,7 +484,7 @@ setInterval(dayChimeTick,200);
 function sfxPos(x,y){/* マップの場所の音の大きさ・左右・こもり（{v,p,l}）。聞こえないほど遠ければ null */const vw=VW/cam.z,vh=VH/cam.z,q=w2s(x*TS,y*TS),qx=(q.x-VW/2)/cam.z,qy=(q.y-VH/2)/cam.z,d=Math.hypot(qx,qy),R=Math.max(vw,vh)*.8/* 画面の上の道のり（クォータービューも） */,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return null;
   const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=qx/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */
   return{v:v*(.85+.15*zr),p:Math.max(-.75,Math.min(.75,dx*.75)),l:Math.min(18000,1100*Math.pow(15,v)*zr)}}/* 画面の左の音は左から。遠いほどこもる */
-function sfxAt(k,x,y,m=1){if(!S)return;{const g=k.startsWith('ea_')?'ea_':k;/* 食べる音は、だれが食べていても、まとめて EATGAP 秒に1回（何人も食べていると、ずっと口の音になる） */if(SFXGAP[g]){const n=performance.now()/1000;if(n-(SFXLAST[g]||0)<SFXGAP[g])return;SFXLAST[g]=n}}const q=sfxPos(x,y);if(!q)return;
+function sfxAt(k,x,y,m=1){if(!S||VBG)return;{const g=k.startsWith('ea_')?'ea_':k;/* 食べる音は、だれが食べていても、まとめて EATGAP 秒に1回（何人も食べていると、ずっと口の音になる） */if(SFXGAP[g]){const n=performance.now()/1000;if(n-(SFXLAST[g]||0)<SFXGAP[g])return;SFXLAST[g]=n}}const q=sfxPos(x,y);if(!q)return;
   SFXV=q.v*m;SFXP=q.p;SFXL=q.l;
   try{sfx(k)}finally{SFXV=1;SFXP=0;SFXL=0;SFXO=null}}
 const gainB=()=>SND.bgm?.1085*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */

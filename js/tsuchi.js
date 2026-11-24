@@ -185,7 +185,7 @@ function tsOliveN(){const P=tsOn()&&S.ts.rub&&S.ts.rub[0];if(!P||!P.open)return 
 /* ---- 洞窟の2階：坂の手前で、火のせいれいイブキが、小さなコワイノ3びきとたたかっている（C.ib）。近づくと会話、いっしょにたおすと会話、なかまになる（S.ts.ib） ----
    イブキは、会うまで C.party に入れず、そばに立って、ねむっているコワイノにむかって火をふる（絵だけ。cvActorsL で描く）。コワイノは会話がおわるまで起きない（tsHold） */
 const TSIBFL=1/* イブキがいる階 */,TSIBFOE=3,TSIBNEAR=4.5/* このマスの近さまで来たら会話 */,TSIBBACK=5/* 坂から、このマスの数だけ手前 */;
-function tsCaveIbuki(C){C.ib=null;if(!tsOn()||C.fl!==TSIBFL||S.ts.ib||!tsQDone('tsolive')||S.res.some(r=>r.name===IBUKI))return;
+function tsCaveIbuki(C){C.ib=null;if(!tsOn()||C.fl!==TSIBFL||S.ts.ib||!tsQDone('tsolive')||cvAll().some(r=>r.name===IBUKI))return;
   let R=-1,St=-1;for(const[j,o]of C.ob){if(o.k==='R'&&R<0)R=j;if(o.k==='S'&&St<0)St=j}if(R<0||St<0)return;
   const p=cvBfs(St,q=>q===R);if(!p||p.length<TSIBBACK+3)return;const j=p[p.length-1-TSIBBACK],on=new Set(p);
   const r=mkRes(S,IBUKI,'fire',STATUE>=0?STATUE%W+.5:CX+.5,STATUE>=0?((STATUE/W)|0)+1.5:CY+.5);
@@ -199,7 +199,7 @@ function tsCaveTick(C,now){/* caveFrame から */const I=C.ib;if(!I||I.st>=3)ret
     if(!C.party.some(q=>Math.hypot(q.x-a.x,q.y-a.y)<=TSIBNEAR))return;I.st=1;C.focus=null;for(const q of C.party){q.path=[];q.mv=false}
     dialog([[IBUKI,'#alarm|へっ、まだまだ！ ……ん？ だれだ、おまえら。'],[TOTO,'#surprise|わっ、火のせいれいだ！'],[IBUKI,'おれは、イブキ。こいつら、なかなか、しつこくてよ。'],[TOTO,'#proud|ぼ、ぼくも、たたかえるもん！'],[IBUKI,'#joy|ははっ、ちびすけ、ふるえてるじゃねえか。……まあいい。まかせとけ！']],()=>{if(CV!==C)return;tsIbJoin(C)});return}
   if(I.st===2&&!fs.length){I.st=3;setTimeout(()=>{if(CV!==C)return;dialog([[IBUKI,'#joy|やるじゃねえか、ちびすけ。'],[TOTO,'#jolt|ちびすけじゃないもん。トトだもん。'],[IBUKI,'おう、トト。おまえら、上の村から来たのか？ ……おれも、いっしょに行っていいか。'],[TOTO,'#joy|うん！']])},600)}}
-function tsIbJoin(C){/* 会話のあと：なかまになって、コワイノが起きる */const I=C.ib,a=I.a,r=a.r;I.st=2;S.res.push(r);r.hunger=375;r.came=dayNo();S.lastCame=dayNo();(S.keyN||(S.keyN={})).fire=IBUKI;S.ts.ib=1;S.ts.ibNew=1;
+function tsIbJoin(C){/* 会話のあと：なかまになって、コワイノが起きる */const I=C.ib,a=I.a,r=a.r;I.st=2;(S.cvAway||(S.cvAway=[])).push(r);/* 洞窟にいるあいだは、村のせいれいの外（cave.js の cvAwayBack で村へ） */r.hunger=375;r.came=dayNo();S.lastCame=dayNo();(S.keyN||(S.keyN={})).fire=IBUKI;S.ts.ib=1;S.ts.ibNew=1;
   C.party.push(a);C.all.push(r);for(const e of C.en)if(I.ids.includes(e.id)){e.tsHold=0;e.asleep=false;e.wakeT=performance.now()}sfx('arrive');toast(IBUKI+'がなかまになった','good');cvHudUpd()}
 function tsIbWelcome(){/* 洞窟からもどったら：村のなかまの紹介（tsTick） */const r=S.res.find(q=>q.name===IBUKI);S.ts.ibNew=0;if(!r)return;
   if(typeof letterQ==='function')letterQ(r,'new');memo('star',IBUKI+'（火のせいれい）が村にやってきた');logEv(IBUKI+'（火のせいれい）がやってきた');const w={id:r.id,t:Infinity};NEWQ.push(w);HOLD.add(r.id);if(typeof welcomeNear==='function')welcomeNear(r,w)}
