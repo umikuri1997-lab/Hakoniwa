@@ -60,7 +60,7 @@ function cvqReflect(V,now){const C=CV;if(cvTheme().lava)return;const P=cvqWaterP
   const nearW=(x,y)=>{for(let d=1;d<=3;d++)for(const[a,b]of[[x,y+d],[x+d,y],[x+d,y+d]])if(cvqIn(a,b)&&C.wt[cvJ(a,b)])return true;return false},L=[];
   for(const d of C.deco||[]){const x=cvX(d.j),y=cvY(d.j);if(C.seen[d.j]&&nearW(x,y))L.push([cvqObj(x,y,1,1),()=>cvDrawDeco(d,now)])}
   for(const[j,o]of C.ob){const x=cvX(j),y=cvY(j);if(C.seen[j]&&'AtTDEbgo'.includes(o.k)&&nearW(x,y))L.push([cvqObj(x,y,1,1),()=>cvDrawObj(j,o,now)])}
-  for(const a of C.party)if(nearW(Math.floor(a.x),Math.floor(a.y-CVOY)))L.push([cvqPt(a.x*TS,a.y*TS),()=>cvDrawActor(a,now)]);
+  for(const a of(typeof cvActorsL==='function'?cvActorsL(C):C.party))if(nearW(Math.floor(a.x),Math.floor(a.y-CVOY)))L.push([cvqPt(a.x*TS,a.y*TS),()=>cvDrawActor(a,now)]);
   for(const e of C.en)if(!e.dead&&C.seen[cvCell(e)]&&nearW(Math.floor(e.x),Math.floor(e.y-CVOY)))L.push([cvqPt(e.x*TS,e.y*TS),()=>EN[e.type].bk?cvBkDraw(e,now):drawEnemy(e,now)]);
   if(!L.length)return;const GA=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'globalAlpha');
   cvqScr(ctx,()=>{ctx.clip(P);Object.defineProperty(ctx,'globalAlpha',{configurable:true,get(){return GA.get.call(this)/CVQREFA},set(v){GA.set.call(this,v*CVQREFA)}});ctx.globalAlpha=1;/* 描く物が globalAlpha=1 にもどしても、うすいまま */

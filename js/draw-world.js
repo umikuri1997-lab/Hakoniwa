@@ -43,7 +43,7 @@ function enFace(e,v,now){/* 攻撃している相手のほうを向く：よこ�
 /* コワイノの体力ゲージ：へった分（白）を HPGHOLD ミリ秒のこしてから、1秒に HPGRATE（ゲージのわりあい）ずつちぢめる */
 const HPG=new WeakMap(),HPGHOLD=380,HPGRATE=.9;function hpGhost(e,f,now){let g=HPG.get(e);if(!g||f>g.v){g={v:f,f,t:now,n:now};HPG.set(e,g);return f}if(f<g.f){g.f=f;g.t=now}const dt=Math.max(0,Math.min(100,now-g.n));g.n=now;if(now-g.t>HPGHOLD)g.v=Math.max(f,g.v-HPGRATE*dt/1000);return g.v}
 function drawEnemy(e,now){
-  if(!e.spawned)return;const D=EN[e.type],z=D.size*2;let px=e.x*TS,py=e.y*TS;
+  if(!e.spawned)return;const D=EN[e.type],z=D.size*2;if(D.tsOok&&tsOokDraw(e,now))return;/* 土のツチノオオカゲ（tsuchi.js） */let px=e.x*TS,py=e.y*TS;
   if(!EV.has(e))EV.set(e,{x:e.x,y:e.y,back:false,f:1,mv:0});const v=EV.get(e),dx=e.x-v.x,dy=e.y-v.y;
   if(Math.abs(dx)+Math.abs(dy)>.001){v.mv=now;if(Math.abs(dx)>.0005)v.f=dx<0?-1:1;v.back=dy<0&&-dy>Math.abs(dx)*.6;v.sd=Math.abs(dx)>Math.abs(dy)*1.2?(dx>0?'R':'L'):''}/* よこへ歩くときは、よこを向いて歩く（walkR・walkL） */v.x=e.x;v.y=e.y;
   shadow(ctx,px,py+8,9*z,2.6*z);

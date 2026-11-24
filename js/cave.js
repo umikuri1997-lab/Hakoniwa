@@ -458,7 +458,7 @@ function caveEnter(list,food,fl){if(CV||!list.length)return false;fl=clamp(fl|0,
   const cells=cvBfsRing(cvJ(sx,sy),list.length);
   list.forEach((r,i)=>{const j=cells[i]!=null?cells[i]:cvJ(sx,sy);C.party.push({r,elem:r.elem,id:r.id,x:cvX(j)+.5,y:cvY(j)+.5+CVOY,path:[],face:1,back:false,turn:0,swing:0,fback:false,fatk:0,job:null,jq:[],mv:false,chase:false,rp:0,cj:-1,hurtU:0,joyU:0,shockU:0,eatU:0,blowU:0,eatE:'',jumpT:0})});
   for(let y=0;y<CVH-1;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]&&!C.ab[j]&&!C.ob.has(j)&&C.g[j+CVW]&&!C.wt[j+CVW]&&hash((j*31+fl*977+5)>>>0)<CVOREP)C.ore.add(j)}/* 光る鉱石：正面の見える岩 */
-  C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function')tsCaveCarve(C);/* 土：彫り絵のかべ（tsuchi.js） */
+  C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function'){tsCaveCarve(C);tsCaveIbuki(C)}/* 土：彫り絵のかべ・2階のイブキ（tsuchi.js） */
   cvDecoPlace();cvBakeEnter(C);C.hud=cvHudMake();document.body.appendChild(C.hud);document.body.classList.add('cave');
   if(typeof followEnd==='function')followEnd();if(camAnim&&!camAnim.done)camAnim=null;LIGHTARM=false;if(typeof setMode==='function')setMode('look');
   cam.z=clamp(cam.z,1.15,1.8);cvCamTo(1);for(const a of C.party)cvReveal(a.x,a.y-CVOY,cvSeeR());cvHudUpd();sfx('next');toast('洞窟の'+(fl+1)+'階に入った');return true}
@@ -642,7 +642,7 @@ function cvActor(a,cdt,mv,now){const C=CV,r=a.r;if(a.eatU>now||a.frzU>now)return
   {const ho=C.ob.get(cj);if(ho&&ho.k==='H'&&a.elem!=='fire'&&!relOn('fuigo')){r.hunger-=CVHOTHUN*cdt;if(!C.note.hot){C.note.hot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}/* あつい床 */
   if(r.hunger<=0){r.hunger=0;cvDie(a)}}
 function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.type];cvStep(e,now,false);
-  if(e.asleep){const R=C.dim?CVWAKED:CVWAKE;if(C.seen[cvCell(e)])for(const a of C.party)if(Math.hypot(a.x-e.x,a.y-e.y)<=R&&cvWakeOK(e,a)&&cvLos(e.x,e.y-CVOY,a.x,a.y-CVOY)){e.asleep=false;e.wakeT=now;break}return}
+  if(e.asleep){if(e.tsHold)return;/* 土：イブキと会う会話がおわるまで（tsuchi.js） */const R=C.dim?CVWAKED:CVWAKE;if(C.seen[cvCell(e)])for(const a of C.party)if(Math.hypot(a.x-e.x,a.y-e.y)<=R&&cvWakeOK(e,a)&&cvLos(e.x,e.y-CVOY,a.x,a.y-CVOY)){e.asleep=false;e.wakeT=now;break}return}
   if(e.stun>0){e.stun-=cdt;return}
   if(D.patrol&&!cvPatrol(e,mv))return;
   let tg=e.tg&&C.party.includes(e.tg)?e.tg:null,bd=1e9;if(!tg)for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);if(d<bd){bd=d;tg=a}}if(!tg)return;
@@ -654,7 +654,7 @@ function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.ty
   cvMove(e,mv*CVFOE*D.sp)}
 function caveFrame(rdt,now){const C=CV;if(!C||cvHold())return;const sp=S.speed||1,cdt=rdt*MIN_PER_SEC*sp,mv=rdt*sp;C.t+=cdt/DAYLEN;LIGHTCD=Math.max(0,LIGHTCD-rdt*sp);
   for(const a of C.party.slice()){cvActor(a,cdt,mv,now);if(CV!==C)return}
-  for(const e of C.en)cvFoe(e,cdt,mv,now);cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
+  for(const e of C.en)cvFoe(e,cdt,mv,now);if(typeof tsCaveTick==='function')tsCaveTick(C,now);cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
   if(C.en.some(e=>e.dead))C.en=C.en.filter(e=>!e.dead);
   if(C.askHome>=0&&C.party.every(a=>!a.path.length)){const j=C.askHome;C.askHome=-1;if(C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6))cvHomeAsk()}
   const h=cvHour();if(!C.eve&&h>=17){C.eve=true;toast('外は夕方です','warn')}if(h>=CVNIGHT||h<CVH0){toast('夜になるので、村へもどります','warn');return caveExit(true)}
