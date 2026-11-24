@@ -28,6 +28,15 @@ function icSrc(j,L,h){const id=cubeAt(j,L);if(id){const t=cubeTex(id);return t?[
 function icBlkKey(x,y,L,v,hv){const n=hv(x,y-1)<L,s=hv(x,y+1)<L,e=hv(x+1,y)<L,w=hv(x-1,y)<L,
   sw=hv(x-1,y+1)>=L&&s&&!w,se=hv(x+1,y+1)>=L&&(s&&!e||e&&!s),ne=hv(x+1,y-1)>=L&&e&&!n,b=a=>a?'1':'0';
   return 'iso:blk-'+v+':'+b(n)+b(s)+b(e)+b(w)+(sw||se||ne?'-'+b(sw)+b(se)+b(ne):'')}
+/* 入隅（L字の内がわの角）：まわりの3マス（たて B・よこ C・ななめ A）がそのだんまであって、このマスだけひくい角に、まるいかべを1まいの絵でかさねる（iso_block.py の build_fillet・fillets_for と同じ）。
+   なまえ：iso:blkf-<だん>:<角 nw|ne|sw|se>-<A><B><C>（そのマスがこのだんでいちばん上なら1）。B・C どちらも上にだんがつづくときは iso:blkf-m:<角>-000 */
+const ICFOFF=[['nw',0,-1,-1,0,-1,-1],['ne',0,-1,1,0,1,-1],['sw',0,1,-1,0,-1,1],['se',0,1,1,0,1,1]];
+function icFils(x,y,h,hv){const L=[];for(const[c,bx,by,cx,cy,ax,ay]of ICFOFF){const B=hv(x+bx,y+by),C=hv(x+cx,y+cy),A=hv(x+ax,y+ay),top=Math.min(A,B,C);
+  for(let l=Math.max(1,h+1);l<=top;l++){const jB=(y+by)*W+x+bx,jC=(y+cy)*W+x+cx,jA=(y+ay)*W+x+ax;if(cubeAt(jB,l)||cubeAt(jC,l)||cubeAt(jA,l))continue;/* 石のブロックの所は、まるめない */
+    const tA=A===l,tB=B===l,tC=C===l,j0=tB?jB:jC,v=REV.has(j0)?'g':WD===KUSA?'d':WD===KAZAN?'v':'k';
+    L.push([tB||tC?'iso:blkf-'+v+':'+c+'-'+(tA?1:0)+(tB?1:0)+(tC?1:0):'iso:blkf-m:'+c+'-000',l])}}return L}
+function icHasFil(x,y){const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),h=hv(x,y);for(const[,bx,by,cx,cy,ax,ay]of ICFOFF)if(Math.min(hv(x+bx,y+by),hv(x+cx,y+cy),hv(x+ax,y+ay))>h)return true;return false}
+function icFilDraw(c,x,y,h,hv){const ix=(x-y)*IQW/2,iy=(x+y)*IQH/2;for(const[k,l]of icFils(x,y,h,hv)){const t=icBlkImg(k);if(!t)continue;const[ch,im]=t;c.drawImage(im,ix-ch.ax/2,iy+IQH/2-(l-1)*IQL-ch.ay/2,ch.w/2,ch.h/2)}}
 function icBlkImg(k){const ch=window.CHIPS&&CHIPS[k];if(!ch)return null;const im=chipImgs(ch,k)[0];return im&&im.ok?[ch,im]:null}
 /* 上の面：その所の地面（igTile0）を、3Dで写した上の面のかたち（<なまえ>~top）で切った絵を、マスごとにとっておく（ICT。地面の区画がかわったら作りなおす。igTileVer）。
    毎コマ描くのは、とっておいた絵と、上の面のかたちの色の絵（時間の色・高いだんほど明るく。かたちと色ごとに1まい）だけ */
@@ -49,7 +58,8 @@ function icBlkTop(c,x,y,h,ix,iy,k){const t=icBlkImg(k+'~top');if(!t)return false
   c.globalCompositeOperation='source-over';c.globalAlpha=Math.min(.24,.06*h);c.drawImage(icMask(k,ch,im,'#fff8e0'),X0,Y0,w,hh);c.restore();/* 上の面は、高いだんほど明るく */
   return true}
 /* 高い段のマス (x,y)（c は画面の向き、ゲームの点で描く）。土のだんは、下のだんから、角の形ごとのチップをならべる。石のブロックのだんは、面の絵を写したタイル */
-function icBlock(c,x,y){const j=y*W+x,h=hiAt(j);if(h<=0)return;const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),
+function icBlock(c,x,y){const j=y*W+x,h=Math.max(0,hiAt(j)),hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a));if(h>0)icBlock0(c,x,y,j,h,hv);icFilDraw(c,x,y,h,hv)}/* 入隅は、このマスの列を描いたあと */
+function icBlock0(c,x,y,j,h,hv){const ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),
     gv=REV.has(j)?'g':WD===KUSA?'d':WD===KAZAN?'v':'k',gr=!top&&REV.has(j)?1+(hash(j)<.5?1:0):0;let soilTop=null;
   for(let L=1;L<=h;L++){
     if(!cubeAt(j,L)){const v=L===h?gv:'m',k=icBlkKey(x,y,L,v,hv),t=icBlkImg(k);if(t){const[ch,im]=t;c.drawImage(im,ix-ch.ax/2,iy+IQH/2-(L-1)*IQL-ch.ay/2,ch.w/2,ch.h/2);if(L===h)soilTop=k;continue}}

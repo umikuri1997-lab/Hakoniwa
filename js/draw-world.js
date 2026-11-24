@@ -234,7 +234,7 @@ function render(now){RFN++;hdFrame();
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!isoCellVis(x,y,TS*4))continue;add(y+2.06,3,null,()=>drawRoofItem(ctx,id,x*TS,y*TS-liftOf(j)),j,objFoot(x,y,2,2,j),x+y+3.35)}/* ガゼボ・東屋：2×2の足もとに立てて、下に置いた物・下にいる子より上（その2×2のいちばん手前のマスの物のすぐあと） */
   iqRoofsAdd(add,x0,y0,x1,y1);/* クォータービュー：家の屋根は、列ごとの切妻（iso-conn.js） */
-  if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if(S.hi[j]>0&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,x+y-.99)}}/* クォータービュー（仮）：高い段のマス */
+  if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,x+y-.99)}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
   if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
   {/* 足もとをきめて、x+y の小さい順（うしろから） */
