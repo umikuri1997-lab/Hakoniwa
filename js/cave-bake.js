@@ -57,16 +57,16 @@ function cvBakeTick(cdt,mv,now){const C=CV;if(!C.sc)return;
     if(e.down&&C.t>=e.down){/* 組みかけのほね：組みなおして起きる */e.down=0;e.hp=e.max;e.asleep=false;e.stun=0;cvSpark(e.x,e.y-CVOY,'#e8dcc0',14);sfx('crack');if(!C.note.hone){C.note.hone=1;toast('ほねが、また組みあがった','warn')}}
     if(D.hot&&!e.asleep&&!e.down){const j=cvCell(e);if(C.g[j]&&!C.wt[j])C.hotT.set(j,C.t+CVROHOT)}}
   for(const[j,u]of C.hotT)if(u<=C.t)C.hotT.delete(j);
-  for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'&&!relOn('fuigo')){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
+  for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
   for(const s of C.sc)cvScTick(s,cdt,mv,now)}
 /* ねているバケモノが目をさます広さ（マス） */
 function cvWakeR(e){const C=CV;if(EN[e.type].pray)return cvSkWakeR();if(EN[e.type].nezu&&relOn('ningyo'))return C.dim?CVNEZUWKD:CVNEZUWK;return C.dim?CVWAKED:CVWAKE}
 /* ねむりからさめるか（ためしのからだは、火のせいれいが近づいたときだけ） */
 function cvWakeOK(e,a){const D=EN[e.type];if(D.pray)return cvSkWakeOK();if(D.thaw)return a.elem==='fire'&&Math.hypot(a.x-e.x,a.y-e.y)<=CVTAMER;return true}
-/* ゆりかごのみはり：ゆりかごのそば・自分のそばに来た子だけ、ねらう。いなければ見回る */
-function cvPatrol(e,mv){const C=CV;let tg=null,bd=1e9;for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);let near=d<=CVMIEYE;if(!near)for(let dy=-CVMIR;dy<=CVMIR&&!near;dy++)for(let dx=-CVMIR;dx<=CVMIR;dx++){const x=(a.x|0)+dx,y=((a.y-CVOY)|0)+dy,o=x>=0&&y>=0&&x<CVW&&y<CVH&&C.ob.get(cvJ(x,y));if(o&&o.k==='Y'){near=true;break}}if(near&&d<bd){bd=d;tg=a}}
+/* ゆりかごのみはり：ゆりかご・ぬいていないくいのそば（cvMiGuard）・自分のそばに来た子だけ、ねらう。いなければ見回る */
+function cvPatrol(e,mv){const C=CV;let tg=null,bd=1e9;for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);let near=d<=CVMIEYE;if(!near)for(let dy=-CVMIR;dy<=CVMIR&&!near;dy++)for(let dx=-CVMIR;dx<=CVMIR;dx++){const x=(a.x|0)+dx,y=((a.y-CVOY)|0)+dy,o=x>=0&&y>=0&&x<CVW&&y<CVH&&C.ob.get(cvJ(x,y));if(cvMiGuard(o)){near=true;break}}if(near&&d<bd){bd=d;tg=a}}
   if(tg){e.tg=tg;return true}if(e.tg&&Math.hypot(e.tg.x-e.x,e.tg.y-e.y)<CVAGGRO)return true;e.tg=null;
-  if(!e.path.length&&(e.pw=(e.pw||0)-mv)<=0){e.pw=2+Math.random()*3;const Y=[...C.ob].filter(([,o])=>o.k==='Y').map(([j])=>j);if(Y.length){const y=Y[(Math.random()*Y.length)|0],p=cvBfs(cvCell(e),q=>cvAdj(q,y));if(p)e.path=p.slice(0,12)}}
+  if(!e.path.length&&(e.pw=(e.pw||0)-mv)<=0){e.pw=2+Math.random()*3;const Y=[...C.ob].filter(([,o])=>cvMiGuard(o)).map(([j])=>j);if(Y.length){const y=Y[(Math.random()*Y.length)|0],p=cvBfs(cvCell(e),q=>cvAdj(q,y));if(p)e.path=p.slice(0,12)}}
   if(e.path.length)cvMove(e,mv*CVFOE*EN[e.type].sp*.6);return false}
 /* たおれたとき（組みかけのほねは、まもりの光でとどめをさすまで、たおれたまま組みなおす）。true なら、まだ消えない */
 function cvBakeDown(e,a){const D=EN[e.type];if(!D||!D.rebuild||!a)return false;const C=CV;e.down=C.t+CVHONET;e.hp=0;e.path=[];e.tg=null;if(C.focus===e)C.focus=null;sfx('crack');if(!C.note.hdown){C.note.hdown=1;toast('ほねが、くずれた','good')}return true}
