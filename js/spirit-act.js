@@ -382,7 +382,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
    if(heldN(r)>0&&r.elem==='earth'&&r.hunger>=275&&!isNight()&&tryJob(r,G,'repair'))return;/* 土のせいれいは、ついでの収穫・木切りより修理が先 */
   if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=150&&!r.highFirst){const cm=r.cmat||{},gm=[...WEEDS].some(id=>(cm[BL[id].weed]||0)>0)?['weed']:(cm.stone||0)>0?['mine']:(cm.wood||0)>0||(cm.bamboo||0)>0?['chop']:[];for(const k of['drop','harvest',...gm,'gather'])if(tryJob(r,G,k))return}/* 草むしり・落ちている素材・食べ物も、持てる数までまとめて集めてから運ぶ */
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
-  if(r.cmat&&matCap()>0)return goStoreMat(r,G);
+  if(r.cmat&&matCap()>0&&!noBoxPut(r))return goStoreMat(r,G);/* どの箱にも入らない物は、地面において、ふつうの仕事へ */
   else if(isNight()&&isWatch(r)){// 火のせいれいは寝ないで見回り
     if(r.hunger<250&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=pickFoe(r,foesNow());if(e){const t=huntSpot(G,e,60,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
@@ -459,6 +459,10 @@ function boxFarNote(G,ks,r){/* 空きのある箱はあるのに、どの箱へ�
 function stkNote(r,ks,G){/* しまう箱へ行けなかった：しごと一覧（work-list.js）にわけを出す印。しまえる箱がひとつもないときは、つけない */const L=BOXL.filter(k=>ks.some(key=>boxRoom(k,key)>0));if(!L.length)return;if(G){const T=TAKEN;TAKEN=null;let j=-1;try{j=nearest(G,j=>putAdj(j,ks)>=0,1e9)}finally{TAKEN=T}if(j>=0)return}/* ほかの子が箱のそばで作業しているだけなら、つけない */r.stk={t:S.t,n:boxNearName(r,L)}}
 function nightPutDown(r){/* 夜、しまう所がないときは、持っている素材・食べ物をその場の地面において、ねる（ひとやすみにすると、夜は毎コマやめさせられて（NIGHT_OK）、しまう所をさがしなおすのをくり返し、重くなって、ひとばんじゅうねない） */if(!isNight()||!(matN(r)+carryN(r)))return false;if(!S.drops)S.drops=[];const x=r.x|0,y=r.y|0,put=(id,n)=>{if(n>0)S.drops.push({x,y,id,n})};
   for(const k in r.cmat||{})put('mat:'+k,r.cmat[k]);if(typeof r.carry==='number')put('food:mugi',r.carry);else for(const k in r.carry||{})put('food:'+k,r.carry[k]);r.cmat=null;r.carry=null;dirty=true;lgR(r,'夜で、しまう所がないので、地面において、ねる');return true}
+const NOBOXN=new Set();/* 「〇〇が入る箱がありません」を知らせた物（セーブしない。入る箱ができたら、また知らせる boxFullReset） */
+function noBoxNote(k){if(NOBOXN.has(k)||IS_STORY_REPLAY||MEMRUN)return;NOBOXN.add(k);toast(itemKeyName(k)+'が入る箱がありません','warn')}
+function noBoxPut(r){/* 持っている素材のうち、どの箱にも入らない物（わくがぜんぶほかの物でうまっている など）は、その場の地面において、仕事にもどる（箱があいたら、ひろってしまう dropFits） */if(!BOXL.length)return false;const m=r.cmat||{},L=Object.keys(m).filter(k=>m[k]>0&&!BOXL.some(j=>boxRoom(j,k)>0));if(!L.length)return false;
+  if(!S.drops)S.drops=[];const x=r.x|0,y=r.y|0;for(const k of L){S.drops.push({x,y,id:'mat:'+k,n:m[k]});delete m[k];noBoxNote(k)}if(!matN(r))r.cmat=null;dirty=true;lgR(r,L.map(itemKeyName).join('・')+'が入る箱がないので、地面において、仕事にもどる');return true}
 function goStoreMat(r,G){const ks=cmatKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,200);if(j>=0){BOXFAR=0;delete r.stk;return startAct(r,G,'smat',j)}boxFarNote(G,ks,r);stkNote(r,ks,G);if(nightPutDown(r))return goWander(r,G);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
 function goStore(r,G){const ks=carryKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,90);if(j>=0){BOXFAR=0;delete r.stk;return startAct(r,G,'store',j)}boxFarNote(G,ks,r);stkNote(r,ks,G);if(nightPutDown(r))return goWander(r,G);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
 function goEatSafe(r,any){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<(encl?4:8));/* 柵がやぶられて中にコワイノがいるときは、8マスはなれた所だけ */
