@@ -478,13 +478,17 @@ function checkQuestParts(q){const parts=QUEST_PARTS[q.id];if(!parts)return;for(l
 function questReplyWho(q){if(!q.k)return storyWho(q);const who=subWho(q);return firstSpk((q.X||[]).map(line=>[line[0]==='K'?who:line[0],line[1]]),who)}
 function noteQuestPlacement(id,j){admireNote(id,j);let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function qvHas(j,id){return S.obj[j]===id||S.floor[j]===id}/* 見にくる物が、置いた物か、しいた床（あぜ道など）か */
+const QUEST_VISIT_IN=j=>HOUSES.some(h=>h.inside.has(j));/* 家の中の物だけ */
+const QUEST_VISIT_OK={/* 見にくる所の、そのクエストだけの決まり（メインは id、サブは k）。(マス, 物) → 見にくるか */
+  imoseed:j=>{const P=imoSeedQuestPlots();return P.length?P.includes(j):true},/* いものたねをまいた畑 */
+  bed:(j,o)=>o!=='bed'||QUEST_VISIT_IN(j),bed3:QUEST_VISIT_IN,houselight:QUEST_VISIT_IN,room:QUEST_VISIT_IN,
+  chair2:j=>[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&TABLES.has(typeAt(k))})/* 食卓のとなりのいす */
+};
 function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
   if(PLANTS.includes(o)&&isBud(j))return false;/* 花も木も、育ってから見にいく */
-  if(q.id==='imoseed'&&imoSeedQuestPlots().length)return imoSeedQuestPlots().includes(j);
-  if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.id==='bed'&&o==='bed')return HOUSES.some(h=>h.inside.has(j));
+  const ok=QUEST_VISIT_OK[q.k||q.id];if(ok)return ok(j,o);
 
-  if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&TABLES.has(typeAt(k))});
   return true;
 }
 function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.id]);if(!ids)return null;
@@ -565,7 +569,7 @@ function migrateKagariIns(s){/* 火山：おまつりのあとに「かえり道
   if(was===at&&!s.qTalked&&s.qStory==null)s.quest=at;/* あし湯の話をまだ聞いていなかった：かえり道のあかりから */}
 const freeHere=()=>FREEG.filter(g=>S.free?!FREEGNO.has(g.k)&&(g.w==null||g.w===0):g.w==null||g.w===WD),FREEGNO=new Set(['g900','b5','k300','tr3']);/* フリーモード：みどりのマスは、はじめからぜんぶ・コワイノは来ない *//* その土地のやりこみ */
 function checkFree(){if(!S.cleared)return;const D=S.freeDone||(S.freeDone={});for(const g of freeHere())if(!D[g.k]&&g.ok()){D[g.k]=1;S.pt+=g.rw;S.totalPt+=g.rw;if(typeof STATUE!=='undefined'&&STATUE>=0&&typeof juiceFly==='function'&&1)juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',g.rw);toast('目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good');memo('target',g.t)}}
-const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が3〜6こ落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる'],hoshi:['✨','星空の夜','3時に寝ているせいれいのたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある']};
+const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が3〜6こ落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる',()=>{S.godVisit=true;S.godNextVisitDay=dayNo()+2}],hoshi:['✨','星空の夜','3時に寝ているせいれいのたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある',()=>monoDrops(4)]};/* [印, 名前, 説明, その朝にすること（あれば）] */
 function killsSince(){/* 「夜をこえて、つよくなろう」：クエストが出てから追いはらったコワイノの数 */if(S.flags.kb==null)S.flags.kb=S.kills||0;return (S.kills||0)-S.flags.kb}
 function kgOpen(j){/* かげのあとが見えるか：そのマスと、左右・手前の5マスに物がない（草・茂み・木の下にかくれない） */const x=j%W,y=(j/W)|0;if(x<1||x>=W-1||y>=H-1)return false;for(const k of[j,j-1,j+1,j+W-1,j+W,j+W+1])if(S.obj[k])return false;return !(S.floor&&S.floor[j])&&S.ground[j]===0&&walk(j)}
 function kgPlace(){/* 大きなかげのあと：村の南のはしの、まわりの空いた地面（なるべく草地）に出す */for(const g of[2,1,0]){let best=-1,by=-1,bx=1e9;for(let j=0;j<W*H;j++){if(!VILL[j]||(g>=1?!kgOpen(j):S.obj[j]||(S.floor&&S.floor[j])||S.ground[j]!==0||!walk(j))||g===2&&!REV.has(j))continue;const y=(j/W)|0,dx=Math.abs(j%W-CX);if(y>by||y===by&&dx<bx){by=y;bx=dx;best=j}}if(best>=0){S.flags.kgMark=best;return}}}
@@ -578,8 +582,7 @@ function morning(){if(typeof mzMorning==='function')mzMorning();if(typeof windMa
   const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */if(typeof hapMorning==='function')hapMorning();/* ときどき起きるできごと（happen.js。雨のつぎの朝を見るので、天気のあと） */
   S.today=null;if(S.enemyOn&&dayNo()>=3&&wxE&&wxE.t&&DAYEV[wxE.t]){const k=wxE.t,E=DAYEV[k];S.today=k;/* 日替わりのできごと（前もってきめた日 wxE.t） */
     setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
-    if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
-    if(k==='mono')monoDrops(4)}
+    if(E[3])E[3]()}
   if(S.rain&&!(typeof stormNow==='function'&&stormNow()))toast(snowNow()?'きょうは雪':'きょうは雨');
   {const d=dayNo(),EV={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
 };
