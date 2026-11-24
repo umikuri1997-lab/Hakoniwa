@@ -8,7 +8,7 @@
    絵：地われと岩の橋は、3Dで写したタイルセット（tsRiftDraw）。 */
 const TSIDS=new Set(['anagura']);
 const TSRIFTX=CX+15/* 地われのまん中の列 */,TSBRY=CY+1/* 岩の橋の上の行（2行） */,TSSAGAN=2/* 谷の岩をほると出る砂岩 */;
-const TSRUBN=7/* 岩の山の数（洞窟の階の数） */,TSRUBV=4/* 岩の山の絵のしゅるい（高い・ひくい、それぞれ） */,TSRUBHI=2.2/* まん中からこの近さまでは、高い岩の絵 */,TSRUBR=3.6/* 岩の山の半径（マス） */,TSRUBMIN=26/* 岩の山のマスの数の下限 */,TSRUBGAP=13/* 岩の山どうしの間 */,TSOLIVEN=3/* コノハが植えるオリーブの苗 */;
+const TSRUBN=7/* 岩の山の数（洞窟の階の数） */,TSRUBV=4/* 岩の山の絵のしゅるい（高い・ひくい、それぞれ） */,TSRUBHI=2.2/* まん中からこの近さまでは、高い岩の絵 */,TSRUBR=3.6/* 岩の山の半径（マス） */,TSRUBMIN=26/* 岩の山のマスの数の下限 */,TSRUBGAP=13/* 岩の山どうしの間 */,TSOLIVEN=3/* ハニが植えるオリーブの苗 */;
 BL.anagura={name:'あなぐまの巣穴',solid:1,natural:1};
 /* 地われの列（y ごと）：まん中の列からのずれ。はば3（ところどころ2） */
 const tsRiftAt=y=>TSRIFTX+Math.round(3*Math.sin(y/9)+2*Math.sin(y/4.3+1));
@@ -25,7 +25,7 @@ function tsPost(s){const hiS=j=>s.hi?s.hi[j]|0:0;
     const d=Math.hypot(x+.5-(CX-4),y+.5-(CY-16));if(d<bd){bd=d;best=j}}
   if(best<0){/* がけが見つからないとき（ないはず）：神殿の北 */best=(CY-16)*W+CX-4}
   for(let b=0;b<=2;b++)for(let a=-1;a<=1;a++){const q=best+b*W+a;if(s.obj[q]&&BL[s.obj[q]]&&BL[s.obj[q]].natural){s.obj[q]='';delete s.dyn[q];delete s.hp[q]}}
-  s.obj[best]='anagura';s.ts={hole:best};s.flags.calmNight=1;tsRubGen(s)}/* 神殿のあとも、夜のコワイノは、まだ来ない（PR3 で地われから来る） */
+  s.obj[best]='anagura';s.ts={hole:best};s.flags.calmNight=1;tsRubGen(s)}/* 神殿のあとも、夜のコワイノは、まだ来ない（ツチノオオカゲを追いかえしたあと、地われから来る。tsuchi-night.js） */
 const tsOn=()=>!!S&&WD===TSUCHI&&!!S.ts;
 /* ---- 絵（チップがないときは、コードのドットの仮の絵） ---- */
 function tsPx(c,col,x,y,w,h){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
@@ -67,7 +67,7 @@ function tsTap(j){if(!tsOn())return false;const o=S.obj[j];if(o==='tsrubble'){to
 const TSCARVE=[
   {fl:0,name:'あなぐまと子たち',lines:[[TOTO,'#surprise|……かべに、なにか彫ってある。'],[TOTO,'大きなあなぐまが、ちいさな子たちを、だっこしてる。'],[TOTO,'#joy|……かっこいいなあ。'],[TOTO,'#think|ヌシ様かな。ぼくも、こんなふうに大きくなれたらいいのに。']]},
   {fl:1,name:'天井をささえるあなぐま',ok:()=>tsQDone('tsolive'),lines:ib=>[[TOTO,'#surprise|……また、彫り絵だ。'],[TOTO,'大きなあなぐまが、くずれる天井を、体でささえてる。'],[TOTO,'その下を、子たちが、にげていく……。'],
-    ...(ib?[[IBUKI,'#surprise|おい、トト。……ふるえてるぞ。']]:[]),[TOTO,'#scared|……わかんない。なんでだろ。足が、とまらないの。'],...(ib?[[IBUKI,'#think|……つめたい風のせいだな。村へもどろうぜ。']]:[])]},/* 2まいめ：コノハのオリーブのあと（ok）。見た日の夜にツチノオオカゲが来る（tsOok） */
+    ...(ib?[[IBUKI,'#surprise|おい、トト。……ふるえてるぞ。']]:[]),[TOTO,'#scared|……わかんない。なんでだろ。足が、とまらないの。'],...(ib?[[IBUKI,'#think|……つめたい風のせいだな。村へもどろうぜ。']]:[])]},/* 2まいめ：ハニのオリーブのあと（ok）。見た日の夜にツチノオオカゲが来る（tsOok） */
 ];
 const tsCarveOf=fl=>WD===TSUCHI?TSCARVE.findIndex(c=>c.fl===fl&&(!c.ok||c.ok())):-1;
 function tsCaveCarve(C){/* 洞窟に入ったとき：坂にいちばん近い、正面の見える岩のマスに、彫り絵を置く（caveEnter） */C.carve=null;const n=tsCarveOf(C.fl);if(n<0)return;let R=-1;for(const[j,o]of C.ob)if(o.k==='R'){R=j;break}if(R<0)return;
@@ -100,7 +100,7 @@ function tsIntro(next){const h=S.ts&&S.ts.hole,t=S.res.find(r=>r.name===TOTO);if
       requestAnimationFrame(roll)},900)}}}
 function tsIntroReset(){if(TSINTRO){if(camAnim===TSINTRO)camAnim=null;TSINTRO=null;GIFT_ACTIVE=false}}/* 村を切りかえたとき */
 /* ---- 会話と目標 ---- */
-MAINEL[TSUCHI]='earth';SECOND[TSUCHI]={elem:'wood',name:KONOHA,ok:()=>false};/* コノハは、神殿でよばない。洞窟の1階のあとにひらいた土地にいる（tsKonohaCome） */
+MAINEL[TSUCHI]='earth';SECOND[TSUCHI]={elem:'earth',name:HANI,ok:()=>false};/* ハニは、神殿でよばない。洞窟の1階のあとにひらいた土地にいる（tsKonohaCome） */
 PROS[TSUCHI]=[
   [GOD,'つぎの土地は、岩の谷じゃ。'],
   [GOD,'#worry|大地がひびわれて、谷が、まっぷたつになりかけておる。'],
@@ -125,18 +125,18 @@ QL[TSUCHI]=[
   {id:'tscave1',text:'巣穴のおくへ行こう',check:()=>tsRubOpenN()>=1,how:'「しらべる」で巣穴をタップして、洞窟へ出かける。下へおりる坂まで行こう',
    talk:{who:TOTO,when:()=>true,lines:[[TOTO,'#think|ねえ、かみさま。巣穴のおくから、ずっと、つめたい風がふいてくるの。'],[GOD,'ふむ。おくは、どこまでつづいとるのかのう。'],[TOTO,'#scared|……く、くらいけど。'],[TOTO,'#proud|へっちゃらだもん！ ぼく、見てくる！']]},
    story:[[GOD,'#surprise|おお、谷のはしの岩の山が、くずれたぞい。'],[TOTO,'#surprise|ほんとだ。あそこ、ずっと、ふさがってたのに。'],[TOTO,'#think|……あれ？ だれか、いる。']]},
-  {id:'tskonoha',text:'ひらいた土地へ行ってみよう',check:()=>tsKonohaIn()&&NEWRES==null&&!NEWQ.length,how:'ひらいた土地の、たおれたオリーブのそばにいる、木のせいれいに話しかけよう',
-   talk:{who:KONOHA,when:()=>S.res.some(r=>r.name===KONOHA),done:()=>tsKonohaJoin(),lines:[[KONOHA,'……だれ。'],[TOTO,'ぼく、トト。この谷の、土のせいれい。'],[KONOHA,'……コノハ。木のせいれい。'],[KONOHA,'#droop|ここに、家があった。オリーブの木も。……地われの夜に、ぜんぶ、うまった。'],[TOTO,'#worry|……そうだったんだ。'],[GOD,'よう、ひとりで、がんばったのう。わしらの村へ、おいで。'],[KONOHA,'#nod|……うん。']]}},
+  {id:'tskonoha',text:'ひらいた土地へ行ってみよう',check:()=>tsKonohaIn()&&NEWRES==null&&!NEWQ.length,how:'ひらいた土地の、たおれたオリーブのそばにいる、土のせいれいに話しかけよう',
+   talk:{who:HANI,when:()=>S.res.some(r=>r.name===HANI),done:()=>tsKonohaJoin(),lines:[[HANI,'……だれ。'],[TOTO,'ぼく、トト。この谷の、土のせいれい。'],[HANI,'……ハニ。……おなじ、土のせいれい。'],[HANI,'#droop|ここに、家があった。オリーブの木も。……地われの夜に、ぜんぶ、うまった。'],[TOTO,'#worry|……そうだったんだ。'],[GOD,'よう、ひとりで、がんばったのう。わしらの村へ、おいで。'],[HANI,'#nod|……うん。']]}},
   {id:'tsolive',text:'オリーブの苗をうえよう',check:()=>tsOliveN()>=TSOLIVEN,prog:()=>'ひらいた土地のオリーブ '+Math.min(TSOLIVEN,tsOliveN())+'/'+TSOLIVEN,how:'「おく」→「オリーブの苗」を、ひらいた土地に置く。せいれいが植えるのを待とう',
-   talk:{who:KONOHA,when:()=>true,gives:{items:{tree:TSOLIVEN}},lines:[[KONOHA,'#think|……あの土地に、オリーブを、また植えたい。'],[TOTO,'#joy|うん！ ぼくも手伝う。'],[KONOHA,'……ヌシ様は、あの夜、どこにもいなかった。'],[KONOHA,'谷がわれても、家がうまっても。……ぼくらを、見すてたんだ。'],[TOTO,'#jolt|……そうだよ。ヌシ様なんて、ずるいよ。'],[TOTO,'#think|……なんで、いなくなっちゃったんだろ。']]},
-   story:[[KONOHA,'#joy|……ちいさい葉が、ゆれてる。'],[KONOHA,'また、われるかもしれないけど。'],[TOTO,'#proud|われないもん！ ぼくが、ふんばるから！'],[KONOHA,'……トトじゃ、ささえられないよ。'],[TOTO,'#droop|……う。'],[GOD,'ほっほ。巣穴の、もっとおくには、なにがあるんじゃろうのう。']]},
+   talk:{who:HANI,when:()=>true,gives:{items:{tree:TSOLIVEN}},lines:[[HANI,'#think|……あの土地に、オリーブを、また植えたい。'],[TOTO,'#joy|うん！ ぼくも手伝う。'],[HANI,'……ヌシ様は、あの夜、どこにもいなかった。'],[HANI,'谷がわれても、家がうまっても。……ぼくらを、見すてたんだ。'],[TOTO,'#jolt|……そうだよ。ヌシ様なんて、ずるいよ。'],[TOTO,'#think|……なんで、いなくなっちゃったんだろ。']]},
+   story:[[HANI,'#joy|……ちいさい葉が、ゆれてる。'],[HANI,'また、われるかもしれないけど。'],[TOTO,'#proud|われないもん！ ぼくが、ふんばるから！'],[HANI,'……トトじゃ、ささえられないよ。'],[TOTO,'#droop|……う。'],[GOD,'ほっほ。巣穴の、もっとおくには、なにがあるんじゃろうのう。']]},
   {id:'tscave2',text:'巣穴の、もっとおくへ行こう',check:()=>(S.ts.carve||[]).includes(1)&&S.res.some(r=>r.name===IBUKI)&&!S.ts.ibNew&&NEWRES==null&&!NEWQ.length,how:'「しらべる」で巣穴をタップして、洞窟の2階へ。下へおりる坂まで行こう',
-   talk:{who:TOTO,when:()=>true,lines:[[TOTO,'#think|ねえ、かみさま。洞窟の2階にも、下へおりる坂があったよね。'],[KONOHA,'……もっと、おくへ行くの？'],[TOTO,'#proud|うん。へっちゃらだもん。'],[KONOHA,'#think|……気をつけて。']]}},
+   talk:{who:TOTO,when:()=>true,lines:[[TOTO,'#think|ねえ、かみさま。洞窟の2階にも、下へおりる坂があったよね。'],[HANI,'……もっと、おくへ行くの？'],[TOTO,'#proud|うん。へっちゃらだもん。'],[HANI,'#think|……気をつけて。']]}},
   {id:'tsookage',text:'夜の谷を守ろう',check:()=>!!S.flags.tsOokDown,how:'夜、大きな影が来たら、まもりの光を当てよう',
-   story:[[KONOHA,'……ゆうべ、大きな影が来たって。'],[TOTO,'#think|あの声……どこかで、きいたことがある気がするの。'],[IBUKI,'#proud|また来たら、おれが追いはらってやる。まかせとけ。'],[GOD,'ふむ。巣穴の、もっとおくに、なにかありそうじゃな。']]},
+   story:[[HANI,'……ゆうべ、大きな影が来たって。'],[TOTO,'#think|あの声……どこかで、きいたことがある気がするの。'],[IBUKI,'#proud|また来たら、おれが追いはらってやる。まかせとけ。'],[GOD,'ふむ。巣穴の、もっとおくに、なにかありそうじゃな。']]},
 ];
 /* ---- くずれた岩の山（S.ts.rub）：谷のはしの土地を、地ゆれでくずれた岩がふさいでいる。洞窟の階をはじめてクリアするたびに、1つずつくずれて、土地がひらく ----
-   1つめ（ひらく順の0）は地われの西がわ。そこに、たおれたオリーブ（tskonoki）と、木のせいれいコノハがいる。
+   1つめ（ひらく順の0）は地われの西がわ。そこに、たおれたオリーブ（tskonoki）と、土のせいれいハニがいる。
    S.ts.rub[i]={c:まん中のマス, cells:[マス], keep:{マス:もとの物}, open:0|1}。岩のマスの物は tsrubble（こわせない・うつせない・歩けない） */
 TSIDS.add('tsrubble');TSIDS.add('tskonoki');
 BL.tsrubble={name:'くずれた岩の山',solid:1};BL.tskonoki={name:'たおれたオリーブ',solid:1};
@@ -172,15 +172,15 @@ function tsOpenReset(){if(TSOPEN){if(camAnim===TSOPEN)camAnim=null;TSOPEN=null;G
 function tsTick(){if(!tsOn()||!S.ts.rub||typeof CV!=='undefined'&&CV||TSINTRO||TSOPEN||GIFT_ACTIVE||camAnim||document.querySelector('.pxpopw,.idea-reveal'))return;
   const n=Math.min(S.cvClr||0,S.ts.rub.length);for(let i=0;i<n;i++)if(!S.ts.rub[i].open){tsRubOpen(i);return}
   if(S.ts.ibNew&&NEWRES==null&&!NEWQ.length){tsIbWelcome();return}tsOokTick()}
-/* ---- コノハ：ひらいた土地の、たおれたオリーブのそばで、すわっている（話しかけるまで、そこから動かない） ---- */
-function tsKonohaCome(P){if(S.res.some(r=>r.name===KONOHA))return;const c=P.c;S.obj[c]='tskonoki';delete P.keep[c];
+/* ---- ハニ：ひらいた土地の、たおれたオリーブのそばで、すわっている（話しかけるまで、そこから動かない） ---- */
+function tsKonohaCome(P){if(S.res.some(r=>r.name===HANI))return;const c=P.c;S.obj[c]='tskonoki';delete P.keep[c];
   const k=[c+W,c-1,c+1,c-W].find(q=>P.cells.includes(q)&&!S.obj[q])||c+W;S.obj[k]='';S.ts.kon=k;
-  const r=mkRes(S,KONOHA,'wood',k%W+.5,((k/W)|0)+.5);r.tsWait=1;r.hunger=375;r.spawnT=performance.now();r.came=dayNo();S.lastCame=dayNo();S.res.push(r);spawnFX(k%W,(k/W)|0,ELEM.wood.col)}
+  const r=mkRes(S,HANI,'earth',k%W+.5,((k/W)|0)+.5);r.tsWait=1;r.hunger=375;r.spawnT=performance.now();r.came=dayNo();S.lastCame=dayNo();S.res.push(r);spawnFX(k%W,(k/W)|0,ELEM.earth.col)}
 function tsStep(){if(!tsOn())return;for(const q of S.res)if(q.tsNight){RHOLD.set(q,performance.now()+4000);q.path=[];q.nap=false;if(q.hidden)q.hidden=false}/* ツチノオオカゲの夜：トトとイブキは、その場で見はる */const r=S.res.find(q=>q.tsWait);if(!r)return;const k=S.ts.kon;if(k==null){r.tsWait=0;return}
   RHOLD.set(r,performance.now()+4000);r.path=[];r.nap=true;r.x=k%W+.5;r.y=((k/W)|0)+.5;r.hunger=Math.max(r.hunger,300)}/* 待つあいだは、おなかもへらない */
-function tsKonohaJoin(){const r=S.res.find(q=>q.name===KONOHA);if(!r||!r.tsWait)return;r.tsWait=0;r.nap=false;RHOLD.delete(r);
-  if(typeof letterQ==='function')letterQ(r,'new');memo('star',KONOHA+'（木のせいれい）が村にやってきた');logEv(KONOHA+'（木のせいれい）がやってきた');const w={id:r.id,t:Infinity};NEWQ.push(w);HOLD.add(r.id);if(typeof welcomeNear==='function')welcomeNear(r,w)}
-const tsKonohaIn=()=>S.res.some(r=>r.name===KONOHA&&!r.tsWait);
+function tsKonohaJoin(){const r=S.res.find(q=>q.name===HANI);if(!r||!r.tsWait)return;r.tsWait=0;r.nap=false;RHOLD.delete(r);
+  if(typeof letterQ==='function')letterQ(r,'new');memo('star',HANI+'（土のせいれい）が村にやってきた');logEv(HANI+'（土のせいれい）がやってきた');const w={id:r.id,t:Infinity};NEWQ.push(w);HOLD.add(r.id);if(typeof welcomeNear==='function')welcomeNear(r,w)}
+const tsKonohaIn=()=>S.res.some(r=>r.name===HANI&&!r.tsWait);
 function tsOliveN(){const P=tsOn()&&S.ts.rub&&S.ts.rub[0];if(!P||!P.open)return 0;let n=0;for(let b=-5;b<=5;b++)for(let a=-5;a<=5;a++){const k=P.c+b*W+a;if(Math.hypot(a,b)<=5&&S.obj[k]==='tree')n++}return n}/* ひらいた土地（まん中から5マス）の、オリーブ */
 /* ---- 洞窟の2階：坂の手前で、火のせいれいイブキが、小さなコワイノ3びきとたたかっている（C.ib）。近づくと会話、いっしょにたおすと会話、なかまになる（S.ts.ib） ----
    イブキは、会うまで C.party に入れず、そばに立って、ねむっているコワイノにむかって火をふる（絵だけ。cvActorsL で描く）。コワイノは会話がおわるまで起きない（tsHold） */
@@ -223,7 +223,7 @@ function tsOokTick(){/* tsTick から（画面があいているとき） */cons
   const e=tsOokE();if(!e)return false;
   if(e.met===1){e.met=2;const t=S.res.find(q=>q.name===TOTO);if(t)STRAINU.set(t,performance.now()+60000);
     dialog([['？？？','……ちいさな子。……つかれたでしょう。'],['？？？','ねむって、いいんだよ。こわいことは、ぜんぶ、わすれさせてあげる。'],[TOTO,'#scared|……あ……。'],[GOD,'#surprise|トト！ どうしたんじゃ、動けんのか！'],[IBUKI,'#alarm|トト！ さがってろ！'],[IBUKI,'おまえの相手は、おれだ！ ……守り神、光をたのむ！']],()=>{tsOokGuard(e)},null,TOTO);return true}
-  if(e.gone&&!O.done){O.done=1;S.enemies=S.enemies.filter(q=>q!==e);S.flags.tsOokDown=1;tsOokGuards(false);const t=S.res.find(q=>q.name===TOTO);if(t)STRAINU.delete(t);memo('moon','ツチノオオカゲが、巣穴のおくへにげていった');
+  if(e.gone&&!O.done){O.done=1;S.enemies=S.enemies.filter(q=>q!==e);S.flags.tsOokDown=1;S.enemyOn=true;if(hour()>=20)S.lastWarn=dayNo();/* つぎの夜から、地われからコワイノとバケモノが来る（tsuchi-night.js） */tsOokGuards(false);const t=S.res.find(q=>q.name===TOTO);if(t)STRAINU.delete(t);memo('moon','ツチノオオカゲが、巣穴のおくへにげていった');
     dialog([[IBUKI,'#think|……にげやがった。巣穴の、おくのほうへ。'],[TOTO,'#droop|……ごめん。ぼく、足が、動かなかった。'],[IBUKI,'#joy|気にすんな。そのための、おれだろ。'],[GOD,'#think|……あの影、トトに「ねむっていい」と言うておったのう。']],()=>checkQuest(),null,IBUKI);return true}
   return false}
 function tsOokSpawn(){/* 地われのそばの、トトから8マスより遠い所から */const t=S.res.find(q=>q.name===TOTO),tx=t?t.x:CX,ty=t?t.y:CY;let best=-1,bs=1e9;

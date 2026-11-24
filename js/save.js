@@ -4,6 +4,8 @@
    S.flags の印で1回だけにする読みかえ（continueGame の中の前からの物）は、もう足さない。 */
 const MIGRATIONS = [
   {v: 11, f(S) { if (S.ts && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 土：谷のはしの、くずれた岩の山（tsuchi.js） */
+  {v: 12, f(S) { if (S.ts && S.flags && S.flags.tsOokDown) S.enemyOn = true; }}, /* 土：ツチノオオカゲを追いかえしたあとは、夜に地われから来る（tsuchi-night.js） */
+  {v: 13, f(S) { if (!S.ts || !S.res) return; for (const r of S.res) if (r.name === 'コノハ') { r.name = 'ハニ'; r.elem = 'earth'; } }}, /* 土：2人めのキーキャラのコノハ（木）は、土のせいれいハニになった */
 ];
 const SAVE_VER = MIGRATIONS.length ? MIGRATIONS[MIGRATIONS.length - 1].v : 10;
 function runMigrations(S) {
