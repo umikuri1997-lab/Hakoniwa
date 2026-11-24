@@ -104,7 +104,7 @@ def run_item(iid,out):
         R[nm]=c;print('iso',nm,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
     import chips as CHP
     if not hasattr(run_item,'old'):run_item.old=CHP.load_imgs()[1]
-    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old})   # 落ち影：いま落ち影のある物だけ
+    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old or re.sub(r'#\d+(?=:)','',k) in run_item.old})   # 落ち影：いま落ち影のある物だけ（足したならび #n は、もとの物に落ち影があれば）
     return R
 def run_sacred(out):   # 落ち影は作らない（御神木は落ち影の描き方を通らない）
     import sacred_tripo as ST
