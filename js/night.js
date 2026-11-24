@@ -7,12 +7,16 @@ let KEYRES=KEYS[0];
 const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||n===KAGARI||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
 const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];SECOND[WIND]={elem:null,name:null,ok:()=>false};/* 風（土台）：2人めのキーキャラは、まだいない *//* 2人目のキーキャラが来るきっかけ */
 const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};MAINEL[MIZU]='water';SECOND[MIZU]={elem:'earth',name:'',ok:()=>false};/* 水のステージ（試作）：2人目のお話はまだない */
-function storySummonOK(el){if(WD!==KUSA||S.free||S.cleared||elemCount(el)>0)return true;const id={earth:'summon',fire:'fire',water:'water',wind:'wind'}[el];if(!id)return true;const qi=questIndexOf(id);return S.quest>qi||S.quest===qi&&S.qTalked&&S.qStory==null}
+/* よべる元素のしばりはない（持ち主がきめた。どのステージでも、属性の力がたまれば、どの元素もよべる）。キーキャラが来るのは、そのお話のときだけ：
+   草原の火・水・風の子（FIXK0）は、その目標に着いて話を聞いたあと（fixKeyOK）。2人めのキーキャラは SECOND の ok のあと。それより前によぶと、ふつうの名前の子が来る */
+function fixKeyOK(el){if(WD!==KUSA)return false;const id={fire:'fire',water:'water',wind:'wind'}[el];if(!id)return false;const qi=questIndexOf(id);return qi>=0&&(S.quest>qi||S.quest===qi&&S.qTalked&&S.qStory==null)}
+const fixHere=el=>[...S.res,...(S.buried||[]),...(S.lost||[])].some(q=>q.name===FIXK0[el]);/* その元素のキーキャラが、もう来たか（村・お墓・いなくなった子） */
+const sumCap=el=>elemCount(el)>=(WD===FREE?(el==='wood'?6:3):el===MAINEL[WD]?10:5)&&!(FIXK0[el]&&fixKeyOK(el)&&!fixHere(el));/* よべる数がいっぱい（お話のキーキャラが、まだ来ていないときは、いっぱいでもよべる） */
 function sumElem(){
   if(S.res.length>=30)return null;let best=null,bs=0;
-  for(const el of ELEM_KEYS){if(!storySummonOK(el))continue;if(!S.flags.minaCame){const sc=SECOND[WD];if(el===sc.elem&&sc.ok()){best=el;break}continue}/* 2人目のキーキャラが先（草原：ききょう2つで土の子、火山：温泉で水のせいれい） */if(elemCount(el)>=(WD===FREE?(el==='wood'?6:3):el===MAINEL[WD]?10:5))continue;/* よべる数は、えらぶ画面（sumCands）と同じ */const n=needFor(el),v=ATTR[el];if(v>=n&&v/n>bs){bs=v/n;best=el}}
+  for(const el of ELEM_KEYS){if(!S.flags.minaCame){const sc=SECOND[WD];if(el===sc.elem&&sc.ok()){best=el;break}}/* 2人目のキーキャラが来られるときは、そちらが先（草原：ききょう2つで土の子、火山：温泉で水のせいれい） */if(sumCap(el))continue;/* よべる数は、えらぶ画面（sumCands）と同じ */const n=needFor(el),v=ATTR[el];if(v>=n&&v/n>bs){bs=v/n;best=el}}
   return best}
-function sumCands(){return ELEM_KEYS.map(el=>{const cap=elemCount(el)>=(WD===FREE?(el==='wood'?6:3):el===MAINEL[WD]?10:5),n=needFor(el),v=ATTR[el];return {el,v,n,cap,ok:!cap&&v>=n&&storySummonOK(el)}})}/* 呼べる属性の候補（いまの力と目もり） */
+function sumCands(){return ELEM_KEYS.map(el=>{const cap=sumCap(el),n=needFor(el),v=ATTR[el];return {el,v,n,cap,ok:!cap&&v>=n}})}/* 呼べる属性の候補（いまの力と目もり） */
 function checkSummon(){
   if(!S||!S.feat.summon||S.summonNext||S.summon)return;const el=sumElem();if(!el)return;S.summonNext=el}
 function storySummonNow(){/* 草原の2人目（土のせいれい）は、ききょうが咲いて呼ぶ話を聞いたら、朝を待たずに昼のうちに呼べる（1日1回はそのまま） */
@@ -30,9 +34,9 @@ function summonMorning(){
 const sumHit=(wx,wy)=>S.summon&&!calledToday()&&STATUE>=0&&Math.hypot(wx-(STATUE%W+.5),wy-(((STATUE/W)|0)-.6))<1.6;
 const calledToday=()=>S.summonDay===callDay()||S.mebukiDay===callDay();/* きょう、もう呼んだか（神殿で呼ぶ・よみがえらせる・めぶきのしずく、どれも1回） */
 function doSummon(){
-  const sm=S.summon;if(!sm)return;if(!sm.rev&&!storySummonOK(sm.elem)){S.summon=null;return}
+  const sm=S.summon;if(!sm)return;
   if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===callDay()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
-  if(!sm.rev&&!sm.pick&&S.flags.minaCame&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
+  if(!sm.rev&&!sm.pick&&!(!S.flags.minaCame&&sm.elem===SECOND[WD].elem&&SECOND[WD].ok())&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
   const sx0=sm.at?sm.at[0]:STATUE>=0?STATUE%W:CX,sy0=sm.at?sm.at[1]:STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;/* at：やってくる所（フリーモード） */
   for(let rr=0;rr<10&&!sp;rr++){const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=sx0+dx,y=sy0+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(walk(j)&&!S.obj[j]&&!S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)&&!(godHere()&&Math.hypot(x+.5-godX(),y+.5-godY())<2.2))c.push([x,y])}if(c.length)sp=pick(c)}
@@ -40,8 +44,8 @@ function doSummon(){
   if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}
     r=mkRes(S,d.name,d.elem,sp[0]+.5,sp[1]+.5,d.like);r.vr=d.vr||r.vr;r.xp=d.xp||0;r.xpf=d.xpf||0;if(d.bst)r.bst=d.bst;if(d.sst)r.sst=d.sst;if(d.tst)r.tst=d.tst;if(d.est)r.est=d.est;if(d.jc)r.jc=d.jc;if(d.ttl)r.ttl=d.ttl;if(d.boost)r.boost=d.boost;r.back=1;r.came=d.came;r.made=d.made;r.beat=d.beat;r.reMate=d.mate||null;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried&&S.dyn[j].name===d.name){S.obj[j]='';delete S.dyn[j];recount()}for(const q of S.res)if(q.coffin&&q.coffin.name===d.name)q.coffin=null;/* 埋葬の前にもどってきた子のお墓は、なくなる */
     toast(r.name+'がもどってきた！','good');sevBack(r.name);goneBack(r.name);reunite(r,sp)}
-  else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
-    else if(WD===KUSA&&FIXK0[sm.elem]&&!S.res.some(q=>q.elem===sm.elem)&&!(S.buried||[]).some(q=>q.elem===sm.elem&&isKey(q.name))&&!(S.lost||[]).some(q=>q.elem===sm.elem&&isKey(q.name)))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子 */
+  else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame&&SECOND[WD].ok()){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
+    else if(FIXK0[sm.elem]&&fixKeyOK(sm.elem)&&!fixHere(sm.elem))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子（お話のとき） */
     else{const used=new Set([...[...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name),...Object.values(S.nick||{})]),keyN=new Set([...KEYS.flat(),KAGARI,...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
