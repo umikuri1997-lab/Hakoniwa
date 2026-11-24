@@ -113,12 +113,12 @@ function juiceResTick(){if(!S||!J3RN||J3RN.s!==S)return;const n=S.res.length;if(
   if(nw.length){j3Ding(7,.05);j3Ding(12,.12);j3Ding(16,.19)}}
 
 /* ---------- はじめて置いた家具（juiceFirst）：着地のあと「はじめて！」の文字だけ（わく・背景なし）が1字ずつはねて出て、
-   紙ふぶきと星のドットがはじける。音は、オルゴールの鈴（tink）の、かけあがるアルペジオと、キラッ（starkira：持ち主の音） ---------- */
+   紙ふぶきと星のドットがはじける。音は、チャイムの「きらーん」（sfx('firstput')） ---------- */
 const J3F=[],J3FMS=2600,J3FOUT=400,J3FTX='はじめて！',J3FCOL=['#ffe066','#ff8fb1','#8fd8ff','#a8f08a','#ffffff','#ffb056'];let J3FC=null;
 function juiceFirst(j,id){if(!j3OK()||!BL[id]||BL[id].kind!=='furn'||J3F.length>3)return;const P=[];for(let k=0;k<28;k++){const a=hash(j*7+k*13)*6.283,v=50+hash(j+k*5)*90;P.push({vx:Math.cos(a)*v,vy:Math.sin(a)*v*.7-90-hash(k*3+j)*60,c:J3FCOL[k%J3FCOL.length],s:hash(k*11+j)>.5?2:3})}J3F.push({j,t0:performance.now()+450,s:0,P})}
 function j3FirstChars(){/* 1字ずつの絵（ドットのフォント・金色・下にだけ1ドットのかげ） */if(J3FC)return J3FC;J3FC=[...J3FTX].map(ch=>{const c=document.createElement('canvas'),w=c.width=22,h=c.height=24,g=c.getContext('2d');g.font='20px PixelMplus10, sans-serif';g.textAlign='center';g.textBaseline='top';
   g.fillStyle='#a8661c';g.fillText(ch,w/2,2);g.fillStyle='#ffd23f';g.fillText(ch,w/2,0);return c});return J3FC}
-function j3FirstSnd(){[0,4,7,12,16,19,24].forEach((st,k)=>j3Ding(st,k*.055,.5));j3U('starkira',.32,0,.4)}/* かけあがる鈴と、さいごにキラッ */
+function j3FirstSnd(){if(typeof sfx==='function')sfx('firstput')}/* チャイムの「きらーん」（持ち主がえらんだ録音） */
 function juiceFirstDraw(now){
   if(!J3F.length)return;
   const c=ctx,Z=j3FirstChars(),sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;

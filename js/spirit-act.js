@@ -1,14 +1,14 @@
 'use strict';
 
 // せいれいは道（道・石だたみ）を優先して歩く：道は1マス2、ほかは3の重みで最短を探す
-const FSPD={path:1.25,floor:1.15,brickfloor:1.15,stonefloor:1.15,herrfloor:1.15,carpet:1,gravel:1.4,woodpath:1.55,stone:1.55,brick:1.75},FCOST={path:4,floor:5,brickfloor:5,stonefloor:5,herrfloor:5,carpet:6,gravel:4,woodpath:3,stone:3,brick:3};// 道の速さと、道えらびの重み（ふつうは6）
+const FWALK={path:{spd:1.25,cost:4},floor:{spd:1.15,cost:5},brickfloor:{spd:1.15,cost:5},stonefloor:{spd:1.15,cost:5},herrfloor:{spd:1.15,cost:5},carpet:{spd:1,cost:6},gravel:{spd:1.4,cost:4},woodpath:{spd:1.55,cost:3},stone:{spd:1.55,cost:3},brick:{spd:1.75,cost:3}};// 床ごとの、歩く速さ（ないときは1）と、道えらびの重み（ないときは6）
 function bfs(sx,sy,enemy){if(!enemy)return roadSearch(sx,sy);return bfs0(sx,sy,enemy)}
 function roadSearch(sx,sy,block){
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(waterJ(i)&&waterJ(j)&&!solidOf(j))&&!(MZLANE&&MZLANE[j]&&!solidOf(j)&&hiAt(i)===hiAt(j))||block&&block.has(j)||cliffUp(i,j)||seatBackStep(i,j))continue;/* 水の中にいるときは、水の中も歩ける（雲の海は歩けない） *//* いす・ベンチの背もたれのがわからは、乗りおりしない */
-      const fl=S.floor[j],nc=c+(MZLANE&&MZLANE[j]?2:(FCOST[fl]||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1))+(seatJ(j)?SEATCOST:0)+(hiAt(i)-hiAt(j)>=2?FALLCOST*(hiAt(i)-hiAt(j)-1):0);/* とびおりは、ほかに道があればさける *//* 通れる家具の上は、ほかに道がないときだけ *//* 舟の道は、歩く3倍の速さ（重み 6÷3） *//* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
+      const fl=S.floor[j],nc=c+(MZLANE&&MZLANE[j]?2:((FWALK[fl]||{}).cost||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1))+(seatJ(j)?SEATCOST:0)+(hiAt(i)-hiAt(j)>=2?FALLCOST*(hiAt(i)-hiAt(j)-1):0);/* とびおりは、ほかに道があればさける *//* 通れる家具の上は、ほかに道がないときだけ *//* 舟の道は、歩く3倍の速さ（重み 6÷3） *//* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -17,7 +17,7 @@ function bfs0(sx,sy,enemy){
   let h=0,t=0;const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);dist[s]=0;q[t++]=s;
   while(h<t){const i=q[h++],x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(dist[j]>=0)continue;
-      if(wetJ(j)||STUMPB.has(j)||j===GODJ||cliffUp(i,j))continue;/* 切り株の根もとは、だれも通れない（walk と同じ） */if((solidOf(j)||HOME_DOORS.has(typeAt(j))||GATE_IDS.has(typeAt(j)))&&(enemy===2||!breakable(typeAt(j))))continue;
+      if(wetJ(j)||noPassJ(j)||cliffUp(i,j))continue;if((solidOf(j)||HOME_DOORS.has(typeAt(j))||GATE_IDS.has(typeAt(j)))&&(enemy===2||!breakable(typeAt(j))))continue;
       dist[j]=dist[i]+1;prev[j]=i;q[t++]=j}}
   return {dist,prev};
 }
@@ -26,7 +26,7 @@ function bfsE(sx,sy,wk,sd,rev){/* rev：行き先から、さかさにさがす�
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(wetJ(j)||STUMPB.has(j)||j===GODJ||(rev?cliffUp(j,i):cliffUp(i,j)))continue;/* 切り株の根もとは通れない（walk と同じ。通れる道にすると、その道を歩けずに止まる） */
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(wetJ(j)||noPassJ(j)||(rev?cliffUp(j,i):cliffUp(i,j)))continue;/* walk と同じ（通れる道にすると、その道を歩けずに止まる） */
       let add=2+((Math.imul(j^sd,2654435761)>>>29)&1);const o=typeAt(j);
       if(jumpEdge(i,j))add*=3;/* 段差を飛ぶのは3倍 */{const dd=rev?hiAt(j)-hiAt(i):hiAt(i)-hiAt(j);if(dd>=2)add+=10*(dd-1)}/* とびおりは少しさける */if(S.ground[j]===2)add*=2;/* 浅瀬は2倍 */if(solidOf(j)||HOME_DOORS.has(o)||GATE_IDS.has(o)){if(!breakable(o))continue;add+=wk}/* 壁はどれも同じ手間（守りの薄い所をねらうことはしない） */
       const nc=c+add;if(cost[j]>=0&&cost[j]<=nc)continue;cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
