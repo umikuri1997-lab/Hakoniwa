@@ -156,9 +156,9 @@ const evPick=(r,L)=>{const k=e=>e[0]+':'+e[1],C=L.filter(e=>k(e)!==r.tle),e=pick
 function funHead(h,b){const m=LOOKRX.exec(b),t=m?b.replace(m[0],''):b;if((h+t).length>60)return[h,b];return[(m?m[0]:'')+h+(/[！？]$/.test(h)?' ':'')+t]}
 function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALKPK=null;
   if(now&&now.u)L=now.L;
-  else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');C.push('chat','chat');
+  else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');if(rumorOK(r))C.push('rumor');/* ほかのせいれいのうわさ（talk-rumor.js） */C.push('chat','chat');
     const C2=C.filter(c=>c!==r.tlk),k=pick(C2.length?C2:C);r.tlk=k;/* 前と同じ種類の話題は、つづけない */
-    if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:funHead(tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'))}else if(k==='day'){L=dayLine(r,evPick(r,work))}
+    if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:funHead(tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'))}else if(k==='day'){L=dayLine(r,evPick(r,work))}else if(k==='rumor'){L=rumorLine(r)}
     if(!L&&k==='chat'&&Math.random()<ASKP)L=askLine(r);/* 4回に1回くらい、守り神さまに質問する（talk-ask.js） */
     if(!L){L=smallTalk(r);pk=prefOfTopic(r.tlast)}}
   TALKPK=pk;/* 好みを話した話：さいごまで読んだら、わかる（prefs.js） */
