@@ -17,6 +17,8 @@ const CVW=56,CVH=44,CVOY=H+8;/* 地図は tools/cave/cave_maps.py で作る（�
    O 大穴（底の見えない穴。歩けない・見とおせる。むかしの人がほった穴。STORY.md）
    X 大穴の上の橋（水晶の階は水晶の橋・化石の階はほねの橋）・J 大穴にはった氷（すべる氷と同じ）
    K 手がかりの物（歩けない。しらべると、その階のむかしの道具が見つかる cave-relic.js。階ごとに、むかしの人のしたことが形でわかる物：くい・からの水晶の台・黒いしみ・氷の中のかげ・ならべかけのほね・われた炉）
+   廃村：H 家の日干しれんがの壁（歩けない）・, 家の板のゆか（house に家の中のかこみ）・; かれた畑・v うらの窓（家のうしろの路地の高さ）・z ゆかの穴・d 戸（家の中からだけあく）・f こわれた家具（歩けない）
+   採掘場：P まきあげの足場（2×2。上の段か下の段にいて、止まっている段のほうへだけ出入りできる）・w まきあげ機（足場のとなり。上の段と下の段に1つずつ）・u ほりくず（ほりくず人形がのこす岩。だれでもおせる・まもりの光でくずれる）
    ゆりかごのへや：Y ゆりかご・N 根と土にくるまれた、大きなかげ（どちらも歩けない）
    lv は、マスごとの高さ。高い所から低い所へは、とびおりられる。低い所から高い所へは、坂からだけ
    地図は、まるい空洞とくねった道で作る（作ったあと、どのパーティでも入口から坂まで行けること・どこからでも入口か坂へもどれることを、tools/tests/cave.cjs でたしかめる） */
@@ -162,9 +164,147 @@ const CVFLOORS=[
 '########################################################'],
  lv:['22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111'],
  theme:'crystal',chest:{'6,18':{mapPc:1,pt:40},'46,16':{item:'oldlantern',pt:40},'13,30':{fukuro:1,pt:50}}},
-null,
-null,
-null,
+{map:[
+'########################################################',
+'########################################################',
+'########################################################',
+'##########################.....#########################',
+'#########################...S...########################',
+'#########################.......########################',
+'#########################.......########################',
+'###########################......#######################',
+'############################q###.#######################',
+'############################q###.#######################',
+'############################.###.###########.....t######',
+'#####...###########KKKKK####^###^#########t.g.......####',
+'##T.h..b...########.....###......########.......c...D.##',
+'##..h...........###.................#####.##.....t###T##',
+'#####...o..####.##....................###.##############',
+'###############.#.c.......................##############',
+'###############.......OOOOOOOOOOO.......################',
+'##############.......OOOOOOOOOOOOOO..c..################',
+'##############..A..OOOOOOOOOOOOOOOOO....################',
+'#############.....OOOOOOOOOOOOOOOOOOO....###############',
+'############...g.OOOOOOOOOOOOOOOOOOOOO....##############',
+'############.....OOOOOOOOOOOOOOOOOOOOOO.A...############',
+'###########......OOOOOOOOOOOOOOOOOOOOOOO.....###########',
+'############wPP##OOOOOOOOOOOOOOOOOOOOOOO################',
+'############wPP##OOOOOOOOOOOOOOOOOOOOOOO################',
+'###########.......OOOOOOOOOOOOOOOOOOOOO.....############',
+'############.......OOOOOOOOOOOOOOOOOOO.....#############',
+'##############...c..OOOOOOOOOOOOOOOOO.c...##############',
+'#######x#######......OOOOOOOOOOOOOOO........W..o########',
+'###..g#1.....#.#......OOOOOOOOOOOOO......#####T#########',
+'##.T...1...............OOOOOOOOOO...g...################',
+'###...#1.....#####.........OOO...c.....#################',
+'########22222y#####.....g............###################',
+'########.....########..............#####################',
+'#########o.o###########..........#######################',
+'############################!###########################',
+'############################!###########################',
+'##########################.....#########################',
+'#########################.......########################',
+'#########################...R...########################',
+'#########################.......########################',
+'###########################...##########################',
+'########################################################',
+'########################################################'],
+ lv:['55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555444444444444445','54444444444455555555555555555555555555555444444444444445','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','11111111111144411111111111111111111111111111111111111111','11111111111114411111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111','11111111111111111111111111111111111111111111111111111111'],
+ theme:'mine',chest:{'2,12':{fukuro:1,pt:60},'53,13':{item:'oldlantern',pt:60},'3,30':{mapPc:1,pt:70},'46,29':{fukuro:1,pt:80}}},
+{map:[
+'########################################################',
+'########################################################',
+'########################################################',
+'##########################.....#########################',
+'#########################...S...########################',
+'########################.........#######################',
+'#########################.......########################',
+'########################.......#########################',
+'########################.###q###########################',
+'########################.###q###########################',
+'########################.###.###########################',
+'######...###############.###.###########################',
+'###T.h..b...############.....##################.o..#####',
+'###..h............##;;.;g........##########.........m.##',
+'######...o..#####..;;.;;;........c...#######.#.....#####',
+'#################............................#.#########',
+'###############........OOOOOOOOO.........#####E#########',
+'#########HHHHHHHvHHHHOOOOOOOOOOOOOO.....A####..T.#######',
+'#########H,,,,,,,,,,,OOOOOOOOOOOOOOOO.....##############',
+'#########H,f,KKKKK,,,OOOOOOOOOOOOOOOOO.....#############',
+'#########H,,,,,,,,,,,OOOOOOOOOOOOOOOOO......############',
+'#########H,,,,,,,c,,,OOOOOOOOOOOOOOOOOO#################',
+'#########H,,,,,,,,f,,OOOOOOOOOOOOOOOOOOO################',
+'#########HHHHHHdHHHHHOOOOOOOOOOOOOOOOOOO.....###########',
+'############;;;;.OOOOOOOOOOOOOOOOOOOOOOO;.;.############',
+'#######.....;;;.;OOOOOOOOOOOOOOOOOOOOOO;.;;.#####kkk####',
+'#######.####;c.;;OOOOOOOOOOOOOOOOOOOOO..;;;......kkk.T.#',
+'#######.##HHHHHHHHHHHHHOOOOOOOOOOOOOO..;;;###..g.kkk..o#',
+'#######....z,,,,,,,,,,HOOOOOOOOOOOO......########kkk####',
+'##########H,,,,,,,c,,,HOOOOOOOOOO.......################',
+'##########H,,f,,,,,,,,HOOOOOOOOO.......#################',
+'##########HHWHHHHHHdHHH....OOO......####################',
+'###########o.T####.........;.;;c;.######################',
+'#####################.......;;;;.#######################',
+'#######################........#########################',
+'######################HHHHHHvHHHH#######################',
+'######################H,,,,,,,,,H#######################',
+'######################H,f,,,,c,,H#######################',
+'######################H,,,,,,,f,H#######################',
+'######################HHHHdHHHHHH#######################',
+'#######################.......##########################',
+'######################....R...##########################',
+'#######################......###########################',
+'########################################################'],
+ lv:['55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','44444444444444445444444444443555555555555555555555555555','44444444444444444444444444443555555555555555555555555555','44444444444444444444444444443555555555555555555555555555','44444444444444444444444444443555555555555555555555555555','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','44444444444444444444444444443333333333333333333333333333','33333333334444444444444333333333333333333333333333333333','33333333334444433333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','22222222222222222222222222223222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222'],
+ theme:'haison',chest:{'13,32':{fukuro:1,pt:80},'3,12':{fukuro:1,pt:70},'47,17':{item:'oldlantern',pt:70},'53,26':{mapPc:1,pt:80}},house:[[10,18,20,22],[11,28,21,30],[23,36,31,38]]},
+{map:[
+'########################################################',
+'########################################################',
+'########################################################',
+'#########################......#########################',
+'#########################...S...########################',
+'########################.........#######################',
+'#########################.......########################',
+'########################.......#########################',
+'########################.###.###########################',
+'########################.###.###########################',
+'########################^###^###############.....t######',
+'########################.###.#############t.g.......####',
+'###################KKKKK####.############.......c...D.##',
+'###################......###.############.##.....t###T##',
+'######################..........#########.##############',
+'###################...c....GG.......##....##############',
+'#################..........GG...........################',
+'##############.........OOOOBBOO...........##############',
+'############........OOOOOOOBBOOOOO........##############',
+'############....A.OOOOOOOOOBBOOOOOOOO......#############',
+'############......OOOOOOOOOBBOOOOOOOOO......############',
+'#############.....OOOOOOOOOBBOOOOOOOOOO.A....###########',
+'##############....OOOOOOOOOBBOOOOOOOOOOO.....###########',
+'###################OOOOOOOOBBOOOOOOOOOOO################',
+'##################OOOOOOOOOBBOOOOOOOOOOO################',
+'#############.....OOOOOOOOOBBOOOOOOOOOOO.....###########',
+'#############......OOOOOOOOBBOOOOOOOOOO.....############',
+'#############....c.OOOOOOOOBBOOOOOOOO......#############',
+'#######x#######......OOOOOOBBOOOOO..........W..o########',
+'###..g#1.....#..........OO.^^.........c#######T#########',
+'##.T...1.............................###################',
+'###...#1.....####..c..........c..#######################',
+'########22222y##############.###########################',
+'########.....###############.###########################',
+'#########o.o################.###########################',
+'############################.###########################',
+'############################.###########################',
+'###########################...##########################',
+'#########################.......########################',
+'#########################...R....#######################',
+'#########################.......########################',
+'##########################....##########################',
+'########################################################',
+'########################################################'],
+ lv:['55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555555555555555555','55555555555555555555555555555555555555555444444444444445','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','44444444444444444444444444444444444444444444444444444444','33333333333333333333333333344333333333333333333333333333','33333333333333333333333333344333333333333333333333333333','33333333333333333333333333344333333333333333333333333333','33333333333333333333333333344333333333333333333333333333','33333333333333333333333333344333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','33333333333333333333333333333333333333333333333333333333','23333333333333322222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222','22222222222222222222222222222222222222222222222222222222'],
+ theme:'shinden',chest:{'53,13':{item:'oldlantern',pt:80},'3,30':{mapPc:1,pt:80},'46,29':{fukuro:1,pt:90}}},
 null,
 {map:[
 '########################################################',
@@ -229,7 +369,9 @@ const CVLEAF=3;/* 足場の葉の数 */
 const CVFLOW=250,CVGUST=12;/* 水が1マス流れるミリ秒・風が1秒に進むマス */
 const CVROCKMS=1200,CVROCKCD=4000,CVROCKHUN=80,CVROCKDMG=80;/* 落ちてくる岩：かげが出てから落ちるまで・つぎまで（ミリ秒）・せいれいのへるおなか・コワイノへのダメージ */
 const CVGATE={F:{el:'fire',no:'火のせいれいがいません'},Z:{el:'fire',no:'火のせいれいがいません'},L:{el:'water',no:'水のせいれいがいません'},b:{el:'earth',no:'土のせいれいがいません'},t:{el:'fire',no:'火のせいれいがいません'},x:{el:'water',no:'水のせいれいがいません'},y:{el:'water',no:'水のせいれいがいません'},m:{el:'wind',no:'風のせいれいがいません'},k:{el:'wood',no:'木のせいれいがいません'}};
-const CVJOBANIM={push:'mine',sluice:'water',leaf:'plant'};
+const CVJOBANIM={push:'mine',topple:'mine',sluice:'water',leaf:'plant'};
+const CVWINCHT=3,CVLIFTS=2.6;/* まきあげの足場：まわす時間（コードの分）・足場がうごく時間（秒） */
+const CVDIGT=3;/* かけたつるはしで、うすい壁をくずす時間（コードの分） */
 const CVHOTHUN=1.2;/* あつい床（炉にくべられたものの通った所）でへるおなか（コードの1分ごと、たす分） */
 /* 化石（石のかたまりから1つ。どれが出るかは、そのたびにきまる） */
 const CVFOS={kai:'うずまき貝の化石',shida:'シダの葉の化石',hone:'さかなのほねの化石',kiba:'おおきなきばの化石',tsume:'つめあとの化石'},CVFOSK=Object.keys(CVFOS),CVFOSALL=100;/* 5しゅるいそろえたときのパワー */
@@ -262,16 +404,16 @@ const cvAdj=(j,k)=>Math.abs(cvX(j)-cvX(k))+Math.abs(cvY(j)-cvY(k))===1;
 const cvNear=(j,k)=>j!==k&&Math.max(Math.abs(cvX(j)-cvX(k)),Math.abs(cvY(j)-cvY(k)))<=1;/* ななめもふくめて、となり */
 const cvName=r=>typeof nickTx==='function'?nickTx(r.name):r.name;/* つけた名前（nick.js） */
 const cvHour=()=>hour();/* 村の時計（洞窟にいるあいだも村は動く） */
-const cvSeeR=()=>(CV.dim?CVSEED:CVSEE)*(CV.lrK||1);
+const cvSeeR=()=>(CV.dim?CVSEED:relOn('kagami')?CVSEEK:CVSEE)*(CV.lrK||1);/* おひさまのかがみ（cave-shinden.js） */
 /* 会話・ポップアップ・レベルアップの画面が出ているあいだは、洞窟も止める */
 function cvHold(){return !$('#dialog').hidden||sheet!=null||!$('#rlv').hidden||!$('#lvup').hidden||!!document.querySelector('.pxpopw')||GIFT_ACTIVE||USERPAUSE}
 /* 高さ：同じか低いマスへは進める。高いマスへは、坂のマスから、1だん上へだけ */
-function cvStepOK(j,k){const C=CV,a=C.lv[j],b=C.lv[k];if(b<=a)return true;const o=C.ob.get(j);return b===a+1&&!!o&&o.k==='^'}
+function cvStepOK(j,k){const C=CV,a=C.lv[j],b=C.lv[k];if(C.lift&&cvIsP(j)!==cvIsP(k))return a===b;/* 足場のさく：止まっている段のほうへだけ */if(b<=a)return true;const o=C.ob.get(j);return b===a+1&&!!o&&o.k==='^'}
 function cvWalk(j){const C=CV;if(j<0||j>=CVW*CVH||!C.g[j]||C.wt[j])return false;const o=C.ob.get(j);if(!o)return true;
-  switch(o.k){case'S':case'R':case'!':case'g':case'^':return true;case'q':return !o.gone;case'h':case'k':case'D':case'E':return !!o.done;case'1':case'2':return !!o.wet;default:return false}}
+  switch(o.k){case'S':case'R':case'!':case'g':case'^':case'v':case'z':return true;case'd':return !!o.done;case'q':return !o.gone;case'h':case'k':case'D':case'E':return !!o.done;case'1':case'2':return !!o.wet;case'P':return !C.lift.mv;default:return false}}
 /* ふきだす溶岩：0 しずか・1 ゆれる（もうすぐ）・2 ふきだす */
 /* 見とおせるか：岩と、しまったとびらは、むこうが見えない（われ目・みぞ・物のむこうは見える） */
-function cvOpaque(j){const C=CV;if(C.ab[j])return false;/* 大穴のむこうは見える */if(!C.g[j])return true;const o=C.ob.get(j);return !!o&&(o.k==='D'||o.k==='E')&&!o.done}
+function cvOpaque(j){const C=CV;if(C.ab[j])return false;/* 大穴のむこうは見える */if(!C.g[j])return true;const o=C.ob.get(j);return !!o&&(o.k==='D'||o.k==='E'||o.k==='d')&&!o.done}
 function cvLos(x0,y0,x1,y1){/* マスのまん中からまん中へ。とちゅうのマスだけを見る（先のマスが岩でも、その岩は見える） */
   const n=Math.ceil(Math.hypot(x1-x0,y1-y0)*3);for(let i=1;i<n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n,j=cvJ(x|0,y|0);if(j===cvJ(x1|0,y1|0))break;if(j!==cvJ(x0|0,y0|0)&&cvOpaque(j))return false}return true}
 function cvReveal(cx,cy,R){const C=CV;for(let y=Math.max(0,Math.floor(cy-R));y<=Math.min(CVH-1,Math.ceil(cy+R));y++)for(let x=Math.max(0,Math.floor(cx-R));x<=Math.min(CVW-1,Math.ceil(cx+R));x++){const j=cvJ(x,y);if(C.seen[j]||Math.hypot(x+.5-cx,y+.5-cy)>R)continue;if(cvLos(cx,cy,x+.5,y+.5))C.seen[j]=1}}
@@ -312,15 +454,16 @@ function cavePrep(){if(!S||!started||CV)return;const h=hour();
 /* 行ける階の数：地図のまだない階（CVFLOORS の null。R4・R5 で作る）の手前まで */
 const cvFlOpen=()=>{const i=CVFLOORS.indexOf(null);return i<0?CVFLOORS.length:i};
 function caveEnter(list,food,fl){if(CV||!list.length)return false;fl=clamp(fl|0,0,CVFLOORS.length-1);const F=CVFLOORS[fl];if(!F)return false;
-  const C=CV={fl,F,ab:new Uint8Array(CVW*CVH),br:new Uint8Array(CVW*CVH),lv:new Uint8Array(CVW*CVH),wt:new Uint8Array(CVW*CVH),ore:new Set(),drips:[],dripT:0,clr:false,g:new Uint8Array(CVW*CVH),seen:new Uint8Array(CVW*CVH),ob:new Map(),party:[],en:[],food:food||{},loot:{mat:{},pt:0,fukuro:0,mapPc:0,fos:{},items:{}},t:0,focus:null,askHome:-1,mark:null,sel:null,sparks:[],flash:null,gust:null,dim:false,leaf:CVLEAF,sluice:'',note:{},cam0:{x:cam.x,y:cam.y,z:cam.z},all:list.slice(),hudT:0,eve:false,dk:document.createElement('canvas'),hud:null,eid:1};
+  const C=CV={fl,F,ab:new Uint8Array(CVW*CVH),hw:new Uint8Array(CVW*CVH),hf:new Uint8Array(CVW*CVH),fd:new Uint8Array(CVW*CVH),br:new Uint8Array(CVW*CVH),lv:new Uint8Array(CVW*CVH),wt:new Uint8Array(CVW*CVH),ore:new Set(),drips:[],dripT:0,clr:false,g:new Uint8Array(CVW*CVH),seen:new Uint8Array(CVW*CVH),ob:new Map(),party:[],en:[],food:food||{},loot:{mat:{},pt:0,fukuro:0,mapPc:0,fos:{},items:{}},t:0,focus:null,askHome:-1,mark:null,sel:null,sparks:[],flash:null,gust:null,dim:false,leaf:CVLEAF,sluice:'',note:{},cam0:{x:cam.x,y:cam.y,z:cam.z},all:list.slice(),hudT:0,eve:false,dk:document.createElement('canvas'),hud:null,eid:1};
   let sx=0,sy=0;
-  for(let y=0;y<CVH;y++)for(let x=0;x<CVW;x++){const ch=F.map[y][x],j=cvJ(x,y);C.lv[j]=+F.lv[y][x];if(ch==='#')continue;if(ch==='O'){C.ab[j]=1;continue}if(ch==='W'||ch==='x'||ch==='y'){C.ob.set(j,{k:ch,done:false});continue}C.g[j]=1;if(ch==='~'){C.wt[j]=1;continue}if(ch==='K'&&F.theme==='lake')C.wt[j]=1;/* 黒いしみは水の中 */if(ch==='X'){C.br[j]=1;continue}
+  for(let y=0;y<CVH;y++)for(let x=0;x<CVW;x++){const ch=F.map[y][x],j=cvJ(x,y);C.lv[j]=+F.lv[y][x];if(ch==='#')continue;if(ch==='H'){C.hw[j]=1;continue}/* 家の壁 */if(ch==='O'||ch==='B'){C.ab[j]=1;continue}/* B：石像がたおれる所（cave-shinden.js） */if(ch==='W'||ch==='x'||ch==='y'){C.ob.set(j,{k:ch,done:false});continue}C.g[j]=1;if(ch==='~'){C.wt[j]=1;continue}if(ch==='K'&&F.theme==='lake')C.wt[j]=1;/* 黒いしみは水の中 */if(ch==='X'){C.br[j]=1;continue}if(ch===','||ch===';'){if(ch===';')C.fd[j]=1;continue}/* 家のゆか・かれた畑 */
     if(CVFOES[ch]){const T=cvFoeType(ch,fl),D=EN[T];C.en.push({id:C.eid++,type:T,asleep:!D.patrol,x:x+.5,y:y+.5+CVOY,hp:D.hp,max:D.hp,spawned:true,stun:0,atk:0,path:[],rp:0,dead:false,tg:null,cj:j})}
     else if(ch!=='.')C.ob.set(j,{k:ch,done:false,home:j});if(ch==='S'){sx=x;sy=y}}
   for(const[j,o]of C.ob)if(o.k==='N'){const n=k=>{const q=C.ob.get(k);return !!q&&q.k==='N'};if(!(cvX(j)>0&&n(j-1))&&!(cvY(j)>0&&n(j-CVW))){o.top=true;o.w=1;o.h=1;while(cvX(j)+o.w<CVW&&n(j+o.w))o.w++;while(cvY(j)+o.h<CVH&&n(j+o.h*CVW))o.h++}}/* 底のかげ：左上のマスで、まとめて1つに描く */
   const cells=cvBfsRing(cvJ(sx,sy),list.length);
   list.forEach((r,i)=>{const j=cells[i]!=null?cells[i]:cvJ(sx,sy);C.party.push({r,elem:r.elem,id:r.id,x:cvX(j)+.5,y:cvY(j)+.5+CVOY,path:[],face:1,back:false,turn:0,swing:0,fback:false,fatk:0,job:null,jq:[],mv:false,chase:false,rp:0,cj:-1,hurtU:0,joyU:0,shockU:0,eatU:0,blowU:0,eatE:'',jumpT:0})});
-  for(let y=0;y<CVH-1;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]&&!C.ab[j]&&!C.ob.has(j)&&C.g[j+CVW]&&!C.wt[j+CVW]&&hash((j*31+fl*977+5)>>>0)<CVOREP)C.ore.add(j)}/* 光る鉱石：正面の見える岩 */
+  for(let y=0;y<CVH-1;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]&&!C.ab[j]&&!C.hw[j]&&!C.ob.has(j)&&C.g[j+CVW]&&!C.wt[j+CVW]&&hash((j*31+fl*977+5)>>>0)<CVOREP)C.ore.add(j)}/* 光る鉱石：正面の見える岩 */
+  cvLiftInit(C);cvSkInit(C);/* 石像（cave-shinden.js） */for(const[a,b,c,d]of F.house||[])for(let y=b;y<=d;y++)for(let x=a;x<=c;x++){const j=cvJ(x,y);if(C.g[j])C.hf[j]=1}/* 家の中（cave-haison.js） */cvPackInit(C);/* ねずみのむれ */
   C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function'){tsCaveCarve(C);tsCaveIbuki(C)}/* 土：彫り絵のかべ・2階のイブキ（tsuchi.js） */
   cvDecoPlace();cvBakeEnter(C);C.hud=cvHudMake();document.body.appendChild(C.hud);document.body.classList.add('cave');
   if(typeof followEnd==='function')followEnd();if(camAnim&&!camAnim.done)camAnim=null;LIGHTARM=false;if(typeof setMode==='function')setMode('look');
@@ -372,7 +515,7 @@ function cvEat(a,k){const C=CV,r=a.r;if(!C||!(C.food[k]>0)||!(S.fs[k]>0))return 
 
 /* ---------- たたかい ---------- */
 function cvSup(a){/* ならんで戦う力（support.js と同じ数）：3マス以内の、なかよしのなかま */let b=0;for(const q of CV.party)if(q!==a&&Math.hypot(q.x-a.x,q.y-a.y)<=SUPR)b=Math.max(b,supAtkOf(bondOf(a.r,q.r)));return b}
-function cvDefeat(e,a){if(e.dead||cvBakeDown(e,a))return;e.dead=true;const D=EN[e.type],C=CV;EVAP.push({e,t0:performance.now()+HIT_LAG,dur:1300,die:true});setTimeout(()=>{if(CV===C)sfx('defeat')},HIT_LAG+KO_HOLD);
+function cvDefeat(e,a){if(e.dead||cvBakeDown(e,a))return;e.dead=true;const D=EN[e.type],C=CV;if(D.kuzu)cvKuzuRub(e);/* ほりくず人形：岩がのこる（cave-mine.js） */EVAP.push({e,t0:performance.now()+HIT_LAG,dur:1300,die:true});setTimeout(()=>{if(CV===C)sfx('defeat')},HIT_LAG+KO_HOLD);
   C.loot.pt+=D.pw;if(a&&(S.cvAway||[]).includes(a.r)){a.r.beat=(a.r.beat||0)+1;addSpiritXp(D.xp,a.r)}if(C.focus===e)C.focus=null}
 function cvAttack(a,en){const r=a.r,C=CV,G=gearStat(r),lv=rLv(r),amb=en.asleep?CVAMBUSH:0;/* ふいうち */
   a.face=en.x>=a.x?1:-1;a.turn=Math.abs(en.x-a.x)>Math.abs(en.y-a.y)*.6?1:0;a.fback=en.y<a.y-.3&&Math.abs(en.y-a.y)>Math.abs(en.x-a.x)*.6;a.back=a.fback;a.swing=performance.now();a.path=[];a.chase=false;
@@ -382,7 +525,7 @@ function cvAttack(a,en){const r=a.r,C=CV,G=gearStat(r),lv=rLv(r),amb=en.asleep?C
     if(E.stop)en.stun=waterStop(r,en)*(typeof weakStun==='function'?weakStun(en,'water'):1);
     else{hurtEn(en,Math.max(1,Math.round(rMul(r,'atk')*100)+cvSup(a))+amb,{lag:HIT_LAG,sx:a.x,sy:a.y,el:r.elem});en.stun=Math.max(en.stun||0,1)}}
   if(amb&&!C.note.amb){C.note.amb=1;toast('ふいうち','good')}
-  en.tg=a;en.asleep=false;setTimeout(()=>{if(CV===C){atkFX(a,en);atkSfx(a)}},HIT_LAG);if(en.hp<=0)cvDefeat(en,a)}
+  en.tg=a;if(en.asleep&&EN[en.type].pray){en.prov=1;en.lost=0}/* おがんでいるせきぞうをたたくと、しぼっていても、たたきかえす */if(en.asleep)cvPackWake(en,performance.now());/* ねずみのむれ（cave-haison.js） */en.asleep=false;setTimeout(()=>{if(CV===C){atkFX(a,en);atkSfx(a)}},HIT_LAG);if(en.hp<=0)cvDefeat(en,a)}
 function cvHurtRes(a,n,sx,sy){a.r.hunger=Math.max(0,a.r.hunger-n);a.hurtU=performance.now()+3000;if(n>0)hitFx(a,n,{sx,sy,silent:1});cvHudUpd()}
 function cvHit(e,a){const D=EN[e.type],r=a.r,G=gearStat(r),n=Math.max(0,Math.round((r.elem==='fire'?D.hitF:D.hitN)-G.hun));
   enAim(e,a.x,a.y);sfx('hit');e.swing=performance.now();enLunge(e,a);cvHurtRes(a,n,e.x,e.y)}
@@ -398,16 +541,17 @@ function caveLight(tx,ty){const C=CV;PTW.q=true;if(LIGHTCD>0)return toast('ま�
 function cvLightHit(tx,ty,R){const C=CV,G=gupOf('stun'),gs=gupLv('stun'),pw=gupOf('pow').v[gupLv('pow')],now=performance.now();let broke=false;
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=CVW||y>=CVH)continue;const j=cvJ(x,y),o=C.ob.get(j);
     if(o&&o.k==='W'){C.ob.delete(j);C.g[j]=1;broke=true;cvSpark(x+.5,y+.5,'#d9c7a8',18)}/* うすい壁 */
+    if(o&&o.k==='u'){C.ob.delete(j);cvSpark(x+.5,y+.5,'#a08a6a',14);broke=2}/* ほりくず */
     if(!dx&&!dy||!C.g[j])continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;setTimeout(()=>{if(CV===C)fxSpr('glspark',x*TS+16,(y+CVOY)*TS+16+GLSPY)},d*GLSTEP)}
-  if(broke){sfx('crack');toast('うすい壁がくずれた','good')}
+  if(broke){sfx('crack');toast(broke===2?'岩がくずれた':'うすい壁がくずれた','good')}
   for(const e of C.en){if(e.dead||Math.max(Math.abs((e.x|0)-tx),Math.abs((e.y|0)-CVOY-ty))>R)continue;if(e.down){e.down=0;cvDefeat(e,null);continue}/* くずれたほねに、とどめ */hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+CVOY+.5});e.stun=G.v[gs];e.asleep=false;e.path=[];if(e.hp<=0)cvDefeat(e,null)}
   cvBakeLight(tx,ty,R);C.flash={x:tx+.5,y:ty+.5,t0:now};if(C.g[cvJ(tx,ty)])cvReveal(tx+.5,ty+.5,R+2.5);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=tx+dx,y=ty+dy;if(x>=0&&y>=0&&x<CVW&&y<CVH)C.seen[cvJ(x,y)]=1}
   for(const a of C.party)if(Math.max(Math.abs(a.x-tx-.5),Math.abs(a.y-CVOY-ty-.5))-R<=GLSHOCKR){a.shockU=now+GLSHOCKT;a.jumpT=now}}
 
 /* ---------- 属性の道 ---------- */
 /* 土：岩をおせる向き。かえす：[{t:岩の行き先,s:立つマス}] */
-function cvPushDirs(j){const C=CV,a=C.party.find(q=>q.elem==='earth'),out=[];if(!a)return out;
-  for(const[dx,dy]of DIRS){const x=cvX(j),y=cvY(j),t=cvJ(x+dx,y+dy),s=cvJ(x-dx,y-dy);if(!C.g[t]||C.wt[t]||C.lv[t]!==C.lv[j]||C.lv[s]!==C.lv[j]||!cvWalk(s))continue;const o=C.ob.get(t);if(o&&!(o.k==='h'&&!o.done)&&!(o.k==='!'))continue;if(!cvBfs(cvCell(a),q=>q===s))continue;out.push({t,s})}return out}
+function cvPushDirs(j){const C=CV,out=[],o0=C.ob.get(j);if(!o0||o0.k==='b'&&!C.party.some(q=>q.elem==='earth'))return out;
+  for(const[dx,dy]of DIRS){const x=cvX(j),y=cvY(j),t=cvJ(x+dx,y+dy),s=cvJ(x-dx,y-dy);if(!C.g[t]||C.wt[t]||C.lv[t]!==C.lv[j]||C.lv[s]!==C.lv[j]||!cvWalk(s))continue;const o=C.ob.get(t);if(o&&!(o.k==='h'&&!o.done)&&!(o.k==='!'))continue;if(!cvPusher(j,s))continue;out.push({t,s})}return out}
 function cvRockReset(){const C=CV;let n=0;for(const[j,o]of[...C.ob])if(o.k==='b'&&o.home!==j&&!C.ob.has(o.home)&&!C.party.some(a=>cvCell(a)===o.home)){C.ob.delete(j);C.ob.set(o.home,o);o.slide=null;n++}C.sel=null;if(n)sfx('tstone');cvHudUpd();return n}
 /* 火：たいまつがぜんぶともったら、石のとびらがひらく（ひらいたまま） */
 function cvTorchCheck(){const C=CV;let all=true,any=false;for(const o of C.ob.values())if(o.k==='t'){any=true;if(!(o.until>C.t))all=false}if(!any||!all)return false;let n=0;for(const[j,o]of C.ob)if(o.k==='D'&&!o.done){o.done=true;n++;cvSpark(cvX(j)+.5,cvY(j)+.5,'#ffb36b',16)}
@@ -426,9 +570,11 @@ function cvGustEnd(){const C=CV,G=C.gust;C.gust=null;if(!G.hit)return toast('風
 /* ---------- 指示：歩く・物を使う ---------- */
 function cvGo(tj,skip){const C=CV,L=C.party.filter(a=>a!==skip),ring=cvBfsRing(tj,L.length+(skip?1:0)).filter(j=>!skip||!skip.path.length||j!==skip.path[skip.path.length-1]);
   L.forEach((a,i)=>{const dj=ring[i]!=null?ring[i]:tj,p=cvBfs(cvCell(a),j=>j===dj);a.job=null;a.jq=[];a.chase=false;if(p){a.path=p;a.mv=true}})}
-const cvObjTap=o=>!!o&&(o.k==='b'||o.k==='t'||o.k==='x'||o.k==='y'||o.k==='o'||o.k==='S'||o.k==='R'||o.k==='K'||o.k==='Y'||(o.k==='m'||o.k==='k'||o.k==='T')&&!o.done);
+const cvObjTap=o=>!!o&&(o.k==='G'||o.k==='d'&&!o.done||o.k==='w'||o.k==='u'||o.k==='W'&&relOn('tsuru')||o.k==='b'||o.k==='t'||o.k==='x'||o.k==='y'||o.k==='o'||o.k==='S'||o.k==='R'||o.k==='K'||o.k==='Y'||(o.k==='m'||o.k==='k'||o.k==='T')&&!o.done);
 function cvJobGo(a,job,goal){const p=cvBfs(cvCell(a),goal);if(!p){toast('そこへ行けません');return false}a.job=job;a.jq=[];a.path=p;a.mv=false;a.chase=false;cvGo(p.length?p[p.length-1]:cvCell(a),a);sfx('tap');return true}
 function cvUse(j,o){const C=CV;C.focus=null;C.askHome=-1;C.sel=null;
+  if(o.k==='G')return cvSkUse(j);/* 石像（cave-shinden.js） */if(o.k==='d')return cvDoorUse(j,o);/* 家の戸（cave-haison.js） */if(o.k==='w')return cvWinchUse(j,o);/* まきあげ機（cave-mine.js） */if(o.k==='W')return cvDigUse(j);/* かけたつるはし */
+  if(o.k==='u'){if(!cvPushDirs(j).length)return toast('この岩は、どの向きにもおせません');C.sel={k:'b',j};sfx('tap');cvHudUpd();return}/* ほりくず：だれでもおせる */
   if(CVGATE[o.k]){const D=CVGATE[o.k],a=C.party.find(q=>q.elem===D.el);if(!a)return toast(D.no);
     if(o.k==='b'){if(!cvPushDirs(j).length)return toast('この岩は、どの向きにもおせません');C.sel={k:'b',j};sfx('tap');cvHudUpd();return}
     if(o.k==='m'){C.sel={k:'m',j};sfx('tap');return toast('風のせいれいを立たせる所をタップ')}
@@ -442,7 +588,7 @@ function caveTap(sx,sy){const C=CV;if(!C||cvHold())return;const w=cvqTapW(sx,sy)
   if(LIGHTARM){caveLight(x,y);return}
   C.lookU=0;/* タップしたら、カメラはパーティへもどる */
   if(C.sel&&in0){const sel=C.sel,tj=cvJ(x,y);C.sel=null;
-    if(sel.k==='b'){const d=cvPushDirs(sel.j).find(q=>q.t===tj),a=C.party.find(q=>q.elem==='earth');if(d&&a){const p=cvBfs(cvCell(a),q=>q===d.s);if(p){a.job={k:'push',j:sel.j,to:d.t,s:d.s,t:0};a.jq=[];a.path=p;a.mv=false;a.chase=false;C.sel=sel;sfx('tap')}return}if(tj===sel.j){cvHudUpd();return}}
+    if(sel.k==='b'){const d=cvPushDirs(sel.j).find(q=>q.t===tj),a=d&&cvPusher(sel.j,d.s);if(d&&a){const p=cvBfs(cvCell(a),q=>q===d.s);if(p){a.job={k:'push',j:sel.j,to:d.t,s:d.s,t:0};a.jq=[];a.path=p;a.mv=false;a.chase=false;C.sel=sel;sfx('tap')}return}if(tj===sel.j){cvHudUpd();return}}
     if(sel.k==='m'){const a=C.party.find(q=>q.elem==='wind');if(a&&C.seen[tj]&&cvWalk(tj)){const p=cvBfs(cvCell(a),q=>q===tj);if(!p)return toast('そこへ行けません');a.job={k:'blow',j:sel.j,at:tj,t:0};a.jq=[];a.path=p;a.mv=false;a.chase=false;C.mark={x:x+.5,y:y+.5,t0:performance.now()};sfx('tap');return}}
     cvHudUpd()}
   {let be=null,bd=1e9;for(const e of C.en){if(e.dead||!C.seen[cvCell(e)])continue;const z=EN[e.type].size,p=cvqScrPt(e.x*TS,e.y*TS,.6*z),d=Math.hypot(p.x-sx,p.y-sy)/(TS*cam.z*IQSX);if(d<.9*Math.max(1,z)&&d<bd){bd=d;be=e}}/* 画面の上で、立てて描いた絵のまん中から */
@@ -462,7 +608,8 @@ function cvTapGoal(x,y){const C=CV;if(!C.party.length)return -1;const rc=new Uin
 
 /* ---------- 1コマ ---------- */
 function cvJobTick(a,cdt,now){const C=CV,J=a.job,o=C.ob.get(J.j),cj=cvCell(a),end=()=>{a.job=null};if(!o)return end();
-  if(J.k==='push'){if(o.k!=='b')return end();if(cj!==J.s){const p=cvBfs(cj,q=>q===J.s);if(!p)return end();a.path=p;return}
+  if(cvMineJob(a,J,o,cj,cdt,now)||cvHsJob(a,J,o,cj,cdt,now)||cvSkJob(a,J,o,cj,cdt,now))return;
+  if(J.k==='push'){if(o.k!=='b'&&o.k!=='u')return end();if(cj!==J.s){const p=cvBfs(cj,q=>q===J.s);if(!p)return end();a.path=p;return}
     cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;if(J.t<(relOn('kui')?CVPUSHT/2:CVPUSHT))return;
     const t=C.ob.get(J.to);if(t&&!(t.k==='h'&&!t.done)&&t.k!=='!'||C.party.some(q=>cvCell(q)===J.to)||C.en.some(e=>!e.dead&&cvCell(e)===J.to)){toast('岩がうごかない');return end()}
     C.ob.delete(J.j);sfxAt('pick_stone',a.x,a.y);
@@ -506,8 +653,9 @@ function cvActor(a,cdt,mv,now){const C=CV,r=a.r;r.hunger-=(CVDEEP[C.fl]||0)*cdt;
       else if((a.rp-=mv)<=0){a.rp=.4;const ej=cvCell(en),p=cvBfs(cj,q=>cvAdj(q,ej)||q===ej);if(p&&p.length){if(p[p.length-1]===ej)p.pop();a.path=p;a.chase=true}}}}}
   if(r.hunger<=0){r.hunger=0;cvDie(a)}}
 function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.type];cvStep(e,now,false);
-  if(e.asleep){if(e.tsHold)return;/* 土：イブキと会う会話がおわるまで（tsuchi.js） */const R=C.dim?CVWAKED:CVWAKE;if(C.seen[cvCell(e)])for(const a of C.party)if(Math.hypot(a.x-e.x,a.y-e.y)<=R&&cvWakeOK(e,a)&&cvLos(e.x,e.y-CVOY,a.x,a.y-CVOY)){e.asleep=false;e.wakeT=now;break}return}
+  if(e.asleep){if(e.tsHold)return;/* 土：イブキと会う会話がおわるまで（tsuchi.js） */const R=cvWakeR(e);if(C.seen[cvCell(e)])for(const a of C.party)if(Math.hypot(a.x-e.x,a.y-e.y)<=R&&cvWakeOK(e,a)&&cvLos(e.x,e.y-CVOY,a.x,a.y-CVOY)){e.asleep=false;e.wakeT=now;cvPackWake(e,now);break}return}
   if(e.stun>0){e.stun-=cdt;return}
+  if(D.pray&&cvSkPray(e,mv,now))return;/* 光をおがむせきぞう：しぼると、おがむ（cave-shinden.js） */
   if(D.patrol&&!cvPatrol(e,mv))return;
   let tg=e.tg&&C.party.includes(e.tg)?e.tg:null,bd=1e9;if(!tg)for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);if(d<bd){bd=d;tg=a}}if(!tg)return;
   const d=Math.hypot(tg.x-e.x,tg.y-e.y);
@@ -518,7 +666,7 @@ function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.ty
   cvMove(e,mv*CVFOE*D.sp)}
 function caveFrame(rdt,now){const C=CV;if(!C||cvHold())return;const sp=S.speed||1,cdt=rdt*MIN_PER_SEC*sp,mv=rdt*sp;C.t+=cdt/DAYLEN;LIGHTCD=Math.max(0,LIGHTCD-rdt*sp);
   for(const a of C.party.slice()){cvActor(a,cdt,mv,now);if(CV!==C)return}
-  for(const e of C.en)cvFoe(e,cdt,mv,now);if(typeof tsCaveTick==='function')tsCaveTick(C,now);cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
+  cvLiftTick(mv,now);cvSkTick(mv,now);for(const e of C.en)cvFoe(e,cdt,mv,now);if(typeof tsCaveTick==='function')tsCaveTick(C,now);cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
   if(C.en.some(e=>e.dead))C.en=C.en.filter(e=>!e.dead);
   if(C.askHome>=0&&C.party.every(a=>!a.path.length)){const j=C.askHome;C.askHome=-1;if(C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6))cvHomeAsk()}
   if((C.hudT+=rdt)>.3){C.hudT=0;cvClearCheck();cvHudUpd()}
@@ -579,6 +727,9 @@ const CVTHEMES={
   roots:{name:'ねっこの坑道',out:'rock',deco:{roots:.55,moss:.3,shroom:.12,plant:.3,plants:[0,1,2,3,6,8,9,11,12,14,16,17,19],edge:[1,9,16,14],vine:.45,gmoss:.12,big:.1},glow:'#7ff0c8',moss:.55,mossc:['#1c2e1a','#2c4a28','#3a5e30','#4a7238','#5c8a44','#7aa858'],crys:null,rock:['#2a1f1a','#463428','#5e4634','#76593f','#8f6e4d','#a8865e'],floor:['#4a3c31','#7a6550','#816b55','#87715a','#8e775f','#a38c72'],water:['#c8f7e0','#7fe0c4','#3fb39a','#23806f','#a9f5dc'],void:'#160f0c'},
   crystal:{name:'水晶のほらあな',out:'void',wall:'crys',deco:{crys:.9,shroom:.05,plant:.32,plants:[3,7,15,17,19,10],edge:[15,17,19],pcrys:.9,fcrys:.1,vine:.3,gmoss:.1,big:.06},glow:'#b49cff',moss:.55,mossc:['#241a3a','#3a2a5c','#4e3a7a','#6a4e9c','#8a6ec0','#b49cff'],crys:[['#3a2a6a','#6a4cc0','#9a7ef0','#c4b0ff','#e8deff','#ffffff'],['#1e4a6a','#2f8ac0','#5cc6f0','#9ce6ff','#d6f6ff','#ffffff']],rock:['#1f1830','#3a2c55','#4d3b70','#62508a','#7a68a3','#968abf'],floor:['#3a3152','#655986','#6a5e8c','#6f6391','#756997','#8c80ad'],water:['#e0d8ff','#9fd4f7','#5a9fe0','#3a64b8','#c8e8ff'],void:'#110c1b'},
   lake:{name:'地底のみずうみ',out:'void',deco:{crys:.14,shroom:.14,plant:.3,plants:[5,6,7,10,13,14,17,1,2],edge:[1,10,14,17],vine:.4,gmoss:.14,big:.08},glow:'#7fe8ff',moss:.55,mossc:['#14242a','#1e3a3c','#28504c','#34645a','#447c6a','#62987e'],crys:[['#1a4a5a','#2a8aa0','#4ccad6','#8ef0f0','#d0fff8','#ffffff']],rock:['#141c2c','#243650','#2f4664','#3c5878','#4d6c8c','#6684a3'],floor:['#2a3646','#516378','#56687d','#5b6d82','#617388','#7a8ca0'],water:['#d6fff8','#7ff0e6','#33c1c8','#1a8a9e','#b6fff4'],void:'#0a0f17'},
+  mine:{name:'古い採掘場',out:'void',deco:{roots:.18,plant:.14,plants:[0,1,8,9,11,12,16],edge:[1,9,16],vine:.12,gmoss:.05,big:.05},glow:'#ffc870',moss:.3,ptex:'pebble',mossc:['#22201a','#3a3426','#4c4430','#5e543a','#706848','#8c8460'],crys:null,rock:['#2a2016','#46361f','#5e4a2c','#78603a','#927848','#ac9260'],floor:['#4a3e2c','#7a684a','#80704f','#877554','#8e7c5a','#a69272'],water:['#d8eedc','#8cc8b0','#4c8e80','#2a5a54','#bfe8d8'],void:'#120d08',dark:'8,6,4'},/* 4階：人が大穴をほった所 */
+  haison:{name:'地下の廃村',out:'void',deco:{roots:.22,plant:.1,plants:[0,1,8,9,12,16],edge:[1,9,16],vine:.18,gmoss:.04,big:.04},glow:'#ffd8a0',moss:.25,ptex:'pebble',mossc:['#201e1a','#36322a','#4a4436','#5c5442','#6e6650','#8a8068'],crys:null,rock:['#28221c','#423a30','#5a5042','#726652','#8a7e66','#a4987e'],floor:['#463e32','#72684e','#7a7054','#82775a','#8a7e60','#a29678'],
+    hwall:['#3a2e22','#5e4c38','#7a6448','#927a58','#a89068','#c0a87e'],water:['#d8eedc','#8cc8b0','#4c8e80','#2a5a54','#bfe8d8'],void:'#100c08',dark:'8,7,6'},/* 5階：にげてきた人がすてた家と畑（hwall：家の日干しれんがの壁） */
   cradle:{name:'ゆりかごのへや',out:'rock',sq:1,deco:{roots:.35,plant:.12,plants:[0,1,2,9,12,16],edge:[1,9],vine:.35,gmoss:.06,big:.03},glow:'#9ad0ff',moss:.3,ptex:'pebble',mossc:['#1e2224','#30383a','#3e4a4a','#4c5c58','#5e7066','#7a8c7a'],crys:null,rock:['#16181c','#2a2e34','#3a4048','#4c535c','#606872','#7c848e'],floor:['#30343a','#585e66','#5e646c','#646a72','#6b7179','#828890'],water:['#d8f0f0','#8cc8cc','#4c8e96','#2a5a66','#bfe8ec'],void:'#0a0b0e',dark:'6,8,12'}};/* 8階：人が作った施設（石と金もの）。まっすぐなかべ（sq） */
 const cvTheme=()=>CVTHEMES[CV.F.theme]||CVTHEMES.roots;
 const cvRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
@@ -613,7 +764,7 @@ function cvDecoPlace(){const C=CV,TH=cvTheme(),D=TH.deco||{},L=[];
     if(ms&&D.pcrys&&TH.crys&&h(40)<D.pcrys*(.5+core)){any=true;L.push({j,k:'crys',v:(h(41)*TH.crys.length)|0,m:CVCRYSP[(h(42)*CVCRYSP.length)|0],flip:h(43)<.5,dx:Math.round((h(44)-.5)*14),dy:Math.round((h(45)-.5)*8)})}/* 水晶のほらあな：まだらの上に、小さな水晶 */
     if(ms&&D.pbone&&h(46)<D.pbone*(.5+core)){any=true;L.push({j,k:'bone',v:[0,0,1,3,3,4,4,2][(h(47)*8)|0],flip:h(48)<.5,dx:Math.round((h(49)-.5)*10),dy:Math.round((h(50)-.5)*8)})}/* 化石の大ひろま：砂のまだらの上に、ほね */
     if(!any&&D.gmoss&&h(6)<D.gmoss*(ms?1.5:1))L.push({j,k:'gmoss',dx:Math.round((h(7)-.5)*10),dy:Math.round((h(8)-.5)*10)})}/* 光るこけ */
-  C.deco=L;C.shafts=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null;for(const c of C.abi||[])c.width=c.height=0;C.abi=C.abp=null;if(C.lflow)C.lflow.width=C.lflow.height=0;C.lflow=C.lpat=null}
+  C.deco=L.filter(d=>!C.hf[d.j]&&!C.fd[d.j]&&!(C.sb&&C.sb[d.j]));/* 家のゆか・畑には、かざりを置かない */C.shafts=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null;for(const c of C.abi||[])c.width=c.height=0;C.abi=C.abp=null;if(C.lflow)C.lflow.width=C.lflow.height=0;C.lflow=C.lpat=null}
 /* 水晶の絵を、その階の色にぬりかえた絵（色ごとに1まい。入るときに作って、出るときに手ばなす） */
 /* こさの番号の絵（3Dで写した水晶・岩の段）を、階の色のならびでぬりかえる（1回だけ。C.crysImg にためて、洞窟を出るとき手ばなす） */
 function cvToneImg(id,R,key){const C=CV;if(!C.crysImg)C.crysImg={};if(C.crysImg[key])return C.crysImg[key];const ch=cvChipOf(id);if(!ch)return null;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
@@ -649,7 +800,11 @@ function cvDrawObj(j,o,now){const C=CV,ox=cvX(j)*TS,oy=(cvY(j)+CVOY)*TS,k=o.k,hs
   if(k==='R'){const c=cvToneChip('cave:down',cvTheme().rock,'down');if(c){drawChip(ctx,c,'cave:down',ox,oy,now);const t=now/1000;for(let i=0;i<3;i++){const p=(t*.4+i*.33)%1;ctx.globalAlpha=(1-p)*.8;P4('#fff3c4',ox+11+hs(i)*10,oy-2-p*16,1,1)}ctx.globalAlpha=1;return}/* 下へおりる所：岩山の暗い入り口へ下る岩の段（3Dから写した絵、cave_down.py） */
     P4('#1d1713',ox+2,oy+4,28,24);P4('#40352c',ox+2,oy+4,28,3);for(let i=0;i<4;i++){P4('#75655a',ox+5+i*2,oy+9+i*5,22-i*4,3);P4('#8a7968',ox+5+i*2,oy+9+i*5,22-i*4,1)}
     const t=now/1000;for(let i=0;i<4;i++){const p=(t*.4+i*.25)%1;ctx.globalAlpha=1-p;P4('#fff3c4',ox+8+hs(i)*16,oy+14-p*22,2,2)}ctx.globalAlpha=1;return}
-  if(k==='^')return;
+  if(k==='^'||k==='P')return;
+  if(k==='w'){cvWinchDraw(o,ox,oy,now);return}
+  if(k==='G'){if(o.top)cvSkStandDraw(o,ox,oy,now);return}/* 石像（cave-shinden.js） */
+  if(k==='v'){cvWinDraw(ox,oy,now);return}if(k==='z'){cvHoleDraw(ox,oy);return}if(k==='d'){cvDoorDraw(o,ox,oy,now);return}if(k==='f'){cvFurnDraw(j,ox,oy);return}/* 廃村（cave-haison.js） */
+  if(k==='u'){cvRubDraw(j,o,ox,oy,now);return}
   if(k==='K'){cvClueDraw(j,ox,oy,now);return}
   if(k==='Y'){cvCradleDraw(j,ox,oy,hs);return}
   if(k==='N'){cvShadeDraw(j,o,ox,oy,now);return}
@@ -683,10 +838,10 @@ function cvDrawActor(a,now){const C=CV,r=a.r,eat=a.eatU>now,walking=a.path.lengt
   if(a.swing&&sd>=0&&sd<400)px+=(a.face<0?-1:1)*atkLunge(sd);px+=hitOff(a,now,1)[0];
   const jd=now-(a.jumpT||-1e9),hop=jd>=0&&jd<1000?Math.abs(Math.sin(jd/130))*9*(1-jd/1000):0,fy=py+9-(walking?Math.abs(Math.sin(now/110+a.id))*2.5:0)-hop;
   shadow(ctx,px,py+8,12,3.6);
-  const pk=a.swing&&sd>=0&&sd<420?sd/420:null,J=a.job&&!walking?a.job:null,job=J&&CVJOBANIM[J.k]&&(J.k==='push'?cvCell(a)===J.s:true)?CVJOBANIM[J.k]:a.blowU>now?'point':'',joy=a.joyU>now,fight=C.en.some(e=>!e.dead&&!e.asleep&&Math.hypot(e.x-a.x,e.y-a.y)<CVAGGRO);
+  const pk=a.swing&&sd>=0&&sd<420?sd/420:null,J=a.job&&!walking?a.job:null,job=J&&CVJOBANIM[J.k]&&(J.k==='push'||J.k==='topple'?cvCell(a)===J.s:true)?CVJOBANIM[J.k]:a.blowU>now?'point':'',joy=a.joyU>now,fight=C.en.some(e=>!e.dead&&!e.asleep&&Math.hypot(e.x-a.x,e.y-a.y)<CVAGGRO);
   drawSpirit(ctx,r.elem,px,fy,.435,a.face<0?-1:1,{dot:1,t:now/1000+a.id*1.7,vr:r.vr,pp:pk,anim:pk!=null?'punch':eat?'eat':joy?'clap':job,food:eat?a.eatE:'',walk:walking,work:!!job,back:joy||eat?false:a.back,turn:joy||eat?0:a.turn,mood:a.shockU>now?'shock':joy||eat?'joy':r.hunger<HUNGRYF?'hungry':fight?'brave':'',blink:(now/1000+a.id*1.3)%3.4<.13});
   if(a.hurtU>now){const m=hMax(r),v=clamp(r.hunger/m,0,1);P4('rgba(0,0,0,.6)',px-12,py+11,24,5);P4(v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b',px-11,py+12,Math.max(2,Math.round(22*v)),3)}
-  if(J&&J.t>0){const T=J.k==='push'?CVPUSHT:J.k==='sluice'?CVSLUICET:CVLEAFT,f=clamp(J.t/T,0,1);P4('rgba(150,115,75,.6)',px-17,py+17,34,7);P4('#e8dcc0',px-16,py+18,32,5);P4('#e0a43a',px-16,py+18,Math.max(2,Math.round(32*f)),5)}}
+  if(J&&J.t>0){const T=J.k==='topple'?CVSKPUSH:J.k==='push'?CVPUSHT:J.k==='sluice'?CVSLUICET:CVLEAFT,f=clamp(J.t/T,0,1);P4('rgba(150,115,75,.6)',px-17,py+17,34,7);P4('#e8dcc0',px-16,py+18,32,5);P4('#e0a43a',px-16,py+18,Math.max(2,Math.round(32*f)),5)}}
 const cvLureOn=j=>{const x=cvX(j)+.5,y=cvY(j)+.5+CVOY;return CV.party.some(a=>Math.hypot(a.x-x,a.y-y)<=CVLURE)};
 /* 洞窟の空気（持ち主のたのみ：ARKの洞窟のように）。見た目だけ・セーブしない。
    霧：ドットの霧の絵（2ドットのます・3だんのこさ）を1まい作って、2まいを、ちがう速さでゆっくり流す（暗さの下：光のとどく所だけ見える）。
@@ -728,6 +883,12 @@ function cvClueDraw(j,ox,oy,now){const C=CV,th=C.F.theme,TH=cvTheme(),isK=k=>{co
     const K=end?(TH.crys[0]):['#3c3c44','#5a5a64','#7a7a84','#9a9aa4','#b0b0ba','#c8c8d0'],p=.5+.5*Math.sin(t*1.4+j);P4(K[1],ox+12,oy+6,8,15);P4(K[2],ox+13,oy+3,6,17);P4(K[3],ox+14,oy+1,3,6);P4(K[0],ox+18,oy+8,2,12);
     if(end){ctx.globalAlpha=.4+.4*p;P4(K[5],ox+14,oy+4,2,8);P4(K[4],ox+10,oy-2,1,1);P4(K[4],ox+22,oy+6,1,1);ctx.globalAlpha=1}return}
   if(th==='lake'){const p=.5+.5*Math.sin(t*.8+j*1.3);P4('#06080c',ox+4,oy+8,24,16);P4('#06080c',ox+8,oy+5,16,22);P4('#0e0c18',ox+2,oy+12,28,8);ctx.globalAlpha=.35+.25*p;P4('#3a2a5a',ox+6,oy+6,20,1);P4('#3a2a5a',ox+4,oy+24,22,1);ctx.globalAlpha=1;/* 光をすいこむ、黒いしみ */for(let i=0;i<4;i++){const q=(t*.5+i*.25)%1;ctx.globalAlpha=q*.8;P4('#8a9ab0',ox+16+Math.cos(i*1.6)*(14-q*12),oy+16+Math.sin(i*1.6)*(9-q*8),1,1)}ctx.globalAlpha=1;return}
+  if(th==='haison'){cvChairDraw(ox,oy,end);return}/* 食卓のいす（cave-haison.js） */
+  if(th==='shinden'){cvMirrorDraw(ox,oy,end,now);return}/* かがみの台（cave-shinden.js） */
+  if(th==='mine'){P4('rgba(20,14,8,.3)',ox+2,oy+27,28,3);P4('#5a4028',ox+1,oy+6,30,3);P4('#7a5634',ox+1,oy+6,30,1);P4('#4a3420',ox+3,oy+9,2,19);P4('#4a3420',ox+27,oy+9,2,19);/* つるはしかけ（木のわく） */
+    P4('#6a4a2c',ox+15,oy+8,2,18);P4('#8a6440',ox+15,oy+8,1,18);/* 柄 */
+    if(end){P4('#6e6e74',ox+9,oy+10,7,2);P4('#9a9aa2',ox+9,oy+10,7,1);P4('#6e6e74',ox+8,oy+11,2,2)}/* はしの1つは、かけている（かた方だけ） */
+    else{P4('#6e6e74',ox+7,oy+10,18,2);P4('#9a9aa2',ox+7,oy+10,18,1);P4('#6e6e74',ox+6,oy+11,2,2);P4('#6e6e74',ox+24,oy+11,2,2)}return}
   P4('#5a4d43',ox+6,oy+12,20,16);P4('#7a6a5c',ox+8,oy+12,16,3)}
 /* ゆりかご（Y）：石と金ものの、からっぽのゆりかご。仮の絵 */
 function cvCradleDraw(j,ox,oy,hs){P4('rgba(6,8,12,.35)',ox+3,oy+27,26,3);P4('#3a4048',ox+6,oy+22,3,7);P4('#3a4048',ox+23,oy+22,3,7);P4('#4c535c',ox+3,oy+10,26,14);P4('#606872',ox+3,oy+10,26,2);P4('#7c848e',ox+4,oy+10,24,1);P4('#16181c',ox+6,oy+12,20,8);P4('#2a2e34',ox+6,oy+19,20,2);/* 金ものの帯（さびている） */P4('#6a4a32',ox+3,oy+16,26,2);P4('#8a5a36',ox+8,oy+16,4,1);

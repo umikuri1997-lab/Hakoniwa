@@ -121,7 +121,7 @@ const WOODLOW=10;/* 木材がこれより少ないときは、雑草・枝ひろ
 let BOXFULL=0;/* 箱がいっぱいを知らせたときの、しまえる数（セーブしない） */
 function boxFullNote(){/* 箱がいっぱいで、木・石をあつめられないとき、1回だけ知らせる。しまえる数がふえるか、2わり空いたら、また知らせる */
   if(IS_STORY_REPLAY||MEMRUN||matCap()<=0||BOXFULL)return;BOXFULL=matCap();toast('箱がいっぱいです','warn')}
-function boxFullReset(){if(BOXFULL&&(matCap()>BOXFULL||matTot()<=matCap()*.8))BOXFULL=0}
+function boxFullReset(){if(BOXFULL&&(matCap()>BOXFULL||matTot()<=matCap()*.8))BOXFULL=0;for(const k of NOBOXN)if(BOXL.some(j=>boxRoom(j,k)>0))NOBOXN.delete(k)}
 function goWork(r,G,nw){boxFullReset();
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
@@ -296,13 +296,15 @@ function moveR(r,dt){
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   if(boxQueueWait(r,dt))return;/* 箱の前に、ほかの子がいる：ぎりぎりまで行って、ならんで待つ */
   while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(waterJ(j)&&!solidOf(j)&&(waterJ((r.y|0)*W+(r.x|0))||r.act&&r.act.wade))&&!(MZLANE&&MZLANE[j]&&!solidOf(j))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
-    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=MZLANE&&MZLANE[j]?1/3:(jumpEdge((r.y|0)*W+(r.x|0),j)?9:1)*(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* 舟の道（水のステージ）は、舟にのって歩く3倍の速さ *//* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる間（マスのさかいまで）は9倍ゆっくり＝1マスで5倍の時間 *//* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
+    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=MZLANE&&MZLANE[j]?1/3:(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* 舟の道（水のステージ）は、舟にのって歩く3倍の速さ *//* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる時間は、下の CLB（ふちでまっすぐ上・下）。歩く1マスとあわせて5倍 *//* 浅瀬は2倍倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(r.path.length===1&&r.act&&j===r.act.stand&&seatCell(j)&&j!==(r.y|0)*W+(r.x|0)){{const cj=(r.y|0)*W+(r.x|0);if(cj===seatBack(j)){/* 背もたれのがわからは乗らない：前か横へまわってから乗る */const G=roadSearch(r.x|0,r.y|0);let best=null;for(const n of seatSides(j)){if(G.dist[n]<0)continue;const p=avoidPath(r,G,n);if(p.length&&(!best||p.length<best.length))best=p}if(best){r.path=best.concat([j]);continue}}}SEATMV.set(r,{k:'in',x:r.x*TS,y:r.y*TS,t0:performance.now()});r.x=tx;r.y=ty;r.path.shift();break}/* となりのマスから、すわる位置へ、ぴょんと乗る */
-    if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
+    {const cj=(r.y|0)*W+(r.x|0);let C=CLB.get(r);if(C&&C.n!==j){CLB.delete(r);C=null}if(!C&&jumpEdge(cj,j)&&Math.abs(j%W-cj%W)+Math.abs(((j/W)|0)-((cj/W)|0))===1){C=Object.assign({a:cj,n:j,k:-1},clbPt(cj,j));CLB.set(r,C)}/* 段差：ふちまで歩いて、そこでまっすぐ上・下へよじのぼる（clbPt） */
+      if(C&&C.k<1){if(C.k<0){const ex=C.px-r.x,ey=C.py-r.y,e=Math.hypot(ex,ey);if(e<=step){r.x=C.px;r.y=C.py;step-=e;C.k=0}else{r.x+=ex/e*step;r.y+=ey/e*step;step=0;continue}}const q=Math.min(step,(1-C.k)*CLBD);C.k+=q/CLBD;step-=q;if(C.k<1)continue;C.k=1;continue}}
+    if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();CLB.delete(r);step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
   if(r.path.length){const g=r.path[r.path.length-1],n0=r.path[0],dd=Math.hypot(n0%W+.5-r.x,((n0/W)|0)+.5-r.y);
-    const prog=r.lastN!==r.path.length||r.lastX==null||dd<r.lastX-.06*dt;
+    const C=CLB.get(r),prog=r.lastN!==r.path.length||r.lastX==null||dd<r.lastX-.06*dt||!!C&&C.k>=0&&C.k<1;/* ふちでよじのぼっている間も、進んでいる */
     if(prog){r.stk=0;r.lastN=r.path.length;r.lastX=dd}else r.stk=(r.stk||0)+dt;
     if(r.stk>2.5){r.stk=0;r.lastX=null;const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))bl.add((q.y|0)*W+(q.x|0));bl.delete(g);bl.delete((r.y|0)*W+(r.x|0));
       const G2=roadSearch(r.x|0,r.y|0,bl);if(G2.dist[g]>=0&&!r.ghost&&G2.dist[g]<=r.path.length+6)r.path=pathTo(G2,g);else r.ghost=8}}
@@ -393,7 +395,7 @@ function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神
   const ok=j=>{if(S.obj[j]!=='grave')return false;const d=S.dyn[j];if(!d||d.buried||!free('bury'+j,1))return false;const by=buryWho(d);if(by&&by!==r&&S.t-(d.t0||0)<BURYWAIT)return false;return true};
   const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&ok(j))gs.push(j);if(!gs.length)return false;
   const st=nearest(G,k=>adjOf(k,q=>gs.includes(q))>=0,200);if(st<0)return false;const g=adjOf(st,q=>gs.includes(q));startAct(r,G,'bury',st,{key:'bury'+g,obj:g});return true}
-function die(r){if(r.kdst&&typeof kdStoneBack==='function')kdStoneBack(r);if(r.sasa&&typeof sasaBack==='function')sasaBack(r);/* ささげものは、箱へもどす *//* もりのこだまへはこぶ石材は、箱へもどす */if(r.coffin&&r.coffin.name){const nm=r.coffin.name;r.coffin=null;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb}/* 棺をはこんでいる子が消えたら、棺の子は、おみおくりがすんだことにする（unb がのこると、二度と呼びもどせない） */if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}if(r.spk){smRefund(r.spk.m);r.spk=null}/* 運んでいた草は、箱へもどす */if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
+function die(r){if(r.sasa&&typeof sasaBack==='function')sasaBack(r);/* ささげものは、箱へもどす */if(r.coffin&&r.coffin.name){const nm=r.coffin.name;r.coffin=null;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb}/* 棺をはこんでいる子が消えたら、棺の子は、おみおくりがすんだことにする（unb がのこると、二度と呼びもどせない） */if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}if(r.spk){smRefund(r.spk.m);r.spk=null}/* 運んでいた草は、箱へもどす */if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
   endAct(r);const dm=bestMate(r),dmN=dm?dm.name:null;goneNote(r,dm&&!dm.hidden?dm:null);/* 思い出帳の「いなくなったなかま」 */{const t0=(r.y|0)*W+(r.x|0);let gj=-1;for(let rad=0;rad<4&&gj<0;rad++)for(let dy=-rad;dy<=rad&&gj<0;dy++)for(let dx=-rad;dx<=rad;dx++){const k=t0+dy*W+dx;if(k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1){gj=k;break}}
     if(gj>=0){S.obj[gj]='grave';S.dyn[gj]={name:r.name,buried:false,mate:dmN,t0:S.t};recount()}}S.res=S.res.filter(q=>q!==r);S.deaths++;for(const q of S.res)if(q===dm||Math.hypot(q.x-r.x,q.y-r.y)<14)q.cryU=S.t+90;/* なかよしは、はなれていても泣く *//* 近くのせいれいは、しばらく泣く */logEv(r.name+'が消えてしまった');
   if(!S.buried)S.buried=[];if(isKey(r.name)&&r.elem==='fire'&&!S.flags.guard&&S.ns&&S.ns.boss&&isNight())S.flags.hDied=1;/* こもれびのまもりをおぼえる前に、オオカゲの夜に火の子がいなくなった */gearDropAll(r);/* そうびは、もちものにもどる */if(isKey(r.name))S.buried.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,tst:r.tst,est:r.est,jc:r.jc,ttl:r.ttl,boost:r.boost,mate:dmN,unb:true});else{if(!S.lost)S.lost=[];S.lost.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,tst:r.tst,est:r.est,jc:r.jc,ttl:r.ttl,boost:r.boost,mate:dmN,unb:true})}/* 埋葬されるまでは、よみがえらせない（unb） *//* キーキャラは特性「きずな」でレベルそのまま。ふつうのせいれいは「めぶきのしずく」がないともどらない *//* もどってくるのはキーキャラだけ *//* 次の朝の召喚で、いちばんにもどってくる */

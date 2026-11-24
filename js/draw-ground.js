@@ -5,11 +5,11 @@ const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
 const GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ちぢめたときだけ、くわしい区画から作り、ちぢめるのをやめて GHALFT コマたったら手ばなす（ghalf・ghalfFree）。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
 const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
-function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()}],NX=(W-1)>>4,NY=(H-1)>>4;
+function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()},()=>{GRD.nob=true;try{render(performance.now())}catch(e){frameErr('preload',e)}GRD.nob=false}/* はじめの画面を、地面をぬいて1回描き、そこに出る物の絵のページを、地面を作るあいだに読みはじめる */],NX=(W-1)>>4,NY=(H-1)>>4;
   igJobs(L);L.push(()=>{GRD.any=true});/* ひし形の地面の区画 */
   return {s:S,L,i:0}}
 const STAGEMS=180;/* 読みこみ中、1コマにマップを作る時間（ミリ秒。長いほど、コマのあいだのむだがへって速い。%の出かたは、ゆっくりになる） */
-function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<STAGEMS){try{J.L[J.i]()}catch(e){frameErr('preload',e)}J.i++}if(J.i>=J.L.length){if(!J.warm){J.warm=performance.now();try{render(now)}catch(e){frameErr('preload',e)}return}/* はじめの画面を1回描いて（読みこみ中の画面のうしろ）、そこに出る物の絵のページを読みはじめる */if(chaReady()||performance.now()-J.warm>15000){GRD.job=null;GRD.pre=J.s;tmpFree()}}}/* 読みはじめたページがそろったら、マップを開く */
+function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<STAGEMS){let r;try{r=J.L[J.i]()}catch(e){frameErr('preload',e)}if(r===false)break;J.i++}/* false：ワーカーがいっぱい。つぎのコマに */if(J.i>=J.L.length){if(igWorkBusy())return;/* ワーカーの区画がそろうまで待つ */if(!J.warm){igWorkEnd();J.warm=performance.now();try{render(now)}catch(e){frameErr('preload',e)}return}/* はじめの画面を1回描いて（読みこみ中の画面のうしろ）、そこに出る物の絵のページを読みはじめる */if(chaReady()||performance.now()-J.warm>15000){GRD.job=null;GRD.pre=J.s;tmpFree()}}}/* 読みはじめたページがそろったら、マップを開く */
 function chaReady(){for(const k in CHA){const a=CHA[k];if(!a.ok&&!a.bad)return false}return true}/* 読みはじめたアトラスのページが、ぜんぶ読みこめたか（使わない物のページは読まない） */
 function assetPct(){/* 絵の読みこみの進みぐあい（0〜1）。マップチップのアトラス（読みはじめたページ）で半分、ほかの絵で半分 */let n=0,d=0,cn=0,cp=0;for(const k in CHA){const a=CHA[k];cp++;if(a.ok||a.bad)cn++}/* アトラスは、読みはじめたページだけ */for(const k in ICI){const im=ICI[k];d++;if(im.ok||im.bad||im.complete)n++}for(const k in ART){const a=ART[k];d++;if(a.ok||a.bad)n++}return ((cp?cn/cp:1)+(d?n/d:1))/2}
 function loadPct(){/* 読みこみの%：絵の読みこみが30%、マップを作るのが70% */const J=GRD.job;return Math.min(99,Math.floor(J&&J.s===S?30+70*J.i/J.L.length:30*assetPct()))}
@@ -102,7 +102,7 @@ function roadGrassEdge(c,id,x,y,i,q,iso){if(id!=='path'&&id!=='gravel'&&id!=='wo
 
 function roadShape(c,x,y,q){const l=x+(q.L?0:2),r=x+TS-(q.R?0:2),t=y+(q.U?0:2),b=y+TS-(q.D?0:2),tl=!q.L&&!q.U?6:0,tr=!q.R&&!q.U?6:0,br=!q.R&&!q.D?6:0,bl=!q.L&&!q.D?6:0;c.beginPath();c.moveTo(l+tl,t);c.lineTo(r-tr,t);c.quadraticCurveTo(r,t,r,t+tr);c.lineTo(r,b-br);c.quadraticCurveTo(r,b,r-br,b);c.lineTo(l+bl,b);c.quadraticCurveTo(l,b,l,b-bl);c.lineTo(l,t+tl);c.quadraticCurveTo(l,t,l+tl,t);c.closePath()}
 function drawFloorChip(c,id0,x,y,i,iso){const C=window.CHIPS;if(!C)return false;const gx=i%W,gy=(i/W)|0,flat=id0==='brickfloor'||id0==='stonefloor',id=flat?(id0==='brickfloor'?'brick':'stone'):id0;
-  const base=id==='carpet'?C.carpet:C[(id==='woodpath'?'floor':id0==='stonefloor'?'stonefloor':id)/* 木の道：絵ができるまでは、フローリングの絵。石の床は、石畳とはべつの絵 */+'#'+(id==='path'||id==='gravel'?((hash(i*13+5)*4)|0):id0==='stonefloor'?(gx%4)+(gy%4)*4:(gx%2)+(gy%2)*2)];/* 石の床は4×4マスでつながる絵 */if(!base||!chipImgs(base,id)[0].ok)return false;/* 床のもよう：土・砂利は4しゅるい、石・レンガ・板は2×2マスでつながる絵 */
+  const base=id==='carpet'?C.carpet:C[(id==='woodpath'?'floor':id0==='stonefloor'?'stonefloor':id)/* 木の道：絵ができるまでは、フローリングの絵。石の床は、石畳とはべつの絵 */+'#'+(id==='path'||id==='gravel'?((hash(i*13+5)*4)|0):id0==='stonefloor'?(gx%4)+(gy%4)*4:(gx%2)+(gy%2)*2)];/* 石の床は4×4マスでつながる絵 */if(!base||!chipImgs(base,id)[0].ok){if(base&&chipPend(base))CHPN++;return false}/* 床のもよう：土・砂利は4しゅるい、石・レンガ・板は2×2マスでつながる絵 */
   const road=!flat&&ROADF.has(id),q=road?roadLinks(i,iso):null,edged=id==='stone'||id==='brick';if(road){c.save();if(!edged){roadShape(c,x,y,q);c.clip()}}/* 石畳・レンガ道は1マスぴったりのはば（へりはマスのふちまで）。あぜ道・砂利道は、ふちを少しまるく */
   drawChip(c,base,id,x,y,0,i);
   if(id==='carpet'&&c._shU==null){const same=k=>!iso&&S.floor[k]==='carpet';/* 壁の下にのばすじゅうたん（wallMarg）には、ふちを描かない */for(const[s,k]of[['U',i-W],['D',i+W],['L',i-1],['R',i+1]])if(!same(k)&&C['carpet:'+s])drawChip(c,C['carpet:'+s],id,x,y,0,i)}/* じゅうたんのふち */
@@ -144,7 +144,6 @@ function drawFloor(c,id,x,y,i,iso){
   else if(id==='brick'){c.fillStyle='#a66e5a';c.fillRect(x,y,TS,TS);for(let row=0;row<4;row++){const off=row%2?8:0;for(let k=-1;k<3;k++){const bx=x+k*16+off,w=15;const l=Math.max(x,bx+.5),r2=Math.min(x+TS,bx+w);if(r2<=l)continue;c.fillStyle=(row+k+((i*3)%2))%3?'#cb8164':'#c17760';c.fillRect(l,y+row*8+.5,r2-l,7);c.fillStyle='rgba(255,220,190,.25)';c.fillRect(l,y+row*8+.5,r2-l,1.2)}}}
   else if(id==='stone'){c.fillStyle='#a8a59d';c.fillRect(x,y,TS,TS);const t=(a,b,w,h2,k)=>{c.fillStyle=k?'#d6d3cc':'#cbc8c0';rr(c,x+a,y+b,w,h2,3);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x+a+2,y+b+1.5,w-4,1.5);c.fillStyle='rgba(90,85,78,.22)';c.fillRect(x+a+1.5,y+b+h2-2,w-3,1.5)};
     if(hash(i)<.5){t(1,1,17,13,1);t(19,1,12,9,0);t(19,11,12,10,1);t(1,15,10,16,0);t(12,15,6,16,1);t(19,22,12,9,0)}else{t(1,1,11,11,0);t(13,1,18,9,1);t(1,13,16,9,1);t(18,11,13,11,0);t(1,23,13,8,0);t(15,23,16,8,1)}}
-  {const key={floor:'floor-wood-render',stone:'floor-stone-render',brick:'floor-brick-render'}[id],art=key&&HOUSEART[key];if(art&&art.complete&&art.naturalWidth){const sample=32,cols=art.naturalWidth/sample,rows=art.naturalHeight/sample;c.drawImage(art,(gx%cols)*sample,(gy%rows)*sample,sample,sample,x,y,TS,TS)}}
   if(flat&&shU(c,i,iso)){c.fillStyle='rgba(60,30,10,.2)';c.fillRect(x,y,TS,4)}
   if(road){roadMaterialEdge(c,id,x,y,links);roadInnerEdges(c,id,x,y,i,iso);roadGrassEdge(c,id,x,y,i,links,iso);c.restore()}/* 道のふち：土・砂利は草との境、レンガ・石畳はふちどりの石 */
 
@@ -169,11 +168,6 @@ function f2rr(c,x,y,w,h,r,f,s){c.beginPath();c.roundRect(x,y,w,h,r);if(f){c.fill
 function f2leaf(c,x,y,rx,ry,a,col){c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,a,0,7);c.fill()}
 function f2pot(c,x,y,w){f2rr(c,x-w/2,y-w*.75,w,w*.75,2,'#c98a5a',F2C.ol);c.fillStyle='#b5764a';c.fillRect(x-w/2,y-w*.75,w,2)}
 function f2flower(c,x,y,col){for(let a=0;a<5;a++)circ(c,x+Math.cos(a*1.26)*1.6,y+Math.sin(a*1.26)*1.6,1.3,col);circ(c,x,y,.9,'#ffd35c')}
-/* 生垣の絵：お手本を切って、まわりのつながり方（左右上下）ごとに16マスぶん並べた画像 */
-function spOK(k){const m=HOUSEART[k];return m&&m.complete&&m.naturalWidth>0}
-function spTile(c,k,m,x,y,ICON,dn,fi,vo){if(dn==null)dn=m&8;if(fi==null)fi=m;const im=HOUSEART[k];if(ICON){c.drawImage(im,m*120,0,120,144,x+5,y-1,22,33);return}
-  /* 高さは0.8倍で、どのマスも同じ大きさ・同じ位置にかく（ふちの高さがそろう）。下につながるマスは、下のマスとのすきまを、絵の下のはしをのばしてうめる */
-  if(dn){c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,32.6);return}/* 下につながるマスは、上のふちの位置はそのままで、下のマスまで絵をのばす */c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,25.8);c.drawImage(im,fi*120,96,120,48,x-.2,y+23,32.4,12.8)}
 const inHouseL=(i,ICON)=>!ICON&&i!=null&&!!roomOf(i);/* 家の中の灯りは、灯りそのもののぼんやりした光をかかない（家ぜんたいが光る） */
 function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   const sh=(w,h)=>{if(!c._onWall)shadow(c,cx,y+29,w,h||3)};
@@ -222,7 +216,6 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   case'sink':sh(13);f2rr(c,cx-13,y+12,26,17,2,'#cfc9be',C.stD);c.fillStyle='#b9b2a6';c.fillRect(cx-13,y+12,26,3);f2rr(c,cx-8,y+15,16,7,2,'#8f897f');c.fillStyle='#a9d4ea';c.fillRect(cx-7,y+18,14,3);c.strokeStyle=C.stD;c.strokeRect(cx-10,y+23,20,5);c.fillStyle='#9d968b';c.fillRect(cx-1,y+5,2.5,9);c.fillRect(cx-1,y+5,7,2.2);circ(c,cx+6,y+7,1.2,'#9d968b');break;
   case'tub':sh(10);f2rr(c,cx-10,y+11,20,18,4,C.wd,C.ol);c.fillStyle='#8f97a0';c.fillRect(cx-10,y+14,20,2);c.fillRect(cx-10,y+24,20,2);c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+12,9,3,0,0,7);c.fill();c.strokeStyle=C.ol;c.beginPath();c.ellipse(cx,y+12,10,3.5,0,0,7);c.stroke();break;
   case'hedge':{/* 生垣：まるくこんもりした明るい葉のかたまりと、下の茶色い土 */const hu=!ICON&&i!=null&&typeAt(i-W)==='hedge',hd=!ICON&&i!=null&&typeAt(i+W)==='hedge',hl=!ICON&&i!=null&&i%W>0&&typeAt(i-1)==='hedge',hr=!ICON&&i!=null&&i%W<W-1&&typeAt(i+1)==='hedge',h=i||0;
-    if(spOK('hedge-atlas')){{const rD=hr&&typeAt(i+1+W)==='hedge',lD=hl&&typeAt(i-1+W)==='hedge',m=(hl?1:0)|(hr?2:0)|(hu?4:0)|(hd?8:0);spTile(c,'hedge-atlas',m,x,y,ICON,null,rD&&lD?18:rD?16:lD?17:m,!hl&&!hr)}break}
     const x0=hl?x-2:x+3.6,x1=hr?x+34:x+28.4,y0=hu?y-4:y+4.6,y1=hd?y+36:y+25.6;
     if(!hd)sh(15);
     if(!hd){const bl=hl?x-1:x+2.5,br=hr?x+33:x+29.5;c.fillStyle='#a07548';rr(c,bl-.6,y+24.2,br-bl+1.2,7,3);c.fillStyle='#b98c5c';rr(c,bl,y+24.2,br-bl,6,2.6)}/* 下の土 */

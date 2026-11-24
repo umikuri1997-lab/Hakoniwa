@@ -31,7 +31,7 @@ let S=null;
 const resv=new Map();
 let RUINT=-1/* こわれた神殿（直している途中もふくむ）のマス。recount で作る */,STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],HOTL=[]/* ほたるの草むらのマス */,DRUMS=[]/* 合図の太鼓のマス */,JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),NEARSUI=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARJORO=new Set(),NEARMIZU=new Set()/* 苔むした石の水ばちのまわり5マス：芽が、植えたその日に育つ */,NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;
 function newState(w){w=w||0;
-  const s={v:8,mig:SAVE_VER,box:{},pile:{},rsv:{},flags:{blk2:1,route:[],ltWhole1:1,lvPick1:1,dig2:1,gf25:1,windFoe1:1,mizuFoe1:1,mzq3:1,mzq2:1,mzGate3:1,wseed1:1,altarLit1:1,volSub1:1,ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,hun2:1,evOpen1:1,trapSub1:1,board2x1:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,kgIns1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:SAVE_VER,box:{},pile:{},rsv:{},flags:{blk2:1,route:[],ltWhole1:1,lvPick1:1,dig2:1,gf25:1,windFoe1:1,mizuFoe1:1,mzq3:1,mzq2:1,mzGate3:1,wseed1:1,altarLit1:1,volSub1:1,ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,hun2:1,evOpen1:1,trapSub1:1,board2x1:1,board4:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,kgIns1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:w===TSUCHI?16*60:12*60,/* 草原は15時・土は夕方16時（はじまりの地ゆれ）からはじまる */speed:1,
@@ -45,7 +45,7 @@ function newState(w){w=w||0;
 }
 /* こわれた神殿：まん中の道（x=CX）の北のはしの先に置く。像のマスと左右（おそなえ箱・依頼ボードになる所）、手前（台座になる所）の4マス。
    水・浅瀬・道や床・人の作った物があるときや、高さがそろわないときは、北のはしに近い所をさがす。自然の物（木・岩・草）はどける */
-function templeRuinCells(j){return [j,j-1,j+1,j+W,j+2,j+3,...templeBack(j)]}/* 神殿・おそなえ箱・神殿の右（神殿の絵の下）・台・依頼ボード（2マス、j+2 と j+3。絵のある所）・神殿のうしろの列 */
+function templeRuinCells(j){return [j,j-1,j+1,j+W,j-W+2,j-W+3,...templeBack(j)]}/* 神殿・おそなえ箱・神殿の右（神殿の絵の下）・台・依頼ボード（2マス。神殿から2つ右・3つ右の、うしろの列。持ち主がきめた）・神殿のうしろの列 */
 const templeBack=j=>[j-W-1,j-W,j-W+1];/* 神殿は3×2マス（持ち主がきめた）：像のマスの列と、そのうしろ（北）の列 */
 const RUIN_CLEAR=new Set(['deadtree','rock','bamboo','berry','ntree','takenoko','kinoko']),ruinClearable=o=>!o||RUIN_CLEAR.has(o)||WEEDS.has(o);/* こわれた神殿のためにどけてよい自然の物 */
 function templeRuinOK(s,j){const x=j%W,y=(j/W)|0;if(x<2||x>W-3||y<3||y>H-3)return false;const h=s.hi?s.hi[j]|0:0;
@@ -63,8 +63,8 @@ function boardMigrate(){/* 依頼ボードは神殿の右の2マス。前のセ�
   if(S.obj[k]&&!ruinClearable(S.obj[k]))removeAt(k%W,(k/W)|0);/* おいてあった物は、もちものへ */
   if(S.obj[k]&&!ruinClearable(S.obj[k]))return;
   S.obj[k]=STATUE>=0?'part':site?'site2':'part';S.ref[k]=STATUE>=0?t+1:t;delete S.dyn[k];delete S.hp[k];if(S.hp)delete S.hp['n'+k];S.flags.board2x1=1;recount()}
-function boardFree(k){/* 依頼ボードの右のマス（神殿から3つ右）をあける。どかせない物は、もちものへ。水ならあけられない */
-  if(S.ground[k]===1)return false;const mine=()=>(S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===k-3;/* もう神殿のマス */if(S.obj[k]&&!ruinClearable(S.obj[k])&&!mine())removeAt(k%W,(k/W)|0);
+function boardFree(k,t=k-3){/* 依頼ボードのマスをあける（t は神殿）。どかせない物は、もちものへ。水ならあけられない */
+  if(S.ground[k]===1)return false;const mine=()=>(S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===t;/* もう神殿のマス */if(S.obj[k]&&!ruinClearable(S.obj[k])&&!mine())removeAt(k%W,(k/W)|0);
   if(S.obj[k]&&!ruinClearable(S.obj[k])&&!mine())return false;delete S.dyn[k];delete S.hp[k];if(S.hp)delete S.hp['n'+k];return true}
 function boardShift(){/* 依頼ボードの2マスを、絵のある所（神殿から2つ右・3つ右）へ。神殿のすぐ右は、神殿の絵の下なので神殿のマス（前は、ボードの絵の右はしの下を歩けた）。1回だけ（あけられなければ、つぎの読みこみでまた） */
   if(S.flags.board3)return;const t=STATUE>=0?STATUE:RUINT;if(t<0)return;const k=t+3;
@@ -72,6 +72,17 @@ function boardShift(){/* 依頼ボードの2マスを、絵のある所（神殿
     const dy=S.dyn[t+1],hp=S.hp[t+1];S.obj[t+1]='part';S.ref[t+1]=t;delete S.dyn[t+1];delete S.hp[t+1];S.obj[t+2]='board';delete S.ref[t+2];if(dy)S.dyn[t+2]=dy;if(hp!=null)S.hp[t+2]=hp;S.obj[k]='part';S.ref[k]=t+2}
   else{if(!boardFree(k))return;S.obj[k]=S.obj[t]==='site'?'site2':'part';S.ref[k]=t}/* こわれた神殿：直すまでは神殿のマス */
   S.flags.board3=1;recount()}
+function boardBackOK(t){const a=t-W+2,h=S.hi?S.hi[t]|0:0;return a>=0&&[a,a+1].every(k=>S.ground[k]!==1&&(S.hi?S.hi[k]|0:0)===h)}/* ボードをうしろの列におけるか（水でなく、神殿と同じ高さ） */
+function boardBack(){/* 依頼ボードの2マスを、1マスうしろ（北）の列へ（持ち主がきめた）。前の2マスは、あいて歩ける。1回だけ（どかせない物がのこれば、つぎの読みこみでまた） */
+  if(S.flags.board4)return;const t=STATUE>=0?STATUE:RUINT;if(t<0){S.flags.board4=1;return}const a=t-W+2,b=a+1;
+  if(STATUE>=0&&S.obj[t+2]!=='board'||!boardBackOK(t)){S.flags.board4=1;return}/* 前の列にボードがない（1つ右の古いならび）・うしろが水や段差なら、そのまま */
+  for(const k of[a,b]){const o=S.obj[k];if(!o||ruinClearable(o)||(o==='part'||o==='site2')&&S.ref[k]===t)continue;
+    const mv=o!=='part'&&o!=='site2'&&!NOMOVE.has(o)&&!(BL[o]&&BL[o].sz)&&!iqGrp(o)&&templeMoveTo(k);if(!mv)removeAt(k%W,(k/W)|0);if(S.obj[k]&&!ruinClearable(S.obj[k]))return}/* 置いてあった物は近くへうつす（うつせない物は、もちものへ） */
+  for(const k of[a,b]){delete S.dyn[k];if(S.hp){delete S.hp[k];delete S.hp['n'+k]}if(S.rot)delete S.rot[k]}
+  if(STATUE>=0){const dy=S.dyn[t+2],hp=S.hp[t+2];S.obj[a]='board';delete S.ref[a];if(dy)S.dyn[a]=dy;if(hp!=null)S.hp[a]=hp;S.obj[b]='part';S.ref[b]=a}
+  else{const pt=S.obj[t]==='site'?'site2':'part';for(const k of[a,b]){S.obj[k]=pt;S.ref[k]=t}}/* こわれた神殿：直すまでは神殿のマス */
+  for(const k of[t+2,t+3])if(S.obj[k]==='board'||(S.obj[k]==='part'||S.obj[k]==='site2')&&(S.ref[k]===t||S.ref[k]===t+2)){S.obj[k]='';delete S.ref[k];delete S.dyn[k];if(S.hp)delete S.hp[k]}
+  S.flags.board4=1;recount()}
 function templeDeepMigrate(){/* 神殿を3×2マスにした（うしろの列も神殿のマス）。前のセーブは1回だけ：うしろの列の物は、近くのあいた所へうつす（うつせない物は、もちものへ） */
   if(S.flags.temple2row)return;const t=STATUE>=0?STATUE:RUINT;if(t<0){S.flags.temple2row=1;return}const site=S.obj[t]==='site',pt=site?'site2':'part';
   for(const k of templeBack(t)){if((S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===t)continue;const o=S.obj[k];
@@ -379,6 +390,8 @@ function ladderDir(j){/* ハシゴの向き（0：うしろが上のマス、1�
 const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];
 function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LADDERS.has(S.obj[b]))return false;const d=ladderDir(b);return d>=0&&ladderTop(b,d)===a}
 const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
+const CLB=new WeakMap(),CLBM=.1,CLBD=4;/* 段差をよじのぼる・おりるせいれい：{a:もとのマス,n:つぎのマス,px,py:よじのぼる所,k:0〜1}。ふちまでふつうに歩き、低いマスのがわ（壁の前、マスのさかいから CLBM）で、まっすぐ上・下へよじのぼる（歩く CLBD マスぶんの時間。歩く1マスとあわせて5倍） */
+function clbPt(a,n){/* よじのぼる所：マスのさかいから、低いマスのがわへ CLBM */const ax=a%W+.5,ay=((a/W)|0)+.5,sx=n%W-a%W,sy=((n/W)|0)-((a/W)|0),m=hiAt(a)<hiAt(n)?-CLBM:CLBM;return{px:ax+sx*(.5+m),py:ay+sy*(.5+m)}}
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return liftOf(c)+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return liftOf(c);const d=stairDir(a);if(d<0)return liftOf(c);const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
@@ -417,12 +430,20 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   for(let pass=0;pass<3;pass++)for(let lv=HMAX;lv>=1;lv--){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]>=lv)+(g[j+1]>=lv)+(g[j-W]>=lv)+(g[j+W]>=lv);if(g[j]>=lv&&n<2)h[j]=lv-1;else if(g[j]===lv-1&&n>=3&&ok(j))h[j]=lv}}/* ほそい所はけす、くぼみはうめる */
   fix();
   s.hi=h;treeHighFix(s)}
-function treeHighFix(s){/* 木のまわり2マス・岩のまわり1マス（hiRad）は、その物より高くしない。茂み・竹（FLATR）と岩のまわり1マスは同じ高さ（岩は、はじめの地形だけ。ほる・つむの決まりは treeNextHigh）。新しいゲームの地形を作ったあと（霧・お屋敷で高さがかわったあとも）によぶ。がけのそばの枯れ木はけし、生きた木・岩は、まわりをその高さにならして、その外を2マスに1だんずつ上げる（段々。2マス以内との差は1だんまでの決まりのまま） */const h=s.hi;if(!h)return;const hi=n=>h[n]|0;const high=(j,R)=>{const x=j%W,y=(j/W)|0,hh=hi(j);for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<W&&yy>=0&&yy<H&&hi(yy*W+xx)>hh)return true}return false};
-  for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree'&&high(j,TREER)){s.obj[j]='';if(s.dyn)delete s.dyn[j]}/* 枯れ木はけす */
+function treeHighFix(s){/* 木のまわり2マス・岩のまわり1マス（hiRad）は、その物より高くしない。茂み・竹（FLATR）と岩・枯れ木のまわり1マスは同じ高さ（岩・枯れ木は、はじめの地形だけ。ほる・つむの決まりは treeNextHigh）。新しいゲームの地形を作ったあと（霧・お屋敷で高さがかわったあとも）によぶ。がけのそばの枯れ木はけし、生きた木・岩は、まわりをその高さにならして、その外を2マスに1だんずつ上げる（段々。2マス以内との差は1だんまでの決まりのまま） */const h=s.hi;if(!h)return;const hi=n=>h[n]|0;const high=(j,R)=>{const x=j%W,y=(j/W)|0,hh=hi(j);for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&xx<W&&yy>=0&&yy<H&&hi(yy*W+xx)>hh)return true}return false};
+  for(let round=0;round<6;round++){/* 1マスはばの段（hiThinFix）をけすと、木・岩のまわりがかわるので、かわらなくなるまで */for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree'&&high(j,TREER)){s.obj[j]='';if(s.dyn)delete s.dyn[j]}/* 枯れ木はけす */
   for(let pass=0;pass<8;pass++){let ch=0;for(let j=0;j<W*H;j++){const R=hiRad(s.obj[j]);if(!R||!high(j,R))continue;const F=R+2*(HMAX-HMIN),x=j%W,y=(j/W)|0,hh=hi(j);for(let dy=-F;dy<=F;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-F;dx<=F;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const d=Math.max(Math.abs(dx),Math.abs(dy)),cap=hh+(d<=R?0:Math.ceil((d-R)/2)),n=yy*W+xx;if(hi(n)>cap){h[n]=cap;ch=1}}}}if(!ch)break}
-  /* 茂み・竹（FLATR）・岩：まわり1マスを同じ高さにならす（岩のとなりに段差を作らない）。ならせない（水・物がある・2マス以内の差が1だんをこえる・木と岩の決まりにあわない）ときは、その物をけす */
-  const flat=o=>FLATR.has(o)||o==='rock',at=(x,y)=>x>=0&&x<W&&y>=0&&y<H;for(let j=0;j<W*H;j++){if(!flat(s.obj[j]))continue;const x=j%W,y=(j/W)|0,hh=hi(j),chg=[];let bad=false;
+  /* 茂み・竹（FLATR）・岩・枯れ木：まわり1マスを同じ高さにならす（岩・枯れ木のとなりに段差を作らない）。ならせない（水・物がある・2マス以内の差が1だんをこえる・木と岩の決まりにあわない）ときは、その物をけす */
+  const flat=o=>FLATR.has(o)||o==='rock'||o==='deadtree',at=(x,y)=>x>=0&&x<W&&y>=0&&y<H;for(let j=0;j<W*H;j++){if(!flat(s.obj[j]))continue;const x=j%W,y=(j/W)|0,hh=hi(j),chg=[];let bad=false;
     for(let dy=-1;dy<=1&&!bad;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;if(!at(x+dx,y+dy)){bad=true;break}const n=(y+dy)*W+x+dx;if(hi(n)===hh)continue;const o=s.obj[n];if((o&&!WEEDS.has(o))||(s.floor&&s.floor[n])||s.ground[n]!==0){bad=true;break}chg.push([n,hi(n)])}
     if(!bad&&chg.length){for(const[n]of chg)h[n]=hh;for(const[n]of chg){const nx=n%W,ny=(n/W)|0;for(let dy=-2;dy<=2&&!bad;dy++)for(let dx=-2;dx<=2;dx++){if(!at(nx+dx,ny+dy))continue;const m=(ny+dy)*W+nx+dx,d=Math.max(Math.abs(dx),Math.abs(dy)),R=hiRad(s.obj[m]);if(Math.abs(hi(m)-hh)>1||(R&&d<=R&&hi(m)<hh)||(flat(s.obj[m])&&d<=1&&hi(m)!==hh)){bad=true;break}}if(bad)break}if(bad)for(const[n,v]of chg)h[n]=v}
-    if(bad){s.obj[j]='';if(s.dyn)delete s.dyn[j]}}}/* ならすと、ほかの木・岩のまわりが高くなることがあるので、かわらなくなるまで */
+    if(bad){s.obj[j]='';if(s.dyn)delete s.dyn[j]}}/* ならすと、ほかの木・岩のまわりが高くなることがあるので、かわらなくなるまで */
+  if(!hiThinFix(s))break}}
+function hiThinFix(s){/* はじめの地形：1マスはばの段（2×2のかたまりに入らない高いマス。1マスのブロックが1つ・2つならぶ所など）を1だん下げる。オートタイルの地形と同じく、段はどこも2×2以上。下げたあと、2マス以内との差は1だんまで（genHeights の fix と同じ）。かえたら true */
+  const h=s.hi,hv=(x,y)=>x<0||y<0||x>=W||y>=H?-99:h[y*W+x]|0;let any=false;
+  for(let it=0;it<20;it++){let ch=0;const g=h.slice(),gv=(x,y)=>x<0||y<0||x>=W||y>=H?-99:g[y*W+x]|0;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=gv(x,y);if(v<=0)continue;let ok=false;for(let b=-1;b<=0&&!ok;b++)for(let a=-1;a<=0;a++)if(gv(x+a,y+b)>=v&&gv(x+a+1,y+b)>=v&&gv(x+a,y+b+1)>=v&&gv(x+a+1,y+b+1)>=v){ok=true;break}if(!ok){h[y*W+x]=v-1;ch=1}}
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;let m=h[j]|0;for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const q=hv(x+a,y+b);if(q!==-99&&q<m)m=q}if((h[j]|0)>m+1){h[j]=m+1;ch=1}}
+    if(!ch)break;any=true}
+  return any}
 function genLand(s,w){if(!valleyOn(s,w)&&w!==WIND&&w!==TSUCHI)genRiver(s,w);/* 花の谷・風（島のあいだは雲の海）・土（地われ）に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */

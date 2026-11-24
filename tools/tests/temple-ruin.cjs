@@ -8,19 +8,20 @@ const assert=require('node:assert/strict');
   assert.equal(a.q,'statue');assert.match(a.how,/こわれた神殿/);
   /* 「しらべる」でタップ（屋根の所） */
   await run(`(()=>{setMode('look');const j=RUINT,wx=(j%W+.5)*TS,wy=((j/W)|0)*TS-2*TS;{const q=objS(j,wx,wy);onTap(q.x,q.y)}})()`);/* 屋根の所（像のマスの2マス上）をタップ */
-  const b=JSON.parse(await run(`JSON.stringify({o:S.obj[RUINT],d:S.dyn[RUINT],s2:[RUINT-1,RUINT+1,RUINT+W,RUINT+2,RUINT+3].map(k=>S.obj[k])})`));
+  const b=JSON.parse(await run(`JSON.stringify({o:S.obj[RUINT],d:S.dyn[RUINT],s2:[RUINT-1,RUINT+1,RUINT+W,RUINT-W+2,RUINT-W+3].map(k=>S.obj[k])})`));
   assert.equal(b.o,'site');assert.equal(b.d.build,'statue');assert.equal(b.d.ruin,1);assert.deepEqual(b.s2,['site2','site2','site2','site2','site2']);
   assert.equal(await run(`templeRuinTap(RUINT)`),false,'second tap does nothing');
   /* せいれいが直す */
   await page.waitForFunction(()=>sacredEval('STATUE>=0'),{},{timeout:120000,polling:500}).catch(async e=>{console.log(await run(`JSON.stringify({t:S.t,res:S.res.map(r=>[r.name,r.act&&r.act.type,r.x,r.y]),d:S.dyn[RUINT],dlg:!document.querySelector('#dialog').hidden})`));throw e});
-  const c=JSON.parse(await run(`JSON.stringify({st:S.obj[STATUE],ob:S.obj[STATUE-1],bd:S.obj[STATUE+2],al:S.obj[STATUE+W],ruin:RUINT,board:BOARD===STATUE+2})`));
+  const c=JSON.parse(await run(`JSON.stringify({st:S.obj[STATUE],ob:S.obj[STATUE-1],bd:S.obj[STATUE-W+2],al:S.obj[STATUE+W],ruin:RUINT,board:BOARD===STATUE-W+2})`));
   assert.deepEqual(c,{st:'statue',ob:'obox',bd:'board',al:'altar',ruin:-1,board:true});
-  assert.deepEqual(JSON.parse(await run(`JSON.stringify({p:S.obj[STATUE+3],r:S.ref[STATUE+3]===STATUE+2,t:S.obj[STATUE+1],tr:S.ref[STATUE+1]===STATUE,w:[STATUE+1,STATUE+2,STATUE+3].map(walk),sz:BL.board.sz})`)),{p:'part',r:true,t:'part',tr:true,w:[false,false,false],sz:[2,1]},'依頼ボードは、絵のある2マス（神殿から2つ右・3つ右）。神殿のすぐ右は神殿のマス');
-  await run(`(()=>{S.orders=[{id:1,type:'chair',prog:0,need:5,worker:null},{id:2,type:'chair',prog:0,need:5,worker:null}];const cv=document.createElement('canvas');cv.width=cv.height=300;drawObj(cv.getContext('2d'),'board',100,150,STATUE+2,0,0);S.orders=[];return 1})()`);/* 依頼がはられたボードの絵（紙）を描いても、エラーが出ない */
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify({p:S.obj[STATUE-W+3],r:S.ref[STATUE-W+3]===STATUE-W+2,t:S.obj[STATUE+1],tr:S.ref[STATUE+1]===STATUE,w:[STATUE+1,STATUE-W+2,STATUE-W+3,STATUE+2,STATUE+3].map(walk),sz:BL.board.sz})`)),{p:'part',r:true,t:'part',tr:true,w:[false,false,false,true,true],sz:[2,1]},'依頼ボードは、神殿から2つ右・3つ右の、うしろの列の2マス。前の2マスは歩ける。神殿のすぐ右は神殿のマス');
+  await run(`(()=>{S.orders=[{id:1,type:'chair',prog:0,need:5,worker:null},{id:2,type:'chair',prog:0,need:5,worker:null}];const cv=document.createElement('canvas');cv.width=cv.height=300;drawObj(cv.getContext('2d'),'board',100,150,BOARD,0,0);S.orders=[];return 1})()`);/* 依頼がはられたボードの絵（紙）を描いても、エラーが出ない */
   /* 前のセーブ（ボードは神殿のすぐ右の1マス）：右どなりの物をどけて2マスにし（board2x1）、絵のある2マスへうつす（board3）。2回でもずれない */
-  const bm=JSON.parse(await run(`(()=>{const t=STATUE;S.obj[t+1]='board';delete S.ref[t+1];S.obj[t+2]='lamp';delete S.ref[t+2];S.obj[t+3]='candle';delete S.ref[t+3];delete S.flags.board2x1;delete S.flags.board3;recount();boardMigrate();const mid=[S.obj[t+2],S.ref[t+2]===t+1];boardShift();recount();const a=[S.obj[t+1],S.ref[t+1]===t,S.obj[t+2],S.obj[t+3],S.ref[t+3]===t+2,BOARD===t+2];delete S.flags.board3;boardShift();
-    return JSON.stringify({mid,a,again:[S.obj[t+1],S.obj[t+2],S.obj[t+3]],flag:!!S.flags.board3&&!!newState(WD).flags.board3,inv:inv('lamp')>0&&inv('candle')>0})})()`));
-  assert.deepEqual(bm,{mid:['part',true],a:['part',true,'board','part',true,true],again:['part','board','part'],flag:true,inv:true},'前のセーブ：ボードを絵のある所へ。どいた物はもちものへ');
+  const bm=JSON.parse(await run(`(()=>{const t=STATUE;S.obj[t+1]='board';delete S.ref[t+1];S.obj[t+2]='lamp';delete S.ref[t+2];S.obj[t+3]='candle';delete S.ref[t+3];for(const k of[t-W+2,t-W+3]){S.obj[k]='';delete S.ref[k]}delete S.flags.board2x1;delete S.flags.board3;recount();boardMigrate();const mid=[S.obj[t+2],S.ref[t+2]===t+1];boardShift();recount();const a=[S.obj[t+1],S.ref[t+1]===t,S.obj[t+2],S.obj[t+3],S.ref[t+3]===t+2,BOARD===t+2];delete S.flags.board3;boardShift();
+    const again=[S.obj[t+1],S.obj[t+2],S.obj[t+3]];S.obj[t-W+2]='lamp';delete S.flags.board4;S.dyn[t+2]={g:7};boardBack();const back=[S.obj[t-W+2],S.obj[t-W+3],S.ref[t-W+3]===t-W+2,BOARD===t-W+2,S.dyn[t-W+2]&&S.dyn[t-W+2].g,S.obj[t+2],S.obj[t+3],walk(t+2)&&walk(t+3)];delete S.flags.board4;boardBack();
+    return JSON.stringify({mid,a,again,back,back2:[S.obj[t-W+2],S.obj[t+2]],flag:!!S.flags.board3&&!!newState(WD).flags.board3&&!!S.flags.board4&&!!newState(WD).flags.board4,inv:inv('lamp')>1&&inv('candle')>0||inv('lamp')>0&&S.obj.includes('lamp')})})()`));
+  assert.deepEqual(bm,{mid:['part',true],a:['part',true,'board','part',true,true],again:['part','board','part'],back:['board','part',true,true,7,'','',true],back2:['board',''],flag:true,inv:true},'前のセーブ：ボードを絵のある所へ、そのあと1マスうしろへ。どいた物はもちものか近くへ');
   /* 古いセーブ（神殿がない）：1回だけ置く。2回めは置かない */
   const m=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));for(let j=0;j<s.obj.length;j++)if(['statue','obox','board','altar'].includes(s.obj[j]))s.obj[j]='';delete s.flags.ruinTemple1;s.quest=0;S=s;LIVE[WD]=S;recount();templeRuinMigrate();const n1=S.obj.filter(o=>o==='statueb').length;delete S.flags.ruinTemple1;templeRuinMigrate();return JSON.stringify({n1,n2:S.obj.filter(o=>o==='statueb').length,flag:!!newState(WD).flags.ruinTemple1})})()`));
   assert.deepEqual(m,{n1:1,n2:1,flag:true});

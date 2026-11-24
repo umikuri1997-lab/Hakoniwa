@@ -13,14 +13,18 @@ const CVBK={
   bk_tame:{bk:1,name:'ためしのからだ',xp:12,pw:9,hp:240,sp:.6,atk:30,hit:30,hitF:60,hitN:80,hitFS:40,hitNS:50,hitFN:60,hitFNS:40,col:'#9cbcd0',eye:'#2a3a4e',size:1.05,thaw:1},/* 火のせいれいが近づくと、とけて目をさます */
   bk_hone:{bk:1,name:'組みかけのほね',xp:12,pw:9,hp:180,sp:.75,atk:28,hit:25,hitF:50,hitN:70,hitFS:30,hitNS:40,hitFN:50,hitFNS:30,col:'#e8dcc0',eye:'#ff8a5a',size:1,rebuild:1},/* たおしても、組みなおして起きる（まもりの光でとどめ） */
   bk_ro:{bk:1,name:'炉にくべられたもの',xp:12,pw:9,hp:160,sp:1.4,atk:22,hit:20,hitF:45,hitN:65,hitFS:28,hitNS:40,hitFN:45,hitFNS:28,col:'#3a1810',eye:'#ffd860',size:.9,hot:1},/* 速い。通った所が、あつい床になる */
+  bk_kuzu:{bk:1,name:'ほりくず人形',xp:12,pw:8,hp:220,sp:.6,atk:28,hit:28,hitF:60,hitN:75,hitFS:40,hitNS:45,hitFN:60,hitFNS:40,col:'#7a6650',eye:'#ffd27a',size:1.05,kuzu:1},/* たおすと、そのマスに岩がのこる（cave-mine.js） */
+  bk_nezu:{bk:1,name:'うえたちねずみ',xp:8,pw:3,hp:60,sp:1.7,atk:18,hit:8,hitF:80,hitN:100,hitFS:50,hitNS:60,hitFN:80,hitFNS:50,col:'#7a6a58',eye:'#e8e4c8',size:.7,pack:3,nezu:1},/* 3びきで1つのむれ。小さく・よわく・はやい。かまれると、おなかが多くへる（cave-haison.js） */
+  bk_seki:{bk:1,name:'光をおがむせきぞう',xp:14,pw:10,hp:420,sp:.35,atk:34,hit:34,hitF:70,hitN:70,hitFS:45,hitNS:45,hitFN:70,hitFNS:45,col:'#8a857a',eye:'#fff0a0',size:1,pray:1},/* かたく、おそい。光をしぼると、おがむ（cave-shinden.js） */
   bk_mi:{bk:1,name:'ゆりかごのみはり',xp:14,pw:10,hp:260,sp:.9,atk:30,hit:30,hitF:60,hitN:85,hitFS:40,hitNS:50,hitFN:60,hitFNS:40,col:'#4c535c',eye:'#ffe08a',size:1.15,patrol:1}};/* ゆりかごのそばに来た子をねらう */
 Object.assign(EN,CVBK);
-const CVBKFL=['bk_kui','bk_yoru','bk_sui',null,null,null,'bk_mi','bk_tame','bk_hone','bk_ro'];/* 階（1〜10階）のバケモノ（STORY.md）。4〜6階は R4 で作る */
+const CVBKFL=['bk_kui','bk_yoru','bk_sui','bk_kuzu','bk_nezu','bk_seki','bk_mi','bk_tame','bk_hone','bk_ro'];/* 階（1〜10階）のバケモノ（STORY.md） */
 function cvFoeType(ch,fl){return CVBKFL[fl]||CVFOES[ch]}
 const CVSUIR=3,CVSUIK=.6;/* 光すい：まわりのマス・光の広さ */
 const CVTAMER=3;/* ためしのからだ：火のせいれいが、このマスまで近づくと目をさます */
 const CVHONET=20;/* 組みかけのほね：組みなおすまで（時計の分） */
 const CVROHOT=10;/* 炉にくべられたもの：通った所が、あつい床のままの時間（時計の分） */
+const CVNEZUWK=1.8,CVNEZUWKD=.6;/* 木のにんぎょうがあるとき、ねているねずみが目をさます広さ（マス）・光をしぼったとき */
 const CVMIR=2,CVMIEYE=2.5;/* ゆりかごのみはり：ゆりかごのまわりのマス・自分のまわりで見つけるマス */
 /* こわい物の数字（秒は実時間。マスは洞窟のマス） */
 const CVSC={
@@ -38,12 +42,12 @@ function cvBakeEnter(C){C.sc=[];C.hotT=new Map();C.lrK=1;const fl=C.fl;
     C.sc.push({k:'te',on:true,rim:R,i:s,dir:1,st:0,t:0,stun:0})}}}
 /* 大穴のふちの、歩けるマス（大穴のまん中からの角度のじゅん） */
 function cvRimCells(){const C=CV;let sx=0,sy=0,n=0;for(let j=0;j<CVW*CVH;j++)if(C.ab[j]){sx+=cvX(j);sy+=cvY(j);n++}if(!n)return[];const cx=sx/n,cy=sy/n,L=[];
-  for(let j=0;j<CVW*CVH;j++){if(!cvWalk(j))continue;const x=cvX(j),y=cvY(j);if(DIRS.some(([dx,dy])=>{const a=x+dx,b=y+dy;return a>=0&&b>=0&&a<CVW&&b<CVH&&C.ab[cvJ(a,b)]}))L.push([Math.atan2(y-cy,x-cx),j])}
+  for(let j=0;j<CVW*CVH;j++){if(!cvWalk(j)||C.sb&&C.sb[j])continue;/* 石像のせなかは、ふちではない */const x=cvX(j),y=cvY(j);if(DIRS.some(([dx,dy])=>{const a=x+dx,b=y+dy;return a>=0&&b>=0&&a<CVW&&b<CVH&&C.ab[cvJ(a,b)]}))L.push([Math.atan2(y-cy,x-cx),j])}
   return L.sort((a,b)=>a[0]-b[0]).map(q=>q[1])}
 const cvPd=(a,x,y)=>Math.hypot(a.x-x-.5,a.y-CVOY-y-.5);/* せいれいと、マス（x,y）のまん中のきょり */
 function cvNearest(x,y){let b=null,bd=1e9;for(const a of CV.party){const d=cvPd(a,x,y);if(d<bd){bd=d;b=a}}return[b,bd]}
 /* 光の広さ（光すいのそばでは小さい） */
-function cvLR(){const C=CV;return (C.dim?CVLIGHTD:CVLIGHT)*(C.lrK||1)}
+function cvLR(){const C=CV;return (C.dim?CVLIGHTD:relOn('kagami')?CVLIGHTK:CVLIGHT)*(C.lrK||1)}/* おひさまのかがみ（cave-shinden.js） */
 /* 毎コマ */
 function cvBakeTick(cdt,mv,now){const C=CV;if(!C.sc)return;
   /* 光すい：そばにいると、光の広さが小さくなる */
@@ -55,8 +59,10 @@ function cvBakeTick(cdt,mv,now){const C=CV;if(!C.sc)return;
   for(const[j,u]of C.hotT)if(u<=C.t)C.hotT.delete(j);
   for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'&&!relOn('fuigo')){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
   for(const s of C.sc)cvScTick(s,cdt,mv,now)}
+/* ねているバケモノが目をさます広さ（マス） */
+function cvWakeR(e){const C=CV;if(EN[e.type].pray)return cvSkWakeR();if(EN[e.type].nezu&&relOn('ningyo'))return C.dim?CVNEZUWKD:CVNEZUWK;return C.dim?CVWAKED:CVWAKE}
 /* ねむりからさめるか（ためしのからだは、火のせいれいが近づいたときだけ） */
-function cvWakeOK(e,a){const D=EN[e.type];if(D.thaw)return a.elem==='fire'&&Math.hypot(a.x-e.x,a.y-e.y)<=CVTAMER;return true}
+function cvWakeOK(e,a){const D=EN[e.type];if(D.pray)return cvSkWakeOK();if(D.thaw)return a.elem==='fire'&&Math.hypot(a.x-e.x,a.y-e.y)<=CVTAMER;return true}
 /* ゆりかごのみはり：ゆりかごのそば・自分のそばに来た子だけ、ねらう。いなければ見回る */
 function cvPatrol(e,mv){const C=CV;let tg=null,bd=1e9;for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);let near=d<=CVMIEYE;if(!near)for(let dy=-CVMIR;dy<=CVMIR&&!near;dy++)for(let dx=-CVMIR;dx<=CVMIR;dx++){const x=(a.x|0)+dx,y=((a.y-CVOY)|0)+dy,o=x>=0&&y>=0&&x<CVW&&y<CVH&&C.ob.get(cvJ(x,y));if(o&&o.k==='Y'){near=true;break}}if(near&&d<bd){bd=d;tg=a}}
   if(tg){e.tg=tg;return true}if(e.tg&&Math.hypot(e.tg.x-e.x,e.tg.y-e.y)<CVAGGRO)return true;e.tg=null;
@@ -133,6 +139,9 @@ function cvBkDraw0(e,now){const D=EN[e.type],k=e.type,s=D.size,t=now/1000+e.id,h
     else{R('#7a98ae',-6,-24+bob,12,22);R(D.col,-5,-23+bob,10,20);R(D.col,-4,-30+bob,8,7);R('#7a98ae',-10,-18+bob,4,10);R('#7a98ae',6,-18+bob,4,10);R(D.eye,-3,-27+bob,2,2);R(D.eye,1,-27+bob,2,2);R('#e6f8ff',-5,-23+bob,1,8)}}
   else if(k==='bk_hone'){R('#b8a888',-1,-26+bob,2,22);for(let i=0;i<4;i++){R(D.col,-7,-22+i*4+bob,14,2)}R(D.col,-5,-33+bob,10,8);R('#5a4e42',-3,-30+bob,2,2);R('#5a4e42',1,-30+bob,2,2);R(D.eye,-3,-30+bob,1,1);R(D.col,-6,-4,3,4);R(D.col,3,-4,3,4);R(D.col,-11,-20+bob,4,2);R(D.col,8,-18+bob,4,2)}
   else if(k==='bk_ro'){const p=.5+.5*Math.sin(t*6);R('#1a0a06',-8,-18+bob,16,18);R(D.col,-7,-17+bob,14,16);ctx.globalAlpha=.6+.4*p;R('#ff5a20',-4,-14+bob,2,10);R('#ff7a1c',2,-12+bob,2,8);R('#ffd860',-1,-8+bob,2,3);ctx.globalAlpha=e.stun>0?.6:1;R(D.eye,-3,-15+bob,2,2);R(D.eye,1,-15+bob,2,2)}
+  else if(k==='bk_kuzu'){/* 土と石くずの人の形。むねに、ほった石がつまっている */R('#5e4c3a',-7,-24+bob,14,20);R(D.col,-6,-23+bob,12,18);R('#968064',-4,-21+bob,5,4);R('#5e4c3a',-5,-32+bob,10,9);R(D.col,-4,-31+bob,8,7);R(D.eye,-3,-28+bob,2,2);R(D.eye,1,-28+bob,2,2);R('#5e4c3a',-11,-20+bob,4,12);R('#5e4c3a',7,-20+bob,4,12);R('#4a3a2c',-5,-4,4,5);R('#4a3a2c',1,-4,4,5);if(Math.sin(t*3)>.7)R('#968064',8,-2,1,1)}
+  else if(k==='bk_seki')cvSkFoeDraw(e,R,D,bob,t);/* 光をおがむせきぞう（cave-shinden.js） */
+  else if(k==='bk_nezu'){/* やせた4本足のねずみ：あばら・大きな耳・長いしっぽ */const st=Math.round(Math.sin(t*14)*1);R('#5a4c3e',-9,-9+bob,17,7);R(D.col,-8,-10+bob,15,6);R('#9a8a74',-6,-9+bob,1,4);R('#9a8a74',-3,-9+bob,1,4);R('#9a8a74',0,-9+bob,1,4);R(D.col,6,-13+bob,6,6);R('#a89070',7,-17+bob,3,4);R('#c8a8a0',8,-16+bob,1,2);R(D.eye,9,-11+bob,2,2);R('#3a3028',12,-10+bob,1,1);R('#5a4c3e',-7,-4,2,4+st);R('#5a4c3e',-2,-4,2,4-st);R('#5a4c3e',2,-4,2,4+st);R('#5a4c3e',6,-4,2,4-st);R('#8a7a68',-15,-8+bob,6,1);R('#8a7a68',-19,-6+bob,4,1)}
   else if(k==='bk_mi'){R('#2a2e34',-5,-36+bob,10,36);R(D.col,-4,-35+bob,8,34);R('#606872',-4,-35+bob,8,2);R('#6a4a32',-6,-20+bob,12,2);R('#16181c',-3,-32+bob,6,5);const p=.5+.5*Math.sin(t*1.5);ctx.globalAlpha=.6+.4*p;R(D.eye,-1,-31+bob,3,3);ctx.globalAlpha=e.stun>0?.6:1;R('#3a4048',-9,-26+bob,3,14);R('#3a4048',6,-26+bob,3,14)}
   if(fl){ctx.globalAlpha=.6;R('#ffffff',-8,-30,16,30)}
   ctx.globalAlpha=1;if(e.hp<e.max&&!e.asleep){const w=18;P4('rgba(0,0,0,.5)',x-w/2,y-40*s-4,w,3);P4('#ff8a8a',x-w/2,y-40*s-4,Math.max(1,Math.round(w*e.hp/e.max)),3)}}
