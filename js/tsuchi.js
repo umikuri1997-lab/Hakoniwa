@@ -25,7 +25,7 @@ function tsPost(s){const hiS=j=>s.hi?s.hi[j]|0:0;
     const d=Math.hypot(x+.5-(CX-4),y+.5-(CY-16));if(d<bd){bd=d;best=j}}
   if(best<0){/* がけが見つからないとき（ないはず）：神殿の北 */best=(CY-16)*W+CX-4}
   for(let b=0;b<=2;b++)for(let a=-1;a<=1;a++){const q=best+b*W+a;if(s.obj[q]&&BL[s.obj[q]]&&BL[s.obj[q]].natural){s.obj[q]='';delete s.dyn[q];delete s.hp[q]}}
-  s.obj[best]='anagura';s.ts={hole:best};s.flags.calmNight=1;tsRubGen(s)}/* 神殿のあとも、夜のコワイノは、まだ来ない（PR3 で地われから来る） */
+  s.obj[best]='anagura';s.ts={hole:best};s.flags.calmNight=1;tsRubGen(s)}/* 神殿のあとも、夜のコワイノは、まだ来ない（ツチノオオカゲを追いかえしたあと、地われから来る。tsuchi-night.js） */
 const tsOn=()=>!!S&&WD===TSUCHI&&!!S.ts;
 /* ---- 絵（チップがないときは、コードのドットの仮の絵） ---- */
 function tsPx(c,col,x,y,w,h){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
@@ -223,7 +223,7 @@ function tsOokTick(){/* tsTick から（画面があいているとき） */cons
   const e=tsOokE();if(!e)return false;
   if(e.met===1){e.met=2;const t=S.res.find(q=>q.name===TOTO);if(t)STRAINU.set(t,performance.now()+60000);
     dialog([['？？？','……ちいさな子。……つかれたでしょう。'],['？？？','ねむって、いいんだよ。こわいことは、ぜんぶ、わすれさせてあげる。'],[TOTO,'#scared|……あ……。'],[GOD,'#surprise|トト！ どうしたんじゃ、動けんのか！'],[IBUKI,'#alarm|トト！ さがってろ！'],[IBUKI,'おまえの相手は、おれだ！ ……守り神、光をたのむ！']],()=>{tsOokGuard(e)},null,TOTO);return true}
-  if(e.gone&&!O.done){O.done=1;S.enemies=S.enemies.filter(q=>q!==e);S.flags.tsOokDown=1;tsOokGuards(false);const t=S.res.find(q=>q.name===TOTO);if(t)STRAINU.delete(t);memo('moon','ツチノオオカゲが、巣穴のおくへにげていった');
+  if(e.gone&&!O.done){O.done=1;S.enemies=S.enemies.filter(q=>q!==e);S.flags.tsOokDown=1;S.enemyOn=true;if(hour()>=20)S.lastWarn=dayNo();/* つぎの夜から、地われからコワイノとバケモノが来る（tsuchi-night.js） */tsOokGuards(false);const t=S.res.find(q=>q.name===TOTO);if(t)STRAINU.delete(t);memo('moon','ツチノオオカゲが、巣穴のおくへにげていった');
     dialog([[IBUKI,'#think|……にげやがった。巣穴の、おくのほうへ。'],[TOTO,'#droop|……ごめん。ぼく、足が、動かなかった。'],[IBUKI,'#joy|気にすんな。そのための、おれだろ。'],[GOD,'#think|……あの影、トトに「ねむっていい」と言うておったのう。']],()=>checkQuest(),null,IBUKI);return true}
   return false}
 function tsOokSpawn(){/* 地われのそばの、トトから8マスより遠い所から */const t=S.res.find(q=>q.name===TOTO),tx=t?t.x:CX,ty=t?t.y:CY;let best=-1,bs=1e9;
