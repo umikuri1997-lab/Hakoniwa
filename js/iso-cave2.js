@@ -28,6 +28,7 @@ function cvqAbyssImg(){const C=CV;if(C.abi)return C.abi;const TH=cvTheme(),n=192
 function cvqAbyssDraw(V,now){const C=CV;if(!C.ab.some(v=>v))return;const P=cvqAbyssPath(V);if(!P)return;cvqAbyssImg();cvMistImg();const t=now/1000,[gx,gy]=cvqScr0(),Wd=VW/cam.z,Hd=VH/cam.z;
   cvqScr(ctx,()=>{ctx.clip(P);ctx.imageSmoothingEnabled=false;
     for(const[k,par]of[[0,.82],[1,.62],[2,.42]]){/* 遠い岩だなほど、カメラより、おそく動く */const ox=Math.round(gx*par/2)*2,oy=Math.round(gy*par/2)*2;ctx.save();ctx.translate(ox,oy);ctx.fillStyle=C.abp[k];ctx.fillRect(gx-ox-4,gy-oy-4,Wd+8,Hd+8);ctx.restore()}
+    if(C.F.theme==='cradle')cvBaiAbyss(gx,gy,Wd,Hd,t);/* 大穴の底の、ガラスの入れ物（cave-baiyou.js） */
     {/* もや：大穴の底から、ゆっくり流れる */const ox=Math.floor(t*4)%192,oy=Math.floor(-t*2)%192;ctx.save();ctx.globalAlpha=.5;ctx.fillStyle=C.mistP;ctx.translate(ox,oy);ctx.scale(2,2);ctx.fillRect((gx-ox)/2-96,(gy-oy)/2-96,Wd/2+192,Hd/2+192);ctx.restore()}
     {/* ちり：ふちから大穴へ、ゆっくり落ちていく */for(let y=V.y0;y<=V.y1;y++)for(let x=V.x0;x<=V.x1;x++){const j=cvJ(x,y);if(!C.ab[j]||!C.seen[j])continue;const h=hash(((j*53+7)>>>0));if(h>.3)continue;
       const Y=y+CVOY,ix=(x-Y)*IQW/2,iy=(x+Y)*IQH/2-cvqH(x,y)*IQL,per=5+h*8,ph=((t+h*per*3)/per)%1;ctx.globalAlpha=Math.sin(ph*Math.PI)*.55;P4('#d8d0c0',Math.round(ix-14+h*28+Math.sin(t*.6+h*20)*3),Math.round(iy-CVQAB*IQL*.6+ph*CVQAB*IQL),1,1)}}})}
