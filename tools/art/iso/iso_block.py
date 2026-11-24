@@ -112,7 +112,7 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         u=(x+y)%1;lt=LT[texcol(x,y,nrm)]
         zb=core[5]+R*0.55+JUP*lt-JDN*(1-lt)-(JGR if var=='g' else 0.0)   # 地面の色と岩のさかい：岩の絵に合わせて、明るい岩は上へ出て、われめには地面がたれる
         if top and z>zb:   # まるいふちの上のほう：地面の色
-            dep=max(0.0,core[5]+R-z);c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]
+            dep=min(R*0.65,max(0.0,core[5]+R-z));c0=gt[min(gt.shape[0]-1,int(dep/R*12)+40),int(u*gt.shape[1])%gt.shape[1]]   # たれた所も、まえと同じ行の色（下の行の小石が、ふちに点でならんだ）
             k=1.14 if nrm[0]<-0.1 or nrm[1]<-0.1 else 1.0 if nrm[2]>0.8 else 0.94 if nrm[1]>=nrm[0] else 0.8   # 光は左上：奥（北・西）のまるいふちは明るい
         elif not top and z>0.999:c0=led;k=0.94   # 上にだんがある所のふたの面
         else:
@@ -134,7 +134,11 @@ def build(n,s,e,w,top,var,dg=(0,0,0)):
         if top:   # てっぺんのふち：岩のわれめで、まるいふちを下げる（かたちが岩の絵に合わせてかける。上の面のまん中・ふたの面は下げない）
             ci=np.minimum(63,(np.where(np.abs(nrm[...,1])>=np.abs(nrm[...,0]),p[...,0]%1,(1-(p[...,1]%1))%1)*64).astype(int))   # 南の面は x、東の面は 1−y
             fr=sum(np.maximum(0,nrm[...,i]) for i,on in((0,e),(1,s)) if on)   # 手前（南・東）のふちだけ（うしろのふちは、明るい線がとぎれて、こわれて見えた）
-            wz=np.clip((p[...,2]-core[5])/R,0,1)*np.clip(fr*2,0,1)*cfade(p[...,0],p[...,1],nrm)
+            X_,Y_=p[...,0],p[...,1];F=lambda d:np.clip(d/0.12,0,1);sf=nrm[...,1]>=nrm[...,0];ef=np.ones_like(X_)   # となりにつづくはし・うしろのふちとあう角の手前では下げない（ふたの面・うしろのふちとのあいだに、すきまが出た）
+            ef=np.where(sf,ef*F(X_),ef*F(Y_))   # 西・北のはしは、うしろのふち・つづきのふたの面とあう所なので、いつも
+            if not e:ef=np.where(sf,ef*F(1-X_),ef)
+            if not s:ef=np.where(~sf,ef*F(1-Y_),ef)
+            wz=np.clip((p[...,2]-core[5])/R,0,1)*np.clip(fr*2,0,1)*cfade(X_,Y_,nrm)*ef
             P[...,2]=P[...,2]-DEPZ*(1-LT[ci])*wz
         for i in range(NG):
             for j in range(NG):
