@@ -262,7 +262,7 @@ OLV=(214,172,116);OLVD=(196,154,100)   # オリーブの木の板（土）
 def ishidoor(v,n):   # 石ころの垣の戸（土）
     b=B(v);PW=0.865 if not v else 0.5;posts=[0.0,1.0] if not(v or INPOST) else [0.14,0.86]
     for pu in posts:
-        for z,r,rz in((0.12,0.14,0.12),(0.33,0.13,0.11),(0.52,0.11,0.09)):x,y=b.xy(pu,PW);b.P.append(('stone',F.Part('柱の石','egg',(x,y,z,r,r*0.9,rz,20),F.IGS[0]),(pu%1,z)))
+        F.post_pile(b.P,*b.xy(pu,PW))
     r0=0.13 if not(v or INPOST) else 0.12;u0,u1=posts[0]+r0,posts[1]-r0;W0,W1=PW-0.025,PW+0.025;rot=b.hinge(u0,W1+0.04,ANG[n])
     def body(b):
         k=4;wd=(u1-u0-0.02)/k
@@ -271,12 +271,12 @@ def ishidoor(v,n):   # 石ころの垣の戸（土）
             b.prism('picket','板',[(a,0.05),(c,0.05),(c,tp),(a,tp)],W0,W1,OLV if i%2==0 else OLVD)
         for z0,z1 in((0.44,0.54),(0.12,0.22)):b.box('railh','横木',u0+0.02,W1,z0,u1-0.02,W1+0.04,z1,OLV)
         b.plate('railh','すじかい',(u0+0.06,W1+0.02,0.22),(u1-0.06,W1+0.02,0.44),0.04,0.08,OLV)
-        for z in(0.49,0.17):b.box('iron','ちょうつがい',u0,W1+0.04,z-0.03,u0+0.09,W1+0.055,z+0.03,(96,96,104))
-        b.box('iron','取っ手',u1-0.08,W1+0.04,0.32,u1-0.04,W1+0.07,0.40,(96,96,104))
+        for z in(0.49,0.17):b.box('iron','ちょうつがい',u0,W1+0.04,z-0.03,u0+0.09,W1+0.055,z+0.03,(140,140,148))
+        b.box('iron','取っ手',u1-0.08,W1+0.04,0.32,u1-0.04,W1+0.07,0.40,(140,140,148))
     leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
 def sagadoor(v,n):   # 砂岩の塀のドア（土）：石の塀のドアと同じ形で、谷の砂岩
     P,xr=sdoor(v,n)
-    for k,p,o in P:p.col=F.SAGC if p.col==STC else F.SAG if p.col==ST else p.col
+    for k,p,o in P:p.col=F.SAGC if p.col==STC else F.SAG if p.col==ST else OLV if p.col==DOORW else OLVD if p.col==DOORD else p.col   # 板戸はオリーブの木
     return P,xr
 def rockgate(v,n):   # 岩のアーチの門（土、2マス）
     b=B(0);PW=0.8;hw=0.2;ZS=1.11
