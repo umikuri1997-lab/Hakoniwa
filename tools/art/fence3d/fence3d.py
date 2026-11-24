@@ -304,25 +304,29 @@ def post_pile(P,cx,cy):   # 石ころの垣の柱：ひらたい石を5まい、
     z=0.0
     for j,(r,h,dx,dy) in enumerate(((0.17,0.11,0.0,0.0),(0.15,0.10,0.02,-0.01),(0.14,0.10,-0.015,0.01),(0.12,0.09,0.01,0.0),(0.09,0.07,-0.01,0.005))):
         pts,a,b=slab(cx+dx,cy+dy,z,z+h,r,r*0.85,11+j*3,j*0.7);P.append(('stone',Part('柱の石','prism',(pts,a,b,'z'),IGS[j%3]),(cx%1,z)));z+=h
-def scene_ishigaki(m):   # 石ころの垣（土）：谷のひらたい石ころ（ふちのでこぼこな形・はばと高さは石ごとに少しずつちがう）を、4だんに、だんごとに半分ずらしてつむ（上ほど小さく）。柱は角・はしだけ（post_pile）
+def scene_ishigaki(m):   # 石ころの垣（土）：谷のひらたい石ころ（ふちのでこぼこな形）を4だんにつむ。だんごとに石の長さのならびをかえ、つなぎ目がそろわないように（1マスでくりかえす）。上のだんは大きな石3つ。柱は角・はしだけ（post_pile）
     L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865
-    CO=[(0.0,0.13,0.135,0.11,0.0),(0.13,0.25,0.125,0.105,0.125),(0.25,0.36,0.12,0.10,0.0),(0.36,0.45,0.105,0.09,0.125)]   # だん：下・上の高さ・よこ・おくの半径・ずらし
+    CO=[(0.0,0.13,0.11,(0.28,0.22,0.27,0.23),0.0),(0.13,0.25,0.105,(0.24,0.30,0.21,0.25),0.11),(0.25,0.36,0.10,(0.33,0.20,0.26,0.21),0.05),(0.36,0.46,0.09,(0.36,0.29,0.35),0.17)]   # だん：下・上の高さ・おくの半径・石の長さのならび（たすと1）・ずらし
+    def row(seq,off):   # だんの石の (まん中, 長さ)：1マスでくりかえす
+        out=[]
+        for c in range(-2,3):
+            q=c+off
+            for ln in seq:out.append((q+ln/2,ln));q+=ln
+        return out
     def st(cx,cy,z0,z1,rx,ry,along):
-        sd=round(cx*8)*3+round(cy*8)*5+round(z0*30);k=hsh(sd,1.7);z1=z1-0.012*hsh(sd,2.9)
+        sd=round(cx*16)*3+round(cy*16)*5+round(z0*30);k=hsh(sd,1.7);z1=z1-0.03*hsh(sd,2.9)
         if along=='y':rx,ry=ry,rx
-        pts,a,b=slab(cx,cy,z0+0.003,z1,rx*(0.92+0.16*k),ry*(0.9+0.15*hsh(sd,4.1)),sd,(k-0.5)*0.4);P.append(('stone',Part('石','prism',(pts,a,b,'z'),IGS[int(k*3)%3]),(cx%1,cy+z0)))
+        pts,a,b=slab(cx,cy,z0+0.003,z1,rx*(0.95+0.1*k),ry*(0.9+0.15*hsh(sd,4.1)),sd,(k-0.5)*0.3);P.append(('stone',Part('石','prism',(pts,a,b,'z'),IGS[int(k*3)%3]),(cx%1,cy+z0)))
     if L or R:
         xa=-0.4 if L else 0.5;xb=1.4 if R else 0.5
-        for z0,z1,rx,ry,off in CO:
-            for k in range(-2,7):
-                cx=off+0.125+k*0.25
-                if xa-0.01<=cx<=xb+0.01 and not(post and abs(cx-0.5)<0.2):st(cx,YC,z0,z1,rx,ry,'x')
+        for z0,z1,ry,seq,off in CO:
+            for cx,ln in row(seq,off):
+                if xa-0.01<=cx<=xb+0.01 and not(post and abs(cx-0.5)<0.2):st(cx,YC,z0,z1,ln*0.54,ry,'x')
     for y0,y1 in vsegs(m,YC,YC-0.1,YC+0.1,(0.0,1.0)):
-        y0=max(0.0,y0)
-        for z0,z1,rx,ry,off in CO:
-            for k in range(4):
-                cy=off+0.125+k*0.25
-                if y0+0.08<=cy<=y1-0.08+1e-6 and not(post and abs(cy-YC)<0.2):st(0.5,cy,z0,z1,rx,ry,'y')
+        lo=0.0 if y0<=0 else y0+0.08;hi=1.0 if y1>=1 else y1-0.08+1e-6   # マスのさかい（0・1）は半分ひらいて、となりのマスの石とつづける（すきまを出さない・かさねない）
+        for z0,z1,ry,seq,off in CO:
+            for cy,ln in row(seq,off):
+                if lo<=cy<hi and not(post and abs(cy-YC)<0.2):st(0.5,cy,z0,z1,ln*0.54,ry,'y')
     if post:post_pile(P,0.5,YC)
     return P
 def scene_sagafence(m):   # 砂岩の塀（土）：石の塀と同じ組み方（おなじ大きさの石を、だんごとに半分ずらしてつむ・かさ石・角とはしの柱）で、谷の砂岩。石ごとに、あわい色を3つ
