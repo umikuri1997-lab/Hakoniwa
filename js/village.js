@@ -160,7 +160,7 @@ const NEEDT=[6,24,52,96,160,248,364,512,696,920,1188],NEEDF=[13,38,83,154,256,39
 const reviveNeed=q=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(x=>x!==q&&x.elem===q.elem&&isKey(x.name)).length;return T[Math.min(T.length-1,elemCount(q.elem)+dk)]};/* めぶきのしずくでよみがえらせるのにいる、その属性の力 *//* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */
 const STAYG=180;/* せいれいが、みんなの合計で時計の3時間（180分）いたマスは、まわり1マスまで緑になる */let STAYDIRTY=false;
 function stayTick(dt){if(!S||WD===FREE||IS_STORY_REPLAY)return;const m=dt/DAYLEN,st=S.stay||(S.stay={}),g=S.grn||(S.grn={});
-  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){const x=j%W,y=j/W|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=j+b*W+a;if(x+a<0||x+a>=W||y+b<0||y+b>=H||S.ground[k]===1)continue;g[k]=1;delete st[k]}STAYDIRTY=true}else st[j]=v}}/* そのマスと、まわり1マスが緑になる */
+  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){const x=j%W,y=j/W|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=j+b*W+a;if(x+a<0||x+a>=W||y+b<0||y+b>=H||S.ground[k]===1)continue;g[k]=1;delete st[k];if(S.kare)delete S.kare[k]}STAYDIRTY=true}else st[j]=v}}/* そのマスと、まわり1マスが緑になる */
 function stayGreen(){if(!STAYDIRTY||!S)return;STAYDIRTY=false;recount()}/* 1秒に1回だけ、緑のマスを入れなおす */
 function campOut(j){/* 雨（雪・あらしもふくむ）の日、外のたき火は消える：あかり・遊び場・料理の家具にならない。家の中・屋根（ガゼボ・東屋）の下はそのまま */if(!S||!S.rain||S.obj[j]!=='campfire')return false;if(roomOf(j))return false;if(S.roof)for(const k of[j,j-1,j-W,j-W-1])if(S.roof[k]&&Math.abs(k%W-j%W)<=1)return false;return true}
 function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 2;if(b.kind==='plant')return 1;/* 植えた木はまわり2マス、花はまわり1マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
@@ -198,7 +198,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
     const tbud=(o==='tree'||o==='fruit')&&isBud(j);/* 木も花と同じ。芽のあいだは、効果なし */
     if(o==='parasol')around(j,1,NEARPARA);/* パラソル：まわり1マス・かさならない */else if(!tbud&&BL[o]&&(BL[o].env||BL[o].envW)&&(BL[o].env||envNear(j))){const er=BL[o].er||3,z=BL[o].sz||[1,1],ev=BL[o].envW&&envNear(j)?BL[o].envW:BL[o].env;/* 風・水の家具：風の道のそば・水べのそば（まわり2マス）では envW */for(let dy=-er;dy<er+z[1];dy++)for(let dx=-er;dx<er+z[0];dx++){/* 2×2の物は、2×2のまわり3マス */const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)ENVG[ny*W+nx]+=ev}}/* にわの家具：まわりの環境 */
     if(BL[o]&&BL[o].kind!=='block'&&(!FLOWERS.has(o)||!isBud(j))&&!tbud)addA(BL[o].attr);
-    const rr=revRadius(o);if(rr&&!tbud)around(j,rr,REV);
+    const rr=revRadius(o);if(rr&&S.kare&&S.kare[j])daichiReplant(j);/* かれたマスに植えなおした */if(rr&&!tbud)around(j,rr,REV);
   }
   {/* 村：家・置いた物（自然の物・雑草・きのこはのぞく）・ラグ・屋根のまわり3マス */const m=new Uint8Array(W*H),v=new Uint8Array(W*H);for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&(o==='part'||BL[o]&&!BL[o].natural&&!WEEDS.has(o)))m[j]=1}for(const k in S.rug||{})m[+k]=1;for(const k in S.roof||{})m[+k]=1;
     const t=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let f=0;for(let d=-3;d<=3&&!f;d++){const q=x+d;if(q>=0&&q<W&&m[y*W+q])f=1}t[y*W+x]=f}
@@ -208,6 +208,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   for(const k of NEARPARA)ENVG[k]+=7;/* パラソルがいくつ重なっても、1つぶん（BL.parasol.env） */
   if(WD===FREE)for(let j=0;j<W*H;j++)REV.add(j);/* フリーモードの土地は荒れていない */
   for(const k in S.grn||{})REV.add(+k);/* せいれいがみんなで3時間すごしたマス（stayTick） */
+  for(const k in S.kare||{})REV.delete(+k);/* かれたマス（daichi.js） */
   {const st=weedSt(),g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */

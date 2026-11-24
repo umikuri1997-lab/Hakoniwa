@@ -24,7 +24,7 @@ const STD=20;/* はたらく速さ・移動速度・スタミナの、ふつう�
 function staNow(r){return Math.max(1,Math.round(staOf(r)*(typeof seaMul==='function'?seaMul(r,'sta'):1)))}/* 季節の倍をかけたスタミナ（画面と同じ） */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=(r,lv)=>(EL_ATK[r.elem]||0)+lvGain(r,'atk',lv);/* 攻撃力：Lv1は EL_ATK、上がるたびに EL_GROW のはばでふえる */
-function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+lvbOf(r,'sta')+(trt(r,'nebari')?10:trt(r,'tafu')?6:0)+evSt(r,'sta')+(typeof pathA==='function'?pathA('sta'):0))}/* スタミナ */
+function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+lvbOf(r,'sta')+(trt(r,'nebari')||trt(r,'daichi')?10:trt(r,'tafu')?6:0)+evSt(r,'sta')+(typeof pathA==='function'?pathA('sta'):0))}/* スタミナ */
 function rStat(r,lv){const V=vrInt(r.vr)||{},fire=r.elem==='fire',G=gearStat(r),B=EL_BASE[r.elem]||EL_BASE.wood;/* G：そうび。どれも、たし算の整数 */return{
   atk:fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk+evSt(r,'atk')+(typeof pathA==='function'?pathA('atk'):0),
   work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?6:0)+G.work+wkUp(r)+lvGain(r,'work',lv)+lvbOf(r,'work')+evSt(r,'work')+(typeof pathA==='function'?pathA('work'):0)+(typeof streakWork==='function'?streakWork():0)),
