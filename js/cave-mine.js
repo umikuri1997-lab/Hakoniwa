@@ -30,7 +30,9 @@ function cvWinchUse(j,o){const C=CV,P=C.lift;if(!P)return;if(P.mv)return toast('
 function cvMineJob(a,J,o,cj,cdt,now){const C=CV,P=C.lift,end=()=>{a.job=null;return true};
   if(J.k==='winch'){if(!P||o.k!=='w')return end();if(P.mv)return true;if(J.ride&&P.lv!==o.lv)return end();
     const ok=J.ride?P.set.has(cj)&&cvAdj(cj,J.j):cvAdj(cj,J.j);if(!ok){const p=cvBfs(cj,q=>J.ride?P.set.has(q)&&cvAdj(q,J.j):cvAdj(q,J.j));if(!p)return end();a.path=p;return true}
-    cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;if(J.t<CVWINCHT)return true;
+    cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));
+    if(J.ride&&C.party.some(q=>q!==a&&q.path.length&&P.set.has(q.path[q.path.length-1])))return true;/* 乗りに来るなかまを待つ（おいていかない） */
+    J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;if(J.t<CVWINCHT)return true;
     cvLiftGo(J.ride?(o.lv===P.a?P.b:P.a):o.lv);return end()}
   if(J.k==='dig'){if(o.k!=='W')return end();if(!cvAdj(cj,J.j)){const p=cvBfs(cj,q=>cvAdj(q,J.j));if(!p)return end();a.path=p;return true}
     cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));a.swing=now;J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;if(J.t<CVDIGT)return true;
