@@ -107,7 +107,7 @@ function windRemFx(r,t){if(!r||r.hidden||IS_STORY_REPLAY)return;let im=WREMIMG.g
 SCN_DRAW.windrem=(e,t,now)=>{/* 頭の上の遊び家具の絵（144のアイコンを30の大きさに。うかんでから、ゆっくりゆれる） */const r=e.r,im=e.im;if(!r||r.hidden||!im.complete||!im.naturalWidth)return;const env=scnEnv(t,.1,.18);if(env<=0)return;
   const s=30,rise=Math.min(1,t/.12),x=Math.round(r.x*TS-s/2),y=Math.round((r.y*TS-uLift(r)-44-rise*14-s/2+Math.sin(now/320)*2)/2)*2;ctx.save();ctx.globalAlpha=env;ctx.imageSmoothingEnabled=true;ctx.drawImage(im,x,y,s,s);ctx.restore()}
 function windRemNote(r){if(!windFun())return '';const n=Object.keys(r.rem||{}).length;return '思い出した遊び：'+n}
-/* ハヤテ：はじめにうかんだ島で目をさます（カザネのおさななじみ）。会話を読みおえてから、来たことにする */
+/* ハヤテ：はじめにうかんだ島で目をさます（カザネのむかしからのなかま）。会話を読みおえてから、来たことにする */
 function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYATE))return false;const I=windIsles(S),h=S.wind.holes.find(q=>I.id[q.j]===k);let c=-1,bd=1e9;for(let j=0;j<W*H;j++){if(I.id[j]!==k||!walk(j)||S.obj[j])continue;const d=h?Math.hypot(j%W-h.j%W,((j/W)|0)-((h.j/W)|0)):Math.hypot(j%W-I.cx[k],((j/W)|0)-I.cy[k]);if(d>=1&&d<bd){bd=d;c=j}}if(c<0)return false;
   const r=mkRes(S,HAYATE,'wind',c%W+.5,((c/W)|0)+.5,'merry');r.came=dayNo();S.res.push(r);S.flags.hayate=1;spawnFX(r.x-.5,r.y-.6,'#e6f4fa');recount();const kz=S.res.some(q=>q.name===KAZANE&&!q.hidden);
   dialog(kz?WIND_HAYATE.slice():WIND_HAYATE.filter(L=>L[0]!==KAZANE),()=>{S.flags.hayate=2;memo('leaf',HAYATE+'が目をさました');if(after)after()});return true}

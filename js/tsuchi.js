@@ -120,7 +120,7 @@ INTROS[TSUCHI]=[
 ];
 QL[TSUCHI]=[
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',
-   story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[TOTO,'#surprise|わあ……！ ぴかぴかだ。'],[GOD,'この谷のヌシ様は、どこにおられるのかのう。'],[TOTO,'#think|ヌシ様？ ……大きなあなぐまのこと？ ずっと前に、いなくなっちゃったって。'],[TOTO,'#worry|みんな、ヌシ様はぼくらを見すてたって言ってる。……ぼくは、よく、おぼえてないけど。']],
+   story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[TOTO,'#surprise|わあ……！ ぴかぴかだ。'],[GOD,'この谷のヌシ様は、どこにおられるのかのう。'],[TOTO,'#think|ヌシ様？ ……大きなあなぐまのこと？ ずっと前に、いなくなっちゃったって。'],[TOTO,'#worry|まえにいた子たちが、ヌシ様はぼくらを見すてたって、言ってた。……ぼくは、よく、おぼえてないけど。']],
    gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10,sagan:10},run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る。夜のコワイノは、まだ来ない */
   {id:'tscave1',text:'巣穴のおくへ行こう',check:()=>tsRubOpenN()>=1,how:'「しらべる」で巣穴をタップして、洞窟へ出かける。下へおりる坂まで行こう',
    talk:{who:TOTO,when:()=>true,lines:[[TOTO,'#think|ねえ、かみさま。巣穴のおくから、ずっと、つめたい風がふいてくるの。'],[GOD,'ふむ。おくは、どこまでつづいとるのかのう。'],[TOTO,'#scared|……く、くらいけど。'],[TOTO,'#proud|へっちゃらだもん！ ぼく、見てくる！']]},
