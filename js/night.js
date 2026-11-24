@@ -240,7 +240,7 @@ function edgeOf(G){/* 道さがしの結果から、行けるマップのはし�
 function enemyFallback(e,D){/* 行き先に行けないコワイノは、ワープせず、基地のまん中に近づける所へ歩く。それもなければ、マップのはしへ歩いて帰る */const G=bfsE(e.x|0,e.y|0,D.wall?6:40,e.sd||(e.sd=(Math.random()*1e9)|0));let best=-1,bd=1e9;if(!e.flee)for(let j=0;j<W*H;j++){if(G.dist[j]<0)continue;const d=Math.hypot(j%W+.5-CX,((j/W)|0)+.5-CY);if(d<bd){bd=d;best=j}}
   if(best>=0&&bd<Math.hypot(e.x-CX,e.y-CY)-1){e.path=pathTo(G,best);return}e.flee=true;const eb=edgeOf(G);if(eb>=0)e.path=pathTo(G,eb);else e.dead=true}
 function updEnemy(e,dt){
-  const D=EN[e.type];
+  const D=EN[e.type];if(D.tsOok){tsOokUpd(e,dt);return}/* 土のツチノオオカゲ（tsuchi.js） */
   if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=(D.dev||D.vol)&&WD===KAZAN?volSpot():WD===WIND&&typeof windSpot==='function'?windSpot():e.side?sideSpot(e.side):nightVarNow()==='mure'?mureSpot():spawnSpot();e.spawned=true;if(typeof seaFoeInit==='function')seaFoeInit(e);/* 冬は体力・攻撃・速さ0.8倍 */(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
   if(e.flash>0)e.flash-=dt;
   if(gearEnemyTick(e,dt))return;/* やけど */
@@ -370,7 +370,7 @@ function glHit(tx,ty,R,foc){/* 光が地面にとどいた：範囲（タップ�
   const inR=(x,y)=>Math.max(Math.abs((x|0)-tx),Math.abs((y|0)-ty))<=R,G=gupOf('stun'),gs=gupLv('stun'),pw=gupOf('pow').v[gupLv('pow')];
   if(R>0)for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H||!dx&&!dy)continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;/* ふちのマスは、ぜんぶ。中は1マスおき */const q=y*W+x;villageTimeout(()=>fxSpr('glspark',x*TS+16,y*TS+16+GLSPY-liftOf(q)),d*GLSTEP)}
   for(const e of S.enemies.slice()){if(!e.spawned||e.dead)continue;if(!(e===foc&&Math.hypot(e.x-tx-.5,e.y-ty-.5)<R+1.5)&&!inR(e.x,e.y))continue;
-    const D=EN[e.type];hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+.5});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
+    const D=EN[e.type];hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+.5});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;if(D.tsOok){tsOokHit(e);continue}/* 土のツチノオオカゲ：当たった数をかぞえる（tsuchi.js） */
     if(e.hp<=0)defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!fogAt(q))natHit(q);else if(rockHard(q))rockHeat(q)}/* 奥のかたい大岩は、熱くなる */
   const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}if(typeof aniScare==='function')aniScare(tx,ty,R);if(typeof critScare==='function')critScare(tx,ty,R);/* まわりの生き物も、おどろいて、にげる */yamiBirth(tx,ty);if(typeof windGlHit==='function')windGlHit(tx,ty)}

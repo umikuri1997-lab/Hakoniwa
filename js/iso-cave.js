@@ -84,7 +84,7 @@ function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);
     else{const w=o.k==='N'?o.w:1,h=o.k==='N'?o.h:1;add(x+y+w+h-2+.8,()=>cvqAt(ctx,cvqObj(x,y,w,h),()=>cvDrawObj(j,o,now)))}}
   for(const d of C.deco||[]){const x=cvX(d.j),y=cvY(d.j);if(C.seen[d.j]&&inV(x,y))add(x+y+.7,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvDrawDeco(d,now)))}
   const ckey=(wx,wy)=>Math.floor(wx)+Math.floor(wy-CVOY)+.9;
-  for(const a of C.party)add(ckey(a.x,a.y),()=>cvqAt(ctx,cvqPt(a.x*TS,a.y*TS),()=>cvDrawActor(a,now)));
+  for(const a of(typeof cvActorsL==='function'?cvActorsL(C):C.party))add(ckey(a.x,a.y),()=>cvqAt(ctx,cvqPt(a.x*TS,a.y*TS),()=>cvDrawActor(a,now)));
   cvBakeL((x,y,flat,f)=>{if(!inV(x,y))return;const j=cvJ(x,y);if(flat)add(x+y+.6,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),f));else add(x+y+.95,()=>cvqAt(ctx,cvqObj(x,y,1,1),f))},now);
   for(const e of C.en){if(e.dead||!C.seen[cvCell(e)])continue;add(ckey(e.x,e.y),()=>cvqAt(ctx,cvqPt(e.x*TS,e.y*TS),()=>{if(EN[e.type].bk){cvBkDraw(e,now);return}if(e.asleep){const s=e.stun;e.stun=1;drawEnemy(e,now);e.stun=s;const z=EN[e.type].size,t=(now/900)%1;ctx.globalAlpha=1-t;P4('#e8e0f4',e.x*TS+8,e.y*TS-30*z-t*8,4,1);P4('#e8e0f4',e.x*TS+10,e.y*TS-29*z-t*8,2,1);P4('#e8e0f4',e.x*TS+8,e.y*TS-28*z-t*8,4,1);ctx.globalAlpha=1}else drawEnemy(e,now)}))}
   EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die?KO_HOLD:0));for(const it of EVAP)add(ckey(it.e.x,it.e.y)+.01,()=>cvqAt(ctx,cvqPt(it.e.x*TS,it.e.y*TS),()=>drawEvap(it,now)));
