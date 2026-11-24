@@ -25,7 +25,7 @@ function presentGive(r,id){if(!r||giftWhy(r))return false;if(isGM(id))return mat
   const first=!(r.gk&&r.gk[id]!=null);(r.gk||(r.gk={}))[id]=v;dirty=true;
   r.gn=(r.gn||0)+1;if(typeof careNote==='function')careNote(r,'gift',id);/* あげた回数（節目の家具 gift-furn.js）・手紙に書く */
   if(first&&v)memo('🎁',r.name+'の、'+GLNAME[v]+'なおくりものがわかった');
-  const L=giftTalk(r,id,v)||[v===2?'これ、だいすき！':v===1?'うれしい！ 大事にするね。':'ありがとう！'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,v)};
+  const L=ongGot(r,'gift',id)||giftTalk(r,id,v)||[v===2?'これ、だいすき！':v===1?'うれしい！ 大事にするね。':'ありがとう！'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,v)};
   if(typeof gfPresentShow==='function')gfPresentShow(r,id,v);giftReply(r,L,after);/* 返事はすぐ出す（つつみをあける動きは、うしろでつづく。gift-furn.js）→ お返し */
   logEv(r.name+'に'+BL[id].name+'をあげた');return true}
 /* 返事の会話（gift-talk.js の GIFTTALK：物・属性・好みごと。素材は3とおりから）。火の一人称 @I は、おれ・あたし・あたい */
@@ -36,7 +36,7 @@ function giftReply(r,L,after){if(!L||!L.length){if(after)after();return}if(!$('#
   dialog(L.map(t=>[r.name,t]),after||null,'とじる')}
 /* 素材をあげる：たのしさ+GIFTMAT（たからものにはしない）。S.mat をへらすと、boxSync が箱からへらす */
 function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.care||(r.care={})).gift=callDay();funAdd(r,GIFTMAT,'care');dirty=true;
-  r.gn=(r.gn||0)+1;const L=giftTalk(r,'mat',null,MATN[k])||['ありがとう、使わせてもらうね。'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,-1)};
+  r.gn=(r.gn||0)+1;const L=ongGot(r,'mat',k)||giftTalk(r,'mat',null,MATN[k])||['ありがとう、使わせてもらうね。'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,-1)};
   if(typeof gfPresentShow==='function')gfPresentShow(r,'m:'+k,-1);giftReply(r,L,after);
   logEv(r.name+'に'+MATN[k]+'をあげた');return true}
 function giftWhy(r){/* あげられないわけ（なければ ''）。お世話のタブ・もちもののどちらも同じ */if(r.act&&r.act.type==='sleep'&&r.act.stage==='do')return 'ねているので、おこさない';if(r.hidden)return 'いまは、そばにいない';return giftToday(r)?'きょうは、もうあげた':''}
