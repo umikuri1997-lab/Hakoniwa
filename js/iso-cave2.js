@@ -84,6 +84,7 @@ const P4c=(c,col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(
 /* 岩の正面の、根・こけ・光る鉱石・つらら石（大岩でかこむ階の、手前が床の岩）。そのマスに立てて、いままでの絵で */
 function cvqRockDeco(x,y){const C=CV,ox=x*TS,oy=(y+CVOY)*TS,IN=(a,b)=>a>=0&&b>=0&&a<CVW&&b<CVH,W0=(a,b)=>!IN(a,b)||!C.g[cvJ(a,b)],
     h=n=>hash(((y*CVW+x)*7+n*131+977)>>>0),F=(c,a,b,w,hh)=>{ctx.fillStyle=c;ctx.fillRect(ox+a,oy+b,w,hh)};if(!IN(x,y))return;const j=cvJ(x,y);
+  if(typeof tsCarveDraw==='function'&&W0(x,y)&&!W0(x,y+1)&&tsCarveDraw(ctx,x,y,ox,oy))return;/* 土：坂のそばのかべの彫り絵（tsuchi.js） */
   {if(!W0(x,y)||C.ab[j]||W0(x,y+1)||C.wt[j+CVW]||cvTheme().out!=='rock')return;/* つらら石・光る鉱石は、大岩でかこむ階の岩の正面だけ */
     {const D=cvTheme().deco||{};if(D.roots&&h(120)<D.roots){/* 天井からたれる根：岩の正面の上から、まがりながら下へ。ところどころ小さな葉 */const n=1+((h(121)*2)|0);for(let r=0;r<n;r++){let px=4+((h(122+r)*22)|0),py=-12;const L=22+((h(130+r)*18)|0);for(let i=0;i<L;i++){const w=i<L*.6?2:1;F(i%6===5?'#7a5634':'#9a7046',px,py+i,w,1);if(w>1)F('#c0905a',px,py+i,1,1);if(h(140+r*31+i)<.16)px+=h(150+r+i)<.5?-1:1;if(i>8&&h(160+r*17+i)<.14){F('#4f8a30',px+w,py+i,3,2);F('#86c25a',px+w,py+i,2,1)}}F('#9a7046',px,py+L,1,2)}}
       if(D.moss&&h(170)<D.moss){const px=2+((h(171)*20)|0);F('#4f7f34',px,26,8,2);F('#6faa48',px+1,25,5,1);F('#86c25a',px+2,24,2,1)}}/* こけ：岩の正面の下 */

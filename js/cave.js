@@ -427,8 +427,9 @@ function cvMove(e,v){/* v：このコマに進むマスの数 */
 function cavePrep(){if(!S||!started||CV)return;const h=hour();
   if(h<CVH0||h>=CVH1)return toast('洞窟へ出かけられるのは、朝6時から夕方4時までです');
   if((S.enemies||[]).some(e=>e.spawned&&!e.dead))return toast('コワイノがいるあいだは出かけられません');
-  const L=S.res.filter(r=>!r.hidden&&!r.coffin&&!(r.act&&r.act.type==='faint'));if(!L.length)return toast('つれていけるせいれいがいません');
-  const P=pxPop('洞窟へ出かける'),sel=[],food={},flMax=Math.min(S.cvClr||0,CVFLOORS.length-1);let fl=flMax;
+  const L=S.res.filter(r=>!r.hidden&&!r.coffin&&!r.tsWait&&!(r.act&&r.act.type==='faint'));if(!L.length)return toast('つれていけるせいれいがいません');
+  const must=typeof tsCaveMust==='function'?tsCaveMust():null;/* 土：まだ見ていない彫り絵の階へは、トトもいっしょ */
+  const P=pxPop('洞窟へ出かける'),sel=must&&L.includes(must)?[must]:[],food={},flMax=Math.min(S.cvClr||0,CVFLOORS.length-1);let fl=flMax;
   const h1=el('<small style="display:block;margin:2px 0 6px"></small>'),g1=el('<div class="grid"></div>'),h2=el('<small style="display:block;margin:10px 0 6px"></small>'),g2=el('<div class="grid"></div>'),go=el('<button class="btn pri" style="width:100%;margin-top:12px">出発する</button>'),rs=el('<button class="btn" style="margin-top:6px">食べ物をえらびなおす</button>');
   const fn=()=>Object.values(food).reduce((a,b)=>a+b,0);
   const upd=()=>{h1.textContent='つれていくせいれい（'+sel.length+'/'+CVPARTY+'）';h2.textContent='持っていく食べ物（'+fn()+'/'+CVFOOD+'）';
@@ -436,7 +437,7 @@ function cavePrep(){if(!S||!started||CV)return;const h=hour();
     lackOn(go,sel.length?'':'せいれいをえらんでください')};
   for(const r of L){const b=el('<button class="slot"><img alt="" style="width:40px;height:40px;image-rendering:pixelated"><span class="nm"></span><span class="nm"></span></button>');b._r=r;b.querySelector('img').src=spiritPort(r.elem,96,r.vr);
     const nm=b.querySelectorAll('.nm');nm[0].textContent=cvName(r);nm[1].textContent=ELEM[r.elem].name+'・おなか '+Math.round(r.hunger);
-    b.onclick=()=>{sfx('tap');const i=sel.indexOf(r);if(i>=0)sel.splice(i,1);else if(sel.length<CVPARTY)sel.push(r);else return toast('つれていけるのは'+CVPARTY+'人までです');upd()};g1.appendChild(b)}
+    b.onclick=()=>{sfx('tap');const i=sel.indexOf(r);if(i>=0&&r===must)return toast(r.name+'は、いっしょに行きたいみたい');if(i>=0)sel.splice(i,1);else if(sel.length<CVPARTY)sel.push(r);else return toast('つれていけるのは'+CVPARTY+'人までです');upd()};g1.appendChild(b)}
   const ks=Object.keys(S.fs||{}).filter(k=>S.fs[k]>0&&FOODS[k]);
   if(!ks.length)g2.appendChild(nodata('box','食べ物がないよ'));
   for(const k of ks){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>'),im=typeof foodIc==='function'?foodIc(k):null;b._k=k;if(im)b.querySelector('img').src=im;else b.querySelector('img').remove();b.querySelector('.nm').textContent=FOODS[k].name;
@@ -457,7 +458,7 @@ function caveEnter(list,food,fl){if(CV||!list.length)return false;fl=clamp(fl|0,
   const cells=cvBfsRing(cvJ(sx,sy),list.length);
   list.forEach((r,i)=>{const j=cells[i]!=null?cells[i]:cvJ(sx,sy);C.party.push({r,elem:r.elem,id:r.id,x:cvX(j)+.5,y:cvY(j)+.5+CVOY,path:[],face:1,back:false,turn:0,swing:0,fback:false,fatk:0,job:null,jq:[],mv:false,chase:false,rp:0,cj:-1,hurtU:0,joyU:0,shockU:0,eatU:0,blowU:0,eatE:'',jumpT:0})});
   for(let y=0;y<CVH-1;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]&&!C.ab[j]&&!C.ob.has(j)&&C.g[j+CVW]&&!C.wt[j+CVW]&&hash((j*31+fl*977+5)>>>0)<CVOREP)C.ore.add(j)}/* 光る鉱石：正面の見える岩 */
-  C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];
+  C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function')tsCaveCarve(C);/* 土：彫り絵のかべ（tsuchi.js） */
   cvDecoPlace();cvBakeEnter(C);C.hud=cvHudMake();document.body.appendChild(C.hud);document.body.classList.add('cave');
   if(typeof followEnd==='function')followEnd();if(camAnim&&!camAnim.done)camAnim=null;LIGHTARM=false;if(typeof setMode==='function')setMode('look');
   cam.z=clamp(cam.z,1.15,1.8);cvCamTo(1);for(const a of C.party)cvReveal(a.x,a.y-CVOY,cvSeeR());cvHudUpd();sfx('next');toast('洞窟の'+(fl+1)+'階に入った');return true}
@@ -661,7 +662,7 @@ function caveFrame(rdt,now){const C=CV;if(!C||cvHold())return;const sp=S.speed||
   cvDripTick(now)}
 /* 下へおりる坂まで来たら、その階はクリア。つぎの階がひらく（S.cvClr：ひらいた階の数。出かけるときに、ひらいた階からえらぶ） */
 function cvClearCheck(){const C=CV;if(C.clr)return;for(const[j,o]of C.ob)if(o.k==='R'&&C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6)){C.clr=true;const first=(S.cvClr||0)<C.fl+1;S.cvClr=Math.max(S.cvClr||0,C.fl+1);
-    if(first){sfx('quest');const now=performance.now(),x=cvX(j)+.5,y=cvY(j)+.5;for(const a of C.party){a.joyU=now+1600;a.jumpT=now}C.pill={x,y,t0:now};C.flash={x,y,t0:now};if(typeof juiceCheer==='function')juiceCheer();cvClearCard(C)}return}}
+    if(first){sfx('quest');const now=performance.now(),x=cvX(j)+.5,y=cvY(j)+.5;for(const a of C.party){a.joyU=now+1600;a.jumpT=now}C.pill={x,y,t0:now};C.flash={x,y,t0:now};if(typeof juiceCheer==='function')juiceCheer();if(!(typeof tsCarveAt==='function'&&tsCarveAt(C,()=>cvClearCard(C))))cvClearCard(C)}else if(typeof tsCarveAt==='function')tsCarveAt(C,()=>{});/* 土：坂のそばのかべの彫り絵（tsuchi.js） */return}}
 /* 階のクリア：坂の所に光の柱（caveRender の C.pill）と紙ふぶき → 「ひらいた」の大きな知らせ（あたらしいイベントと同じ形） */
 const CVPILLMS=2400;
 function cvClearCard(C){const more=C.fl+1<CVFLOORS.length;setTimeout(()=>{if(CV!==C)return;GIFT_ACTIVE=true;const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="下へおりる坂"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi('star')+'</div><h2>下へおりる坂を見つけた！</h2><div class="idea-items"></div></div>'),it=el('<div class="idea-item"><b></b><span></span></div>');
