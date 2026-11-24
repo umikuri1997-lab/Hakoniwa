@@ -71,22 +71,38 @@ def posed(sp, face, p):
         P2 = (P-pv)@R.T+pv
         out[nm] = ((head if nm.startswith('wing') else body)(P2), C, 't')
     anchors['eye'] = head(EYEP[None])[0]; anchors['eye0'] = EYEP
-    if ISOEYE[0]:   # クォータービュー：左右の目を、顔の面の上の点（と、よこ・たてに少しずらした点）で持つ（shoot が画面の場所と、ちぢみ方にする）
-        anchors['eyeq'] = [head(eyesurf(sp, u0, v0)) for u0, v0 in ISOEYEUV]
     ref = rz(-math.pi/2).T@np.array([0, 1., 0])   # 横向き（右を向く）のときの、カメラの向き
     anchors['ti'] = ti; anchors['mir'] = bool(ti == 1 and v[0]*ref[0] < 0)   # 目の絵：0 正面・1 横・2 なし（うしろ）、横は左右反対か
     return out, anchors
 
-ISOEYE = [False]                     # build.py --iso がたてる
-ISOEYEUV = ((-9.0, -40.0), (9.0, -40.0), (-15.0, -35.0), (15.0, -35.0))   # 左・右の目、左・右のほっぺのまん中（絵の場所＝正面の画面の点。x はキャラの x、y は −z）。js の ISOEYEUV と同じ数
-def eyesurf(sp, u0, v0, d=2.0):
-    """顔の面（風は、ずきん）の、正面から見て (u, v) の所の点と、u・v を d ずらした所の点（いちばん手前の面）"""
-    P = sp.tex['face' if 'face' in sp.tex else 'hood'][0]; out = []
-    for u, v in ((u0, v0), (u0+d, v0), (u0, v0+d)):
-        m = (np.abs(P[:, 0]-u) < 0.8) & (np.abs(P[:, 2]+v) < 0.8)
-        y = P[m, 1].max() if m.any() else P[:, 1].max()
-        out.append([u, y, -v])
-    return np.array(out)
+ISOEYE = [False]                     # build.py --iso がたてる（前ななめのコマで、目・ほっぺ・まつげを3Dの顔の面にはって写す）
+def eyekeys():
+    """3Dで写す、目にかさねる絵：ほっぺ・目（表情ごと）・まつげ（表情ごと）。ゲームは、この順にかさねる"""
+    from core import chips
+    C = chips(); return ['sp:cheek']+sorted(k for k in C if k.startswith('sp:face#'))+sorted(k for k in C if k.startswith('sp:lash#'))
+_EYEC = {}
+def eyecolors(sp):
+    """目をはる面の点ごとの、目の絵の色とうすさ（正面の絵の場所で、正面からうつす。ゲームの正面の絵とおなじ場所。風はゲームと同じく3ドット上）"""
+    if sp.el in _EYEC: return _EYEC[sp.el]
+    from core import chip
+    P = sp.tex['face' if 'face' in sp.tex else 'hood'][0]; dy = -3.0 if sp.el == 'wind' else 0.0; out = []
+    for k in eyekeys():
+        a, ax, ay = chip(k); c = np.floor(P[:, 0]-ax).astype(int); r = np.floor(-P[:, 2]-dy-ay).astype(int)
+        ok = (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0]) & (P[:, 1] > 0)   # 顔の前の面だけ（うらの面にはうつさない）
+        hit = np.zeros(len(P), bool); hit[ok] = a[r[ok], c[ok], 3] > 0; col = np.zeros((len(P), 3), np.uint8); col[hit] = a[r[hit], c[hit], :3]
+        out.append((hit, col))
+    _EYEC[sp.el] = out; return out
+def eyelayers(sp, ei, idb, pib, Wd, Hd):
+    """目・ほっぺ・まつげの絵を、それぞれ、写した顔の面のドットの色からつくる（1ドットの半分より多く写った所）→ (絵の数, 高さ, はば, 4)"""
+    W1, H1 = Wd//SSN, Hd//SSN; on = (idb == ei) & (pib >= 0); L = eyecolors(sp); out = np.zeros((len(L), H1, W1, 4), np.uint8)
+    for li, (hit, col) in enumerate(L):
+        h = np.zeros(Wd*Hd, bool); h[on] = hit[pib[on]]
+        hb = h.reshape(H1, SSN, W1, SSN).transpose(0, 2, 1, 3).reshape(H1, W1, -1)
+        for yy, xx in np.argwhere(hb.sum(-1)*2 >= SSN*SSN):
+            blk = pib.reshape(H1, SSN, W1, SSN).transpose(0, 2, 1, 3).reshape(H1, W1, -1)[yy, xx][hb[yy, xx]]
+            cc = col[blk]; pk = (cc[:, 0].astype(np.int64) << 16) | (cc[:, 1].astype(np.int64) << 8) | cc[:, 2]
+            v, n = np.unique(pk, return_counts=True); c = v[np.argmax(n)]; out[li, yy, xx] = (c >> 16 & 255, c >> 8 & 255, c & 255, 255)
+    return out
 
 def darker(c, k=0.72): return tuple(int(v*k) for v in c)
 
@@ -106,6 +122,7 @@ def shoot(sp, face, p):
     _, _, zc = V(parts['body'][0].mean(0)[None]); zc = zc[0]   # 体のまん中の奥行き
     HEAD = ('hood', 'face')+sp.fixed_head_parts+tuple(nm for nm, _ in sp.tops); fa = np.zeros(Wd*Hd, bool)   # fa：頭に勝つ、うで・手・道具のドット
     hoodi = names.index('hood'); headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
+    eyen = ('face' if 'face' in names else 'hood') if ISOEYE[0] and anc['ti'] == 0 else None; pib = np.full(Wd*Hd, -1)   # クォータービュー：目をはる面（風は、ずきん）の、どの点がそのドットに写ったか（目・ほっぺ・まつげを3Dで写す）
     colors = {'cream': sp.body_color, 'creamf': sp.far_leg_color,
               'arm': sp.arm_color, 'hand': sp.hand}
     for i, nm in enumerate(names):
@@ -117,8 +134,8 @@ def shoot(sp, face, p):
         for ox in range(k):
             for oy in range(k):
                 c = np.floor((X-EXT[0])*SSN).astype(int)+ox; r = np.floor((Y-EXT[2])*SSN).astype(int)+oy
-                ok = (c >= 0) & (c < Wd) & (r >= 0) & (r < Hd); j = r[ok]*Wd+c[ok]; z = Z[ok]; cc = C[ok]
-                o = np.lexsort((z, j)); j, z, cc = j[o], z[o], cc[o]; last = np.r_[j[1:] != j[:-1], True]; j, z, cc = j[last], z[last], cc[last]
+                ok = (c >= 0) & (c < Wd) & (r >= 0) & (r < Hd); j = r[ok]*Wd+c[ok]; z = Z[ok]; cc = C[ok]; pi = np.nonzero(ok)[0]
+                o = np.lexsort((z, j)); j, z, cc, pi = j[o], z[o], cc[o], pi[o]; last = np.r_[j[1:] != j[:-1], True]; j, z, cc, pi = j[last], z[last], cc[last], pi[last]
                 if nm in ('hood', 'face')+sp.fixed_head_parts: headcov[j] |= (nm != 'face') or facing
                 if nm == 'face':
                     bt = ((z > zb[j]) | ((idb[j] == hoodi) & facing)) & ~fa[j]
@@ -132,6 +149,8 @@ def shoot(sp, face, p):
                     if nm in HEAD: bt &= ~fa[j]
                     zb[j[bt]] = z[bt]; fa[j[bt]] = False
                 idb[j[bt]] = i; cb[j[bt]] = cc[bt]
+                if nm == eyen: pib[j[bt]] = pi[bt]
+    eyeimg = eyelayers(sp, names.index(eyen), idb, pib, Wd, Hd) if eyen else None
     zb = zb.reshape(Hd, Wd); idb = idb.reshape(Hd, Wd); cb = cb.reshape(Hd, Wd, 3)
     W1, H1 = Wd//SSN, Hd//SSN
     blk = idb.reshape(H1, SSN, W1, SSN).transpose(0, 2, 1, 3).reshape(H1, W1, -1)
@@ -167,17 +186,7 @@ def shoot(sp, face, p):
     ex, ey = scr(anc['eye']); x0, y0, _ = view(anc['ti'] if anc['ti'] != face else face, 0.0, False)(anc['eye0'][None])   # 目の絵の向き（くるくるまわるときは、そのとき見える向き）の、止まっているときの場所から
     if anc['mir']: x0 = -x0
     A = {'eye': [int(round(ex-x0[0])), int(round(ey-y0[0])), anc['ti'], 1 if anc['mir'] else 0], 'facing': bool(facing)}
-    if 'eyeq' in anc and anc['ti'] == 0:   # 左右の目：画面の場所・ちぢみ方（目の絵の1ドット → 画面）・見えるか
-        HI = [names.index(n) for n in names if n in HEAD]
-        for k, Q3 in enumerate(anc['eyeq']):
-            X, Y, Z = V(Q3); d = 2.0; a, b = (X[1]-X[0])/d, (Y[1]-Y[0])/d; c, dd = (X[2]-X[0])/d, (Y[2]-Y[0])/d
-            col = int(np.floor((X[0]-EXT[0])*SSN)); row = int(np.floor((Y[0]-EXT[2])*SSN)); vis = 1
-            if a*dd-b*c < (0.25 if k < 2 else 0.5): vis = 0   # 面がむこうを向いている（ほっぺは、ふちに近いと、かくす）
-            elif 0 <= row < Hd and 0 <= col < Wd and zb[row, col] > Z[0]+1.5 and idb[row, col] in HI and idb[row, col] not in [names.index(n) for n in ('face',) if n in names]: vis = 0   # ずきんのふちにかくれる
-            if vis and 'face' in names:   # 写した絵で、そのまん中が顔の上か（ずきんのふちの上なら、かくす）
-                r1, c1 = int(np.floor(Y[0]-EXT[2])), int(np.floor(X[0]-EXT[0]))
-                if not (0 <= r1 < H1 and 0 <= c1 < W1 and ids[r1, c1] == names.index('face')): vis = 0
-            A['eye'] += [round(float(X[0]), 1), round(float(Y[0]), 1), round(float(a), 2), round(float(b), 2), round(float(c), 2), round(float(dd), 2), vis]
+    if eyeimg is not None: A['eyeimg'] = eyeimg
     for k, v in anc.items():
-        if k not in ('eye', 'eye0', 'ti', 'mir', 'eyeq'): A[k] = scr(v)
+        if k not in ('eye', 'eye0', 'ti', 'mir'): A[k] = scr(v)
     return img, over, A

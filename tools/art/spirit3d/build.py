@@ -7,7 +7,7 @@
 光・闇（トモリ・ツキミ）は light_dark.py の LightDark で組む（GPT の H-4）。
 絵のならび：動きと属性ごとに1まい（ゲームは、使う動き・属性の絵だけ読みこむ）。3行（正面・横・うしろ）× コマ数。目の上にかさねる絵（ずきん・顔の上で手前にある、うで・手・道具）があれば、正面・横・うしろの3行を、かさねる所の高さに切りつめて下に。わくは、そのぜんぶのコマの絵が入る大きさ。
 js/spirit-motions.js：SPM = {動きの名前: {s（属性ごとの絵）, n（コマ数）, r（速さ。'ph' は o.ph）, g（属性ごとの [わくのはば, 高さ, わくの左上 x, y]、目の上にかさねる絵があれば [.., わくの上からのずれ, 高さ]）,
-  e（属性ごと・向きごと・コマごとの [目のずれ x, y]）, h（向きごと・コマごとの [手前の手 x, y, 奥の手 x, y]、道具の先があれば [.., 先 x, y]）}}"""
+  e（属性ごと・向きごと・コマごとの [目のずれ x, y]）, q（クォータービューだけ。属性ごとの [目の絵, わくのはば, 高さ, わくの左上 x, y]：3Dの顔の面にはって写した、ほっぺ・目・まつげ。行は rig.eyekeys の順・列はコマ。前ななめの行だけ）, h（向きごと・コマごとの [手前の手 x, y, 奥の手 x, y]、道具の先があれば [.., 先 x, y]）}}"""
 import sys, os, io, json, hashlib, re
 from multiprocessing import Pool
 import numpy as np
@@ -48,13 +48,19 @@ def job(a, *, factory=None):
         for k in ('tipN', 'tipF'):
             if k in a: v = v+a[k]
         return [round(x, 1) for x in v]
-    for f in range(3):   # クォータービューの目・ほっぺの見える・見えないは、その向きのコマの多いほうにそろえる（コマごとに出たり消えたりしない）
-        E = [meta[(f, i)]['eye'] for i in range(n)]
-        for q in range(10, len(E[0]), 7):
-            if all(len(e) > q for e in E):
-                v = 1 if sum(e[q] for e in E)*2 > n else 0
-                for e in E: e[q] = v
-    return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)]
+    eq = None; EL = [meta[(0, i)].pop('eyeimg', None) for i in range(n)]
+    if any(e is not None for e in EL):   # クォータービュー：3Dの顔の面にはって写した、ほっぺ・目・まつげ（rig.eyekeys の順）。行がその絵・列がコマ。わくは、ぜんぶの絵が入る大きさ
+        L0 = next(e for e in EL if e is not None); EL = [e if e is not None else np.zeros_like(L0) for e in EL]
+        ea = np.stack([e[..., 3] > 0 for e in EL]).any((0, 1)); eys, exs = np.nonzero(ea)
+        if len(eys):
+            ex0, ex1, ey0, ey1 = int(exs.min()), int(exs.max())+1, int(eys.min()), int(eys.max())+1; ew, eh = ex1-ex0, ey1-ey0; nl = len(L0)
+            es = np.zeros((eh*nl, ew*n, 4), np.uint8)
+            for i, e in enumerate(EL):
+                for li in range(nl): es[li*eh:(li+1)*eh, i*ew:(i+1)*ew] = e[li, ey0:ey1, ex0:ex1]
+            b2 = io.BytesIO(); Image.fromarray(es).save(b2, 'WEBP', lossless=True, exact=True, quality=100, method=6); eq = (b2.getvalue(), [ew, eh, int(EXT[0]+ex0), int(EXT[2]+ey0)])
+    for f in range(3):
+        for i in range(n): meta[(f, i)]['eye'] = meta[(f, i)]['eye'][:4]
+    return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)], eq
 
 def main():
     args = sys.argv[1:]; dbg = None; ALL = ELS + list(LDELS); els = ALL
@@ -69,20 +75,22 @@ def main():
     if os.path.exists(jsf):
         m = re.search(r'const '+VAR+r'=(\{.*\});', open(jsf, encoding='utf8').read(), re.S)
         if m: old = json.loads(m.group(1))
-    used0 = {v for d in old.values() for v in d.get('s', {}).values()}
+    used0 = {v for d in old.values() for v in d.get('s', {}).values()}|{q[0] for d in old.values() for q in d.get('q', {}).values()}
     new = {k: v for k, v in old.items() if k in MOTIONS and (add or k not in names)}
     jobs = [(n, e) for n in names for e in els]
     with Pool(min(4, os.cpu_count() or 1)) as pool:
-        for name, el, raw, geo, eye, hd in pool.imap_unordered(job, jobs):
+        for name, el, raw, geo, eye, hd, eq in pool.imap_unordered(job, jobs):
             src = 'assets/g/'+hashlib.sha1(raw).hexdigest()[:10]+'.webp'; open(os.path.join(ROOT, src), 'wb').write(raw)
             d = new.setdefault(name, {'n': MOTIONS[name]['n'], 'r': MOTIONS[name]['rate'], 's': {}, 'g': {}, 'e': {}, 'h': None})
             d['s'][el] = src; d['g'][el] = geo; d['e'][el] = eye
+            if eq:   # クォータービューの目の絵：q（属性ごとの [絵, わくのはば, 高さ, わくの左上 x, y]）
+                qs = 'assets/g/'+hashlib.sha1(eq[0]).hexdigest()[:10]+'.webp'; open(os.path.join(ROOT, qs), 'wb').write(eq[0]); d.setdefault('q', {})[el] = [qs]+eq[1]
             if el == 'wood' or d['h'] is None: d['h'] = hd   # 手・道具の先の場所（属性によらない）
             if dbg:
                 im = Image.open(io.BytesIO(raw)); bg = Image.new('RGBA', im.size, (200, 220, 180, 255)); bg.alpha_composite(im); bg.save(os.path.join(dbg, f'{name}_{el}.png'))
             print(name, el, src, len(raw), 'bytes', flush=True)
     if els != ALL and not add: print('属性をしぼったので、js は書かない'); return
-    used = {v for d in new.values() for v in d['s'].values()}
+    used = {v for d in new.values() for v in d['s'].values()}|{q[0] for d in new.values() for q in d.get('q', {}).values()}
     for f in used0-used:   # どの動きも使わなくなった絵だけ消す
         if os.path.exists(os.path.join(ROOT, f)): os.remove(os.path.join(ROOT, f))
     body = json.dumps({k: new[k] for k in sorted(new)}, separators=(',', ':'), ensure_ascii=False)
