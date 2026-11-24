@@ -16,7 +16,8 @@ const assert=require('node:assert/strict');
   const dt=JSON.parse(await run(`JSON.stringify({bed:BL.bed.mat,rug:BL.rug1.mat,pouf:BL.pouf.mat,cur:BL.curtain1.mat,bread:ALLRECIPES.find(R=>R.out==='bread').need,dango:ALLRECIPES.find(R=>R.out==='dango'),nuno:MATN.nuno,ko:FOODS.komugiko.name,loomLock:RLOCK.has('loom'),insp:QUEST_INSPIRATIONS.bed})`));
   assert.deepEqual(dt.bed,{wood:6,nuno:1});assert.deepEqual(dt.rug,{nuno:3});assert.deepEqual(dt.pouf,{wood:1,nuno:2});assert.deepEqual(dt.cur,{wood:10,nuno:2});
   assert.deepEqual(dt.bread,{komugiko:1});assert.equal(dt.dango.st,'cooktable');assert.deepEqual(dt.dango.need,{komugiko:1});
-  assert.equal(dt.nuno,'布');assert.equal(dt.ko,'こむぎこ');assert.equal(dt.loomLock,true);assert.deepEqual(dt.insp,['loom','bed']);
+  assert.equal(dt.nuno,'布');assert.equal(dt.ko,'こむぎこ');assert.equal(dt.loomLock,true);assert.deepEqual(dt.insp,['bed','loom']);
+  {const d=JSON.parse(await run(`(()=>{const g=S.guardianIdeas;S.guardianIdeas={};const q=QUESTS.find(q=>q.id==='bed'),L=ideaDialogue(q,q.talk.lines);S.guardianIdeas=g;return JSON.stringify(L.map(l=>l[0]==='@idea'?'@'+l[1].join(','):l[1].includes('布がいる')?'cloth':'-'))})()`));assert.deepEqual(d.filter(x=>x!=='-'),['@bed','cloth','@loom'],'ベッドを思いつき、布がいるとなってから、はたおり機')}
   /* はたおり機：タップで数をえらぶ（かさかさ草7こ→2つまで。しなやかな草2こは出ない） */
   await run(`prPop(${lj});1`);
   const pop=await page.evaluate(()=>[...document.querySelectorAll('.pxcard .nm')].map(e=>e.textContent));
@@ -60,5 +61,13 @@ const assert=require('node:assert/strict');
   /* はじめのベッドの目標 */
   const bq=JSON.parse(await run(`(()=>{const q=QUESTS.find(q=>q.id==='bed');return JSON.stringify({gives:q.talk.gives,prog:typeof q.prog==='function'?q.prog():''})})()`));
   assert.deepEqual(bq.gives,{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}});assert.equal(bq.prog,'手順 3/4 依頼ボードでベッドをたのむ','布ができたら、いまの手順だけを番号つきで（bedStep）');
+  /* 箱のわくが、ほかの物でぜんぶうまっているとき：はたおりをはじめない（入れた草は家具にのこる）・持っている布は地面において仕事にもどる・「布が入る箱がありません」 */
+  const nb=JSON.parse(await run(`(()=>{const a=S.res[0];endAct(a);a.act=null;a.cmat=null;a.ppk=null;S.prQ={};S.prOut={};S.drops=[];for(const j of BOXL){S.box[j]={};S.boxF&&delete S.boxF[j]}const ks=['wood','stone','eda','shina','funba','kasa','kuru','chiri','houki','nabiki','ashi','gama','yotsuyu','kagekusa','tsuchi','can','copper','iron','silver','gold','sulfur','crystal','obsidian','maruishi'];let i=0;for(const j of BOXL)for(let s=0;s<boxSlots(j);s++)S.box[j][ks[i++]]=1;for(const k of Object.keys(S.mat))S.mat[k]=0;S.fs={};for(const j of BOXL)for(const k in S.box[j])S.mat[k]=(S.mat[k]||0)+1;boxSync();
+    const lj=${lj};S.prIn={[lj]:{kasa:3}};NOBOXN.clear();let wove=false,n=0;for(;n<2000;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(a.act&&a.act.type==='proc')wove=true}
+    const left=(S.prIn[lj]||{}).kasa||0;endAct(a);a.act=null;a.cmat={nuno:1};const t0=[...NOBOXN];NOBOXN.clear();for(n=0;n<40&&a.cmat;n++){stepWorld(.25);a.hunger=hMax(a)}
+    return JSON.stringify({wove,left,t0,held:a.cmat,drop:(S.drops||[]).filter(d=>d.id==='mat:nuno').reduce((s,d)=>s+d.n,0),note:[...NOBOXN]})})()`));
+  console.log(JSON.stringify(nb));
+  assert.equal(nb.wove,false,'布の入る箱がなければ、はたおりをはじめない');assert.equal(nb.left,3,'入れた草は家具にのこる');assert.deepEqual(nb.t0,['nuno'],'布が入る箱がないと知らせる');
+  assert.equal(nb.held,null,'持っている布は、もったまま止まらない');assert.equal(nb.drop,1,'布は地面におく');assert.deepEqual(nb.note,['nuno']);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});

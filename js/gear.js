@@ -149,7 +149,7 @@ function gearIdea(material,crafted,carried=0){
     if(b.idea?acquired(b.idea)<1:!g.gr&&!g.wd&&!ore&&primary!=='bamboo')continue;
     const related=crafted&&BL[crafted]?.g&&['w','a'].includes(BL[crafted].g.s)&&
       gear&&source(gearMain(crafted))===primary;
-    const threshold=rank<=1?1:(rank-1)*(related?1:3)+1;
+    const threshold=g.ia||(rank<=1?1:(rank-1)*(related?1:3)+1);/* 草原の物は、きめた数（ia） */
     if(acquired(primary)<threshold)continue;
     if(!Object.keys(b.mat).every(k=>!GEAR_ORES.includes(source(k))||acquired(source(k))>=1))continue;
     known[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true;

@@ -43,6 +43,7 @@ SKIP={'kabebukuro','wreath','wshelf','nat_eda','g_w_acorn','g_w_clover','g_w_she
 BATCH2=['crate','bed','wbench','loom','taru','chair','table']   # はじめの家具
 BATCH1=['statue','statueb','obox','board','altar','sacred','nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush']   # 草原で目に入る物から（神殿まわり・御神木・自然の物）
 WBUP=10
+FRONT={'nat_tree','nat_tree_aki'}   # 48度にせず、設計図の見え方（ELEV）のまま、まわさずに写す物（草原の木：モデルは正面から見る形・まるい。持ち主がきめた）。大きさ・置き方（iso:1）と落ち影は、ほかと同じクォータービュー
 SHADOWS={'nat_tree','nat_tree_aki','nat_deadtree','nat_rock','nat_boulder','nat_bush','sacred'}   # 落ち影も写す物
 def bl_sizes():
     """ゲームの BL の大きさ sz（id → (よこ,たて)）。BL は1行に1つ（中に {} がある行も、その行の中の sz を見る）"""
@@ -88,8 +89,11 @@ def run_item(iid,out):
     M=F3.load(iid);add_left(M)
     if M.ID=='wbwork':M.VIEWS=list(M.VIEWS)+[('wbwork>%d#%d'%(k,v),k,v) for k in(1,2,3) for v in range(3)]   # 作業台の上の形：作業台の4つの向きごとに（作業台と同じだけまわす）
     if M.ID=='matyard':M.VIEWS=list(M.VIEWS)+[('matyard>%d#%d'%(k,v),k,v) for k in(0,1,2,3) for v in range(4)]   # 作業台についた材料置き場：作業台の4つの向きごとに（うしろを作業台と同じ壁にそわせる。作業台と同じく WBUP 上げる）。matyard#… は、建てる所などの、ひとりの置き場
-    if hasattr(M,'ELEV'):M.ELEV=ISOLIGHT   # 光を画面の向きにする所（sunscreen(ELEV)）は、ほんとうのカメラの角度で
-    F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));parts=getattr(F3.run,'parts',{});R={}
+    fr=iid in FRONT
+    if hasattr(M,'ELEV') and not fr:M.ELEV=ISOLIGHT   # 光を画面の向きにする所（sunscreen(ELEV)）は、ほんとうのカメラの角度で
+    if fr:O.persp,O.Scene.turn=_persp,_turn   # FRONT：設計図の見え方のまま（大きさ ISOS の shot はそのまま）
+    try:F3.META.clear();CH=F3.run(iid,os.path.join(out,iid));parts=getattr(F3.run,'parts',{});R={}
+    finally:O.persp,O.Scene.turn=persp,turn
     for nm,(im,ax0,ay0) in CH.items():
         bb,inf=F3.META[nm];k=dict((v[0],v[1]) for v in M.VIEWS).get(nm.rsplit('.',1)[0],0);u,v=anchor(inf,nm,k)
         ax,ay=round(bb[0]-u),round(bb[1]-v);dx,dy=ax-ax0,ay-ay0
@@ -105,7 +109,7 @@ def run_item(iid,out):
         R[nm]=c;print('iso',nm,'%dx%d ax %d ay %d'%(im.width,im.height,ax,ay),flush=True)
     import chips as CHP
     if not hasattr(run_item,'old'):run_item.old=CHP.load_imgs()[1]
-    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old})   # 落ち影：いま落ち影のある物だけ
+    if any(nm+':sh' in run_item.old for nm in R):R.update({k:v for k,v in shadows(M,R,out).items() if k in run_item.old or re.sub(r'#\d+(?=:)','',k) in run_item.old})   # 落ち影：いま落ち影のある物だけ（足したならび #n は、もとの物に落ち影があれば）
     return R
 def run_sacred(out):   # 落ち影は作らない（御神木は落ち影の描き方を通らない）
     import sacred_tripo as ST
@@ -220,8 +224,21 @@ def build(out,ids):
         for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
         for pi,q in enumerate(c.get('parts') or []):
             for n,im in enumerate(q['f']):im.save(os.path.join(D,safe(k)+'_p%d_%d.png'%(pi,n)))
+    for k,c in R.items():   # 見せる絵：ゲームと同じクォータービューのマス（64×48 のひし形）の上に、置く所（ax・ay）で8倍。持ち主に見せるのは、これ（<出力>/_view/）
+        try:view(out,k,c)
+        except Exception as e:print('見せる絵をつくれなかった',k,e)
     json.dump({k:{q:v for q,v in c.items() if q not in('f','parts')}|{'n':len(c['f'])}|({'parts':[{a:b for a,b in q.items() if a!='f'}|{'n':len(q['f'])} for q in c['parts']]} if c.get('parts') else {}) for k,c in R.items()},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)
     return R
+def view(out,k,c,Z=8):
+    """チップの絵を、ゲームの地面のマス（ひし形）の上に置いた絵。足もとのマスのまん中が (ax,ay) の点"""
+    im=c['f'][0];ax,ay=-c['ax'],-c['ay'];W=max(160,im.width+2*abs(ax)+40);Hh=max(140,im.height+abs(ay)+60)
+    bg=Image.new('RGBA',(W,Hh),(232,226,210,255));d=np.asarray(bg).copy();cx,cy=W//2,Hh-40
+    for y in range(Hh):
+        for x in range(W):
+            u=abs(x-cx+.5)/32+abs(y-cy+.5)/24
+            if u<=1:d[y,x]=(196,214,170,255) if u<0.96 else (150,170,128,255)
+    bg=Image.fromarray(d,'RGBA');bg.alpha_composite(im.convert('RGBA'),(cx-ax,cy-ay))
+    D=os.path.join(out,'_view');os.makedirs(D,exist_ok=True);bg.resize((W*Z,Hh*Z),Image.NEAREST).save(os.path.join(D,safe(k)+'_x%d.png'%Z))
 def safe(k):import hashlib;return re.sub(r'[^0-9A-Za-z~@_-]','_',k)+'_'+hashlib.md5(k.encode()).hexdigest()[:6]   # ファイルの名前（tree:sh と tree_sh がぶつからないように）
 def load_out(out):
     """build で書いた絵と _info.json から、チップの中身を作りなおす（写しなおさない）"""

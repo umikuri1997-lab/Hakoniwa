@@ -86,9 +86,9 @@ const assert=require('node:assert/strict');
     for(const[fl,key]of[[2,'crys'],[7,'cra']]){S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter(P3(),{},fl);C=CV;C.en=[];const S4=one('S'),R4=one('R'),p=cvBfs(S4,j=>j===R4)||[],b=backAll();
       let pil=0;for(let j=CVW;j<CVW*CVH-CVW;j++)if(!C.g[j]&&!C.ob.has(j)&&(cvWalk(j-1)&&cvWalk(j+1)||cvWalk(j-CVW)&&cvWalk(j+CVW)))pil++;/* 柱：両がわが床の、うすい岩 */
       out[key]=[p.length>0,b[1],C.ab.reduce((s,v)=>s+v,0),fk('K').length+fk('Y').length,fk('K').concat(fk('Y'),fk('N')).every(j=>!cvWalk(j)),CV.F.theme,pil];C.seen.fill(1);caveRender(performance.now());
-      /* 3階の坂：つぎの階（4階）は、まだ地図がないので、ひらかない */if(fl===2){putJ(act('earth'),R4-CVW);step(.5);out.clr3=S.cvClr;document.querySelectorAll('.idea-reveal').forEach(e=>e.remove());GIFT_ACTIVE=false}
+      /* 3階の坂：つぎの階（4階）がひらく */if(fl===2){putJ(act('earth'),R4-CVW);step(.5);out.clr3=S.cvClr;document.querySelectorAll('.idea-reveal').forEach(e=>e.remove());GIFT_ACTIVE=false}
       if(fl===7){putJ(act('earth'),R4-CVW);step(.5);out.clr8=S.cvClr;document.querySelectorAll('.idea-reveal').forEach(e=>e.remove());GIFT_ACTIVE=false}caveAbort()}
-    out.nFl=CVFLOORS.length;out.themes=CVFLOORS.map(f=>f?f.theme:'-').join(',');out.open=cvFlOpen();out.noMap=caveEnter(P3(),{},3);caveAbort();
+    out.nFl=CVFLOORS.length;out.themes=CVFLOORS.map(f=>f?f.theme:'-').join(',');out.open=cvFlOpen();out.noMap=caveEnter(P3(),{},5);caveAbort();
     cavePrep();{const P=document.querySelector('.pxpopw');out.flBtn3=[...P.querySelectorAll('button')].filter(b=>/^[0-9]+階$/.test(b.textContent)).length;P.remove()}
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
@@ -112,10 +112,10 @@ const assert=require('node:assert/strict');
   assert.equal(r.clr0,0);assert.equal(r.clr,1,'坂まで来ると、つぎの階がひらく');assert.equal(r.clrF,true);assert.equal(r.fl0,0);assert.equal(r.drip,1);assert.equal(r.dripS,true,'しずくが落ちた音');assert.equal(r.chunks,true);
   assert.equal(r.flBtn,2,'出かける階をえらべる');assert.equal(r.fl1,1);assert.equal(r.main2,true,'2階：どのパーティでも坂まで行ける');assert.ok(r.closed2.every(v=>v===false));assert.equal(r.back1,0);assert.deepEqual(r.tier,[true,false,true]);assert.equal(r.dirs2.length,1);assert.equal(r.isle,true);
   assert.equal(r.leaf0,3);assert.equal(r.leaf,0);assert.equal(r.island,true);assert.equal(r.far,true);assert.equal(r.noLeaf,true);assert.equal(r.abort,true);
-  assert.equal(r.nFl,10);assert.equal(r.themes,'roots,lake,crystal,-,-,-,-,cradle,-,-','階のならび（STORY.md）：地図のまだない階は null');assert.equal(r.open,3,'行けるのは3階まで');assert.equal(r.noMap,false,'地図のない階には入れない');
+  assert.equal(r.nFl,10);assert.equal(r.themes,'roots,lake,crystal,mine,haison,-,-,cradle,-,-','階のならび（STORY.md）：地図のまだない階は null');assert.equal(r.open,5,'行けるのは5階まで');assert.equal(r.noMap,false,'地図のない階には入れない');
   assert.deepEqual(r.falls,[0,true],'2階：大穴はない・小川のとびいしをわたって坂へ');
   assert.deepEqual(r.crys.slice(0,3).concat(r.crys[4],r.crys[5]),[true,0,0,true,'crystal'],'3階：坂へ行ける・どこからでももどれる・大穴はない・手がかりは歩けない');assert.ok(r.crys[6]>=40,'水晶の柱の林：'+r.crys[6]);
-  assert.equal(r.clr3,3,'3階をクリアすると3');assert.equal(r.clr8,3,'4階より下はひらかない');assert.equal(r.flBtn3,3,'えらべるのは3階まで');
+  assert.equal(r.clr3,3,'3階をクリアすると3');assert.equal(r.clr8,5,'6階より下はひらかない');assert.equal(r.flBtn3,5,'えらべるのは5階まで');
   assert.deepEqual([r.cra[0],r.cra[1],r.cra[4],r.cra[5]],[true,0,true,'cradle'],'ゆりかごのへや');assert.ok(r.cra[3]>=20,'ゆりかごが、ならぶ');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
