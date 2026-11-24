@@ -1,5 +1,5 @@
 /* もりのこだま・霧の中の手がかり・属性のはたらきあい（風の日のはたおり機・雨のたき火・火のせいれいで雪がとける）
-   草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・石の輪（石材をはこぶ）・花の輪（同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
+   草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・石の輪（石材をはこぶ）・花の輪（霧が晴れたエリアだけ。同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
    火山：はじめから16エリアに3こずつ（48こ。置けなかった分は、つぎの朝に）。 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
@@ -15,7 +15,10 @@ const assert=require('node:assert/strict');
     /* 石の輪：石材がないと、はこばない */
     let e2=S.kd.find(e=>e.k==='ishi');if(!e2){e2=S.kd.find(e=>e.st===0);}
     if(e2&&e2.k==='ishi'){const st0=S.mat.stone||0;S.mat.stone=0;boxSync();kdTap(e2.j%W,(e2.j/W)|0);out.noStone=e2.ws||0;S.mat.stone=st0+5;boxSync();const s1=availOf('stone');kdTap(e2.j%W,(e2.j/W)|0);out.ws=e2.ws;out.rsv=s1-availOf('stone');walkN();out.found2=e2.st;out.gapObj=S.obj[e2.gap];out.stoneUsed=st0+5-(S.mat.stone||0)}
-    /* 花の輪：すきまに同じ花が咲くと、見にいく */
+    /* 花の輪：はじめの4エリアには置かない。前のセーブの、まだ見つけていない花の輪はけして、べつのしゅるいを置く */out.midHana=S.kd.filter(e=>e.k==='hana').length;
+    {const a5=S.kd.filter(e=>e.a===5&&e.st===0)[0];if(a5){for(const c of kdCells(a5))if(S.obj[c]===KDK[a5.k].o)S.obj[c]='';S.kd=S.kd.filter(e=>e!==a5);const h={id:S.kdN=(S.kdN||0)+1,k:'hana',a:5,j:a5.j,gap:a5.j-W,st:0,fl:'clover'};for(const c of kdCells(h))if(c!==h.gap)S.obj[c]='kdhana';S.kd.push(h);KDMN=-1;kdInit();out.oldHana=S.kd.some(e=>e===h)||kdCells(h).some(c=>S.obj[c]==='kdhana');out.a5n=S.kd.filter(e=>e.a===5).length}}
+    /* 花の輪：すきまに同じ花が咲くと、見にいく（タップしても、ふつうの花と同じ） */
+    {const h={id:S.kdN=(S.kdN||0)+1,k:'hana',a:5,j:0,gap:0,st:0,fl:'clover'};const sv=S.kd;S.kd=[h];KDMN=-1;out.hanaTap=kdTap(0,0);S.kd=sv;KDMN=-1}
     const e3=S.kd.find(e=>e.k==='hana'&&e.st===0);if(e3){S.obj[e3.gap]=e3.fl;recount();out.hanaSt=e3.st;walkN();out.found3=e3.st}
     out.kodama=S.kodama;
     /* こわせない */const before=S.obj[e1.j];removeAt(e1.j%W,(e1.j/W)|0);out.keep=S.obj[e1.j]===before;
@@ -33,6 +36,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.n0,12,'はじめは晴れた4エリアに3こずつ');assert.deepEqual(r.areas,[5,6,9,10]);assert.equal(r.objOK,true);
   assert.equal(r.st1,1);assert.equal(r.found1,2,'せいれいが見つける');assert.equal(r.kodama1,1);assert.ok(r.pt1>=5,'パワー+5');assert.equal(r.again,1);
   if(r.ws!==undefined){assert.equal(r.noStone,0,'石材がないと、はこばない');assert.equal(r.ws,1);assert.equal(r.rsv,1,'石材を1こ、とっておく');assert.equal(r.found2,2);assert.equal(r.gapObj,'kdishi');assert.equal(r.stoneUsed,1)}
+  assert.equal(r.midHana,0,'はじめの4エリアに花の輪はない');if(r.oldHana!==undefined){assert.equal(r.oldHana,false,'前のセーブの花の輪はけす');assert.equal(r.a5n,3)}assert.equal(r.hanaTap,false,'花の輪のタップは、ふつうの花と同じ');
   if(r.hanaSt!==undefined){assert.equal(r.hanaSt,1);assert.equal(r.found3,2)}
   assert.equal(r.keep,true,'こわせない');
   assert.equal(r.owe+r.bp,1,'10こめで設計図');assert.equal(r.oweAfter,0);assert.equal(r.bpAfter,1);
