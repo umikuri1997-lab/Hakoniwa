@@ -2,7 +2,9 @@
    読みかえを足すときは、MIGRATIONS のうしろに {v: 前の v + 1, f(S){...}} を1つ足す。
    新しいゲームは newState が SAVE_VER からはじめるので、読みかえは走らない。
    S.flags の印で1回だけにする読みかえ（continueGame の中の前からの物）は、もう足さない。 */
-const MIGRATIONS = [];
+const MIGRATIONS = [
+  {v: 11, f(S) { if (S.ts && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 土：谷のはしの、くずれた岩の山（tsuchi.js） */
+];
 const SAVE_VER = MIGRATIONS.length ? MIGRATIONS[MIGRATIONS.length - 1].v : 10;
 function runMigrations(S) {
   for (const m of MIGRATIONS) {
