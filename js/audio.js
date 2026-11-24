@@ -137,7 +137,7 @@ function chatMurmur(r,p){if(!p||!AC||!SND.sfx||AC.state!=='running'||VOICE||(typ
   src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}if(lowG&&!lowOK(q.v))return;if(lowG)lowAdd(src,g,q.v);h.connect(lowG||sfxG);
   src.start(t,Math.random()*Math.max(0,b.duration-dur-.1));src.stop(t+dur+.05);st.n=now+dur+.15+Math.random()*.5}
 function playSeg(k,vol,dur){if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=b;const v=vol*(SFXO?1:SFXV);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.15);g.gain.setValueAtTime(v,t+dur-.3);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.random()*Math.max(0,b.duration-dur));src.stop(t+dur+.05);return true}
-function playPour(vol){/* 水やり：持ち主の水の音（20秒）のどこかを3秒。はじめ・おわりの0.4秒は、2つの音の大きさの2乗の和が一定になる形で重ねる（pourKeep が、おわる0.4秒まえに、つぎを鳴らす） */if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF.pourw||[]).filter(Boolean);if(!L.length)return false;const b=L[0],D=3,X=.4,src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime,v=vol*(SFXO?1:SFXV),n=16,ci=new Float32Array(n),co=new Float32Array(n);src.buffer=b;for(let i=0;i<n;i++){const u=i/(n-1);ci[i]=Math.sin(u*Math.PI/2)*v;co[i]=Math.cos(u*Math.PI/2)*v}g.gain.setValueAtTime(0,t);g.gain.setValueCurveAtTime(ci,t,X);g.gain.setValueAtTime(v,t+X);g.gain.setValueCurveAtTime(co,t+D-X,X);g.gain.setValueAtTime(0,t+D);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.random()*Math.max(0,b.duration-D));src.stop(t+D+.05);return true}
+function playPour(vol){/* 水やり：持ち主の水の音（20秒）のどこかを3秒。はじめ・おわりの0.4秒は、2つの音の大きさの2乗の和が一定になる形で重ねる（pourKeep が、おわる0.4秒まえに、つぎを鳴らす） */if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF.pourw||[]).filter(Boolean);if(!L.length)return false;const b=L[0],D=3,X=.4,src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime,v=vol*(SFXO?1:SFXV),n=121,C=new Float32Array(n);src.buffer=b;for(let i=0;i<n;i++){const x=i/(n-1)*D;C[i]=(x<X?Math.sin(x/X*Math.PI/2):x>D-X?Math.cos((x-D+X)/X*Math.PI/2):1)*v}/* はいり・おわりを1本の曲線にする（曲線のはしに、べつの予定をおくと、Safari で「Events are overlapping」になる） */g.gain.setValueCurveAtTime(C,t,D);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.random()*Math.max(0,b.duration-D));src.stop(t+D+.05);return true}
 let WAVE=null;/* 水浴びの音は1つだけ。水浴びが終わったら止める */
 function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolean);if(!L.length)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);const w={src,g};src.onended=()=>{if(WAVE===w)WAVE=null};WAVE=w;src.start()}
 function stopWave(){if(!WAVE)return;const{src,g}=WAVE;WAVE=null;try{g.gain.setTargetAtTime(0,AC.currentTime,.12);src.stop(AC.currentTime+.5)}catch(e){}}
@@ -474,12 +474,10 @@ function dayChimeTick(){if(!S||!started){CHIMEH=null;return}const h=hour();if(CH
   const p=CHIMEH;CHIMEH=h;const cross=x=>p<x&&h>=x&&h-p<3;let k=cross(6)?'dawn':p>h&&p-h>12&&p>=21?'midnight':'';if(!k)return;/* 24時をこえたら、夜12時 */
   if(!AC||!SND.sfx||AC.state!=='running')return;const b=(SBUF[k]||[]).find(Boolean);if(!b)return;
   const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;
-  const fadeIn=Math.min(CHIMEIN,b.duration/4),fadeOut=Math.min(CHIMEOUT,b.duration-fadeIn),N=64,cin=new Float32Array(N),cout=new Float32Array(N);
-  for(let i=0;i<N;i++){const x=i/(N-1);cin[i]=CHIMEV*x*x;cout[i]=CHIMEV*Math.pow(1-x,4)}/* はいりは、ゆっくり。おわりは、長く、だんだん小さくなって、いつ消えたかわからないくらいに */
+  const D=b.duration,fadeIn=Math.min(CHIMEIN,D/4),fadeOut=Math.min(CHIMEOUT,D-fadeIn),N=Math.max(64,Math.ceil(D*30)),C=new Float32Array(N);
+  for(let i=0;i<N;i++){const x=i/(N-1)*D;C[i]=x<fadeIn?CHIMEV*(x/fadeIn)**2:x>D-fadeOut?CHIMEV*Math.pow(Math.max(0,(D-x)/fadeOut),4):CHIMEV}/* はいりは、ゆっくり。おわりは、長く、だんだん小さくなって、いつ消えたかわからないくらいに。1本の曲線にする（曲線のはしに、べつの予定をおくと、Safari でエラー） */
   src.buffer=b;
-  g.gain.setValueAtTime(0,t);
-  g.gain.setValueCurveAtTime(cin,t,fadeIn);
-  g.gain.setValueCurveAtTime(cout,t+(b.duration-fadeOut),fadeOut-.02);
+  g.gain.setValueCurveAtTime(C,t,D);
   src.connect(g);g.connect(sfxG);src.start(t)}/* 和音なので、高さはゆらさない */
 setInterval(dayChimeTick,200);
 function sfxPos(x,y){/* マップの場所の音の大きさ・左右・こもり（{v,p,l}）。聞こえないほど遠ければ null */const vw=VW/cam.z,vh=VH/cam.z,q=w2s(x*TS,y*TS),qx=(q.x-VW/2)/cam.z,qy=(q.y-VH/2)/cam.z,d=Math.hypot(qx,qy),R=Math.max(vw,vh)*.8/* 画面の上の道のり（クォータービューも） */,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return null;
