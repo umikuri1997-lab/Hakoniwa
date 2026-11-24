@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;{const ce=caveEnter;caveEnter=(...q)=>{const v=ce(...q);if(CV)CV.sc=[];return v}}/* こわい物（cave-bake.js）は tools/tests/cave-bake.cjs でたしかめる */S.introSeen=true;S.flags.tapped=1;const out={};
     for(const el of ['earth','fire','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const q of S.res){q.nap=false;q.hunger=hMax(q)}
     S.t=Math.floor(S.t/1440)*1440+9*60;S.hold=0;S.fs.imo=5;syncFood();S.pt=50;
-    const by=el=>S.res.find(q=>q.elem===el),step=(sec)=>{for(let i=0;i<sec*30;i++)caveFrame(1/30,performance.now())},J=cvJ,act=el=>CV.party.find(a=>a.elem===el),
+    const by=el=>cvAll().find(q=>q.elem===el),step=(sec)=>{for(let i=0;i<sec*30;i++)caveFrame(1/30,performance.now())},J=cvJ,act=el=>CV.party.find(a=>a.elem===el),
       put=(a,x,y)=>{a.x=x+.5;a.y=y+.5+CVOY;a.path=[];a.job=null;a.jq=[];a.mv=false;a.cj=J(x,y)},putJ=(a,j)=>put(a,cvX(j),cvY(j)),full=()=>{for(const a of CV.party)a.r.hunger=hMax(a.r)},
       fk=k=>[...CV.ob].filter(([,o])=>o.k===k).map(([j])=>j).sort((a,b)=>a-b),one=k=>fk(k)[0],
       nb=j=>DIRS.map(([dx,dy])=>J(cvX(j)+dx,cvY(j)+dy)).filter(k=>cvWalk(k)),nb8=j=>[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]].map(([dx,dy])=>J(cvX(j)+dx,cvY(j)+dy)).filter(k=>cvWalk(k)),
