@@ -14,6 +14,14 @@ const assert=require('node:assert/strict');
   assert.equal(await lbl(),'「おる」をタップ');
   await run(`$('#prPop .go').click()`);
   assert.equal(await lbl(),'','wait while weaving');
+  /* せいれいが草を分けて運ぶとき（運んでいる2こ・のこり1こ）も、布をおるのを待つ */
+  await run(`S.prQ={${j}:{kasa:1}};S.prIn={};S.prOut={};S.res[0].ppk={j:${j},m:{kasa:2}}`);
+  assert.equal(await lbl(),'','wait while grass is split between the box and a spirit');
+  assert.equal(await run(`bedStep()`),'手順 2/4 布をおっている');
+  /* おりおわって、せいれいが布を箱へ運んでいるあいだも待つ */
+  await run(`S.prQ={};S.res[0].ppk=null;S.res[0].cmat={nuno:1}`);
+  assert.equal(await lbl(),'','wait while a spirit carries the cloth to a box');
+  await run(`S.res[0].cmat=null`);
   await run(`if(BOARD<0){const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};let p=null;for(let y=CY-12;y<CY+20&&!p;y++)for(let x=CX-14;x<CX+14;x++)if(free(x,y,6,3)){p=[x,y];break}const k=p[1]*W+p[0]+1;S.obj[k]='statue';S.obj[k+1]='board';S.obj[k+2]='part';S.ref[k+2]=k+1;recount()}S.prQ={};S.prIn={};S.prOut={};S.mat.nuno=1;boxSync&&boxSync();centerOn((BOARD%W+1)*TS,((BOARD/W)|0)*TS)`);
   assert.equal(await lbl(),'依頼ボードをタップ');
   await run(`S.recipes.bed=true;openSheet('craft')`);{const t=await lbl();assert.ok(/ベッドの「はる」|待とう|タップ|けそう/.test(t),t);console.log('craft sheet: '+t)}
