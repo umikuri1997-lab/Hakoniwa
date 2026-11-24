@@ -119,6 +119,7 @@ function iqRoofBuild(h){
     const q=iqRPick(ps);if(q.p){piece(cx,cy,q.p.o+'-'+q.p.t+'-'+q.p.e,q.p.z);continue}
     if(C['iso:roof-'+col+':'+q.j]){piece(cx,cy,q.j,q.z);continue}
     for(const p of q.vs.slice().sort((a,b)=>a.z-b.z))piece(cx,cy,p.o+'-'+p.t+'-'+p.e,p.z)}/* 谷のチップのない組み合わせ：低いほうから */
+  {let miss=false;for(const L of put.values())for(const[k]of L){const ch=C[k];if(!ch)continue;const im=chipImgs(ch,k)[0];if(!im||!im.ok)miss=true}if(miss)return null}/* 部品の絵がまだのときは、ぜんぶの部品を読みはじめてから、つぎのコマで（アトラスのページを1つずつ待たない） */
   /* 列ごとに、奥の行から置いて、1まいの絵に */
   const cols=[];for(let cx=h.x0;cx<=h.x1;cx++){const rows=[];for(let cy=h.y0;cy<=h.y1;cy++){const L=put.get(cy*W+cx);if(L)rows.push([cy,L])}if(!rows.length)continue;
     let X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;const it=[];
