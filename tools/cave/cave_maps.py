@@ -8,9 +8,10 @@
 import math,json,re,sys,os
 W,H=56,44
 ROOT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..')
-WALK=set('.SR!g^VHcizqX')        # P まきあげの足場は check の lift で
+WALK=set('.SR!g^cizqX,;v')        # P まきあげの足場は check の lift で。, 家の板のゆか・; かれた畑・v うらの窓（家のうしろの路地の高さ）・z ゆかの穴（家の中）
 SOLID=set('KYN')                  # 手がかりの物・ゆりかご・底のかげ（歩けない）          # 歩ける（q・z はくずれるまで）
 GATE=set('hkDEF12Wb')               # 門をあけると歩ける（W はまもりの光でくずれる）
+HDOOR='d'                           # 家の戸：家の中（, のマス）からだけあく。あいたら行き来できる
 def hsh(x,y,k=0):
     n=(x*73856093)^(y*19349663)^(k*83492791);n=(n^(n>>13))*1274126177&0xffffffff;return ((n^(n>>16))&0xffff)/65535
 def noise(u,v,k):
@@ -19,7 +20,7 @@ def noise(u,v,k):
 def mirror(rows):return[r[::-1] for r in rows]
 class Map:
     def __init__(s,seed):
-        s.g=[['#']*W for _ in range(H)];s.lv=[[1]*W for _ in range(H)];s.seed=seed;s.chest={}
+        s.g=[['#']*W for _ in range(H)];s.lv=[[1]*W for _ in range(H)];s.seed=seed;s.chest={};s.houses=[]
     def put(s,x,y,c):
         if 0<=x<W and 0<=y<H:s.g[y][x]=c
     def hole(s,cx,cy,rx,ry,ring):
@@ -53,6 +54,12 @@ class Map:
                 x,y=x0+dx,y0+dy;s.put(x,y,c)
                 if lv is not None:s.lv[y][x]=lv
                 if c in 'TZ' and chest:s.chest['%d,%d'%(x,y)]=chest[n];n+=1
+    def house(s,x0,y0,rows,lv):
+        """家のハンコ（H 壁・, 板のゆか・v 窓・z ゆかの穴・d 戸・f こわれた家具）。家の中（, のならびのかこみ）を s.houses に書く"""
+        s.stamp(x0,y0,rows,lv=lv)
+        P=[(x0+dx,y0+dy) for dy,r in enumerate(rows) for dx,c in enumerate(r) if c==',']
+        s.houses.append([min(p[0] for p in P),min(p[1] for p in P),max(p[0] for p in P),max(p[1] for p in P)])
+    def inhouse(s,x,y):return any(a<=x<=c and b<=y<=d for a,b,c,d in s.houses)
     def levels(s,f):
         for y in range(H):
             for x in range(W):s.lv[y][x]=f(x,y)
@@ -73,16 +80,19 @@ class Map:
     def rows(s):return[''.join(r) for r in s.g],[''.join(str(v) for v in r) for r in s.lv]
 
 # ---------- つながりのたしかめ（js/cave.js の cvWalk・cvStepOK と同じ決まり） ----------
-def check(m,name,lift=True):
+def check(m,name,lift=True,house=True):
     """lift：まきあげの足場（P）に乗れるか。足場は、上の段と下の段のどちらかにいて、止まっている段のほうへだけ出入りできる（さく）"""
     g,lv=m.g,m.lv;find=lambda c:[(x,y) for y in range(H) for x in range(W) if g[y][x]==c]
     S=find('S')[0];R=find('R')[0];PC=set(find('P'))
     PL=sorted({lv[y][x] for (px,py) in PC for x,y in((px+1,py),(px-1,py),(px,py+1),(px,py-1)) if 0<=x<W and 0<=y<H and (x,y) not in PC and g[y][x] in WALK})
     def ok(x,y,gates):
         if not(0<=x<W and 0<=y<H):return False
-        c=g[y][x];return c in WALK or (gates and c in GATE) or (lift and c=='P')
+        c=g[y][x]
+        if not house and (c in 'vzd' or m.inhouse(x,y)):return False   # 家の中を通らない
+        return c in WALK or c==HDOOR or (gates and c in GATE) or (lift and c=='P')
     def hv(p):return p[2] if p[:2] in PC else lv[p[1]][p[0]]
-    def step(a,b):
+    def step(a,b,gates=True):
+        if not gates and g[b[1]][b[0]]==HDOOR and not m.inhouse(a[0],a[1]):return False   # 家の戸は、家の中からだけあく
         if (a[:2] in PC)!=(b[:2] in PC):return hv(a)==hv(b)          # 足場のさく
         la,lb=hv(a),hv(b)
         return lb<=la or (lb==la+1 and g[a[1]][a[0]]=='^')
@@ -97,7 +107,7 @@ def check(m,name,lift=True):
                 else:nx.append((x,y,lv[y][x]))
             if p[:2] in PC:nx+=[(p[0],p[1],h) for h in PL]          # 足場をうごかす
             for n in nx:
-                if not step(p,n):continue
+                if not step(p,n,gates):continue
                 if n not in seen:seen.add(n);q.append(n)
         return {p[:2] for p in seen}
     r0=reach(S,False);r1=reach(S,True);bad=[]
@@ -107,7 +117,7 @@ def check(m,name,lift=True):
     lone=[]
     for y in range(H):
         for x in range(W):
-            if g[y][x] in 'ToxymtWbZFDEKw':
+            if g[y][x] in 'ToxymtWbZFDEKwd':
                 if not any((x+dx,y+dy) in r1 for dx,dy in((1,0),(-1,0),(0,1),(0,-1))):lone.append((g[y][x],x,y))
     opn=[(x,y) for y in range(H) for x in range(W) if g[y][x] in 'TZ' and any((x+dx,y+dy) in r0 for dx,dy in((1,0),(-1,0),(0,1),(0,-1)))]
     if opn:print(name,'門なしでとどく宝箱',opn)
@@ -421,6 +431,80 @@ def floor_mine():
     for (x,y,c) in[(18,15,'c'),(37,17,'c'),(15,20,'g'),(40,21,'A'),(17,27,'c'),(38,27,'c'),(24,32,'g'),(33,31,'c'),(44,11,'g'),(16,18,'A'),(36,30,'g')]:
         if m.g[y][x]=='.':m.put(x,y,c)
     return m
+# ---------- 5階：地下の廃村（にげてきた人がすてた家と畑） ----------
+# ふち道は、家でふさがれていて、家の中を通らないと坂へ行けない（家は3けん、北から段々に南へ）。
+#   H 家の日干しれんがの壁（歩けない）・, 板のゆか・v うらの窓（家のうしろの路地の高さ。家の中へとびおりて入る。もどれない）
+#   z ゆかの穴（ねずみがほった横穴が出てくる。同じ高さで行き来できる）・d 戸（家の中からだけ、かんぬきをはずしてあく。あいたら、あいたまま）
+#   f こわれた家具（歩けない）・; かれた畑
+def floor_haison():
+    m=Map(51);cx,cy=28,23
+    m.hole(cx,cy,11,7.5,1.45)
+    m.levels(lambda x,y:5 if y<=16 or (x>cx and y<=20) else 4 if (x<cx and y<=30) else 3 if y<=34 else 2)
+    m.fill(cx+1,21,W-1,22,'#')       # 東のふち道を切る（北の東は、ゆきどまり。南の東は、南のふち道から）
+    # 入口（北）：ひびの床の近道と、まわり道
+    m.blob(cx,5,4,2.6);m.stamp(cx-1,4,['.S.']);m.carve([(cx,7),(cx,12)],0);m.carve([(cx,7),(cx-4,7),(cx-4,12),(cx,12)],0)
+    m.stamp(cx,8,['q','q'])
+    # 家1（北西）：うらの窓から、とびおりて入る。中に、食卓といす（手がかり）
+    m.house(9,17,['HHHHHHHvHHHH',
+                  'H,,,,,,,,,,,',
+                  'H,f,KKKKK,,,',
+                  'H,,,,,,,,,,,',
+                  'H,,,,,,,,,,,',
+                  'H,,,,,,,,f,,',
+                  'HHHHHHdHHHHH'],lv=4)
+    m.lv[17][16]=5
+    # 家2（南西）：ねずみの横穴から、ゆかの穴へ。中の、うすい壁の先に、かくれた宝箱
+    m.carve([(12,25),(7,25),(7,28),(10,28)],0)
+    m.house(10,27,['HHHHHHHHHHHHH',
+                   '.z,,,,,,,,,,H',
+                   'H,,,,,,,,,,,H',
+                   'H,,f,,,,,,,,H',
+                   'HHHHHHHHHdHHH'],lv=4)
+    m.stamp(10,31,[' HW','#o.T#'],lv=4,chest=[{'fukuro':1,'pt':80}])
+    # 家3（南）：南のふち道からうらの窓へ。戸の先が、下へおりる坂
+    m.house(22,35,['HHHHHHvHHHH',
+                   'H,,,,,,,,,H',
+                   'H,f,,,,,,,H',
+                   'H,,,,,,,f,H',
+                   'HHHHdHHHHHH'],lv=2)
+    m.lv[35][28]=3
+    m.blob(26,41,4,1.6);m.stamp(25,41,['.R.'],lv=2)
+    for y in range(40,44):
+        for x in range(W):m.lv[y][x]=2
+    # かれた畑（家のまわり）
+    for (x0,y0,x1,y1) in[(12,24,16,26),(19,13,24,14),(27,32,33,33),(39,24,42,27)]:
+        for y in range(y0,y1+1):
+            for x in range(x0,x1+1):
+                if m.g[y][x]=='.' and (x+y)%5:m.g[y][x]=';'
+    # 土：岩をおす（北西の上）。くぼみ h を、岩 b でうめると、宝箱の所へ
+    m.stamp(2,10,['###########',
+                  '####...####',
+                  '#T.h..b...#',
+                  '#..h.......',
+                  '####...o..#',
+                  '###########'],lv=5,chest=[{'fukuro':1,'pt':70}])
+    m.carve([(12,13),(17,13),(17,15)],0)
+    # 風：風車 m（北東の上）。風のとびら E の先の宝箱
+    m.stamp(43,11,['############',
+                   '####.o..####',
+                   '.........m.#',
+                   '###.....####',
+                   '###.########',
+                   '###E########',
+                   '##..T.######',
+                   '############'],lv=5,chest=[{'item':'oldlantern','pt':70}])
+    m.carve([(39,15),(44,15),(44,13)],0)
+    # 木：葉の足場 k（東の下）。われ目を、葉でわたった先の宝箱
+    m.stamp(44,24,['############',
+                   '#####kkk####',
+                   '.....kkk.T.#',
+                   '#..g.kkk..o#',
+                   '#####kkk####',
+                   '############'],lv=3,chest=[{'mapPc':1,'pt':80}])
+    m.carve([(42,26),(44,26)],0)
+    for (x,y,c) in[(33,14,'c'),(17,21,'c'),(13,26,'c'),(18,29,'c'),(31,32,'c'),(41,28,'c'),(29,37,'c'),(24,13,'g'),(40,17,'A'),(36,31,'g')]:
+        if m.g[y][x] in '.;,':m.put(x,y,c)
+    return m
 # ---------- 8階：ゆりかごのへや（人が作った施設。まっすぐなかべ・直角のへや。大穴・ガラスの入れ物は R5 で足す） ----------
 def floor_cradle():
     m=Map(61)
@@ -458,8 +542,8 @@ def floor_cradle():
         if m.g[y][x]=='.':m.put(x,y,c)
     return m
 
-FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),7:('cradle',floor_cradle)}
-NFLOORS=10   # 階の数。地図のまだない階（5〜7・9・10階。R4・R5 で作る）は null
+FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),4:('haison',floor_haison),7:('cradle',floor_cradle)}
+NFLOORS=10   # 階の数。地図のまだない階（6・7・9・10階。R4・R5 で作る）は null
 def jsstr(o):return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('"',"'")
 def jsobj(o):
     s=json.dumps(o,ensure_ascii=False,separators=(',',':'))
@@ -472,7 +556,8 @@ def write():
         if i not in FLOORS:out.append('null');continue
         th,f=FLOORS[i];m=f();g,l=m.rows();assert check(m,th)
         if any('P' in r for r in g):assert not check(m,th+'（足場なし）',lift=False),'足場を通らなくても坂へ行ける'
-        out.append('{map:[\n'+',\n'.join("'%s'"%r for r in g)+'],\n lv:['+','.join("'%s'"%r for r in l)+'],\n theme:\'%s\',chest:%s}'%(th,jsobj(m.chest)))
+        if m.houses:assert not check(m,th+'（家を通らない）',house=False),'家の中を通らなくても坂へ行ける'
+        out.append('{map:[\n'+',\n'.join("'%s'"%r for r in g)+'],\n lv:['+','.join("'%s'"%r for r in l)+'],\n theme:\'%s\',chest:%s%s}'%(th,jsobj(m.chest),',house:'+jsobj(m.houses) if m.houses else ''))
     src=src[:a]+'const CVFLOORS=[\n'+',\n'.join(out)+'];\n'+src[b:]
     open(p,'w',encoding='utf8').write(src);print('js/cave.js に書いた',len(out))
 if __name__=='__main__':

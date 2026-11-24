@@ -219,8 +219,21 @@ def build(out,ids):
         for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
         for pi,q in enumerate(c.get('parts') or []):
             for n,im in enumerate(q['f']):im.save(os.path.join(D,safe(k)+'_p%d_%d.png'%(pi,n)))
+    for k,c in R.items():   # 見せる絵：ゲームと同じクォータービューのマス（64×48 のひし形）の上に、置く所（ax・ay）で8倍。持ち主に見せるのは、これ（<出力>/_view/）
+        try:view(out,k,c)
+        except Exception as e:print('見せる絵をつくれなかった',k,e)
     json.dump({k:{q:v for q,v in c.items() if q not in('f','parts')}|{'n':len(c['f'])}|({'parts':[{a:b for a,b in q.items() if a!='f'}|{'n':len(q['f'])} for q in c['parts']]} if c.get('parts') else {}) for k,c in R.items()},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)
     return R
+def view(out,k,c,Z=8):
+    """チップの絵を、ゲームの地面のマス（ひし形）の上に置いた絵。足もとのマスのまん中が (ax,ay) の点"""
+    im=c['f'][0];ax,ay=-c['ax'],-c['ay'];W=max(160,im.width+2*abs(ax)+40);Hh=max(140,im.height+abs(ay)+60)
+    bg=Image.new('RGBA',(W,Hh),(232,226,210,255));d=np.asarray(bg).copy();cx,cy=W//2,Hh-40
+    for y in range(Hh):
+        for x in range(W):
+            u=abs(x-cx+.5)/32+abs(y-cy+.5)/24
+            if u<=1:d[y,x]=(196,214,170,255) if u<0.96 else (150,170,128,255)
+    bg=Image.fromarray(d,'RGBA');bg.alpha_composite(im.convert('RGBA'),(cx-ax,cy-ay))
+    D=os.path.join(out,'_view');os.makedirs(D,exist_ok=True);bg.resize((W*Z,Hh*Z),Image.NEAREST).save(os.path.join(D,safe(k)+'_x%d.png'%Z))
 def safe(k):import hashlib;return re.sub(r'[^0-9A-Za-z~@_-]','_',k)+'_'+hashlib.md5(k.encode()).hexdigest()[:6]   # ファイルの名前（tree:sh と tree_sh がぶつからないように）
 def load_out(out):
     """build で書いた絵と _info.json から、チップの中身を作りなおす（写しなおさない）"""

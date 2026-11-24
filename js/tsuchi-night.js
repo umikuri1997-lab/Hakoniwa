@@ -12,8 +12,8 @@ function tsBkFloors(){const n=Math.min(S.cvClr|0,CVBKFL.length),L=[];for(let i=0
 /* 今夜のならび（waveFor から）：3びきめごとをバケモノにする。ひらいた階から、じゅんばんに（夜ごとに、はじめの階をずらす） */
 function tsBkWave(list){if(WD!==TSUCHI||!S.ts)return;const F=tsBkFloors(),nb=Math.floor(list.length/TSBKEVERY);if(!F.length||!nb)return;
   const ko=list.slice(0,list.length-nb),out=[];let k=(S.nights||0)%F.length,b=0;
-  for(let i=0;out.length<list.length;i++){if(i%TSBKEVERY===TSBKEVERY-1&&b<nb||!ko.length){out.push(F[k%F.length]);k++;b++}else out.push(ko.shift())}
-  list.length=0;list.push(...out)}
+  for(let i=0;out.length<list.length;i++){if(i%TSBKEVERY===TSBKEVERY-1&&b<nb||!ko.length){let t=F[k%F.length];if((EN[t].pack||1)>list.length-out.length)t=F.find(q=>!EN[q].pack)||null;/* のこりが3つより少ないときは、むれでないバケモノ */if(!t){out.push(ko.shift()||'basic');continue}const n=EN[t].pack||1;for(let q=0;q<n;q++)out.push(t);ko.splice(0,n-1);/* うえたちねずみは3びきで来て、来る数の3つ分 */k++;b++}else out.push(ko.shift())}
+  out.length=list.length;list.length=0;list.push(...out)}
 /* 地われのとなりの、歩けて、村から行けるマス（下絵が変わったら作りなおす） */
 const TSRF={n:-1,s:null,L:null};
 function tsRiftEdge(){if(TSRF.n===STATN&&TSRF.s===S&&TSRF.L)return TSRF.L;const R=spawnReach(),L=[];
@@ -21,7 +21,11 @@ function tsRiftEdge(){if(TSRF.n===STATN&&TSRF.s===S&&TSRF.L)return TSRF.L;const 
   TSRF.n=STATN;TSRF.s=S;TSRF.L=L;return L}
 const tsRiftNext=j=>[1,-1,W,-W].some(d=>riftJ(j+d));
 /* 来る所（updEnemy から）：地われのふちの、村からはなれた所。群れの夜は、その夜の1か所のまわり */
-function tsRiftSpot(){const L=tsRiftEdge();if(!L.length)return edgeSpot();
+const TSPACK={j:-1,n:0,t:''};/* むれのバケモノ（うえたちねずみ）：むれのなかまは、同じ所のそばから来る */
+function tsRiftSpot(e){const L=tsRiftEdge();if(!L.length)return edgeSpot();
+  const pk=e&&EN[e.type]&&EN[e.type].pack;if(pk&&TSPACK.n>0&&TSPACK.t===e.type&&TSPACK.j>=0){TSPACK.n--;const N=L.filter(j=>Math.hypot(j%W-TSPACK.j%W,((j/W)|0)-((TSPACK.j/W)|0))<=2),j=N.length?N[(Math.random()*N.length)|0]:TSPACK.j;return [j%W+.5,((j/W)|0)+.5]}
+  const r=tsRiftSpot0(L);if(pk){const j=((r[1]|0)*W)+(r[0]|0);TSPACK.j=j;TSPACK.n=pk-1;TSPACK.t=e.type}return r}
+function tsRiftSpot0(L){
   const far=L.filter(j=>Math.hypot(j%W+.5-CX,((j/W)|0)+.5-CY)>=TSRIFTFAR&&!lightAt(j%W+.5,((j/W)|0)+.5)),P=far.length?far:L;
   if(nightVarNow()==='mure'){const v=S.nightVar;if(v.rj==null||v.s!==S.nights){v.rj=P[(Math.random()*P.length)|0];v.s=S.nights}const N=P.filter(j=>Math.hypot(j%W-v.rj%W,((j/W)|0)-((v.rj/W)|0))<=3);const j=N.length?N[(Math.random()*N.length)|0]:v.rj;return [j%W+.5,((j/W)|0)+.5]}
   const j=P[(Math.random()*P.length)|0];return [j%W+.5,((j/W)|0)+.5]}
