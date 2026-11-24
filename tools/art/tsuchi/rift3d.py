@@ -94,7 +94,7 @@ def field(C,x,y,z):
             iw,ie,ri=C.br.get((cx,cy),(0,0,0))
             lx=x-cx;gx=iw+lx;gy=ri+(y-cy)   # 橋ぜんたいでの場所
             dw=iw+lx;de=ie+1-lx;dd=np.clip(np.minimum(dw,de),0,None)
-            T=TMIN+(TMAX-TMIN)*np.clip(1-dd/0.9,0,1)**1.6+0.06*pnoise(x,1.0)
+            T=TMIN+(TMAX-TMIN)*np.clip(1-dd/0.9,0,1)**1.6+0.06*pnoise(gx,1.0)   # 橋ぜんたいの場所で（マスでくりかえさない）
             f=np.minimum(f,np.minimum(-z+1e-3-BUMP*(1-hbump(gx,gy)),z+T))   # 上の面は、ゆるいでこぼこ
         m=f>best;best=np.where(m,f,best);U=np.where(m,u,U);isb=np.where(m,kd=='b',isb)
     return best,U,isb
@@ -145,7 +145,7 @@ def render(C,own=(0,0)):
         kt=np.select([kt>0.97,kt>0.9],[1.0,0.92],0.84)   # 3だん
         rgb[tb]=np.clip(np.array(BRC)[None,:]*kt[:,None],0,254)
     sb=isb&~tb   # 橋の南の面
-    if sb.any():rgb[sb]=np.clip(np.array(BRC)[None,:]*np.where(N[sb,1]>0.5,0.86,0.76)[:,None],0,254)
+    if sb.any():rgb[sb]=np.clip(np.array(BRC)[None,:]*(k[sb]*0.9)[:,None],0,254)
     # ふかさで、くらく（段）
     fd=np.zeros(n)
     _,Lw=texat(U,np.maximum(-pz,0))

@@ -19,7 +19,7 @@ LIGHT=np.array((-0.55,-0.45,0.70));LIGHT/=np.linalg.norm(LIGHT)
 GROUND=np.array((190,170,132.0));SOIL=np.array((172,132,98.0))
 STRATA=[np.array(c,float) for c in((214,178,146),(200,164,136),(226,192,158),(192,156,130))]
 DARKC=np.array((46,34,28.0));HOLE=np.array((64,46,36.0));SKY=np.array((214,228,232.0))
-TONE=(1.0,0.90,0.79,0.68)
+TONE=(1.0,0.86,0.72,0.60)
 RX=lambda y:6.2+0.7*np.sin(y*0.42+0.5)   # 地われのまん中
 RW=1.15
 BY0,BY1=3.0,4.4   # 橋
@@ -32,6 +32,7 @@ def height(x,y):
     h2=np.clip((y-yb-2.6-0.8*np.sin(x*0.5))/0.35,0,1)*(1.5+0.6*np.sin(x*0.55+1)+0.35*np.sin(x*1.4))   # 2だんめ（おくへひっこんだテラス。上のふちは、でこぼこ）
     side=np.clip((np.abs(x-0.6)-12.5-0.8*np.sin(y*0.5))/0.4,0,1)*(2.6+0.4*np.sin(y*0.8))
     h=np.maximum(h1+h2,side)
+    yb0=back(BUR[0]);h=np.maximum(h,np.clip(0.28-0.28*np.hypot((x-BUR[0])/1.4,(y-yb0+1.0)/0.9),0,None))   # 巣穴の前の、ほり出した土の山
     for rx,ry,rr in ROCKS:   # ころがる岩（ひらたい玉）
         d=(x-rx)**2+(y-ry)**2;h=np.maximum(h,np.sqrt(np.clip(rr*rr-d,0,None))*0.8)
     return h
@@ -83,9 +84,9 @@ def render():
     hole=(eb<1.06)&(y>yb0-0.3)
     dh=np.clip((y-(yb0-0.2))/0.9,0,1);dh=np.round(dh*3)/3
     rgb=np.where(hole[:,None],HOLE*(1.25-0.45*dh)[:,None],rgb)
-    soil=(np.hypot((x-BUR[0])/1.3,(y-yb0+1.1)/0.8)<1)&(z<0.2)&~hole   # ほり出した土
+    soil=(np.hypot((x-BUR[0])/1.4,(y-yb0+1.0)/0.9)<1)&(z<0.3)&~hole   # ほり出した土
     rgb=np.where(soil[:,None],SOIL*k[:,None],rgb)
-    far=np.clip((y-2)/14,0,1)*0.22;far=np.round(far*20)/20
+    far=np.clip((y-2)/14,0,1)*0.12;far=np.round(far*20)/20
     rgb=rgb*(1-far[:,None])+SKY*far[:,None]
     out=np.zeros((n,4));out[i,:3]=rgb;out[i,3]=255
     return Image.fromarray(np.clip(out,0,255).astype(np.uint8).reshape(GH,GW,4))
