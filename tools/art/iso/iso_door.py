@@ -44,7 +44,7 @@ F1=(108,220,216,270,(0,1,0,1));F2=(108,240,300,340,(0,2,0,1))   # わくは、�
 # 木のいた戸（土 itado）：いまの見え方の絵がないので、とびらの面の絵を、3Dで組んで正面から写す（leaf3d）。
 #   たて板5まい（はば0.14・あつさ0.04、あいだに0.006のすき間）を、うらの横木2本（高さ0.22・1.12）と、すじかいでとめる（おもてから見えるのは板と、
 #   鉄の帯2本・かんぬきの取っ手）。1マス80ドットで写すので、はば0.7は56ドット・高さ1.4は112行。
-FRAMEW={'itado':'adobewall'}   # わく（柱・かもい）にはる壁の絵。木のいた戸は土の家（日干しれんがの壁）にだけあるので、その壁（ほかのドアは木の壁）
+FRAMEW={'itado':'adobewall'};FRAMEX={'itado':('rockwall',)}   # わく（柱・かもい）にはる壁の絵。木のいた戸は土の家（日干しれんがの壁）にだけあるので、その壁（ほかのドアは木の壁）
 ITW=(214,166,108);ITWD=(200,152,96)
 def leaf3d():
     sc=O.Scene();sc.txo={};sc.txax={};TW=O.Tex(os.path.join(ART,'textures','wood049.png'),span=1.0,flow=10,minrun=4)
@@ -75,8 +75,8 @@ def frame_deco(top,front,v,h):
             c=front[min(63,max(0,IC.frow(z,h))),math.floor(u*64)%64]*k
         return tuple(np.clip(c,0,255))
     return f
-def hdoor_parts(C,iid,v,n,low):
-    top,front=IC.wall_tex(C,FRAMEW.get(iid,'hwall'));P=[];h=IC.LH if low else IC.WH;t=IC.WT/2;E=IC.EXT
+def hdoor_parts(C,iid,v,n,low,fw=None):
+    top,front=IC.wall_tex(C,fw or FRAMEW.get(iid,'hwall'));P=[];h=IC.LH if low else IC.WH;t=IC.WT/2;E=IC.EXT
     fd=frame_deco(top,front,v,h)
     def bx(u0,u1,z0,z1,grp='fr',col=(200,200,200),deco=None,w0=0.5-t,w1=0.5+t):
         d=(w0,u0,z0,w1,u1,z1) if v else (u0,w0,z0,u1,w1,z1);P.append((Part('わく','box',d,col,grp=grp),deco or fd,None))
@@ -132,6 +132,9 @@ def build_hdoor(C,iid):
         o='v' if v else 'h'
         for n in range(4):res['iso:%s:%s%s'%(iid,o,'#%d'%n if n else '')]=IC.crop(render_parts(hdoor_parts(C,iid,v,n,False)))
         res['iso:%s:%s~low'%(iid,o)]=IC.crop(render_parts(hdoor_parts(C,iid,v,0,True)))
+        for fw in FRAMEX.get(iid,()):   # となりの壁ごとのわく：iso:<壁>.<id>:…（ゲームは、となりの壁の絵があれば、それ）
+            for n in range(4):res['iso:%s.%s:%s%s'%(fw,iid,o,'#%d'%n if n else '')]=IC.crop(render_parts(hdoor_parts(C,iid,v,n,False,fw)))
+            res['iso:%s.%s:%s~low'%(fw,iid,o)]=IC.crop(render_parts(hdoor_parts(C,iid,v,0,True,fw)))
     return res
 # ---- 柵・塀のドア・門（doors3d の設計図） ----
 def gate_scene(P,dy,stub=()):
