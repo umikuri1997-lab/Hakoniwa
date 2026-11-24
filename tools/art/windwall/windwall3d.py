@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""風・水のステージの家の壁（風：帆布の壁 canvaswall・アカシアの板壁 acaciawall、水：木組みの壁 timberwall・運河の石積みの壁 canalwall）を、3Dで組んで写して、チップにする。
+"""風・水のステージの家の壁（風：帆布の壁 canvaswall・アカシアの板壁 acaciawall、水：木組みの壁 timberwall・運河の石積みの壁 canalwall、土：日干しれんがの壁 adobewall・岩をくりぬいた壁 rockwall）を、3Dで組んで写して、チップにする。
   python3 tools/art/windwall/windwall3d.py <出力フォルダ> [canvaswall acaciawall] [--chips]
 竹の壁（tools/art/bamboowall/bamboowall_art.py）と同じ5まいの絵（上の面・正面・柱の切り口・柱の正面・たての壁を上から見た帯）を、
 もらった絵のかわりに3Dから写し、部品（H0〜HLR・VU〜VUD・m5〜m15、かげのうすい ~in）は竹の壁の道具の part・vpart で組む。
@@ -10,6 +10,8 @@
   よこの壁：y 0.72〜1.0（上の面は18ドット）、高さ1.25（正面は64ドット）。柱は角とはしだけ（x 10/64〜54/64、y 0.72〜1.0）。
   たての壁を上から見た帯：x 10/64〜54/64（竹の壁と同じはば）。
   帆布の壁：白くぬった木のわく（上の横木 z1.17〜1.25・下の巾木 z0〜0.10）に、うすいピンクとクリーム色の、はば0.25のたてじまの布（布のテクスチャ Fabric026）を、わくより0.04おくにはる。柱は白い角柱。
+  日干しれんがの壁（土）：砂岩の土台（z 0〜0.10）に、日干しれんが（はば0.25・高さ0.15625、だんごとに半分ずらす。2だんで16行なので、iso の壁の、くりかえす32行にそろう）を泥の目地でつみ、上に木のはり（z 1.17〜1.25、木目）。
+  岩をくりぬいた壁（土）：谷の岩（砂岩）をくりぬいたので、つなぎ目はなく、よこの地層のしま（0.3125ごとにくりかえす、はばのちがう4本の帯）だけ。上に石材のかさ石（z 1.17〜1.25、少し前へ出す）。
   アカシアの板壁：はちみつ色の板（木目 Wood049）を、よこに4まい、下の板が少し前へ出るように かさねる（下見板）。上の面は板の色、水色は上の手前のふちの細い帯と巾木だけ。柱はアカシアの角柱に水色の頭。"""
 import sys, os
 import numpy as np
@@ -83,10 +85,48 @@ def stone_wall(piece, a, b, m, moss):
     else:
         P.append((Part('かさ石', 'box', (X0, -1, 0, X1, 2, ZT), m), TR, capm(m, moss), (0, 1, 0)))
     return P
+ADB = (226, 186, 142); ADBD = (214, 172, 128); ADBM = (236, 214, 182); SAGB = (230, 206, 168); ADW = (206, 160, 106)   # 日干しれんが・目地・砂岩の土台・はりの木
+def adobe(u, z):   # 日干しれんが：だんの高さ0.15625、はば0.25、1だんごとに半分ずらす。目地は泥の色
+    zz = z - 0.10; r = int(zz / 0.15625); uu = u + (0.125 if r % 2 else 0)
+    if (zz % 0.15625) < 0.018 or (uu % 0.25) < 0.02: return ADBM
+    return ADB if (int(uu / 0.25) * 3 + r) % 4 else ADBD
+def adobe_wall(piece):
+    P = []
+    if piece == 'h':
+        P.append((Part('れんが', 'box', (-1, YB+0.02, 0.10, 2, YF, ZT-0.08), ADB), TR, lambda x, y, z: adobe(x, z), (1, 0, 0)))
+        P.append((Part('土台', 'box', (-1, YB+0.01, 0, 2, YF+0.01, 0.10), SAGB), TR, None, (1, 0, 0)))
+        P.append((Part('はり', 'box', (-1, YB, ZT-0.08, 2, YF+0.012, ZT), ADW), TW, None, (1, 0, 0)))
+    elif piece == 'p':
+        P.append((Part('れんがの柱', 'box', (X0, YB, 0.10, X1, YF, ZT-0.08), ADB), TR, lambda x, y, z: adobe(x+y, z), (0, 0, 1)))
+        P.append((Part('土台', 'box', (X0-0.01, YB-0.01, 0, X1+0.01, YF+0.01, 0.10), SAGB), TR, None, (1, 0, 0)))
+        P.append((Part('はり', 'box', (X0-0.01, YB-0.01, ZT-0.08, X1+0.01, YF+0.012, ZT), ADW), TW, None, (1, 0, 0)))
+    else:
+        P.append((Part('はり', 'box', (X0, -1, 0, X1, 2, ZT), ADW), TW, None, (0, 1, 0)))   # 上から見ると、はり（横の壁のてっぺんと同じ）
+    return P
+STRATA = [(0.0, (226, 188, 146)), (0.09, (238, 210, 172)), (0.14, (230, 196, 154)), (0.24, (240, 216, 180))]   # 地層のしま（0.3125 の中の、下のはしの高さ・色）。0.3125 は iso の壁の16行で、くりかえす32行にそろう
+RCAP = (214, 206, 194)   # かさ石（石材）
+def strata(z):
+    q = z % 0.3125; c = STRATA[0][1]
+    for z0, col in STRATA:
+        if q >= z0: c = col
+    return c
+def rock_wall(piece):
+    P = []
+    if piece == 'h':
+        P.append((Part('岩', 'box', (-1, YB+0.02, 0, 2, YF, ZT-0.08), STRATA[0][1]), TR, lambda x, y, z: strata(z), (1, 0, 0)))
+        P.append((Part('かさ石', 'box', (-1, YB, ZT-0.08, 2, YF+0.015, ZT), RCAP), TR, None, (1, 0, 0)))
+    elif piece == 'p':
+        P.append((Part('岩の柱', 'box', (X0, YB, 0, X1, YF, ZT-0.08), STRATA[0][1]), TR, lambda x, y, z: strata(z), (0, 0, 1)))
+        P.append((Part('かさ石', 'box', (X0-0.01, YB-0.01, ZT-0.08, X1+0.01, YF+0.015, ZT), RCAP), TR, None, (1, 0, 0)))
+    else:
+        P.append((Part('かさ石', 'box', (X0, -1, 0, X1, 2, ZT), RCAP), TR, None, (0, 1, 0)))
+    return P
 def parts(wall, piece):
     """piece：'h'（よこの壁）・'p'（柱）・'v'（たての壁を上から見た帯）。[(部品, テクスチャ, もよう, 木目の向き)]"""
     if wall == 'timberwall': return timber_parts(piece)
     if wall == 'canalwall': return canal_parts(piece)
+    if wall == 'adobewall': return adobe_wall(piece)
+    if wall == 'rockwall': return rock_wall(piece)
     if wall == 'mosswall': return stone_wall(piece, MSTN, MSTND, MMORT, True)   # こけむした石の壁（闇）：灰色の石に、コケ
     if wall == 'moonwall': return stone_wall(piece, MOON, MOOND, MOONM, False)   # 月光石の壁（闇）：うすい青白の石
     P = []
@@ -144,6 +184,8 @@ WOODPAL = {'canvaswall': [(196, 192, 182), (218, 214, 204), (234, 231, 222), (24
            'timberwall': [(92, 62, 44), (110, 76, 54), (128, 90, 64), (142, 102, 74), (158, 116, 86), (176, 132, 100)],  # こげ茶の木わく
            'canalwall': [(150, 156, 164), (170, 176, 184), (186, 192, 200), (198, 204, 210), (212, 216, 222), (226, 230, 234)],  # 石の灰色
            'mosswall': [(132, 130, 124), (150, 148, 142), (166, 164, 158), (178, 176, 170), (192, 190, 184), (206, 204, 198)],
+           'adobewall': [(150, 108, 66), (176, 130, 84), (198, 150, 100), (212, 164, 112), (226, 180, 128), (240, 200, 150)],  # はりの木
+           'rockwall': [(176, 150, 118), (196, 170, 136), (212, 186, 150), (224, 198, 162), (234, 210, 176), (244, 224, 194)],  # 砂岩
            'moonwall': [(160, 174, 200), (180, 194, 218), (196, 210, 234), (210, 222, 242), (222, 232, 248), (236, 242, 252)]}
 def wood_map(rgb, pal):
     pal = np.array(pal, float); L = rgb @ np.array([.3, .59, .11])

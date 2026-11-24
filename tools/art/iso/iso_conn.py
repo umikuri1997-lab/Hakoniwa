@@ -27,7 +27,7 @@ WP,HP=216,270   # 高さ2の壁のてっぺんの奥の角は、地面の点か�
 OWN=(0,1,0,1)   # のこすマスのはんい（たしかめるときだけかえる）
 EXT=0.45   # 腕を、となりのマスへのばす長さ
 EDGE=1e-3   # マスの東・南のはしちょうどにある面（柵のドアの柱の東の面など）も、このマスの物にする（ないと、柱の東の面が切れる）
-WALLS=['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']
+WALLS=['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','adobewall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']
 WT,WH,LH=0.3,2.0,0.2
 def frow(z,h):
     """壁の正面の絵（高さ1の64行）の、高さ z の行。h が1より高い壁は、上の0.5・下の0.5はそのまま、あいだは16〜47行をくりかえす"""
@@ -162,7 +162,7 @@ def to_chips(res):
 # 下（南）へのびる腕は、前の設計図では柱からマスのはしまでしかないので、下のマスのまっすぐな柵（m 12）を +1 ずらして足す。
 # たての横木（y の向きにのびる箱・つつ）は、同じ線の上の物を1本にまとめる
 #（前の設計図のマスのさかいが、新しいマスの中にくるので、2本のままだと、つなぎ目に線とすきまが出る）。
-FPCY={'fence':0.865,'logfence':0.76,'bamboofence':0.86,'misugaki':0.90,'wall':0.80,'parkfence':0.865,'ropefence':0.865,'ashifence':0.865,'rankan':0.865,'ibara':0.865,'kuzure':0.865}
+FPCY={'fence':0.865,'logfence':0.76,'bamboofence':0.86,'misugaki':0.90,'wall':0.80,'parkfence':0.865,'ropefence':0.865,'ashifence':0.865,'rankan':0.865,'ibara':0.865,'kuzure':0.865,'ishigaki':0.865,'sagafence':0.80}
 FENCES=list(FPCY)
 RAILK=('railv','ext','bamv','crmv','ropev','stonev')
 def _yk(p):

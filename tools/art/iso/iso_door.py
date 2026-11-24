@@ -26,9 +26,9 @@ import oblique3d as O
 import iso_conn as IC
 from blueprint import Part,build
 S=IC.S
-HDOORS=['door','yozoradoor','canvasdoor','archdoor','niwadoor']
-GATES=['gate','logdoor','parkdoor','sdoor','ropefence.gate','ashifence.gate','rankan.gate','ibara.gate','kuzure.gate','misugaki.gate']
-BIG=['stonegate','loggate','parkgate','canalgate','irongate']
+HDOORS=['door','yozoradoor','canvasdoor','archdoor','niwadoor','itado']
+GATES=['gate','logdoor','parkdoor','sdoor','ropefence.gate','ashifence.gate','rankan.gate','ibara.gate','kuzure.gate','misugaki.gate','ishidoor','sagadoor']
+BIG=['stonegate','loggate','parkgate','canalgate','irongate','rockgate']
 HANG=['window','curtain1','curtain2','paint1','paint2','paint3','wshelf','wreath','kabebukuro','yonaka']
 ANG=[0,30,60,85]
 JW,LZ,LT=0.15,1.4,0.06   # 柱のはば・とびらの高さ・とびらのあつさ
@@ -41,7 +41,26 @@ def frame(px0,py0,wp,hp,own):
     IC.EXTS=(0.5-px0/S,0.5+(wp-px0)/S,0.5-py0/S,0.5+(hp-py0)/S)
 F1=(108,220,216,270,(0,1,0,1));F2=(108,240,300,340,(0,2,0,1))   # わくは、高さ2の壁のてっぺんの奥の角（地面の点から約197ドット上）まで入る大きさ
 # ---- 家のドア ----
+# 木のいた戸（土 itado）：いまの見え方の絵がないので、とびらの面の絵を、3Dで組んで正面から写す（leaf3d）。
+#   たて板5まい（はば0.14・あつさ0.04、あいだに0.006のすき間）を、うらの横木2本（高さ0.22・1.12）と、すじかいでとめる（おもてから見えるのは板と、
+#   鉄の帯2本・かんぬきの取っ手）。1マス80ドットで写すので、はば0.7は56ドット・高さ1.4は112行。
+ITW=(214,166,108);ITWD=(200,152,96)
+def leaf3d():
+    sc=O.Scene();sc.txo={};sc.txax={};TW=O.Tex(os.path.join(ART,'textures','wood049.png'),span=1.0,flow=10,minrun=4)
+    W=0.7;k=5;wd=W/k
+    for i in range(k):
+        sc.texture(TW);p0=sc.pid;build(sc,[Part('板','box',(i*wd+0.003,0,0,(i+1)*wd-0.003,0.04,1.4),ITW if i%2==0 else ITWD)])
+        for q in range(p0+1,sc.pid+1):sc.txo[q]=((0,0,0),i*37,11);sc.txax[q]=np.array((0,0,1.0))
+    sc.texture(None)
+    for z in(0.26,1.08):build(sc,[Part('鉄の帯','box',(0.02,0.04,z,W-0.02,0.052,z+0.045),(150,150,158))])
+    build(sc,[Part('取っ手','box',(W-0.12,0.052,0.62,W-0.07,0.075,0.74),(130,130,140))])
+    sv=O.S;O.S=80
+    try:im=O.render_px(sc,O.side,(0,W,-1.4,0),np.array([0,1.0,0]),k=0.86,lw=1,k2=0.93,merge=4)
+    finally:O.S=sv
+    return np.array(im.convert('RGBA'))
 def leaf_img(C,iid):
+    if iid=='itado':
+        a=leaf3d();rgb=a[...,:3].astype(float);m=a[...,3]>0;bg=rgb[m].mean(0);rgb[~m]=bg;return rgb
     a=np.array(C['hwall.'+iid+'#h0']['f'][0].convert('RGBA'))[4:60,4:60,:3].astype(float)
     mid=a[18:38];n=LEAFN-36;return np.concatenate([a[:18],np.concatenate([mid]*(n//len(mid)+1))[:n],a[38:]])   # 上と下の18行はそのまま、まん中20行をくりかえす
 def frame_deco(top,front,v,h):
@@ -63,7 +82,7 @@ def hdoor_parts(C,iid,v,n,low):
     bx(-E,JW,0,h);bx(1-JW,1+E,0,h)
     if low:bx(JW,1-JW,0,0.02);return P   # ひくいドア：柱はひくい壁と同じ高さ（壁の線がとぎれない）と、しきい
     bx(JW,1-JW,LZ,h)
-    L=leaf_img(C,iid);edge=np.clip(L.reshape(-1,3).mean(0)*0.78,0,255)
+    L=leaf_img(C,iid);LR,LC=L.shape[:2];edge=np.clip(L.reshape(-1,3).mean(0)*0.78,0,255)
     # ドアの枠（持ち主：「ドアは枠をつけて」）：入り口のまわりの、壁の両がわの面に、たてわく2本とかもい（はば CW・壁の面から CT 出す）。
     #   内のふちは入り口のふちにそろえる（ふつうのドアの額縁）。色は、とびらよりこい木（とびら・壁と見分けられる）
     cc=np.clip(L.reshape(-1,3).mean(0)*0.66,0,255)
@@ -85,7 +104,7 @@ def hdoor_parts(C,iid,v,n,low):
             front_=abs(lw)<2e-3;s=lu/(1-2*JW);s=s if front_ else 1-s
             nx,ny=(sa,ca) if front_ else (-sa,-ca)   # 面の向き（よこ置きのとき。たて置きは x と y をいれかえる）
             if v:nx,ny=ny,nx
-            k=IC.FACE[1]*ny*ny+IC.FACE[2]*nx*nx;c=L[min(LEAFN-1,max(0,int((LZ-z)/LZ*LEAFN))),min(55,max(0,int(s*56)))]*k
+            k=IC.FACE[1]*ny*ny+IC.FACE[2]*nx*nx;c=L[min(LR-1,max(0,int((LZ-z)/LZ*LR))),min(LC-1,max(0,int(s*LC)))]*k
         else:c=edge
         return tuple(np.clip(c,0,255))
     lp=Part('とびら','box',((0.5-LT/2,JW+0.004,0.035,0.5+LT/2,1-JW-0.004,LZ-0.004) if v else (JW+0.004,0.5-LT/2,0.035,1-JW-0.004,0.5+LT/2,LZ-0.004)),(200,200,200),grp='leaf')
@@ -157,10 +176,10 @@ def gate_render(iid,fn,v,n,big=False):
     ol=ndimage.binary_dilation(m)&(f[...,3]>0)&(a[...,3]==0)&(ids<0)   # かさねた横木のまわりの線
     m=m|ol;a[m]=f[m];return Image.fromarray(a)
 NOSTUB=('post','picket','cap')
-NBF={'sdoor':'wall','stonegate':'wall','gate':'fence','logdoor':'logfence','parkdoor':'parkfence','ropefence.gate':'ropefence','ashifence.gate':'ashifence','rankan.gate':'rankan','ibara.gate':'ibara','kuzure.gate':'kuzure','misugaki.gate':'misugaki','loggate':'logfence','parkgate':'parkfence','canalgate':'rankan','irongate':'kuzure'}   # となりにくる柵・塀
-POSTE={'sdoor':0.3,'stonegate':0.46,'gate':0.16,'logdoor':0.3,'parkdoor':0.18,'ropefence.gate':0.17,'ashifence.gate':0.16,'rankan.gate':0.24,'ibara.gate':0.15,'kuzure.gate':0.24,'misugaki.gate':0.115,'loggate':0.44,'parkgate':0.22,'canalgate':0.3,'irongate':0.3}   # マスのさかいから、柱のそとまで（この中だけ柵の腕を描く）
-BIGIN={'loggate':0.22,'stonegate':0.23,'parkgate':0.11,'canalgate':0.15,'irongate':0.15}   # 柱のはばの半分（かさ石もふくめて、柱のそとがわが、マスのさかいにそろう）
-PWOF={'loggate':0.76,'stonegate':0.8,'parkgate':0.865,'canalgate':0.865,'irongate':0.865,'gate':0.865,'logdoor':0.76,'parkdoor':0.865,'sdoor':0.8,'misugaki.gate':0.9,'ropefence.gate':0.865,'ashifence.gate':0.865,'rankan.gate':0.865,'ibara.gate':0.865,'kuzure.gate':0.865}   # よこ置きの柱のおく行き（設計図の PW。となりの柵の FPCY と同じ）
+NBF={'sdoor':'wall','stonegate':'wall','gate':'fence','logdoor':'logfence','parkdoor':'parkfence','ropefence.gate':'ropefence','ashifence.gate':'ashifence','rankan.gate':'rankan','ibara.gate':'ibara','kuzure.gate':'kuzure','misugaki.gate':'misugaki','loggate':'logfence','parkgate':'parkfence','canalgate':'rankan','irongate':'kuzure','ishidoor':'ishigaki','sagadoor':'sagafence','rockgate':'sagafence'}   # となりにくる柵・塀
+POSTE={'sdoor':0.3,'stonegate':0.46,'gate':0.16,'logdoor':0.3,'parkdoor':0.18,'ropefence.gate':0.17,'ashifence.gate':0.16,'rankan.gate':0.24,'ibara.gate':0.15,'kuzure.gate':0.24,'misugaki.gate':0.115,'loggate':0.44,'parkgate':0.22,'canalgate':0.3,'irongate':0.3,'ishidoor':0.28,'sagadoor':0.27,'rockgate':0.4}   # マスのさかいから、柱のそとまで（この中だけ柵の腕を描く）
+BIGIN={'loggate':0.22,'stonegate':0.23,'parkgate':0.11,'canalgate':0.15,'irongate':0.15,'rockgate':0.2}   # 柱のはばの半分（かさ石もふくめて、柱のそとがわが、マスのさかいにそろう）
+PWOF={'loggate':0.76,'stonegate':0.8,'parkgate':0.865,'canalgate':0.865,'irongate':0.865,'gate':0.865,'logdoor':0.76,'parkdoor':0.865,'sdoor':0.8,'misugaki.gate':0.9,'ropefence.gate':0.865,'ashifence.gate':0.865,'rankan.gate':0.865,'ibara.gate':0.865,'kuzure.gate':0.865,'ishidoor':0.865,'sagadoor':0.8,'rockgate':0.8}   # よこ置きの柱のおく行き（設計図の PW。となりの柵の FPCY と同じ）
 def build_gate(iid):
     import doors3d as D
     fn,hasv=D.DOORS[iid];res={};big=iid in BIG;frame(*(F2 if big else F1))
