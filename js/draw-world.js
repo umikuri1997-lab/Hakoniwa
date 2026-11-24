@@ -110,6 +110,10 @@ function uLift(o){if(o&&o.act&&o.act.type==='watchpost'&&o.act.stage==='do'){con
   if(o.elem){const C=CLB.get(o);if(C&&C.n===n){const ha=Math.max(0,hiAt(C.a)),hn=Math.max(0,hiAt(C.n)),k=Math.max(0,C.k);if(k>0&&k<1)CLIMB.add(o);return LIFT*(ha+(hn-ha)*k)+(k>0&&k<1?Math.abs(Math.sin(k*Math.PI*4))*1.5:0)}return zAt(o.x,o.y)}/* せいれい：ふちで、まっすぐ上・下へよじのぼる（CLB。もとのマスの高さから、つぎのマスの高さへ。1歩ごとに小さくゆれる） */
   if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=Math.max(0,hiAt(a)),hn=Math.max(0,hiAt(n));if(jumpEdge(a,n)){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
   return zAt(o.x,o.y)}
+function climbFace(r){/* がけ・ハシゴをよじのぼる・おりるときの向き：がけのほうを向く。正面（手前に見える面）はうしろ向き（true）、おくの面は正面（false）。横・ふちまで歩いているあいだ・よじのぼっていないときは null（歩く向き） */
+  if(!S||!S.hi||!r.path||!r.path.length)return null;const cj=(r.y|0)*W+(r.x|0),n=r.path[0];
+  if(n===cj-W&&ladderLink(n,cj)||LADDERS.has(S.obj[cj])&&ladderDir(cj)===0)return true;/* 正面のハシゴ */
+  const C=CLB.get(r);if(!C||C.n!==n||C.k<0||Math.abs(C.n-C.a)!==W)return null;return hiAt(Math.min(C.a,C.n))>hiAt(Math.max(C.a,C.n))}/* ふちで、まっすぐ上・下へよじのぼっているあいだ（CLB）。のぼるときも、おりるときも同じ向き（ハシゴと同じ） */
 const STPAL={slope_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_brick:['#dba48c','#b8735c','#935a47'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
 function drawStair(c,id,px,py,d,top,bot){/* 階段のアイコン（仮の絵）：手前へ下りる5だん */
   const P=STPAL[id]||STPAL.slope_earth,br=id.endsWith('_brick'),n=5,h=(bot-top)/n,x0=px+3,w=TS-6;

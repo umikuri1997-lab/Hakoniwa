@@ -8,7 +8,7 @@
 import math,json,re,sys,os
 W,H=56,44
 ROOT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..')
-WALK=set('.SR!g^VHcizqX')
+WALK=set('.SR!g^VHcizqX')        # P まきあげの足場は check の lift で
 SOLID=set('KYN')                  # 手がかりの物・ゆりかご・底のかげ（歩けない）          # 歩ける（q・z はくずれるまで）
 GATE=set('hkDEF12Wb')               # 門をあけると歩ける（W はまもりの光でくずれる）
 def hsh(x,y,k=0):
@@ -73,24 +73,33 @@ class Map:
     def rows(s):return[''.join(r) for r in s.g],[''.join(str(v) for v in r) for r in s.lv]
 
 # ---------- つながりのたしかめ（js/cave.js の cvWalk・cvStepOK と同じ決まり） ----------
-def check(m,name):
+def check(m,name,lift=True):
+    """lift：まきあげの足場（P）に乗れるか。足場は、上の段と下の段のどちらかにいて、止まっている段のほうへだけ出入りできる（さく）"""
     g,lv=m.g,m.lv;find=lambda c:[(x,y) for y in range(H) for x in range(W) if g[y][x]==c]
-    S=find('S')[0];R=find('R')[0]
+    S=find('S')[0];R=find('R')[0];PC=set(find('P'))
+    PL=sorted({lv[y][x] for (px,py) in PC for x,y in((px+1,py),(px-1,py),(px,py+1),(px,py-1)) if 0<=x<W and 0<=y<H and (x,y) not in PC and g[y][x] in WALK})
     def ok(x,y,gates):
         if not(0<=x<W and 0<=y<H):return False
-        c=g[y][x];return c in WALK or (gates and c in GATE)
+        c=g[y][x];return c in WALK or (gates and c in GATE) or (lift and c=='P')
+    def hv(p):return p[2] if p[:2] in PC else lv[p[1]][p[0]]
     def step(a,b):
-        la,lb=lv[a[1]][a[0]],lv[b[1]][b[0]]
+        if (a[:2] in PC)!=(b[:2] in PC):return hv(a)==hv(b)          # 足場のさく
+        la,lb=hv(a),hv(b)
         return lb<=la or (lb==la+1 and g[a[1]][a[0]]=='^')
     def reach(src,gates):
-        seen={src};q=[src]
+        src=(src[0],src[1],lv[src[1]][src[0]]);seen={src};q=[src]
         while q:
-            p=q.pop()
+            p=q.pop();nx=[]
             for dx,dy in((1,0),(-1,0),(0,1),(0,-1)):
-                n=(p[0]+dx,p[1]+dy)
-                if not(ok(*n,gates) and step(p,n)):continue
+                x,y=p[0]+dx,p[1]+dy
+                if not ok(x,y,gates):continue
+                if (x,y) in PC:nx+=[(x,y,h) for h in PL]
+                else:nx.append((x,y,lv[y][x]))
+            if p[:2] in PC:nx+=[(p[0],p[1],h) for h in PL]          # 足場をうごかす
+            for n in nx:
+                if not step(p,n):continue
                 if n not in seen:seen.add(n);q.append(n)
-        return seen
+        return {p[:2] for p in seen}
     r0=reach(S,False);r1=reach(S,True);bad=[]
     for p in r1:
         if S not in reach(p,True) and R not in reach(p,True):bad.append(p)
@@ -98,7 +107,7 @@ def check(m,name):
     lone=[]
     for y in range(H):
         for x in range(W):
-            if g[y][x] in 'ToxymtWbZFDEK':
+            if g[y][x] in 'ToxymtWbZFDEKw':
                 if not any((x+dx,y+dy) in r1 for dx,dy in((1,0),(-1,0),(0,1),(0,-1))):lone.append((g[y][x],x,y))
     opn=[(x,y) for y in range(H) for x in range(W) if g[y][x] in 'TZ' and any((x+dx,y+dy) in r0 for dx,dy in((1,0),(-1,0),(0,1),(0,-1)))]
     if opn:print(name,'門なしでとどく宝箱',opn)
@@ -357,6 +366,61 @@ def floor1():
         if m.g[y][x]=='~':m.put(x,y,'K')
     return m
 
+# ---------- 4階：古い採掘場：人がほった大穴のふちを、まきあげの足場でおりる（ふち道は東も西も切れている） ----------
+def floor_mine():
+    m=Map(41);cx,cy=28,23
+    m.hole(cx,cy,11,7.5,1.45)
+    m.levels(lambda x,y:5 if y<=10 else 4 if y<=cy-1 else 1)
+    m.fill(0,cy,W-1,cy+1,'#')       # ふち道を、東も西も切る（北と南は、まきあげの足場でだけつながる）
+    # 入口（北）：ひびの床の近道と、まわり道。入口の台（5）から、ふち道（4）へは、とびおりる。もどるのは坂から
+    m.blob(cx,5,4,2.6);m.stamp(cx-1,4,['.S.']);m.carve([(cx,7),(cx,12)],0);m.carve([(cx,7),(cx+4,7),(cx+4,12),(cx,12)],0)
+    m.stamp(cx,8,['q','q'])
+    for (x,y) in[(cx,11),(cx+4,11)]:m.put(x,y,'^')
+    # まきあげの足場（西）：P 足場（2×2）・w まきあげ機（上の段と下の段に1つずつ）
+    m.carve([(11,22),(16,22)],0);m.carve([(11,25),(16,25)],0)
+    m.stamp(12,23,['wPP','wPP'])
+    m.lv[23][12]=4;m.lv[24][12]=1
+    for y in(23,24):
+        for x in(13,14):m.lv[y][x]=4
+    # 手がかり：つるはしかけ（北のふち道のうしろ）。ならんだつるはしの、はしの1つだけ、かけたまま
+    m.carve([(19,12),(23,12)],0);m.stamp(18,11,['#KKKKK#'])
+    # 土：岩をおす（北西の上）。くぼみ h を、岩 b でうめると、宝箱の所へ
+    m.stamp(1,10,['###########',
+                  '####...####',
+                  '#T.h..b...#',
+                  '#..h.......',
+                  '####...o..#',
+                  '###########'],lv=4,chest=[{'fukuro':1,'pt':60}])
+    m.carve([(11,13),(15,13),(15,16)],0)
+    # 火：たいまつ3本で、石のとびら（北東の上）
+    m.stamp(41,9,['##############',
+                  '###.....t#####',
+                  '#t.........###',
+                  '.......c...D.#',
+                  '###.....t###T#',
+                  '##############'],lv=4,chest=[{'item':'oldlantern','pt':60}])
+    m.carve([(38,15),(41,15),(41,12)],0)
+    # 水：水門 x・y の片方だけ（南西の下）。みぞ 1・2
+    m.stamp(1,28,['######x#######',
+                  '##..g#1.....#.',
+                  '#.T...1.......',
+                  '##...#1.....##',
+                  '#######22222y#',
+                  '#######.....##',
+                  '########o.o###',
+                  '##############'],lv=1,chest=[{'mapPc':1,'pt':70}])
+    m.carve([(15,30),(17,30)],0)
+    # うすい壁 W の先の、かくれた宝箱（南東の下）。かけたつるはしがあれば、たたいてくずせる
+    m.stamp(43,27,['######',
+                   '.W..o#',
+                   '###T##',
+                   '######'],lv=1,chest=[{'fukuro':1,'pt':80}])
+    m.carve([(40,28),(43,28)],0)
+    # 下へおりる坂（南）：落ちてくる岩の通路
+    m.carve([(cx,33),(cx,37)],0);m.blob(cx,39,4,2.3);m.stamp(cx,35,['!','!']);m.stamp(cx-1,39,['.R.'])
+    for (x,y,c) in[(18,15,'c'),(37,17,'c'),(15,20,'g'),(40,21,'A'),(17,27,'c'),(38,27,'c'),(24,32,'g'),(33,31,'c'),(44,11,'g'),(16,18,'A'),(36,30,'g')]:
+        if m.g[y][x]=='.':m.put(x,y,c)
+    return m
 # ---------- 8階：ゆりかごのへや（人が作った施設。まっすぐなかべ・直角のへや。大穴・ガラスの入れ物は R5 で足す） ----------
 def floor_cradle():
     m=Map(61)
@@ -394,8 +458,8 @@ def floor_cradle():
         if m.g[y][x]=='.':m.put(x,y,c)
     return m
 
-FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),7:('cradle',floor_cradle)}
-NFLOORS=10   # 階の数。地図のまだない階（4〜7・9・10階。R4・R5 で作る）は null
+FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),7:('cradle',floor_cradle)}
+NFLOORS=10   # 階の数。地図のまだない階（5〜7・9・10階。R4・R5 で作る）は null
 def jsstr(o):return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('"',"'")
 def jsobj(o):
     s=json.dumps(o,ensure_ascii=False,separators=(',',':'))
@@ -407,6 +471,7 @@ def write():
     for i in range(NFLOORS):
         if i not in FLOORS:out.append('null');continue
         th,f=FLOORS[i];m=f();g,l=m.rows();assert check(m,th)
+        if any('P' in r for r in g):assert not check(m,th+'（足場なし）',lift=False),'足場を通らなくても坂へ行ける'
         out.append('{map:[\n'+',\n'.join("'%s'"%r for r in g)+'],\n lv:['+','.join("'%s'"%r for r in l)+'],\n theme:\'%s\',chest:%s}'%(th,jsobj(m.chest)))
     src=src[:a]+'const CVFLOORS=[\n'+',\n'.join(out)+'];\n'+src[b:]
     open(p,'w',encoding='utf8').write(src);print('js/cave.js に書いた',len(out))
