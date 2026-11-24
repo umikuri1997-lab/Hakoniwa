@@ -50,7 +50,7 @@ function cvqFlat(x,y){const C=CV,j=cvJ(x,y);if(!C.g[j])return false;const h=cvqH
 /* マス (x,y) を描く（c は画面の向き、ゲームの点） */
 function cvqCell(c,x,y,now,T){const C=CV,j=cvJ(x,y),Y=y+CVOY,ix=(x-Y)*IQW/2,iy=(x+Y)*IQH/2,h=cvqH(x,y);
   if(C.ab[j]||C.lift&&C.lift.set.has(j)){/* 大穴の底・足場のたて穴の底：暗い（かべは、うしろのマスが下へのばす） */c.fillStyle=T.void;c.beginPath();c.moveTo(ix,iy-h*IQL);c.lineTo(ix+IQW/2,iy+IQH/2-h*IQL);c.lineTo(ix,iy+IQH-h*IQL);c.lineTo(ix-IQW/2,iy+IQH/2-h*IQL);c.closePath();c.fill();return}
-  const hw=C.hw[j]&&T.hface,F=hw?T.hface:T.face,fk=hw?'h':T.fk;if(F)for(const side of[0,1]){const n=side?cvqH(x+1,y):cvqH(x,y+1);for(let L=h;L>n&&L>h-8;L--){const kk=(side?ICRT:ICLF)*(L<=0?Math.max(.2,1+(L-1)*.24):1);
+  const hw=C.hw[j]&&T.hface,F=hw?T.hface:T.face,fk=hw?'h':T.fk;if(F)for(const side of[0,1]){const n=side?cvqH(x+1,y):cvqH(x,y+1);for(let L=h,lim=C.sb&&C.sb[j]?1:8;L>n&&L>h-lim;L--){const kk=(side?ICRT:ICLF)*(L<=0?Math.max(.2,1+(L-1)*.24):1);
     c.drawImage(cvqFace(side,F,((side?y:x)*64)%F.w,fk,Math.round(kk*100)/100),side?ix:ix-IQW/2,iy+IQH/2-L*IQL)}}
   let P=T.floor,key='fl';if(cvqRock(j)){P=hw?T.hwtop:T.rock;key=hw?'hw':'rk'}else if(C.wt[j]){P=T.water;key='wt'}else if(C.br[j]===1||C.hf[j]){P=T.br;key='br'}else if(T.moss&&cvMossAt(x,y)){P=T.moss;key='ms'}
   if(!P)return;let ox=(x*64)%P.w,oy=(y*64)%P.h;if(key==='wt'){ox=(ox+((now/180)|0)*2)%P.w;ox-=ox%4}/* 水は、ゆっくり流れる */
@@ -75,14 +75,14 @@ function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);
   if(T)cvqScr(ctx,()=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(!C.seen[cvJ(x,y)])continue;const j=cvJ(x,y);if(cvqFlat(x,y)||C.ab[j]){cvqCell(ctx,x,y,now,T);if(C.g[j])cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvqPebble(x,y))}else{add(x+y+.5,()=>cvqScr(ctx,()=>cvqCell(ctx,x,y,now,T)));if(C.g[j])add(x+y+.51,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvqPebble(x,y)))}
     /* マスにかさねる絵（iso-cave2.js）：水・橋・滝・岩の正面のかざり */
     if(C.wt[j]){add(x+y+.52,()=>cvqWaterCell(x,y,now));if(cvqIn(x,y+1)&&C.ab[j+CVW]||cvqIn(x+1,y)&&C.ab[j+1])add(x+y+.53,()=>cvqScr(ctx,()=>cvqFalls(ctx,x,y,now)))}
-    if(C.br[j])add(x+y+.52,()=>cvqBridge(ctx,x,y,now));if(cvqRock(j)&&cvqIn(x,y+1)&&C.g[j+CVW])add(x+y+.52,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvqRockDeco(x,y)))}});
+    if(C.br[j])add(x+y+.52,()=>cvqBridge(ctx,x,y,now));if(C.sb&&C.sb[j])add(x+y+.52,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvSkBackDraw(x,y)));/* たおれた石像のせなか（cave-shinden.js） */if(cvqRock(j)&&cvqIn(x,y+1)&&C.g[j+CVW])add(x+y+.52,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvqRockDeco(x,y)))}});
   if(T){cvqAbyssDraw(V,now);cvqReflect(V,now)}/* 大穴の底・水のうつりこみ（うしろのかべ・物は、このあと上に） */
   /* 物（地面にはりつく物は、地面の描き方で） */
-  const FL='SRkh12q!^LVHz';for(const[j,o]of C.ob){if(!C.seen[j]&&!(o.k==='g'&&cvLureOn(j)))continue;if(o.k==='N'&&!o.top)continue;const x=cvX(j),y=cvY(j);if(!inV(x,y))continue;
+  const FL='SRkh12q!^LVHz';for(const[j,o]of C.ob){if(!C.seen[j]&&!(o.k==='g'&&cvLureOn(j)))continue;if(o.k==='N'&&!o.top||o.sub)continue;const x=cvX(j),y=cvY(j);if(!inV(x,y))continue;
     if(o.k==='^'){add(x+y+.55,()=>cvqScr(ctx,()=>cvqSteps(ctx,x,y)));continue}
     if(o.k==='P'){if(o.top)add(x+y+.58,()=>cvqScr(ctx,()=>cvLiftDraw(ctx,now)));continue}/* まきあげの足場（cave-mine.js） */
     if(FL.includes(o.k)&&!(o.k==='!'&&o.fall))add(x+y+.6,()=>cvqGr(ctx,Math.max(0,cvqLv(j)),()=>cvDrawObj(j,o,now)));
-    else{const w=o.k==='N'?o.w:1,h=o.k==='N'?o.h:1;add(x+y+w+h-2+.8,()=>cvqAt(ctx,cvqObj(x,y,w,h),()=>cvDrawObj(j,o,now)))}}
+    else{const w=o.k==='N'||o.k==='G'?o.w:1,h=o.k==='N'||o.k==='G'?o.h:1;add(x+y+w+h-2+.8,()=>cvqAt(ctx,cvqObj(x,y,w,h),()=>cvDrawObj(j,o,now)))}}
   for(const d of C.deco||[]){const x=cvX(d.j),y=cvY(d.j);if(C.seen[d.j]&&inV(x,y))add(x+y+.7,()=>cvqAt(ctx,cvqObj(x,y,1,1),()=>cvDrawDeco(d,now)))}
   const ckey=(wx,wy)=>Math.floor(wx)+Math.floor(wy-CVOY)+.9;
   for(const a of(typeof cvActorsL==='function'?cvActorsL(C):C.party))add(ckey(a.x,a.y),()=>cvqAt(ctx,cvqPt(a.x*TS,a.y*TS),()=>cvDrawActor(a,now)));
