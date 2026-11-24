@@ -1,5 +1,5 @@
 # クォータービューの、つながる物（H-14）を3Dで組んで写す：家の壁 12しゅるい（つなぎ方 m 0〜15 と、ひくい壁 ~low）。
-# 使い方：python3 tools/art/iso/iso_conn.py <出力フォルダ> [id...] [--chips]
+# 使い方：python3 tools/art/iso/iso_conn.py <出力フォルダ> [id...] [--chips]（--cut：家の壁の切り口 iso:<id>:cut-e・cut-s だけ）
 #   --chips：チップ iso:<id>:<m>・iso:<id>:<m>~low を chips.js に入れる（g64。ax・ay はマスのまん中の地面の点）。
 #
 # 見え方は iso3d.py と同じ（物を上から見て45度まわす：南が左下・東が右下。見おろし48.59度・遠近なし。1マスの1辺 90.51 ドット）。
@@ -58,9 +58,10 @@ def render(parts,decal):
     sc.dc={pid:(lambda f:(lambda x,y,z:f(*unrot(x,y),z)))(f) for pid,f in sc.dc.items()}
     O.S=S
     im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.86,lw=1,k2=0.93,merge=0)
-    return own_mask(im)
-def own_mask(im,free=None):
-    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）。free：マスの外へ出てものこす部品の番号（ひらいたとびら）"""
+    return own_mask(im,bleed=BLEED)
+BLEED=1   # マスのさかいの外へ、1ドットのこす（タイルのはみ出し）。ゲームはマスごとの絵を、はんぱな倍率でならべるので、絵のはしがうすくなり、うしろの地面がすけて、つなぎ目に線が出た（iPhone の Safari）。となりの絵にかさなる所は、同じ場所の同じ色
+def own_mask(im,free=None,bleed=0):
+    """見えている面が、このマスの中にあるドットだけをのこす（O.LAST_ZB を使う）。free：マスの外へ出てものこす部品の番号（ひらいたとびら）。bleed：マスの外へ、そのドット数だけのこす（つながる腕の所だけ。腕のない所には絵がない）"""
     a=np.array(im).copy();zb=O.LAST_ZB.copy();obj=zb>-1e8
     wx,wy=world_of(np.where(obj,zb,0))
     x0,x1,y0,y1=OWN;own=obj&(wx>=x0-1e-6)&(wx<x1+EDGE)&(wy>=y0-1e-6)&(wy<y1+EDGE)
@@ -74,6 +75,10 @@ def own_mask(im,free=None):
             nb=np.where((lab==0)&(sh==1),1,nb)   # このマスの面ととなりの面の両方にふれる線のドットは、このマスの物にする（どちらのマスにもならず、つなぎ目の足もとに1ドットのすきまが出た）
         lab=nb
     keep=(lab==1)&(a[...,3]>0)
+    for _ in range(bleed):
+        d=keep.copy()
+        for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):d|=np.roll(np.roll(keep,dy,0),dx,1)
+        keep=d&(a[...,3]>0)
     a[~keep]=0
     return Image.fromarray(notch(a))
 def notch(a):
@@ -131,6 +136,29 @@ def wall_parts(m,top,front,h):
         if D:bx(0.5-t,0.5 if hz else 0.5-t,0.5+t,1+EXT,'y',zt)
     if not(hz or U or D):bx(0.5-t,0.5-t,0.5+t,0.5+t,'x')
     return P
+CUTD=0.004   # 断面の板のあつさ（マス）
+def cut_parts(top,d):
+    """屋根をはずした家で、高い壁がとなりのひくい壁（手前）にかわる所の切り口（断面）：マスの東（d='e'）か南（'s'）のはしに立つ、うすい板。
+    色は断面の行（てっぺんの絵の、あつさの向きの行）を、のびる向きにならした色（ドアの上の断面と同じ、となりの壁の断面の色）"""
+    t=WT/2;row=top.mean(axis=1)
+    def f(x,y,z):
+        v=(y-(0.5-t))/(2*t) if d=='e' else (x-(0.5-t))/(2*t)
+        c=row[min(row.shape[0]-1,max(0,int(v*row.shape[0])))]*(FACE[2] if d=='e' else FACE[1])
+        return tuple(np.clip(c,0,255))
+    box=(1-CUTD,0.5-t,0,1,0.5+t,WH) if d=='e' else (0.5-t,1-CUTD,0,0.5+t,1,WH)
+    return [(Part('断面','box',box,(200,200,200),grp='w'),f)]
+def build_cuts(ids,C=None):
+    """家の壁の切り口の絵 iso:<id>:cut-e・cut-s。色は、いまの壁の絵の色からえらぶ（色をふやすと、256色にへらすときに、いまの壁の絵の色までかわる）"""
+    C=C or chipsrc();res={}
+    for iid in ids:
+        top,_=wall_tex(C,iid)
+        pal=np.concatenate([np.array(f.convert('RGBA')).reshape(-1,4) for k,v in C.items() if k.startswith('iso:%s:'%iid) and ':cut-' not in k for f in v['f']])
+        pal=np.unique(pal[pal[:,3]>0][:,:3],axis=0).astype(float)
+        for d in('e','s'):
+            im,ax,ay=crop(render(cut_parts(top,d),None));a=np.array(im);o=a[...,3]>0;X=a[o][:,:3].astype(float)
+            a[o,:3]=pal[((X[:,None,:]-pal[None])**2).sum(2).argmin(1)].astype(np.uint8)
+            res['iso:%s:cut-%s'%(iid,d)]=(Image.fromarray(a),ax,ay)
+    return res
 def build_walls(out,ids,chips_=False):
     C=chipsrc();res={}
     for iid in ids:
@@ -216,7 +244,7 @@ def fence_render(iid,m,nod=0):
     sc.txax={pid:rot(np.array(v)+np.array([0.5,0.5,0]))-np.array([0.5,0.5,0]) for pid,v in sc.txax.items()}
     O.S=S;im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.80,lw=2,k2=0.90,merge=4)
     import furntone;im=furntone.tone(im)
-    return own_mask(im)
+    return own_mask(im,bleed=BLEED)
 # ---- 生垣（hedge）：あつさ 0.74・高さ 0.73。こい緑の中身の箱を、小さな葉の部品（板）でおおう（玉にしない） ----
 # 葉は、せかいのます目の点に、場所から決まるずれ・向き・色でならべる（1マスでくりかえすので、となりとつながる）。
 HT,HH,HL=0.74,0.73,0.075
@@ -271,7 +299,7 @@ def hedge_render(m):
     for p,_ in hedge_parts(m):build(sc,[p])
     sc.t=[(rot(a),rot(b),rot(c),col,pid) for a,b,c,col,pid in sc.t]
     O.S=S;im=O.render_px(sc,PROJ,EXTS,DEPTH,k=0.84,lw=1,k2=0.92,merge=4)
-    return own_mask(im)
+    return own_mask(im,bleed=BLEED)
 def build_all(out,ids):
     """ids の物を、つなぎ方 m 0〜15（家の壁は ~low も）ぜんぶ写す"""
     res={};C=None
@@ -281,6 +309,7 @@ def build_all(out,ids):
                 if C is None:C=chipsrc()
                 top,front=wall_tex(C,iid)
                 for low in(False,True):res['iso:%s:%d%s'%(iid,m,'~low' if low else '')]=crop(render(wall_parts(m,top,front,LH if low else WH),None))
+                if m==0:res.update(build_cuts([iid],C))
             elif iid=='hedge':res['iso:hedge:%d'%m]=crop(hedge_render(m))
             else:
                 res['iso:%s:%d'%(iid,m)]=crop(fence_render(iid,m));sd=stake_sides(iid,m)
@@ -293,6 +322,11 @@ def build_all(out,ids):
 ALL=WALLS+FENCES+['hedge']
 if __name__=='__main__':
     a=[q for q in sys.argv[1:] if not q.startswith('--')];out=a[0];ids=a[1:] or ALL;os.makedirs(out,exist_ok=True)
+    if '--cut' in sys.argv:   # 家の壁の切り口の絵だけ（ほかの絵は写しなおさない）
+        res=build_cuts([q for q in ids if q in WALLS])
+        for k,(im,ax,ay) in res.items():im.save(os.path.join(out,k.replace(':','_')+'.png'))
+        if '--chips' in sys.argv:to_chips(res)
+        sys.exit()
     res=build_all(out,ids)
     for n in range(0,len(ids),4):sheet(res,os.path.join(out,'_sheet%d.png'%(n//4)),ids[n:n+4])
     if '--chips' in sys.argv:to_chips(res)
