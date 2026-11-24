@@ -8,5 +8,5 @@ VIEWS=[('rock~t',0)]
 BAND=[(232,198,164),(194,152,122),(240,212,178),(210,170,138)]
 def PARTS():
     p=flat(nat('岩','sandrock.glb',0.78,BAND[0],'dot'))
-    p.decal=lambda x,y,z:BAND[int((z+0.025*math.sin(x*9+y*5))/0.085)%4] if z<0.44 else BAND[2]   # 横のしまは横の面だけ（上の面まで入れると、上から見て年輪のような輪になった）
+    p.decal=lambda x,y,z:BAND[int((z+0.015*math.sin(x*9+y*5))/0.05)%4] if z<0.52 else BAND[2]   # 横のしまは横の面だけ（上の面まで入れると、上から見て年輪のような輪になった）
     return[p]

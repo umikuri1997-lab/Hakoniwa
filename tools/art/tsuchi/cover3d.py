@@ -92,7 +92,7 @@ def render():
     rgb=rgb*(1-far[:,None])+SKY*far[:,None]
     out=np.zeros((n,4));out[i,:3]=rgb;out[i,3]=255
     return Image.fromarray(np.clip(out,0,255).astype(np.uint8).reshape(GH,GW,4))
-OLIVES=[(-7.2,3.2),(-10.6,7.4),(3.2,8.4)]   # オリーブの木の場所（根もと）
+OLIVES=[(-7.0,0.6),(-9.4,7.0),(1.6,8.8)]   # オリーブの木の場所（根もと）
 def project(p):
     fwd=LOOK-CAM;fwd/=np.linalg.norm(fwd);rt=np.cross(fwd,(0,0,1.0));rt/=np.linalg.norm(rt);up=np.cross(rt,fwd)
     tw=math.tan(math.radians(FOV/2));th=tw*GH/GW;d=np.asarray(p,float)-CAM;z=d@fwd
