@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
   assert.ok(o.east,'岩の橋で東へわたれる');assert.equal(o.hole,'anagura');assert.ok(o.holeCliff,'巣穴は、がけのふもと');assert.ok(o.holeReach,'巣穴まで歩いて行ける');
   assert.deepEqual(o.walls,['adobewall','itado']);assert.ok(o.un,'はじめからおぼえている');assert.deepEqual(o.stg,['adobewall','ishigaki',2,'~t','トト']);assert.ok(o.ok,'土の物を作れる');assert.ok(o.house>=1,'はじめの家');
   assert.equal(o.rec,'statue');assert.equal(o.time,16);assert.ok(o.calm,'夜のコワイノはまだ来ない');assert.deepEqual(o.swing,{wood:12,iwakusa:4});assert.equal(o.tree,'オリーブ');assert.ok(o.noRm,'巣穴はこわせない');
-  assert.deepEqual(o.tiles.miss,[],'地われ・橋のタイルが、ぜんぶある');assert.equal(o.tiles.b,6,'岩の橋は3列×2行');assert.ok(o.tiles.n>H*2,'地われのタイル');assert.ok(o.cover,'表紙の景色');assert.ok(o.ana,'巣穴の3Dの絵');
+  assert.deepEqual(o.tiles.miss,[],'地われ・橋のタイルが、ぜんぶある');assert.equal(o.tiles.b,6,'岩の橋は3列×2行');assert.ok(o.tiles.n>200,'地われのタイル');assert.ok(o.cover,'表紙の景色');assert.ok(o.ana,'巣穴の3Dの絵');
   /* はじまりの地ゆれ：トトが巣穴からころがり出て、会話 */
   const t=JSON.parse(await run(`(()=>{const t=S.res.find(r=>r.name===TOTO),h=S.ts.hole;let done=0;tsIntro(()=>{done=1});return new Promise(res=>{const y0=t.y;setTimeout(()=>res(JSON.stringify({done,dy:t.y-(((h/W)|0)+.5),gift:GIFT_ACTIVE})),5200)})})()`));
   console.log(JSON.stringify(t));assert.equal(t.done,1,'会話へ');assert.ok(t.dy>2,'巣穴からころがり出た');assert.equal(t.gift,false);
