@@ -656,22 +656,33 @@ const QUESTS1=[
     [MINA,'みんなが、だれかを想う気持ちに、ヌシ様の力がこたえてくれたんだねぇ。'],
     [POKO,'#joy|ぼくたち、もっとなかよしになれたんだね！'],
     ...KS([['H','#joy|へへっ、なんだか、てれくさいな。'],['M','あと、ひとつですね。'],['K','フッ……想いの光か。悪くないね。']]).filter(l=>S.res.some(r=>r.name===l[0]))];},gives:{shard:'key'}}),
+  /* 草原の転：あらしのつぎの朝、霧の影からノドカをかばったフタバのまわりのみどりがかれ、あの夜のことがわかる（kiri.js） */
+  stepQuest({id:'kiri',text:'霧のむこうの影',
+   steps:[{id:'kiriStorm',t:'あらしの日をこえる',check:()=>S.flags.kiriD!=null&&dayNo()>S.flags.kiriD,prog:()=>S.flags.kiriD==null?'':dayNo()<S.flags.kiriD?'あしたは、あらし':'きょうは、あらし',how:'あらしの日がすぎるのを待つ'},
+    {id:'kiriFog',t:'あらしのあとの朝、村の南のはしの霧',check:()=>{kiriTry();return !!S.flags.kiriSeen},how:'あらしのつぎの朝、村の南のはしに霧がおりてくる'}],
+   talk:{who:MINA,when:()=>true,gives:{run(){kiriStormSet()}},get lines(){return KS([
+    ['N','#think|ねぇ、フタバ。かけらが2つになってから、土が、ざわざわしてるんだぁ。'],
+    ['F','#worry|ざわざわ……？'],
+    ['N','風も、しめってきたねぇ。あしたは、あらしになりそうだよぉ。'],
+    ['F','#alarm|みんなで、そなえておこうね。']])}},
+   get story(){return KS([['N','#worry|……フタバ、御神木の根もとから、うごかないねぇ。'],['G','#sigh|しばらく、そっとしておいてやろう。']])}}),
   stepQuest({id:'wood6',text:'きょうだいの花畑',
    steps:[{id:'wood6',/* id はセーブの読みかえのため、前のまま（前は、木のせいれいを5人） */get t(){return 'きょうだいがかくした、'+wflName()+'のたねを5つ見つける'},check:()=>wseedN()>=WSEED_N||wflN()>=WFL_N||!!S.flags.wSeedOld,prog:()=>'見つけたたね '+Math.min(WSEED_N,wseedN())+'/'+WSEED_N,how:'晴れた土地のどこかで、たねが光っている。「しらべる」でタップすると、せいれいがひろいにいく'},
     {id:'flower50',/* id はセーブの読みかえのため、前のまま（前は、花を50こ） */get t(){return '御神木のそばに、'+wflName()+'を5本咲かせる'},check:()=>wflN()>=WFL_N,prog:()=>wflName()+' '+wflN()+'/'+WFL_N,get how(){return '「おく」で'+wflName()+'のたねを、御神木のそばに置く'}},
     {id:'flTend',t:'フタバとなかまに、花の世話をしてもらう',check:()=>wflTN()>=wflNeed(),prog:()=>'花の世話 '+wflTN()+'/'+wflNeed()+(wflN()<WFL_N?'　'+wflName()+'が咲くのを待っている':''),get how(){return '御神木のそばの'+wflName()+'が咲くのを待とう'}}],
    talk:{who:MINA,when:()=>true,learn:['campfire'],lines:[
-    [POKO,'ヌシ様がいたころ、御神木のそばには、花が咲いてたんだ。ぼくと、きょうだいたちの5人で、ひとり1本ずつ、お世話してた。'],
-    [POKO,'#think|……きょうだいたちは、もういないけど。みんな、花のたねを、すきな場所にかくしてたんだ。'],
-    [MINA,'#tilt|たねを、かくしてたのぉ？'],
-    [POKO,'#giggle|うん。川のそばとか、大きな木の下とか。春になったら、いっしょに植えようねって。'],
-    [POKO,'守り神さま、おねがい。たねを見つけて、ヌシ様が帰ってきたとき、さいしょに、その花を見てほしいんだ。'],
-    ['@choice',{key:'nushiFlower',who:POKO,q:'#think|みんなでかくしたのは……どの花のたねだったかな？',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */wseedPlace()},opts:[
-     {t:'ききょう',v:'bellf',lines:[[POKO,'#joy|ききょう！ ノドカを呼んでくれた花だね！']]},
-     {t:'ゆり',v:'lily',lines:[[POKO,'#joy|ゆり！ 白くて、ヌシ様の毛なみみたいだね！']]},
-     {t:'シロツメクサ',v:'clover',lines:[[POKO,'#joy|シロツメクサ！ ヌシ様のそばで、よく四つ葉をさがしたんだ！']]}]}],
+    [MINA,'#think|守り神さま。フタバ、ずっと御神木の根もとにすわってるねぇ。'],
+    [MINA,'さっき、ぽつりと話してくれたんだぁ。むかし、ここには花が咲いてたんだってぇ。'],
+    [POKO,'#think hush|……ぼくと、きょうだいたちの5人で、ひとり1本ずつ、お世話してたんだ。'],
+    [POKO,'#think|みんな、花のたねを、すきな場所にかくしてた。川のそばとか、大きな木の下とか。春になったら、いっしょに植えようねって。'],
+    [MINA,'#nod|そのたね、さがしてみようよぉ。フタバの1本も、いっしょにねぇ。'],
+    ['@choice',{key:'nushiFlower',who:POKO,q:'#think hush|……みんなでかくしたのは、どの花のたねだったかな。',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */wseedPlace()},opts:[
+     {t:'ききょう',v:'bellf',lines:[[POKO,'#think|……ききょう。ノドカを呼んでくれた花だね。']]},
+     {t:'ゆり',v:'lily',lines:[[POKO,'#think|……ゆり。白くて、ヌシ様の毛なみみたいだった。']]},
+     {t:'シロツメクサ',v:'clover',lines:[[POKO,'#think|……シロツメクサ。ヌシ様のそばで、よく四つ葉をさがしたんだ。']]}]}],
     [MINA,'#joy|見つけたら、みんなで植えて、お世話しようねぇ。']]},
-   get story(){return [[POKO,'#surprise|わあ……御神木のまわりが、'+wflName()+'でいっぱいだ！'],[POKO,'#joy|ありがとう、守り神さま！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
+   gives:{run(){S.flags.kiriSit=0}},/* フタバが立ちなおる（kiri.js） */
+   get story(){return [[POKO,'#think|……みんなが、1本ずつお世話してくれた。ぼくの1本も、ちゃんと咲いてる。'],[POKO,'#surprise|御神木のまわりが、'+wflName()+'でいっぱいだ……！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'#think|……ヌシ様は、ぼくをのこしてくれた。だから、こんどは、ぼくがみんなを守る。'],[POKO,'#nod|守り神さま、もう、だいじょうぶ。……ヌシ様に、会いたいな。']]}}),
   {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],

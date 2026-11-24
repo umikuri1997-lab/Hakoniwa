@@ -7,6 +7,8 @@ const MIGRATIONS = [
   {v: 12, f(S) { if (S.ts && S.flags && S.flags.tsOokDown) S.enemyOn = true; }}, /* 土：ツチノオオカゲを追いかえしたあとは、夜に地われから来る（tsuchi-night.js） */
   {v: 13, f(S) { if (!S.ts || !S.res) return; for (const r of S.res) if (r.name === 'コノハ') { r.name = 'ハニ'; r.elem = 'earth'; } }}, /* 土：2人めのキーキャラのコノハ（木）は、土のせいれいハニになった */
   {v: 14, f(S) { if (S.cvClr > 3) S.cvClr = 3; if (S.ts && S.ground && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 洞窟は10階：いま行けるのは3階まで（cave.js の cvFlOpen）・くずれた岩の山は10（tsuchi.js） */
+  {v: 15, f(S) { daichiMig(S); }}, /* フタバの特性「ねばりづよい」は「だいちのちから」になった（daichi.js） */
+  {v: 16, f(S) { kiriIns(S); }}, /* 草原の転「霧のむこうの影」（kiri）を、なかよしの想いと花畑のあいだに足した（kiri.js） */
 ];
 const SAVE_VER = MIGRATIONS.length ? MIGRATIONS[MIGRATIONS.length - 1].v : 10;
 function runMigrations(S) {

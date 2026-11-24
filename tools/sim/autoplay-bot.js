@@ -156,7 +156,7 @@ H._all=()=>{
 
 B.tapTree=()=>{const [sx,sy]=SR();setMode('look');centerOn((sx+1.5)*TS,(sy+1.5)*TS);try{onTap(VW/2,VH/2)}catch(e){B.lg('tapTree err '+e.message)}};
 H.nushi=()=>{if(isNight()||!S.qTalked)return;if(performance.now()-(B.st.nt||0)<6000)return;B.st.nt=performance.now();B.tapTree()};
-H.lv5=()=>{};H.omoi=()=>{};H.wood6=()=>{};
+H.lv5=()=>{};H.omoi=()=>{};H.kiri=()=>{};/* 霧のむこうの影：あらしのつぎの朝に、ひとりで場面がはじまる（kiri.js） */H.wood6=()=>{};
 const all0=H._all;
 H._all=()=>{all0();
   if(B.opts.supply){
