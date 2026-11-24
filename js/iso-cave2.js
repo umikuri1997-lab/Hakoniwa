@@ -43,7 +43,7 @@ function cvqAbyssLights(V,now){const C=CV;if(!C.ab.some(v=>v))return;const P=cvq
 /* 水の模様が、ゆっくり流れる・光のすじ・きらめき・光のつぶ（水のマスの地面に。1マスずつ、描く順に入れる） */
 function cvqWaterInit(){const C=CV,T=C.tx;if(C.wflow||!T||!T.water)return;const W=T.water,c=document.createElement('canvas');c.width=W.w;c.height=W.h;const g=c.getContext('2d'),d=g.createImageData(W.w,W.h),q=cvRGB(cvTheme().water[4]);
   for(let i=0;i<W.L.length;i++)if(W.L[i]===2){d.data[i*4]=q[0];d.data[i*4+1]=q[1];d.data[i*4+2]=q[2];d.data[i*4+3]=255}g.putImageData(d,0,0);C.wflow=c;C.wpat=ctx.createPattern(c,'repeat')}
-function cvqWaterCell(x,y,now){const C=CV,TH=cvTheme();if(TH.lava)return;cvqWaterInit();const t=now/1000,hi=TH.water[4],fo=TH.water[0],j=cvJ(x,y),ox=x*TS,oy=(y+CVOY)*TS,a=hash((j*17+3)>>>0),b=hash((j*29+11)>>>0),fx=Math.floor(t*3)%128,fy=Math.floor(t*1.5)%128;
+function cvqWaterCell(x,y,now){const C=CV,TH=cvTheme();cvqWaterInit();const t=now/1000,hi=TH.water[4],fo=TH.water[0],j=cvJ(x,y),ox=x*TS,oy=(y+CVOY)*TS,a=hash((j*17+3)>>>0),b=hash((j*29+11)>>>0),fx=Math.floor(t*3)%128,fy=Math.floor(t*1.5)%128;
   cvqGr(ctx,Math.max(0,cvqLv(j)),()=>{
     if(C.wpat){ctx.save();ctx.beginPath();ctx.rect(ox,oy,TS,TS);ctx.clip();ctx.globalAlpha=.14;ctx.translate(fx/2,fy/2);ctx.scale(.5,.5);ctx.fillStyle=C.wpat;ctx.fillRect((ox-fx/2)*2,(oy-fy/2)*2,TS*2,TS*2);ctx.restore()}
     {const p=(t*.15+a)%1;ctx.globalAlpha=.6*Math.sin(p*Math.PI);P4(hi,ox+2+Math.floor((b*18+p*8)/2)*2,oy+8+Math.floor(a*14/2)*2,6,1);ctx.globalAlpha=1}
@@ -56,7 +56,7 @@ function cvqDrips(now){const C=CV,fo=cvTheme().water[0];C.drips=C.drips.filter(d
     const q=(u-320)/780;if(d.w)cvqGr(ctx,cvqLvAt(px,py),()=>{ctx.globalAlpha=(1-q)*.8;const r=2+q*9;for(let i=0;i<10;i++){const an=i/10*6.283;P4(fo,px+Math.cos(an)*r,py+Math.sin(an)*r,1,1)}ctx.globalAlpha=1});
     else cvqAt(ctx,cvqPt(px,py),()=>{ctx.globalAlpha=(1-q)*.8;P4('#bfe3f5',px-2-q*3,py-q*4,1,1);P4('#bfe3f5',px+2+q*3,py-q*4,1,1);P4('#6f8f9e',px-1,py,3,1);ctx.globalAlpha=1})}}
 /* 水のうつりこみ：水のそば（手前の3マスまでに水）の物・かざり・せいれい・コワイノを、足もとで上下さかさに、水のひし形の中に、うすく */
-function cvqReflect(V,now){const C=CV;if(cvTheme().lava)return;const P=cvqWaterPath(V);if(!P)return;
+function cvqReflect(V,now){const C=CV;const P=cvqWaterPath(V);if(!P)return;
   const nearW=(x,y)=>{for(let d=1;d<=3;d++)for(const[a,b]of[[x,y+d],[x+d,y],[x+d,y+d]])if(cvqIn(a,b)&&C.wt[cvJ(a,b)])return true;return false},L=[];
   for(const d of C.deco||[]){const x=cvX(d.j),y=cvY(d.j);if(C.seen[d.j]&&nearW(x,y))L.push([cvqObj(x,y,1,1),()=>cvDrawDeco(d,now)])}
   for(const[j,o]of C.ob){const x=cvX(j),y=cvY(j);if(C.seen[j]&&'AtTDEbgo'.includes(o.k)&&nearW(x,y))L.push([cvqObj(x,y,1,1),()=>cvDrawObj(j,o,now)])}
@@ -66,11 +66,8 @@ function cvqReflect(V,now){const C=CV;if(cvTheme().lava)return;const P=cvqWaterP
   cvqScr(ctx,()=>{ctx.clip(P);Object.defineProperty(ctx,'globalAlpha',{configurable:true,get(){return GA.get.call(this)/CVQREFA},set(v){GA.set.call(this,v*CVQREFA)}});ctx.globalAlpha=1;/* 描く物が globalAlpha=1 にもどしても、うすいまま */
     try{for(const[A,f]of L)cvqAt(ctx,A,()=>{ctx.translate(0,2*A.fy+Math.round(Math.sin(now/500+A.fy)));ctx.scale(1,-1);f()})}finally{delete ctx.globalAlpha}})}
 /* 大穴の上の橋（水晶の橋・ほねの橋）と、大穴にはった氷（そのマスの地面に） */
-function cvqBridge(c,x,y,now){const C=CV,TH=cvTheme(),th=C.F.theme,j=cvJ(x,y),b=C.br[j],t=now/1000;if(!b)return;const ox=x*TS,oy=(y+CVOY)*TS,nb=k=>k>=0&&k<CVW*CVH&&!!C.br[k],L=x>0&&nb(j-1),Rr=x<CVW-1&&nb(j+1),U=nb(j-CVW),D=nb(j+CVW);
+function cvqBridge(c,x,y,now){const C=CV,TH=cvTheme(),j=cvJ(x,y),b=C.br[j],t=now/1000;if(!b)return;const ox=x*TS,oy=(y+CVOY)*TS,nb=k=>k>=0&&k<CVW*CVH&&!!C.br[k],L=x>0&&nb(j-1),Rr=x<CVW-1&&nb(j+1),U=nb(j-CVW),D=nb(j+CVW);
   cvqGr(c,Math.max(0,cvqLv(j)),()=>{
-    if(b===2){/* 大穴にはった氷：下の暗がりがすけて見える。白いひび */ctx.globalAlpha=.42;P4('#0a1626',ox,oy,TS,TS);ctx.globalAlpha=.5;P4('#9ccae6',ox,oy,TS,1);if(!L)P4('#e6f8ff',ox,oy,2,TS);if(!Rr)P4('#e6f8ff',ox+TS-2,oy,2,TS);ctx.globalAlpha=.8;const h=n=>hash((j*29+n*53+7)>>>0);let cx=ox+4+h(1)*20,cy=oy+4+h(2)*10;for(let i=0;i<7;i++){P4('#e6f8ff',cx,cy,2,1);cx+=2;cy+=h(i+3)<.5?1:2}if(Math.sin(t*1.3+j)>.7)P4('#ffffff',ox+6+h(9)*18,oy+6+h(8)*18,1,1);ctx.globalAlpha=1;return}
-    if(th==='fossil'){/* ほねの橋：大きなほねを、よこにならべた */const B='#e8dcc0',Bs='#b8a888',Bd='#8a7a62';for(const yy of[5,19]){P4(Bd,ox,oy+yy+5,TS,2);P4(B,ox,oy+yy,TS,5);P4('#fff6e0',ox,oy+yy,TS,1);P4(Bs,ox,oy+yy+4,TS,1)}
-      if(x%2===0){P4(B,ox-2,oy+3,6,9);P4(B,ox-2,oy+17,6,9);P4(Bs,ox-2,oy+11,6,1);P4(Bs,ox-2,oy+25,6,1)}return}
     const K=(TH.crys&&TH.crys[0])||['#3a2a6a','#6a4cc0','#9a7ef0','#c4b0ff','#e8deff','#ffffff'],p=.5+.5*Math.sin(t*1.1+(x+y)*.6);/* 水晶の橋：水晶の板。ふちは明るく、ゆっくり光る */
     P4(K[1],ox,oy,TS,TS);P4(K[2],ox+3,oy+3,TS-6,TS-6);for(let i=0;i<3;i++)P4(K[3],ox+6+i*8,oy+4+((i*5+y*3)%14),5,1);if(!L)P4(K[4],ox,oy,2,TS);if(!Rr)P4(K[4],ox+TS-2,oy,2,TS);if(!U)P4(K[4],ox,oy,TS,2);if(!D)P4(K[0],ox,oy+TS-2,TS,2);
     ctx.globalAlpha=.25+.3*p;P4(K[5],ox+8,oy+10,2,2);P4(K[5],ox+20,oy+20,1,1);ctx.globalAlpha=1})}
