@@ -82,7 +82,7 @@ def extrude_limb(bm, faces, rings):
     for k, (c, ra, rb, ax, sd) in enumerate(rings):
         r = bmesh.ops.extrude_face_region(bm, geom=prev)
         cur = [e for e in r['geom'] if isinstance(e, bmesh.types.BMFace)]
-        bmesh.ops.delete(bm, geom=prev, context='FACES_ONLY')
+        bmesh.ops.delete(bm, geom=[f for f in prev if f.is_valid], context='FACES')
         cs = set(cur); vs = {v for f in cur for v in f.verts}
         edge = [v for v in vs if any(any(g not in cs for g in e.link_faces) for e in v.link_edges)]
         inner = [v for v in vs if v not in edge]
@@ -112,7 +112,7 @@ def build_body():
     def r_body(z):
         l, r = fb(z); bl, br = sb(z); return (r-l)/2, (br-bl)/2, (bl+br)/2
     def r_head(z):
-        l, r = fh(z); bl, br = shp(z); cy = (bl+br)/2; return (r-l)/2*0.95, (br-bl)/2*0.95, cy, br+1-cy   # 横は、ずきんの中に入るよう少し小さく・前（顔）は横の絵の前のはしまで
+        l, r = fh(z); bl, br = shp(z); cy = (bl+br)/2; return (r-l)/2*0.95, (br-bl)/2*0.95, cy, br-3-cy   # 横は、ずきんの中に入るよう少し小さく・前（顔）は横の絵の前のはしまで
     Z = [7.5, 9.5, 13, 17, 19.5, 22.6, 25.5, 27.5]          # 胴（かた 22.6 の上下に輪をおく：うでを押し出す所）
     rings = []
     for z in Z:
@@ -174,18 +174,30 @@ def assign_body_mats(ob, mats):
 # ---------------- ずきん ----------------
 def build_hood(el):
     fp, z0, z1 = prof('sp_%s:hood' % el); sp_, *_ = prof('sp_%s:hoodS' % el)
-    N = 32; zs = list(np.linspace(z0+1.5, z1-1.2, 14))
+    N = 32; zs = list(np.linspace(25.5, z1-1.2, 14))   # すそ：絵の下のはし（顔の丸にかくれて細くなる所）より上で、ひらいたまま
     rings = []
     for z in zs:
         l, r = fp(z); bl, br = sp_(z); a = (r-l)/2; b = (br-bl)/2
         rings.append([B(x, y, z) for x, y in ring_pts(N, a, b, (l+r)/2*0, (bl+br)/2, 2.0)])
+    for k, r in enumerate(rings[:3]):   # すそ：うしろを下へのばす（せなかにかかる）
+        for i, q in enumerate(r):
+            t = max(0.0, q.y/S)/max(1e-6, max(p.y/S for p in r)); q.z -= (4.0-1.3*k)*S*t
     bm = bmesh.new(); V = loft(bm, rings)
     cap(bm, V[-1], sum((v.co for v in V[-1]), Vector())/N, Vector((0, 0, 0.02)))
     bm.normal_update(); bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     # 顔の所をあける：前を向いた面で、正面から見て顔の円（sp:head の形）の中
     fh, hz0, hz1 = prof('sp:head'); cz = (hz0+hz1)/2+1
-    kill = [f for f in bm.faces if f.normal.y < -0.1 and (f.calc_center_median().x/S)**2/23.5**2+((f.calc_center_median().z/S-cz)/20.5)**2 < 1]
+    kill = [f for f in bm.faces if f.normal.y < -0.1 and (f.calc_center_median().x/S)**2/25**2+((f.calc_center_median().z/S-cz)/21.5)**2 < 1]
     bmesh.ops.delete(bm, geom=kill, context='FACES')
+    # 顔の穴のふち：ふちの点を、正面から見た だ円の上へよせる（面の中心でえらんだ段々を、なめらかに）
+    for v in bm.verts:
+        if v.is_boundary and v.co.y < 0 and v.co.z > 26*S:
+            x, z = v.co.x/S, v.co.z/S-cz; r = math.hypot(x/25, z/21.5)
+            if 0.6 < r < 1.6: v.co.x, v.co.z = x/r*S, (cz+z/r)*S
+    rim = [v for v in bm.verts if v.is_boundary and v.co.y < 0 and v.co.z > 26*S]
+    for _ in range(4):   # ふちの前うしろ（y）を、となりの点となめらかに
+        ny = {v: sum(e.other_vert(v).co.y for e in v.link_edges if e.is_boundary)/max(1, sum(1 for e in v.link_edges if e.is_boundary)) for v in rim}
+        for v in rim: v.co.y = 0.5*v.co.y+0.5*ny[v]
     me = bpy.data.meshes.new('hood_'+el); bm.to_mesh(me); bm.free(); return me
 
 def build_plate_loft(k, kS, thick=None, n=8):
@@ -207,11 +219,11 @@ def build_plate_loft(k, kS, thick=None, n=8):
 def cutout(k, thick, down=0.0):
     """絵の形（輪郭をなめらかにした線）を、うすい板にする（カーブを押し出したのと同じ）。点はチップの座標 (x, 0, z)"""
     from skimage import measure
-    a, ax, ay = chip(k); m = np.pad(a[..., 3] > 0, 2).astype(float)
+    a, ax, ay = chip(k); U = 4; m = np.pad(a[..., 3] > 0, 2).repeat(U, 0).repeat(U, 1).astype(float)
     from scipy import ndimage
-    m = ndimage.gaussian_filter(m, 0.7)
-    cs = measure.find_contours(m, 0.5); c = max(cs, key=len)
-    c = measure.approximate_polygon(c, 0.35)[:-1]
+    m = ndimage.gaussian_filter(m, 0.8*U)
+    cs = measure.find_contours(m, 0.5); c = max(cs, key=len)/U
+    c = measure.approximate_polygon(c, 0.12)[:-1]
     bm = bmesh.new(); vs = [bm.verts.new((ax+(q[1]-2)+.5, -thick/2, -(ay+(q[0]-2)+.5)-down)) for q in c]
     edges = [bm.edges.new((vs[i], vs[(i+1) % len(vs)])) for i in range(len(vs))]
     bmesh.ops.triangle_fill(bm, edges=edges, use_beauty=True)
@@ -243,7 +255,7 @@ def ellipsoid(name, c, r, coll, m, rot=None):
 def head_front_y(x, z):
     """あたま（体のメッシュ）の前の面の y（キャラの前 +y）"""
     fh, *_ = prof('sp:head'); shp, *_ = prof('sp:headS')
-    l, r = fh(z); bl, br = shp(z); a = (r-l)/2*.95; cy = (bl+br)/2; b = br+1-cy
+    l, r = fh(z); bl, br = shp(z); a = (r-l)/2*.95; cy = (bl+br)/2; b = br-3-cy
     t = min(1, abs(x)/a); return cy+b*(1-t**2.1)**(1/2.1)
 
 # ---------------- 骨 ----------------
@@ -304,7 +316,11 @@ def build(out):
     arm = build_armature(common)
     # 体
     me = build_body(); body = bpy.data.objects.new('body', me); common.objects.link(body)
-    bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.bisect_plane(bm, geom=bm.verts[:]+bm.edges[:]+bm.faces[:], plane_co=(0, 0, 0), plane_no=(1, 0, 0), clear_inner=True)
+    bm = bmesh.new(); bm.from_mesh(me)
+    for v in bm.verts:
+        if abs(v.co.x) < (0.012 if v.co.z < 0.08 else 0.002): v.co.x = 0.0   # まん中の線を x=0 にそろえる（ミラーのつなぎ目）
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:]+bm.edges[:]+bm.faces[:], plane_co=(0, 0, 0), plane_no=(1, 0, 0), clear_inner=True)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
     for v in bm.verts:
         if abs(v.co.x) < 1e-5: v.co.x = 0
     bm.to_mesh(me); bm.free()
@@ -325,6 +341,8 @@ def build(out):
             for g in v.groups:
                 if g.group == tg.index: hg.add([v.index], g.weight, 'ADD')
         body.vertex_groups.remove(tg)
+    for g in list(body.vertex_groups):   # ミラーが右がわへ重みをうつすには、.R の グループが（からでも）いる
+        if g.name.endswith('.L'): body.vertex_groups.new(name=g.name[:-2]+'.R')
     am = body.modifiers.get('Armature');
     sd = body.modifiers.new('Subdivision', 'SUBSURF'); sd.levels = 2; sd.render_levels = 2
     # 属性ごと
@@ -345,23 +363,23 @@ def build(out):
             a = chip(k)[0]; c = a[a[..., 3] > 0][:, :3].mean(0).astype(int)
             yc = 0.0
             if kS: sa, sx, sy = chip(kS); cols = np.nonzero((sa[..., 3] > 0).any(0))[0]; yc = sx+(cols[0]+cols[-1]+1)/2
-            th = 3.0 if nm in ('tip', 'ember') else 1.6
+            th = 5.0 if nm in ('tip', 'ember') else 3.5
             bmO = place(cutout(k, th, down=0 if nm == 'ember' else 2.5), lambda q: (q[0], -(q[1]+yc), q[2]))
             o = bm_to_obj(bmO, '%s_%s' % (nm, el), co, mat('%s_%s' % (nm, el), '#%02x%02x%02x' % tuple(c)), smooth=False)
-            bind_rigid(o, arm, [('hood_tip', 1.0)]); bv = o.modifiers.new('Bevel', 'BEVEL'); bv.width = 0.006; bv.segments = 2
+            bind_rigid(o, arm, [('hood_tip', 1.0)]); bv = o.modifiers.new('Bevel', 'BEVEL'); bv.width = 0.009; bv.segments = 3
         # しっぽ（風ははね）
         if el != 'wind':
             a, ax0, ay0 = chip('sp_%s:tail' % el); ub = ax0+a.shape[1]/2; vb = ay0+a.shape[0]
             R = rx(TAILBACK)@rz(TAILTWIST)
             bmT = place(cutout('sp_%s:tail' % el, 2.4), lambda q: (lambda w: (-w[0]*0+w[0], -w[1], w[2]))(R@np.array([q[0]-ub, q[1], q[2]+vb])+TAILBASE))
             o = bm_to_obj(bmT, 'tail_'+el, co, mat('hood_'+el, COLS[el]['hood']), smooth=False); bind_rigid(o, arm, [('tail', 1.0)])
-            bv = o.modifiers.new('Bevel', 'BEVEL'); bv.width = 0.006; bv.segments = 2
+            bv = o.modifiers.new('Bevel', 'BEVEL'); bv.width = 0.009; bv.segments = 3
         else:
             for i, (wx, wy, ln, th, sg) in enumerate(WINGS):
                 sc_ = ln/44; c_, s_ = math.cos(th), math.sin(th)
                 def fw(q, sc_=sc_, c_=c_, s_=s_, wx=wx, wy=wy):
                     X, Y = q[0]*sc_, -q[2]*sc_; X, Y = X*c_-Y*s_, X*s_+Y*c_
-                    return (X+wx*K, -(-24+q[1]), -(Y+wy*K))
+                    return (X+wx*K, -(-13+q[1]), -(Y+wy*K))
                 bmW = place(cutout('sp_wind:leaf', 1.4), fw)
                 o = bm_to_obj(bmW, 'wing%d_wind' % i, co, mat('wing_wind', '#a6cc8a'), smooth=False); bind_rigid(o, arm, [('spine', 1.0)])
                 bv = o.modifiers.new('Bevel', 'BEVEL'); bv.width = 0.005; bv.segments = 2
@@ -392,6 +410,8 @@ def build(out):
         bpy.ops.export_scene.gltf(filepath=os.path.join(out, 'spirit_%s.glb' % el), use_selection=True, export_skins=True, export_animations=False, export_apply=True)
     for o in bpy.data.objects: o.select_set(False)
     for el in ELS[1:]: bpy.context.view_layer.layer_collection.children[el].hide_viewport = True
+    for im in bpy.data.images:   # 下絵は .blend の中に入れる（ほかのパソコンでも見える）
+        if im.filepath: im.pack()
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(os.path.join(out, 'spirit_model.blend')))
     print('body verts', len(body.data.vertices), 'faces', len(body.data.polygons), 'groups', [g.name for g in body.vertex_groups])
 
