@@ -81,7 +81,7 @@ const assert=require('node:assert/strict');
   await run(`(()=>{S.t=(S.hold||0)+dayNo()*1440+7*60;checkQuest();startTalk()})()`);await talk();
   const n5=await J(`(()=>({q:S.quest,len:QUESTS.length,qs:S.qStory}))()`);console.log(JSON.stringify(n5));assert.equal(n5.q,n5.len);assert.equal(n5.qs,null);
   /* 古いセーブ（岩の山のない土のセーブ）：読みかえで岩の山ができる */
-  const m1=await J(`(()=>{const s=JSON.parse(JSON.stringify({ts:{hole:S.ts.hole},ground:S.ground,hi:S.hi,obj:S.obj.map(o=>o==='tsrubble'||o==='tskonoki'?'':o),floor:S.floor,dyn:{},hp:{},mig:10}));runMigrations(s);return{n:s.ts.rub&&s.ts.rub.length,mig:s.mig}})()`);
-  console.log(JSON.stringify(m1));assert.equal(m1.n,7);assert.equal(m1.mig,11);
+  const m1=await J(`(()=>{const s=JSON.parse(JSON.stringify({ts:{hole:S.ts.hole},ground:S.ground,hi:S.hi,obj:S.obj.map(o=>o==='tsrubble'||o==='tskonoki'?'':o),floor:S.floor,dyn:{},hp:{},mig:10}));runMigrations(s);return{n:s.ts.rub&&s.ts.rub.length,mig:s.mig,ver:SAVE_VER}})()`);
+  console.log(JSON.stringify(m1));assert.equal(m1.n,7);assert.equal(m1.mig,m1.ver);
   await page.waitForTimeout(300);assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});

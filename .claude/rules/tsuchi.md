@@ -20,5 +20,5 @@ paths:
 - 岩の山・たおれたオリーブ・彫り絵の絵は3D（`furn3d/items/ts_rubble*.py`・`ts_konoki.py`・`cave_carve<n>.py`、大きな1まいは `carve_big<n>.py`）。かべの小さい絵とツチノオオカゲは `iso3d.py`、大きな1まいは `furn3d.py`（正面から）で写す。
 - お話の前半（PR2b）：目標は オリーブ → 巣穴の、もっとおくへ（`tscave2`）→ 夜の谷を守ろう（`tsookage`）。2階の坂の手前で、イブキが小さなコワイノ3びきとたたかっている（`tsCaveIbuki`・`tsCaveTick`。会うまではパーティに入れず `cvActorsL` で描く。コワイノは会話まで起きない `tsHold`）。会話でなかまになり（`S.ts.ib`・`S.keyN.fire`）、村にもどると紹介（`S.ts.ibNew`）。彫り絵2はオリーブのあと（`TSCARVE` の `ok`）。
 - ツチノオオカゲ1回め（`S.ts.ok`）：彫り絵2を見た日の夜。20時に前ぶれの会話、トトとイブキは起きて見はる（`r.tsNight`、`tsStep`）。22時に地われのそばから来て（`EN.tsuchi`、体力はへらない）、トトへゆっくり、まっすぐ近づく（壁もすりぬける）。トトのそばで会話 → イブキが前に立つ → まもりの光を3回（会話の前に当てた分もかぞえる）で巣穴へにげる（`S.flags.tsOokDown`）。朝までにおわらなければ、つぎの夜にまた来る。絵は `furn3d/items/ts_ookage.py`（8コマでゆれる `tsookage`）。
-- 夜のコワイノは、まだ来ない（`S.flags.calmNight`。夜のPRで地われから来る）。ツチノオオカゲ1回めだけは来る。
-- たしかめは `tools/tests/tsuchi-stage.cjs`・お話は `tools/tests/tsuchi-story.cjs`。
+- 夜（`js/tsuchi-night.js`）：ツチノオオカゲを追いかえすと `S.enemyOn`（古いセーブは `MIGRATIONS` の v12）。つぎの夜から、コワイノとバケモノが谷の地われのふち（`tsRiftSpot`、村のまん中から10マスより遠い所。群れの夜は1か所のまわり）から来る。数はほかのステージと同じで、そのうち3びきに1ぴきが、洞窟でひらいた階（`S.cvClr`）のバケモノ（`tsBkWave`。ひらいた階から、じゅんばんに。持ち主がえらんだ）。オオカゲは来ない。朝、バケモノは消えずに、歩いて地われへもどる（`tsBkMorning`・`e.home`）。村でもうごくとくちょう：夜の水のかたまりは2つにわかれる・組みかけのほねは、たおしても `CVHONET` 分で組みなおす（くずれたあいだは `e.down`・`spawned:false`。まもりの光でとどめ `tsBoneLight`）・炉にくべられたものの通った所は、あつい床（`TSHOT`。セーブしない）。光すい・ためしのからだ・ゆりかごのみはりのとくちょうは、洞窟だけ。絵は洞窟と同じ `cvBkDraw`。トトがもどったあとは来ない（PR4 で入れる）。
+- たしかめは `tools/tests/tsuchi-stage.cjs`・お話は `tools/tests/tsuchi-story.cjs`・夜は `tools/tests/tsuchi-night.cjs`。

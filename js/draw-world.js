@@ -14,6 +14,7 @@ function fxSpr(n,x,y,col,fl,gy){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x
 'use strict';
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
 function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
+  if(D.bk&&WD===TSUCHI&&typeof tsBkEvap==='function')return tsBkEvap(it,now);/* 土の夜のバケモノ */
   if(it.sand)return drawSand(it,now,e,D,z,px,py,v);
   if(it.home)return drawHome(it,now,e,D,z,px,py,v);
   if(it.die){const a=now-it.t0;if(a<KO_HOLD){drawShade(ctx,e.type,px+(a<0?0:Math.sin(now/18)*1.5),py+8,.27*z,v.f,{dot:1,t:it.t0/1000+e.id*1.3,flash:a>=0,hurt:a>=0?0:null});return}/* 当たるまではそのまま、当たったら白く止まって小さくふるえる */const p=(a-KO_HOLD)/(it.dur||1800);/* たおれるモーション（やられの3コマ）→ 体が つぶに ほどけて、上へ きえる（やられの4・5コマ） */if(p>=.92)return;drawShade(ctx,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,die:p<.12?0:p<.24?1:p<.6?2:p<.76?3:4,flash:p<.12});return}
@@ -43,7 +44,7 @@ function enFace(e,v,now){/* 攻撃している相手のほうを向く：よこ�
 /* コワイノの体力ゲージ：へった分（白）を HPGHOLD ミリ秒のこしてから、1秒に HPGRATE（ゲージのわりあい）ずつちぢめる */
 const HPG=new WeakMap(),HPGHOLD=380,HPGRATE=.9;function hpGhost(e,f,now){let g=HPG.get(e);if(!g||f>g.v){g={v:f,f,t:now,n:now};HPG.set(e,g);return f}if(f<g.f){g.f=f;g.t=now}const dt=Math.max(0,Math.min(100,now-g.n));g.n=now;if(now-g.t>HPGHOLD)g.v=Math.max(f,g.v-HPGRATE*dt/1000);return g.v}
 function drawEnemy(e,now){
-  if(!e.spawned)return;const D=EN[e.type],z=D.size*2;if(D.tsOok&&tsOokDraw(e,now))return;/* 土のツチノオオカゲ（tsuchi.js） */let px=e.x*TS,py=e.y*TS;
+  if(EN[e.type].bk&&WD===TSUCHI){if(e.spawned||e.down)cvBkDraw(e,now);return}/* 土の夜のバケモノ：洞窟と同じ絵（cave-bake.js） */if(!e.spawned)return;const D=EN[e.type],z=D.size*2;if(D.tsOok&&tsOokDraw(e,now))return;/* 土のツチノオオカゲ（tsuchi.js） */let px=e.x*TS,py=e.y*TS;
   if(!EV.has(e))EV.set(e,{x:e.x,y:e.y,back:false,f:1,mv:0});const v=EV.get(e),dx=e.x-v.x,dy=e.y-v.y;
   if(Math.abs(dx)+Math.abs(dy)>.001){v.mv=now;if(Math.abs(dx)>.0005)v.f=dx<0?-1:1;v.back=dy<0&&-dy>Math.abs(dx)*.6;v.sd=Math.abs(dx)>Math.abs(dy)*1.2?(dx>0?'R':'L'):''}/* よこへ歩くときは、よこを向いて歩く（walkR・walkL） */v.x=e.x;v.y=e.y;
   shadow(ctx,px,py+8,9*z,2.6*z);
@@ -194,7 +195,7 @@ function render(now){RFN++;hdFrame();
   if(typeof bpGhostDraw==='function')bpGhostDraw(ctx);/* 家の設計図：置く前のわく・建てる前の部品 */
   if(pending&&pending.kind==='stamp'){for(const[dx,dy]of STAMPS[pending.sid].cells){ctx.fillStyle='rgba(255,220,90,.4)';qRect(ctx,(pending.x+dx)*TS,(pending.y+dy)*TS,TS,TS,(pending.y+dy)*W+pending.x+dx)}}
   if(pending&&pending.kind==='swap'){ctx.fillStyle='rgba(255,220,90,.4)';for(const j of pending.cells)qRect(ctx,(j%W)*TS,((j/W)|0)*TS,TS,TS,j)}/* つけかえる所 */
-  if(S.broken)for(const b of S.broken){if(S.obj[b.j])continue;const bx=(b.j%W)*TS,by=((b.j/W)|0)*TS,bz=(BL[b.id]&&BL[b.id].sz)||[1,1];ctx.save();isoGroundLv(ctx,isoLv(b.j));ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,230,180,.55)';ctx.lineWidth=2;ctx.strokeRect(bx+3,by+3,bz[0]*TS-6,bz[1]*TS-6);ctx.restore()}/* こわれた見張り台は、4マスぶんの枠 */
+  if(S.broken)for(const b of S.broken){if(S.obj[b.j])continue;const bx=(b.j%W)*TS,by=((b.j/W)|0)*TS,bz=(BL[b.id]&&BL[b.id].sz)||[1,1];ctx.save();isoGroundLv(ctx,isoLv(b.j));ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,230,180,.55)';ctx.lineWidth=2;ctx.strokeRect(bx+3,by+3,bz[0]*TS-6,bz[1]*TS-6);ctx.restore()}/* こわれた見張り台は、4マスぶんの枠 */if(typeof tsHotDraw==='function')tsHotDraw(now);/* 土：あつい床（tsuchi-night.js） */
   const vis=o=>o.x>x0-2&&o.x<x1+2&&o.y>y0-1&&o.y<y1+3;// 画面外は描かない
   // ---- 奥行きの順に描く（足もとのY座標が小さい＝奥から）----
   // せいれい・敵・置いてある物・屋根を、ぜんぶ足もとの順に描く
