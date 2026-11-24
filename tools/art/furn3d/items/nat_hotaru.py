@@ -2,7 +2,7 @@
 # 夜に光るドットは、ゲームのコード（hotaruDots）が上にかさねる。つぼみは昼も見える。
 # 設計図（単位はマス。まん中 0.5,0.5）
 #   葉：20まい。根もと（まん中から0.04〜0.10）から、上へ斜め（20〜40度）にのび、さきほど外へたおれてたれる（長さ0.42〜0.62・はば0.05→さき0.004）。1まいずつの部品（あいだに輪郭線）。
-#   くき：5本（太さ0.008）。根もとから、外へひらいてから、ゆるくまがって上へ（外へ0.17〜0.23・高さ0.50〜0.64・まっすぐにしない）。さきに、つぼみ（上を向いた、さきのとがったしずく形・はば0.05・長さ0.10。根もとはがくの緑。まるい玉にしない）。
+#   くき：5本（太さ0.008）。根もとから、外へひらいてから、ゆるくまがって上へ（外へ0.17〜0.23・よこへ0.07・高さ0.50〜0.64・まっすぐにしない）。さきに、つぼみ（上を向いた、さきのとがったしずく形・はば0.05・長さ0.10。根もとはがくの緑。まるい玉にしない）。
 #   色：葉は根もとがこい緑、さきほど明るい緑の3だん（場所ごとの色 decal。面ごとの色だと、すじが出る）。
 import math,random
 import numpy as np
@@ -35,8 +35,9 @@ def EXTRA(sc):
     for i in range(5):   # くき：根もとから外へひらき、ゆるくまがって、さきは上を向く
         az=2*math.pi*i/5+0.15;A=rd.uniform(0.17,0.23);h=rd.uniform(0.50,0.64);bx,by=CX+0.03*math.cos(az),CY+0.03*math.sin(az)
         pts=[]
-        for k in range(8):
-            t=k/7;o=A*math.sin(t*math.pi/2);pts.append((bx+o*math.cos(az),by+o*math.sin(az),h*t))
+        sd=0.07*(1 if i%2 else -1)   # よこにも少しまげる（どの向きから見ても、まがりが見える）
+        for k in range(13):
+            t=k/12;o=A*math.sin(t*math.pi/2);q=sd*t*t;pts.append((bx+o*math.cos(az)-q*math.sin(az),by+o*math.sin(az)+q*math.cos(az),h*t))
         sc.decal(None);sc.part();sc.tube(pts,0.008,STEM,n=6)
         d=np.array(pts[-1])-np.array(pts[-2]);d/=np.linalg.norm(d);bud(sc,np.array(pts[-1]),d)
 def bud(sc,b,d):   # つぼみ：がくにつつまれた、さきのとがったしずく形（まるい玉にしない）。根もとは緑、さきほどうすい黄緑
