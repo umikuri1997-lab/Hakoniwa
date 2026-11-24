@@ -8,13 +8,13 @@ const assert=require('node:assert/strict');
       enter=(fl,els)=>{day();S.pt=500;caveEnter(els.map(nw),{},fl);CV.sc=[];return CV},
       mk=(t,x,y,o)=>Object.assign({id:CV.eid++,type:t,x:x+.5,y:y+.5+CVOY,hp:EN[t].hp,max:EN[t].hp,spawned:true,asleep:false,stun:0,atk:0,path:[],rp:0,dead:false,tg:null,cj:cvJ(x,y)},o||{}),
       open=C=>{for(let j=0;j<CVW*CVH;j++)if(cvWalk(j)){const x=cvX(j),y=cvY(j);if([[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]].every(([dx,dy])=>cvWalk(cvJ(x+dx,y+dy))))return[x,y]}};
-    out.chips=Object.values(CVREL).every(k=>BL['rel_'+k]&&BL['rel_'+k].relic&&!!cvChipOf('rel_'+k));out.n=Object.keys(CVREL).length;
+    const RK=CVREL.filter(Boolean);out.chips=RK.every(k=>BL['rel_'+k]&&BL['rel_'+k].relic&&!!cvChipOf('rel_'+k));out.n=RK.length;out.rel=CVREL.slice();
     /* 階ごとに、手がかりの物をしらべて道具を見つける */
     out.found=[];
-    for(let fl=0;fl<CVFLOORS.length;fl++){const C=enter(fl,['earth','fire','water']);C.en=[];const K=[...C.ob].find(([,o])=>o.k==='K'||o.k==='Y');if(!K){out.found.push('noK'+fl);caveAbort();continue}
-      const a=act('earth'),st=[...Array(CVW*CVH).keys()].find(j=>cvWalk(j)&&cvAdj(j,K[0])&&!C.ice[j]);put(a,cvX(st),cvY(st));for(const q of C.party)if(q!==a)put(q,cvX(st),cvY(st));
-      cvUse(K[0],K[1]);for(let i=0;i<60&&!C.loot.items['rel_'+CVREL[C.F.theme]];i++)tick(.1);out.found.push(!!C.loot.items['rel_'+CVREL[C.F.theme]]);caveExit(true);for(const p of document.querySelectorAll('.pxpopw'))p.remove();GIFT_ACTIVE=false}
-    out.rec=Object.values(CVREL).every(k=>S.relRec&&S.relRec['rel_'+k]&&(S.inv['rel_'+k]||0)>0);out.on=Object.values(CVREL).every(k=>relOn(k));
+    for(let fl=0;fl<CVFLOORS.length;fl++){if(!CVFLOORS[fl])continue;const C=enter(fl,['earth','fire','water']);C.en=[];const K=[...C.ob].find(([,o])=>o.k==='K'||o.k==='Y');if(!K){out.found.push('noK'+fl);caveAbort();continue}
+      const a=act('earth'),st=[...Array(CVW*CVH).keys()].find(j=>cvWalk(j)&&cvAdj(j,K[0]));put(a,cvX(st),cvY(st));for(const q of C.party)if(q!==a)put(q,cvX(st),cvY(st));
+      cvUse(K[0],K[1]);for(let i=0;i<60&&!C.loot.items['rel_'+CVREL[C.fl]];i++)tick(.1);out.found.push(CVREL[C.fl]+':'+!!C.loot.items['rel_'+CVREL[C.fl]]);caveExit(true);for(const p of document.querySelectorAll('.pxpopw'))p.remove();GIFT_ACTIVE=false}
+    const GOT=['kui','bin','suisho','nafuda'];out.rec=GOT.every(k=>S.relRec&&S.relRec['rel_'+k]&&(S.inv['rel_'+k]||0)>0);out.on=GOT.every(k=>relOn(k));/* 地図のまだない階（R4・R5）の道具は、ためしに、もたせてたしかめる */for(const k of['fuigo','sekiban','suzu']){S.flags.cvItem['rel_'+k]=1;S.relRec['rel_'+k]=1}
     /* 2回めは、もう出ない */
     {const C=enter(0,['earth']);const K=[...C.ob].find(([,o])=>o.k==='K'),a=act('earth'),st=[...Array(CVW*CVH).keys()].find(j=>cvWalk(j)&&cvAdj(j,K[0]));put(a,cvX(st),cvY(st));cvUse(K[0],K[1]);tick(3);out.again=!C.loot.items.rel_kui;caveAbort()}
     /* からの水晶：光すいのそばでも光が小さくならない */
@@ -26,14 +26,14 @@ const assert=require('node:assert/strict');
     /* ゆりかごのすず：えさが3マスまで近づくと、正体をあらわす */
     {const C=enter(2,['earth','fire','water']);C.en=[];cvBakeEnter(C);const s=C.sc.find(q=>q.k==='esa');C.sc=[s];s.cd=0;tick(.1);const a=act('earth');s.x=Math.floor(a.x)+2;s.y=Math.floor(a.y-CVOY);s.path=[];s.lured=1;const h=a.r.hunger;cvBakeTick(0,.01,performance.now());out.suzu=s.rev>0&&!s.bite&&a.r.hunger===h;caveAbort()}
     /* 炉のふいご：あつい床で、おなかがへらない */
-    {const C=enter(5,['earth','fire','water']);C.en=[];const[x,y]=open(C);const ea=act('earth');put(ea,x,y);C.hotT.set(cvJ(x,y),C.t+100);const h=ea.r.hunger;cvBakeTick(1,0,performance.now());out.fuigo=ea.r.hunger===h;caveAbort()}
+    {const C=enter(7,['earth','fire','water']);C.en=[];const[x,y]=open(C);const ea=act('earth');put(ea,x,y);C.hotT.set(cvJ(x,y),C.t+100);const h=ea.r.hunger;cvBakeTick(1,0,performance.now());out.fuigo=ea.r.hunger===h;caveAbort()}
     /* 図鑑 */
     S.bkRec={bk_kui:1,sc_koe:1,sc_te:1};ZKW=WD;const b=document.createElement('div');ZKT=11;zukanBody(b);const b2=document.createElement('div');ZKT=12;zukanBody(b2);
     out.zk=[zkCount(11),zkTotal(11),zkCount(12),zkTotal(12)];out.zkTx=b.textContent.includes('さびたくい')&&b2.textContent.includes('声のこだま');
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.equal(r.chips,true,'7つの道具の家具とチップ');assert.equal(r.n,7);
-  assert.deepEqual(r.found,[true,true,true,true,true,true,true],'どの階でも、手がかりの物から道具が見つかる');
+  assert.equal(r.chips,true,'7つの道具の家具とチップ');assert.equal(r.n,7);assert.deepEqual(r.rel,['kui','bin','suisho',null,null,null,'fuigo','nafuda','sekiban','suzu'],'階ごとの道具（STORY.md）');
+  assert.deepEqual(r.found,['kui:true','bin:true','suisho:true','nafuda:true'],'地図のある階では、手がかりの物から道具が見つかる');
   assert.equal(r.rec,true,'もちものと図鑑に入る');assert.equal(r.on,true);assert.equal(r.again,true,'同じ道具は1回だけ');
   assert.equal(r.suisho,true,'からの水晶');assert.equal(r.bin,true,'黒い水のびん');assert.equal(r.nafuda,true,'名ふだ');assert.equal(r.suzu,true,'ゆりかごのすず');assert.equal(r.fuigo,true,'炉のふいご');
   assert.deepEqual(r.zk,[7,7,3,11],'図鑑の数');assert.equal(r.zkTx,true,'図鑑に出る');

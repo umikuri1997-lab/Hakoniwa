@@ -15,8 +15,8 @@ const CVBK={
   bk_ro:{bk:1,name:'炉にくべられたもの',xp:12,pw:9,hp:160,sp:1.4,atk:22,hit:20,hitF:45,hitN:65,hitFS:28,hitNS:40,hitFN:45,hitFNS:28,col:'#3a1810',eye:'#ffd860',size:.9,hot:1},/* 速い。通った所が、あつい床になる */
   bk_mi:{bk:1,name:'ゆりかごのみはり',xp:14,pw:10,hp:260,sp:.9,atk:30,hit:30,hitF:60,hitN:85,hitFS:40,hitNS:50,hitFN:60,hitFNS:40,col:'#4c535c',eye:'#ffe08a',size:1.15,patrol:1}};/* ゆりかごのそばに来た子をねらう */
 Object.assign(EN,CVBK);
-const CVBKFL={roots:'bk_kui',crystal:'bk_sui',lake:'bk_yoru',ice:'bk_tame',fossil:'bk_hone',magma:'bk_ro',cradle:'bk_mi'};/* 階のバケモノ */
-function cvFoeType(ch,th){return CVBKFL[th]||CVFOES[ch]}
+const CVBKFL=['bk_kui','bk_yoru','bk_sui',null,null,null,'bk_mi','bk_tame','bk_hone','bk_ro'];/* 階（1〜10階）のバケモノ（STORY.md）。4〜6階は R4 で作る */
+function cvFoeType(ch,fl){return CVBKFL[fl]||CVFOES[ch]}
 const CVSUIR=3,CVSUIK=.6;/* 光すい：まわりのマス・光の広さ */
 const CVTAMER=3;/* ためしのからだ：火のせいれいが、このマスまで近づくと目をさます */
 const CVHONET=20;/* 組みかけのほね：組みなおすまで（時計の分） */
@@ -99,7 +99,7 @@ function cvScOff(s,cd){s.on=false;s.path=null;s.rev=0;s.lured=0;s.t=0;s.cd=cvRnd
 function cvScSpawn(s){const C=CV,P=CVSC[s.k];let cx=0,cy=0;for(const a of C.party){cx+=a.x;cy+=a.y-CVOY}cx/=C.party.length;cy/=C.party.length;const L=[],lr=cvLR();
   for(let j=0;j<CVW*CVH;j++){if(!cvWalk(j))continue;const d=Math.hypot(cvX(j)+.5-cx,cvY(j)+.5-cy);
     if(s.k==='me'){if(d>=P.d[0]&&d<=P.d[1]&&d>lr+.5)L.push([!C.seen[j]?0:1,j])}
-    else if(d>=6&&d<=(s.k==='koe'?P.far:8)&&!C.ice[j]&&C.party.every(a=>cvPd(a,cvX(j),cvY(j))>lr))L.push([0,j])}
+    else if(d>=6&&d<=(s.k==='koe'?P.far:8)&&C.party.every(a=>cvPd(a,cvX(j),cvY(j))>lr))L.push([0,j])}
   if(!L.length)return false;const best=Math.min(...L.map(q=>q[0])),M=L.filter(q=>q[0]===best),j=M[(Math.random()*M.length)|0][1];
   if(s.k==='me'){s.j=j;s.t=0}else{s.x=cvX(j);s.y=cvY(j);s.path=null;if(s.k==='esa')s.cr=Math.random()<.5?'critusagi':'critrisu'}return true}
 /* まもりの光があたったとき */
