@@ -65,17 +65,16 @@ function bkFrame(B,st,e,a,pal){if(st.hard)return bkHard(B,st,e,pal);const{g}=st,
   /* めくれた紙が、まだめくっていない紙に落とすかげ（外のはしの左） */if(sp||xl>S+D)for(let i=1;i<=2;i++){c.globalAlpha=1;c.fillStyle='rgba('+P.sh+','+([.12,.05][i-1]*s*a).toFixed(3)+')';c.fillRect(xL-i,t0,1,b0-t0)}
   c.globalAlpha=1}
 /* ハードカバーの表紙：かたい板なので、まがらない。とじ目を軸に、まっすぐまわる（e＝0〜1）。
-   おもては、切らずに横にちぢめて（scaleX）まわす。90度をこえると、うら（見返し）が左にひろがる（見開き）。外のふちほど上へもち上がる（まっすぐな線）。
+   おもては、切らずに横にちぢめて（scaleX）まわす。90度をこえると、うら（見返し）が左にひろがる（見開き）。上と下のふちは、まっすぐ横のまま（もち上げない）。
    板のあつみ BKTHK：板のうらの面は、おもてから (T×(0.6×cos＋sin), T×cos) ずれた所（紙のたばと同じ、右下へのずれ）。そのあいだの、下の面と外の横の面を描く。
    とじたあと（e＝0）も、下と右にあつみが見える。1ページの画面で90度をこえた所は、とじ目に立った板のあつみだけが見える */
 function bkHard(B,st,e,pal){const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,th=Math.PI*e,co=Math.cos(th),s=Math.sin(th),T=BKTHK;
   if(st.hideL)B.L.style.visibility=e>.96?'':'hidden';
   const c=B.cv.getContext('2d'),O=BKLIFT,P=pal||BKC;c.clearRect(0,0,B.cv.width,B.cv.height);
-  const t0=Math.round(g.top/D)+O,b0=Math.round(g.bot/D)+O,xs=Math.round(S/D),W=Math.round(w*Math.abs(co)/D),L=Math.round(BKLIFT*s),dk='rgba('+P.sh+',.3)',dk2='rgba('+P.sh+',.45)',ol='#3c2418';
+  const t0=Math.round(g.top/D)+O,b0=Math.round(g.bot/D)+O,xs=Math.round(S/D),W=Math.round(w*Math.abs(co)/D),L=0,/* かたい板は、まがらない・ゆがまない：上のふちも下のふちも、まっすぐ横のまま（片方だけ上げると、板がそって見える） */dk='rgba('+P.sh+',.3)',dk2='rgba('+P.sh+',.45)',ol='#3c2418';
   const ox=Math.max(0,Math.round(T*(.6*co+s))),oy=Math.max(0,Math.round(T*co));
   if(st.cEl){st.wR.style.width=w+'px';st.wR.style.visibility=co>0&&W>0?'':'hidden';st.cEl.style.transformOrigin='0 0';st.cEl.style.transform=co>0?'scaleX('+(W*D/w).toFixed(4)+')':''}
-  if(co>0){/* おもて：上のふちが外へむかって、まっすぐ上がる */for(let i=0;i<W;i++){const l=Math.round(L*(i+1)/Math.max(1,W));if(l>0){c.fillStyle=P.edge;c.fillRect(xs+i,t0-l,1,l)}}
-    /* 下の面（あつみ）：下のふちから、右下へずれた板のうらまで */for(let j=0;j<oy;j++){const dx=Math.round(ox*(j+1)/oy);c.fillStyle=P.edge;c.fillRect(xs+dx,b0+j,W,1);c.fillStyle=dk2;c.fillRect(xs+dx,b0+j,W,1)}
+  if(co>0){/* 下の面（あつみ）：下のふちから、右下へずれた板のうらまで */for(let j=0;j<oy;j++){const dx=Math.round(ox*(j+1)/oy);c.fillStyle=P.edge;c.fillRect(xs+dx,b0+j,W,1);c.fillStyle=dk2;c.fillRect(xs+dx,b0+j,W,1)}
     /* 外の横の面（あつみ） */for(let i=0;i<ox;i++){const dy=oy?Math.round(oy*(i+1)/ox):0;c.fillStyle=P.edge;c.fillRect(xs+W+i,t0-L+dy,1,b0-t0+L);c.fillStyle=dk;c.fillRect(xs+W+i,t0-L+dy,1,b0-t0+L)}
     /* いちばん外のふちの線 */if(ox||oy){c.fillStyle=ol;c.fillRect(xs+ox,b0+oy-1,W,1);c.fillRect(xs+W+ox-1,t0-L+oy,1,b0-t0+L)}
     /* 下のページに落ちるかげ */for(let i=0;i<3;i++){const a=[.22,.12,.05][i]*(e>0?Math.max(s,.5):.5);c.fillStyle='rgba('+P.sh+','+a.toFixed(3)+')';c.fillRect(xs+W+ox+i,t0+oy,1,b0-t0);if(e<.5)c.fillRect(xs+ox+i+1,b0+oy+i,W,1)}
