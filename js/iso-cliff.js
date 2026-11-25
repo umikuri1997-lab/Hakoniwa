@@ -5,6 +5,9 @@
    土のだんは、3Dで写した角の形ごとのチップ（icBlkKey）。石のブロックの壁のタイルは、まうえから見た四角の絵（cubeTex）を、ドットのまん中の点で面へ写して作り、
    とっておく（1マスの1だんぶん：はば 32・高さ 54 のひし形の半分のはば）。左の面は少し明るく、右の面はこい。
    坂・階段・ハシゴは、3Dの点を画面へ写した形をぬり、ふちをぼかさずに切る（ドットにそろえる）。形ごとに1回作ってとっておく。 */
+/* 段差のマスを描く順（draw-world.js の dd）：高い段のマスは、うしろのマスの物・せいれいより後、そのマスの上の物より先（ふつうのアイソメトリックの順）。
+   入隅の丸いかべだけをかさねるひくいマスは、そのマスの物より先 */
+function icBlkDD(j){const x=j%W,y=(j/W)|0;return hiAt(j)>0?x+y+1:x+y-.99}
 const ICK=new Map();/* 作った絵（key → canvas） */
 const ICLF=.94,ICRT=.74;/* 左の面・右の面の明るさ */
 function icClear(){for(const c of ICK.values())c.width=c.height=0;ICK.clear();for(const e of ICT.c.values())e.c.width=e.c.height=0;ICT.c.clear();for(const e of ICT.m.values())e.width=e.height=0;ICT.m.clear()}

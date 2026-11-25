@@ -226,7 +226,7 @@ function render(now){RFN++;hdFrame();
     {if(!isoCellVis(x,y,TS*4))continue;if(iqGrp(o)){add(objectDepth(o,i),1,null,()=>iqConnDraw(ctx,i,o,now),i,false,x+y+1.3);continue}/* 壁・ドア・窓・塀・柵・生垣（iso-conn.js） */if(STAIRS.has(o)||LADDERS.has(o)){add(objectDepth(o,i),0,null,()=>icScreen(ctx,()=>LADDERS.has(o)?icLadder(ctx,i,o):icStair(ctx,i,o)),i,false,icStairDD(i,o));continue}/* 階段・坂・ハシゴ（iso-cliff.js） */}
     if(o==='sprout'){add(objectDepth(o,i),1,null,()=>sproutBox(ctx,x*TS,y*TS-liftOf(i)),i,false,x+y+.01);add(objectDepth(o,i),1,null,()=>drawObj(ctx,o,x*TS,y*TS-liftOf(i),i,0,now),i);continue}/* 植える場所：点線のわくは地面にはりつけて、種（と輪・土のもりあがり）は、前と同じ向きで立てて描く */
     const isoFlat=FLAT.has(o)||BL[o].floor;/* クォータービュー：畑など平らな物は、地面といっしょにひし形で */
-    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>isoCastAt(ctx,i,()=>hdCastStretch(x*TS+TS/2,y*TS+TS*.8,()=>{drawChip(ctx,sh,o,x*TS,y*TS,0,i);komorebi(sh,o,x*TS,y*TS,i,now)})),-1,false,x+y+.5)}/* 落ち影：地面の上に（iso-fx.js）。その物より先。葉のある木は、落ち影の中に木もれ日（feel.js） */
+    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>isoCastAt(ctx,i,()=>hdCastStretch(x*TS+TS/2,y*TS+TS*.8,()=>{drawChip(ctx,sh,o,x*TS,y*TS,0,i);komorebi(sh,o,x*TS,y*TS,i,now)})),-1,false,hiAt(i)>0?x+y+1.005:x+y+.5)}/* 落ち影：地面の上に（iso-fx.js）。その物より先。葉のある木は、落ち影の中に木もれ日（feel.js） */
     if(o==='wbench'){const c=wbCells(i),far=(c.b%W+(c.b/W|0))<(c.y%W+(c.y/W|0))?c.b:c.y;for(const [k,yd] of [[c.b,0],[c.y,1]]){const kx=k%W,ky=(k/W)|0;add(objectDepth(o,k)-(k===far?WBFAR:0),1,null,()=>dropIn(ctx,i,kx*TS,ky*TS-liftOf(k),now,()=>yd?drawWbYard(ctx,i,kx*TS,ky*TS-liftOf(k),now,k):drawObj(ctx,o,kx*TS,ky*TS-liftOf(k),i,0,now),o),k)}continue}/* 作業台：作業台と材料置き場を、それぞれのマスの順に（同じ深さになるので、うしろのマスを WBFAR だけ先に。台のむこうで作るせいれいは、そのあいだ wbDepth） */
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>dropIn(ctx,i,x*TS,y*TS-liftOf(i),now,()=>{const g=S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0;drawObj(ctx,o,x*TS,y*TS-liftOf(i),i,g,now);feelCap(ctx,o,i,x*TS,y*TS-liftOf(i),g)/* 冬：木・岩の上の雪 */},o),i,isoFlat?false:undefined,isoFlat?x+y+.01:undefined)}
   drawWebs(add,vis);/* クモの巣 */
@@ -235,14 +235,15 @@ function render(now){RFN++;hdFrame();
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!isoCellVis(x,y,TS*4))continue;add(y+2.06,3,null,()=>drawRoofItem(ctx,id,x*TS,y*TS-liftOf(j)),j,objFoot(x,y,2,2,j),x+y+3.35)}/* ガゼボ・東屋：2×2の足もとに立てて、下に置いた物・下にいる子より上（その2×2のいちばん手前のマスの物のすぐあと） */
   iqRoofsAdd(add,x0,y0,x1,y1);/* クォータービュー：家の屋根は、列ごとの切妻（iso-conn.js） */
-  if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,x+y-.99)}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
+  if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,icBlkDD(j))}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
   if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
   if(typeof pickTick==='function'){pickTick(now);const P=PICKH;if(P&&P.dig&&!P.done)add(P.y,-1,null,()=>drawPickCrack(now),P.j,false,P.x+P.y-.97)}/* こわす：ブロック・地面の長おし（build.js）。ひびは、そのマスのブロック・雪のすぐあと（手前のブロックや物が上にかさなる） */
   {/* 足もとをきめて、x+y の小さい順（うしろから） */
     if(S.sacredRoot!=null&&WD===KUSA&&!S.free&&!S.obj.includes('tower')){const j=S.sacredRoot,x=j%W,y=(j/W)|0;if(S.obj[j]!=='site')add(y+4,1,null,()=>drawSacredRoot(now),j,objFoot(x,y,4,4,j),x+y+4.3)}/* 御神木の切り株：まわりの4×4のまん中の順 */
     for(const it of D){if(it.A===undefined)it.A=it.box?ptFoot((it.box[0]+it.box[2])/2,it.k*TS):it.own>=0?objFootJ(it.own):false;
-      if(it.dd==null)it.dd=it.A&&it.A.w!=null?it.A.x+it.A.y+(it.A.w+it.A.h)/2+.3+(it.k-(it.A.y+it.A.h)):it.A?it.k+it.A.fx/TS:it.own>=0?it.k+it.own%W+.5:it.k*2}
+      if(it.dd==null)it.dd=it.A&&it.A.w!=null?it.A.x+it.A.y+(it.A.w+it.A.h)/2+.3+(it.k-(it.A.y+it.A.h)):it.A?it.k+it.A.fx/TS:it.own>=0?it.k+it.own%W+.5:it.k*2;
+      if(it.t>=0&&it.own>=0&&S.hi&&S.hi[it.own]>0){const m=it.own%W+((it.own/W)|0)+1;if(it.dd<m)it.dd=m}/* 高い段のマスの上の物・せいれいは、そのマスのブロック（icBlkDD）より後 */}
     D.sort((a,b)=>a.dd-b.dd||a.t-b.t);
     for(const it of D){if(it.A)standTf(ctx,k,it.A.fx,it.A.fy,it.A.px,it.A.py);else groundTf(ctx,k);it.draw()}groundTf(ctx,k)}
   drawSacredCare(now);drawStoryStage(now);drawKite(now);
