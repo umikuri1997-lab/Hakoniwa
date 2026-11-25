@@ -1,0 +1,3 @@
+せいれいの足音の録音（footstep_rec.py が1歩ずつ切る）
+grass・snow・soil・stone・wet・wood.mp3：持ち主の録音（wood.mp3 は、いまは使っていない）
+wood_child.mp3（木の床・橋 fwood）：Yuval「footsteps child parquet」 https://freesound.org/people/Yuval/sounds/207638 （CC0 1.0。freesound のプレビューの mp3）

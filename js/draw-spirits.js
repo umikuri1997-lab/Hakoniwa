@@ -202,8 +202,9 @@ function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは 
    首はいっぺんに向けない：HTSTEP だんの絵（walk_hp1〜walk_hp6 など、s は ±k/HTSTEP）を、同じ時間ずつ（画面の1コマくらい）順に出して、同じ速さでなめらかに向く */
 const HTURNMS=100,HTSTEP=6;
 /* 歩く絵のコマは、時計でなく、歩いた道のりで進める（速く歩いても、ゆっくりでも、足がすべらない）。
-   WALKPT：1マス歩くあいだに、歩く絵が何回まわるか（tools/art/spirit3d/motions.py の WSTEP 4.5：1まわりで 4×4.5＝18 ドット、1マス＝64 ドット） */
-const WALKPT=64/18,WALKR=9/(2*Math.PI),WLKD=new WeakMap();
+   WALKPT：1マス歩くあいだに、歩く絵が何回まわるか（1まわりで2歩）。2回で、ふつうの速さ（1秒に約0.9マス）なら1秒に約3.6歩（持ち主がえらんだ）。
+   絵の1まわりは 4×WSTEP（tools/art/spirit3d/motions.py の 6.5）＝26 ドットで、1マス＝64 ドットなので、ついた足は少しすべる（すべらないのは 64/26 回。それだと足ぶみが速すぎる） */
+const WALKPT=2,WALKR=9/(2*Math.PI),WLKD=new WeakMap();
 function spWalkD(k,x,y,walking){let m=WLKD.get(k);if(!m){m={x,y,d:0};WLKD.set(k,m)}const d=Math.hypot(x-m.x,y-m.y);if(walking&&d<1)m.d+=d;m.x=x;m.y=y;return m.d}/* 歩いた道のり（マス）。とんだ（1マスより遠い）ときは足さない */
 const spWalkBob=(wd,s)=>wd==null?0:-1.5*Math.cos(2*(wd*WALKPT*2*Math.PI-Math.PI/2-.3))*s/.87;/* 歩く絵の体の上下（motions.py の WBOB・WDOWN と同じ。上が+、画面の点） */
 function spHeadTurn(v,walking,face,now){const k=v.back?2:v.turn?1:0,f=face<0?-1:1;
