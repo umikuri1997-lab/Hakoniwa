@@ -148,7 +148,7 @@ function updHUD(){
 
 /* ---------- はじまり ---------- */
 let started=false,titleDrift=0,STOCKSIG='';
-function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
+function showUI(on){if(on&&$('#topUI').hidden&&typeof UIFX!=='undefined')UIFX.showT=performance.now();/* 上の欄が出た時刻：そのあと1.5秒は、上の数の音を鳴らさない（ui-fx.js） */$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ・ひっこしミトン）だけは、ほかの土地でもらっていれば使える */
 function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.mover)s.mover=true;if((s.world||0)!==0&&(L.areaSkill||L.flags&&L.flags.areaSkill))(s.flags||(s.flags={})).areaSkill=true;if((s.world||0)!==0&&L.flags&&L.flags.sortie)(s.flags||(s.flags={})).sortie=true/* 出撃も、草原でおぼえたら、ほかのステージで */;if((s.world||0)!==0&&L.subDone&&L.subDone.bphome)(s.flags||(s.flags={})).bpOpen=true/* 設計図も、草原でサブクエストをおえたら、ほかのステージで出る */}}/* 「こもれびのまもり」も、草原でおぼえたら、ほかのステージで使える（草原は、はじめからやりなおしても、自分でおぼえなおす） */
 const LISTEN_ACT=new Set(['idle','storywait','fieldwait','fieldgather','fieldintro','fieldassist','chatwait','nmeet']);
