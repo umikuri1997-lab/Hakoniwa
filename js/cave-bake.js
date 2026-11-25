@@ -113,7 +113,7 @@ function cvBakeLight(tx,ty,R){const C=CV;if(!C.sc)return;const now=performance.n
   for(const s of C.sc){if(!s.on)continue;const x=s.k==='me'?cvX(s.j):s.x,y=s.k==='me'?cvY(s.j):s.y,d=Math.max(Math.abs(x-tx),Math.abs(y-ty));
     if(s.k==='te'){if(d<=R+2){s.stun=CVSC.te.stun;s.st=0;s.t=0;cvSpark(x+.5,y+.5,'#fff3c4',14)}continue}
     if(d>R+1)continue;
-    if(s.k==='koe'){bkSeen('sc_koe');s.vis=now+1500;setTimeout(()=>{if(CV===C)cvScOff(s,[35,60])},1500);cvSpark(x+.5,y+.5,'#d8d0ff',16);if(!C.note.koeL){C.note.koeL=1;toast('光の中に、うすいすがたが見えて、消えた','good')}}
+    if(s.k==='koe'){bkSeen('sc_koe');s.vis=now+1500;later(()=>{if(CV===C)cvScOff(s,[35,60])},1500);cvSpark(x+.5,y+.5,'#d8d0ff',16);if(!C.note.koeL){C.note.koeL=1;toast('光の中に、うすいすがたが見えて、消えた','good')}}
     else if(s.k==='esa'&&!s.rev){bkSeen('sc_esa');s.rev=now+900;s.bite=0;cvSpark(x+.5,y+.5,'#fff3c4',12);if(!C.note.esaL){C.note.esaL=1;toast('光をあびて、正体をあらわした','good')}}
     else if(s.k==='me')cvScOff(s,[6,12])}}
 /* ---------- 絵（仮のドット絵） ---------- */

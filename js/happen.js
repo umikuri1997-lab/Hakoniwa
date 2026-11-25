@@ -32,7 +32,7 @@ function hapMorning(){if(!S)return;const d=dayNo();S.hap=null;HAPFX=null;if(!hap
   S.hap={d,k,j,ph:k==='kino'?'on':'wait',tk:0};
   if(k==='hina')S.hap.tj=hapNest(G,j);if(k==='kino')S.hap.dn={};if(k==='kabu')S.hap.crop=cropK(S.dyn[j]);
   const T={kabu:['grass','畑に、とても大きな'+hapCropName()+'ができている'],hina:['heart','村に、まいごのヒナがいる'],kin:['apple','木に、きんいろの実がなっている'],kino:['leaf','草地に、きのこの輪ができている']}[k];
-  setTimeout(()=>{if(hapNow(k))toast(T[1],'good')},1700);memo(T[0],T[1]);dirty=true}
+  later(()=>{if(hapNow(k))toast(T[1],'good')},1700);memo(T[0],T[1]);dirty=true}
 function hapCropName(){const h=S.hap,k=h&&h.crop;return k&&FOODS[k]?FOODS[k].name:'かぶ'}
 function hapNest(G,j){/* ヒナをとどける木：ヒナからいちばん近い木（立てるマスのある木） */const x=j%W,y=(j/W)|0;let best=-1,bd=1e9;
   for(let dy=-14;dy<=14;dy++)for(let dx=-14;dx<=14;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const k=yy*W+xx;if(!TREES.has(typeAt(k))||fogAt(k))continue;const dd=dx*dx+dy*dy;if(dd>=bd||!hapStands(G,k).length)continue;bd=dd;best=k}return best}

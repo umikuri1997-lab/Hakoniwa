@@ -67,7 +67,7 @@ function windRiseTick(){while(WRISEQ.length&&WRISEQ[0].state!==S)WRISEQ.shift();
   const back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2},tz=Math.min(cam.z,1.2),tx=(I.cx[k]+.5)*TS,ty=(I.cy[k]+.5)*TS;
   const finish=()=>{if(!WRISEON)return;WRISEON=false;GIFT_ACTIVE=false;if(T.get(k)===Infinity)T.set(k,performance.now())};
   musicDuck(2600);camAnim=WRISECAM={fz:cam.z,tz,fx:back.x,fy:back.y,tx,ty,t:0,dur:1.6,done:()=>{if(!ok())return finish();T.set(k,performance.now());sfx('level');dirty=true;
-    setTimeout(()=>{if(!ok())return finish();const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="島がうかんだ"></div>'),card=el('<div class="idea-card"><h2>島がうかんだ！</h2><div class="spotpop"><p></p></div></div>');
+    later(()=>{if(!ok())return finish();const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="島がうかんだ"></div>'),card=el('<div class="idea-card"><h2>島がうかんだ！</h2><div class="spotpop"><p></p></div></div>');
       card.querySelector('p').textContent='風がとどいて、雲の下から島があらわれた';
       const button=el('<button class="btn pri" type="button">とじる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
       button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();memo('leaf','風がとどいて、島がうかんだ');const go=()=>{checkQuest();camAnim=WRISECAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}};if(!windHayateWake(k,go))go()}},WINDRISE+200)}}}

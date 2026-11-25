@@ -264,7 +264,7 @@ function strayMeet(a){if(AMEET||GIFT_ACTIVE||camAnim&&camAnim.done)return strayP
     const T0=performance.now();aniJoy(a);sfx('good');const x=a.x*TS,y=a.y*TS-uLift(a)-10;
     scnAdd('aniq',1500,{a});scnAdd('glow',1700,{x,y,r:26,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:30,col:'#fff0a8'},120);scnAdd('ring',900,{x,y:y+8,r0:6,r1:40,col:'#fff6c8'},420);
     for(let i=0;i<5;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*1.26)*22,y1:y-12+Math.sin(i*1.26)*12,arc:6,col:'#fff0a8',n:1},200+i*80);
-    setTimeout(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="はじめて会った"></div>'),card=el('<div class="idea-card"><h2>はじめて会った！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p><p class="amrow pr"></p></div>');
+    later(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="はじめて会った"></div>'),card=el('<div class="idea-card"><h2>はじめて会った！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p><p class="amrow pr"></p></div>');
       const pic=aniMeetPic(a.k);if(pic)card.querySelector('.pic').append(pic);card.querySelector('.nm').textContent=ANI[a.k].name;card.querySelector('.ds').textContent=ANI[a.k].desc;card.querySelector('.pr').textContent='とれる物：'+aniProdName(ANI[a.k].prod);
       const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
       b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();(S.flags.aniMet||(S.flags.aniMet={}))[a.k]=1;
@@ -279,10 +279,10 @@ function aniBirth(a){const owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&ses
   musicDuck(2600);a.path=null;a.wt=3;
   camAnim=AMEET.cam={fz:cam.z,tz:Math.min(2.6,Math.max(cam.z,2)),fx:back.x,fy:back.y,tx,ty,t:0,dur:1.2,done:()=>{if(!ok())return finish();
     const T0=performance.now(),x=a.x*TS,y=a.y*TS-uLift(a)-8;aniJoy(a);sfx('good');
-    S.ani.filter(q=>q!==a&&q.h===a.h&&q.k===a.k&&!q.in&&!q.stray).slice(0,2).forEach((q,i)=>setTimeout(()=>{if(ok()&&AMEET)aniJoy(q)},350+i*300));/* 親もはねる */
+    S.ani.filter(q=>q!==a&&q.h===a.h&&q.k===a.k&&!q.in&&!q.stray).slice(0,2).forEach((q,i)=>later(()=>{if(ok()&&AMEET)aniJoy(q)},350+i*300));/* 親もはねる */
     scnAdd('glow',1700,{x,y,r:24,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+6,r0:5,r1:26,col:'#ffe2ea'},120);scnAdd('ring',900,{x,y:y+6,r0:5,r1:36,col:'#fff6c8'},420);
     for(let i=0;i<6;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*1.05)*20,y1:y-12+Math.sin(i*1.05)*10,arc:6,col:i%2?'#ffd9e4':'#fff0a8',n:1},200+i*70);
-    setTimeout(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="子どもが生まれた"></div>'),card=el('<div class="idea-card"><h2>子どもが生まれた！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p></div>');
+    later(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="子どもが生まれた"></div>'),card=el('<div class="idea-card"><h2>子どもが生まれた！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p></div>');
       const pic=aniMeetPic(a.k);if(pic)card.querySelector('.pic').append(pic);card.querySelector('.nm').textContent=ANI[a.k].name+'の子ども';card.querySelector('.ds').textContent=(BL[S.obj[a.h]]?BL[S.obj[a.h]].name+'で、':'')+'すくすく育っていくよ。';
       const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');if(typeof juiceCheer==='function')juiceCheer();setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
       b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();delete a.nb;memo('heart',ANI[a.k].name+'の子どもが生まれた');

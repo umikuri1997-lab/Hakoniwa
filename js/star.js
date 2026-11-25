@@ -32,12 +32,12 @@ function starWishShow(){const G=S.starG,owner=S,session=VILLAGE_SESSION,ok=()=>S
   camAnim=STARG.cam={fz:cam.z,tz:Math.min(2.2,Math.max(cam.z,1.6)),fx:back.x,fy:back.y,tx,ty,t:0,dur:1.1,done:()=>{if(!ok())return finish();
     const T0=performance.now(),x=tx,y=ty-6,top=y-VH/cam.z*.55;sfx('starkira');
     scnAdd('orb',900,{x0:x+40,y0:top,x1:x,y1:y,arc:-14,col:'#fff6c8',n:5});scnAdd('glow',900,{x,y:top+30,r:14,col:'#fff6c8'},0);
-    setTimeout(()=>{if(!ok()||!STARG)return finish();sfx('good');scnAdd('glow',1600,{x,y,r:30,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:34,col:'#fff0a8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:46,col:'#cfe4ff'},260);
+    later(()=>{if(!ok()||!STARG)return finish();sfx('good');scnAdd('glow',1600,{x,y,r:30,col:'#fff6c8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:34,col:'#fff0a8'});scnAdd('ring',900,{x,y:y+8,r0:6,r1:46,col:'#cfe4ff'},260);
       for(let i=0;i<8;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*.785)*30,y1:y-6+Math.sin(i*.785)*16,arc:8,col:i%2?'#cfe4ff':'#fff0a8',n:1},60+i*40);
       if(typeof juiceGlowAt==='function'&&j>=0)juiceGlowAt(j%W+.5,(j/W|0)+.5,2);
       if(G.k==='genki'){for(const r of S.res)if(!r.hidden&&!(r.act&&r.act.type==='sleep')){JOYU.set(r,performance.now()+2600);JUMP.set(r,performance.now())}}
-      else if(typeof juiceFly==='function')setTimeout(()=>{if(ok())juiceFly(x/TS,y/TS,'mat',3)},300);
-      setTimeout(()=>{if(!ok()||!STARG)return finish();const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="流れ星のおねがいが、かなった"></div>'),card=el('<div class="idea-card"><h2>おねがいが、かなった！</h2><p class="note"></p></div>');
+      else if(typeof juiceFly==='function')later(()=>{if(ok())juiceFly(x/TS,y/TS,'mat',3)},300);
+      later(()=>{if(!ok()||!STARG)return finish();const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="流れ星のおねがいが、かなった"></div>'),card=el('<div class="idea-card"><h2>おねがいが、かなった！</h2><p class="note"></p></div>');
         card.querySelector('.note').textContent=G.got.join('・');const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');if(typeof juiceCheer==='function')juiceCheer();setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
         b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();delete S.starG;camAnim=STARG.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:finish}}},1300)},850)}}}
 function starWishReset(){if(!STARG)return;if(STARG.cam&&camAnim===STARG.cam)camAnim=null;STARG=null;GIFT_ACTIVE=false;document.querySelectorAll('.gift-reveal').forEach(e=>{if(e.getAttribute('aria-label')==='流れ星のおねがいが、かなった')e.remove()})}/* 村を切りかえたとき */

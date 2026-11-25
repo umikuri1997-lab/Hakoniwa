@@ -33,7 +33,7 @@ function relOn(k){return !!(S&&S.flags&&S.flags.cvItem&&S.flags.cvItem['rel_'+k]
 /* 手がかりの物をしらべた */
 function cvRelicLook(a,j,now){const C=CV,th=C.F.theme,k=CVREL[C.fl],L=CVRELSEE[th]||[];a.joyU=0;a.shockU=now+500;
   C.relI=(C.relI||0);if(L.length){toast(L[C.relI%L.length]);C.relI++}
-  if(k&&!relOn(k)&&BL['rel_'+k]){C.loot.items['rel_'+k]=1;bkNote();setTimeout(()=>{if(CV!==C)return;toast(BL['rel_'+k].name+'を見つけた','good');sfx('quest');cvSpark(cvX(j)+.5,cvY(j)+.4,'#ffe58a',14);a.joyU=performance.now()+1400;a.jumpT=performance.now()},900)}}
+  if(k&&!relOn(k)&&BL['rel_'+k]){C.loot.items['rel_'+k]=1;bkNote();later(()=>{if(CV!==C)return;toast(BL['rel_'+k].name+'を見つけた','good');sfx('quest');cvSpark(cvX(j)+.5,cvY(j)+.4,'#ffe58a',14);a.joyU=performance.now()+1400;a.jumpT=performance.now()},900)}}
 function bkNote(){}/* 見つけた数のメモ（いまは何もしない。図鑑は caveExit の S.relRec） */
 /* バケモノに会った（図鑑） */
 function bkSeen(k){if(!S||typeof MEMRUN!=='undefined'&&MEMRUN)return;const R=S.bkRec||(S.bkRec={});if(!R[k]){R[k]=1}}

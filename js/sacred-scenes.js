@@ -71,8 +71,8 @@ function sacredRings(x,y,n,r1,col,gap){for(let i=0;i<n;i++)scnAdd('ring',1200,{x
 function sacredGrowSparks(j,ms,stage,mode){
   musicDuck(ms+800);hdBig(ms+2500);const owner=S,session=VILLAGE_SESSION,g=sacredGeo(j,mode==='glow'?undefined:stage),glow=mode==='glow',live=()=>S===owner&&VILLAGE_SESSION===session;
   scnAdd('glow',ms*.75,{x:g.cx,y:g.base-10,r:24+stage*9});scnAdd('vein',ms*.55,{x:g.cx,y:g.base-6,h:Math.max(20,g.h*.7),w:2+stage});
-  const n=8+stage*5;for(let i=0;i<n;i++)setTimeout(()=>{if(!live())return;const a=Math.random()*Math.PI*2,r=6+Math.random()*(12+stage*4);fx.push({k:'p',x:g.cx+Math.cos(a)*r,y:g.base-4,vx:Math.cos(a)*8,vy:-120-Math.random()*80,life:1.4,col:i%3?'#fff6c8':'#c8f5a0',r:2})},ms*.08+i*(ms*.45/n));
-  setTimeout(()=>{if(!live())return;const R=glow?40+stage*8:36+stage*22;sacredRings(g.cx,g.base-4,glow?1:3,R,'#fff6c8');sacredLeafFall(g,glow?3+stage:6+stage*6,12+stage*12);
+  const n=8+stage*5;for(let i=0;i<n;i++)later(()=>{if(!live())return;const a=Math.random()*Math.PI*2,r=6+Math.random()*(12+stage*4);fx.push({k:'p',x:g.cx+Math.cos(a)*r,y:g.base-4,vx:Math.cos(a)*8,vy:-120-Math.random()*80,life:1.4,col:i%3?'#fff6c8':'#c8f5a0',r:2})},ms*.08+i*(ms*.45/n));
+  later(()=>{if(!live())return;const R=glow?40+stage*8:36+stage*22;sacredRings(g.cx,g.base-4,glow?1:3,R,'#fff6c8');sacredLeafFall(g,glow?3+stage:6+stage*6,12+stage*12);
     if(!glow){for(let i=0;i<14+stage*5;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*60;fx.push({k:'p',x:g.cx,y:g.top+g.h*.4,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:2})}sacredNearJoy(j,1800)}
     sfx('sacred')},ms*(glow?.45:.7))}
 /* ---------- かけらを御神木にささげる場面 ----------
@@ -94,7 +94,7 @@ function sacredOfferShard(j,done){
   const finish=()=>{if(SHARD_OFFER===offer)SHARD_OFFER=null};
   let begun=false;const act=()=>{if(begun)return;begun=true;if(!alive())return finish();
     endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act,face=f.x<storyTreeX(j)?1:-1,T=n>=3?10600:11400,g=sacredGeo(j);f.face=face;
-    const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms),stopAll=()=>{SCENEHOLD=0;finish();if(f.act===hold)endAct(f);SACRED_POSES.delete(f)};
+    const at=(ms,fn)=>later(()=>{if(alive())fn()},ms),stopAll=()=>{SCENEHOLD=0;finish();if(f.act===hold)endAct(f);SACRED_POSES.delete(f)};
     SCENEHOLD=performance.now()+T+300;musicDuck(T+900);hdBig(T+2500);
     const lx=g.cx+face*84,ly=g.base+8,fb=[[f.x*TS-24,f.y*TS-62-uLift(f)],[f.x*TS+24,f.y*TS+10-uLift(f)]];
     const near=[[g.cx-66,g.top-4],[g.cx+66,g.base+14],...fb];storyShot(near,{limit:2.4,seconds:1.4,full:true});
@@ -122,7 +122,7 @@ function sacredOfferShard(j,done){
     at(T,()=>{stopAll();if(n>=3)S.treeSeen=4;/* 育った木は、そのまま（sacredStage） */sacredNearJoy(j,1600,10);const end=()=>{if(S!==owner||VILLAGE_SESSION!==session)return;if(sacredDirection())sacredEndDirection(true);done()};
       const lines=n<3?shardLines(n):[];if(lines.length)storyShot(near,{limit:2.2,seconds:.9});if(!lines.length||dialog(lines,end,null,'')===false)end()})};
   if(!sacredSceneWalk(f,(j%W)+.5,by,{adjacentSide:true},act)&&!sacredSceneWalk(f,(j%W)+span-.5,by,{adjacentSide:true},act))act();
-  setTimeout(()=>{if(!begun&&S===owner&&VILLAGE_SESSION===session)act();else if(!begun)finish()},15000);/* 歩くのをじゃまされても、止まったままにしない */
+  later(()=>{if(!begun&&S===owner&&VILLAGE_SESSION===session)act();else if(!begun)finish()},15000);/* 歩くのをじゃまされても、止まったままにしない */
 }
 /* ---------- なかよしの想い：2人の光が、御神木のあかりになる ---------- */
 const LAMPS_TAKEN=new WeakSet();/* あかりが、かけらになった村（お礼の会話の中。保存しない） */
