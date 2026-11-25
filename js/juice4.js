@@ -37,7 +37,7 @@ function juiceGrowWave(){/* morning のおわり：育った物を、神殿か�
   L.forEach(q=>J4GROW.push({j:q.j,t:now+300+Math.min(1,q.d/J4GROWR)*J4GROWMS}))}
 function juiceGrowStep(now){for(let i=J4GROW.length-1;i>=0;i--){const g=J4GROW[i];if(now<g.t)continue;J4GROW.splice(i,1);if(!S.obj[g.j])continue;const x=(g.j%W+.5)*TS,y=(((g.j/W)|0)+.6)*TS-j4Lift(g.j%W,(g.j/W)|0);
     if(!uiReduced())LANDFX.set(g.j,now);/* 上から少し落ちて、つぶれて、もどる（置いたときと同じ動き） */
-    for(let k=0;k<4;k++){const a=-Math.PI*(.2+.6*k/3),sp=40+Math.random()*30;fx.push({k:'p',x,y:y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:.6+Math.random()*.2,col:['#8fd06a','#ffe58a','#d8f5c0','#fffbe6'][k],r:2})}}}/* 音は鳴らさない（持ち主がきめた） */
+    for(let k=0;k<4;k++){const a=-Math.PI*(.2+.6*k/3),sp=40+Math.random()*30;fx.push({k:'p',x,y:y-8,gy:(((g.j/W)|0)+.6)*TS,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:.6+Math.random()*.2,col:['#8fd06a','#ffe58a','#d8f5c0','#fffbe6'][k],r:2})}}}/* 音は鳴らさない（持ち主がきめた） */
 
 /* ---------- 2. つりのヒット ---------- */
 function juiceFish(r,fk,w){if(!j4OK()||!r||J4FISH.length>3)return;const ic=typeof emoImg==='function'&&typeof foodEmo==='function'?emoImg(foodEmo(fk)):null;if(!ic)return;
@@ -73,7 +73,7 @@ function juiceFenceDraw(now){const P=2,h=TS/2;for(let i=J4FENCE.length-1;i>=0;i-
 
 /* ---------- 4. 直した（朽ちた壁） ---------- */
 function juiceMend(j,r){if(!j4OK()||J4MEND.length>4)return;const x=j%W,y=(j/W)|0,lift=j4Lift(x,y),now=performance.now();J4MEND.push({x,y,lift,t0:now});
-  for(let k=0;k<8;k++){const px=(x+.15+Math.random()*.7)*TS,py=(y+.2+Math.random()*.6)*TS-lift;fx.push({k:'p',x:px,y:py,vx:(Math.random()-.5)*30,vy:-20-Math.random()*30,life:.7+Math.random()*.3,col:['#8a6a4a','#b08a62','#6e5440'][k%3],r:2})}/* ひびのかけらが、ぱらぱら落ちる */
+  for(let k=0;k<8;k++){const px=(x+.15+Math.random()*.7)*TS,py=(y+.2+Math.random()*.6)*TS-lift;fx.push({k:'p',x:px,y:py,gy:py+lift,vx:(Math.random()-.5)*30,vy:-20-Math.random()*30,life:.7+Math.random()*.3,col:['#8a6a4a','#b08a62','#6e5440'][k%3],r:2})}/* ひびのかけらが、ぱらぱら落ちる */
   j3U('twood',.3,0);j3Ding(12,J4MENDMS/1000,.3);j3Ding(19,J4MENDMS/1000+.06,.3);
   if(r&&typeof JOYU!=='undefined'&&!r.hidden){JOYU.set(r,now+J4MENDMS+900);if(typeof JUMP!=='undefined')JUMP.set(r,now+J4MENDMS)}}
 function juiceMendDraw(now){const P=2;for(let i=J4MEND.length-1;i>=0;i--){const m=J4MEND[i],e=now-m.t0;if(e>J4MENDMS+400){J4MEND.splice(i,1);continue}
@@ -84,7 +84,7 @@ function juiceMendDraw(now){const P=2;for(let i=J4MEND.length-1;i>=0;i--){const 
 
 /* ---------- 5. クモの巣をはらった ---------- */
 function juiceWeb(j,side){if(!j4OK())return;const x=j%W,y=(j/W)|0,lift=j4Lift(x,y),cx=(x+(side?.8:.2))*TS,cy=(y+.15)*TS-lift,now=performance.now();
-  for(let k=0;k<10&&J4THREAD.length<40;k++)J4THREAD.push({x:cx+(Math.random()-.5)*10,y:cy+(Math.random()-.5)*6,vx:(Math.random()-.5)*14,vy:-6-Math.random()*8,ph:Math.random()*6,t0:now,len:1400+Math.random()*600,w:k%3?1:2});/* 糸のきれはし：ふわふわ、ゆっくり落ちる */
+  for(let k=0;k<10&&J4THREAD.length<40;k++)J4THREAD.push({x:cx+(Math.random()-.5)*10,y:cy+(Math.random()-.5)*6,gy:(y+.15)*TS,vx:(Math.random()-.5)*14,vy:-6-Math.random()*8,ph:Math.random()*6,t0:now,len:1400+Math.random()*600,w:k%3?1:2});/* 糸のきれはし：ふわふわ、ゆっくり落ちる */
   addFloatG(x+.5,y+.5,-1.5,'住み心地+5','#ffe58a');j3U('tcloth',.25,5);j3Ding(16,.15,.25);J4ST&&(J4ST.force=1)}
 function juiceThreadDraw(now,dt){const P=2;ctx.fillStyle='#fdfbf4';for(let i=J4THREAD.length-1;i>=0;i--){const t=J4THREAD[i],e=now-t.t0;if(e>t.len){J4THREAD.splice(i,1);continue}
     isoAtA(ctx,fxFoot(t));t.vy=Math.min(t.vy+20*dt,14);t.x+=(t.vx+Math.sin(now/260+t.ph)*10)*dt;t.y+=t.vy*dt;ctx.globalAlpha=.85*(1-e/t.len);ctx.fillRect(Math.round(t.x/P)*P,Math.round(t.y/P)*P,P*t.w,P)}ctx.globalAlpha=1}
