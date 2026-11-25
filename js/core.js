@@ -25,10 +25,11 @@ let WD=0;/* いまのステージ */
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return KV.getItem('hk-test')==='1'}catch(_){return false}})();
 const $=s=>document.querySelector(s);
 /* ---------- 予約の係：ゲームと演出の、遅れて動く処理は、ここに予約する（setTimeout のかわり）。時計 GCLK（ミリ秒）は main.js の frame が毎コマ進め、メニュー（シート・タイトル・マップえらび）をひらいているあいだと、タブをかくしているあいだは止まる。画面の部品だけの処理・音の先読み・読みこみ待ちは setTimeout のまま ---------- */
-let GCLK=0,GQN=0;const GQ=[];
-function later(fn,ms){const id=++GQN;GQ.push({id,at:GCLK+(+ms>0?+ms:0),fn});return id}
+let GCLK=0,GQN=0,GCLKR=0,GCLKON=false;const GQ=[];/* GCLKR：さいごに時計を進めた本当の時刻・GCLKON：時計が動いているか（main.js） */
+const clockNow=()=>GCLKON?GCLK+Math.min(250,performance.now()-GCLKR):GCLK;/* コマのあいだに予約しても、そのコマのはじめからはからない（1コマぶん早く動かない）。250 は frame の1コマの上限 */
+function later(fn,ms){const id=++GQN;GQ.push({id,at:clockNow()+(+ms>0?+ms:0),fn});return id}
 function laterClear(id){const i=GQ.findIndex(q=>q.id===id);if(i>=0)GQ.splice(i,1)}
-function clockStep(ms,onErr){GCLK+=ms;if(!GQ.length)return;const due=[];for(let i=GQ.length-1;i>=0;i--)if(GQ[i].at<=GCLK)due.push(GQ.splice(i,1)[0]);due.sort((a,b)=>a.at-b.at||a.id-b.id);/* 時間のはやい順・おなじなら予約した順。動かしているあいだに足された予約は、つぎのコマから */for(const q of due){try{q.fn()}catch(e){if(onErr)onErr(e);else throw e}}}
+function clockStep(ms,onErr){GCLK+=ms;GCLKR=performance.now();if(!GQ.length)return;const due=[];for(let i=GQ.length-1;i>=0;i--)if(GQ[i].at<=GCLK)due.push(GQ.splice(i,1)[0]);due.sort((a,b)=>a.at-b.at||a.id-b.id);/* 時間のはやい順・おなじなら予約した順。動かしているあいだに足された予約は、つぎのコマから */for(const q of due){try{q.fn()}catch(e){if(onErr)onErr(e);else throw e}}}
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const pick=a=>a[(Math.random()*a.length)|0];

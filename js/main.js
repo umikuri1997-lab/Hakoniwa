@@ -217,14 +217,14 @@ let CAMW=null;/* おわりの処理つきのカメラ（上書きの見はり）
 function frame(now){
   if(!running)return;requestAnimationFrame(frame);
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
-  if(!S||STORY_REPLAY_SHELL){last=now;return}
+  if(!S||STORY_REPLAY_SHELL){last=now;GCLKON=false;return}
   if(now-frameT<(menuOpen?125:31))return;frameT=now;
   if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S){GRD.job=null;tmpFree()}if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000)GRD.job=stageJob()}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
   if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   if(started&&!IS_STORY_REPLAY&&!document.hidden&&$('#idle').hidden&&!menuOpen)playAdd(rdt);/* あそんだ時間（クリアまでの記録）。S には、セーブのときに入れる */
-  const PZ=started&&sheet!=null,prdt=PZ?0:rdt;if(!PZ&&!menuOpen)clockStep(rdt*1000,e=>frameErr('later',e));/* 予約の係の時計（core.js）：メニューのあいだは止める *//* メニューを開いているあいだは、アニメーションも止める */
+  const PZ=started&&sheet!=null,prdt=PZ?0:rdt;GCLKON=!PZ&&!menuOpen;if(GCLKON)clockStep(rdt*1000,e=>frameErr('later',e));/* 予約の係の時計（core.js）：メニューのあいだは止める *//* メニューを開いているあいだは、アニメーションも止める */
   if(CAMW&&CAMW!==camAnim){const w=CAMW;CAMW=null;if(!w.fin&&w.done){w.fin=1;try{w.done()}catch(e){frameErr('cam',e)}}}/* おわりの処理つきのカメラが、とちゅうでほかの動きに上書きされたら、おわりの処理だけはする（しないと、演出がおわらず、ゲームが止まったままになる） */if(camAnim&&camAnim.done)CAMW=camAnim;
   if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const a=camAnim,d=a.done;camAnim=null;a.fin=1;if(d)d()}}
   followTick(rdt);/* 見守る */flingTick(rdt);/* 地図の慣性（input.js） */
