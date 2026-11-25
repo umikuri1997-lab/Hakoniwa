@@ -35,14 +35,27 @@ def foot(ph):
     if ph < PI: y, h = WSTEP*(1-2*ph/PI), 0.0
     else: y, h = -WSTEP*C(ph-PI), WLIFT*S(ph-PI)
     a = math.asin(y/WHIP); return a, h-WHIP*(1-C(a))   # 足をふると足先が上がる分だけ下げて、ついている足を地面からうかせない
-def walk(w, face):
-    # かわいい歩き方（持ち主のたのみ）：ちょこちょこ はずむ（上下を大きく・パッシングでぴょこっと上がる）・体はついた足のほうへ少しよたよた・少し前のめり。
-    # 頭は体のゆれと反対にもどして、前を向いたまま（持ち主：頭をふりすぎない）。うでは少し外へ開いて、大きめに前うしろへふる。
-    bob = -2.6*C(2*(w-PI/2-WDOWN)); bob = bob+0.6*max(0.0, -C(2*(w-PI/2-WDOWN)))   # 上がる所を少しとがらせて、ぴょこっと
-    down = armdown(face, {0: 0.95, 2: 0.8, 1: PI/2}[face])
-    sN, sF = sides(face, 1.0*S(w), 1.0*S(w+PI)); lM, hM = foot(w-3*PI/2); lP, hP = foot(w-PI/2)
-    return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=0.03*S(w), roll=0.05*S(w), lean=0.05,
-                sN=sN, sF=sF, bN=down, bF=down, hy=-0.02*S(w), hr=-0.045*S(w), hp=-0.04+0.05*C(2*w), top=0.18*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
+WALKST = {   # 属性ごとの歩き方（持ち主がえらんだ案）。足の運び方（WSTEP）と速さは同じ。bob：上下・peak：上がる所のとがり・slow：上下を1歩でなく1まわりに1回（ゆったり）
+    #   roll・yaw：体のゆれ・arm：うでのふり・down：うでの下げ方（画面の中で水平からの角度）・top：頭の上の物のゆれ・nod：頭のうなずき
+    'base':  dict(bob=2.6, peak=0.6, slow=0, roll=0.05, yaw=0.03, arm=1.0, down=0.95, top=0.18, nod=0.05),
+    'earth': dict(bob=1.2, peak=0.0, slow=0, roll=0.08, yaw=0.02, arm=0.6, down=1.1, top=0.10, nod=0.03),   # どっしり・のっしのっし
+    'water': dict(bob=0.8, peak=0.0, slow=0, roll=0.02, yaw=0.02, arm=0.45, down=1.15, top=0.08, nod=0.02),  # すーっと なめらか
+    'fire':  dict(bob=3.4, peak=1.0, slow=0, roll=0.04, yaw=0.03, arm=1.3, down=0.85, top=0.25, nod=0.06),   # ぴょんぴょん元気
+    'wind':  dict(bob=2.2, peak=0.0, slow=1, roll=0.02, yaw=0.02, arm=0.6, down=0.95, top=0.15, nod=0.03),   # ふわふわ軽く
+    'wood':  dict(bob=1.6, peak=0.2, slow=0, roll=0.06, yaw=0.03, arm=0.7, down=1.05, top=0.30, nod=0.04),   # のんびり・よたよた・頭の葉をゆらす
+}
+def walk_el(st):
+    def f(w, face):
+        # 体はついた足のほうへ少しゆれ、頭は体と反対にもどして前を向いたまま（持ち主：頭をふりすぎない・胸をそらせない）
+        ph = 2*(w-PI/2-WDOWN)
+        bob = -st['bob']*C(w-PI/2) if st['slow'] else -st['bob']*C(ph)+st['peak']*max(0.0, -C(ph))
+        down = armdown(face, {0: st['down'], 2: st['down']-0.15, 1: PI/2}[face])
+        sN, sF = sides(face, st['arm']*S(w), st['arm']*S(w+PI)); lM, hM = foot(w-3*PI/2); lP, hP = foot(w-PI/2)
+        return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=st['yaw']*S(w), roll=st['roll']*S(w),
+                    sN=sN, sF=sF, bN=down, bF=down, hy=-0.7*st['yaw']*S(w), hr=-0.9*st['roll']*S(w), hp=st['nod']*C(2*w), top=st['top']*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
+    return f
+walk = walk_el(WALKST['base'])
+WALKEL = {el: walk_el(WALKST[el]) for el in ('earth', 'water', 'fire', 'wind', 'wood')}   # 持ち主のモデルで写すとき（fbx_build）、属性ごとにこちらを使う
 M('walk', 8, 9/(2*PI), walk)
 # ---- 立つ（クォータービューの絵で、3Dの絵のない立ち姿のかわり。js の spMotion） ----
 M('stand', 4, 0.5, lambda w, face: breathe({}, w))

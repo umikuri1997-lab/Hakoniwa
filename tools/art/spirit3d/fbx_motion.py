@@ -79,7 +79,9 @@ def pose(el, p, face):
     T = {}
     for nm in rest:
         if nm in ('root',): T[nm] = np.eye(4)
-        elif nm in ('neck', 'head', 'hood_tip'): T[nm] = Th
+        elif nm in ('neck', 'head'): T[nm] = Th
+        elif nm == 'hood_tip':   # 頭の上の物：根もとで、よこへゆれる（top）
+            tb = F@rest['hood_tip'][:3, 3]*100; T[nm] = Th@rigid(ry(g('top')), tb)
         elif nm.startswith(('thigh', 'shin', 'foot')):
             s = 'M' if nm.endswith('.R') else 'P'   # ゲームの M はキャラの −x（モデルの .R）
             hip = F@rest['thigh'+nm[nm.index('.'):]][:3, 3]*100

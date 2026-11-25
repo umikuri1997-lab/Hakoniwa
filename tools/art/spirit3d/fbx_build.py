@@ -26,7 +26,8 @@ def job(a):
     faces = (0, 1, 2) if iso else (0,)   # 正面の絵（守り神と話すとき：正面の行だけ使う）は、正面だけ写して、横・うしろの行にも同じ絵を入れる
     for face in faces:
         for i in range(n):
-            w = 2*np.pi*i/n; p = m['f'](w, face)
+            from motions import WALKEL
+            w = 2*np.pi*i/n; p = (WALKEL[el] if name == 'walk' and el in WALKEL else m['f'])(w, face)   # 歩く：属性ごとの歩き方
             T = FM.pose(el, p, face); S = FM.scene(el)
             pts, anc = FM.props(el, p, face)
             yaw = core.ISOY if (iso and face in (0, 2)) else 0.0
