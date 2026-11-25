@@ -604,7 +604,7 @@ function caveEnter(list,food,fl){if(CV||!list.length)return false;fl=clamp(fl|0,
   list.forEach((r,i)=>{const j=cells[i]!=null?cells[i]:cvJ(sx,sy);C.party.push({r,elem:r.elem,id:r.id,x:cvX(j)+.5,y:cvY(j)+.5+CVOY,path:[],face:1,back:false,turn:0,swing:0,fback:false,fatk:0,job:null,jq:[],mv:false,chase:false,rp:0,cj:-1,hurtU:0,joyU:0,shockU:0,eatU:0,blowU:0,eatE:'',jumpT:0})});
   for(let y=0;y<CVH-1;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]&&!C.ab[j]&&!C.hw[j]&&!C.ob.has(j)&&C.g[j+CVW]&&!C.wt[j+CVW]&&hash((j*31+fl*977+5)>>>0)<CVOREP)C.ore.add(j)}/* 光る鉱石：正面の見える岩 */
   cvLiftInit(C);cvSkInit(C);/* 石像（cave-shinden.js） */cvKuiInit(C);/* くい（cave-shisetsu.js） */cvHoneInit(C);/* ほねの橋（cave-hakaba.js） */for(const[a,b,c,d]of F.house||[])for(let y=b;y<=d;y++)for(let x=a;x<=c;x++){const j=cvJ(x,y);if(C.g[j])C.hf[j]=1}/* 家の中（cave-haison.js） */cvPackInit(C);/* ねずみのむれ */
-  C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function'){tsCaveCarve(C);tsCaveIbuki(C)}/* 土：彫り絵のかべ・2階のイブキ（tsuchi.js） */
+  C.top=0;for(let j=0;j<CVW*CVH;j++)if(C.g[j]&&C.lv[j]>C.top)C.top=C.lv[j];if(typeof tsCaveCarve==='function'){tsCaveCarve(C);tsCaveIbuki(C);tsOkuEnter(C)}/* 土：彫り絵のかべ・2階のイブキ（tsuchi.js） */
   cvDecoPlace();cvBakeEnter(C);C.hud=cvHudMake();document.body.appendChild(C.hud);document.body.classList.add('cave');
   if(typeof followEnd==='function')followEnd();if(camAnim&&!camAnim.done)camAnim=null;LIGHTARM=false;if(typeof setMode==='function')setMode('look');
   cam.z=clamp(cam.z,1.15,1.8);cvCamTo(1);for(const a of C.party)cvReveal(a.x,a.y-CVOY,cvSeeR());cvHudUpd();sfx('next');cvAwayOut(list);cvVNoteInit(C);toast('洞窟の'+(fl+1)+'階に入った');return true}
@@ -673,7 +673,7 @@ function cvDie(a){const C=CV,r=a.r;C.party=C.party.filter(q=>q!==a);S.cvAway=(S.
   if(STATUE>=0){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.5}/* 村の神殿の前で消えたのと同じ */die(r);cvHudUpd();
   if(!C.party.length)later(()=>{if(CV===C)caveExit(false)},600)}
 function cvTarget(a){const C=CV;let b=null,bd=CVAGGRO;const f=C.focus;if(f&&!f.dead&&!f.down&&!cvGlassOn(f)&&Math.hypot(f.x-a.x,f.y-a.y)<CVAGGRO+4)return f;/* タップしたコワイノは、ねていてもねらう */
-  for(const e of C.en){if(e.dead||e.asleep||e.down)continue;const d=Math.hypot(e.x-a.x,e.y-a.y)+(a.elem==='water'&&e.stun>1?3:0);if(d<bd){bd=d;b=e}}return b}
+  for(const e of C.en){if(e.dead||e.asleep||e.down||EN[e.type].tsOok)continue;const d=Math.hypot(e.x-a.x,e.y-a.y)+(a.elem==='water'&&e.stun>1?3:0);if(d<bd){bd=d;b=e}}return b}
 /* まもりの光：村と同じ（パワー1・チャージ・威力・とめる時間・範囲は GUP）。光の落ちた所のまわりは見えるようになり、うすい壁はくずれる */
 function caveLight(tx,ty){const C=CV;PTW.q=true;if(LIGHTCD>0)return toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒'),false;if(S.pt<1)return toast('パワーが足りません'),false;if(tx<0||ty<0||tx>=CVW||ty>=CVH)return false;
   S.pt-=1;LIGHTCD=lightCdMax();const R=gupOf('rng').v[gupLv('rng')],wy=ty+CVOY;fxSpr('godlight',tx*TS+16,wy*TS+26);
@@ -686,7 +686,7 @@ function cvLightHit(tx,ty,R){const C=CV,G=gupOf('stun'),gs=gupLv('stun'),pw=gupO
     if(!dx&&!dy||!C.g[j])continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;later(()=>{if(CV===C)fxSpr('glspark',x*TS+16,(y+CVOY)*TS+16+GLSPY)},d*GLSTEP)}
   if(gl){sfx('crack');toast('ガラスの入れ物が、われた。中から、なにかが出てきた','warn')}
   if(broke){sfx('crack');toast(broke===2?'岩がくずれた':'うすい壁がくずれた','good')}
-  for(const e of C.en){if(e.dead||Math.max(Math.abs((e.x|0)-tx),Math.abs((e.y|0)-CVOY-ty))>R)continue;if(e.down){e.down=0;e.byLight=1;cvDefeat(e,null);continue}/* くずれたほねに、とどめ */hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+CVOY+.5});e.stun=G.v[gs];e.asleep=false;e.path=[];if(e.hp<=0){e.byLight=1;cvDefeat(e,null)}}
+  for(const e of C.en){if(e.dead||Math.max(Math.abs((e.x|0)-tx),Math.abs((e.y|0)-CVOY-ty))>R)continue;if(e.down){e.down=0;e.byLight=1;cvDefeat(e,null);continue}if(EN[e.type].tsOok){tsOkuLight(C,e);continue}/* かげのゆりかご（tsuchi-oku.js） *//* くずれたほねに、とどめ */hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+CVOY+.5});e.stun=G.v[gs];e.asleep=false;e.path=[];if(e.hp<=0){e.byLight=1;cvDefeat(e,null)}}
   cvBakeLight(tx,ty,R);C.flash={x:tx+.5,y:ty+.5,t0:now};if(C.g[cvJ(tx,ty)])cvReveal(tx+.5,ty+.5,R+2.5);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=tx+dx,y=ty+dy;if(x>=0&&y>=0&&x<CVW&&y<CVH)C.seen[cvJ(x,y)]=1}
   for(const a of C.party)if(Math.max(Math.abs(a.x-tx-.5),Math.abs(a.y-CVOY-ty-.5))-R<=GLSHOCKR){a.shockU=now+GLSHOCKT;a.jumpT=now}}
 
@@ -794,7 +794,7 @@ function cvActor(a,cdt,mv,now){const C=CV,r=a.r;r.hunger-=((relOn('fuigo')?CVDEE
       if(d<=E.rng&&cvLos(a.x,a.y-CVOY,en.x,en.y-CVOY)){if(C.t>=a.fatk&&!(E.stop&&en.stun>1))cvAttack(a,en)}
       else if((a.rp-=mv)<=0){a.rp=.4;const ej=cvCell(en),p=cvBfs(cj,q=>cvAdj(q,ej)||q===ej);if(p&&p.length){if(p[p.length-1]===ej)p.pop();a.path=p;a.chase=true}}}}}
   if(r.hunger<=0){r.hunger=0;cvDie(a)}}
-function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.type];cvStep(e,now,false);
+function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.type];if(D.tsOok)return;/* かげのゆりかご：tsOkuTick がうごかす */cvStep(e,now,false);
   if(e.asleep){if(e.tsHold)return;/* 土：イブキと会う会話がおわるまで（tsuchi.js） */const R=cvWakeR(e);if(C.seen[cvCell(e)])for(const a of C.party)if(Math.hypot(a.x-e.x,a.y-e.y)<=R&&cvWakeOK(e,a)&&cvLos(e.x,e.y-CVOY,a.x,a.y-CVOY)){e.asleep=false;e.wakeT=now;cvPackWake(e,now);break}return}
   if(e.stun>0){e.stun-=cdt;return}
   if(D.pray&&cvSkPray(e,mv,now))return;/* 光をおがむせきぞう：しぼると、おがむ（cave-shinden.js） */
@@ -807,8 +807,8 @@ function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.ty
   if(e.path.length){const nx=e.path[0];if((e.wait||0)<2&&C.en.some(q=>q!==e&&!q.dead&&(cvCell(q)===nx||q.nx===nx))){e.wait=(e.wait||0)+mv;e.nx=-1;return}e.wait=0;e.nx=nx}else e.nx=-1;
   cvMove(e,mv*CVFOE*D.sp)}
 function caveFrame(rdt,now){const C=CV;if(!C||cvHold())return;const sp=S.speed||1,cdt=rdt*MIN_PER_SEC*sp,mv=rdt*sp;C.t+=cdt/DAYLEN;LIGHTCD=Math.max(0,LIGHTCD-rdt*sp);
-  for(const a of C.party.slice()){cvActor(a,cdt,mv,now);if(CV!==C)return}
-  cvLiftTick(mv,now);cvSkTick(mv,now);cvKuiTick(mv,now);for(const e of C.en)cvFoe(e,cdt,mv,now);if(typeof tsCaveTick==='function')tsCaveTick(C,now);cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
+  for(const a of C.party.slice()){if(a.tsSleep>0){a.tsSleep=Math.max(0,a.tsSleep-mv);a.path=[];a.mv=false;continue}/* 土：かげのゆりかごにふれて、ねむっている（tsuchi-oku.js） */cvActor(a,cdt,mv,now);if(CV!==C)return}
+  cvLiftTick(mv,now);cvSkTick(mv,now);cvKuiTick(mv,now);for(const e of C.en)cvFoe(e,cdt,mv,now);if(typeof tsCaveTick==='function'){tsCaveTick(C,now);tsOkuTick(C,mv,now)}cvBakeTick(cdt,mv,now);cvRocks(now);if(CV!==C)return;
   if(C.en.some(e=>e.dead))C.en=C.en.filter(e=>!e.dead);
   if(C.askHome>=0&&C.party.every(a=>!a.path.length)){const j=C.askHome;C.askHome=-1;if(C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6))cvHomeAsk()}
   if((C.hudT+=rdt)>.3){C.hudT=0;cvClearCheck();cvHudUpd()}
@@ -987,7 +987,7 @@ function cvDrawActor(a,now){const C=CV,r=a.r,eat=a.eatU>now,walking=a.path.lengt
   const jd=now-(a.jumpT||-1e9),hop=jd>=0&&jd<1000?Math.abs(Math.sin(jd/130))*9*(1-jd/1000):0,fy=py+9-hop,wd=spWalkD(a,a.x,a.y,walking);/* 歩く絵の上下は絵の中（コードでは上下させない）・コマは歩いた道のりで */
   shadow(ctx,px,py+8,12,3.6);
   const pk=a.swing&&sd>=0&&sd<420?sd/420:null,J=a.job&&!walking?a.job:null,job=J&&CVJOBANIM[J.k]&&(J.k==='push'||J.k==='topple'?cvCell(a)===J.s:true)?CVJOBANIM[J.k]:a.blowU>now?'point':'',joy=a.joyU>now,fight=C.en.some(e=>!e.dead&&!e.asleep&&Math.hypot(e.x-a.x,e.y-a.y)<CVAGGRO);
-  drawSpirit(ctx,r.elem,px,fy,.435,a.face<0?-1:1,{dot:1,t:now/1000+a.id*1.7,vr:r.vr,pp:pk,anim:pk!=null?'punch':eat?'eat':joy?'clap':job,food:eat?a.eatE:'',walk:walking,wd,work:!!job,back:joy||eat?false:a.back,turn:joy||eat?0:a.turn,mood:a.shockU>now?'shock':joy||eat?'joy':r.hunger<HUNGRYF?'hungry':fight?'brave':'',blink:(now/1000+a.id*1.3)%3.4<.13});
+  drawSpirit(ctx,r.elem,px,fy,.435,a.face<0?-1:1,{dot:1,t:now/1000+a.id*1.7,vr:r.vr,pp:pk,anim:pk!=null?'punch':eat?'eat':joy?'clap':job,food:eat?a.eatE:'',walk:walking,wd,work:!!job,back:joy||eat?false:a.back,turn:joy||eat?0:a.turn,sleep:a.tsSleep>0,mood:a.shockU>now?'shock':joy||eat?'joy':r.hunger<HUNGRYF?'hungry':fight?'brave':'',blink:(now/1000+a.id*1.3)%3.4<.13});
   if(a.hurtU>now){const m=hMax(r),v=clamp(r.hunger/m,0,1);P4('rgba(0,0,0,.6)',px-12,py+11,24,5);P4(v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b',px-11,py+12,Math.max(2,Math.round(22*v)),3)}
   if(J&&J.t>0){const T=J.k==='topple'?CVSKPUSH:J.k==='push'?CVPUSHT:J.k==='sluice'?CVSLUICET:CVLEAFT,f=clamp(J.t/T,0,1);P4('rgba(150,115,75,.6)',px-17,py+17,34,7);P4('#e8dcc0',px-16,py+18,32,5);P4('#e0a43a',px-16,py+18,Math.max(2,Math.round(32*f)),5)}}
 const cvLureOn=j=>{const x=cvX(j)+.5,y=cvY(j)+.5+CVOY;return CV.party.some(a=>Math.hypot(a.x-x,a.y-y)<=CVLURE)};
@@ -1050,4 +1050,4 @@ function cvShadeDraw(j,o,ox,oy,now){const w=o.w*TS,h=o.h*TS,t=now/1000,br=Math.s
   P4('rgba(4,4,6,.45)',ox-6,oy+h-6,w+12,8);
   for(let yy=0;yy<h+16;yy+=2){const v=(yy-(h+16)/2)/((h+16)/2),ww=Math.round((w/2+8)*Math.sqrt(Math.max(0,1-v*v))),c=yy<8?'#3a2c20':yy<h/2?'#2a2018':'#1e1812';P4(c,ox+w/2-ww,oy-16-rise+yy+Math.round(rise*yy/(h+16)),ww*2,2)}
   for(let i=0;i<14;i++){/* まきついた根 */let x=ox+hs(i)*w,y=oy-14+hs(i+20)*(h+6);const dx=hs(i+40)<.5?2:-2;for(let k=0;k<14;k++){P4(k%3?'#5a4030':'#76563c',x,y,3,2);x+=dx;y+=hs(i*7+k)<.5?1:2}}
-  for(let i=0;i<6;i++){const p=(t*.25+i/6)%1;ctx.globalAlpha=(1-p)*.5;P4('#8a7a68',ox+hs(i+60)*w,oy-18-p*14,1,1)}ctx.globalAlpha=1}
+  for(let i=0;i<6;i++){const p=(t*.25+i/6)%1;ctx.globalAlpha=(1-p)*.5;P4('#8a7a68',ox+hs(i+60)*w,oy-18-p*14,1,1)}ctx.globalAlpha=1;if(typeof tsOkuShade==='function')tsOkuShade(o,ox,oy,now)}/* 土：大きなあなぐまと根（tsuchi-oku.js） */
