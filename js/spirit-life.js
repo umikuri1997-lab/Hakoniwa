@@ -622,14 +622,15 @@ const NIGATE={fire:['fountain'],wood:['campfire'],water:['campfire'],earth:['swi
 const nigate=(el,k)=>(NIGATE[el]||[]).includes(k);
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw','sandbox','swing','fountain','campfire','merry','cup','skyswing','wheel']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
 const FISHP=.125,FISHPS=.2,FISHPA=.1;/* つりに行く確率：ふつうの水べ12.5%、つり場（水べのいす）20%、つりスポット・よるづり場は1つで+10% */
+const PLAYSC={pt:3,like:6,fav:7,park:4,dist:.3,rand:2,fish:10,fishSpot:12,fishLike:6,fishWater:9};/* 遊び・つりをえらぶ点数：遊び＝遊びのパワー×pt＋すき like＋とくい fav＋公園 park×数−歩数×dist＋ゆらぎ（0〜rand）。つり＝fish＋つり場 fishSpot＋つりずき fishLike＋水のせいれい fishWater−歩数×dist＋ゆらぎ */
 function goPlay(r,G,strict){
   if(windOpGo(r,G))return true;/* 風の遊園地：風のせいれいは、遊具の係になる（wind.js） */
   const fq=Math.random()/((r.elem==='water'?2:1)*(r.like==='fish'?1.5:1)),allowFishing=fq<FISHPS+FISHPA*2;/* つりの割合：ふつうの子は1日1回くらい、水のせいれいは2回くらい（えらぶ点数が高い）、つり好きはもっと。つり場では、行く確率が上がる */let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
-    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)&&useFor(j,r)&&!nigate(r.elem,o)&&windPlayOK(r,o,j)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)+((FAVTOY[r.elem]||[]).includes(o)?7:0)+spotN(j,'park','park2')*4-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw}}}}
+    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)&&useFor(j,r)&&!nigate(r.elem,o)&&windPlayOK(r,o,j)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*PLAYSC.pt+(r.like===o?PLAYSC.like:0)+((FAVTOY[r.elem]||[]).includes(o)?PLAYSC.fav:0)+spotN(j,'park','park2')*PLAYSC.park-d*PLAYSC.dist+Math.random()*PLAYSC.rand;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw}}}}
     const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&!(t==='campfire'&&campOut(anc(k)))&&free('o'+anc(k),p.cap)&&!toyTired(r,anc(k))&&!nigate(r.elem,t)&&useFor(k,r)&&windPlayOK(r,t,anc(k)))}),fk=fk0>=0?anc(fk0):-1;
-    if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*3+(r.like===w?6:0)+((FAVTOY[r.elem]||[]).includes(w)?7:0)+spotN(fk,'park','park2')*4-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw}}}}
-    if(allowFishing&&canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)&&fq<(fSpot(j)?FISHPS+FISHPA*spotN(j,'fishspot','yoruzuri'):FISHP)+(typeof pathA==='function'?pathA('fish'):0)/100){const sp=fSpot(j),s=10+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
+    if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*PLAYSC.pt+(r.like===w?PLAYSC.like:0)+((FAVTOY[r.elem]||[]).includes(w)?PLAYSC.fav:0)+spotN(fk,'park','park2')*PLAYSC.park-d*PLAYSC.dist+Math.random()*PLAYSC.rand;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw}}}}
+    if(allowFishing&&canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)&&fq<(fSpot(j)?FISHPS+FISHPA*spotN(j,'fishspot','yoruzuri'):FISHP)+(typeof pathA==='function'?pathA('fish'):0)/100){const sp=fSpot(j),s=PLAYSC.fish+(sp?PLAYSC.fishSpot:0)+(r.like==='fish'?PLAYSC.fishLike:0)+(r.elem==='water'?PLAYSC.fishWater:0)-d*PLAYSC.dist+Math.random()*PLAYSC.rand;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
   if(typeof mzRaftPick==='function')best=mzRaftPick(best);/* 水のステージ：いかだ乗り場は川くだり */

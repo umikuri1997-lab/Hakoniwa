@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2343;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=0;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -249,8 +249,8 @@ function frame(now){
     questT+=rdt;if(questT>1&&!GIFT_ACTIVE&&!STORY_REPLAY_SHELL&&!sacredQuietActive()){questT=0;checkLevel();checkQuest()}
     saveT+=rdt;if(saveT>10){saveT=0;save()}}
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;save();KV.push(true);if(AC)AC.suspend()}else{if(AC)AC.resume();if(!running){running=true;last=performance.now();requestAnimationFrame(frame)}}});
-addEventListener('pagehide',()=>{save();KV.push(true)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;save();if(AC)AC.suspend()}else{if(AC)AC.resume();if(!running){running=true;last=performance.now();requestAnimationFrame(frame)}}});
+addEventListener('pagehide',()=>{save()});
 addEventListener('resize',resize);
 /* 一度画面をとじて戻ると音が止まったままになる（iOS）→ 次のタッチで鳴らしなおす */
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{});if(ev!=='pointerdown')audioUnlock()},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
@@ -300,7 +300,6 @@ $('#cYes').onclick=confirmYes;$('#cRot').onclick=e=>{e.stopPropagation();rotPend
 /* ---------- 起動 ---------- */
 resize();
 showUI(false);$('#app').classList.add('ready');
-KV.onCloud(()=>{if(started)return;if(!$('#maps').hidden)showMaps()});
 requestAnimationFrame(frame);
 window.__game={get doSummon(){return doSummon},get pinkPrompts(){return {...SEVW}},checkSev,sevTalk,get RECIPES(){return RECIPES},subTalk,walk,hour,nushiReturns,centerOn,rebuild(){rebuildStatic(true)},get cam(){return cam},get avoidPath(){return avoidPath},get bfs(){return bfs},get moveR(){return moveR},get sepRes(){return sepRes},get pathTo(){return pathTo},dialog,get drawObj(){return drawObj},get drawFloor(){return drawFloor},get drawShade(){return drawShade},set ICON(v){ICON=v},openSheet,get S(){return S},stepWorld,place,spawnWave,waveFor,checkLevel,checkQuest,newGame,orderFurn,recount,get ATTR(){return ATTR},get BASEPCT(){return BASEPCT}};
 
