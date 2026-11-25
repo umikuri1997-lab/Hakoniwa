@@ -67,6 +67,7 @@ def pick(M, pre):
 class FbxSpirit(Spirit):
     def __init__(self, el):
         super().__init__(el)   # 色・チップの絵のもと（いまと同じ）
+        self.true_depth = True   # 顔とずきんは本当の奥行きでかさねる（チップの形のときの「顔はずきんに勝つ」はしない）
         M = meshes(el); E = self.E
         BT, BB = M['Body']
         def part(*bones):
@@ -94,7 +95,7 @@ class FbxSpirit(Spirit):
         hk = pick(M, 'hood')
         if hk: textured('hood', np.concatenate([surface(M[k][0]) for k in hk]), (E+'hood',), (E+'hoodS',))   # 風は ずきんなし（持ち主のモデル）
         if 'Head' in M:
-            textured('face', surface(M['Head'][0]), ('sp:head', E+'bang') if el == 'fire' else ('sp:head',), ('sp:headS',))
+            textured('face', surface(M['Head'][0]), ('sp:head',), ('sp:headS',))   # 火の前がみは、モデルのずきんにある
         if 'eye' in M:   # モデルの目（両目のまん中・いちばん前）
             T = M['eye'][0].reshape(-1, 3); self.eyep = np.array([0.0, T[:, 1].max(), T[:, 2].mean()])
         self.tops = []
@@ -105,16 +106,15 @@ class FbxSpirit(Spirit):
                 textured(nm, P, (E+nm,), (E+nm+'S',))
                 self.tops.append((nm, np.array([P[:, 0].mean(), P[:, 1].mean(), P[:, 2].min()])))
         # 風のはね：つながった かたまりごとに1まい。根もと（体にいちばん近い点）で、前うしろの軸のまわりにふる
-        #   4まいは、まん中から見た 左上・右上・左下・右下。ふる向き（sg）は、いまの WINGS と同じ（左上 −1・右上 +1・左下 +1・右下 −1）
+        #   モデルの形のまま（ふらない）。上の2まい（頭のよこ）は頭につけ、下の2まいは体につける
         self.wings = []
         for k in pick(M, 'Hane'):
-            P = surface(M[k][0]); c = P.mean(0)
+            P = surface(M[k][0]); zc = P[:, 2].mean()
             a, ax, ay = chip(E+'leaf'); col = a[a[..., 3] > 0][:, :3].mean(0).astype(np.uint8)
-            for up, right, sg in ((1, 0, -1), (1, 1, 1), (0, 0, 1), (0, 1, -1)):
-                m = ((P[:, 2] > c[2]) == bool(up)) & ((P[:, 0] > c[0]) == bool(right)); Q = P[m]
-                if len(Q) < 20: continue
-                pv = Q[np.argmin(np.linalg.norm(Q-c, axis=1))]
-                self.wings.append((Q, np.tile(col, (len(Q), 1)), pv, np.array([0, 1., 0]), sg))
+            up, lo = P[P[:, 2] > zc], P[P[:, 2] <= zc]
+            if len(up):
+                C = np.tile(col, (len(up), 1)); self.tex['ears'] = (up, (C, C, C)); self.fixed_head_parts = ('ears',)
+            if len(lo): self.cape = (lo, np.tile(col, (len(lo), 1)))
         self.cache = {}
 
     def flat(self, face):
