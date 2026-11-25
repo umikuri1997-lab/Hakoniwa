@@ -23,8 +23,8 @@ function letterQ(r,k,v,sub,d,sec){/* 手紙を書く（つぎの朝にとどく�
 const LTCAREP=.35,LTSECP=.2;/* なでた・おやつ・おくりもの・毛布のあと、お礼の手紙を書く確率 ／ 朝に、ひみつの好みの手紙を書く確率 */
 function careNote(r,k,v){/* 守り神がしてくれたことの、お礼の手紙（つぎの朝にとどく） */if(!r||IS_STORY_REPLAY||Math.random()>=LTCAREP)return;
   const f=k==='snack'?(FOODS[v]?FOODS[v].name:''):k==='gift'?(typeof presentName==='function'?presentName(v):''):'';if((k==='snack'||k==='gift')&&!f)return;letterQ(r,'care',{f},k)}
-function letterSecretMorning(){/* 朝：まだわかっていない好みを、ひみつの手紙で打ちあける（好きな料理は、食べるまで言わない） */if(typeof prefKnown!=='function'||Math.random()>=LTSECP)return;
-  const C=[];for(const r of S.res){if(r.hidden)continue;for(const q of['lk','lf','ng'])if(!prefKnown(r,q)&&prefName(r,q)&&prefName(r,q)!=='とくにない'&&!(S.letterQ||[]).some(x=>x.sec&&x.sec.id===r.id&&x.sec.k===q)&&!(S.letters||[]).some(x=>!x.read&&x.sec&&x.sec.id===r.id&&x.sec.k===q))C.push([r,q])}
+function letterSecretMorning(){/* 朝：まだわかっていない好みを、ひみつの手紙で打ちあける（好きな遊び・料理は、遊ぶ・食べるまで言わない） */if(typeof prefKnown!=='function'||Math.random()>=LTSECP)return;
+  const C=[];for(const r of S.res){if(r.hidden)continue;for(const q of['lf','ng'])if(!prefKnown(r,q)&&prefName(r,q)&&prefName(r,q)!=='とくにない'&&!(S.letterQ||[]).some(x=>x.sec&&x.sec.id===r.id&&x.sec.k===q)&&!(S.letters||[]).some(x=>!x.read&&x.sec&&x.sec.id===r.id&&x.sec.k===q))C.push([r,q])}
   if(!C.length)return;const[r,q]=pick(C);letterQ(r,'secret',{f:prefName(r,q)},q,null,{id:r.id,k:q})}
 function letterWholeMig(){/* 前のセーブ：つけたしの行がついた手紙は、もとの3行だけにする（読んでいない手紙のひみつの好みは、書いていないので、わかったことにしない） */if(S.flags.ltWhole1)return;S.flags.ltWhole1=1;
   for(const l of(S.letters||[]).concat(S.letterQ||[])){if(!LETTERD[l.k]||!l.tx||l.tx.length<=3)continue;l.tx=l.tx.slice(0,3);if(!l.read)delete l.sec}}
