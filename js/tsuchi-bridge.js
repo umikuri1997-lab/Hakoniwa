@@ -23,7 +23,25 @@ function tsBridgeTap(j){if(WD!==TSUCHI||!S.ts||!S.flags.tsBrOpen||S.flags.tsBrid
   P.body.append(t,go);return true}
 /* 1マスできた（build.js の finishBuild から） */
 function tsBridgeCell(j,r){delete S.dyn[j];S.obj[j]='';S.ground[j]=0;(S.ts.brd||(S.ts.brd=[])).push(j);RIFTS=null;TSRC=null;/* 地われの地図と、タイルの一覧を作りなおす */
-  recount();dirty=true;burst(j,'block');if(r)addSpiritXp(4,r);if(tsBrCells().every(k=>S.ts.brd.includes(k)))tsBridgeDone()}
+  tsRiftSeal();recount();dirty=true;burst(j,'block');if(r)addSpiritXp(4,r);
+  if(!S.flags.tsBridge&&tsBrCells().every(k=>S.ts.brd.includes(k)))tsBridgeDone();else if(S.flags.tsBridge&&tsFillRowDone(j))toast('地われの一行が、うまった。近道ができた')}
+/* 橋やうめた所で、まわりから切りはなされた地われのマスは、水になってしまう。地われの帯の中の、そのマスもうめる */
+function tsRiftSeal(){for(let y=0;y<H;y++){const br=y>=TSBRY-1&&y<=TSBRY+6,x0=tsRiftAt(br?TSBRY:y);for(let x=x0;x<x0+3;x++){const j=y*W+x;if(x<W&&S.ground[j]===1&&!riftJ(j)&&!S.obj[j]){S.ground[j]=0;(S.ts.brd||(S.ts.brd=[])).push(j)}}}}
+/* ---- 地われをうめる（橋のあと）：橋のとなりの行から、北・南それぞれ TSFILLROWS 行まで。1行ずつ、橋と同じ材料と時間 ---- */
+const TSFILLROWS=6/* 北・南それぞれ、うめられる行の数（地われは、のこす） */;
+const tsRowRift=y=>{const L=[];if(y<0||y>=H)return L;for(let x=0;x<W;x++){const j=y*W+x;if(riftJ(j))L.push(j)}return L};
+function tsFillRow(y){/* その行が、いま うめられる行か（橋に近い行から、じゅんばん） */if(!S.flags.tsBridge)return false;
+  for(const[y0,d]of[[TSBRY-1,-1],[TSBR2Y+2,1]])for(let k=0;k<TSFILLROWS;k++){const yy=y0+d*k;if(yy!==y)continue;return tsRowRift(y).length>0&&(k===0||tsRowRift(y-d).length===0)}return false}
+const tsFillRowDone=j=>tsRowRift((j/W)|0).length===0;
+function tsFillTap(j){if(WD!==TSUCHI||!S.ts||!S.flags.tsBridge||!riftJ(j))return false;const y=(j/W)|0;
+  if(!tsFillRow(y)){toast('地われ。ふかくて、底が見えない（橋のとなりの行から、うめられる）');return true}
+  const free=tsRowRift(y).filter(k=>!S.obj[k]);if(!free.length){toast('せいれいが、地われをうめています');return true}
+  const n=free.length,pc=TSBRPC*n,bm={sagan:TSBRSAGAN*n,stone:TSBRSTONE*n};sfx('tap');
+  const P=pxPop('地われをうめる'),t=el('<div style="line-height:1.6;margin:6px 0"></div>'),go=el('<button class="btn pri" style="width:100%">うめる</button>');
+  t.textContent='地われを、一行（'+n+'マス）うめます。歩ける近道ができますが、コワイノも、そこをとおります。必要：'+matTxt(bm)+'・'+SP(pc);
+  go.onclick=()=>{if(S.pt<pc)return toast('パワーが足りません（'+SP(pc)+'）');if(!matOK(bm))return toast('素材が足りません（'+matTxt(bm)+'）');P.close();S.pt-=pc;rsvAdd(bm);
+    for(const q of free){S.obj[q]='site';S.dyn[q]={build:'tsbridge',p:0,need:TSBRT,mat:{sagan:TSBRSAGAN,stone:TSBRSTONE},got:{}}}toast('せいれいが、地われをうめにきてくれる');recount();burst(free[0],'furn')};
+  P.body.append(t,go);return true}
 function tsBridgeDone(){S.flags.tsBridge=1;sfx('quest');memo('rock','谷をつなぐ石の大橋が、かかった');toast('石の大橋が、かかった！','good');checkQuest()}
 /* らんかんの花：橋のマスの、北と南のふちに、小さな花（仮の絵）。tsRiftDraw から（icScreen の中） */
 function tsBrFlowerDraw(){const k=S.ts&&S.ts.brFlower,col=TSBRFL[k];if(!col||!S.ts.brd||!S.flags.tsBridge)return;
