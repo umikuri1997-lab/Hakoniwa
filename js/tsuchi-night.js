@@ -3,7 +3,7 @@
    ・ツチノオオカゲを巣穴へ追いかえした（S.flags.tsOokDown）つぎの夜から、コワイノとバケモノが谷の地われから来る
    ・数は、ほかのステージと同じ（せいれいの人数×1〜2倍）。そのうち3びきに1ぴきが、洞窟でひらいた階のバケモノ（CVBK。ひらいた階から、じゅんばんに）
    ・朝、のこったバケモノは、歩いて地われへもどる（朝の光でも消えない）。コワイノは、ほかのステージと同じく、とけて消える
-   ・洞窟のとくちょうのうち、村でもうごく物：夜の水のかたまりは2つにわかれる・組みかけのほねは組みなおして起きる（まもりの光でとどめ）・炉にくべられたものの通った所は、あつい床
+   ・洞窟のとくちょうのうち、村でもうごく物：光をおがむせきぞうは、村のあかりへよってきて、その前でおがむ・夜の水のかたまりは2つにわかれる・組みかけのほねは組みなおして起きる（まもりの光でとどめ）・炉にくべられたものの通った所は、あつい床
    たしかめは tools/tests/tsuchi-night.cjs */
 const TSBKEVERY=3;/* 3びきに1ぴきがバケモノ */
 const TSRIFTFAR=10;/* 地われから来るとき、村のまん中からはなれる広さ（マス） */
@@ -12,8 +12,8 @@ function tsBkFloors(){const n=Math.min(S.cvClr|0,CVBKFL.length),L=[];for(let i=0
 /* 今夜のならび（waveFor から）：3びきめごとをバケモノにする。ひらいた階から、じゅんばんに（夜ごとに、はじめの階をずらす） */
 function tsBkWave(list){if(WD!==TSUCHI||!S.ts)return;const F=tsBkFloors(),nb=Math.floor(list.length/TSBKEVERY);if(!F.length||!nb)return;
   const ko=list.slice(0,list.length-nb),out=[];let k=(S.nights||0)%F.length,b=0;
-  for(let i=0;out.length<list.length;i++){if(i%TSBKEVERY===TSBKEVERY-1&&b<nb||!ko.length){out.push(F[k%F.length]);k++;b++}else out.push(ko.shift())}
-  list.length=0;list.push(...out)}
+  for(let i=0;out.length<list.length;i++){if(i%TSBKEVERY===TSBKEVERY-1&&b<nb||!ko.length){let t=F[k%F.length];if((EN[t].pack||1)>list.length-out.length)t=F.find(q=>!EN[q].pack)||null;/* のこりが3つより少ないときは、むれでないバケモノ */if(!t){out.push(ko.shift()||'basic');continue}const n=EN[t].pack||1;for(let q=0;q<n;q++)out.push(t);ko.splice(0,n-1);/* うえたちねずみは3びきで来て、来る数の3つ分 */k++;b++}else out.push(ko.shift())}
+  out.length=list.length;list.length=0;list.push(...out)}
 /* 地われのとなりの、歩けて、村から行けるマス（下絵が変わったら作りなおす） */
 const TSRF={n:-1,s:null,L:null};
 function tsRiftEdge(){if(TSRF.n===STATN&&TSRF.s===S&&TSRF.L)return TSRF.L;const R=spawnReach(),L=[];
@@ -21,7 +21,11 @@ function tsRiftEdge(){if(TSRF.n===STATN&&TSRF.s===S&&TSRF.L)return TSRF.L;const 
   TSRF.n=STATN;TSRF.s=S;TSRF.L=L;return L}
 const tsRiftNext=j=>[1,-1,W,-W].some(d=>riftJ(j+d));
 /* 来る所（updEnemy から）：地われのふちの、村からはなれた所。群れの夜は、その夜の1か所のまわり */
-function tsRiftSpot(){const L=tsRiftEdge();if(!L.length)return edgeSpot();
+const TSPACK={j:-1,n:0,t:''};/* むれのバケモノ（うえたちねずみ）：むれのなかまは、同じ所のそばから来る */
+function tsRiftSpot(e){const L=tsRiftEdge();if(!L.length)return edgeSpot();
+  const pk=e&&EN[e.type]&&EN[e.type].pack;if(pk&&TSPACK.n>0&&TSPACK.t===e.type&&TSPACK.j>=0){TSPACK.n--;const N=L.filter(j=>Math.hypot(j%W-TSPACK.j%W,((j/W)|0)-((TSPACK.j/W)|0))<=2),j=N.length?N[(Math.random()*N.length)|0]:TSPACK.j;return [j%W+.5,((j/W)|0)+.5]}
+  const r=tsRiftSpot0(L);if(pk){const j=((r[1]|0)*W)+(r[0]|0);TSPACK.j=j;TSPACK.n=pk-1;TSPACK.t=e.type}return r}
+function tsRiftSpot0(L){
   const far=L.filter(j=>Math.hypot(j%W+.5-CX,((j/W)|0)+.5-CY)>=TSRIFTFAR&&!lightAt(j%W+.5,((j/W)|0)+.5)),P=far.length?far:L;
   if(nightVarNow()==='mure'){const v=S.nightVar;if(v.rj==null||v.s!==S.nights){v.rj=P[(Math.random()*P.length)|0];v.s=S.nights}const N=P.filter(j=>Math.hypot(j%W-v.rj%W,((j/W)|0)-((v.rj/W)|0))<=3);const j=N.length?N[(Math.random()*N.length)|0]:v.rj;return [j%W+.5,((j/W)|0)+.5]}
   const j=P[(Math.random()*P.length)|0];return [j%W+.5,((j/W)|0)+.5]}
@@ -34,6 +38,10 @@ function tsBkMorning(){if(WD!==TSUCHI||!S.ts)return[];const L=[];
   for(const e of S.enemies){if(e.dead||!EN[e.type].bk)continue;if(e.down){e.down=0;e.spawned=true;e.hp=e.max}if(!e.spawned)continue;e.home=1;e.flee=true;e.path=[];e.repath=0;e.stun=0;L.push(e)}
   if(L.length&&!S.flags.tsBkHome){S.flags.tsBkHome=1;villageTimeout(()=>toast('バケモノは、朝日の中を、地われへもどっていく','warn'),1200)}
   TSBKN.clear();return L}
+/* ---- 光をおがむせきぞう：いちばん近い村のあかり（歩いて行けるとなりのマス）へ。着いたら、あかりを向いておがむ（-2）。行けるあかりがなければ -1（ほかのバケモノと同じ） ---- */
+function tsPrayGoal(e){if(WD!==TSUCHI||!LITP.length)return -1;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);let bq=-1,bl=-1,bd=1e9;
+  for(const l of LITP){const lx=l%W,ly=(l/W)|0;for(const[dx,dy]of[[0,1],[1,0],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=lx+dx,y=ly+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(!walk(q)||!(RD&&RD[q]>=0))continue;const d=Math.hypot(x+.5-e.x,y+.5-e.y);if(d<bd){bd=d;bq=q;bl=l}}}
+  if(bq<0)return -1;if(bd<.6){e.busyT=S.t;e.path=[];e.pray=1;enAim(e,bl%W+.5,((bl/W)|0)+.5);if(!TSBKN.has('pray')){TSBKN.add('pray');toast('せきぞうが、村のあかりを、おがんでいる','warn')}return -2}e.pray=0;return bq}
 /* ---- 組みかけのほね：たおしても、くずれたまま組みなおして起きる。まもりの光で、とどめ ---- */
 function tsBoneDown(e){/* defeat から。true なら、まだ消えない */if(WD!==TSUCHI||!EN[e.type].rebuild||e.byLight||typeof CV!=='undefined'&&CV)return false;
   e.down=S.t+CVHONET;e.spawned=false;e.hp=0;e.path=[];e.repath=0;e.stun=0;sfxAt('crack',e.x,e.y);if(!TSBKN.has('hdown')){TSBKN.add('hdown');toast('ほねが、くずれた','good')}return true}

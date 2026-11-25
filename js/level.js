@@ -17,6 +17,8 @@ const GRK={work:7,move:3,cap:11,atk:13};
 const grw=(r,k)=>Math.floor(hash(((r.id||0)*173+GRK[k]*29+5)>>>0)*(GRDEV*2+1))-GRDEV;/* のびやすさ：id と能力から決まるので、しまわない */
 function lvGain(r,k,lv){const P=(EL_GROW[r.elem]||EL_GROW.wood)[k];if(P==null)return 0;const g=grw(r,k);let n=0;for(let l=2;l<=lv;l++){const u=hash(((r.id||0)*131+l*17+GRK[k])>>>0)*100;if(typeof P==='number'){const q=Math.max(0,P+g);n+=Math.floor(q/100)+(u<q%100?1:0)}else{const v=Math.min(99.999,Math.max(0,u+g));n+=P[0]+Math.floor(v*(P[1]-P[0]+1)/100)}}return n}/* 数だけの物（はたらく速さ・移動速度・持てる数）は（%+のびやすさ）で+1、100をこえた分はかならず+1。はばの物（攻撃力）は、のびやすさの分だけ多いほうへよる */
 /* レベルアップのごほうびで、えらんでふやした分（r.lvb：work・move・sta。実数のたし算。20がふつうの大きさ） */
+/* お話のおねがいのお礼でのびた分（r.onb：work・move・sta。talk-onegai.js） */
+const onbOf=(r,k)=>(r.onb&&r.onb[k])||0,onbSum=r=>r.onb?(r.onb.work||0)+(r.onb.move||0)+(r.onb.sta||0):0;
 const LVB=1,lvbOf=(r,k)=>(r.lvb&&r.lvb[k])||0,lvbSum=r=>r.lvb?(r.lvb.work||0)*1e6+(r.lvb.move||0)*1e3+(r.lvb.sta||0):0;
 const wkUp=r=>r.wkB>S.t?(r.wkM||0):0,mvUp=r=>r.mvT>S.t?(r.mvM||0):0;/* 料理で、しばらくふえる分 */
 const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)||c.ev!==(r.estV||0)||c.lb!==lvbSum(r)){c={lv,vr:r.vr,b:r.boost,ev:r.estV||0,lb:lvbSum(r),g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return (k==='work'||k==='move'?Math.max(1,Math.round(c.s[k]*(typeof seaMul==='function'?seaMul(r,k):1)))/STD:(c.s[k]+(k==='atk'&&typeof supAtk==='function'?supAtk(r):0))/100+(k==='atk'&&typeof inspAtk==='function'?inspAtk(r):0))*(k==='work'&&BOND5.has(r)?1.05:1)}/* はたらく速さ・移動速度は20がふつう（STD）。季節の倍（seaMul）をかけて、まるめた数（画面と同じ）。攻撃力は÷100のまま（ならんで戦う力 supAtk をたす）。なかよし100が3マス以内：はたらく速さ+5% */
@@ -24,11 +26,11 @@ const STD=20;/* はたらく速さ・移動速度・スタミナの、ふつう�
 function staNow(r){return Math.max(1,Math.round(staOf(r)*(typeof seaMul==='function'?seaMul(r,'sta'):1)))}/* 季節の倍をかけたスタミナ（画面と同じ） */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=(r,lv)=>(EL_ATK[r.elem]||0)+lvGain(r,'atk',lv);/* 攻撃力：Lv1は EL_ATK、上がるたびに EL_GROW のはばでふえる */
-function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+lvbOf(r,'sta')+(trt(r,'nebari')||trt(r,'daichi')?10:trt(r,'tafu')?6:0)+evSt(r,'sta')+(typeof pathA==='function'?pathA('sta'):0))}/* スタミナ */
+function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+lvbOf(r,'sta')+onbOf(r,'sta')+(trt(r,'nebari')||trt(r,'daichi')?10:trt(r,'tafu')?6:0)+evSt(r,'sta')+(typeof pathA==='function'?pathA('sta'):0))}/* スタミナ */
 function rStat(r,lv){const V=vrInt(r.vr)||{},fire=r.elem==='fire',G=gearStat(r),B=EL_BASE[r.elem]||EL_BASE.wood;/* G：そうび。どれも、たし算の整数 */return{
   atk:fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk+evSt(r,'atk')+(typeof pathA==='function'?pathA('atk'):0),
-  work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?6:0)+G.work+wkUp(r)+lvGain(r,'work',lv)+lvbOf(r,'work')+evSt(r,'work')+(typeof pathA==='function'?pathA('work'):0)+(typeof streakWork==='function'?streakWork():0)),
-  move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?6:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)+lvbOf(r,'move')+evSt(r,'move')+(typeof pathA==='function'?pathA('move'):0)),
+  work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?6:0)+G.work+wkUp(r)+lvGain(r,'work',lv)+lvbOf(r,'work')+onbOf(r,'work')+evSt(r,'work')+(typeof pathA==='function'?pathA('work'):0)+(typeof streakWork==='function'?streakWork():0)),
+  move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?6:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)+lvbOf(r,'move')+onbOf(r,'move')+evSt(r,'move')+(typeof pathA==='function'?pathA('move'):0)),
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
   sta:staOf(r),
   cap:B.cap+lvGain(r,'cap',lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0)+G.cap+evSt(r,'cap')+(typeof pathA==='function'?pathA('cap'):0),

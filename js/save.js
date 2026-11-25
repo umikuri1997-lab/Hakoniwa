@@ -9,6 +9,7 @@ const MIGRATIONS = [
   {v: 14, f(S) { if (S.cvClr > 3) S.cvClr = 3; if (S.ts && S.ground && typeof tsRubGen === 'function') tsRubGen(S); }}, /* 洞窟は10階：いま行けるのは3階まで（cave.js の cvFlOpen）・くずれた岩の山は10（tsuchi.js） */
   {v: 15, f(S) { daichiMig(S); }}, /* フタバの特性「ねばりづよい」は「だいちのちから」になった（daichi.js） */
   {v: 16, f(S) { kiriIns(S); }}, /* 草原の転「霧のむこうの影」（kiri）を、なかよしの想いと花畑のあいだに足した（kiri.js） */
+  {v: 17, f(S) { kdIshiMig(S); }}, /* もりのこだまの、欠けた石の輪をなくした（kodama.js） */
 ];
 const SAVE_VER = MIGRATIONS.length ? MIGRATIONS[MIGRATIONS.length - 1].v : 10;
 function runMigrations(S) {
@@ -43,4 +44,15 @@ function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{cons
   for(const e of d.enemies||[]){e.x+=O;e.y+=O;e.path=[]}
   for(const r of d.res||[]){r.x+=O;r.y+=O;if(r.stX!=null)r.stX+=O;if(r.stY!=null)r.stY+=O;r.act=null;r.path=[];delete r.avoidJ;delete r.faceObj;delete r.lastToy;if(r.cing&&r.cing.ov!=null)r.cing.ov=mi(r.cing.ov)}/* 歩いている途中・作業の途中は、やりなおし */
   delete d.fst}
-function load(w){try{const t=KV.getItem(SAVE_KEYS[w||0]);if(!t)return null;const d=JSON.parse(t);if(d&&d.v===8){if(d.ground&&d.ground.length===OW*OW)expandMap(d);if((d.mig||0)<1){const fx=v=>{if(!v)return;if(v.key){v.lash=false;v.cheek=true}};/* キーキャラは、まつげなし・ほっぺあり */(d.res||[]).concat(d.buried||[],d.lost||[]).forEach(r=>{if(r.like==='flower')r.like='chat'});(d.res||[]).forEach(r=>{fx(r.vr);if(r.name==='ノドカ'&&r.vr)r.vr.lash=false});(d.buried||[]).forEach(r=>fx(r.vr));(d.lost||[]).forEach(r=>fx(r.vr))}/* 古いセーブを直すのは、1回だけ（mig） */return d}}catch(e){}return null}
+const LOADBAD={};/* 読めなかったセーブ（ステージの番号→わけ）。「はじめから」をおすまで、もとのセーブに書かない */
+function loadBad(w,t,why){LOADBAD[w]={why:String(why&&why.message||why),kept:false};lgErr('load w'+w,why);/* ログにわけをのこす */try{const k=SAVE_KEYS[w]+'-broken';LOADBAD[w].kept=KV.getItem(k)===t||KV.setItem(k,t)}catch(e){}/* こわれたセーブを、べつの所にとっておく */return null}
+function load(w){w=w||0;const t=KV.getItem(SAVE_KEYS[w]);if(!t)return null;let d;try{d=JSON.parse(t)}catch(e){return loadBad(w,t,e)}if(!d||d.v!==8)return loadBad(w,t,'セーブの版 '+(d&&d.v));try{{if(d.ground&&d.ground.length===OW*OW)expandMap(d);if((d.mig||0)<1){const fx=v=>{if(!v)return;if(v.key){v.lash=false;v.cheek=true}};/* キーキャラは、まつげなし・ほっぺあり */(d.res||[]).concat(d.buried||[],d.lost||[]).forEach(r=>{if(r.like==='flower')r.like='chat'});(d.res||[]).forEach(r=>{fx(r.vr);if(r.name==='ノドカ'&&r.vr)r.vr.lash=false});(d.buried||[]).forEach(r=>fx(r.vr));(d.lost||[]).forEach(r=>fx(r.vr))}/* 古いセーブを直すのは、1回だけ（mig） */}}catch(e){return loadBad(w,t,e)}delete LOADBAD[w];return d}
+/* セーブが読めなかったことを知らせて、「はじめから」にするか聞く（もどると、もとのセーブはそのまま） */
+function saveBadAsk(w){if(document.querySelector('.bad-reveal'))return;const B=LOADBAD[w]||{};
+  const ov=el('<div class="idea-reveal bad-reveal" role="dialog" aria-modal="true" aria-label="セーブが読めない"></div>'),card=el('<div class="idea-card" style="min-width:0;max-width:440px"><h2>セーブが読めない</h2><p></p><p class="note"></p><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"></div></div>');
+  card.querySelector('p').textContent=(WORLDS[w]&&WORLDS[w].name||'この土地')+'のセーブが、こわれていて読めなかった。';
+  card.querySelector('.note').textContent=B.kept?'こわれたセーブは、べつの所にとっておいた。「はじめから」をおしても、そちらはのこる。':'「はじめから」をおすまで、このセーブはけさない。';
+  const no=el('<button class="btn pri" type="button">もどる</button>'),ok=el('<button class="btn" type="button" data-hold>はじめから</button>');
+  no.onclick=()=>{sfx('tap');ov.remove();if(!started)showMaps()};
+  ok.onclick=()=>{if(!ok._held)return;ov.remove();delete LOADBAD[w];$('#title').hidden=true;$('#maps').hidden=true;newGame(w)};/* データがきえるので、おしつづけて決める */
+  card.lastElementChild.append(no,ok);ov.append(card);document.body.append(ov)}

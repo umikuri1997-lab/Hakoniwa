@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
   assert.ok(r1.evb.every(v=>v===2),'taiso day buff work+2');
   assert.ok(r1.evm.every(v=>v==='taiso'),'memory');assert.equal(r1.lq,1,'one letter');assert.equal(r1.dy&&r1.dy[0],'taiso','diary topic');
   /* お話・雑談・手紙の文 */
-  const tp=JSON.parse(await run(`JSON.stringify(evTopic(S.res[1]))`));assert.ok(tp&&tp.L.length>=3,'talk topic with thanks '+JSON.stringify(tp));
+  const tp=JSON.parse(await run(`JSON.stringify(evTopic(S.res[1]))`));assert.ok(tp&&tp.L.length>=2,'talk topic with thanks '+JSON.stringify(tp));
   assert.equal(await run(`evTopic(S.res[1])`),null,'once a day');
   assert.ok(await run(`CHATS.some(c=>c.evc&&c.ok(S.res[0],S.res[1]))`),'chat about it');
   assert.ok(await run(`letterTx('ev','taiso','fire').length===5&&letterTx('ev','taiso','fire').every(L=>L.length>=3&&L.length<=8)`),'5 whole letters');

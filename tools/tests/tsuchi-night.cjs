@@ -13,6 +13,11 @@ const assert=require('node:assert/strict');
   for(const L of w){const bk=L.filter(t=>t.startsWith('bk_'));assert.equal(bk.length,Math.floor(L.length/3),'3びきに1ぴきがバケモノ');assert.ok(bk.every(t=>['bk_kui','bk_sui','bk_yoru'].includes(t)),'ひらいた階のバケモノだけ');assert.ok(!L.includes('boss'),'オオカゲは来ない')}
   {const all=w.flat().filter(t=>t.startsWith('bk_'));for(const t of['bk_kui','bk_sui','bk_yoru'])assert.ok(all.includes(t),'どの階のバケモノも来る '+t)}
   const w0=await J(`(()=>{S.cvClr=0;S.nights=8;const L=waveFor(12);S.cvClr=3;return L})()`);assert.ok(!w0.some(t=>t.startsWith('bk_')),'洞窟をひらいていなければ、コワイノだけ');
+  /* うえたちねずみ（5階）：3びきで来て、来る数の3つ分。むれは同じ所のそばから */
+  const wn=await J(`(()=>{S.cvClr=5;const out=[];for(let d=10;d<20;d++){S.nights=d;out.push(waveFor(d))}S.cvClr=3;return out})()`);
+  {const L=wn.find(L=>L.includes('bk_nezu'));assert.ok(L,'5階をひらくと、ねずみも来る');const i=L.indexOf('bk_nezu');assert.deepEqual(L.slice(i,i+3),['bk_nezu','bk_nezu','bk_nezu'],'3びきで来る');
+    for(const L of wn){const n=L.filter(t=>t==='bk_nezu').length;assert.equal(n%3,0,'ねずみは3びきずつ')}}
+  const sp=await J(`(()=>{TSPACK.n=0;const P=[0,1,2].map(()=>tsRiftSpot({type:'bk_nezu'}));return Math.max(...P.map(p=>Math.hypot(p[0]-P[0][0],p[1]-P[0][1])))})()`);assert.ok(sp<=3,'むれは同じ所のそばから '+sp);
   /* 来る所：地われのふち */
   const s1=await J(`(()=>{S.enemies=[];S.t=Math.floor(S.t/1440)*1440+1440;spawnWave(['basic','bk_kui','fast','bk_sui']);document.querySelectorAll('#dialog').forEach(d=>d.hidden=true);DLGQ.length=0;for(const e of S.enemies){e.delay=0;updEnemy(e,.1)}return S.enemies.map(e=>({sp:e.spawned,rift:[1,-1,W,-W].some(d=>riftJ((e.y|0)*W+(e.x|0)+d)),far:Math.hypot(e.x-CX,e.y-CY)}))})()`);
   console.log(JSON.stringify(s1));assert.ok(s1.every(e=>e.sp&&e.rift),'地われのふちから来る');
@@ -36,5 +41,11 @@ const assert=require('node:assert/strict');
   /* 古いセーブ：追いかえしたあとのセーブは、夜が来るようになる */
   const g1=await J(`(()=>{const s={ts:{hole:1},flags:{tsOokDown:1},enemyOn:false,mig:11};runMigrations(s);const t={flags:{},enemyOn:false,mig:11};runMigrations(t);return{a:s.enemyOn,b:t.enemyOn}})()`);
   console.log(JSON.stringify(g1));assert.deepEqual(g1,{a:true,b:false});
+  /* 光をおがむせきぞう（6階）：村のあかりへよってきて、その前でおがんで止まる（たたかない物はこわさない） */
+  const pr=await J(`(()=>{S.enemies=[];const L0=LITP.slice();let lj=-1;for(let j=0;j<W*H&&lj<0;j++){if(!walk(j)||S.obj[j])continue;const x=j%W,y=(j/W)|0;if(Math.hypot(x-CX,y-CY)<12&&walk(j+1)&&walk(j+4))lj=j}
+    LITP.length=0;LITP.push(lj);const e={id:S.nid++,type:'bk_seki',x:lj%W+4.5,y:((lj/W)|0)+.5,hp:420,max:420,delay:0,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0};S.enemies.push(e);for(const r of S.res)r.hidden=true;
+    const g=tsPrayGoal(e),gl=g>=0&&[1,-1,W,-W,W+1,W-1,-W+1,-W-1].includes(g-lj);EREACH.delete(e);e.x=g%W+.5;e.y=((g/W)|0)+.5;const x0=e.x,y0=e.y;updEnemy(e,1);updEnemy(e,1);
+    const out={gl,stay:e.x===x0&&e.y===y0,pray:e.pray===1};for(const r of S.res)r.hidden=false;LITP.length=0;LITP.push(...L0);S.enemies=[];return out})()`);
+  console.log(JSON.stringify(pr));assert.deepEqual(pr,{gl:true,stay:true,pray:true},'せきぞうは、村のあかりのそばへ行き、おがんで止まる');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});

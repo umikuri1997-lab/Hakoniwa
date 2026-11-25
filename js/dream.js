@@ -5,7 +5,7 @@
    - ふしぎなゆめ（sky）：たのしさ+10。
    ゆめの話は、その子とお話しすると聞ける（nowTopic）。せいれいの画面にも出す。 */
 const DREAMP=.3,DREAMDAYS=3,DREAMWISH=30,DREAMFUN=10,DREAMBOND=3;
-const DREAMSKY=[['ゆうべ、空をとぶゆめを見たんだ。','村が、おもちゃみたいに小さく見えたよ。'],['ゆうべ、雲の上でおひるねするゆめを見たんだ。','#joy|ふわふわで、とっても気持ちよかったよ。'],['ゆうべ、星をあつめるゆめを見たんだ。','ポケットが、きらきらでいっぱいになったよ。'],['ゆうべ、大きな木の上に村があるゆめを見たんだ。','どこまでも、遠くが見えたんだよ。']];
+const DREAMSKY=[['ゆうべ、空をとぶゆめを見たんだ。村が、おもちゃみたいに小さく見えたよ。'],['#joy|ゆうべ、雲の上でおひるねするゆめを見たんだ。ふわふわで、とっても気持ちよかったよ。'],['ゆうべ、星をあつめるゆめを見たんだ。ポケットが、きらきらでいっぱいになったよ。'],['ゆうべ、大きな木の上に村があるゆめを見たんだ。どこまでも、遠くが見えたんだよ。']];
 function dreamWishPick(r){/* まだ村にない、いま作れる家具（好きな家具は、こまりごとで聞くので、べつの物） */const like=typeof likeF==='function'?likeF(r):null;
   const L=FURN.filter(id=>{const b=BL[id];return b&&b.kind==='furn'&&!b.offerOnly&&id!==like&&!cnt(id)&&!inv(id)&&recipeKnown(id)&&lvOK(id)&&!(S.orders||[]).some(o=>o.type===id)&&stageItemOK(id)});return L.length?pick(L):null}
 function dreamMorning(){if(!S||IS_STORY_REPLAY)return;const D=S.dream;if(D&&dayNo()-D.day>=DREAMDAYS)S.dream=null;if(S.dream)return;

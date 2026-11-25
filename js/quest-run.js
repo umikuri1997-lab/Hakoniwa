@@ -13,7 +13,7 @@ function checkQuest(){
   if(S.cleared){if(WD!==FREE&&!(typeof KGRIV!=='undefined'&&KGRIV)&&!(typeof KGRRUN!=='undefined'&&KGRRUN))afterTick();/* 火山のさいごのうずみ火（kagari.js）のあいだは、クリアのあとの依頼を出さない */else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
   if(S.quest>=QUESTS.length){if(S.qStory!=null&&$('#dialog').hidden){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest()}return}/* さいごの目標のお礼の会話も出す（一覧のおわりで止めない） */
   const q=QUESTS[S.quest];
-  if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
+  if(q.tick)q.tick();/* そのクエストのあいだ、毎回たしかめること（クエストのデータの tick） */
   if(S.flags.qPassed&&S.flags.qPassed[q.id]&&S.qStory==null){delete S.flags.qPassed[q.id];S.quest++;S.qTalked=false;return checkQuest()}/* 古いセーブで、ならびをかえる前にもうした目標は、とばす（migrateFarmFirst） */
   if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id])S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
   if(!$('#dialog').hidden)return;
@@ -52,7 +52,7 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   const items=new Map(),g0=ITEM_GIFTS[0],ttl=g0.title||'うけとった！',rec=!!g0.rec;while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S&&(ITEM_GIFTS[0].title||'うけとった！')===ttl&&!!ITEM_GIFTS[0].rec===rec)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);/* 見出しがおなじものだけ、1まいにまとめる */
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi(rec?'paper':'box')+'</div><h2></h2><div class="idea-items"></div></div>');
   card.querySelector('h2').textContent=ttl;for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=rec?BL[id].name:iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
-  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
+  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx(rec?'good':'gift');/* うけとった：鉄琴の「ちん・ちーん」 */const prior=document.activeElement;
   if(rec)recRevealFx(card,overlay);/* あたらしいレシピ：ひらめきの演出（ためて → はじける → 1つずつぺたっ） */
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},rec?650+items.size*240+500:650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
