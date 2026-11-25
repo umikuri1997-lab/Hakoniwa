@@ -13,7 +13,7 @@ import rig
 import fbx_pixel as FP
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FACE_DOWN = 2.0   # 顔を下げる量（ドット）
+FACE_DOWN = 0.0   # 目・ほっぺはモデルの場所のまま（持ち主：目の位置を勝手にかえない）
 F = np.diag([1.0, -1.0, 1.0])   # キャラの座標（前 +y）⇔ Blender（前 −Y）
 
 def blend(R): return F@R@F

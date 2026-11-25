@@ -37,7 +37,9 @@ def job(a):
             tag = inf['tag']
             ov = np.zeros_like(img); mk = inf['hcov'] & np.isin(tag, [2, 5]); ov[mk] = img[mk]
             # 目の向き：頭の前（Blender の −Y）が、カメラに向くか・横か・うしろか
-            Th = T['head']; fwd = (Th[:3, :3]@np.array([0, -1.0, 0])); c = cam((fwd@Rs.T)[None])[0]
+            # 目の向きは、クォータービューの45度をのぞいた向きできめる（rig.posed と同じ。入れると、うしろななめで横向きの目が出た）
+            Th = T['head']; fwd = (Th[:3, :3]@np.array([0, -1.0, 0])); sp_ = -p.get('spin', 0.0); R0 = np.array([[math.cos(sp_), -math.sin(sp_), 0], [math.sin(sp_), math.cos(sp_), 0], [0, 0, 1]])
+            f0 = fwd@R0.T; c = {0: (f0[0], f0[2], -f0[1]), 1: (-f0[1], f0[2], -f0[0]), 2: (-f0[0], f0[2], f0[1])}[face]   # カメラから見た 頭の前の向き（x・上・手前）
             ti = 0 if c[2] >= abs(c[0]) else 2 if -c[2] >= abs(c[0]) else 1
             mir = ti == 1 and c[0] < 0
             F4 = S['feat']; eyec = (F4[0]+F4[1])/2
@@ -45,7 +47,7 @@ def job(a):
             vf = view(ti if ti != face else face, 0.0, False); x0, y0, _ = vf(rig.EYEP[None])
             x0 = -x0 if mir else x0
             A = {'eye': [int(round(ex[0]-x0[0])), int(round(ey[0]-y0[0])), ti, 1 if mir else 0]}
-            if ti == 0:   # 表情の目：顔の面の場所と ちぢみ方（目の絵の1ドット → 画面）
+            if ti in (0, 1):   # 表情の目：顔の面の場所と ちぢみ方（目の絵の1ドット → 画面）。横向きも同じ（前の横向きの目の絵は、モデルの顔と合わない）
                 for k, C in enumerate(F4):
                     d = 2.0; P3 = tr(Th, np.array([C, C+[d, 0, 0], C+[0, 0, -d]]))
                     X, Y, Z = scr3(P3); aa, bb = (X[1]-X[0])/d, (Y[1]-Y[0])/d; cc, dd = (X[2]-X[0])/d, (Y[2]-Y[0])/d
