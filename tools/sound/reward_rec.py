@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """うけとった・たっせい・はじめて置いた・作業台と料理の「できた」 の音（持ち主がサンプルページの4つの候補からえらんだ）。音は作らない（録音を切って、ならべて、大きさをそろえるだけ）。
-- rwget（うけとった）：おもちゃの鉄琴の ソ→ド（0.13秒あと）。「ちん・ちーん」
-- rwlevel（村レベルアップ・たっせい・あたらしいレシピ など、sfx('level') と sfx('quest')）：qubodup の「Level Up」まるごと（1.7秒。持ち主が10の候補からえらんだ。前のたっせいの「ドミソド」はやめた）
+- rwget（うけとった）：おもちゃの鉄琴の ソ→ド（0.13秒あと）。「ちん・ちーん」。0.95秒で切る
+- rwlevel（村レベルアップ・たっせい・あたらしいレシピ など、sfx('level') と sfx('quest')）：qubodup の「Level Up」まるごとを、高さはそのままで1.5倍の速さに（1.7秒→約1.13秒。持ち主が10の候補からえらび、あとで1.5倍にした。前のたっせいの「ドミソド」はやめた）
 - rwfirst（はじめて置いた）：チャイムの「きらーん」（1.25秒から2.6秒ぶん）
 - wdone（作業台・料理の「できた」）：あわがはじける「ぽん」（0.04秒から0.3秒ぶん。持ち主が9つの候補からえらんだ）
 もとの録音（どれも CC0。freesound のページで CC0 をたしかめる。おとすのは freesound の試聴の mp3）：
@@ -23,8 +23,8 @@ def run(a):
   return r.stderr
 def gl(k, dl, du=1.6): return ('glock', 4 * k, du, dl)  # k：ド6から k ばんめの音（0=ド6, 2=ミ6, 4=ソ6, 7=ド7）
 RECIPE = {
-  'rwget': ([gl(4, 0, 1.4), gl(7, .13, 1.8)], 1.9, .4),
-  'rwlevel': ([('lvup', 0, 1.7, 0)], 1.7, .4),
+  'rwget': ([gl(4, 0, 1.4), gl(7, .13, 1.8)], .95, .35),  # 持ち主がたのんで、半分の長さに（0.6秒から消えていく）
+  'rwlevel': ([('lvup', 0, 1.7, 0)], 1.7, .4, 1.5),
   'rwfirst': ([('gleam', 1.25, 2.6, 0)], 2.6, .6),
   'wdone': ([('pop', .04, .3, 0)], .3, .1),
 }
@@ -32,14 +32,15 @@ res = {}
 with tempfile.TemporaryDirectory() as td:
   for k, u in URL.items():
     urllib.request.urlretrieve(u, os.path.join(td, k + '.mp3'))
-  for name, (parts, total, fout) in RECIPE.items():
+  for name, (parts, total, fout, *sp) in RECIPE.items():
+    sp = sp[0] if sp else 1  # sp：速さ（高さはそのまま。atempo）
     if sys.argv[1:] and name not in sys.argv[1:]: continue
     a = ['ffmpeg', '-v', 'error', '-y']; fc = []
     for i, (f, ss, du, dl) in enumerate(parts):
       a += ['-ss', str(ss), '-t', str(du), '-i', os.path.join(td, f + '.mp3')]
       fc.append('[%d:a]aresample=44100,aformat=channel_layouts=mono,highpass=f=60,afade=t=in:d=0.004,afade=t=out:st=%f:d=%f,adelay=%d[p%d]' % (i, du * .6, du * .4, int(dl * 1000), i))
     n = len(parts)
-    fc.append(''.join('[p%d]' % i for i in range(n)) + 'amix=inputs=%d:normalize=0:duration=longest,apad,atrim=0:%f,afade=t=out:st=%f:d=%f[m]' % (n, total, total - fout, fout))
+    fc.append(''.join('[p%d]' % i for i in range(n)) + 'amix=inputs=%d:normalize=0:duration=longest,apad,atrim=0:%f,afade=t=out:st=%f:d=%f' % (n, total, total - fout, fout) + (',atempo=%f' % sp if sp != 1 else '') + '[m]')
     w = os.path.join(td, name + '.wav')
     run(a + ['-filter_complex', ';'.join(fc), '-map', '[m]', '-ar', '44100', '-ac', '1', w])
     e = run(['ffmpeg', '-v', 'info', '-i', w, '-af', 'apad=pad_dur=3,ebur128=peak=true', '-f', 'null', '-'])

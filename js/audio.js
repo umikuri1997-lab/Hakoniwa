@@ -35,7 +35,7 @@ const SONGS={
 for(const k in SONGS){const g=SONGS[k];g.at=new Array(64).fill(null);let p=0;for(const[m,l]of g.mel){if(m)g.at[p%64]=[m,l];p+=l}}
 const SAMPLES={"bell":["assets/g/cb9ff20140.mp3"],"pat":["assets/g/e2b825e14e.mp3"],"voice":["assets/g/fc5ad15d4b.mp3"],"paper":["assets/g/b7b70de2d3.mp3"],"night":["assets/g/982aef2204.mp3"],"chop":["assets/g/1d86cabda1.mp3","assets/g/676cf2fa6d.mp3","assets/g/a8dd704564.mp3"],"dig":["assets/g/56f3308409.mp3"],"splash":["assets/g/05adadaa1c.mp3"],"cast":["assets/g/93da972520.mp3"],"nail":["assets/g/b121a3b6b8.mp3"],"bush":["assets/g/3c69ed59fd.mp3"],"bubble":["assets/g/3dae9cab95.mp3"],"catch":["assets/g/269701117d.mp3"],"box":["assets/g/8c8eeb8b61.mp3"],"fire":["assets/g/e54c43d515.mp3"],"boil":["assets/g/55a7541497.mp3"],"rain":["assets/g/7178ec736f.mp3"],"birds":["assets/g/c0eec144c6.mp3"],"amb_morn":["assets/g/cecc7fdf2e.mp3"],"amb_spr":["assets/g/bb13746d18.mp3"],"amb_sum":["assets/g/48649f26f9.mp3"],"amb_snight":["assets/g/36b79a1b68.mp3"]};/* 季節・時間の環境音（amb_〜）は tools/sound/season_amb.py */const SBUF={};
 Object.assign(SAMPLES,{"cv_bird":["assets/g/c8f27e82a0.mp3","assets/g/d5a88a07a1.mp3","assets/g/5dae17a6bb.mp3","assets/g/2853515b46.mp3"],"cv_risu":["assets/g/4c78fed31b.mp3","assets/g/9edc31c156.mp3"],"cv_nezumi":["assets/g/501d60a27f.mp3","assets/g/7af1d6b1ad.mp3"],"cv_usagi":["assets/g/448b608b82.mp3"],"cv_hari":["assets/g/59206ffa86.mp3"],"cv_mogura":["assets/g/3085bc7ee5.mp3"],"cv_frog":["assets/g/2e14f342ca.mp3","assets/g/672e9ac7f4.mp3"],"cv_bee":["assets/g/08dea7c333.mp3","assets/g/f6f6d54ef1.mp3"],"cv_bug":["assets/g/f55c26356a.mp3","assets/g/b62bdf400b.mp3"],"cv_tonbo":["assets/g/5a2cccf54c.mp3"],"cv_hotaru":["assets/g/f6cafbb03a.mp3","assets/g/45888ac778.mp3","assets/g/afa9f4627a.mp3"],"cv_snail":["assets/g/d33577f724.mp3"]});/* 小さな生き物の鳴き声（OpenGameArt の CC0 の録音、tools/sound/critter_voice.py） */
-Object.assign(SAMPLES,{"mine":["assets/g/ba69ed4c76.mp3"]});
+Object.assign(SAMPLES,{"mine":["assets/g/ba69ed4c76.mp3"]});Object.assign(SAMPLES,{"digSoil":["assets/g/f3b927e9d4.mp3"],"blkStone":["assets/g/f98e722ff3.mp3"]});/* ブロックをこわす音：ほる音の0.12秒まで・石をほる音の0.5秒まで（切っただけ） */
 Object.assign(SAMPLES,{"tpuni":["assets/g/6b79a88272.mp3","assets/g/a9d3a9c033.mp3","assets/g/72120899ad.mp3","assets/g/6074b7cd9b.mp3","assets/g/552f80bbbc.mp3"],"loomk":["assets/g/bdeafe2c64.mp3","assets/g/c36dad1860.mp3","assets/g/5be427e58a.mp3"],"shutl":["assets/g/e3b3fdc4e1.mp3","assets/g/eb9922b92c.mp3","assets/g/4eee98ed5d.mp3"]});/* きのこ・はたおり（Kenney の CC0、tools/sound/ui_asmr.py） */
 Object.assign(SAMPLES,{"bowdraw":["assets/g/31506abaf6.mp3"],"starkira":["assets/g/74849355af.mp3"],"tillhit":["assets/g/2e6fb1390c.mp3","assets/g/20fade0d21.mp3","assets/g/1fc0c732af.mp3","assets/g/520cad11ce.mp3","assets/g/0ba494ed23.mp3","assets/g/9382a53dbd.mp3","assets/g/82a4a0537b.mp3","assets/g/fa9349ce43.mp3"],"pourw":["assets/g/6412920a88.mp3"]});/* 持ち主の音：弓をひきしぼる・流れ星のキラッ・くわが土にささる（8回ぶん）・水やり（tools/sound/owner_sfx4.py） */
 Object.assign(SAMPLES,{"slip":["assets/g/0f85595dd0.mp3"]});/* 効果音ラボ（持ち主がくれた音）：水たまりですべる「シャッ、シャッ」（2回ぶんを切った tools/sound/owner_slip.py） */
@@ -49,7 +49,7 @@ Object.assign(SAMPLES,{"dscoop":["assets/g/7567dbe225.mp3","assets/g/3df26569c5.
 Object.assign(SAMPLES,{"moya": ["assets/g/3b48b35943.mp3", "assets/g/2d7c698059.mp3", "assets/g/57ccb5ca93.mp3"]});/* もやもや（たのしさが低いとき）：持ち主がくれた声を、尻上がりにしないで、ゆっくりの「もやん」1回ぶんずつにした（tools/sound/owner_moya.py） */
 Object.assign(SAMPLES,{"cavedrip":["assets/g/c71f5bdd7f.mp3","assets/g/ea04850a8c.mp3","assets/g/dda10e0646.mp3","assets/g/83d7df255d.mp3","assets/g/945908278f.mp3","assets/g/cb53c608a7.mp3"],"caveamb":["assets/g/b2cdd41001.mp3"]});/* 洞窟のしずく・洞窟の空気の音：本物の録音（OpenGameArt「Dripping water loop」「Loopable Dungeon Ambience」CC0。tools/sound/cave_amb.py） */
 Object.assign(SAMPLES,{"thunder":["assets/g/838e080f8c.mp3","assets/g/76dfb6bdbe.mp3"]});/* あらしのかみなり：本物の録音（OpenGameArt「Rain + Long Thunder」CC0。tools/sound/thunder.py） */
-Object.assign(SAMPLES,{"rwget":["assets/g/43a66340f1.mp3"],"rwlevel":["assets/g/4766ca53d8.mp3"],"rwfirst":["assets/g/654e58828e.mp3"],"wdone":["assets/g/57c354d44f.mp3"]});/* うけとった・レベルアップとたっせい・はじめて置いた・作業台と料理の「できた」（おもちゃの鉄琴・qubodup の「Level Up」・チャイム・あわの録音、tools/sound/reward_rec.py。持ち主がえらんだ） */
+Object.assign(SAMPLES,{"rwget":["assets/g/5b40bc0a75.mp3"],"rwlevel":["assets/g/3e2df49689.mp3"],"rwfirst":["assets/g/654e58828e.mp3"],"wdone":["assets/g/57c354d44f.mp3"]});/* うけとった・レベルアップとたっせい・はじめて置いた・作業台と料理の「できた」（おもちゃの鉄琴・qubodup の「Level Up」・チャイム・あわの録音、tools/sound/reward_rec.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"joyc":["assets/g/658e945ea5.mp3"],"potg":["assets/g/4b6de3da31.mp3"]});/* せいれいがよろこぶ音（カリンバのオルゴールの「ちりりん」）・なべがぐつぐつにえる音：持ち主がえらんだ CC0 の録音（tools/sound/joy_pot、credits.json） */Object.assign(SAMPLES,{"treefall":["assets/g/9d8376a84b.mp3"]});/* 木がたおれる音：持ち主がくれた音（tools/sound/owner_treefall.py） */Object.assign(SAMPLES,{"harvdone":["assets/g/6f531d4897.mp3"]});/* しゅうかくしおわった音：かれ葉がこすれる本物の録音（OpenGameArt qubodup CC0。tools/sound/harvest_done.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"goso":["assets/g/392c341186.mp3"]});/* 箱にしまう・取るあいだのゴソゴソ（持ち主がくれた音。tools/sound/gosogoso_loop.py で、つなぎ目なく1まわり1.0337秒を3つならべた形） */
 Object.assign(SAMPLES,{"gravel":["assets/g/1367715265.mp3"],"wdon":["assets/g/6e3c4c3694.mp3"],"arrow": ["assets/g/4020d45f73.mp3"], "bush2": ["assets/g/0f9eb4e9b6.mp3"], "door": ["assets/g/02047b788c.mp3"], "kill": ["assets/g/c3aac5194a.mp3"], "munch": ["assets/g/83541e7fe0.mp3"], "nail2": ["assets/g/f10fe51343.mp3"], "pick": ["assets/g/443dd77412.mp3"], "place": ["assets/g/c75dd30fa4.mp3"], "punch": ["assets/g/5124e82f60.mp3"], "shoot": ["assets/g/8c1be13e0e.mp3"], "trickle": ["assets/g/017cf8add7.mp3"], "wallbreak": ["assets/g/43e010b66b.mp3"], "wave": ["assets/g/241549ec96.mp3"]});/* 効果音ラボ（ユーザー提供） */
@@ -186,6 +186,7 @@ function stageMusic(){
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
   nextT=AC.currentTime+.01;sched();
 }
+let PROLD=0;/* プロローグのあとの「マップを読みこみ中…%」のあいだ：曲を鳴らさない（持ち主がきめた） */
 function sched(){
   if(!AC||AC.state!=='running')return;
   if(nextT<AC.currentTime)nextT=AC.currentTime+.05;
@@ -193,7 +194,7 @@ function sched(){
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
-    if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
+    if(curSong!=='opening'||PROLD){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。プロローグのあとの読みこみ中は鳴らさない。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
     const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
     if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
@@ -240,6 +241,8 @@ function ambTick(){if(!AC||AC.state!=='running')return;cupMusicTick();if(!ambG){
   ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
+const LVSFXS=1.7;/* たっせい・レベルアップの録音（rwlevel）の長さ（秒） */
+function lvSfxOn(){return !!(AC&&lastSfx.level!=null&&AC.currentTime-lastSfx.level<LVSFXS)}/* たっせいの音が、まだ鳴っている */
 /* 音の優先順位：大事な音（DUCKK：たっせい・ハンコ・たたかい）が鳴ったら、うしろの音（lowG）と場所の音（ambD）を LOWDUCK の大きさにして、LOWREL 秒かけてもどす。
    うしろの音は、同時に LOWN こまで。いっぱいなら、いちばん小さい（画面のまん中から遠い）音より大きいときだけ、それを止めて鳴らす */
 let lowG=null,ambD=null,SFXBUS=null;const LOWN=8,LOWDUCK=.5,LOWHOLD=.1,LOWREL=.6,LOWL=[];
@@ -262,9 +265,9 @@ function sfx(k){
   SFXO=o===sfxG?null:o;if(SFXTAB&&(k==='tap'||k==='next')){SFXTABD=1;if(SFXTAB===2)return;k='tab'}/* タブをおしたときのボタンの音は、めくる音に */
   if(k==='cavedrip'){playU('cavedrip',.45);return}/* 洞窟のしずく */
   if(k.startsWith('cv_')){playU(k,.3);return}/* 小さな生き物の鳴き声 */
-  if(k.startsWith('brk_')){playU(k.slice(4),.9,.85);playU('dig',.8);return}/* ブロックをこわしおえた：そのブロックの材質の音を大きく、低めに＋ほる音 */
+  if(k.startsWith('brk_')){const m=k.slice(4);if(m==='tstone'){playU('blkStone',1,.85);return}playU(m,.9,.85);playU(m==='tsoil'?'digSoil':'dig',.8);return}/* ブロックをこわしおえた：そのブロックの材質の音を大きく、低めに＋ほる音（石は石をほる音だけ。土のほる音は、うしろのキーンを切った録音。持ち主がえらんだ） */
   if(k.startsWith('put_')){playU(k.slice(4),.7,1.05);return}/* ブロックをつんだ */
-  if(k.startsWith('fudedig')){const m=k.split(':')[1];if(m)playU(m,.6,.95);playU('dig',.35,1.15);return}/* ブロックをこわしているあいだ：そのブロックの材質の音（マイクラのように、たたくたび） */
+  if(k.startsWith('fudedig')){const m=k.split(':')[1];if(m==='tstone'){playU('blkStone',.68);return}if(m)playU(m,.6,.95);playU(m==='tsoil'?'digSoil':'dig',.35,1.15);return}/* ブロックをこわしているあいだ：そのブロックの材質の音（マイクラのように、たたくたび） */
   if(k.startsWith('pick_')){const m=k.slice(5);playU(m,PICKV[m]||.3);return}/* ひろった物の音：その物の材質の録音（tapMatOf と同じ録音。ピロンという音ではない） */if(k.startsWith('ea_')){playU(k,EATV);return}/* 食べる・のむ音：とても小さく（ASMRのように近く小さく） */
   switch(k){
   case'block':if(playS('wdon',.5))break;tone(260,t,.07,'square',.05,o,520);tone(83,t+.05,.07,'triangle',.06,o);break;
@@ -312,7 +315,7 @@ function sfx(k){
   case'next':tone(88,t,.04,'triangle',.05,o);break;
   case'good':if(!playS('joyc',.14))seq([84,88],.07,'sine',.03);break;/* よろこぶ音：オルゴールのちりりん（読みこむ前だけ、前の作った音） */
   case'warn':seq([62,57],.14,'square',.035,.22);break;
-  case'level':if(playS('rwlevel',.137))break;seq([67,72,76,79],.09,'triangle',.058,.16);break;/* たっせい・村レベルアップ・あたらしいレシピ など：qubodup の「Level Up」の録音（持ち主がえらんだ。キラリン系の -35 LUFS。読みこむ前だけ、前の作った音） */
+  case'level':if(playS('rwlevel',.137))break;seq([67,72,76,79],.09,'triangle',.058,.16);break;/* たっせい・村レベルアップ・あたらしいレシピ など：qubodup の「Level Up」の録音（高さはそのままで1.5倍の速さ。持ち主がえらんだ。キラリン系の -35 LUFS。読みこむ前だけ、前の作った音） */
   case'gift':if(playS('rwget',.098))break;if(!playS('joyc',.14))seq([84,88],.07,'sine',.03);break;/* うけとった：おもちゃの鉄琴の「ちん・ちーん」 */
   case'firstput':if(playS('rwfirst',.136))break;tone(2093,t,.5,'sine',.03,o);break;/* はじめて置いた家具：チャイムの「きらーん」 */
   case'bossIn':noise(t,1.6,.16,o,60);tone(110,t,1.6,'sawtooth',.06,o,40);tone(55,t,2.2,'sine',.12,o,35);[45,46,51].forEach((m,i)=>tone(m,t+.25+i*.02,2.4,'triangle',.05,o));break;/* オオカゲの登場：ひくい地ひびきと、にごった和音 */

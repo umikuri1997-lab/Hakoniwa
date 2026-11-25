@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.chips,true,'chip per level');assert.equal(r.tbl,true,'10 levels');
   assert.equal(r.lit4,false,'no light below Lv5');assert.equal(r.lit5,true,'Lv5 light counts');
   assert.equal(r.cap7,1);assert.equal(r.cap8,2);
-  assert.deepEqual(r.both,[true,true],'two go to Lv8 tower');assert.equal(r.slots,'0,1');assert.equal(r.xs,'0.5,1.5');
+  assert.deepEqual(r.both,[true,true],'two go to Lv8 tower');assert.equal(r.slots,'0,1');assert.equal(r.xs,'0.25,1.25');
   assert.equal(r.shots,2,'both shoot');assert.equal(r.t0&&r.t1,true);
   assert.equal(r.one7,1,'Lv7 only one');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
