@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
     /* こわす：長おしでこわす（土1秒）。とちゅうではなすと、こわさない。おく：タップした所に1だんつむ */
     const c=[x0+1,y0+1],cj=c[1]*W+c[0];S.hi[cj]=2;S.inv.blk_soil=3;const now=performance.now();
     PICKH={x:c[0],y:c[1],j:cj,t0:now-300,dig:false,n:0};pickTick(now);const need=PICKH.need;pickTick(now+500);const was=pickEnd();const half=hiAt(cj);
-    PICKH={x:c[0],y:c[1],j:cj,t0:now-300,dig:false,n:0};pickTick(now);pickTick(now+1000);const held=hiAt(cj),chips=fx.filter(f=>f.k==='bc').length;pickEnd();
+    PICKH={x:c[0],y:c[1],j:cj,t0:now-300,dig:false,n:0};pickTick(now);pickTick(now+2000);const held=hiAt(cj),chips=fx.filter(f=>f.k==='bc').length;pickEnd();
     PICKH={x:c[0],y:c[1],j:cj,t0:now-100,dig:false,n:0};pickTick(now);const quick=pickEnd();
     setMode('build');sel=SOIL;place(SOIL,c[0],c[1]);const tap=hiAt(cj),dust=fx.some(f=>f.k==='spr'&&f.n==='bdust');
     const pal=(()=>{PALF='all';palOpen=true;renderPalette();const t=[...document.querySelectorAll('#palette .chip')].map(e=>e.textContent);return {fude:t.some(x=>/かたちの筆/.test(x)),blk:t.some(x=>/土のブロック/.test(x))}})();setMode('look');const tool=!pal.fude&&pal.blk;
@@ -23,7 +23,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.dug,r.h1-1,'タップで1だんほれる');assert.equal(r.t1,1,'ほると土のブロックが1こ落ちる（せいれいがはこぶ）');
   assert.equal(r.top,8,'8だんまでつめる');assert.equal(r.t2,20-(8-r.dug),'つんだぶん土のブロックがへる');
   assert.ok(r.shop,'ほる・つむにパワーはいらない');
-  assert.equal(r.need,1000,'土は1秒');assert.equal(r.half,2,'とちゅうではなすと、こわさない');assert.ok(r.was,'こわしかけたら、はなしてもタップにしない');assert.equal(r.held,1,'長おしでこわれた');assert.ok(r.chips>=10,'こわれると、かけらがとぶ');assert.equal(r.quick,false,'短くおしたら、ふつうのタップ');assert.equal(r.tap,2,'「おく」でタップしてつむ');assert.ok(r.dust,'おくと、足もとに砂ぼこり');assert.ok(r.tool,'「おく」に土のブロックがあり、かたちの筆はない');
+  assert.equal(r.need,2000,'土は2秒');assert.equal(r.half,2,'とちゅうではなすと、こわさない');assert.ok(r.was,'こわしかけたら、はなしてもタップにしない');assert.equal(r.held,1,'長おしでこわれた');assert.ok(r.chips>=10,'こわれると、かけらがとぶ');assert.equal(r.quick,false,'短くおしたら、ふつうのタップ');assert.equal(r.tap,2,'「おく」でタップしてつむ');assert.ok(r.dust,'おくと、足もとに砂ぼこり');assert.ok(r.tool,'「おく」に土のブロックがあり、かたちの筆はない');
   /* つむブロック：もちものからつむと、そのだんがブロックになり、ほるとブロックがもどる。依頼ボードで作れる */
   const c=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&!treeNextHigh(j,99);let j=-1;for(let k=(CY-8)*W+CX-8;k<(CY+8)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+W)){j=k;break}const x=j%W,y=(j/W)|0,h0=hiAt(j);
     S.inv.blk_stone=3;S.inv.blk_soil=1;terraNow('blk_stone',x,y);terraNow('blk_soil',x,y);const o={h:hiAt(j)-h0,c1:cubeAt(j,h0+1),c2:cubeAt(j,h0+2),inv:S.inv.blk_stone,ico:iconURL('blk_stone').slice(0,10)};
@@ -61,7 +61,7 @@ const assert=require('node:assert/strict');
   assert.equal(fl.bad,0,'はじめの地形：茂み・竹のまわり1マスは同じ高さ');assert.ok(fl.n>0,'茂みがある');assert.ok(fl.k>=0&&fl.up===true&&fl.dn===false,'茂みのとなりは、つめない・ほれない');
   /* こわすモード：タップではこわさず、長おしで1だんこわす。こわしているあいだのひび（10まいの絵）が描ける。ブロックのアイコンは立方体 */
   const rm=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&!treeNextHigh(j,99);let j=-1;for(let k=(CY-10)*W+CX-10;k<(CY+10)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+W)&&hiAt(k)===hiAt(k+1)&&hiAt(k)===hiAt(k+W)){j=k;break}
-    let o0=false;const x=j%W,y=(j/W)|0,h0=hiAt(j);S.hi[j]=h0+2;S.drops=[];setMode('remove');removeAt(x,y);const tapNo=hiAt(j)-h0;PICKH={x,y,j,t0:performance.now()-1300,dig:false,n:0};pickTick(performance.now());pickTick(performance.now()+1300);pickEnd();const dug=h0+2-hiAt(j);const drop=(S.drops.find(d=>d.lt)||{}).id;
+    let o0=false;const x=j%W,y=(j/W)|0,h0=hiAt(j);S.hi[j]=h0+2;S.drops=[];setMode('remove');removeAt(x,y);const tapNo=hiAt(j)-h0;PICKH={x,y,j,t0:performance.now()-2300,dig:false,n:0};pickTick(performance.now());pickTick(performance.now()+2300);pickEnd();const dug=h0+2-hiAt(j);const drop=(S.drops.find(d=>d.lt)||{}).id;
     PICKH={x,y,j,t0:performance.now()-600,dig:true,n:0,need:1000};o0=!!crackImg(3);for(let i=0;i<2;i++)render(performance.now());PICKH=null;S.hi[j]=h0;setMode('look');
     return JSON.stringify({dug,tapNo,o0,drop,soil:iconURL('blk_soil').slice(0,10),stone:iconURL('blk_stone').slice(0,10)})})()`));
   console.log(rm);assert.equal(rm.tapNo,2,'タップではこわさない');assert.equal(rm.dug,1,'長おしで1だんこわせる');assert.ok(rm.o0,'ひびの絵');assert.equal(rm.drop,'blk_soil');assert.ok(rm.soil.startsWith('data:')&&rm.stone.startsWith('data:'),'ブロックのアイコン');

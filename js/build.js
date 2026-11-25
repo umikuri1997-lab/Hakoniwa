@@ -274,7 +274,7 @@ function shortCost(need){let cost=0;const parts=[];for(const id in need){const s
 /* ---------- ブロック（地面のブロック。マイクラと同じ） ----------
    おく：「おく」で、もちものの土・石のブロックをえらび、マスをタップすると、そのマスに1だんつむ（その場にパッと出て、足もとに少し砂ぼこり）。
    こわす：「こわす」で、物のないマスを長おしすると、面にひびが10だんで広がり（bcrack#0〜9 の絵）、たたくたびに材質の音とブロックのかけら。
-   ひびが10だんめまで行くと、そのだんがその場で消え、かけらがはねて落ちる（材質で時間がかわる pickMs）。とちゅうではなすと、こわさない。
+   ひびが10だんめまで行くと、そのだんがその場で消え、かけらがはねて落ちる（材質で時間がかわる pickMs）。ひびは、そのマスのブロックのすぐあとに奥行きの順で描く（手前のブロック・物の上にかさならない）。とちゅうではなすと、こわさない。
    平らな地面も、地面より下へほれる（HMIN）。こわしたブロックはその場に落ち（土は土のブロック、地面より下は石のブロック）、せいれいがはこぶ。
    S.vx[マス]：だんごとのブロック（[1だんめ,2だんめ,…]、''は土）。ないマスは、ぜんぶ土 */
 const VX=()=>S.vx||(S.vx={});
@@ -312,7 +312,7 @@ function blockMig(){/* 前のセーブ：レンガ・木のブロック（いま
   S.drops=(S.drops||[]).filter(d=>{if(!CUBEOLD.includes(d.id))return true;back(d.id,d.n||1);return false});
   for(const o of (S.orders||[]).filter(o=>CUBEOLD.includes(o.type)))cancelOrder(o.id)}
 let PICKH=null;/* こわすの長おし */
-function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?2000:t===SOIL?1000:t==='blk_brick'||t==='blk_wood'?1500:2000}/* こわすのにかかる時間（ミリ秒）：土1秒・石と地面より下2秒 */
+function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?4000:t===SOIL?2000:t==='blk_brick'||t==='blk_wood'?3000:4000}/* こわすのにかかる時間（ミリ秒）：土2秒・石と地面より下4秒 */
 const PICKTAP=250;/* これより長くおしたら、こわしはじめる（短ければ、ふつうのタップ） */
 function pickCell(sx,sy){const w=tapW(sx,sy),x=Math.floor(w.x/TS),y=Math.floor(w.y/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
 function pickDown(sx,sy){const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
