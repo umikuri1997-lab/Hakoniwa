@@ -49,7 +49,7 @@ Object.assign(SAMPLES,{"dscoop":["assets/g/7567dbe225.mp3","assets/g/3df26569c5.
 Object.assign(SAMPLES,{"moya": ["assets/g/3b48b35943.mp3", "assets/g/2d7c698059.mp3", "assets/g/57ccb5ca93.mp3"]});/* もやもや（たのしさが低いとき）：持ち主がくれた声を、尻上がりにしないで、ゆっくりの「もやん」1回ぶんずつにした（tools/sound/owner_moya.py） */
 Object.assign(SAMPLES,{"cavedrip":["assets/g/c71f5bdd7f.mp3","assets/g/ea04850a8c.mp3","assets/g/dda10e0646.mp3","assets/g/83d7df255d.mp3","assets/g/945908278f.mp3","assets/g/cb53c608a7.mp3"],"caveamb":["assets/g/b2cdd41001.mp3"]});/* 洞窟のしずく・洞窟の空気の音：本物の録音（OpenGameArt「Dripping water loop」「Loopable Dungeon Ambience」CC0。tools/sound/cave_amb.py） */
 Object.assign(SAMPLES,{"thunder":["assets/g/838e080f8c.mp3","assets/g/76dfb6bdbe.mp3"]});/* あらしのかみなり：本物の録音（OpenGameArt「Rain + Long Thunder」CC0。tools/sound/thunder.py） */
-Object.assign(SAMPLES,{"rwget":["assets/g/43a66340f1.mp3"],"rwquest":["assets/g/a63f37cee4.mp3"],"rwfirst":["assets/g/654e58828e.mp3"]});/* うけとった・たっせい・はじめて置いた（おもちゃの鉄琴とチャイムの録音、tools/sound/reward_rec.py。持ち主がえらんだ） */
+Object.assign(SAMPLES,{"rwget":["assets/g/43a66340f1.mp3"],"rwquest":["assets/g/a63f37cee4.mp3"],"rwfirst":["assets/g/654e58828e.mp3"],"wdone":["assets/g/57c354d44f.mp3"]});/* うけとった・たっせい・はじめて置いた・作業台と料理の「できた」（おもちゃの鉄琴とチャイムとあわの録音、tools/sound/reward_rec.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"joyc":["assets/g/658e945ea5.mp3"],"potg":["assets/g/4b6de3da31.mp3"]});/* せいれいがよろこぶ音（カリンバのオルゴールの「ちりりん」）・なべがぐつぐつにえる音：持ち主がえらんだ CC0 の録音（tools/sound/joy_pot、credits.json） */Object.assign(SAMPLES,{"treefall":["assets/g/9d8376a84b.mp3"]});/* 木がたおれる音：持ち主がくれた音（tools/sound/owner_treefall.py） */Object.assign(SAMPLES,{"harvdone":["assets/g/6f531d4897.mp3"]});/* しゅうかくしおわった音：かれ葉がこすれる本物の録音（OpenGameArt qubodup CC0。tools/sound/harvest_done.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"goso":["assets/g/392c341186.mp3"]});/* 箱にしまう・取るあいだのゴソゴソ（持ち主がくれた音。tools/sound/gosogoso_loop.py で、つなぎ目なく1まわり1.0337秒を3つならべた形） */
 Object.assign(SAMPLES,{"gravel":["assets/g/1367715265.mp3"],"wdon":["assets/g/6e3c4c3694.mp3"],"arrow": ["assets/g/4020d45f73.mp3"], "bush2": ["assets/g/0f9eb4e9b6.mp3"], "door": ["assets/g/02047b788c.mp3"], "kill": ["assets/g/c3aac5194a.mp3"], "munch": ["assets/g/83541e7fe0.mp3"], "nail2": ["assets/g/f10fe51343.mp3"], "pick": ["assets/g/443dd77412.mp3"], "place": ["assets/g/c75dd30fa4.mp3"], "punch": ["assets/g/5124e82f60.mp3"], "shoot": ["assets/g/8c1be13e0e.mp3"], "trickle": ["assets/g/017cf8add7.mp3"], "wallbreak": ["assets/g/43e010b66b.mp3"], "wave": ["assets/g/241549ec96.mp3"]});/* 効果音ラボ（ユーザー提供） */
@@ -359,7 +359,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'loombeat':if(playU('loomk',.3))break;{const r=.94+Math.random()*.12;knock(420*r,t,.08,o,.08);knock(700*r,t+.015,.03,o,.05)}break;/* はたおり：おさをごとん（本物の録音） */
   case'grind':{const r=.93+Math.random()*.14;rustle(t,.32,.05,o,260*r,420*r,1.2);knock(110*r,t,.03,o,.12)}break;/* 粉ひき：石うすが、ごりごり */
   case'saw':rustle(t,.2,.07,o,1500,2600,2.4);knock(160,t+.02,.03,o,.06);break;/* のこぎり：ごりっ */
-  case'workdone':knock(420,t,.1,o,.07);seq([79,86,91],.07,'sine',.045);break;/* できた：ぽん、きらん */
+  case'workdone':if(playS('wdone',.35))break;knock(420,t,.1,o,.07);break;/* 作業台・料理の「できた」：あわがはじける「ぽん」（el_boss の録音。持ち主がえらんだ。読みこむ前だけ作った音） */
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
   case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6,0,RMRT))break;noise(t,.18,.09,o,900);break;
   case'nail':playHit('nail2',.28);break;
@@ -404,6 +404,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'bklure':playU(Math.random()<.5?'cv_usagi':'cv_risu',.35);break;/* 洞窟のえさ：かわいい生き物の声でよぶ *//* つるしたなわが、きゅ… */
   case'bend':playU('bend',.04+.08*SFXR,.85+SFXR*.15);break;/* 板がしなって、ぎぃ（SFXR：しなりの大きさ 0〜1） */
   case'page':if(!playU('page',.34,1))rustle(t,.12,.05,o,3400,2200,.6);break;/* 思い出帳のページをめくる：ぺらっ（本物の録音） */
+  case'count':playU('tab',.3,1.05);break;/* 上の数がふえた：タブの「ぱたっ」の録音（持ち主がえらんだ。読みこむ前は鳴らさない） */
   case'tab':if(!playU('tab',.3,1.05))rustle(t,.06,.03,o,3600,2400,.6);playU('knockw',.12,1.35,.025);break;/* タブ：ぱたっとめくって、ことっ */
   case'notch':if(!playU('notch',.32,SFXR))knock(1600*SFXR,t,.04,o,.02);break;/* ±：かちっ（ねじを回す音） */
   case'rowin':playU('knockw',.07,SFXR);break;/* 一覧の行が、ことっと置かれる */
