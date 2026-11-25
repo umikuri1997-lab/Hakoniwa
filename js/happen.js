@@ -5,7 +5,7 @@
    ・大きなかぶ（kabu）：育ちきった畑の作物が大きくなる。「しらべる」でタップすると、せいれいが3人（いなければいる人数）あつまり、
      そろったら、せーのでひっぱる（KABUPULL）。ぬけるとしりもち（KABUFALL）。収穫 KABUN こ。18時（HAPEND）に、ふつうの作物にもどる。
    ・まいごのヒナ（hina）：村の中の行ける所。タップすると、近いせいれいがヒナを頭にのせ、いちばん近い木へとどける。
-     17時（HINAPAR）に親鳥が来て、ベリー HINAFOOD こと花のたね HINASEED つを落とす。とどけないまま18時になると、親鳥がつれていく。
+     17時（HINAPAR）に親鳥が来て、ベリー HINAFOOD こと花のたね HINASEED つを落とし、ヒナを足でつかんでつれて行く。とどけないまま18時になると、親鳥がヒナの所までとんで来て、つれていく。
    ・きんいろの木（kin）：村の木（植えた木・りんごの木）1本に金の実。タップすると、せいれいがとる（KINT）。りんご KINAPPLE こ、KINGIFT でおくりもの1つ。18時に実がおちて消える。
    ・きのこの輪（kino）：雨のつぎの朝（S.wetD）だけ。村のそばの草地に、5×5のふちのきのこの輪（まん中3×3があく）。
      昼（KINOH0〜KINOH1）、ひまなせいれいが KINOP でおどりに行き（goWander の hapDance）、たのしさ+KINOFUN（1人1回）。17時（KINOEND）に輪がきえ、きのこ KINON こが落とし物になる。
@@ -112,16 +112,22 @@ function hapDrawBig(c,px,fy,k,now,wob){/* 大きな作物：根もとが土に�
   hapPx(c,ox-8*HAPD,top+4,3,2,'#fffaf0');hapPx(c,ox-12,fy-2,12,2,'#8a6a48')}
 function hapDrawChick(c,x,y,now,ph){/* ヒナ：きいろい小さな鳥 */const b=Math.round(Math.abs(Math.sin(now/180+ph))*2)*HAPD/2;y-=b;
   hapPx(c,x-6,y-10,6,5,'#f7dc6a');hapPx(c,x-4,y-12,4,1,'#f7dc6a');hapPx(c,x-6,y-4,6,1,'#e2b94a');hapPx(c,x+2,y-8,1,1,'#4b3a2e');hapPx(c,x+6,y-6,2,1,'#f09a4a');hapPx(c,x-8,y-6,1,2,'#e2b94a')}
-function hapBird(c,x,y,now){const C=window.CHIPS||{},ch=C[Math.floor(now/120)%2?'critbird#f0':'critbird#f1']||C['critbird#0'];if(ch&&typeof drawChip==='function')drawChip(c,ch,'critbird',x-TS/2,y-TS/2,now)}
+const HAPCARRY=[-1,8],HAPBYEIN=2400,HAPBYEOUT=3000;/* 親鳥がつかんだヒナ：親鳥の足もとの点からのずれ。夕方に帰るとき：とんで来る・つれて行く時間（ms） */
+function hapBird(c,x,y,now){/* 親鳥：足もとの点 x,y から描く（小鳥と同じ、チップの ax・ay は足もとからのずれ。右向き） */const C=window.CHIPS||{},ch=C[Math.floor(now/120)%2?'critbird#f0':'critbird#f1']||C['critbird#0'];if(!ch||typeof chipImgs!=='function')return;const im=chipImgs(ch,'critbird')[0];if(!im||!im.ok)return;
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,Math.round(x+ch.ax/2),Math.round(y+ch.ay/2),ch.w/2,ch.h/2);c.imageSmoothingEnabled=sm}
+function hapBirdCarry(c,x,y,now){/* 足でヒナをつかんでとぶ（ヒナはゆらさない） */hapDrawChick(c,x+HAPCARRY[0],y+HAPCARRY[1],0,0);hapBird(c,x,y,now)}
 function hapDraw(add,vis,c,now){const h=hapNow();if(!h)return;const lf=j=>S.hi?liftOf(j):0;
   if(h.k==='kabu'&&(h.ph==='wait'||h.ph==='pull')){const j=h.j,o={x:j%W+.5,y:((j/W)|0)+.9};if(vis(o)){const px=o.x*TS,fy=((j/W)|0)*TS+TS-lf(j),wob=h.ph==='pull'?Math.round(Math.sin(now/70))*HAPD:0;add(o.y,1,[px-26,fy-60,px+26,fy+4],()=>hapDrawBig(c,px,fy,h.crop,now,wob),j)}}
   if(h.k==='hina'){if(h.ph==='wait'){const j=h.j,o={x:j%W+.5,y:((j/W)|0)+.8};if(vis(o)){const px=o.x*TS,fy=o.y*TS-lf(j);add(o.y,2,[px-10,fy-16,px+10,fy+2],()=>hapDrawChick(c,px,fy,now,0),j)}}
     else if(h.ph==='held'){const r=S.res.find(q=>q.id===h.who);if(r&&vis(r)){add(r.y+.002,2,null,()=>liftDraw(typeof uLift==='function'?uLift(r):0,()=>hapDrawChick(c,r.x*TS,r.y*TS-28,now,1)),(r.y|0)*W+(r.x|0))}}
     else if(h.ph==='nest'||h.ph==='par'){const j=h.tj,o={x:j%W+.5,y:((j/W)|0)+1};if(vis(o)){const px=o.x*TS+4,fy=((j/W)|0)*TS-14-lf(j);add(o.y+.05,2,null,()=>{hapPx(c,px-10,fy-2,10,2,'#9b7350');hapDrawChick(c,px,fy-1,now,2)},j)}}}
   if(h.k==='kino'&&h.ph==='on'){for(const k of hapRing(h.j)){if(S.obj[k])continue;const o={x:k%W+.5,y:((k/W)|0)+.5};if(!vis(o))continue;const C=window.CHIPS||{},ch=C['kinoko#'+(hash(k)*3|0)]||C.kinoko;if(!ch)continue;const x=(k%W)*TS,y=((k/W)|0)*TS-lf(k);add(o.y+.3,1,null,()=>drawChip(c,ch,'kinoko',x,y,now,k),k)}}
-  const F=HAPFX;if(F){const dt=now-F.t0;if(dt>4000){HAPFX=null;return}const j=F.j;if(j==null)return;const tx=(j%W+.5)*TS,ty=((j/W)|0)*TS-lf(j);
-    if(F.k==='par'){const p=Math.min(1,dt/2400),x=tx-160*(1-p),y=ty-40-90*(1-p)*(1-p);add(99999,3,null,()=>hapBird(c,x,y,now),j)}
-    else if(F.k==='fly'||F.k==='bye'){const p=Math.min(1,dt/3000),x=tx+180*p,y=ty-30-120*p;add(99999,3,null,()=>{c.save();c.globalAlpha=1-Math.max(0,p-.7)/.3;hapBird(c,x,y,now);hapDrawChick(c,x+14,y+10,now,3);c.restore()},j)}
+  const F=HAPFX;if(F){const dt=now-F.t0;if(dt>(F.k==='bye'?HAPBYEIN+HAPBYEOUT+600:4000)){HAPFX=null;return}const j=F.j;if(j==null)return;const row=(j/W)|0,tx=(j%W+.5)*TS,ty=row*TS-lf(j);
+    const nest={x:tx+4,y:ty-15},gnd={x:tx,y:(row+.8)*TS-lf(j)},grab=q=>({x:q.x-HAPCARRY[0],y:q.y-HAPCARRY[1]});/* 巣のヒナ・地面のヒナの描く点（hapDraw の上と同じ）と、それをつかむ親鳥の足もと */
+    if(F.k==='par'){const p=Math.min(1,dt/2400),g=grab(nest),x=g.x-160*(1-p),y=g.y-90*(1-p)*(1-p);add(99999,3,null,()=>hapBird(c,x,y,now),j)}
+    else if(F.k==='fly'||F.k==='bye'){const from=F.k==='fly'?nest:gnd,g=grab(from),t=F.k==='bye'?dt-HAPBYEIN:dt;
+      if(t<0){const p=dt/HAPBYEIN,x=g.x-160*(1-p),y=g.y-90*(1-p)*(1-p);add(row+.8,2,null,()=>hapDrawChick(c,gnd.x,gnd.y,now,0),j);add(99999,3,null,()=>hapBird(c,x,y,now),j)}/* 帰るとき：まず親鳥が、地面のヒナの所までとんで来る */
+      else{const p=Math.min(1,t/HAPBYEOUT),x=g.x+180*p,y=g.y-120*p;add(99999,3,null,()=>{c.save();c.globalAlpha=1-Math.max(0,p-.7)/.3;hapBirdCarry(c,x,y,now);c.restore()},j)}}
     else if(F.k==='fall'){const p=Math.min(1,dt/1600);add(((j/W)|0)+1.1,2,null,()=>{c.save();c.globalAlpha=1-p;for(const[cx,cy]of HAPGOLD){hapPx(c,(j%W)*TS+cx-2,((j/W)|0)*TS-lf(j)+cy+p*30,2,2,'#f5c542')}c.restore()},j)}}}
 const HAPGOLD=[[2,-30],[26,-38],[40,-14],[12,-8],[-12,-16]];
 function hapGoldOn(c,x,y,i,now){/* きんいろの実：木の絵に、金の実のドットをのせる（drawObj から） */const h=hapNow('kin');if(!h||h.ph==='end'||h.j!==i)return;
