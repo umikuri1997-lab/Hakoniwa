@@ -22,7 +22,8 @@ LDELS = ('light', 'dark')   # 光・闇は、light_dark.py の形
 def job(a, *, factory=None):
     """1つの動き・属性：絵（PNG のまま）と、わく・目・手の場所"""
     name, el = a
-    if factory is None and el in ELS and not os.environ.get('SPIRIT_OLD'):   # 5つの属性は、持ち主のモデル（model/<属性>.fbx）の骨を動かして写す（fbx_build）
+    import core as _c
+    if factory is None and el in ELS and _c.ISOY and not os.environ.get('SPIRIT_OLD'):   # クォータービューの5つの属性は、持ち主のモデル（model/<属性>.fbx）の骨を動かして写す（fbx_build）。正面の絵は前のまま（守り神と話すときだけ。写しなおさない）
         import fbx_build
         return fbx_build.job(a)
     if factory is None:
