@@ -200,10 +200,16 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
         sh = np.roll(np.roll(out, dy, 0), dx, 1); m = ~al & (sh[..., 3] > 0) & (line[..., 3] == 0)
         line[m, :3] = (sh[m, :3]*0.72).astype(np.uint8); line[m, 3] = sh[m, 3]
     out[~al] = line[~al]
+    # ずきんの印：ずきん・頭のかざり・芽・はね（すける物）がうつるドット。ゲームは、せいれいごとの色のずれ（vr.h・vr.l）を、この印のドットだけにかける
+    K = (((tg == 3) & has) | wt).reshape(H, ss, W, ss).sum(axis=(1, 3)); A = a.reshape(H, ss, W, ss).sum(axis=(1, 3))
+    hk = al & (K*2 >= np.maximum(A, 1)); done = np.zeros_like(al)
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):   # 輪郭は、その色をとったとなりのドットの印（上の輪郭と同じ順）
+        m = ~al & np.roll(np.roll(al, dy, 0), dx, 1) & ~done; sm = np.roll(np.roll(hk, dy, 0), dx, 1)
+        hk = hk | (m & sm); done |= m
     if not info: return out
     T = tg.reshape(H, ss, W, ss).transpose(0, 2, 1, 3).reshape(H, W, ss*ss)
     cnt = np.stack([(T == q).sum(2) for q in range(len(TAGS))], 2); tagd = cnt.argmax(2)   # ドットごとの いちばん多い種類
-    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs, 'rb': rb, 'tgs': tg, 'w1': (zt > -1e8) & (zt > zb), 'ss': ss, 'W': W, 'H': H}
+    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs, 'rb': rb, 'tgs': tg, 'w1': (zt > -1e8) & (zt > zb), 'hk': hk, 'ss': ss, 'W': W, 'H': H}
 
 def decals(inf, chipimgs, fit):
     """decal を いくつもの絵で（顔の点と、チップの場所は1回だけ計算する）"""

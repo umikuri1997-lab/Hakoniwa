@@ -177,11 +177,17 @@ function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const k in SPMI){cons
 function spmCell(nm,el,vr,dir,i,T){/* せいれいの色にした1コマ（色のかえ方は spDot と同じ。色をかえないときは、もとの絵の場所）。dir 3〜5 は、目の上にかさねる絵（正面・横・うしろ。G[5] の高さ） */
   const m=(T||SPM)[nm],ae=spArt(el),G=m.g[ae];if(!G)return null;const im=spmImg(nm,el,T);if(!im)return null;const ov=dir>2,H=ov?G[5]:G[1],sx=i*G[0],sy=ov?G[1]*3+(dir-3)*H:dir*G[1],A=SPC[ae],B=spcVar(el,vr);
   if(A===B)return[im,sx,sy];
+  const ks=m.k&&m.k[ae];/* ずきんの印がある絵（持ち主のモデルから写した絵。ずきんにかげの色がまざる）は、印のドットだけ、その色の色相・明るさをずらす。目の上にかさねる行（うで・道具）はかえない */
+  if(ks&&ov)return[im,sx,sy];let km=null;if(ks){km=SPMI[ks];if(!km){km=SPMI[ks]={img:new Image(),ok:0,u:0};km.img.onload=()=>{km.ok=1;dirty=true};km.img.src=ks}km.u=performance.now();if(!km.ok)return[im,sx,sy]}
   const k=m.s[ae]+'|'+(ae!==el?el:'')+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+i;let cv=SPMC.get(k);
   if(cv){SPMC.delete(k);SPMC.set(k,cv);return[cv,0,0]}
   cv=document.createElement('canvas');cv.width=G[0];cv.height=H;const g=cv.getContext('2d');g.drawImage(im,sx,sy,G[0],H,0,0,G[0],H);
-  const d=g.getImageData(0,0,G[0],H),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
-  for(let q=0;q<p.length;q+=4){if(!p[q+3])continue;const h='#'+((1<<24)|(p[q]<<16)|(p[q+1]<<8)|p[q+2]).toString(16).slice(1),to=M[h];if(to){p[q]=parseInt(to.slice(1,3),16);p[q+1]=parseInt(to.slice(3,5),16);p[q+2]=parseInt(to.slice(5,7),16)}}
+  const d=g.getImageData(0,0,G[0],H),p=d.data,M={};let kp=null;
+  if(km){const kc=document.createElement('canvas');kc.width=G[0];kc.height=H;const k2=kc.getContext('2d');k2.drawImage(km.img,sx,sy,G[0],H,0,0,G[0],H);kp=k2.getImageData(0,0,G[0],H).data;kc.width=kc.height=0}
+  else for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
+  for(let q=0;q<p.length;q+=4){if(!p[q+3]||kp&&kp[q]<128)continue;const h='#'+((1<<24)|(p[q]<<16)|(p[q+1]<<8)|p[q+2]).toString(16).slice(1);let to=M[h];
+    if(kp&&!to){const[H0,S0,l0]=hex2hsl(h);to=M[h]=hsl2hex((H0+(vr.h||0)+360)%360,S0,Math.max(.08,Math.min(.92,l0+(vr.l||0))))}/* spcVar と同じずらし方を、そのドットの色に */
+    if(to){p[q]=parseInt(to.slice(1,3),16);p[q+1]=parseInt(to.slice(3,5),16);p[q+2]=parseInt(to.slice(5,7),16)}}
   g.putImageData(d,0,0);SPMC.set(k,cv);
   while(SPMC.size>SPMCAP){const[k0,c0]=SPMC.entries().next().value;c0.width=c0.height=0;SPMC.delete(k0)}
   return[cv,0,0]}
@@ -619,7 +625,7 @@ function drawRes0(r,now){
   if(at==='craft'&&ad&&!CLAPON){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
   if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);workBar(bx,byy,f,0);WBAR.set(r,{f,dx:bx-px,dy:byy-py,t:now,done:0})}else workBarDone(r,px,py,now)/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
   if(r.act&&r.act.type==='repair'&&r.act.stage==='do'&&r.act.obj!=null){const a=r.act,p=Math.min(1,(a.t||0)/repairTime(a)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-8,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ecdcbc';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 修理の進みぐあい *//* 話したそうな吹き出しが出ていても、修理・料理のバーは出す（その場所のバーなので） */
-  if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=cookTime(r,a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-(S.obj[a.obj]==='cooktable'?24:12),g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
+  if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=cookTime(r,a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-12,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
   {const a=r.act;if(a&&a.stage==='do'&&a.obj!=null&&(a.type==='repair'||a.type==='cook'&&r.cing)){const gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-(a.type==='cook'?12:8);if(Math.abs(px-(gx+14))<45&&by-67<gy+6&&by-15>gy)by=gy+13}}/* 修理・料理のバーとふきだしが重なるときは、ふきだしをバーの上へ */
   by=bubLift(px,by,now);/* となりの子のふきだしと重なるときは、上へずらす */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */

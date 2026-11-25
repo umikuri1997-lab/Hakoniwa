@@ -43,7 +43,7 @@ def tr(M, P):
 
 def job(a):
     name, el = a; m = MOTIONS[name]; n = m['n']; iso = bool(core.ISOY)
-    fr, fo, meta, xl = {}, {}, {}, {}
+    fr, fo, meta, xl, fk = {}, {}, {}, {}, {}
     faces = (0, 1, 2) if iso else (0,)   # 正面の絵（守り神と話すとき：正面の行だけ使う）は、正面だけ写して、横・うしろの行にも同じ絵を入れる
     for face in faces:
         for i in range(n):
@@ -89,13 +89,13 @@ def job(a):
             for k in ('tipN', 'tipF'):
                 if k in anc:
                     P = np.asarray(anc[k])@FM.F; X, Y, _ = scr3(P); A[k] = [round(float(X[0]), 2), round(float(Y[0]), 2)]
-            fr[(face, i)] = img; fo[(face, i)] = ov; meta[(face, i)] = A
+            fr[(face, i)] = img; fo[(face, i)] = ov; meta[(face, i)] = A; fk[(face, i)] = inf['hk']
             fit = FM.face_fit(el)   # 表情の目・ほっぺ：顔の3Dの面にはって写した層（表情ごと）
             xl[(face, i)] = FP.decals(inf, [xchip(xkey(l), el) for l in XL], fit)
     if not iso:
         import copy
         for face in (1, 2):
-            for i in range(n): fr[(face, i)] = fr[(0, i)]; fo[(face, i)] = fo[(0, i)]; meta[(face, i)] = copy.deepcopy(meta[(0, i)]); xl[(face, i)] = xl[(0, i)]
+            for i in range(n): fr[(face, i)] = fr[(0, i)]; fo[(face, i)] = fo[(0, i)]; fk[(face, i)] = fk[(0, i)]; meta[(face, i)] = copy.deepcopy(meta[(0, i)]); xl[(face, i)] = xl[(0, i)]
     al = np.stack([f[..., 3] > 0 for f in fr.values()]).any(0); ys, xs = np.nonzero(al)
     x0, x1, y0, y1 = int(xs.min()), int(xs.max())+1, int(ys.min()), int(ys.max())+1; cw, ch = x1-x0, y1-y0
     oa = np.stack([fo[(face, i)][y0:y1, x0:x1, 3] > 0 for face in (0, 1, 2) for i in range(n)]).any(0).any(1); oys = np.nonzero(oa)[0]
@@ -106,6 +106,9 @@ def job(a):
         for face in (0, 1, 2):
             for i in range(n): sheet[ch*3+face*oh:ch*3+(face+1)*oh, i*cw:(i+1)*cw] = fo[(face, i)][y0+oy:y0+oy+oh, x0:x1]
     b = io.BytesIO(); Image.fromarray(sheet).save(b, 'WEBP', lossless=True, exact=True, quality=100, method=2)
+    ks = np.zeros((ch*3, cw*n), np.uint8)   # ずきんの印の絵：からだの絵と同じわく（目の上にかさねる行はなし）。印のドットは 255
+    for (face, i), k in fk.items(): ks[face*ch:(face+1)*ch, i*cw:(i+1)*cw] = np.where(k[y0:y1, x0:x1], 255, 0)
+    kb = io.BytesIO(); Image.fromarray(ks).convert('RGB').save(kb, 'WEBP', lossless=True, exact=True, quality=100, method=2)
     def hands(a):
         v = a['handN']+a['handF']
         for k in ('tipN', 'tipF'):
@@ -127,4 +130,4 @@ def job(a):
         xb = io.BytesIO(); Image.fromarray(xs).save(xb, 'WEBP', lossless=True, exact=True, quality=100, method=2)
         xr = (xb.getvalue(), [xw, xh, int(EXT[0]+a0), int(EXT[2]+b0)])
     else: xr = None
-    return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)], xr
+    return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)], xr, kb.getvalue()

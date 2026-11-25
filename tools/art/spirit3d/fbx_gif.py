@@ -46,8 +46,15 @@ def main():
     from motions import MOTIONS
     n = MOTIONS[name]['n']; cols = []
     for el in ELS:
-        _, _, raw, geo, eye, _ = fbx_build.job((name, el)); sh = Image.open(io.BytesIO(raw)).convert('RGBA'); cw, ch = geo[0], geo[1]
-        cols.append([[eyes_on(sh.crop((i*cw, f*ch, (i+1)*cw, (f+1)*ch)), geo, eye[f][i]) for i in range(n)] for f in (0, 1, 2)])
+        _, _, raw, geo, eye, _, xr = fbx_build.job((name, el)); sh = Image.open(io.BytesIO(raw)).convert('RGBA'); cw, ch = geo[0], geo[1]
+        if xr:   # 3Dの表情の層（ふつうの目 n とほっぺ）を、ゲームと同じにそのままかさねる
+            xs = Image.open(io.BytesIO(xr[0])).convert('RGBA'); xw, xh, a0, b0 = xr[1]; NL = len(fbx_build.XL)
+            def lay(fr, f, i):
+                fr = fr.copy()
+                for li in (NL-1, 0): fr.alpha_composite(xs.crop((i*xw, (f*NL+li)*xh, (i+1)*xw, (f*NL+li+1)*xh)), (a0-geo[2], b0-geo[3]))
+                return fr
+            cols.append([[lay(sh.crop((i*cw, f*ch, (i+1)*cw, (f+1)*ch)), f, i) for i in range(n)] for f in (0, 1, 2)])
+        else: cols.append([[eyes_on(sh.crop((i*cw, f*ch, (i+1)*cw, (f+1)*ch)), geo, eye[f][i]) for i in range(n)] for f in (0, 1, 2)])
     W = max(c[0][0].width for c in cols); H = max(c[0][0].height for c in cols); Z = 3; frames = []
     for i in range(n):
         S = Image.new('RGBA', (W*len(ELS), H*3), (200, 220, 180, 255))
