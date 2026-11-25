@@ -427,7 +427,6 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'bklure':playU(Math.random()<.5?'cv_usagi':'cv_risu',.35);break;/* 洞窟のえさ：かわいい生き物の声でよぶ *//* つるしたなわが、きゅ… */
   case'bend':playU('bend',.04+.08*SFXR,.85+SFXR*.15);break;/* 板がしなって、ぎぃ（SFXR：しなりの大きさ 0〜1） */
   case'page':if(!playU('page',.34,1))rustle(t,.12,.05,o,3400,2200,.6);break;/* 思い出帳のページをめくる：ぺらっ（本物の録音） */
-  case'count':playU('tab',.3,1.05);break;/* 上の数がふえた：タブの「ぱたっ」の録音（持ち主がえらんだ。読みこむ前は鳴らさない） */
   case'tab':if(!playU('tab',.3,1.05))rustle(t,.06,.03,o,3600,2400,.6);playU('knockw',.12,1.35,.025);break;/* タブ：ぱたっとめくって、ことっ */
   case'notch':if(!playU('notch',.32,SFXR))knock(1600*SFXR,t,.04,o,.02);break;/* ±：かちっ（ねじを回す音） */
   case'rowin':playU('knockw',.07,SFXR);break;/* 一覧の行が、ことっと置かれる */
