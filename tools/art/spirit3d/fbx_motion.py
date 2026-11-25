@@ -183,7 +183,7 @@ def props(el, p, face):
         side = NEARSIDE[face] if k == 'N' else -NEARSIDE[face]; sfx = '.L' if side > 0 else '.R'
         sh, el0, hm0 = armpts(S, side); du = np.linalg.norm(hm0-sh)-rig.HANDU[0, 0]
         (P, C), fx = PR.prop(pn); kw = p.get('k'+k, 0.0)
-        if kw: P = rig.wrist(P, kw); fx = {a: (v if a == 'up' else rig.wrist(v[None], kw)[0]) for a, v in fx.items()}
+        if kw: P = rig.wrist(P, kw); fx = {a: (v if a in ('up', 'fwd') else rig.wrist(v[None], kw)[0]) for a, v in fx.items()}
         def put(U):
             U = np.atleast_2d(U); Q = sh+np.stack([side*(U[:, 0]+du), U[:, 2], U[:, 1]], 1)   # 休みの うで（キャラの座標）
             M = T['hand'+sfx]; W = (M@np.c_[(Q@F)*0.01, np.ones(len(Q))].T).T[:, :3]*100   # Blender（ドット）
@@ -191,10 +191,13 @@ def props(el, p, face):
         Wp = put(P); hc = put(rig.HANDU)[0]
         if 'up' in fx:   # たいらに持つ道具：道具の「上」を、まうえへ
             u0 = put(rig.HANDU[0]+fx['up'])[0]-hc; u0 = u0/np.linalg.norm(u0); R = align(u0, np.array([0, 0, 1.0]))
+            if 'fwd' in fx:   # 口のある道具（じょうろ）：口を、からだの正面（Blender の −Y）へ。うでのひねりにつられて横を向かない
+                f0 = R@(put(rig.HANDU[0]+fx['fwd'])[0]-hc); a_ = math.atan2(-1.0, 0.0)-math.atan2(f0[1], f0[0])
+                R = np.array([[math.cos(a_), -math.sin(a_), 0], [math.sin(a_), math.cos(a_), 0], [0, 0, 1.0]])@R
             Wp = (Wp-hc)@R.T+hc
         out.append((Wp, np.asarray(C)))
         for a, v in fx.items():
-            if a == 'up': continue
+            if a in ('up', 'fwd'): continue
             w_ = put(v)[0]
             if 'up' in fx: w_ = (w_-hc)@R.T+hc
             anc[a+k] = F@w_   # キャラの座標

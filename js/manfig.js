@@ -12,7 +12,7 @@ function manFig(key){if(!MANFIG[key]||!window.CHIPS)return null;const c=document
   if(!mfDraw(c,key)){MFWAIT.add([c,key]);clearTimeout(MFT);MFT=setTimeout(mfRetry,400)}return c}
 function mfRetry(){for(const q of[...MFWAIT]){if(!q[0].isConnected){MFWAIT.delete(q);continue}if(mfDraw(q[0],q[1]))MFWAIT.delete(q)}if(MFWAIT.size)MFT=setTimeout(mfRetry,400)}
 /* 1まい描く。絵がまだのせいれいがいたら false（あとでもう1回） */
-function mfDraw(c,key){const[w,h,gd,L]=MANFIG[key],g=c.getContext('2d'),W=c.width,H=c.height;g.setTransform(1,0,0,1,0,0);g.imageSmoothingEnabled=false;g.clearRect(0,0,W,H);let ok=true;
+function mfDraw(c,key){const[w,h,gd,L]=MANFIG[key],g=c.getContext('2d'),W=c.width,H=c.height;g.setTransform(1,0,0,1,0,0);g.imageSmoothingEnabled=false;g.clearRect(0,0,W,H);let ok=true;const p0=CHPN;/* 読みこみ中のページの物があったら、とどいてから描きなおす */
   const night=gd==='n'||gd==='s';
   if(gd==='s'){/* 夜空：2ドットずつの段 */const SK=['#28305a','#2d3763','#333e6c','#3a4675','#41507e','#4a5a86'];for(let i=0;i<6;i++){g.fillStyle=SK[i];g.fillRect(0,Math.floor(i*H/6)&~1,W,Math.ceil(H/6)+2)}}
   else{const tx=gd==='d'?'tex:dry':gd==='f'?'floor#0':'tex:grass',T=CHIPS[tx];g.setTransform(2,0,0,2,0,0);if(T)for(let y=0;y<H/2;y+=T.h||32)for(let x=0;x<W/2;x+=T.w||32)drawChip(g,T,tx.split(/[#:]/)[0],x,y,1);g.setTransform(1,0,0,1,0,0)}
@@ -34,7 +34,7 @@ function mfDraw(c,key){const[w,h,gd,L]=MANFIG[key],g=c.getContext('2d'),W=c.widt
     else if(k==='r'){g.fillStyle='rgba(200,220,255,.7)';for(let i=0;i<40;i++){const x=Math.floor(Math.abs(Math.sin(i*3.7)*999)%1*W)&~1,y=Math.floor(Math.abs(Math.sin(i*7.1)*777)%1*H)&~1;for(let j=0;j<4;j++)g.fillRect(x-j*2,y+j*2,2,2)}}
     else if(k==='w'){g.fillStyle='rgba(230,240,255,.55)';for(let i=0;i<5;i++){const y=(10+i*H/5)&~1,x0=(Math.abs(Math.sin(i*5.3))*W*.5)&~1;g.fillRect(x0,y,W*.4|0,2);g.fillRect(x0+W*.4-6|0,y-2,6,2)}}
     else if(k==='f'){for(let i=0;i<4;i++){g.fillStyle='rgba(235,238,245,'+(.18+i*.06)+')';g.fillRect(0,(H*.3+i*H*.15)&~1,W,(H*.12)&~1)}}}
-  return ok}
+  return ok&&CHPN===p0}
 function mfArrow(g,x0,y0,x1,y1){/* ドットの矢じるし：こい色のふち＋明るい中 */const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))/2|0,dx=Math.sign(x1-x0),dy=Math.sign(y1-y0);
   for(const[col,s]of[['#5a3c1e',4],['#fff3c4',2]]){g.fillStyle=col;for(let i=0;i<=n;i++){const x=x0+Math.round((x1-x0)*i/Math.max(1,n)/2)*2,y=y0+Math.round((y1-y0)*i/Math.max(1,n)/2)*2;g.fillRect(x-s/2,y-s/2,s,s)}
     for(let k=1;k<=4;k++){const a=k*2;g.fillRect(x1-dx*a-dy*a-s/2,y1-dy*a+dx*a-s/2,s,s);g.fillRect(x1-dx*a+dy*a-s/2,y1-dy*a-dx*a-s/2,s,s)}}}
