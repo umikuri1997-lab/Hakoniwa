@@ -126,10 +126,10 @@ function bpFinish(j,r){/* finishBuild から：設計図の部品ができた */
   p.s=2;if(r){addSpiritXp(1,r);r.made=(r.made||0)+1}if(p.t!=='plant')burst(j,p.t==='furn'||p.t==='build'?'furn':'block');recount();bpAdvance(e);dirty=true}
 const BPDONE={/* できたときの、くれたせいれいのひとこと（同じ物をつづけない pickFresh） */
   house:[[['#joy|わあ……！ ずっと、こんな家にすんでみたかったんだ。'],['#joy|守り神さま、ほんとうに、ありがとう！ 今夜から、ここでねむるね。']],[['#joy|えがいたとおりの家だ……！'],['#joy|守り神さま、ありがとう！ 大切にすむね。']],[['#joy|できた……！ 中に入ってみてもいい？'],['#joy|守り神さま、ありがとう。ここが、おうちになるんだね。']]],
-  garden:[[['#joy|わあ……！ えがいたとおりの庭だ。'],['#joy|守り神さま、ありがとう！ ここで、のんびりしたいな。']],[['#joy|すてき……！ ずっと、ながめていたくなるね。'],['#joy|守り神さま、ありがとう！']],[['#joy|できた！ ここに来ると、ほっとするね。'],['#joy|守り神さま、ありがとう。みんなにも見せてあげよう。']]],
-  farm:[[['#joy|できた！ これで、おいしいものが、たくさん育てられるね。'],['#joy|守り神さま、ありがとう！']],[['#joy|わあ……！ ここに、なにを育てようかな。'],['#joy|守り神さま、ありがとう！ たいせつに世話するね。']],[['#joy|えがいたとおりだ……！'],['#joy|守り神さま、ありがとう。みのるのが、たのしみだね。']]],
-  play:[[['#joy|できた！ みんなで、ここで遊ぼうよ！'],['#joy|守り神さま、ありがとう！']],[['#joy|わあ……！ はやく遊んでみたいな。'],['#joy|守り神さま、ありがとう！ みんなを、よんでくるね。']],[['#joy|えがいたとおりの遊び場だ……！'],['#joy|守り神さま、ありがとう。たくさん遊ぶね。']]],
-  guard:[[['#joy|できた……！ これで、夜も、みんなを守れるね。'],['#joy|守り神さま、ありがとう！']],[['#joy|これなら、あの影が来ても、こわくないね。'],['#joy|守り神さま、ありがとう！']],[['#joy|えがいたとおりだ……！ たのもしいね。'],['#joy|守り神さま、ありがとう。いっしょに、村を守ろうね。']]]};
+  garden:[[['#joy|わあ……！ えがいたとおりの庭だ。'],['#joy|守り神さま、ありがとう！ ここで、のんびりしたいな。']],[['#joy|すてき……！ ずっと、ながめていたくなるね。'],['#joy|守り神さま、ありがとう！ あしたの朝も、ここに来ようっと。']],[['#joy|できた！ ここに来ると、ほっとするね。'],['#joy|守り神さま、ありがとう。みんなにも見せてあげよう。']]],
+  farm:[[['#joy|できた！ これで、おいしいものが、たくさん育てられるね。'],['#joy|守り神さま、ありがとう！ みのったら、みんなで食べようね。']],[['#joy|わあ……！ ここに、なにを育てようかな。'],['#joy|守り神さま、ありがとう！ たいせつに世話するね。']],[['#joy|えがいたとおりだ……！'],['#joy|守り神さま、ありがとう。みのるのが、たのしみだね。']]],
+  play:[[['#joy|できた！ みんなで、ここで遊ぼうよ！'],['#joy|守り神さま、ありがとう！ 守り神さまも、見にきてね。']],[['#joy|わあ……！ はやく遊んでみたいな。'],['#joy|守り神さま、ありがとう！ みんなを、よんでくるね。']],[['#joy|えがいたとおりの遊び場だ……！'],['#joy|守り神さま、ありがとう。たくさん遊ぶね。']]],
+  guard:[[['#joy|できた……！ これで、夜も、みんなを守れるね。'],['#joy|守り神さま、ありがとう！ 今夜から、ぐっすり眠れそう。']],[['#joy|これなら、あの影が来ても、こわくないね。'],['#joy|守り神さま、ありがとう！ 夜の見回りも、がんばるね。']],[['#joy|えがいたとおりだ……！ たのもしいね。'],['#joy|守り神さま、ありがとう。いっしょに、村を守ろうね。']]]};
 const bpHouseN=()=>S.bpHouse!=null?S.bpHouse:(S.bpDone||0);/* 建てた家の数（家でない設計図がなかったころのセーブは、bpDone が家の数） */
 function bpComplete(e){S.bp=S.bp.filter(q=>q!==e);const b=BPS[e.k],cat=b.cat||'house';recount();
   const inner=e.ps.find(p=>p.t==='floor'),h=cat==='house'&&inner&&HOUSES.find(q=>q.inside.has(inner.j));
@@ -169,10 +169,10 @@ function bpGiveNext(g,cat,force){const r=g!=null?S.res.find(q=>q.id===g):null,k=
 const BPGHOSTA=.75;/* できあがりの家具・建物・花の絵のこさ（床のこさは下の rgba の .55） */
 function bpGhostDraw(ctx,now){now=now||performance.now();const L=[];if(pending&&pending.kind==='bp')L.push([pending.k,pending.x,pending.y,pending.ok,null,pending.r||0]);
   for(const e of S.bp||[])L.push([e.k,e.x,e.y,true,e,e.r||0]);if(!L.length)return;ctx.save();
-  for(const[k,x,y,ok,e,r]of L){const ps=bpPieces(k,r);for(const[dx,dy,t,id,rot,ph]of ps){if(e){const p=e.ps.find(q=>q.j===(y+dy)*W+x+dx&&q.t===t);if(!p||p.s>0)continue}
+  for(const[k,x,y,ok,e,r]of L){const ps=bpPieces(k,r),cells=new Map();for(const[dx,dy,t,id]of ps)if(t==='build')cells.set((y+dy)*W+x+dx,id);/* 壁・柵どうしのつながり（iqGhostDraw） */for(const[dx,dy,t,id,rot,ph]of ps){if(e){const p=e.ps.find(q=>q.j===(y+dy)*W+x+dx&&q.t===t);if(!p||p.s>0)continue}
       for(const c of t==='furn'||t==='build'?bpCellsOf(id,x+dx,y+dy,rot):[(y+dy)*W+x+dx]){const px=(c%W)*TS,py=((c/W)|0)*TS-liftOf(c);ctx.fillStyle=!ok?'rgba(255,110,110,.30)':t==='floor'?'rgba(255,236,170,.55)':t==='furn'?'rgba(170,220,255,.32)':'rgba(255,214,140,.40)';ctx.fillRect(px+1,py+1,TS-2,TS-2);
       ctx.strokeStyle=!ok?'rgba(255,110,110,.9)':'rgba(255,230,120,.85)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.strokeRect(px+1.5,py+1.5,TS-3,TS-3);ctx.setLineDash([])}
-      if(ok&&(t==='furn'||t==='build'||t==='plant')&&BL[id]){const j0=(y+dy)*W+x+dx,px=(j0%W)*TS,py=((j0/W)|0)*TS-liftOf(j0),rch=ROTS[id]&&rot&&chipOf(id,null,rot);ctx.save();ctx.globalAlpha=BPGHOSTA;if(rch)drawChip(ctx,rch,id,px,py,now);else drawObj(ctx,id,px,py,null,100,now);ctx.restore()}/* 家具・建物・花は、できあがりの絵もうすく */}}
+      if(ok&&(t==='furn'||t==='build'||t==='plant')&&BL[id]){const j0=(y+dy)*W+x+dx,px=(j0%W)*TS,py=((j0/W)|0)*TS-liftOf(j0),rch=ROTS[id]&&rot&&chipOf(id,null,rot);ctx.save();ctx.globalAlpha=BPGHOSTA;if(typeof iqGrp==='function'&&iqGrp(id)){iqGhostDraw(ctx,id,j0,cells);ctx.restore();continue}/* 壁・ドア・柵は、クォータービューの絵で */if(rch)drawChip(ctx,rch,id,px,py,now);else drawObj(ctx,id,px,py,null,100,now);ctx.restore()}/* 家具・建物・花は、できあがりの絵もうすく */}}
   ctx.restore()}
 const BPTALKL={house:'こんな家に、すんでみたいなって',garden:'こんな庭があったら、すてきだなって',farm:'こんな畑があったら、いいなって',play:'こんな遊び場があったら、みんなで遊べるなって',guard:'こんなふうに守れたら、夜もこわくないなって'};
 function bpTalkGift(r){/* お話のあと：ときどき、えがいた設計図をくれる */if(Math.random()>=BPTALK)return;const d=callDay();if(S.bpTalkD!=null&&d-S.bpTalkD<BPTALKCD)return;const k=bpNext(null,r.elem);if(!k)return;S.bpTalkD=d;const id=r.id;

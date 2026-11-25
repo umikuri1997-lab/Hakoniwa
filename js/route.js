@@ -1,31 +1,9 @@
-/* ---------- お話の道をえらぶ（草原） ----------
-   土のなかまのあと、火・水・風の3つの話（ROUTE_ARCS）の順番を、自分でえらぶ。オオカゲの話（ROUTE_BOSS）は、2つめの話のあと。
-   こもれびのまもり（夜に火のせいれいを守る）・オオカゲとたたかうのは火のせいれいなので、火は1つめか2つめ。
-   S.flags.route：えらんだ順（新しいゲームは []。前のセーブは、ない＝いまのならび 火・水・風）。
-   QUESTS1 を、その順にならべかえる（routeApply。QUESTS は同じ配列）。えらぶのは、その話の目標になったとき（話を聞く前）だけ。
+/* ---------- 火・水・風の話（草原） ----------
+   土のなかまのあと、火・水・オオカゲ・風の順にむかえる（ROUTE_DEF。えらべない。持ち主がきめた）。
    御神木の調べは、何番めかで、1つめ 芽・2つめ 一枚目の葉・3つめ ヌシ様の声（routePos）。会話も、何番めかでかわる。 */
-const ROUTE_ARCS={fire:['fire','fireRoot','warmMeal'],water:['water','waterFilm','aoFish'],wind:['wind','windEcho','kite']},ROUTE_BOSS=['kagemark','ookage','guardLearn'],ROUTE_DEF=['fire','water','wind'];
+const ROUTE_DEF=['fire','water','wind'];
 const ROUTE_ROOT={fire:'fireRoot',water:'waterFilm',wind:'windEcho'};
-function routeFull(s){s=s||S;const r=s&&s.flags&&Array.isArray(s.flags.route)?s.flags.route.slice(0,3):ROUTE_DEF.slice();for(const e of ROUTE_DEF)if(!r.includes(e))r.push(e);if(r[2]==='fire'){r[2]=r[1];r[1]='fire'}return r}/* まだえらんでいない所は、いまのならびでうめる（火は3つめにしない） */
-const routePos=el=>routeFull().indexOf(el);
-let QROUTE='def',QORIG=null;
-function routeApply(){if(typeof QUESTS1==='undefined')return;if(!QORIG||QORIG.length!==QUESTS1.length&&QROUTE==='def')QORIG=QUESTS1.slice();
-  const key=S&&WD===KUSA&&!S.free&&!IS_STORY_REPLAY?routeFull().join():'def';if(key===QROUTE&&QUESTS1.length===QORIG.length)return;
-  const ids=QORIG.map(q=>q.id),all=[...ROUTE_DEF.flatMap(e=>ROUTE_ARCS[e]),...ROUTE_BOSS],ix=all.map(id=>ids.indexOf(id));if(ix.some(i=>i<0))return;const a=Math.min(...ix),b=Math.max(...ix);if(b-a+1!==all.length)return;/* つづいてならんでいないときは、ならべかえない */
-  const by=id=>QORIG[ids.indexOf(id)],R=key==='def'?ROUTE_DEF:routeFull(),mid=[...ROUTE_ARCS[R[0]],...ROUTE_ARCS[R[1]],...ROUTE_BOSS,...ROUTE_ARCS[R[2]]].map(by);
-  QUESTS1.splice(0,QUESTS1.length,...QORIG.slice(0,a),...mid,...QORIG.slice(b+1));QROUTE=key}
-const ROUTE_NAME={fire:'火のせいれい',water:'水のせいれい',wind:'風のせいれい'},ROUTE_DESC={fire:'夜、村を守る。',water:'水やり・水くみをする。',wind:'落ちている物をひろう。遊ぶのが好き。'};
-let ROUTEPOP=null;
-function routeTick(){if(!S||WD!==KUSA||S.free||IS_STORY_REPLAY||!Array.isArray(S.flags.route))return;routeApply();const r=S.flags.route;if(r.length>=3)return;
-  const slot=QUESTS1.findIndex(q=>q.id===ROUTE_ARCS[routeFull()[r.length]][0]);if(slot<0||S.quest<slot)return;/* その話の目標になったときに、えらぶ */
-  if(r.length===2||S.quest>slot||S.qTalked){r.push(routeFull()[r.length]);if(r.length===2)r.push(routeFull()[2]);routeApply();dirty=true;return}/* 話を聞いたあと・前のならびのまま進んだ：いまのならびにきめる */
-  const opts=r.length===0?ROUTE_DEF.slice():r[0]==='fire'?['water','wind']:['fire'];if(opts.length===1){r.push(opts[0]);r.push(ROUTE_DEF.find(e=>!r.includes(e)));routeApply();dirty=true;return}
-  if(ROUTEPOP||sheet||typeof MEMRUN!=='undefined'&&MEMRUN)return;{const dg=document.getElementById('dialog'),lu=document.getElementById('lvup');if(dg&&!dg.hidden||lu&&!lu.hidden)return}if(typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE||typeof LVPOP!=='undefined'&&LVPOP)return;routePop(opts)}
-function routePop(opts){/* つぎにむかえるなかまを、えらぶ（えらぶまで、とじない） */
-  const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:12px 24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:360px;width:100%;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;color:var(--ink)"><b style="display:block;font-size:15px;margin-bottom:8px">つぎは、どのせいれいをむかえる？</b><div class="rows ks" style="min-height:0;overflow-y:auto"></div></div></div>');
-  ROUTEPOP=o;const R=o.querySelector('.ks');
-  for(const e of opts){const r=rowEl(ROUTE_NAME[e],ROUTE_DESC[e],null),b=el('<button class="btn pri">むかえる</button>');b.onclick=()=>{sfx('good');const L=S.flags.route;L.push(e);if(L.length===2)L.push(ROUTE_DEF.find(x=>!L.includes(x)));if(L.length===1&&e!=='fire'){L.push('fire');L.push(ROUTE_DEF.find(x=>!L.includes(x)))}routeApply();dirty=true;o.remove();ROUTEPOP=null;memo('leaf',ROUTE_NAME[e]+'を、つぎにむかえることにした')};r.appendChild(b);R.appendChild(r)}
-  document.body.appendChild(o)}
+const routePos=el=>ROUTE_DEF.indexOf(el);
 /* ---- 何番めかで、かわる会話 ---- */
 const rHas=el=>typeof elemCount==='function'&&elemCount(el)>0;
 const rStageWord=st=>st===1?'芽':'若葉';
