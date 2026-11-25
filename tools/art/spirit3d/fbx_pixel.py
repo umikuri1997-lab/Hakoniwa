@@ -73,8 +73,8 @@ def shade(cb, nb, mb, light, soft=None):
     hsv = rgb2hsv(cb[m]/255) if m.any() else np.zeros((0, 3))
     if len(hsv):
         add = np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0)
-        if soft is not None:   # 体（うで・足も）：かげをぼかす（光の当たり方で、7だんに少しずつ。頭はいままでの3だん）
-            t = np.round(np.clip((0.55-dl[m])/0.9, 0, 1)*6)/6; sa = 0.20*t+np.where(hsv[:, 1] < 0.08, 0.06*t, 0)
+        if soft is not None:   # 体（うで・足も）：かげの だんを ゆるく（色の数は頭と同じ3だんのまま、だんの差を小さく。持ち主がえらんだ）
+            sa = np.array([0.0, 0.06, 0.12])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.02, 0.04])[band[m]], 0)
             add = np.where(soft[m], sa, add)
         hsv[:, 1] = np.minimum(1, hsv[:, 1]+add)
         out[m] = hsv2rgb(hsv)*255
