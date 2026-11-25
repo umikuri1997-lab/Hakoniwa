@@ -131,13 +131,14 @@ function dyFillPh(secs,after){if(IS_STORY_REPLAY||typeof phList!=='function')ret
     for(const s of secs.values())for(const f of s.sec.querySelectorAll('.dyph0'))f.remove()},()=>{})}
 /* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日。
    思い出帳と同じ本（book.js の bookMake）：1ページめは、思い出帳のその日のページと同じ絵日記（dyDayPage）。
-   めくると、点のページ（ゆうべのかつやく・ゆうべの守り・きのうのしごと。数え上げ・ハンコは、そのページを見せたとき）、そのあと、追いはらったせいれい・みんなのしたこと。 */
+   めくると、点のページ（ゆうべのかつやく・ゆうべの守り・きのうのしごと。数え上げ・ハンコは、そのページを見せたとき）、そのあと、追いはらったせいれい・みんなのしたこと。いちばん最後に、できごと・ゆうべのひとこと。 */
 const DYBK={k:null};
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
   T.textContent=e.d+'日めの日記';
   const key=e.d+'|'+arg,first=DYBK.k!==key;if(first)DYBK.k=key;const anim=arg==='m'&&first;/* かきなおし（画面の回転など）では、数え上げ・ハンコを2回しない */
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
   const x={d:e.d,e,ev:(S.memo||[]).filter(m=>m[0]===e.d).map(m=>[m[1],m[2]]).concat((S.log||[]).filter(m=>m[0]===e.d).map(m=>['',m[1]]))}/* できごとは、思い出帳の日のページと同じ */,day=dyDayPage(x,false),P1=el('<div class="mpg"></div>'),P2=el('<div class="mpg"></div>');
+  const P3=el('<div class="mpg"><div class="sec"></div></div>');{const mo=day.querySelector(':scope>.dyMore');if(mo)P3.firstChild.appendChild(mo)}/* できごと・ゆうべのひとことは、いちばん最後のページ（持ち主がきめた） */
   let stampR=null;{const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);P1.appendChild(sec);
     if(anim)stampR=r;else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}
   const N=e.ns;if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
@@ -153,7 +154,7 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
     for(const x of e.w){if(!by.has(x[0]))by.set(x[0],{el:x[1],vr:x[2],L:[]});by.get(x[0]).L.push(x)}
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
     P2.appendChild(sec)}
-  const pages=[day].concat(P1.children.length?[P1]:[],P2.children.length?[P2]:[]);
+  const pages=[day].concat(P1.children.length?[P1]:[],P2.children.length?[P2]:[],P3.firstChild.children.length?[P3]:[]);
   /* 点のページ（P1）は、入りきらないと2ページ以上にわかれる。わかれたページごとに、見せたときに数え上げてハンコ（見えていないページで数えない・ハンコをおさない）。
      わかれたページは、数えおわったら、つぎのページへ自動でめくる（DYAUTOMS。じぶんでページをかえていたら、めくらない） */
   let map=null;const PT=[],pi=P1.children.length?1:-1;let busy=false;
