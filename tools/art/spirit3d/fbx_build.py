@@ -49,7 +49,8 @@ def job(a):
             A = {'eye': [int(round(ex[0]-x0[0])), int(round(ey[0]-y0[0])), ti, 1 if mir else 0]}
             if ti in (0, 1):   # 表情の目：顔の面の場所と ちぢみ方（目の絵の1ドット → 画面）。横向きも同じ（前の横向きの目の絵は、モデルの顔と合わない）
                 for k, C in enumerate(F4):
-                    d = 2.0; P3 = tr(Th, np.array([C, C+[d, 0, 0], C+[0, 0, -d]]))
+                    d = 2.0   # 顔の丸みにそって：目のまん中と、よこ・たてに d ずらした所を、顔の面の上にとる
+                    P3 = tr(Th, np.array([FM.face_pt(el, C[0], C[2]), FM.face_pt(el, C[0]+d, C[2]), FM.face_pt(el, C[0], C[2]-d)]))
                     X, Y, Z = scr3(P3); aa, bb = (X[1]-X[0])/d, (Y[1]-Y[0])/d; cc, dd = (X[2]-X[0])/d, (Y[2]-Y[0])/d
                     vis = 1 if aa*dd-bb*cc >= (0.25 if k < 2 else 0.5) else 0
                     r1, c1 = int(np.floor(Y[0]-EXT[2])), int(np.floor(X[0]-EXT[0]))

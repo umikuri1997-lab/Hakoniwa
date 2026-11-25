@@ -33,6 +33,7 @@ def scene(el):
     for o in meshes:
         names = {g.index: g.name for g in o.vertex_groups}
         dom[o.name] = [names.get(max(v.groups, key=lambda g: g.weight).group, '') if v.groups else '' for v in o.data.vertices]
+    restV = {o.name: np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices])*100 for o in meshes}   # 休みのポーズの点（ドット）
     comp = {}   # 木のずきん：はなれた かたまり（いちばん大きい物のほかは 葉脈）
     from scipy.sparse import coo_matrix
     from scipy.sparse.csgraph import connected_components
@@ -49,6 +50,7 @@ def scene(el):
         Q = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith(pre)])*100
         for sgn in (-1, 1):
             q = Q[np.sign(Q[:, 0]) == sgn]; feat.append(np.array([q[:, 0].mean(), q[:, 1].min(), q[:, 2].mean()]))
+    HV = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith('head') and not o.name.lower().startswith('headacc')])*100   # 顔（Head）の点（休み・ドット）
     rest = {b.name: np.array(b.matrix_local) for b in arm.data.bones}   # アーマチュアの空間（m）
     order = []
     def walk(b):
@@ -56,7 +58,7 @@ def scene(el):
         for c in b.children: walk(c)
     for b in arm.data.bones:
         if b.parent is None: walk(b)
-    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0, feat=feat)
+    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0, feat=feat, HV=HV, restV=restV)
     return _CUR
 
 def rigid(R, pivot, t=(0, 0, 0)):
@@ -125,7 +127,7 @@ def triangles(el, eyes=True):
             if el == 'wood' and cp is not None and cp[0][i[0]] != cp[1]: col = FP.hx('#c9ef9b')   # 木の葉脈：明るい黄緑
             tag = 'face' if ln.startswith('head') and not ln.startswith('headacc') else 'head' if ln.startswith(('hood', 'headacc', 'sprout', 'eye', 'cheek')) \
                 else 'arm' if ln == 'body' and dom[i[0]].startswith(('upper_arm', 'forearm', 'hand')) else 'body'
-            out.append((V[i], N[i], col, mat, tag))
+            out.append((V[i], N[i], col, mat, tag, S['restV'][o.name][i]))
         ev.to_mesh_clear()
     return out
 
@@ -143,3 +145,16 @@ def frame(el, p, face):
     pose(el, p, face)
     pts, anc = props(el, p, face)
     return FP.render(triangles(el), face, points=pts, spin=p.get('spin', 0.0))
+
+def face_pt(el, x, z):
+    """顔（Head）の、正面から見て (x, z) の所の、いちばん前（Blender の −Y）の点（休み・ドット）"""
+    HV = scene(el)['HV']; r = 1.5
+    while True:
+        m = (np.abs(HV[:, 0]-x) < r) & (np.abs(HV[:, 2]-z) < r)
+        if m.any(): return np.array([x, HV[m, 1].min(), z])
+        r *= 1.5
+
+def face_fit(el):
+    """休みの顔の点（Blender・ドット）→ 表情の目のチップの場所 (u, v)。モデルの両目のまん中・あいだを、チップの目（±9.5, −40.5）に合わせる"""
+    F4 = scene(el)['feat']; L, R = F4[0], F4[1]; mx, mz = (L[0]+R[0])/2, (L[2]+R[2])/2; s = 19.0/max(1e-6, abs(R[0]-L[0]))
+    return lambda P: ((P[:, 0]-mx)*s, -40.5-(P[:, 2]-mz)*s)

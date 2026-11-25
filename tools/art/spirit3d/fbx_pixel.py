@@ -89,7 +89,7 @@ ELEV = 25.0   # 見おろす角度（度。持ち主が「少しだけ見おろ�
 from numba import njit
 
 @njit(cache=True)
-def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2):
+def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2, RP, rb):
     """三角形を1つずつ、ドットの細かさ（ss）でぬる（前の Python のぬり方と同じ式・同じじゅんばん）"""
     for k in range(SX.shape[0]):
         ax, bx, cx = SX[k, 0], SX[k, 1], SX[k, 2]; ay, by, cy = SY[k, 0], SY[k, 1], SY[k, 2]
@@ -117,6 +117,7 @@ def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt,
                     continue
                 if z > zb[j]:
                     zb[j] = z; mb[j] = MAT[k]; tg[j] = TAG[k]
+                    for q in range(3): rb[j, q] = l0*RP[k, 0, q]+l1*RP[k, 1, q]+l2*RP[k, 2, q]   # 休みのポーズの場所（顔に表情の目をはる所）
                     for q in range(3): cb[j, q] = COL[k, q]; nb[j, q] = l0*NN[k, 0, q]+l1*NN[k, 1, q]+l2*NN[k, 2, q]
 
 @njit(cache=True)
@@ -150,7 +151,7 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）・3 すける（風のはね）
     zt = np.full(Ws*Hs, -1e9); ct = np.zeros((Ws*Hs, 3)); nt = np.zeros((Ws*Hs, 3))   # すける物（いちばん手前）
     zt2 = np.full(Ws*Hs, -1e9); ct2 = np.zeros((Ws*Hs, 3)); nt2 = np.zeros((Ws*Hs, 3))   # すける物（2まいめ）
-    tg = np.zeros(Ws*Hs, int); hcov = np.zeros(Ws*Hs, bool)   # いちばん手前の物の種類（TAGS）・頭（ずきん・顔）がうつる所
+    tg = np.zeros(Ws*Hs, int); hcov = np.zeros(Ws*Hs, bool); rb = np.zeros((Ws*Hs, 3))   # いちばん手前の物の種類（TAGS）・頭（ずきん・顔）がうつる所
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
     spin = -(spin+yaw); cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])   # ゲームの view（キャラの座標で rz(spin)）＝ Blender の座標で rz(−spin)
     cam0 = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
@@ -166,7 +167,8 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
         if spin: P = P@Rs.T; N = N@Rs.T
         Q = cam(P.reshape(-1, 3)).reshape(-1, 3, 3); NN = cam(N.reshape(-1, 3)).reshape(-1, 3, 3)
         SX = (Q[..., 0]+W/2)*ss; SY = (H-12-Q[..., 1])*ss
-        _raster(SX, SY, np.ascontiguousarray(Q[..., 2]), np.ascontiguousarray(NN), COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2)
+        RP = np.array([t[5] if len(t) > 5 else np.zeros((3, 3)) for t in tris], float)
+        _raster(SX, SY, np.ascontiguousarray(Q[..., 2]), np.ascontiguousarray(NN), COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2, RP, rb)
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
         if spin: P = P@Rs.T
         Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
@@ -197,7 +199,23 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     if not info: return out
     T = tg.reshape(H, ss, W, ss).transpose(0, 2, 1, 3).reshape(H, W, ss*ss)
     cnt = np.stack([(T == q).sum(2) for q in range(len(TAGS))], 2); tagd = cnt.argmax(2)   # ドットごとの いちばん多い種類
-    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs}
+    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs, 'rb': rb, 'tgs': tg, 'w1': (zt > -1e8) & (zt > zb), 'ss': ss, 'W': W, 'H': H}
+
+def decal(inf, chipimg, fit):
+    """表情の目・ほっぺの絵を、顔の3Dの面にはって写した層（RGBA・ドット）。
+    inf：render(info=True)・chipimg：(絵, ax, ay)・fit(休みの点 [n,3]) → チップの場所 (u, v)。顔がいちばん手前の所だけ（ずきん・うで・すける はねの下はかくれる）"""
+    ss, W, H = inf['ss'], inf['W'], inf['H']; a, ax, ay = chipimg
+    m = (inf['tgs'] == 4) & ~inf['w1']; idx = np.nonzero(m)[0]
+    lay = np.zeros((H*ss*W*ss, 4), np.uint8)
+    if len(idx):
+        u, v = fit(inf['rb'][idx]); c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int)
+        ok = (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
+        lay[idx[ok]] = a[r[ok], c[ok]]
+    lay = lay.reshape(H, ss, W, ss, 4).transpose(0, 2, 1, 3, 4).reshape(H, W, ss*ss, 4)
+    out = np.zeros((H, W, 4), np.uint8); on = lay[..., 3] > 0; n = on.sum(2)
+    for r, c in zip(*np.nonzero(n*2 >= ss*ss)):   # 半分より多く絵がある所：いちばん多い色
+        px = lay[r, c][on[r, c]][:, :3]; u_, k = np.unique(px, axis=0, return_counts=True); out[r, c, :3] = u_[k.argmax()]; out[r, c, 3] = 255
+    return out
 
 def main():
     dst = sys.argv[1]; Z = 4; tiles = []
