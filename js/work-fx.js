@@ -2,7 +2,7 @@
    動きの絵は spirit3d（cookprep・cookcut・cookmix・cook・cookfry・cookfan・cookgrill・cookplate・raise・craftprep・saw・craft・polish、作業台の上では wbprep・wbsaw・wbham・wbpolish）。
    音と粒は、描くときの時刻（drawSpiritDot の t）と同じ時刻で、動きの決まった所（WBEAT）をこえたときに出す（手の動きとずれない）。 */
 const WORKSHOW=4;
-const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBSLOT={0:[-3,-28],1:[-28,-3],2:[-3,16],3:[16,-3]};/* 作業台で作るせいれいの立つ所の、作業する所（workCells のマスのまん中）からのずれ（せかいの点、向きごと）。天板は、台のマスの奥0.56（tools/art/furn3d/items/wbench.py）なので、マスのまん中のままだと台から0.94マス（30点）はなれる：台のほうへ、台の前に立つ向き（0・1。せいれいが手前）は25点、台のうしろに立つ向き（2・3。せいれいが台にかくれる）は19点よせる（ゲームの絵で手もとが天板にとどく所をたしかめた数）。作業台の絵は10ドット（g64）上に置く（iso3d.py の WBUP）ので、画面で同じだけ上に見えるよう、x・y とも3点ひく *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
+const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBSLOT={0:[14,-21.5],1:[-16,-19],2:[-16,0.5],3:[11,4.5]},WBFACE={0:1,1:-1,2:1,3:1};/* 作業台で作るせいれいの、絵のずれ（向きごと。作業する所のマスのまん中に立てて描く点からの、drawRes0 の px・py。SEATOFF と同じ）。持ち主が「作業台の立つ位置」のページ（tools/wbslot/）できめる数。WBFACE：絵の左右（r.face）。ななめの絵は、反転すると、ちがうななめを向く（前ななめは反転なしで左下＝南、うしろななめは右上＝北）ので、台のほうを向く左右にそろえる *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
@@ -64,7 +64,7 @@ function boxAct(r){const a=r.act;return a&&!r.nap&&!(typeof onHold==='function'&
 /* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
 function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
 /* 取る・置く物の高さ：上から入れる物（ふちが顔の高さ）は背のびして storeh、前から入れる家具は胸の高さへ storem、地面の物（神殿のまえの山・材料置き場など）は、しゃがむ store */
-const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
+const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['tskama','makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
 function boxReach(a){const t=boxTarget(a);if(t<0)return'';const id=boxTypeAt(t)||S.obj[anc(t)];return BOXHI.has(id)?'storeh':BOXMID.has(id)?'storem':''}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
@@ -91,8 +91,11 @@ function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=type
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
 const POURU=new WeakMap();/* 水やり：1回3秒の音（pourl）を、おわる0.4秒まえに、つぎをかさねて、とぎれずにつづける */
-function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);sfxLow('pourl',r.x,r.y)}
-function workBeat(r,nm,t,p){if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
+const POURS=new WeakMap();/* その子が鳴らしている水やりの音（かさなる所で2つ） */
+function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);POURLAST=null;sfxLow('pourl',r.x,r.y);if(POURLAST){const L=(POURS.get(r)||[]).slice(-1);L.push(POURLAST);POURS.set(r,L);POURLAST=null}}
+function pourHush(r){const L=POURS.get(r);if(L){L.forEach(pourCut);POURS.delete(r)}POURU.delete(r)}/* 作業が止まったら、鳴っている水の音も、すっと消す */
+/* 話している・場面で止められている子（onHold）と、村の時間が止まっているときは、作業が進まないので音を鳴らさない（話しているあいだ、水やりの音が鳴りつづけた） */
+function workBeat(r,nm,t,p){if(typeof onHold==='function'&&onHold(r)||typeof paused==='function'&&paused()){WBEATP.delete(r);pourHush(r);return}if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
   for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxLow(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);const nat=(nm==='chop'||nm==='mine')&&r.act&&r.act.obj!=null;if(nat&&typeof natJolt==='function')natJolt(r.act.obj,(r.act.obj%W+.5)>=r.x?1:-1);/* 木・岩は、たたくたびに、たたかれた向きへゆれる。木くず・石のかけらも毎回 */if(fx&&(nat||Math.random()<.5)){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
 /* できあがり：1回だけ、ぽん・きらきら */
 function workShowStart(r,a){a.sh=0;r.bubble='';/* 頭の上の物とかさならないように */sfxAt('workdone',r.x,r.y);fxSpr('twinkle',r.x*TS,(r.y-.9)*TS)}

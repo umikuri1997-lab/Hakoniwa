@@ -36,6 +36,7 @@ const calledToday=()=>S.summonDay===callDay()||S.mebukiDay===callDay();/* きょ
 function doSummon(){
   const sm=S.summon;if(!sm)return;
   if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===callDay()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
+  if(!sm.rev&&!sm.mebuki&&!S.flags.minaCame&&SECOND[WD].ok())sm.elem=SECOND[WD].elem;/* 2人目のキーキャラが来られるときは、前からほかの属性で出ていた「！」でも、そのキーキャラが来る（ほかの属性の力は、つかわずにのこる） */
   if(!sm.rev&&!sm.pick&&!(!S.flags.minaCame&&sm.elem===SECOND[WD].elem&&SECOND[WD].ok())&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
   const sx0=sm.at?sm.at[0]:STATUE>=0?STATUE%W:CX,sy0=sm.at?sm.at[1]:STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;/* at：やってくる所（フリーモード） */
@@ -415,13 +416,13 @@ function takeDrop(d,r){let nm;if(d.ws&&typeof wseedTake==='function')wseedTake(d
   if(d.id==='recipe'){const L=KWR.filter(id=>!(S.recipes||{})[id]);if(!L.length){d={id:'sand',n:1}}else{const id=pick(L);(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true;kwrSync();sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('paper',BL[id].name+'のレシピをひろった');renderPalette();return}}/* コワイノのレシピ（まれ）：レシピだけは、すぐおぼえる */
   if(d.id==='shard'){S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);const nm=SHN(),c=WD===KAZAN?'':'（'+S.shards+'/3）';memo('power',nm+'をひろった'+c);sfx('level');toast((r?r.name+'が':'')+'「'+nm+'」をひろった！'+c,'good');logEv(nm+'をひろった');checkQuest();return}/* ヌシのかけらは、ひろった子がそのまま御神木へささげる */
   if(!d.id.startsWith('food:')&&!d.id.startsWith('mat:')){/* やすらぎの砂・角笛・しずく・灰・たね・家具・そうび：せいれいが頭の上につんで、箱へはこぶ（もちものに、すぐには入れない） */
-    if(r&&itemBoxOK()){const n=addItem(r,d.id,d.n);if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));if(n>0&&d.made){(r.cmade||(r.cmade={}))[d.id]=(r.cmade[d.id]||0)+n;return}/* 依頼ボードで作った物の、のこり */if(n>0&&!d.ws){toast(r.name+'が「'+itemName(d.id)+'」をひろった','good')}return}
+    if(r&&itemBoxOK()){const n=addItem(r,d.id,d.n);if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));if(n>0&&d.made){(r.cmade||(r.cmade={}))[d.id]=(r.cmade[d.id]||0)+n;return}/* 依頼ボードで作った物の、のこり */if(n>0&&!d.ws&&!d.lt){toast(r.name+'が「'+itemName(d.id)+'」をひろった','good',0,1)}/* こわしたブロック（lt）は、だまってひろう */return}
     if(d.made){giveItem(setId(d.id),setN(d.id,d.n),1);return}
     stowItem(d.id,d.n,r);return}/* しまう箱がひとつもないときだけ、そのまま */
-  if(r&&(d.id.startsWith('food:')||d.id.startsWith('mat:'))){const food=d.id.startsWith('food:'),k=d.id.slice(food?5:4),n=Math.min(d.n,roomN(r));if(n>0){if(food)addCarry(r,k,n);else{addMat(r,k,n);gearIdea(k,null,r.cmat[k])}}if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));/* せいれいがひろった食べ物・素材は、頭の上につんで、箱へはこぶ。持ちきれない分は地面にのこす */if(n>0&&!d.lt)toast(r.name+'がおとしものをひろった：'+(food?FOODS[k].name:MATN[k])+'×'+n,'good');return}
+  if(r&&(d.id.startsWith('food:')||d.id.startsWith('mat:'))){const food=d.id.startsWith('food:'),k=d.id.slice(food?5:4),n=Math.min(d.n,roomN(r));if(n>0){if(food)addCarry(r,k,n);else{addMat(r,k,n);gearIdea(k,null,r.cmat[k])}}if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));/* せいれいがひろった食べ物・素材は、頭の上につんで、箱へはこぶ。持ちきれない分は地面にのこす */if(n>0&&!d.lt)toast(r.name+'がおとしものをひろった：'+(food?FOODS[k].name:MATN[k])+'×'+n,'good',0,1);return}
   if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（箱がいっぱい）')}
   else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（箱がいっぱい）');bambooIdea();matIdea()}
-  if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
+  if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good',0,1)}/* 守りの光で落とした素材は、だまってひろう */
 function itemName(id){if(id.startsWith('set:'))return itemName(id.slice(4))+'×'+(BL[id.slice(4)].qty||1);return typeof TRNAME!=='undefined'&&TRNAME[id]?TRNAME[id]:id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
 function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */{const m=madeStow(id,n,r);n-=m;if(n<=0)return}/* 依頼ボードで作った物 */if(id.startsWith('set:')){giveItem(setId(id),setN(id,n),1);return}if(typeof trStow==='function'&&trStow(id,n))return;/* 地図の切れはし・宝の地図・ふしぎなふくろ */
   if(id==='gear'||id==='gearf'){for(let i=0;i<n;i++)gearFind(r,id==='gearf'?'つりあげた！':'ひろった！');return}

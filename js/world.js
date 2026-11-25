@@ -348,7 +348,7 @@ const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)retur
 let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */
 /* 作業する向きがきまっている家具（WORKF）：作業するマスは、その向きの前（向き0 前＝下・1 右・2 後ろ＝上・3 左）。2×2は前の2マス、作業台は台のマス（wbCells の b）の前。
    せいれいは、そのマスに立って家具のほうを向く。どのマスも歩けない（物がある・水など）と作業できない。流し台は、せいれいの作業はないが、置くときに同じく出す */
-const WORKF=new Set(['loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
+const WORKF=new Set(['tskama','loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
 function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと、置く前の場所でも */id=id||S.obj[j];if(rot==null)rot=rotAt(j);rot&=3;const[dx,dy]=WORKD[rot];
   const cells=id==='wbench'?[rot>=2?(rot%2?j+W:j+1):j].map(b=>[b%W,(b/W)|0]):fp(id,j%W,(j/W)|0,rot),own=new Set(cells.map(([x,y])=>y*W+x)),L=[];
   for(const[x,y]of cells){const nx=x+dx,ny=y+dy,k=ny*W+nx;if(nx<0||ny<0||nx>=W||ny>=H||own.has(k)||(id==='wbench'&&own.size===1&&fp(id,j%W,(j/W)|0,rot).some(([a,b])=>b*W+a===k)))continue;L.push(k)}return L}
@@ -412,10 +412,10 @@ function genRiver(s,w,o){/* 川：草原（とフリー）は北のはしから�
   for(const v of[Math.round(CY-26+R()*8),Math.round(CY-3+R()*6),Math.round(CY+20+R()*8)]){ford(v);ford(v+1)}
   {const fu=Math.round((ex+mx)/2);for(let v=0;v<H;v++){const j=J(fu,v);if(riv[j])s.ground[j]=2;const k=J(fu+(side<0?1:-1),v);if(riv[k])s.ground[k]=2}}
   return riv}
-function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だんの台地。まん中も外と同じ（はじめからある物のマスと、そのまわり1マス・神殿と御神木の置き場だけ平ら）。水・浅瀬のまわり・床・人の作った物の所には作らない。となりとの差は1だんまで（段々の台地） */
+function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だんの台地。まん中も外と同じ（はじめからある物のマスと、そのまわり2マス・神殿と御神木の置き場だけ平ら）。水・浅瀬のまわり・床・人の作った物の所には作らない。となりとの差は1だんまで（段々の台地） */
   const R=mulberry(LANDSEED(w)+77),h=new Array(W*H).fill(0);
-  const keep=new Uint8Array(W*H),box=(x0,y0,x1,y1)=>{for(let y=Math.max(0,y0);y<=Math.min(H-1,y1);y++)for(let x=Math.max(0,x0);x<=Math.min(W-1,x1);x++)keep[y*W+x]=1};/* 平らにのこす所：はじめからある物のマスと、そのまわり1マス */
-  for(let j=0;j<W*H;j++){const o=s.obj[j];if(s.floor[j]||o&&!HI_OK.has(o))box(j%W-1,((j/W)|0)-1,j%W+1,((j/W)|0)+1)}
+  const keep=new Uint8Array(W*H),box=(x0,y0,x1,y1)=>{for(let y=Math.max(0,y0);y<=Math.min(H-1,y1);y++)for(let x=Math.max(0,x0);x<=Math.min(W-1,x1);x++)keep[y*W+x]=1};/* 平らにのこす所：はじめからある物のマスと、そのまわり2マス */
+  for(let j=0;j<W*H;j++){const o=s.obj[j];if(s.floor[j]||o&&!HI_OK.has(o))box(j%W-2,((j/W)|0)-2,j%W+2,((j/W)|0)+2)}
   {let y=w===0?CY-4:CY;while(y>1&&s.floor[(y-1)*W+CX])y--;box(CX-2,y-4,CX+4,y)}/* こわれた神殿の置き場（templeRuinPlace と同じ所） */
   if(w===0)box(CX-4,CY-4,CX+3,CY+3);/* 草原：御神木の切り株（sacredRootEnsure） */box(CX-1,CY-3,CX+1,CY);/* はじめのせいれいの立つ所 */
   const ok=j=>{const x=j%W,y=(j/W)|0;if(x<2||y<2||x>=W-2||y>=H-2)return false;if(keep[j])return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(s.ground[j+b*W+a])return false;if(w===1&&Math.abs(x+.5-CX)<9&&y<OFF+16)return false;/* 火山：北の火口のまわりは平ら */return true};
