@@ -53,19 +53,14 @@ function isoUITf(c,A,wx,wy){const k=dpr*cam.z,O=isoOff(k),px=A.px+(wx-A.fx)*IQSX
 function isoAt(c,wx,wy){const A=gFoot(wx,wy);standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py)}
 function isoAtA(c,A){if(A)standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py)}
 function isoBack(c){groundTf(c,dpr*cam.z)}
-/* ひものかざり（イベントの旗・花・ちょうちん ev-show.js、大会の旗 cup.js）：マスのならび（x の向き）にそって、地面の2点（せかいの点 gx0〜gx1・gy）に柱を立て、そのあいだにひもをはる。
-   ひもの上の点は、柱の足もとを画面にうつした2点のあいだ（画面では、マスと同じななめ）を、高さ GARH だけ上へ。旗は、ひもの向きにそってななめに下げ、
-   花・ちょうちん（丸い物）は、ゆがめずにまっすぐ下げる。age：出てからのミリ秒（ひもがのび、かざりが1つずつ出る。大会は Infinity） */
-const GARH=TS*1.5,GARSAG=6,GARSTEP=10,GARCOL={rw:['#ff5a4a','#ffffff'],lamp:['#ff8a5c','#ffb070','#ff6a5c'],flower:['#ff9fb8','#fff0a0','#ffffff','#c49cff'],flag:['#ff8a5c','#ffd23f','#7fc6ff','#a8f08a','#ff8fb1']};
-function isoGarland(c,gx0,gx1,gy,kind,age,now){const A=gFoot(gx0,gy),B=gFoot(gx1,gy),hs=GARH*IQSY,L=gx1-gx0,ex=(B.px-A.px)/L,ey=(B.py-A.py)/L,R=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)};
-  const at=t=>({x:A.px+(B.px-A.px)*t,y:A.py+(B.py-A.py)*t-hs+Math.sin(t*Math.PI)*GARSAG*IQSY});
-  c.save();isoScreenTf(c);R('#7a5a3a',A.px-1,A.py-hs-8,3,hs+8);R('#7a5a3a',B.px-1,B.py-hs-8,3,hs+8);
-  const n=Math.ceil(Math.hypot(B.px-A.px,B.py-A.py)/2),m=n*clamp(age/700,0,1);for(let i=0;i<=m;i++){const p=at(i/n);R('#5c4a32',p.x,p.y,2,2)}
-  const C=GARCOL[kind]||GARCOL.flag;let i=0;for(let x=6;x<L-8;x+=GARSTEP,i++){const a=age-250-i*110;if(a<0)break;const p=at((x+3)/L),dy=2+(a<160?(1-a/160)*-6*IQSY:0),col=C[i%C.length],sw=Math.floor(now/400+i)%2;
-    if(kind==='lamp'||kind==='flower'){c.save();c.translate(Math.round(p.x),Math.round(p.y+dy));c.scale(IQSX,IQSY);
-      if(kind==='lamp'){R('#5c4a32',-1,0,1,2);R(col,-3,2,6,7);R('#ffe9a8',-2,3,4,4);R('#7a4a2a',-3,2,6,1);R('#7a4a2a',-3,8,6,1)}else{R('#7fb070',-2,3,4,2);R(col,-2,0,4,4);R(col,-3,1,6,2);R('#ffd23f',-1,1,2,2)}c.restore()}
-    else for(let k=0;k<8;k++)for(let d=0;d<8-k;d++){const u=Math.ceil(k/2)+d-4+(sw&&k>5?1:0);R(col,p.x+u*ex,p.y+dy+u*ey+k,1,2)}}/* 旗：上の辺がひもにそう三角（1ドットずつ、ひもの向きにずらす） */
-  c.restore()}
+/* ひものかざり（イベントの旗・花・ちょうちん ev-show.js、大会の旗 cup.js）：3Dから写したチップ（tools/art/furn3d/items/garl.py）を、会場のおくの行 ty の北のふちにならべる。
+   くい（garlk＝マスの西のはし・garlk#1＝東のはし）を、マス tx0 の西と tx1 の東に立て、そのあいだに、1マスぶんのひもの部品（旗 garl・赤白 garl#1・ちょうちん garl#2・花 garl#3）を、マスごとにならべる。
+   ひもの部品は2コマでゆれる（マスごとに、ずらして） */
+const GARCHIP={rw:'garl#1',lamp:'garl#2',flower:'garl#3',flag:'garl'},GARMS=400,GARPH=400;
+/* チップ（g64・クォータービュー）を、マス (tx,ty) の足もとに立てて描く。t：コマの時間（ミリ秒。1コマのチップは使わない） */
+function isoChipTile(c,id,tx,ty,t){if(ICON)return;const ch=chipOf(id);if(!ch)return;const src=ch.src||ch,ims=chipImgs(src,id),n=ims.length,im=ims[n>1?Math.floor(t/GARMS)%n:0];if(!im.ok){if(chipPend(src))CHPN++;return}
+  const A=gFoot((tx+.5)*TS,(ty+.5)*TS),sm=c.imageSmoothingEnabled;c.save();isoScreenTf(c);c.imageSmoothingEnabled=false;c.drawImage(im,A.px+src.ax/2,A.py+src.ay/2,src.w/2,src.h/2);c.imageSmoothingEnabled=sm;c.restore()}
+function isoGarland(c,tx0,tx1,ty,kind,now){const id=GARCHIP[kind]||GARCHIP.flag;isoChipTile(c,'garlk',tx0,ty,now);for(let x=tx0;x<=tx1;x++)isoChipTile(c,id,x,ty,now+(x-tx0)*GARPH);isoChipTile(c,'garlk#1',tx1,ty,now)}
 /* 御神木の場面の光：切り株（4×4）を足もとに */
 function treeFoot(){const j=S&&S.sacredRoot;if(j==null)return null;const n=typeof sacredSpan==='function'?sacredSpan():4;return objFoot(j%W,(j/W)|0,n,n,j)}
 /* 字・ふだ（のばさない）：地面の点 (gx,gy) から立てた所の (wx,wy) に */
