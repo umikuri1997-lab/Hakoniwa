@@ -73,8 +73,8 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2419;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
-function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
+const APP_VER=2446;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+function showMaps(){PROLD=0;$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
   const list=$('#mList');list.innerHTML='';freeCard(list);
@@ -286,7 +286,7 @@ function rlvPick(r){const o=$('#rlv'),ok=$('#rlvOk');let w=o.querySelector('.rpi
   const h=document.createElement('small');h.textContent='ごほうびを1つえらぶ'+(n>1?'（のこり'+n+'）':'');h.style.textAlign='center';w.appendChild(h);
   for(const[k,t]of LVBK){const b=document.createElement('button');b.className='btn';b.textContent=t+' +'+LVB;b.onclick=e=>{e.stopPropagation();if(!(r.lvPend>0))return;sfx('tap');r.lvb=r.lvb||{};r.lvb[k]=(r.lvb[k]||0)+LVB;r.lvPend--;if(!r.lvPend)delete r.lvPend;dirty=true;toast(r.name+'の'+t+'が+'+LVB,'good');if(r.lvPend>0)rlvPick(r);else{w.replaceChildren();ok.hidden=false;ok.click()}};w.appendChild(b)}}
 $('#rlvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#rlv').hidden=true;const r=RLVR;RLVR=null;if(r&&S.res.includes(r)&&!inBattle(r)){const t=performance.now();JOYU.set(r,t+2600);RHOLD.set(r,t+2600);JUMP.set(r,t);r.bubble='😆'}});/* レベルアップしたら、手をとめて喜ぶ（たたかっている子は、そのままたたかう） */
-for(const id of['#foodStk','#matStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('inv')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料・素材の数をタップすると、そうこが見られる */
+for(const id of['#foodStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('inv')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料の数をタップすると、そうこが見られる */
 $('#lvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#lvup').hidden=true;endClap()});
 
 document.querySelector('.hud').addEventListener('click',()=>{if(!S)return;sfx('tap');openSheet('vill')});/* HUD をタップすると村のようす */

@@ -30,11 +30,11 @@ function fieldPrepNeed(id){fieldBuildAdopt(id);const st=fieldStoryState(id),p=FI
 /* 設計図の準備（FIELD_PREP の bp）：依頼を聞いたら、設計図をわたす（持っていない・建てていないときだけ。とちゅうでやめて設計図がなくなっても、またわたす） */
 function fieldBpGive(id){const p=FIELD_PREP[id];if(!p||!p.bp||IS_STORY_REPLAY||!S.qTalked||S.qStory!=null||QUESTS[S.quest]?.id!==id)return;if((S.bpInv||[]).some(q=>q.k===p.bp)||(S.bp||[]).some(e=>e.k===p.bp))return;bpGive(p.bp,null);dirty=true}
 /* 設計図の、目じるしの物（BPS の key）のマス */
-function fieldBpKey(k,x,y){const b=BPS[k],f=b&&b.furn.find(q=>q[2]===b.key);return f?(y+f[1])*W+x+f[0]:-1}
-function fieldBpNear(k,x,y){const c=fieldBpKey(k,x,y);return c>=0&&S.sacredRoot!=null&&fieldDistance(c,S.sacredRoot)<=FIELD_NEAR_R}
+function fieldBpKey(k,x,y,r){const b=BPS[k],f=b&&bpPieces(k,r).find(q=>q[3]===b.key);return f?(y+f[1])*W+x+f[0]:-1}/* r：置いた向き */
+function fieldBpNear(k,x,y,r){const c=fieldBpKey(k,x,y,r);return c>=0&&S.sacredRoot!=null&&fieldDistance(c,S.sacredRoot)<=FIELD_NEAR_R}
 /* bpComplete から：いまの調べの準備の設計図ができたら、その調べの物として記録する */
-function fieldBpDone(e){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const p=FIELD_PREP[q.id];if(!p||p.bp!==e.k||!fieldBpNear(e.k,e.x,e.y))return;const st=fieldStoryEnsure(q.id);if(!st||(st.step||0)>0)return;
-  st.built={cells:[fieldBpKey(e.k,e.x,e.y)],bp:1};dirty=true;renderQuest()}
+function fieldBpDone(e){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const p=FIELD_PREP[q.id];if(!p||p.bp!==e.k||!fieldBpNear(e.k,e.x,e.y,e.r))return;const st=fieldStoryEnsure(q.id);if(!st||(st.step||0)>0)return;
+  st.built={cells:[fieldBpKey(e.k,e.x,e.y,e.r)],bp:1};dirty=true;renderQuest()}
 /* 古いセーブ：いまの依頼で、前の準備（その時の決まり）がもうそろっていた調べは、そのまま進める（1回だけ） */
 function migrateFieldBuild(state){if(!state.flags||state.flags.fieldBuild1)return;state.flags.fieldBuild1=1;if(state.free||(state.world||0)!==0||state.sacredRoot==null||!state.qTalked||state.qStory!=null)return;
   const q=QUESTS1[state.quest];if(!q?.fieldParts)return;const S0=S;S=state;try{{const id=q.fieldParts.find(p=>((state.fieldStories?.[p]?.step)||0)<(FIELD_STORIES[p]?.length||0)),p=id&&FIELD_PREP[id],st=state.fieldStories?.[id];if(p&&!((st?.step||0)>0)&&!st?.built)if(p.legacy(state.sacredRoot)){state.fieldStories||(state.fieldStories={});(state.fieldStories[id]||(state.fieldStories[id]={step:0})).built={legacy:1};}}}finally{S=S0}}

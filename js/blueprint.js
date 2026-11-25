@@ -67,15 +67,21 @@ const BPFM={floor:{wood:1},stonefloor:{stone:1},brickfloor:{stone:1},path:{stone
 const bpWall=()=>stg().wall,bpWallOf=b=>b.wl||bpWall(),bpFence=()=>stg().fence;
 function bpPieceMat(t,id){/* 1つずつの部品の素材 */if(t==='farm'||t==='plant')return{};if(t==='wall')return Object.assign({},BPWM[id]||{wood:1});if(t==='win')return Object.assign({},BPWINM[id]||{wood:3});if(BPFM[id])return Object.assign({},BPFM[id]);return Object.assign({},BL[id].mat||{})}
 const bpTime=(t,id)=>t==='build'?BL[id].time:BPT[t];
-function bpPieces(k){/* 設計図の部品：[dx,dy,t,id,rot,phase]。段：1 床・道・畑・ふち（1行ずつ）→ 2 家具・建物・花・木 → 3 壁・窓・柵 → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出られる） */const b=BPS[k],L=[],wl=bpWallOf(b);
+function bpPieces(k,r){/* 設計図の部品：[dx,dy,t,id,rot,phase]。r：置く向き（右へ90度ずつ。bpTurn）。段：1 床・道・畑・ふち（1行ずつ）→ 2 家具・建物・花・木 → 3 壁・窓・柵 → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出られる） */const b=BPS[k],L=[],wl=bpWallOf(b);
   b.rows.forEach((row,dy)=>{for(let dx=0;dx<row.length;dx++){const c=row[dx];
     if(c==='.')L.push([dx,dy,'floor',b.fl||'floor',0,1]);else if(c==='p')L.push([dx,dy,'path',b.pa||'path',0,1]);else if(c==='f')L.push([dx,dy,'farm','farm',0,1]);else if(c==='e')L.push([dx,dy,'edge','bedge',0,1]);
     else if(c==='W')L.push([dx,dy,'wall',wl,0,3]);else if(c==='O')L.push([dx,dy,'win',wl,0,3]);else if(c==='F')L.push([dx,dy,'fence',bpFence(),0,3]);
     else if(c==='D')L.push([dx,dy,'door',b.dr||'door',0,4]);else if(c==='G')L.push([dx,dy,'gate','gate',0,4])}});
-  for(const[dx,dy,id,rot]of b.furn){const t=BL[id].kind==='plant'?'plant':BL[id].kind==='build'?'build':'furn';L.push([dx,dy,t,id,rot||0,2])}return L}
+  for(const[dx,dy,id,rot]of b.furn){const t=BL[id].kind==='plant'?'plant':BL[id].kind==='build'?'build':'furn';L.push([dx,dy,t,id,rot||0,2])}return r?bpTurn(L,k,r):L}
+const BPD3=[0,1,3],BP3D={0:0,1:1,3:2,2:1};/* 前・右・左だけの家具（ROTS 3）の向き↔向きの矢（WORKD：0下・1右・2上・3左）。うしろ向きがないので、上は右に */
+function bpTurnRot(id,rot,i){/* 家具の向きを、右へ90度まわす（i：何回めか） */const n=ROTS[id];if(n===4)return(rot+3)%4;if(n===3)return BP3D[(BPD3[rot]+3)%4];if(n===2)return rot^1;if(n===1)return i===1?rot^1:rot;return rot}
+function bpTurn(L,k,r){/* 部品のならびを、右へ90度ずつ r 回まわす（2マスより大きい物は、まわしたあとの左上） */let h=bpSize(k).h;L=L.map(p=>p.slice());
+  for(let i=0;i<r;i++){for(const p of L){const big=p[2]==='furn'||p[2]==='build',z=big&&szR(p[3],p[4])||[1,1];const nx=h-p[1]-z[1],ny=p[0];p[0]=nx;p[1]=ny;if(big)p[4]=bpTurnRot(p[3],p[4],i)}h=bpSize(k,i+1).h}
+  const wl=new Set(L.filter(p=>p[2]==='wall'||p[2]==='win'||p[2]==='door').map(p=>p[0]+','+p[1]));for(const p of L)if(p[2]==='win'&&(wl.has(p[0]+','+(p[1]-1))||wl.has(p[0]+','+(p[1]+1))))p[2]='wall';/* 窓は横向きの壁にだけ。たて向きの壁に来た窓は、ふつうの壁に */return L}
 const bpCellsOf=(id,x,y,rot)=>fp(id,x,y,rot||0).map(([a,c])=>c*W+a);/* 家具・建物のマス（2マスより大きい物も） */
-function bpCost(k){const m={};for(const p of bpPieces(k)){const pm=bpPieceMat(p[2],p[3]);for(const key in pm)m[key]=(m[key]||0)+pm[key]}return m}
-const bpSize=k=>({w:Math.max(...BPS[k].rows.map(r=>r.length)),h:BPS[k].rows.length});
+function bpCost(k,r){const m={};for(const p of bpPieces(k,r)){const pm=bpPieceMat(p[2],p[3]);for(const key in pm)m[key]=(m[key]||0)+pm[key]}return m}
+const bpSize=(k,r)=>{const w=Math.max(...BPS[k].rows.map(q=>q.length)),h=BPS[k].rows.length;return (r||0)&1?{w:h,h:w}:{w,h}};
+let bpRotSel=0;/* 置くときにえらんでいる向き（右へ90度ずつ。設計図ぜんぶで同じ） */
 function bpKnown(t,id){/* その部品を、いまのステージで、おぼえているか */const b=BL[id];if(!b)return false;
   if(t==='plant')return !!S.feat.plant&&lvOK(id)&&plantOK(id)&&(WD===KUSA||id==='tree');
   if(t==='furn'||t==='build'){if(b.offerOnly&&STAGEONLY[id]==null||WIND_STAGE_TOYS.has(id)&&WD!==WIND)return false;if(!((b.w||0)<=WD&&(STAGEONLY[id]==null||STAGEONLY[id]===WD)||grec(id)))return false;/* あとのステージの物・ほかのステージだけの物は、そこでおぼえていなければ入れない */return t==='build'?usable(id):recipeKnown(id)&&lvOK(id)}
@@ -84,23 +90,24 @@ const bpCanGet=k=>bpPieces(k).every(p=>bpKnown(p[2],p[3]));/* 中の物を、ぜ
 const bpIcon=()=>ICONS.bp;/* どの設計図も同じ絵（tools/art/icons32/blueprint.py。持ち主がえらんだ） */
 const BPNAT=new Set(['ntree','deadtree','bamboo','rock','boulder']);/* 置く所にあれば、せいれいが切る・ほる */
 const bpSoft=o=>WEEDS.has(o)||o==='kinoko'||o==='takenoko';/* 置くときに、そのままなくなる */
-function bpCheck(k,x,y){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k);if(x<0||y<0||x+w>W||y+h>H)return[false,'ここには置けません'];const h0=hiAt(y*W+x);
+function bpCheck(k,x,y,r){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k,r);if(x<0||y<0||x+w>W||y+h>H)return[false,'ここには置けません'];const h0=hiAt(y*W+x);
   for(let b=0;b<h;b++)for(let a=0;a<w;a++){const j=(y+b)*W+x+a,o=S.obj[j];
     if(S.ground[j]===1||S.ground[j]===2)return[false,'水の上には置けません'];if(fogAt(j))return[false,'霧の中には置けません'];if(hiAt(j)!==h0)return[false,'段差のある所には置けません'];
     if(STUMPB.has(j)||j===GODJ||sacredNoBuild(j,bpWall()))return[false,'ここには置けません'];
     if(S.floor[j]||S.rug&&S.rug[j]!=null||S.edge&&S.edge[j]||S.roof&&S.roof[j])return[false,'床や物のある所には置けません'];
     if(o&&!BPNAT.has(o)&&!bpSoft(o)&&!VEINS[o])return[false,'物のある所には置けません'];
     if(S.bp&&S.bp.some(e=>e.cells.includes(j)))return[false,'ほかの設計図とかさなっています']}
-  if(BPS[k].story&&typeof fieldBpNear==='function'&&!fieldBpNear(k,x,y))return[false,'切り株のそばに置こう'];
-  for(const[dx,dy,id]of BPS[k].furn)if(id==='watch'&&watchNear(x+dx,y+dy))return[false,'見張り台は、5マスはなさないと置けません'];
+  if(BPS[k].story&&typeof fieldBpNear==='function'&&!fieldBpNear(k,x,y,r))return[false,'切り株のそばに置こう'];
+  for(const[dx,dy,,id]of bpPieces(k,r))if(id==='watch'&&watchNear(x+dx,y+dy))return[false,'見張り台は、5マスはなさないと置けません'];
   return[true,'']}
-function askBp(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,[ok,why]=bpCheck(k,x,y),pc=BPS[k].pc,m=bpCost(k);
-  pending={kind:'bp',i,k,x,y,ok};$('#confirmTxt').textContent=ok?BPS[k].name+'をここに建てる？（'+SP(pc)+'・'+matTxt(m)+'）':why;
-  lackOn($('#cYes'),ok?(S.pt<pc?lackPt(pc):!matOK(m)?lackMat(m):''):'').disabled=!ok;yesLbl('おく');($('#cRot').hidden=true,$('#confirm').hidden=false);dirty=true}
-function bpPlace(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,[ok,why]=bpCheck(k,x,y);if(!ok)return toast(why);const pc=BPS[k].pc,m=bpCost(k);
+function askBp(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,r=bpRotSel,[ok,why]=bpCheck(k,x,y,r),pc=BPS[k].pc,m=bpCost(k,r);
+  pending={kind:'bp',i,k,x,y,ok,r};$('#confirmTxt').textContent=ok?BPS[k].name+'をここに建てる？（'+SP(pc)+'・'+matTxt(m)+'）':why;
+  lackOn($('#cYes'),ok?(S.pt<pc?lackPt(pc):!matOK(m)?lackMat(m):''):'').disabled=!ok;yesLbl('おく');($('#cRot').hidden=false,$('#confirm').hidden=false);dirty=true}
+function bpRotate(){/* 向きのボタン：右へ90度まわす */const p=pending;if(!p||p.kind!=='bp')return;bpRotSel=(bpRotSel+1)%4;sfx('tap');askBp(p.i,p.x,p.y)}
+function bpPlace(i,x,y,r){const it=(S.bpInv||[])[i];if(!it)return;r=r||0;const k=it.k,[ok,why]=bpCheck(k,x,y,r);if(!ok)return toast(why);const pc=BPS[k].pc,m=bpCost(k,r);
   if(S.pt<pc)return toast('パワーが足りません（'+SP(pc)+'）');if(!matOK(m))return toast('素材が足りません（'+matTxt(m)+'）');
-  S.pt-=pc;S.bpInv.splice(i,1);const {w,h}=bpSize(k),cells=[];for(let b=0;b<h;b++)for(let a=0;a<w;a++){const j=(y+b)*W+x+a;cells.push(j);if(bpSoft(S.obj[j])){S.obj[j]='';delete S.dyn[j]}}
-  const e={id:(S.bpId=(S.bpId||0)+1),k,x,y,g:it.g==null?null:it.g,req:it.req?1:0,cells,ps:bpPieces(k).map(([dx,dy,t,id,rot,ph])=>({j:(y+dy)*W+x+dx,t,id,rot,ph,s:0}))};
+  S.pt-=pc;S.bpInv.splice(i,1);const {w,h}=bpSize(k,r),cells=[];for(let b=0;b<h;b++)for(let a=0;a<w;a++){const j=(y+b)*W+x+a;cells.push(j);if(bpSoft(S.obj[j])){S.obj[j]='';delete S.dyn[j]}}
+  const e={id:(S.bpId=(S.bpId||0)+1),k,x,y,r,g:it.g==null?null:it.g,req:it.req?1:0,cells,ps:bpPieces(k,r).map(([dx,dy,t,id,rot,ph])=>({j:(y+dy)*W+x+dx,t,id,rot,ph,s:0}))};
   (S.bp||(S.bp=[])).push(e);toast('せいれいが'+BPS[k].name+'を建てにきてくれる','good');sfx('power');bpAdvance(e);recount();dirty=true;renderPalette()}
 const bpNatLeft=e=>e.cells.filter(j=>BPNAT.has(S.obj[j])||VEINS[S.obj[j]]);
 function bpAdvance(e){/* つぎの段の部品を「建てる所」にする */if(bpNatLeft(e).length)return;const left=e.ps.filter(p=>p.s<2);if(!left.length)return bpComplete(e);const ph=Math.min(...left.map(p=>p.ph));
@@ -159,12 +166,13 @@ function bpNext(cat,el,force){/* まだ持っていない・建てていない�
 function bpGiveK(k,g){(S.bpGot||(S.bpGot={}))[k]=1;bpGive(k,g);return k}
 function bpGiveNext(g,cat,force){const r=g!=null?S.res.find(q=>q.id===g):null,k=bpNext(cat,r&&r.elem,force);return k?bpGiveK(k,g):null}
 /* ---------- 絵：置く前のわく・建てる前の部品のうすい形 ---------- */
-function bpGhostDraw(ctx,now){now=now||performance.now();const L=[];if(pending&&pending.kind==='bp'){const {w,h}=bpSize(pending.k);L.push([pending.k,pending.x,pending.y,pending.ok,null])}
-  for(const e of S.bp||[])L.push([e.k,e.x,e.y,true,e]);if(!L.length)return;ctx.save();
-  for(const[k,x,y,ok,e]of L){const ps=bpPieces(k);for(const[dx,dy,t,id,rot,ph]of ps){if(e){const p=e.ps.find(q=>q.j===(y+dy)*W+x+dx&&q.t===t);if(!p||p.s>0)continue}
-      for(const c of t==='furn'||t==='build'?bpCellsOf(id,x+dx,y+dy,rot):[(y+dy)*W+x+dx]){const px=(c%W)*TS,py=((c/W)|0)*TS-liftOf(c);ctx.fillStyle=!ok?'rgba(255,110,110,.30)':t==='floor'?'rgba(255,236,170,.22)':t==='furn'?'rgba(170,220,255,.32)':'rgba(255,214,140,.40)';ctx.fillRect(px+1,py+1,TS-2,TS-2);
+const BPGHOSTA=.75;/* できあがりの家具・建物・花の絵のこさ（床のこさは下の rgba の .55） */
+function bpGhostDraw(ctx,now){now=now||performance.now();const L=[];if(pending&&pending.kind==='bp')L.push([pending.k,pending.x,pending.y,pending.ok,null,pending.r||0]);
+  for(const e of S.bp||[])L.push([e.k,e.x,e.y,true,e,e.r||0]);if(!L.length)return;ctx.save();
+  for(const[k,x,y,ok,e,r]of L){const ps=bpPieces(k,r);for(const[dx,dy,t,id,rot,ph]of ps){if(e){const p=e.ps.find(q=>q.j===(y+dy)*W+x+dx&&q.t===t);if(!p||p.s>0)continue}
+      for(const c of t==='furn'||t==='build'?bpCellsOf(id,x+dx,y+dy,rot):[(y+dy)*W+x+dx]){const px=(c%W)*TS,py=((c/W)|0)*TS-liftOf(c);ctx.fillStyle=!ok?'rgba(255,110,110,.30)':t==='floor'?'rgba(255,236,170,.55)':t==='furn'?'rgba(170,220,255,.32)':'rgba(255,214,140,.40)';ctx.fillRect(px+1,py+1,TS-2,TS-2);
       ctx.strokeStyle=!ok?'rgba(255,110,110,.9)':'rgba(255,230,120,.85)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.strokeRect(px+1.5,py+1.5,TS-3,TS-3);ctx.setLineDash([])}
-      if(ok&&(t==='furn'||t==='build'||t==='plant')&&BL[id]){const j0=(y+dy)*W+x+dx,px=(j0%W)*TS,py=((j0/W)|0)*TS-liftOf(j0),rch=ROTS[id]&&rot&&chipOf(id,null,rot);ctx.save();ctx.globalAlpha=.4;if(rch)drawChip(ctx,rch,id,px,py,now);else drawObj(ctx,id,px,py,null,100,now);ctx.restore()}/* 家具・建物・花は、できあがりの絵もうすく */}}
+      if(ok&&(t==='furn'||t==='build'||t==='plant')&&BL[id]){const j0=(y+dy)*W+x+dx,px=(j0%W)*TS,py=((j0/W)|0)*TS-liftOf(j0),rch=ROTS[id]&&rot&&chipOf(id,null,rot);ctx.save();ctx.globalAlpha=BPGHOSTA;if(rch)drawChip(ctx,rch,id,px,py,now);else drawObj(ctx,id,px,py,null,100,now);ctx.restore()}/* 家具・建物・花は、できあがりの絵もうすく */}}
   ctx.restore()}
 const BPTALKL={house:'こんな家に、すんでみたいなって',garden:'こんな庭があったら、すてきだなって',farm:'こんな畑があったら、いいなって',play:'こんな遊び場があったら、みんなで遊べるなって',guard:'こんなふうに守れたら、夜もこわくないなって'};
 function bpTalkGift(r){/* お話のあと：ときどき、えがいた設計図をくれる */if(Math.random()>=BPTALK)return;const d=callDay();if(S.bpTalkD!=null&&d-S.bpTalkD<BPTALKCD)return;const k=bpNext(null,r.elem);if(!k)return;S.bpTalkD=d;const id=r.id;
@@ -197,4 +205,4 @@ function bpPop(i){const it=(S.bpInv||[])[i];if(!it)return;document.querySelector
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:86vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div style="display:flex;justify-content:center;margin-bottom:8px"><canvas class="pv" style="image-rendering:pixelated"></canvas></div><p class="note c" style="margin:0 0 10px"></p><div class="bt" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go">置く場所をえらぶ</button></div></div></div>');
   o.querySelector('.t').textContent=b.name;o.querySelector('.n').textContent=BPCAT[b.cat]+'の設計図・むずかしさ：'+BPDIFF[b.rw];o.querySelector('.c').textContent='パワー'+b.pc+'・'+matTxt(m);bpPreview(k,o.querySelector('.pv'));
   const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
-  o.querySelector('.go').onclick=()=>{sfx('tap');close();if(sheet)closeSheet();if(mode!=='bulk')setMode('bulk');selStamp='bp:'+i;palOpen=false;renderPalette();toast('建てたい場所の左上をタップ')};document.body.appendChild(o)}/* もちもの・もらったときのカードからも、置く場所をえらべる */
+  o.querySelector('.go').onclick=()=>{sfx('tap');close();if(sheet)closeSheet();BULKT='bp';if(mode!=='bulk')setMode('bulk');selStamp='bp:'+i;palOpen=false;renderPalette();toast('建てたい場所の左上をタップ')};document.body.appendChild(o)}/* もちもの・もらったときのカードからも、置く場所をえらべる */
