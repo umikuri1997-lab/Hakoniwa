@@ -186,6 +186,7 @@ function stageMusic(){
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
   nextT=AC.currentTime+.01;sched();
 }
+let PROLD=0;/* プロローグのあとの「マップを読みこみ中…%」のあいだ：曲を鳴らさない（持ち主がきめた） */
 function sched(){
   if(!AC||AC.state!=='running')return;
   if(nextT<AC.currentTime)nextT=AC.currentTime+.05;
@@ -193,7 +194,7 @@ function sched(){
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
-    if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
+    if(curSong!=='opening'||PROLD){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。プロローグのあとの読みこみ中は鳴らさない。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
     const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
     if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
