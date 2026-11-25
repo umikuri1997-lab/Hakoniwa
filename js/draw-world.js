@@ -238,7 +238,7 @@ function render(now){RFN++;hdFrame();
   if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,icBlkDD(j))}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
   if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
-  if(typeof pickTick==='function'){pickTick(now);const P=PICKH;if(P&&P.dig&&!P.done)add(P.y,-1,null,()=>drawPickCrack(now),P.j,false,P.x+P.y-.97)}/* こわす：ブロック・地面の長おし（build.js）。ひびは、そのマスのブロック・雪のすぐあと（手前のブロックや物が上にかさなる） */
+  if(typeof pickTick==='function'){pickTick(now);const P=PICKH;if(P&&P.dig&&!P.done)add(P.y,-1,null,()=>drawPickCrack(now),P.j,false,icBlkDD(P.j)+.02)}/* こわす：ブロック・地面の長おし（build.js）。ひびは、そのマスのブロック（icBlkDD）・雪（+.01）のすぐあと（手前のブロックや物が上にかさなる。高いマスのブロックは x+y+1 なので、x+y でくらべるとブロックの下にかくれる） */
   {/* 足もとをきめて、x+y の小さい順（うしろから） */
     if(S.sacredRoot!=null&&WD===KUSA&&!S.free&&!S.obj.includes('tower')){const j=S.sacredRoot,x=j%W,y=(j/W)|0;if(S.obj[j]!=='site')add(y+4,1,null,()=>drawSacredRoot(now),j,objFoot(x,y,4,4,j),x+y+4.3)}/* 御神木の切り株：まわりの4×4のまん中の順 */
     for(const it of D){if(it.A===undefined)it.A=it.box?ptFoot((it.box[0]+it.box[2])/2,it.k*TS):it.own>=0?objFootJ(it.own):false;
