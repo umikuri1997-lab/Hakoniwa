@@ -265,7 +265,7 @@ def hamcurve(u, s0, s1, a0, a1):
     return s, a, s-a
 def wbham(w, face):
     """トンカチ：頭の上へふり上げて、天板の上の材料へふりおろす"""
-    s, a, k = hamcurve((w/(2*PI)) % 1, 1.35, 2.45, -0.1, 2.6); up = (s-1.35)/1.1
+    s, a, k = hamcurve((w/(2*PI)) % 1, 2.0, 2.9, 0.0, 2.6); up = (s-2.0)/0.9   # 打つときは、うで2.0・柄は水平：トンカチの頭が天板の高さ（絵の約24ドット上。持ち主のたのみ「台の上に打つ感じ」）
     return breathe(dict(sN=s, bN=-0.4, tN=0.0, kN=k, prop='hammer', sF=1.5, bF=-0.7, lean=0.22-0.1*up, hp=0.2-0.1*up), w, 0.5)
 M('wbham', 8, 2.6/2, wbham)
 def wbprep(w, face):

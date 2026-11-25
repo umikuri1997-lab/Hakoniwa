@@ -187,7 +187,7 @@ const BL={
   rel_sekiban:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'組み立ての石板',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：石のかたまりから、化石がもう1つ出る 50%'},
   rel_fuigo:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'炉のふいご',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：深い階で、いるだけでへるおなか 4階0.03・7階0.1・10階0.18'},
   rel_suzu:{chest:1,shopOnly:1,relic:1,hp:5,brk:1,fix:1,fixm:{stone:1},name:'ゆりかごのすず',kind:'furn',pc:1,solid:1,attr:{earth:1},mat:{stone:2},desc:'洞窟で見つけた、むかしの道具。住み心地+5。洞窟で：えさが3マスまで近づくと、正体をあらわす'},
-  telescope:{chest:1,shopOnly:1,name:'星見の望遠鏡',kind:'furn',pc:6,solid:1,attr:{},mat:{wood:3,stone:2},desc:'流れ星の夜が来るわりあい+10%（重複なし）'},
+  telescope:{chest:1,shopOnly:1,name:'星見の望遠鏡',kind:'furn',pc:6,solid:1,attr:{},mat:{wood:3,stone:2},desc:'流れ星が、2晩に1回流れる（ふだんは3晩に1回。重複なし）'},
   hdokei:{chest:1,shopOnly:1,name:'森の柱時計',kind:'furn',pc:15,solid:1,attr:{},mat:{wood:6},desc:'住み心地+15'},
   mizubachi:{chest:1,shopOnly:1,name:'苔むした石の水ばち',kind:'furn',cat:'env',pc:5,solid:1,attr:{},mat:{stone:6},desc:'まわり5マスの花・木の芽が、植えたその日に育つ'},
   /* 限定の家具（gift-furn.js）：gf:'ret' プレゼントのお返し・'let' 手紙のお礼・'bond' プレゼントを10回あげた節目。el はくれるせいれいの属性 */
