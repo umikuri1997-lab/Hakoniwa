@@ -18,3 +18,5 @@ paths:
 - 石の大橋（`js/tsuchi-bridge.js`）：岩の橋の南2行の地われ6マスを、せいれいが1マスずつかける（工事 `site`・できたマスは ground 0・`S.ts.brd`）。タイルは `tsKind` が 'b' を返すマス。らんかんの花は `S.ts.brFlower`（仮の絵）。
 - 洞窟のいちばんおく（`js/tsuchi-oku.js`）：目標 `tsoku`。10階の島の前に、にげたトト（`S.ts.totoGone`。パーティの外・`cvActorsL` で描く）。かげのゆりかご（`EN.tsuchi` を `C.en` に入れ、`tsOkuTick` がうごかす。`cvFoe`・`cvTarget` はさける。光は `cvLightHit` から `tsOkuLight`）。ふれたせいれいは `a.tsSleep` のあいだ動かない。おわると `S.ts.totoRoot`（トトは村にもどらない）。
 - お話のおわり（`js/tsuchi-nushi.js`）：根になったあと、村で巣穴の南にトトの根（`tsroot`・`S.ts.rootJ`）。目標 `tsnushi`：つぎの日の昼（9〜16時）に根のそばへ集まり（`gatherAt`）、ハニが子どものあなぐま（`tsnushi`・`S.ts.haniNushi`）になって `S.res` から出る。目標がおわるとクリア（`tsClear`：`S.cleared`・`clearSnap`）。根とあなぐまは、こわせない・うつせない（`NOMOVE`）。
+- 地われをうめる（`tsuchi-bridge.js`）：石の大橋のあと、橋のとなりの行（北は `TSBRY-1`・南は `TSBR2Y+2`）から1行ずつ、北・南 `TSFILLROWS` 行まで（`tsFillRow`）。材料・時間は橋と同じ。できたマスは `S.ts.brd`。切りはなされた地われのマスは水になるので、帯の中をうめる（`tsRiftSeal`）。
+- 地ゆれ（`js/tsuchi-quake.js`）：橋のあと `TSQKEVERY` 日ごと（`S.ts.qk`）。前の日に知らせ、その日の昼に、ささえの柱（`tspillar`・土の家具）から `TSPILR` マスより遠い家の壁が `TSQKWALL` まいくずれ（`S.broken` に入る。夜のこわれと同じ）、がけのふもとに岩が落ちる。壁は `breakable` でないものもあるので、朽ちさせず、くずして建てなおす。

@@ -34,6 +34,8 @@ function tsDrawObj(c,id,x,y,i,now){if(tsNushiDraw(c,id,x,y,i,now))return;/* ト�
     /* 仮の絵：かさなった砂岩の大きな石 */const h=n=>hash(((i|0)*7+n)>>>0);P('#8a6a4e',2,14,28,16);P('#a98a68',3+((h(1)*4)|0),6,16,12);P('#c4a07a',5+((h(1)*4)|0),7,10,3);P('#9c7a5a',14+((h(2)*4)|0),10,14,12);P('#b8946e',16+((h(2)*4)|0),11,8,2);P('#6f553f',4,26,24,3);return}
   if(id==='tskonoki'){const ch=window.CHIPS&&CHIPS.tskonoki;if(ch&&drawChip(c,ch,id,x,y,now||performance.now(),i))return;
     /* 仮の絵：よこにたおれたオリーブの幹と、うきあがった根 */P('#6f553f',2,18,24,7);P('#8a6a4e',3,18,22,3);P('#5a4432',24,14,5,14);P('#5a4432',27,12,3,4);P('#7f9a5a',0,13,6,5);P('#97b06a',1,13,4,2);return}
+  if(id==='tspillar'){const ch=window.CHIPS&&CHIPS.tspillar;if(ch&&drawChip(c,ch,id,x,y,now||performance.now(),i))return;
+    /* 仮の絵：砂岩の太い柱と、上の横木 */P('#6f553f',6,26,20,4);P('#8a6a4e',9,6,14,21);P('#a98a68',10,7,5,19);P('#c4a07a',11,8,2,16);P('#7a5a3e',20,7,3,19);P('#6f553f',5,3,22,5);P('#9c7a5a',6,3,20,2);return}
   if(id!=='anagura')return;const ch=window.CHIPS&&CHIPS.anagura;if(ch&&drawChip(c,ch,id,x,y,now||performance.now(),i))return;
   /* がけのふもとの、まるい穴：まわりの岩・おくの暗さ・ほり出した土 */
   P('#8a6a4e',3,8,26,20);P('#9c7a5a',5,6,22,4);P('#a98a68',8,4,16,3);
@@ -192,7 +194,7 @@ function tsOpenReset(){if(TSOPEN){if(camAnim===TSOPEN)camAnim=null;TSOPEN=null;G
 /* 洞窟からもどったら：はじめてクリアした階の数だけ、岩の山がくずれる（main.js：画面があいているとき） */
 function tsTick(){if(!tsOn()||!S.ts.rub||typeof CV!=='undefined'&&CV||TSINTRO||TSOPEN||GIFT_ACTIVE||camAnim||document.querySelector('.pxpopw,.idea-reveal'))return;
   const n=Math.min(S.cvClr||0,S.ts.rub.length);for(let i=0;i<n;i++)if(!S.ts.rub[i].open){tsRubOpen(i);return}
-  if(S.ts.ibNew&&NEWRES==null&&!NEWQ.length){tsIbWelcome();return}if(tsNushiTick())return;/* トトの根・あたらしいヌシ様（tsuchi-nushi.js） */tsOokTick()}
+  if(S.ts.ibNew&&NEWRES==null&&!NEWQ.length){tsIbWelcome();return}if(tsNushiTick())return;/* トトの根・あたらしいヌシ様（tsuchi-nushi.js） */if(tsQuakeTick())return;/* 地ゆれ（tsuchi-quake.js） */tsOokTick()}
 /* ---- ハニ：ひらいた土地の、たおれたオリーブのそばで、すわっている（話しかけるまで、そこから動かない） ---- */
 function tsKonohaCome(P){if(S.res.some(r=>r.name===HANI))return;const c=P.c;S.obj[c]='tskonoki';delete P.keep[c];
   const k=[c+W,c-1,c+1,c-W].find(q=>P.cells.includes(q)&&!S.obj[q])||c+W;S.obj[k]='';S.ts.kon=k;
