@@ -373,3 +373,16 @@ function tourTick(r,G){const P=tourPair();if(!P||r.hunger<200)return false;const
     if(q>=0){startAct(r,G,'tourf',q,{tg:g.id});return true}}
   return false}
 function tourFace(r,j){if(j!=null&&j>=0)r.face=j%W+.5>=r.x?1:-1}
+
+/* 合わせわざ：なかよし（BOND_TALK 以上）の2人が COMBORNG マス以内で、COMBOWIN のうちに同じコワイノをたたくと、COMBOHIT ダメージ（まわり COMBOAREA マス）。つぎまで COMBOCD（ゲームの分。2.5で1秒＝150で60秒）。名前・色は COMBON（2つの属性の組） */
+const COMBORNG=3,COMBOWIN=10,COMBOHIT=30,COMBOAREA=1,COMBOCD=150;
+const COMBON={'fire,wind':'火のつむじ','fire,water':'ゆげのうず','fire,wood':'もえ花','earth,fire':'ようがん','water,wind':'あらしのなみ','water,wood':'めぐみの雨','earth,water':'どろなみ','wind,wood':'はなふぶき','earth,wood':'ねっこのつき','earth,wind':'すなけむり'};
+function comboNote(r,en){if(!S||!en||en.dead||IS_STORY_REPLAY)return;const H=en.cmb||(en.cmb={});H[r.id]=S.t;
+  if((S.comboT||0)>S.t)return;/* つぎに出せるまで */
+  for(const q of S.res){if(q===r||q.hidden||H[q.id]==null||S.t-H[q.id]>COMBOWIN||bondOf(r,q)<BOND_TALK||Math.hypot(q.x-r.x,q.y-r.y)>COMBORNG)continue;
+    const ks=[r.elem,q.elem].sort(),nm=COMBON[ks.join(',')];if(!nm)continue;
+    S.comboT=S.t+COMBOCD;delete en.cmb;comboFire(r,q,en,nm,ks);return}}
+function comboFire(r,q,en,nm,ks){const cx=en.x,cy=en.y,col=ELEM[r.elem].col;
+  fxSpr('hanabi',cx*TS,cy*TS,col);fxSpr('twinkle',cx*TS,(cy-.5)*TS,ELEM[q.elem].col);sfxAt('glight',cx,cy);if(typeof shakeScreen==='function')try{shakeScreen('m')}catch(_){}
+  addFloatG(cx,cy,-1.8,nm+'！',col);toast(r.name+'と'+q.name+'の合わせわざ「'+nm+'」！','good');
+  for(const o of S.enemies.slice()){if(o.dead||!o.spawned||Math.hypot(o.x-cx,o.y-cy)>COMBOAREA+.5)continue;hurtEn(o,COMBOHIT,{flash:8,k:'combo',sx:cx,sy:cy});if(o.hp<=0)defeat(o,r.name+'と'+q.name+'が「'+nm+'」で'+EN[o.type].name+'を追いはらった！',r)}}

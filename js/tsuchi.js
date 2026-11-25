@@ -94,7 +94,7 @@ function tsTotoFlee(C){/* 彫り絵3のあと：トトは、ひとりで洞窟�
   const a=C.party.find(q=>q.r.name===TOTO);if(!a)return;const t=a.r;cvSpark(a.x,a.y-CVOY,'#c8b890',12);sfx('crack');
   C.party=C.party.filter(q=>q!==a);C.all=(C.all||[]).filter(r=>r!==t);S.cvAway=(S.cvAway||[]).filter(r=>r!==t);if(C.focus&&C.focus.tg===a)C.focus.tg=null;
   t.act=null;t.path=[];S.ts.totoGone=t;toast('トトは、洞窟のおくへ、走っていった','warn');cvHudUpd()}
-const tsCaveMust=()=>{/* まだ見ていない彫り絵の階があるうちは、トトもいっしょ（cave.js の cavePrep。出かける階は、そのあとでえらぶ） */if(!tsOn())return null;const top=Math.min(S.cvClr||0,cvFlOpen()-1);for(let fl=0;fl<=top;fl++){const n=tsCarveOf(fl);if(n>=0&&!(S.ts.carve||[]).includes(n))return S.res.find(r=>r.name===TOTO&&!r.hidden)||null}return null};
+const tsCaveMust=()=>{/* まだ見ていない彫り絵の階があるうちは、トトもいっしょ（cave.js の cavePrep。出かける階は、そのあとでえらぶ） */if(!tsOn())return null;const top=Math.min(S.cvClr||0,cvFlOpen()-1);for(let fl=0;fl<=top;fl++){const n=tsCarveOf(fl);if(n>=0&&!(S.ts.carve||[]).includes(n))return S.res.find(r=>r.name===TOTO&&!r.hidden)||null}return tsOkuOn()&&top>=TSOKFL?tsHaniOf():null};/* 10階のトトの所へは、ハニもいっしょ（tsuchi-oku.js） */
 /* ---- はじまりの地ゆれ：カメラが巣穴へ → 地面がゆれる → トトがころがり出る → 会話 ---- */
 let TSINTRO=null;
 function tsIntro(next){const h=S.ts&&S.ts.hole,t=S.res.find(r=>r.name===TOTO);if(h==null||!t){next();return}
@@ -153,6 +153,7 @@ QL[TSUCHI]=[
      {t:'サルビア',v:'salvia',lines:[[HANI,'……あかい花。トトが、すきそう。']]},
      {t:'ユリ',v:'lily',lines:[[HANI,'……しろい花。']]}]}],
     [GOD,'ほっほ。谷が、ひとつにつながったのう。']]},
+  {id:'tsoku',text:'洞窟のいちばんおくへ行こう',check:()=>!!S.ts.totoRoot,prog:()=>(S.cvClr|0)<TSOKFL?'洞窟の10階は、まだひらいていない':!tsHaniOf()&&!(S.cvAway||[]).some(r=>r.name===HANI)?HANI+'が、村にいない':'ハニといっしょに、10階のまん中の島へ',how:'「しらべる」で巣穴をタップして、洞窟の10階へ。ハニといっしょに、まん中の島へ行こう'},/* トトの場面は tsuchi-oku.js */
 ];
 /* ---- くずれた岩の山（S.ts.rub）：谷のはしの土地を、地ゆれでくずれた岩がふさいでいる。洞窟の階をはじめてクリアするたびに、1つずつくずれて、土地がひらく ----
    1つめ（ひらく順の0）は地われの西がわ。そこに、たおれたオリーブ（tskonoki）と、土のせいれいハニがいる。
@@ -212,7 +213,7 @@ function tsCaveIbuki(C){C.ib=null;if(!tsOn()||C.fl!==TSIBFL||S.ts.ib||!tsQDone('
   const fs=cvBfsRing(j,16).filter(k=>k!==j&&!on.has(k)&&!C.ob.has(k)&&Math.hypot(cvX(k)-cvX(j),cvY(k)-cvY(j))>=1.5).slice(0,TSIBFOE);
   const ids=fs.map(k=>{const D=EN.basic,e={id:C.eid++,type:'basic',asleep:true,tsHold:1,x:cvX(k)+.5,y:cvY(k)+.5+CVOY,hp:D.hp,max:D.hp,spawned:true,stun:0,atk:0,path:[],rp:0,dead:false,tg:null,cj:k};C.en.push(e);return e.id});
   C.ib={a,ids,st:0,sw:0,k:0}}
-const cvActorsL=C=>C.ib&&C.ib.st===0&&C.seen[cvCell(C.ib.a)]?C.party.concat([C.ib.a]):C.party;/* 洞窟で描くせいれい：なかまと、まだ会っていないイブキ（iso-cave.js） */
+const cvActorsL=C=>(C.ib&&C.ib.st===0&&C.seen[cvCell(C.ib.a)]?C.party.concat([C.ib.a]):C.party).concat(tsOkuActors(C));/* 10階のトト（tsuchi-oku.js） *//* 洞窟で描くせいれい：なかまと、まだ会っていないイブキ（iso-cave.js） */
 function tsCaveTick(C,now){/* caveFrame から */const I=C.ib;if(!I||I.st>=3)return;const a=I.a,fs=C.en.filter(e=>I.ids.includes(e.id)&&!e.dead);
   if(I.st===0){if(fs.length&&now>=I.sw){I.sw=now+1100;const e=fs[(I.k++)%fs.length];a.face=e.x>=a.x?1:-1;a.turn=Math.abs(e.x-a.x)>Math.abs(e.y-a.y)*.6?1:0;a.back=a.fback=e.y<a.y-.3&&!a.turn;a.swing=now;later(()=>{if(CV===C&&!e.dead){atkFX(a,e);cvSpark(e.x,e.y-CVOY,'#ffb070',6)}},HIT_LAG)}/* 火をふる（絵だけ） */
     if(!C.party.some(q=>Math.hypot(q.x-a.x,q.y-a.y)<=TSIBNEAR))return;I.st=1;C.focus=null;for(const q of C.party){q.path=[];q.mv=false}
@@ -258,7 +259,8 @@ function tsOokUpd(e,dt){/* updEnemy から */e.hp=e.max;if(e.gone)return;if(e.st
   const dx=gx-e.x,dy=gy-e.y,d=Math.hypot(dx,dy);if(!e.flee&&d<=TSOOKMEET){e.met=1;return}if(e.flee&&d<.6){e.gone=1;spawnFX(e.x-.5,e.y-.5,'#3a3028');return}
   const v=Math.min(d,D_TSOOK(e)*dt);e.x+=dx/d*v;e.y+=dy/d*v}/* 影なので、壁も家も、すりぬけて、まっすぐ（にげるときは速い） */
 const D_TSOOK=e=>EN.tsuchi.sp*(e.flee?4:1);
-function tsOokDraw(e,now){/* drawEnemy から：3Dから写したゆりかご（tsookage#0〜）。チップがないときは、コードのドットの仮の絵 */const px=e.x*TS,py=e.y*TS;shadow(ctx,px,py+6,30,8);
+function tsOokDraw(e,now){/* drawEnemy から（10階でしずむときは、うすれる tsOkuAlpha） */const al=typeof tsOkuAlpha==='function'?tsOkuAlpha(e,now):1;if(al<=0)return true;if(al>=1)return tsOokDraw0(e,now);ctx.save();ctx.globalAlpha*=al;tsOokDraw0(e,now);ctx.restore();return true}
+function tsOokDraw0(e,now){/* 3Dから写したゆりかご（tsookage#0〜）。チップがないときは、コードのドットの仮の絵 */const px=e.x*TS,py=e.y*TS;shadow(ctx,px,py+6,30,8);
   const ch=window.CHIPS&&CHIPS.tsookage;if(ch&&drawChip(ctx,ch,'tsookage',px-TS/2,py-TS/2,now,e.id))return true;
   const sw=Math.round(Math.sin(now/700)*3),P=(col,a,b,w,h)=>{ctx.fillStyle=col;ctx.fillRect(Math.round(px+a+sw*(b<-20?1:0)),Math.round(py+b),w,h)};
   P('#2a2420',-26,-8,52,10);P('#3a3028',-22,-18,44,12);P('#4a3e34',-18,-30,36,14);P('#2a2420',-30,-4,8,6);P('#2a2420',22,-4,8,6);P('#e8c890',-8,-24,4,3);P('#e8c890',4,-24,4,3);return true}
