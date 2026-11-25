@@ -226,6 +226,7 @@ function removeAt0(x,y){const tx0=x,ty0=y;
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');if(d.bp!=null&&typeof bpOfSite==='function'){const e=bpOfSite(j);if(e)return bpCancel(e)}siteRefund(d,j);clearObj(j);toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1,1);toast('植えるのをやめた')}
     else{if(BOXCAP[o])boxStash(j,o);/* しまう家具：中身は散らさず、つぎに置いた同じ家具へ */clearObj(j);
+      if(LIGHTNAT[o]&&typeof juiceBreak==='function'){if(RMGH)RMGH.hit=1;fxSpr(o==='rock'||VEINS[o]?'rockbreak':'treefall',x*TS+16,y*TS+26);const wd=LIGHTNAT[o]==='wood'||LIGHTNAT[o]==='bamboo';juiceBreak(j,wd?'wood':'stone',null,1);if(wd&&cam.z>=homeZ()*.7&&typeof juiceShake==='function')juiceShake()}/* 木・岩をこわした：白く光ってふるえ、一瞬とまってから、かけらがとびちり、画面が小さくゆれる */
       if(b.natural){toast(b.name+'をかたづけた')}
       else if(FLOWERS.has(o)||o==='tree'||o==='fruit'){giveItem(o,1,1);toast(iname(o)+'をもらった')}/* 花・木をこわすと、種・苗がもどる */
       else if(o==='plot'||o==='farm'){giveItem('farm',1,1);toast('畑をもちものにもどした')}
