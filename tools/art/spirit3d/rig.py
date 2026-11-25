@@ -27,7 +27,8 @@ def posed(sp, face, p):
     Rh = rz(g('hy'))@ry(g('hr'))@rx(-g('hp')); hc = body(PIVH[None])[0]
     head = lambda P: (np.asarray(P)-PIVH)@Rh.T+hc
     out = {'body': (body(sp.solid['body']), 'cream', 'c')}
-    for nm, hipx in (('M', -8.0), ('P', 8.0)):
+    hx_ = getattr(sp, 'hipx', 8.0)   # また（足の回る所）。持ち主のモデルは、モデルの足のまん中
+    for nm, hipx in (('M', -hx_), ('P', hx_)):
         h = np.array([hipx, 0, 11.]); R = rx(g('leg'+nm)); d = np.array([g('x'), g('y'), g('legz')+g('lift'+nm)])
         out['leg'+nm] = ((sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h+d, 'creamf' if face == 1 and nm == 'P' else 'cream', 'c')   # 横向きの奥の足（+x）は1段暗い色
     anchors = {}
@@ -70,7 +71,7 @@ def posed(sp, face, p):
         R = rx(a) if ax[0] else rz(a) if ax[2] else ry(a)   # しっぽは根もとで左右にふる（まうえの軸）・はねは板の面の中
         P2 = (P-pv)@R.T+pv
         out[nm] = ((head if nm.startswith('wing') else body)(P2), C, 't')
-    anchors['eye'] = head(EYEP[None])[0]; anchors['eye0'] = EYEP
+    anchors['eye'] = head(getattr(sp, 'eyep', EYEP)[None])[0]; anchors['eye0'] = EYEP   # 目の絵は、チップの目の所（EYEP）から、モデルの目（eyep）がうごいた分だけずらす
     if ISOEYE[0]:   # クォータービュー：左右の目を、顔の面の上の点（と、よこ・たてに少しずらした点）で持つ（shoot が画面の場所と、ちぢみ方にする）
         anchors['eyeq'] = [head(eyesurf(sp, u0, v0)) for u0, v0 in ISOEYEUV]
     ref = rz(-math.pi/2).T@np.array([0, 1., 0])   # 横向き（右を向く）のときの、カメラの向き
@@ -105,7 +106,7 @@ def shoot(sp, face, p):
     grp = {nm: (nm[-1] if nm.startswith(('arm', 'hand', 'prop')) else None) for nm in names}
     _, _, zc = V(parts['body'][0].mean(0)[None]); zc = zc[0]   # 体のまん中の奥行き
     HEAD = ('hood', 'face')+sp.fixed_head_parts+tuple(nm for nm, _ in sp.tops); fa = np.zeros(Wd*Hd, bool)   # fa：頭に勝つ、うで・手・道具のドット
-    hoodi = names.index('hood'); headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
+    hoodi = names.index('hood') if 'hood' in names else -2; headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
     colors = {'cream': sp.body_color, 'creamf': sp.far_leg_color,
               'arm': sp.arm_color, 'hand': sp.hand}
     for i, nm in enumerate(names):
