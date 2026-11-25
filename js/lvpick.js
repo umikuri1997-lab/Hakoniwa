@@ -2,7 +2,7 @@
    村レベルが上がるたびに、えらべる物（LVPICK）の中から3つを出し、1つえらんでおぼえる。えらばなかった物は、つぎのレベルでまた出る。
    お話でつかう物・家の材料（壁・床・道・柵・ドア・階段・ハシゴ・橋）は、いままでどおり、えらばずにおぼえる（LVPICK に入れない）。フリーモードは、えらばずにぜんぶおぼえる。
    S.lvPick：{got:{id:1}, n:まだえらんでいない回数}。 */
-const LVPICK=new Set(['tspillar','gekkolamp','hotarukago','shitone','tsukimidai','terraceseat','madobachi','canallamp','araiba','shimahammock','fusenya','kagoisu','kazakadan','kazelamp','curtain1','signw','signs','lurestatue','mato','picnic','taiko','chadogu','hokora']);
+const LVPICK=new Set(['tskama','tsubo','tspillar','gekkolamp','hotarukago','shitone','tsukimidai','terraceseat','madobachi','canallamp','araiba','shimahammock','fusenya','kagoisu','kazakadan','kazelamp','curtain1','signw','signs','lurestatue','mato','picnic','taiko','chadogu','hokora']);
 const LVPICKN=3;/* 出す数 */
 const LP=()=>S.lvPick||(S.lvPick={got:{},n:0});
 const lvPickOn=()=>!!S&&!S.free;

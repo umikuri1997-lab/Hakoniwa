@@ -348,7 +348,7 @@ const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)retur
 let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */
 /* 作業する向きがきまっている家具（WORKF）：作業するマスは、その向きの前（向き0 前＝下・1 右・2 後ろ＝上・3 左）。2×2は前の2マス、作業台は台のマス（wbCells の b）の前。
    せいれいは、そのマスに立って家具のほうを向く。どのマスも歩けない（物がある・水など）と作業できない。流し台は、せいれいの作業はないが、置くときに同じく出す */
-const WORKF=new Set(['loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
+const WORKF=new Set(['tskama','loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
 function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと、置く前の場所でも */id=id||S.obj[j];if(rot==null)rot=rotAt(j);rot&=3;const[dx,dy]=WORKD[rot];
   const cells=id==='wbench'?[rot>=2?(rot%2?j+W:j+1):j].map(b=>[b%W,(b/W)|0]):fp(id,j%W,(j/W)|0,rot),own=new Set(cells.map(([x,y])=>y*W+x)),L=[];
   for(const[x,y]of cells){const nx=x+dx,ny=y+dy,k=ny*W+nx;if(nx<0||ny<0||nx>=W||ny>=H||own.has(k)||(id==='wbench'&&own.size===1&&fp(id,j%W,(j/W)|0,rot).some(([a,b])=>b*W+a===k)))continue;L.push(k)}return L}
