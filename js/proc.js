@@ -5,6 +5,7 @@
    水車（suisha）のまわり5マス（NEARSUI）の加工の家具は、せいれいがいなくても動く（S.prW[j]：進みぐあい）。できた物は S.prOut[j] にたまり、せいれいが箱へ運ぶ。 */
 const GRASSKEYS=['shina','kasa','kuru','chiri','funba','nabiki','houki','ashi','gama','yotsuyu','kagekusa'];
 const PROC={mill:{ins:['f:mugi'],n:2,out:'f:komugiko',el:'earth',T:45,cap:10,verb:'ひく',ask:'粉ひきをたのんだ'},/* こむぎ2こで、こむぎこ1こ。1こ30分 */
+  tskama:{ins:['nendo'],n:3,out:'yaki',el:'earth',T:90,cap:10,verb:'やく',ask:'やきものをたのんだ'},/* 粘土3こで、やきもの1こ。1こ90分（土の窯） */
   loom:{ins:[...GRASSKEYS,'wool'],n:3,nk:{wool:2},out:'nuno',el:'wind',T:60,Tk:40,cap:10,verb:'おる',ask:'はたおりをたのんだ'}};/* 草3こか、わた毛2こで、布1こ。1こ40分。風の強い日（S.today==='kaze'）は Tk：1こ27分 */
 const prT=P=>S&&S.today==='kaze'&&P.Tk?P.Tk:P.T;/* 1こ作る時間 */
 const prN=(P,k)=>P.nk&&P.nk[k]||P.n;/* その物を、1こ作るのに入れる数 */
@@ -51,12 +52,13 @@ function prPop(j){/* 粉ひき小屋・はたおり機：作る数を、入れ�
   upd();($('#app')||document.body).appendChild(box)}
 /* ---- アイコン（16×16のドット絵。gear.js の pixURL・pixDraw）。布は3Dから写した絵（tools/art/nuno3d、ICONS） ---- */
 const PRPIX={
+ yaki:['................','................','.....oooooo.....','......ohhd......','.....ohhhmd.....','....ohhhmmmd....','...ohhhmmmmmd...','...ohhmmmmmdd...','...ohmmmmmmdd...','...ommmmmmddd...','....ommmmddd....','.....ooddddo....','......oooo......','................','................','................'],
  komugiko:['................','................','......oooo......','.....owwwwo.....','......omdo......','.....ohmmmo.....','....ohhmmmmo....','...ohmmmmmmdo...','...ohmmmmmmdo...','...ommmmmmmdo...','...ommmmmmddo...','...ommmmmdddo...','....oddddddo....','.....oooooo.....','................','................'],
  dango:['.......ww.......','......oooo......','.....ohhmmo.....','.....ommmdo.....','......oddo......','......oooo......','.....ohhmmo.....','.....ommmdo.....','......oddo......','......oooo......','.....ohhmmo.....','.....ommmdo.....','......oddo......','.......ww.......','.......ww.......','................'],
  tamasand:['................','................','.......ww.......','......whhw......','.....whhhhw.....','....whhhhhhw....','...whhhhhhhhw...','..wwwwwwwwwwww..','..ommmmmmmmmmo..','..oddddddddddo..','..wwwwwwwwwwww..','..whhhhhhhhhhw..','..wwwwwwwwwwww..','................','................','................'],
  milkshake:['................','..........w.....','.........w......','.....hhhwhh.....','....hhhhhhhh....','....oooooooo....','....ommmmmho....','....ommmmmho....','.....ommmho.....','.....ommmho.....','.....ommmho.....','......omho......','......oddo......','.....oddddo.....','.....oooooo.....','................'],
  berrymilk:['................','.......oo.......','......oddo......','.....hhddhh.....','....hhhhhhhh....','....oooooooo....','....ommmmmho....','....ommmmmho....','.....ommmho.....','.....ommmho.....','.....ommmho.....','......omho......','......oddo......','.....oddddo.....','.....oooooo.....','................'],
  pancake:['................','................','................','.......hh.......','......hhhh......','...wwwwwwwwww...','..ohhhhhhhhhho..','..ommmmmmmmmmo..','..oddddddddddo..','..ohhhhhhhhhho..','..ommmmmmmmmmo..','..oddddddddddo..','..ohhhhhhhhhho..','..ommmmmmmmmmo..','...oddddddddo...','................']};
-const PRCOL={komugiko:'#efe6d4',dango:'#f2d2c8',tamasand:'#f2dc8c',milkshake:'#f4e6c4',berrymilk:'#f0c6d6',pancake:'#e8bc78'};
+const PRCOL={yaki:'#c9805a',komugiko:'#efe6d4',dango:'#f2d2c8',tamasand:'#f2dc8c',milkshake:'#f4e6c4',berrymilk:'#f0c6d6',pancake:'#e8bc78'};
 for(const k in PRPIX){if(ICONS[k])continue;ICONS[k]=pixURL('pr:'+k,PRPIX[k],PRCOL[k]);const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
 EMO_IC['🥣']='komugiko';EMO_IC['🍡']='dango';EMO_IC['🥪']='tamasand';EMO_IC['🥛']='milkshake';EMO_IC['🍓']='berrymilk';EMO_IC['🥞']='pancake';/* 食べ物の字（FOODS の e）は、アイコンのキーとしてだけ使う */
