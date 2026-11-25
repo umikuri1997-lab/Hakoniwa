@@ -2,7 +2,7 @@
    動きの絵は spirit3d（cookprep・cookcut・cookmix・cook・cookfry・cookfan・cookgrill・cookplate・raise・craftprep・saw・craft・polish、作業台の上では wbprep・wbsaw・wbham・wbpolish）。
    音と粒は、描くときの時刻（drawSpiritDot の t）と同じ時刻で、動きの決まった所（WBEAT）をこえたときに出す（手の動きとずれない）。 */
 const WORKSHOW=4;
-const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBUP=5,WBBACK=14;/* 作業台のうしろに立つ向き（2）は、台のほうへ14点よせて、台ごしに手もとが天板にとどくようにする *//* 作業台は、マスの中で10ドット（g64）上に置く。作業台で作るせいれいも、同じだけ（ゲームの5点）上に立つ *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
+const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBSLOT={0:[-3,-28],1:[-28,-3],2:[-3,16],3:[16,-3]};/* 作業台で作るせいれいの立つ所の、作業する所（workCells のマスのまん中）からのずれ（せかいの点、向きごと）。天板は、台のマスの奥0.56（tools/art/furn3d/items/wbench.py）なので、マスのまん中のままだと台から0.94マス（30点）はなれる：台のほうへ、台の前に立つ向き（0・1。せいれいが手前）は25点、台のうしろに立つ向き（2・3。せいれいが台にかくれる）は19点よせる（ゲームの絵で手もとが天板にとどく所をたしかめた数）。作業台の絵は10ドット（g64）上に置く（iso3d.py の WBUP）ので、画面で同じだけ上に見えるよう、x・y とも3点ひく *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
