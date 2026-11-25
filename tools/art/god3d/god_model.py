@@ -174,11 +174,19 @@ def build():
     # 3 そで：ローブのそでぐり（かた）から、前でたてにひらくそで口へ、布がふくらんでつながるベルスリーブ。うではひじで曲げて、そで口から出た手を前であわせる。
     #   そで口は、手の高さから下へ、たてに長くひらく（布の重さでたれる）。そで口のふちが金色で、正面からは、たての線に見える
     for sx, nm in ((-1, 'sleeve_r'), (1, 'sleeve_l')):
-        inward = Vector((-sx, -0.55, 0)).normalized(); side = inward.cross(Vector((0, 0, 1))).normalized()
-        loft(nm, [((sx*0.70, 0.02, 2.58), (0, 1, 0), (0, 0, 1), 0.28, 0.28),            # そでぐり（かた）
-                  ((sx*0.92, -0.30, 2.15), (0, 1, 0.3), (0, -0.3, 1), 0.42, 0.50),       # 上うで（ふくらむ）
-                  ((sx*0.80, -0.62, 1.80), side*0.6+Vector((0, -0.4, 0)), (0, 0, 1), 0.36, 0.62),   # ひじから先（下へたれる）
-                  ((sx*0.36, -0.86, 1.62), side, (0, 0, 1), 0.24, 0.58)], 'robe', rim='gold')   # そで口（たてにひらく）
+        SP = [(sx*0.66, 0.02, 2.58), (sx*0.78, -0.22, 2.22), (sx*0.84, -0.52, 1.86), (sx*0.62, -0.76, 1.66), (sx*0.42, -0.88, 1.60)]   # そでのまん中の線（かた→ひじ→そで口）
+        SA = [0.28, 0.40, 0.42, 0.34, 0.26]; SB = [0.28, 0.46, 0.56, 0.60, 0.62]   # 輪のよこ・たての半径（下へたれて、たてに長いそで口）
+        bm = bmesh.new(); rings = []; P = [Vector(p) for p in SP]; seg = 24
+        for k_, p_ in enumerate(P):
+            t = (P[min(k_+1, len(P)-1)]-P[max(k_-1, 0)]).normalized(); u = t.cross(Vector((0, 0, 1))).normalized(); v = u.cross(t).normalized()
+            if v.z < 0: v = -v
+            rings.append([bm.verts.new(p_+u*SA[k_]*math.cos(2*math.pi*q/seg)+v*SB[k_]*math.sin(2*math.pi*q/seg)) for q in range(seg)])
+            if k_ == len(P)-1: rim = [tuple(p_+u*SA[k_]*math.cos(2*math.pi*q/40)+v*SB[k_]*math.sin(2*math.pi*q/40)) for q in range(41)]
+        for A, B in zip(rings, rings[1:]):
+            for q in range(seg): bm.faces.new((A[q], A[(q+1) % seg], B[(q+1) % seg], B[q]))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        ob = obj(nm, bm, ['robe'], 2); md = ob.modifiers.new('solidify', 'SOLIDIFY'); md.thickness = 0.04; md.offset = 0.0   # 布のあつみ
+        tube(nm+'_rim', rim, [0.05]*41, 'gold', seg=6, caps=False)   # そで口のふち（金色）
     # つえ：体の前の地面から立つ柄（下は平ら）と、くびれのある、スプーンの形の頭
     tube('staff', [(0, -1.02, 0.0), (0, -1.02, 0.04), (0, -1.0, 1.2), (0, -1.04, 2.20), (0, -1.05, 2.26)], [0.10]*5, 'wood', seg=12, subsurf=0)
     ball('staff_top', (0, -1.05, 2.62), (0.40, 0.36, 0.46), 'wood')
