@@ -202,9 +202,9 @@ function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは 
    首はいっぺんに向けない：HTSTEP だんの絵（walk_hp1〜walk_hp6 など、s は ±k/HTSTEP）を、同じ時間ずつ（画面の1コマくらい）順に出して、同じ速さでなめらかに向く */
 const HTURNMS=100,HTSTEP=6;
 /* 歩く絵のコマは、時計でなく、歩いた道のりで進める（速く歩いても、ゆっくりでも、足がすべらない）。
-   WALKPT：1マス歩くあいだに、歩く絵が何回まわるか（1まわりで2歩）。2回で、ふつうの速さ（1秒に約0.9マス）なら1秒に約3.6歩（持ち主がえらんだ）。
+   WALKPT：1マス歩くあいだに、歩く絵が何回まわるか（1まわりで2歩）。1回で、ふつうの速さ（1秒に約0.9マス）なら1秒に約1.8歩・れんがの道（×1.75）で約3.2歩（持ち主がえらんだ。2だと道や石畳で速すぎた）。
    絵の1まわりは 4×WSTEP（tools/art/spirit3d/motions.py の 6.5）＝26 ドットで、1マス＝64 ドットなので、ついた足は少しすべる（すべらないのは 64/26 回。それだと足ぶみが速すぎる） */
-const WALKPT=2,WALKR=9/(2*Math.PI),WLKD=new WeakMap();
+const WALKPT=1,WALKR=9/(2*Math.PI),WLKD=new WeakMap();
 function spWalkD(k,x,y,walking){let m=WLKD.get(k);if(!m){m={x,y,d:0};WLKD.set(k,m)}const d=Math.hypot(x-m.x,y-m.y);if(walking&&d<1)m.d+=d;m.x=x;m.y=y;return m.d}/* 歩いた道のり（マス）。とんだ（1マスより遠い）ときは足さない */
 const spWalkBob=(wd,s)=>wd==null?0:-1.5*Math.cos(2*(wd*WALKPT*2*Math.PI-Math.PI/2-.3))*s/.87;/* 歩く絵の体の上下（motions.py の WBOB・WDOWN と同じ。上が+、画面の点） */
 function spHeadTurn(v,walking,face,now){const k=v.back?2:v.turn?1:0,f=face<0?-1:1;
@@ -541,7 +541,7 @@ function wbSlot(r,walking,now){/* 作業台で作るせいれいの、絵のず�
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.nap||r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act&&r.act.obj!=null&&BEDSET.has(S.obj[r.act.obj])&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&BENCHES.has(S.obj[r.act.obj])?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
-  const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */const bxy=bedJ>=0&&BEDXY[S.obj[bedJ]];let sj=bedJ>=0?bedJ:benchJ,px=bxy?(bedJ%W)*TS+bxy[bedH?1:0][0]:bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bxy?((bedJ/W)|0)*TS+bxy[bedH?1:0][1]:bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const walking=!!(r.act&&(r.act.stage==='walk'&&r.path.length>0&&!(r.greetStop>S.t)&&!(r.slipT>S.t)&&!(typeof spFrontNow==='function'&&spFrontNow(r,now))||r.act.type==='tag'))&&!(typeof TALKID!=='undefined'&&TALKID===r.id&&!$('#dialog').hidden);/* お話のあいだは（村の時間が止まっている）、立ちどまって正面を向く *//* 歩いているあいだは、会話・拍手・手をふる・よろこぶときも、歩く向き・歩く動きのまま（こっちを向いたまま、すべらない）。止まったら、こっちを向く */
+  const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */const bxy=bedJ>=0&&BEDXY[S.obj[bedJ]];let sj=bedJ>=0?bedJ:benchJ,px=bxy?(bedJ%W)*TS+bxy[bedH?1:0][0]:bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bxy?((bedJ/W)|0)*TS+bxy[bedH?1:0][1]:bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const walking=!!(r.act&&(r.act.stage==='walk'&&r.path.length>0&&!(r.greetStop>S.t)&&!(r.slipT>S.t)&&!(typeof spFrontNow==='function'&&spFrontNow(r,now))||r.act.type==='tag'))&&!(!$('#dialog').hidden&&(typeof TALKID!=='undefined'&&TALKID===r.id||DLGN.has(r.name)));/* お話のあいだは（村の時間が止まっている）、話す子は立ちどまって正面を向く（お世話タブのお話も、マップの「！」のお話も） *//* 歩いているあいだは、会話・拍手・手をふる・よろこぶときも、歩く向き・歩く動きのまま（こっちを向いたまま、すべらない）。止まったら、こっちを向く */
   const flSl=sleeping&&bedJ<0&&benchJ<0&&!!(r.act?.ground||r.nap&&!(r.act&&r.act.obj>=0))&&typeof SPM!=='undefined'&&!!SPM.sleepcurl;/* 床・地面で寝る：横になって丸くなる */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','draw','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
