@@ -81,7 +81,7 @@ function bpKnown(t,id){/* その部品を、いまのステージで、おぼえ
   if(t==='furn'||t==='build'){if(b.offerOnly&&STAGEONLY[id]==null||WIND_STAGE_TOYS.has(id)&&WD!==WIND)return false;if(!((b.w||0)<=WD&&(STAGEONLY[id]==null||STAGEONLY[id]===WD)||grec(id)))return false;/* あとのステージの物・ほかのステージだけの物は、そこでおぼえていなければ入れない */return t==='build'?usable(id):recipeKnown(id)&&lvOK(id)}
   if(t==='win')return !!S.unlocked.window&&!!S.unlocked[id];return !!S.unlocked[id]}
 const bpCanGet=k=>bpPieces(k).every(p=>bpKnown(p[2],p[3]));/* 中の物を、ぜんぶおぼえている設計図だけ、もらえる */
-const bpIcon=k=>{const b=BPS[k];if(b.cat==='house')return iconURL(bpWallOf(b));const f=b.furn.find(q=>BL[q[2]].kind!=='plant')||b.furn[0];return iconURL(f?f[2]:b.rows.join('').includes('f')?'farm':bpFence())};
+const bpIcon=()=>ICONS.bp;/* どの設計図も同じ絵（tools/art/icons32/blueprint.py。持ち主がえらんだ） */
 const BPNAT=new Set(['ntree','deadtree','bamboo','rock','boulder']);/* 置く所にあれば、せいれいが切る・ほる */
 const bpSoft=o=>WEEDS.has(o)||o==='kinoko'||o==='takenoko';/* 置くときに、そのままなくなる */
 function bpCheck(k,x,y){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k);if(x<0||y<0||x+w>W||y+h>H)return[false,'ここには置けません'];const h0=hiAt(y*W+x);
