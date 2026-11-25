@@ -258,7 +258,8 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
   if(fl&&fl.length>4&&dir!==2)drawFishLine(c,x+h[4]*D*s*f,y+h[5]*D*s,fT[0],fT[1],t);/* さおの先から、水の上のうきへ糸 */
   spmFree(performance.now());return true}
 function fishTo(r){/* つっている子の、うきの場所（見る水のマスのまん中）。せいれいは足もとで立てて描く（standTf）ので、水のマスの画面の点（ひし形）を、いまの描き方の点にもどす。水面は岸より WBANK ひくい（洞窟はない） */const a=r.act;if(!a||a.type!=='fish'||a.stage!=='do')return null;const w=fishW(a.stand);if(w<0)return null;
-  const B=gFoot((w%W+.5)*TS,((w/W|0)+.55)*TS),k=dpr*cam.z,O=isoOff(k),X=k*B.px+O[0],Y=k*(B.py+(caveOn()?0:WBANK))+O[1],T=ctx.getTransform().invertSelf();return[T.a*X+T.c*Y+T.e,T.b*X+T.d*Y+T.f]}
+  return fishBobPt(ctx,w)}
+function fishBobPt(c,w){/* 水のマス w のうきの点を、c のいまの描き方の点で（釣り中の子・釣りスポットの家具） */const B=gFoot((w%W+.5)*TS,((w/W|0)+.55)*TS),k=dpr*cam.z,O=isoOff(k),X=k*B.px+O[0],Y=k*(B.py+(caveOn()?0:WBANK))+O[1],T=c.getTransform().invertSelf();return[T.a*X+T.c*Y+T.e,T.b*X+T.d*Y+T.f]}
 function drawFishLine(c,tx,ty,wx,wy,t){/* 糸・波の輪・うき（うきと波は1ドットの四角） */
   const X=Math.round(wx),Y=Math.round(wy+Math.sin(t*3)*1.2);
   c.save();c.fillStyle='rgba(255,255,255,.5)';const rp=Math.sin(t*1.6)>0?1:0;c.fillRect(X-5-rp,Y+1,3,1);c.fillRect(X+3+rp,Y+1,3,1);c.fillRect(X-3-rp,Y+2,7+rp*2,1);/* 波の輪 */
