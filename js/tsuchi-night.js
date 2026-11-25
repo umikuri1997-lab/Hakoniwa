@@ -10,7 +10,7 @@ const TSRIFTFAR=10;/* 地われから来るとき、村のまん中からはな�
 /* ひらいた階のバケモノ（上の階から） */
 function tsBkFloors(){const n=Math.min(S.cvClr|0,CVBKFL.length),L=[];for(let i=0;i<n;i++){const t=CVBKFL[i];if(t)L.push(t)}return L}
 /* 今夜のならび（waveFor から）：3びきめごとをバケモノにする。ひらいた階から、じゅんばんに（夜ごとに、はじめの階をずらす） */
-function tsBkWave(list){if(WD!==TSUCHI||!S.ts)return;const F=tsBkFloors(),nb=Math.floor(list.length/TSBKEVERY);if(!F.length||!nb)return;
+function tsBkWave(list){if(WD!==TSUCHI||!S.ts||S.ts.totoRoot)return;/* トトが根になったあとは、バケモノは来ない（コワイノだけ） */const F=tsBkFloors(),nb=Math.floor(list.length/TSBKEVERY);if(!F.length||!nb)return;
   const ko=list.slice(0,list.length-nb),out=[];let k=(S.nights||0)%F.length,b=0;
   for(let i=0;out.length<list.length;i++){if(i%TSBKEVERY===TSBKEVERY-1&&b<nb||!ko.length){let t=F[k%F.length];if((EN[t].pack||1)>list.length-out.length)t=F.find(q=>!EN[q].pack)||null;/* のこりが3つより少ないときは、むれでないバケモノ */if(!t){out.push(ko.shift()||'basic');continue}const n=EN[t].pack||1;for(let q=0;q<n;q++)out.push(t);ko.splice(0,n-1);/* うえたちねずみは3びきで来て、来る数の3つ分 */k++;b++}else out.push(ko.shift())}
   out.length=list.length;list.length=0;list.push(...out)}

@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2381;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2380;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -87,7 +87,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     const hide=!open;/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
-    if(play&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
+    if(play&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?(k===TSUCHI?'・あたらしいヌシ様が生まれた':'・ヌシ様が帰ってきた！'):'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k>=3&&!(open&&play))info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
     if((k===TSUCHI||k===WIND)&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';if(k===MIZU&&!(L&&L.introSeen))info=wd.desc;
