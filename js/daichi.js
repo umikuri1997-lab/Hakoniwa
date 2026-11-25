@@ -19,4 +19,4 @@ function daichiUse(r){/* おなかが0になったとき：みどりでもちこ
   const F=S.flags;if(WD===KUSA&&!F.daichi1){F.daichi1=1;(S.sevQ||(S.sevQ=[])).push('d_F')}else toast(r.name+'が、まわりのみどりで、もちこたえた','warn');
   return true}
 function daichiReplant(j){/* かれたマスに植えた（recount から） */if(S.kare&&S.kare[j])delete S.kare[j]}
-function daichiMig(s){/* 前のセーブ：フタバの特性「ねばりづよい」を「だいちのちから」に */for(const r of[...(s.res||[]),...(s.buried||[]),...(s.lost||[])])if(r&&r.name===POKO&&r.vr&&r.vr.tr==='nebari')r.vr.tr='daichi'}
+function daichiMig(s){/* 前のセーブ：フタバの特性「ねばりづよい」を「だいちのちから」に */for(const r of[...(s.res||[]),...(s.buried||[]),...(s.lost||[])])if(r&&r.name===FUTABA&&r.vr&&r.vr.tr==='nebari')r.vr.tr='daichi'}

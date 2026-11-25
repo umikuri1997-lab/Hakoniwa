@@ -79,7 +79,7 @@ function startSacredPlay(id,j,cast,done,fail){
   if(P.type==='pipe')pipeInit(P,now);/* 水路の石：回して、かめから根まで水の道をつなぐ */
   if(P.type==='drip'){P.path=[];for(let i=0;i<=24;i++){const u=i/24;P.path.push({x:cx-50+u*40,y:cy-51+u*13})}P.reach=0;P.hold=false;P.bud={x:cx-4,y:cy-20};P.leaf={x:cx-53,y:cy-57}}/* かたむいた葉の上を、しずくが芽まで */
   if(P.type==='swipe'){P.need=3}
-  if(P.type==='gather'){P.order=[...cast.filter(r=>r.name!==POKO),...cast.filter(r=>r.name===POKO)];P.need=P.order.length;P.prog=0;P.holding=false}/* 切り株を長おし：みんなが、じゅんに切り株へ力をおくる（フタバはさいご） */
+  if(P.type==='gather'){P.order=[...cast.filter(r=>r.name!==FUTABA),...cast.filter(r=>r.name===FUTABA)];P.need=P.order.length;P.prog=0;P.holding=false}/* 切り株を長おし：みんなが、じゅんに切り株へ力をおくる（フタバはさいご） */
   if(P.type==='brush'){P.area={x:cx-34,y:cy-10,w:68,h:20}}
   if(P.type==='bellows')bellowsInit(P,now);/* 守護の台座の火入れ */
   if(P.type==='trace')traceInit(P,now);/* 風をなぞってあつめる */

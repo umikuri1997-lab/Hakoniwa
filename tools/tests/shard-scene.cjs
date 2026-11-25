@@ -3,8 +3,8 @@
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`updTut=()=>{};checkLevel=()=>{};showItemGift=()=>{};showSpotPop=()=>{SPOT_POPS.length=0};`);
-  await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.minaCame=true;S.flags.nushiAlive=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;
-    const x=S.sacredRoot%W,y=S.sacredRoot/W|0;S.res=[mkRes(S,POKO,'wood',x-2.5,y+5.5),mkRes(S,MINA,'earth',x+4.5,y+5.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,x+i+.5,y+6.5))];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90}
+  await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.nodokaCame=true;S.flags.nushiAlive=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;
+    const x=S.sacredRoot%W,y=S.sacredRoot/W|0;S.res=[mkRes(S,FUTABA,'wood',x-2.5,y+5.5),mkRes(S,NODOKA,'earth',x+4.5,y+5.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,x+i+.5,y+6.5))];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90}
     S.fieldStories=Object.fromEntries(Object.entries(FIELD_STORIES).map(([id,L])=>[id,{step:L.length}]));S.sev=Object.fromEntries(SEV1.map(v=>[v.k,1]));growStoryTree();
     S.quest=questIndexOf('omoi');S.qStory=null;S.qTalked=true;S.shards=1;S.setSh=0;S.treeSeen=sacredStage();recount()})()`);
   const tap=()=>run(`sacredTreeTap(S.sacredRoot)`),dlgOpen=()=>run(`!document.querySelector('#dialog').hidden`);

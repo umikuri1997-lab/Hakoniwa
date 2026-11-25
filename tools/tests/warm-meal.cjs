@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
   /* 3. 切り株のそばの食卓と、受けてからフタバがそこで食べたことだけ数える */
   const c=JSON.parse(await run(`(()=>{S.quest=qsIx('warmMeal');S.qStory=null;S.qTalked=true;delete S.flags.warmEat;delete S.flags.warmYaki;
     const R=S.sacredRoot,x=R%W,y=R/W|0,far=(y+20)*W+x+20,near=(y+sacredSpan()+2)*W+x+1;S.obj[far]='table';const t0=QUESTS1[qsIx('warmMeal')].steps[0].check();S.obj[far]='';S.obj[near]='table';const t1=QUESTS1[qsIx('warmMeal')].steps[0].check();
-    const f=S.res.find(r=>r.name===POKO),eat=(cx,cy)=>{f.x=cx+.5;f.y=cy+.5;f.meal={u:1,pt:0,pw:0,e:'🍙'};ACT.eat.start(f,{tdir:-W})};
+    const f=S.res.find(r=>r.name===FUTABA),eat=(cx,cy)=>{f.x=cx+.5;f.y=cy+.5;f.meal={u:1,pt:0,pw:0,e:'🍙'};ACT.eat.start(f,{tdir:-W})};
     eat(x+20,y+21);const e0=!!S.flags.warmEat;eat(x+1,y+sacredSpan()+3);const e1=!!S.flags.warmEat;
     return JSON.stringify({t0,t1,e0,e1,check:QUESTS1[qsIx('warmMeal')].check()})})()`));
   assert.deepEqual(c,{t0:false,t1:true,e0:false,e1:true,check:true});

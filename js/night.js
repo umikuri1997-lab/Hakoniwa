@@ -5,7 +5,7 @@
    埋葬されたせいれいがいれば、そちらの復活が先（物語のせいれいが最優先） */
 let KEYRES=KEYS[0];
 const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||n===KAGARI||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
-const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];SECOND[WIND]={elem:null,name:null,ok:()=>false};/* 風（土台）：2人めのキーキャラは、まだいない *//* 2人目のキーキャラが来るきっかけ */
+const SECOND=[{elem:'earth',name:NODOKA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];SECOND[WIND]={elem:null,name:null,ok:()=>false};/* 風（土台）：2人めのキーキャラは、まだいない *//* 2人目のキーキャラが来るきっかけ */
 const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};MAINEL[MIZU]='water';SECOND[MIZU]={elem:'earth',name:'',ok:()=>false};/* 水のステージ（試作）：2人目のお話はまだない */
 /* よべる元素のしばりはない（持ち主がきめた。どのステージでも、属性の力がたまれば、どの元素もよべる）。キーキャラが来るのは、そのお話のときだけ：
    草原の火・水・風の子（FIXK0）は、その目標に着いて話を聞いたあと（fixKeyOK）。2人めのキーキャラは SECOND の ok のあと。それより前によぶと、ふつうの名前の子が来る */
@@ -14,13 +14,13 @@ const fixHere=el=>[...S.res,...(S.buried||[]),...(S.lost||[])].some(q=>q.name===
 const sumCap=el=>elemCount(el)>=(WD===FREE?(el==='wood'?6:3):el===MAINEL[WD]?10:5)&&!(FIXK0[el]&&fixKeyOK(el)&&!fixHere(el));/* よべる数がいっぱい（お話のキーキャラが、まだ来ていないときは、いっぱいでもよべる） */
 function sumElem(){
   if(S.res.length>=30)return null;let best=null,bs=0;
-  for(const el of ELEM_KEYS){if(!S.flags.minaCame){const sc=SECOND[WD];if(el===sc.elem&&sc.ok()){best=el;break}}/* 2人目のキーキャラが来られるときは、そちらが先（草原：ききょう2つで土の子、火山：温泉で水のせいれい） */if(sumCap(el))continue;/* よべる数は、えらぶ画面（sumCands）と同じ */const n=needFor(el),v=ATTR[el];if(v>=n&&v/n>bs){bs=v/n;best=el}}
+  for(const el of ELEM_KEYS){if(!S.flags.nodokaCame){const sc=SECOND[WD];if(el===sc.elem&&sc.ok()){best=el;break}}/* 2人目のキーキャラが来られるときは、そちらが先（草原：ききょう2つで土の子、火山：温泉で水のせいれい） */if(sumCap(el))continue;/* よべる数は、えらぶ画面（sumCands）と同じ */const n=needFor(el),v=ATTR[el];if(v>=n&&v/n>bs){bs=v/n;best=el}}
   return best}
 function sumCands(){return ELEM_KEYS.map(el=>{const cap=sumCap(el),n=needFor(el),v=ATTR[el];return {el,v,n,cap,ok:!cap&&v>=n}})}/* 呼べる属性の候補（いまの力と目もり） */
 function checkSummon(){
   if(!S||!S.feat.summon||S.summonNext||S.summon)return;const el=sumElem();if(!el)return;S.summonNext=el}
 function storySummonNow(){/* 草原の2人目（土のせいれい）は、ききょうが咲いて呼ぶ話を聞いたら、朝を待たずに昼のうちに呼べる（1日1回はそのまま） */
-  if(!S||WD!==KUSA||S.free||S.summon||S.summonNext||!S.feat.summon||S.flags.minaCame||isNight()||calledToday())return false;const el=sumElem();if(el!==SECOND[WD].elem||!SECOND[WD].ok())return false;S.summon={elem:el};sfx('arrive');toast('神殿に「！」が出ている','good');return true}
+  if(!S||WD!==KUSA||S.free||S.summon||S.summonNext||!S.feat.summon||S.flags.nodokaCame||isNight()||calledToday())return false;const el=sumElem();if(el!==SECOND[WD].elem||!SECOND[WD].ok())return false;S.summon={elem:el};sfx('arrive');toast('神殿に「！」が出ている','good');return true}
 /* おみおくりの前（unb）なのに、お墓も棺もない子は、おみおくりがすんだことにする（お墓を置く空きがなかった・お墓がなくなった、など。unb がのこると二度と呼びもどせない） */
 function unbFix(){for(const L of[S.buried||[],S.lost||[]])for(const q of L){if(!q.unb)continue;let has=S.res.some(r=>r.coffin&&r.coffin.name===q.name);if(!has)for(const k in S.dyn){const d=S.dyn[k];if(d&&d.name===q.name&&!d.buried&&S.obj[k]==='grave'){has=true;break}}if(!has)delete q.unb}}
 function summonMorning(){
@@ -36,8 +36,8 @@ const calledToday=()=>S.summonDay===callDay()||S.mebukiDay===callDay();/* きょ
 function doSummon(){
   const sm=S.summon;if(!sm)return;
   if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===callDay()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
-  if(!sm.rev&&!sm.mebuki&&!S.flags.minaCame&&SECOND[WD].ok())sm.elem=SECOND[WD].elem;/* 2人目のキーキャラが来られるときは、前からほかの属性で出ていた「！」でも、そのキーキャラが来る（ほかの属性の力は、つかわずにのこる） */
-  if(!sm.rev&&!sm.pick&&!(!S.flags.minaCame&&sm.elem===SECOND[WD].elem&&SECOND[WD].ok())&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
+  if(!sm.rev&&!sm.mebuki&&!S.flags.nodokaCame&&SECOND[WD].ok())sm.elem=SECOND[WD].elem;/* 2人目のキーキャラが来られるときは、前からほかの属性で出ていた「！」でも、そのキーキャラが来る（ほかの属性の力は、つかわずにのこる） */
+  if(!sm.rev&&!sm.pick&&!(!S.flags.nodokaCame&&sm.elem===SECOND[WD].elem&&SECOND[WD].ok())&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
   const sx0=sm.at?sm.at[0]:STATUE>=0?STATUE%W:CX,sy0=sm.at?sm.at[1]:STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;/* at：やってくる所（フリーモード） */
   for(let rr=0;rr<10&&!sp;rr++){const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=sx0+dx,y=sy0+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(walk(j)&&!S.obj[j]&&!S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)&&!(godHere()&&Math.hypot(x+.5-godX(),y+.5-godY())<2.2))c.push([x,y])}if(c.length)sp=pick(c)}
@@ -45,7 +45,7 @@ function doSummon(){
   if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}
     r=mkRes(S,d.name,d.elem,sp[0]+.5,sp[1]+.5,d.like);r.vr=d.vr||r.vr;r.xp=d.xp||0;r.xpf=d.xpf||0;if(d.bst)r.bst=d.bst;if(d.sst)r.sst=d.sst;if(d.tst)r.tst=d.tst;if(d.est)r.est=d.est;if(d.jc)r.jc=d.jc;if(d.ttl)r.ttl=d.ttl;if(d.boost)r.boost=d.boost;r.back=1;r.came=d.came;r.made=d.made;r.beat=d.beat;r.reMate=d.mate||null;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried&&S.dyn[j].name===d.name){S.obj[j]='';delete S.dyn[j];recount()}for(const q of S.res)if(q.coffin&&q.coffin.name===d.name)q.coffin=null;/* 埋葬の前にもどってきた子のお墓は、なくなる */
     toast(r.name+'がもどってきた！','good');sevBack(r.name);goneBack(r.name);reunite(r,sp)}
-  else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame&&SECOND[WD].ok()){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
+  else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.nodokaCame&&SECOND[WD].ok()){name=SECOND[WD].name;S.flags.nodokaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
     else if(FIXK0[sm.elem]&&fixKeyOK(sm.elem)&&!fixHere(sm.elem))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子（お話のとき） */
     else{const used=new Set([...[...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name),...Object.values(S.nick||{})]),keyN=new Set([...KEYS.flat(),KAGARI,...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
@@ -134,12 +134,12 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')||list.includes('yama')?1:0,trial:!!S.trialOn,final:!!S.finalOn,rush:S.rushOn?S.rushN:0};if(nsc)S.ns.n+=nsc;if(wv){const nv=S.flags.nv||(S.flags.nv={});nv.wave=1;if(nsc)nv.scout=1;if(nightSideNow())nv.side=1}S.trialOn=false;S.finalOn=false;S.rushOn=false;if(typeof ngSpawn==='function')ngSpawn();/* 夜のたからさがし（nightglow.js） */
   if(WD===MIZU&&!S.flags.mizuFoeTold&&!S.free&&S.res.some(r=>r.name===MIO&&!r.hidden)){S.flags.mizuFoeTold=1;dialog([[MIO,'#scared|……霧のむこうから、なにか来る。'],[MIO,'#worry|影……。水の流れているところは、わたりにくいみたい。']],null,null,MIO)}/* 水：はじめての夜の影 */
   if(WD===WIND&&!S.flags.windFoeTold&&!S.free&&S.res.some(r=>r.name===KAZANE&&!r.hidden)){S.flags.windFoeTold=1;dialog([[KAZANE,'#surprise|……雲の海から、なにかのぼってくる。'],[KAZANE,'#think|影だ。風がもどって、目をさましたのかもしれないね。'],[KAZANE,'フッ……せっかくの遊び場だ。こわされるわけにはいかないさ。']],null,null,KAZANE)}/* 風：はじめての夜の影 */if(WD===TSUCHI&&typeof tsNightTold==='function')tsNightTold(list);/* 土：はじめて地われから来た夜（tsuchi-night.js） */
-  if(S.ns.rush&&WD===KUSA&&S.res.some(r=>r.name===POKO))dialog([[POKO,S.ns.rush===1?'#alarm big|守り神さま、見て……！ 影が、あんなにたくさん……！ 御神木を守らなきゃ！':'#think|ゆうべより、もっと多い……！ みんな、もうひと晩、がんばろう！']]);
+  if(S.ns.rush&&WD===KUSA&&S.res.some(r=>r.name===FUTABA))dialog([[FUTABA,S.ns.rush===1?'#alarm big|守り神さま、見て……！ 影が、あんなにたくさん……！ 御神木を守らなきゃ！':'#think|ゆうべより、もっと多い……！ みんな、もうひと晩、がんばろう！']]);
   else if(list.includes('yama'))dialog([[HOMURA,'守り神！ 火の山が、あばれてる……！'],[HOMURA,'「ヤマノオオカゲ」だ。温泉の熱をうばいに来るよ。'],[SHIZUKU,'温泉を、朝まで守りぬきましょう……！']],null,null,LEAD());
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる……！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた……！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
   else if(list.includes('boss2'))dialog(WD===KAZAN?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ……！'],[HOMURA,'今夜は「ヤマノオオカゲ」さ。みんな、気をつけな！']]:['守り神さま……！ いつもより、ずっと空気が重い……！','あれ……オオカゲより、ずっと大きい……！ みんな、家の中にかくれて！'],null,null,LEAD());
-  else if(list.includes('boss')&&WD===KUSA&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'#worry|守り神さま……！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm big|「オオカゲ」……「コワイノ」があつまった大きな影が、来るんだ。'],[POKO,'#sigh|思い出すと、今でも足がすくむ……。'],[POKO,'#think|でも、もう、にげない。みんなで、朝まで守りきろう。']],null,null,LEAD())}
+  else if(list.includes('boss')&&WD===KUSA&&!S.flags.bossTold&&S.res.some(r=>r.name===FUTABA)){S.flags.bossTold=1;dialog([[FUTABA,'#worry|守り神さま……！ ……この感じ。空気が、ずっしり重い。'],[FUTABA,'#alarm big|「オオカゲ」……「コワイノ」があつまった大きな影が、来るんだ。'],[FUTABA,'#sigh|思い出すと、今でも足がすくむ……。'],[FUTABA,'#think|でも、もう、にげない。みんなで、朝まで守りきろう。']],null,null,LEAD())}
   /* 火山では、オオカゲが来ることは知らせない（草原で話したので、くりかえさない） *//* 草原は、はじめての夜のフタバの知らせだけ。2回目からは知らせない */
 }
 // 出現場所：マップの南のはし（いちばん下の行）から。水・障害物・明かりの中はさける
@@ -393,7 +393,7 @@ function defeat(e,msg,r,by){if(e.dead)return;if(typeof tsBoneDown==='function'&&
   e.dead=true;S.kills++;if(e.scout)scoutDown(e);/* 先ぶれをたおすと、本隊がへる */if(e.shiny)shinyDrop(e);const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2;if(e.type==='boss2'){S.ns.b2=1;S.b2At={x:e.x,y:e.y}}}const n=D.pw||5;
   if(e.type==='hino'){S.flags.hinoDown=true;HINO_AT.set(S,[e.x,e.y]);}if(D.ash&&WD===KAZAN){const t=st2();t.ashKills=(t.ashKills||0)+1;if(!S.free){const left=CRACKS.filter(j=>S.obj[j]==='crack').length,lying=(S.drops||[]).filter(d=>d.id==='hai').length+S.res.reduce((a,q)=>a+((q.citem||{}).hai||0),0);if(left>(t.hai||0)+lying){const n0=(S.drops||[]).length;dropAt(e.x,e.y,'hai',1);if(S.drops.length>n0)S.drops[S.drops.length-1].tap=1}}}/* ハイカゲは、ひびわれが残っているあいだ、灰を落とす（せいれいがどこでもひろいに行く） */
   if(D.boss&&typeof letterQ==='function'){const L=S.res.filter(q=>!q.hidden);if(L.length)letterQ(pick(L),'boss',null,'',hour()<6?dayNo()-1:dayNo())}/* あの大きな影を追いはらった朝の手紙 */if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();if(e.type==='boss'&&!S.ookDay)S.ookDay=dayNo();if(S.bossKills>=2&&e.type==='boss')S.flags.winMorn=dayNo();/* 2回めからは、つぎの朝にみんなでよろこぶ（はじめての夜は、その場の会話） */logEv('オオカゲを追いはらった');omo('boss');memo('sword','オオカゲを追いはらった')}
-  if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&WD===KUSA&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;{const go=()=>performance.now()<BOSSHOLD?later(go,300):dialog([[POKO,'#joy big|……やった！ オオカゲを、追いはらったよ！','cheer'],[POKO,'#surprise|……あれ？ 手が、まだふるえてる……。'],...(S.res.some(r=>r.name===MINA)?[[MINA,'#joy|フタバ、すごかったねぇ。みんなで、村を守れたよぉ。'],[MINA,'ふるえるのは、それだけがんばったからだよぉ。こわかったのに、にげなかったもんねぇ。'],[POKO,'#cry|……うん。ノドカがいてくれたから、がんばれたんだ。'],[MINA,'#joy|今夜は、みんなでゆっくり休もうねぇ。'],[POKO,'#joy|うん！ みんな、ありがとう！']]:[[GOD,(GVOICE()||'#nod|')+'……ようやったのう、フタバ。ちゃんと見とったぞい。'],[GOD,'ふるえるのは、こわいのをこらえて、さいごまでふんばったしるしじゃ。'],[POKO,'#cry|……うん。こわかったけど、にげなかったよ。'],[GOD,'#joy|えらいぞ。今夜は、ゆっくり休むんじゃ。']])]);later(go,1200)}}/* 戦闘のあと：フタバのふるえ（かけらの話とは別）。追いはらいの演出で「進む」をおしてから */
+  if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&WD===KUSA&&S.res.some(r=>r.name===FUTABA)){S.flags.bossShake=1;{const go=()=>performance.now()<BOSSHOLD?later(go,300):dialog([[FUTABA,'#joy big|……やった！ オオカゲを、追いはらったよ！','cheer'],[FUTABA,'#surprise|……あれ？ 手が、まだふるえてる……。'],...(S.res.some(r=>r.name===NODOKA)?[[NODOKA,'#joy|フタバ、すごかったねぇ。みんなで、村を守れたよぉ。'],[NODOKA,'ふるえるのは、それだけがんばったからだよぉ。こわかったのに、にげなかったもんねぇ。'],[FUTABA,'#cry|……うん。ノドカがいてくれたから、がんばれたんだ。'],[NODOKA,'#joy|今夜は、みんなでゆっくり休もうねぇ。'],[FUTABA,'#joy|うん！ みんな、ありがとう！']]:[[GOD,(GVOICE()||'#nod|')+'……ようやったのう、フタバ。ちゃんと見とったぞい。'],[GOD,'ふるえるのは、こわいのをこらえて、さいごまでふんばったしるしじゃ。'],[FUTABA,'#cry|……うん。こわかったけど、にげなかったよ。'],[GOD,'#joy|えらいぞ。今夜は、ゆっくり休むんじゃ。']])]);later(go,1200)}}/* 戦闘のあと：フタバのふるえ（かけらの話とは別）。追いはらいの演出で「進む」をおしてから */
   if(D.boss&&WD===KAZAN&&!S.flags.sh_boss&&!S.drops.some(d=>d.id==='shard'))dropAt(e.x,e.y,'shard');/* 草原では、最後のバトルに勝ったときだけかけらが出る *//* オオカゲが落とすかけらは1つだけ */
   if(D.boss&&Math.random()<.25)dropAt(e.x,e.y,'mebuki');/* 25%で「めぶきのしずく」（カミサマからは買えない） */
   if(e.loot){for(const id in e.loot)dropAt(e.x,e.y,id,e.loot[id]);if(S.ns)for(const g of e.lootN||[]){const i=S.ns.lost.indexOf(g);if(i>=0)S.ns.lost.splice(i,1)}toast('カゲドロボウが、ぬすんだ物を落とした','good');e.loot=null}/* カゲドロボウをたおすと、ぬすんだ物を落とす（せいれいがひろって箱へ） */
@@ -470,7 +470,7 @@ function updTowers(dt){
 /* オオカゲの夜の前ぶれ：来る日の夕方は、空があやしい色になり、せいれいが不安そうに話す。追いはらった朝は、みんなでよろこぶ */
 let BOSSEVE=0;/* 前ぶれの空のこさ（0〜1） */
 function bossTonight(){return !!(S&&S.enemyOn&&!S.cleared&&!S.free&&!S.finalNight&&bossDays()==='オオカゲが来るまで：今夜')}
-function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=WD===KUSA?S.res.find(r=>r!==F&&!r.hidden&&r.name===POKO):S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}/* 草原：相手はフタバ（セリフがフタバの口調）。フタバがいない日は、この会話は出さない */
+function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=WD===KUSA?S.res.find(r=>r!==F&&!r.hidden&&r.name===FUTABA):S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}/* 草原：相手はフタバ（セリフがフタバの口調）。フタバがいない日は、この会話は出さない */
 function bossEveTick(h){BOSSEVE=h>=15&&h<23&&bossTonight()?1:0;
   if(BOSSEVE&&h>=17&&S.flags.eveD!==dayNo()&&$('#dialog').hidden&&!sheet){const p=evePair();if(!p)return;S.flags.eveD=dayNo();const[A,F]=p,again=(S.bossKills||0)>0;
     dialog(again?pickFresh('eveAgain',[/* 2回めからは、ひとことだけ */

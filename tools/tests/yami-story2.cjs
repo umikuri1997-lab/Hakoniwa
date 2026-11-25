@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
     window.__at=(d,h)=>{S.t=(d-1)*1440+h*60;S.hold=0};window.__morn=d=>{__at(d,5.99);for(let i=0;i<8&&!(hour()>=6&&hour()<7);i++)stepWorld(.5)};`);
   const r=JSON.parse(await run(`(async()=>{const out={};document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;const day0=Math.floor(S.t/1440)*1440;S.t=day0+10*60;S.hold=0;
     glHit(CX+2,CY+2,0);await __dlg();const t=S.res.find(x=>x.name===TOMORI);
-    const add=(n,el,dx)=>{const q=mkRes(S,n,el,CX+.5+dx,CY+3.5);q.came=dayNo();S.res.push(q);return q};add(HIIRO,'fire',1);add('ツチ','earth',2);add('コノハ','wood',3);add('ミナモ','water',-1);add('ソヨ','wind',-2);S.flags.minaCame=true;
+    const add=(n,el,dx)=>{const q=mkRes(S,n,el,CX+.5+dx,CY+3.5);q.came=dayNo();S.res.push(q);return q};add(HIIRO,'fire',1);add('ツチ','earth',2);add('コノハ','wood',3);add('ミナモ','water',-1);add('ソヨ','wind',-2);S.flags.nodokaCame=true;
     S.enemyOn=false;S.enemies=[];const Y=yamiState();Y.yj=(CY+6)*W+CX+5;S.flags.asayake=1;const qi=id=>questIndexOf(id);S.quest=qi('irana');S.qTalked=false;S.qStory=null;recount();
     /* 5：すわりこむ */for(let i=0;i<120&&!(t.act&&t.act.type==='ysit'&&t.act.stage==='do');i++)stepWorld(.5);out.sit=t.act&&t.act.type;out.r1=yamiR();
     await __day(()=>S.qTalked);out.iTalk=S.qTalked;render(performance.now());DLGTAP=performance.now();out.iTap=yamiTap(t.x,t.y-.3,t.x|0,t.y|0);await __dlg();out.irana=!!S.flags.irana;out.cr=Y.cr!=null;

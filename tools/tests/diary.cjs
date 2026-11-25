@@ -51,7 +51,7 @@ const assert=require('node:assert/strict');
   assert.equal(m.m,m.n+1,'morning() closes the diary');
   await run(`if(sheet)closeSheet()`);
   /* 絵日記：その日の絵（できた家具）と、その下のフタバの文 */
-  const f=JSON.parse(await run(`(async()=>{closeSheet();const a=S.res.find(r=>r.name===POKO);S.dy=null;dyWork(S.res[0],'build','bench');dyNoon(12);
+  const f=JSON.parse(await run(`(async()=>{closeSheet();const a=S.res.find(r=>r.name===FUTABA);S.dy=null;dyWork(S.res[0],'build','bench');dyNoon(12);
     const b=await new Promise(ok=>{const c=document.createElement('canvas');c.width=c.height=8;c.toBlob(ok,'image/jpeg')});const id=await phAdd({w:WD,d:S.dy.d,h:12,vn:'',at:1,b});S.dy.ph=id;S.dy.phK='built';S.dy.phN=BL.bench.name;S.dy.phP=2;
     diaryClose();clockStep(2000);const L=S.diary[S.diary.length-1];await new Promise(ok=>setTimeout(ok,600));
     return JSON.stringify({has:!!a,ft:L.ft,ph:L.ph,id,wx:L.wx,img:!!document.querySelector('#sheetBody .mdy .dyph img[src]'),first:BK.at===0&&BK.pages[0].classList.contains('mdy'),port:!!document.querySelector('#sheetBody .mdy .dyport'),tx:[...document.querySelectorAll('#sheetBody .mdy .dyTx')].map(x=>x.textContent).join(''),same:(()=>{const a=BK.pages.map(p=>p.querySelector('.dyTx')).filter(Boolean).map(x=>x.textContent).join('');closeSheet();MEMPG=0;openSheet('menu','record');const t=[...document.querySelectorAll('#sheetBody .mdy .dyTx')].map(x=>x.textContent);closeSheet();return !!a&&t.some(x=>x&&a.startsWith(x))})(),bn:BL.bench.name,body:document.querySelector('#sheetBody').textContent})})()`));
@@ -60,19 +60,19 @@ const assert=require('node:assert/strict');
   for(const t of f.ft)assert.ok(t.length<=60&&!/子|オオカゲ|タップ|最後の夜/.test(t),'line rules: '+t);
   console.log('Diary: picture diary with the new furniture and Futaba\'s lines');
   /* 大きなできごと（オオカゲを追いはらった）の日は、ふだんの絵のことより、そちらを書く */
-  const bw=JSON.parse(await run(`(()=>{closeSheet();const a=S.res.find(r=>r.name===POKO),R=[];for(let i=0;i<12;i++){const e={d:5,w:[],m:[],k:{},o:{},wx:'sun1',ns:{n:5,kill:5,lost:[],hurt:0,broke:0,boss:2},ph:1,phK:'see',phS:'quirk'},L=dyNote(e,a).join('');
+  const bw=JSON.parse(await run(`(()=>{closeSheet();const a=S.res.find(r=>r.name===FUTABA),R=[];for(let i=0;i<12;i++){const e={d:5,w:[],m:[],k:{},o:{},wx:'sun1',ns:{n:5,kill:5,lost:[],hurt:0,broke:0,boss:2},ph:1,phK:'see',phS:'quirk'},L=dyNote(e,a).join('');
     R.push(DYFULL.bossWin.some(A=>A.map((t,j)=>chatTone(t,a,j)).join('')===L))}return JSON.stringify(R)})()`));
   assert.ok(bw.every(Boolean),'boss night is written before the daily picture '+bw);
   console.log('Diary: the boss night comes before daily things');
   /* 同じできごとの日がつづいても、同じ日記はできない。同じ文も、しゅるいの文をぜんぶ使うまで出ない */
-  const u=JSON.parse(await run(`(()=>{closeSheet();const a=S.res.find(r=>r.name===POKO),T=new Set(),seen={};let dupT=0,dupL=0;S.dyU={};S.dyTx=[];
+  const u=JSON.parse(await run(`(()=>{closeSheet();const a=S.res.find(r=>r.name===FUTABA),T=new Set(),seen={};let dupT=0,dupL=0;S.dyU={};S.dyTx=[];
     for(let i=0;i<150;i++){const e={d:5,w:[[S.res[0].name,'earth',null,'build','bench',1]],m:[],k:{},o:{},wx:'sun1'},L=dyNote(e,a),t=L.join('|');if(T.has(t))dupT++;T.add(t);
       if(i<20){const o=L[0];if(seen[o])dupL++;seen[o]=1}}
     return JSON.stringify({dupT,dupL,n:T.size,o:DYOPEN.sun1.length})})()`));
   assert.equal(u.dupT,0,'no two diaries are the same');assert.ok(u.o<=20&&u.dupL<=20-u.o,'openers do not repeat until all are used');
   console.log('Diary: '+u.n+' different notes in a row');
   /* フタバがいないときは、ひとことも写真もない */
-  const g=JSON.parse(await run(`(()=>{closeSheet();const keep=S.res.slice();S.res=S.res.filter(r=>r.name!==POKO);S.dy=null;dyEv('いなくなったテスト');S.dy.ph=12345;diaryClose();clockStep(2000);const L=S.diary[S.diary.length-1];S.res=keep;closeSheet();return JSON.stringify({ft:L.ft||null,ph:L.ph||null})})()`));
+  const g=JSON.parse(await run(`(()=>{closeSheet();const keep=S.res.slice();S.res=S.res.filter(r=>r.name!==FUTABA);S.dy=null;dyEv('いなくなったテスト');S.dy.ph=12345;diaryClose();clockStep(2000);const L=S.diary[S.diary.length-1];S.res=keep;closeSheet();return JSON.stringify({ft:L.ft||null,ph:L.ph||null})})()`));
   assert.equal(g.ft,null,'no note without Futaba');assert.equal(g.ph,null,'no photo without Futaba');
   console.log('Diary: no note and no photo when Futaba is gone');
   /* 思い出帳の再生（MEMRUN）では書かない */

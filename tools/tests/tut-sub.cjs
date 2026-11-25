@@ -37,7 +37,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     return JSON.stringify({before,n,god:!!S.godGone,st:S.subSt.trade,done:S.subDone.trade,shop:!!S.feat.shop,first:last&&last[0][0],at:SUBQ.find(q=>q.k==='trade').at(),hint:last.some(l=>/ヌシの気配/.test(l[1]))})})()`));
   assert.deepEqual(bye,{before:0,n:1,god:true,st:4,done:1,shop:true,first:await run('GOD'),at:false,hint:true});
   /* おわりの会話：話すせいれいが村にいないときは、その行だけはぶく（Kと、くれた子と、カミサマはのこす） */
-  const pres=JSON.parse(await run(`(()=>{const keep=S.res.filter(r=>r.name!==MINA);const all=S.res;S.res=keep;const L=qPresent([[POKO,'a'],[MINA,'b'],['K','c'],[GOD,'d'],[FIXK0.fire,'e']],POKO).map(x=>x[1]);const L2=qPresent([[MINA,'b']],MINA).length;S.res=all;return JSON.stringify([L,L2,SUBQ.find(q=>q.k==='oracle').X.length])})()`));
+  const pres=JSON.parse(await run(`(()=>{const keep=S.res.filter(r=>r.name!==NODOKA);const all=S.res;S.res=keep;const L=qPresent([[FUTABA,'a'],[NODOKA,'b'],['K','c'],[GOD,'d'],[FIXK0.fire,'e']],FUTABA).map(x=>x[1]);const L2=qPresent([[NODOKA,'b']],NODOKA).length;S.res=all;return JSON.stringify([L,L2,SUBQ.find(q=>q.k==='oracle').X.length])})()`));
   assert.deepEqual(pres,[['a','c','d'],1,4],'absent speakers are skipped; oracle ending has 4 lines');
   assert.deepEqual(errors,[]);
   console.log('Trade/oracle are sub quests: old save migration by name, new game flow, other modes unaffected');
