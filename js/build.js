@@ -225,8 +225,9 @@ function removeAt0(x,y){const tx0=x,ty0=y;
     if(o==='matyard')return toast('材料置き場は、作りおわるとかたづきます');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');if(d.bp!=null&&typeof bpOfSite==='function'){const e=bpOfSite(j);if(e)return bpCancel(e)}siteRefund(d,j);clearObj(j);toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1,1);toast('植えるのをやめた')}
-    else{if(BOXCAP[o])boxStash(j,o);/* しまう家具：中身は散らさず、つぎに置いた同じ家具へ */clearObj(j);
-      if(LIGHTNAT[o]&&typeof juiceBreak==='function'){if(RMGH)RMGH.hit=1;fxSpr(o==='rock'||VEINS[o]?'rockbreak':'treefall',x*TS+16,y*TS+26);const wd=LIGHTNAT[o]==='wood'||LIGHTNAT[o]==='bamboo';juiceBreak(j,wd?'wood':'stone',null,1);if(wd&&cam.z>=homeZ()*.7&&typeof juiceShake==='function')juiceShake()}/* 木・岩をこわした：白く光ってふるえ、一瞬とまってから、かけらがとびちり、画面が小さくゆれる */
+    else{if(BOXCAP[o])boxStash(j,o);/* しまう家具：中身は散らさず、つぎに置いた同じ家具へ */
+      if(LIGHTNAT[o]){RMGH=null;if(typeof treeFall==='function')treeFall(j,o,null)}/* 木・岩：うきあがる写しは出さない。木は、せいれいが切りおえたときと同じに、たおれる（clearObj の前に。育ちぐあいの絵を使う） */clearObj(j);
+      if(LIGHTNAT[o]&&typeof juiceBreak==='function'){fxSpr(o==='rock'||VEINS[o]?'rockbreak':'treefall',x*TS+16,y*TS+26);juiceBreak(j,LIGHTNAT[o]==='wood'||LIGHTNAT[o]==='bamboo'?'wood':'stone',null)}/* 木・岩をこわした：せいれいが切った・ほったときと同じ手ごたえ（一瞬とまって、かけらがとびちる。岩は画面がゆれ、木はドンと地面についたときにゆれる） */
       if(b.natural){toast(b.name+'をかたづけた')}
       else if(FLOWERS.has(o)||o==='tree'||o==='fruit'){giveItem(o,1,1);toast(iname(o)+'をもらった')}/* 花・木をこわすと、種・苗がもどる */
       else if(o==='plot'||o==='farm'){giveItem('farm',1,1);toast('畑をもちものにもどした')}
@@ -357,7 +358,7 @@ function askStamp(sid,x,y){
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
   $('#confirmTxt').textContent=st.name+(s.parts.length?'・足りない分は'+SP(s.cost)+'で':'・おそなえ箱から');lackOn($('#cYes'),lackPt(s.cost));yesLbl('おく');($('#cRot').hidden=true,$('#confirm').hidden=false);
 }
-const SWAPG=[['fence','misugaki','ropefence','ashifence','ishigaki','rankan','sagafence','ibara','kuzure','logfence','bamboofence','parkfence','wall'],['hwall','bamboowall','canvaswall','acaciawall','timberwall','adobewall','canalwall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall'],['path','gravel','woodpath','stone','brick'],['floor','brickfloor','stonefloor','herrfloor','carpet']],SWAPTHRU=[new Set(['gate','stonegate','logdoor','sdoor']),new Set(['door','yozoradoor']),new Set(),new Set()],SWAPNO=['柵や塀ではありません','家の壁ではありません','道ではありません','床ではありません'];/* つけかえトンカチ：柵・塀／家の壁／道／床のなかま。ドア・門はとおりぬけて、その先もつけかえる。道・床は S.floor */
+const SWAPG=[['fence','misugaki','ropefence','ashifence','ishigaki','rankan','sagafence','ibara','kuzure','logfence','bamboofence','parkfence','wall'],['hwall','bamboowall','canvaswall','acaciawall','timberwall','adobewall','yakiwall','canalwall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall'],['path','gravel','woodpath','stone','brick'],['floor','brickfloor','stonefloor','herrfloor','carpet']],SWAPTHRU=[new Set(['gate','stonegate','logdoor','sdoor']),new Set(['door','yozoradoor']),new Set(),new Set()],SWAPNO=['柵や塀ではありません','家の壁ではありません','道ではありません','床ではありません'];/* つけかえトンカチ：柵・塀／家の壁／道／床のなかま。ドア・門はとおりぬけて、その先もつけかえる。道・床は S.floor */
 const swapT=(id,k)=>BL[id].floor?S.floor[k]:S.obj[k];
 function askSwap(id,x,y){const gi=SWAPG.findIndex(g=>g.includes(id)),G=SWAPG[gi],T=SWAPTHRU[gi],j0=y*W+x;
   if(!G.includes(swapT(id,j0)))return toast(SWAPNO[gi]);

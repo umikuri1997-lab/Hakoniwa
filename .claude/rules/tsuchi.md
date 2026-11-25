@@ -20,4 +20,4 @@ paths:
 - お話のおわり（`js/tsuchi-nushi.js`）：根になったあと、村で巣穴の南にトトの根（`tsroot`・`S.ts.rootJ`）。目標 `tsnushi`：つぎの日の昼（9〜16時）に根のそばへ集まり（`gatherAt`）、ハニが子どものあなぐま（`tsnushi`・`S.ts.haniNushi`）になって `S.res` から出る。目標がおわるとクリア（`tsClear`：`S.cleared`・`clearSnap`）。根とあなぐまは、こわせない・うつせない（`NOMOVE`）。
 - 地われをうめる（`tsuchi-bridge.js`）：石の大橋のあと、橋のとなりの行（北は `TSBRY-1`・南は `TSBR2Y+2`）から1行ずつ、北・南 `TSFILLROWS` 行まで（`tsFillRow`）。材料・時間は橋と同じ。できたマスは `S.ts.brd`。切りはなされた地われのマスは水になるので、帯の中をうめる（`tsRiftSeal`）。
 - 地ゆれ（`js/tsuchi-quake.js`）：橋のあと `TSQKEVERY` 日ごと（`S.ts.qk`）。前の日に知らせ、その日の昼に、ささえの柱（`tspillar`・土の家具）から `TSPILR` マスより遠い家の壁が `TSQKWALL` まいくずれ（`S.broken` に入る。夜のこわれと同じ）、がけのふもとに岩が落ちる。壁は `breakable` でないものもあるので、朽ちさせず、くずして建てなおす。
-- 粘土とやきもの（`js/tsuchi-yaki.js`）：谷の岩をほると砂岩のあと、持てる数がのこっていれば粘土 `TSNENDO`（`spirit-act.js` の mine）。粘土の窯（`tskama`・`PROC`）で粘土3こ→やきもの（`yaki`）1こ。やきものでつぼ（`tsubo`）。`yaki` は土以外では出ない（`NOMAT`）。かわら・土の壁は作っていない。
+- 粘土とやきもの（`js/tsuchi-yaki.js`）：谷の岩をほると砂岩のあと、持てる数がのこっていれば粘土 `TSNENDO`（`spirit-act.js` の mine）。粘土の窯（`tskama`・`PROC`）で粘土3こ→やきもの（`yaki`）1こ。やきものでつぼ（`tsubo`）。`yaki` は土以外では出ない（`NOMAT`）。やきれんがの壁（`yakiwall`。やきもの2・砂岩1・じょうぶさ42。絵は `windwall3d.py` → `iso_conn.py --chips` → `--cut --chips` の順）。かわら（屋根）は作らない（屋根はいまのまま。持ち主がきめた）。
