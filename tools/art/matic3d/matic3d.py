@@ -7,7 +7,8 @@
   竹：竹3本。太さ0.10（半径0.05）・長さ0.62。木材と同じ向きにねかせ、下に2本・上に1本。節は0.16ごと（ふくらんだ輪・こい緑）。
         手前のはしは切り口（うすい緑のふち・中は空洞のこい色）。まん中を、ひも（茶色、太さ0.012）で1まわりしばる。
   python3 tools/art/matic3d/matic3d.py <出力フォルダ>            # 絵（<名前>.png・<名前>_x10.png）を書き出す
-  python3 tools/art/matic3d/matic3d.py <出力フォルダ> --icon     # assets/g に入れ、js/draw-spirits.js の ICONS に書く"""
+  python3 tools/art/matic3d/matic3d.py <出力フォルダ> --icon     # assets/g に入れ、js/draw-spirits.js の ICONS に書く
+  python3 tools/art/matic3d/matic3d.py <出力フォルダ> wood --icon   # 木材だけ"""
 import sys,os,io,re,math,hashlib
 D=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(D,'..');ROOT=os.path.join(ART,'..','..')
 sys.path.insert(0,ART);sys.path.insert(0,os.path.join(ART,'furn3d'));sys.path.insert(0,os.path.join(ART,'furn3d','items'))
@@ -41,7 +42,7 @@ def rings(a,e,R):
         return LOGEND
     return f
 class Wood:
-    GRAD=True;TONE5=True;BOTTOM=0;ELEV=25
+    GRAD=True;TONE5=True;BOTTOM=0;ELEV=25;STREAK=(0.4,0.25,2)   # 樹皮のすじ：2だんこく（持ち主がえらんだ）
     @staticmethod
     def PARTS():
         L=[];R=0.085
@@ -101,6 +102,8 @@ def icon(k,im):
     s=s[:m.start()]+"%s:'%s'"%(k,name)+s[m.end():];open(js,'w',encoding='utf-8').write(s);print('アイコン',k,name,im.size)
 if __name__=='__main__':
     out=sys.argv[1];os.makedirs(out,exist_ok=True)
+    names=[a for a in sys.argv[2:] if not a.startswith('--')]   # 名前を書けば、その物だけ（例：wood）
     for k,M in ITEMS.items():
+        if names and k not in names:continue
         im=render(M);im.save(os.path.join(out,k+'.png'));im.resize((im.width*10,im.height*10),Image.NEAREST).save(os.path.join(out,k+'_x10.png'));print(k,im.size)
         if '--icon' in sys.argv:icon(k,im)

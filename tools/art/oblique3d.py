@@ -48,6 +48,10 @@ class Scene:
         """これから足す部品の名札。join(a, b) した名札の部品どうしのさかいには、render_px で線を引かない（つづいている1まいの板など）"""
         self.tcur2 = t
     def join(self, a, b): self.joins.add(frozenset((a, b)))
+    def over(self, a, b):
+        """部品 a は、となりの部品 b より手前（さかいの線は、いつも b のがわに引く）。まるい切り口とそのまわりの皮のように、ふちの点の奥行きが行ごとに入れかわって、線が切り口へとびこむ所に使う"""
+        if not hasattr(self, 'overs'): self.overs = set()
+        self.overs.add((a, b))
     def part(self):
         self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
         if self.tcur2 is not None: self.tg[self.pid] = self.tcur2
@@ -486,6 +490,8 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         nid[yd, xd] = idb[ys, xs]; nz[yd, xd] = zb[ys, xs]
         tie = np.abs(zb-nz) < 1e-4*S                                           # 同じ高さでならぶ板（ぴったりつけた板のさかい）は、番号の小さいほうに線
         far = (idb >= 0) & (nid >= 0) & (nid != idb) & ((zb < nz) & ~tie | tie & (idb < nid))   # となりの部品のほうが手前
+        for a_, b_ in getattr(sc, 'overs', ()):   # sc.over(a, b)：a と b のさかいの線は、いつも b のがわ
+            far[(idb == a_) & (nid == b_)] = False; far[(idb == b_) & (nid == a_)] = True
         far &= ~np.isin(nid, list(noline)) if noline else True
         if sc.grp:
             G = np.full(sc.pid+2, -1); gi = {}

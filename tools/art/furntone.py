@@ -46,13 +46,16 @@ def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK,three=False,dw=None,world=None):
     grad=body&(gr>0.05)&(gr<3)   # あみかけは、明るさがなめらかにかわる所（まるい面）だけ。平らな面がまるごと、さかいめの近くにあっても、あみにしない
     dw=DW3 if three else (DW if dw is None else dw);lv[(fr<dw)&ck&grad]-=1;lv[(fr>1-dw)&~ck&grad]+=1
     tx=body&np.isin(ids,list(getattr(O,'LAST_TX',())) or [-9])
-    for sgn,k_ in ((-1,streak[0]),(1,streak[1])):   # 木目のすじ：いちばん強い所だけ、1だん（細長いすじだけ）
+    for sgn,k_ in ((-1,streak[0]),(1,streak[1])):   # 木目のすじ：いちばん強い所だけ（細長いすじだけ）。かえる段は1、streak の3つめがあれば、その数（樹皮など、こいすじ）
         if k_<=0 or tx.sum()<8:continue
         from scipy.ndimage import label
-        thr=np.quantile(sgn*dd[tx],1-k_);lab,_=label(tx&(sgn*dd>=thr))
+        thr=np.quantile(sgn*dd[tx],1-k_);lab,_=label(tx&(sgn*dd>=thr),structure=np.ones((3,3)))   # ななめにつづくドットも、1本のすじ
         for i_,sl in enumerate(find_objects(lab),1):
-            hh,ww=sl[0].stop-sl[0].start,sl[1].stop-sl[1].start
-            if max(hh,ww)>=3 and max(hh,ww)>=2*min(hh,ww):lv[sl][lab[sl]==i_]+=sgn
+            yy_,xx_=np.nonzero(lab[sl]==i_)
+            if len(yy_)<3:continue
+            ev=np.linalg.eigvalsh(np.cov(np.vstack([yy_,xx_]).astype(float))) if len(yy_)>1 else np.zeros(2)   # 細長さは、すじの向きにそってはかる（ななめのすじも、すじとして残す。外わくの四角ではかると、ななめの丸太の木目が消えた）
+            Lmaj,Lmin=math.sqrt(12*max(ev[1],0))+1,math.sqrt(12*max(ev[0],0))+1
+            if Lmaj>=3 and Lmaj>=2*Lmin:lv[sl][lab[sl]==i_]+=sgn*(streak[2] if len(streak)>2 else 1)
     lv[LN2&tgt]-=1
     lv=np.clip(lv,1,3).astype(int) if three else np.clip(lv,0,4).astype(int)
     for y,x in zip(*np.nonzero(tgt)):

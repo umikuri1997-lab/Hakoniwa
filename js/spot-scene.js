@@ -31,11 +31,11 @@ function spotScene(e,ready){/* e：SPOT_POPS の1つ。ready(back)：カード�
   musicDuck(6500);if(typeof hdBig==='function')hdBig(4200);
   sc.cam=camAnim={fz:cam.z,tz,fx:back.x,fy:back.y,tx:cx,ty:cy-TS*.8,t:0,dur:1.1,done:()=>{if(!ok())return;
     const n=B.A.length,tRun=700,tPop=tRun+120,tBig=tPop+n*SPOTSCN_POP+200,tCard=tBig+1900;
-    scnAdd('spotline',tCard+400,Object.assign({run:tRun/(tCard+400)},B));sfx('chime');
+    scnAdd('spotline',tCard+400,Object.assign({run:tRun/(tCard+400)},B));sfx('firstput');
     B.A.forEach((a,i)=>at(tPop+i*SPOTSCN_POP,()=>{const x=(a%W+.5)*TS,y=((a/W)|0)*TS+16-B.z,o=S.obj[a];if(o)LANDFX.set(a,performance.now());/* ぽんとはねる */
-      scnAdd('glow',700,{x,y:y-6,r:22,col:'#fff6c8'});scnAdd('ring',650,{x,y,r0:4,r1:22,col:'#ffe48a',a:.9});sfx('tink')}));
+      scnAdd('glow',700,{x,y:y-6,r:22,col:'#fff6c8'});scnAdd('ring',650,{x,y,r0:4,r1:22,col:'#ffe48a',a:.9});sfx('firstput')}));
     at(tBig,()=>{const bx=cx,by=B.Y+B.Hd*.75;scnAdd('spotpillar',2400,{x:bx,y:by,w:Math.max(26,Math.min(48,B.Wd*.4)),h:TS*7});scnAdd('spotconf',2600,{x:bx,y:by-TS*.5,n:80});scnAdd('spotconf',2400,{x:bx,y:by-TS,n:40},250);scnAdd('spotstars',2800,{X:B.X-TS,Y:B.Y-TS,Wd:B.Wd+TS*2,Hd:B.Hd+TS*2,n:16});
-      scnAdd('ring',900,{x:bx,y:by,r0:8,r1:Math.max(40,B.Wd*.7),col:'#fff6c8',a:1});scnAdd('ring',1100,{x:bx,y:by,r0:6,r1:Math.max(30,B.Wd*.55),col:'#ffd0e0',a:.8},180);sfx('level');
+      scnAdd('ring',900,{x:bx,y:by,r0:8,r1:Math.max(40,B.Wd*.7),col:'#fff6c8',a:1});scnAdd('ring',1100,{x:bx,y:by,r0:6,r1:Math.max(30,B.Wd*.55),col:'#ffd0e0',a:.8},180);sfx('firstput');
       const now=performance.now(),mx=(B.x0+B.x1+1)/2,my=(B.y0+B.y1+1)/2;/* 近くの、起きているせいれいが、そちらを向いてよろこぶ */
       for(const r of S.res){if(r.hidden||Math.hypot(r.x-mx,r.y-my)>8)continue;const a=r.act;if(a&&(a.type==='sleep'||a.type==='faint'))continue;if(Math.abs(r.x-mx)>.3)r.face=r.x<mx?1:-1;JUMP.set(r,now+Math.random()*250);JOYU.set(r,now+2200);villageTimeout(()=>JUMP.set(r,performance.now()),650+Math.random()*250)}});
     at(tCard,()=>ready(done=>{if(!ok()){if(done)done();return}sc.cam=camAnim={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1,done:()=>{if(SPOTSCN===sc)SPOTSCN=null;if(done)done()}}}))}}}
