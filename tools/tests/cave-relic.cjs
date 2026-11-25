@@ -33,7 +33,7 @@ const assert=require('node:assert/strict');
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
   assert.equal(r.chips,true,'10の道具の家具とチップ');assert.equal(r.n,10);assert.deepEqual(r.rel,['kui','bin','suisho','tsuru','ningyo','kagami','fuigo','nafuda','sekiban','suzu'],'階ごとの道具（STORY.md）');
-  assert.deepEqual(r.found,['kui:true','bin:true','suisho:true','tsuru:true','ningyo:true','kagami:true','fuigo:true','nafuda:true','sekiban:true'],'地図のある階では、手がかりの物から道具が見つかる');
+  assert.deepEqual(r.found,['kui:true','bin:true','suisho:true','tsuru:true','ningyo:true','kagami:true','fuigo:true','nafuda:true','sekiban:true','suzu:true'],'地図のある階では、手がかりの物から道具が見つかる');
   assert.equal(r.rec,true,'もちものと図鑑に入る');assert.equal(r.on,true);assert.equal(r.again,true,'同じ道具は1回だけ');
   assert.equal(r.suisho,true,'からの水晶');assert.equal(r.bin,true,'黒い水のびん');assert.equal(r.nafuda,true,'名ふだ');assert.equal(r.suzu,true,'ゆりかごのすず');assert.equal(r.fuigo,+(.13+.05).toFixed(3),'炉のふいご：8階0.13');
   assert.deepEqual(r.zk,[10,10,3,14],'図鑑の数');assert.equal(r.zkTx,true,'図鑑に出る');
