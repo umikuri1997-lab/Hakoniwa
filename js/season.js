@@ -9,7 +9,7 @@ const ANNIV=[10,30,50,100,200,365];
 function seasonOf(d){return Math.floor(Math.max(0,d-1)/SEASONDAYS)%4}
 function seasonNow(){return S?seasonOf(dayNo()):0}
 const snowNow=()=>seasonNow()===3&&!!S.rain;
-function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;if(typeof splaySeason==='function')splaySeason();if(seasonOf(d)===3)S.flags.winter1=1;const n=SEASONS[seasonOf(d)];memo('',n+'になった');if(seasonOf(d)!==3)S.snowm=[];/* 雪だるまは、冬がおわるととける */later(()=>toast(n+'になった　'+SEAFXT[seasonOf(d)],'good'),900)}
+function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;if(typeof splaySeason==='function')splaySeason();if(seasonOf(d)===3){S.flags.winter1=1;winterPrepCheck()}/* 冬になる朝：冬じたくが足りていたか */const n=SEASONS[seasonOf(d)];memo('',n+'になった');if(seasonOf(d)!==3)S.snowm=[];/* 雪だるまは、冬がおわるととける */later(()=>toast(n+'になった　'+SEAFXT[seasonOf(d)],'good'),900);if(seasonOf(d)===2&&WD===KUSA)later(()=>toast('秋のおわりまでに、冬じたく：まき'+WPWOOD+'・食料'+WPFOOD+'をためよう','good'),3200)}
 /* 粒：画面の中の場所（0〜1）。p：ゆれ、s：速さ、c：色 */
 const SEAP=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.5,1),c:Math.random()}));
 const SEACOL=[['#f7c4d6','#f3aec5','#fbe0ea'],null,['#f6a650','#ec6f45','#f5d25a','#e2884a'],['#ffffff','#f1f6ff','#e4eefb']];
@@ -71,3 +71,11 @@ ACT_LBL.snowman='雪だるまを作っている';IDLE_ACTS.push('snowman');
 function snowDraw(add,vis,ctx){/* 奥行きの順に、ほかの物といっしょに描く */if(!S||!S.snowm||!S.snowm.length||seasonNow()!==3||!SNOWSPR.ok)return;const Z=SNOWSPR;
   for(const m of S.snowm){const j=m.j;if(S.obj[j]||S.floor[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.8};if(!vis(o))continue;const px=o.x*TS,fy=o.y*TS-(S.hi?liftOf(j):0)-(typeof snowHop==='function'?snowHop(j):0),g=Math.max(0,Math.min(Z.n-1,m.g|0));
     add(o.y,2,[px-12,fy-30,px+12,fy+4],()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(Z.img,g*Z.w,0,Z.w,Z.h,px-Z.ax/2,fy-Z.ay/2,Z.w/2,Z.h/2);ctx.imageSmoothingEnabled=sm},j)}}
+
+/* ---------- 冬じたく：秋のおわり（冬になる朝）に、まき（木材）WPWOOD 以上・食料 WPFOOD 以上あればじゅうぶん。足りないと、その冬のあいだ、せいれいのおなかのへりが、いつもの数に WPLESS ふえる（spirit-work.js）。秋のあいだは、目標の欄に進みぐあいを出す。草原だけ。S.wprep={k:季節の番号,ok} ---------- */
+const WPWOOD=60,WPFOOD=100,WPLESS=.05;
+function winterPrepOn(){return !!S&&WD===KUSA&&!S.free&&!IS_STORY_REPLAY}
+function winterPrepNote(){return winterPrepOn()&&seasonNow()===2?'冬じたく まき'+Math.min(WPWOOD,Math.floor(S.mat.wood||0))+'/'+WPWOOD+'・食料'+Math.min(WPFOOD,Math.floor(S.food||0))+'/'+WPFOOD:''}
+function winterPrepCheck(){if(!winterPrepOn())return;const w=Math.floor(S.mat.wood||0),f=Math.floor(S.food||0),ok=w>=WPWOOD&&f>=WPFOOD;S.wprep={k:seasonKey(),ok};dirty=true;
+  later(()=>toast(ok?'冬じたくは、じゅうぶん！ まきと食べ物で、冬をこせそう':'冬じたくが足りなかった（まき'+w+'/'+WPWOOD+'・食料'+f+'/'+WPFOOD+'）。冬のあいだ、おなかのへりが早くなる','warn'),2000)}
+function winterShort(){return !!S&&seasonNow()===3&&!!S.wprep&&S.wprep.ok===false&&S.wprep.k===seasonKey()?WPLESS:0}/* 冬じたくが足りなかった冬の、おなかのへりの足し */

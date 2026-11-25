@@ -237,6 +237,7 @@ function render(now){RFN++;hdFrame();
   if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,x+y-.99)}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
   if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
+  if(typeof pickTick==='function'){pickTick(now);const P=PICKH;if(P&&P.dig&&!P.done)add(P.y,-1,null,()=>drawPickCrack(now),P.j,false,P.x+P.y-.97)}/* こわす：ブロック・地面の長おし（build.js）。ひびは、そのマスのブロック・雪のすぐあと（手前のブロックや物が上にかさなる） */
   {/* 足もとをきめて、x+y の小さい順（うしろから） */
     if(S.sacredRoot!=null&&WD===KUSA&&!S.free&&!S.obj.includes('tower')){const j=S.sacredRoot,x=j%W,y=(j/W)|0;if(S.obj[j]!=='site')add(y+4,1,null,()=>drawSacredRoot(now),j,objFoot(x,y,4,4,j),x+y+4.3)}/* 御神木の切り株：まわりの4×4のまん中の順 */
     for(const it of D){if(it.A===undefined)it.A=it.box?ptFoot((it.box[0]+it.box[2])/2,it.k*TS):it.own>=0?objFootJ(it.own):false;
@@ -256,7 +257,6 @@ function render(now){RFN++;hdFrame();
   if(S.summon&&!calledToday()&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='20px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
   
   BUBQ=null;const bubLate=darkness()>0&&!(typeof sacredPlayActive==='function'&&sacredPlayActive());/* 夜は、ふきだしを暗さの上に描く（夜も明るく見える） */if(!bubLate)for(const f of bubs)f();if(typeof drawSacredPlay==='function'&&sacredPlayActive())drawSacredPlay(now);/* 守り神の出番は、せいれいより上に */else drawFieldStory(now,true);drawSacredQuiet(now);drawSacredScenes(now);/* 見せ場の光は、ふきだしより上 */drawOmoiBub(now);drawPrintMarks(now);
-  if(typeof pickTick==='function'){pickTick(now);drawPickCrack(now)}/* こわす：ブロック・地面の長おし（build.js） */
   if(typeof REFUSE!=='undefined'&&REFUSE.length)drawRefuse(now);/* ことわったマスのわく（build.js） */
   for(const[j,ht]of NATHIT){if(now-ht>4000||!LIGHTNAT[S.obj[j]]){NATHIT.delete(j);continue}const v=Math.max(0,1-(S.hp['lp'+j]||0)/NATG[S.obj[j]]),a=Math.min(1,(4000-(now-ht))/600),bx=(j%W)*TS+3,byy=natBarY(j);/* 守りの光をあてた木・岩・せいれいが切っている木・ほっている岩の、のこりのバー（高いマスでは持ち上げる） */
     {const A=objFootJ(j);standTf(ctx,k,A.fx,A.fy,A.px,A.py)}ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle='#ffe58a';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);ctx.globalAlpha=1;groundTf(ctx,k)}

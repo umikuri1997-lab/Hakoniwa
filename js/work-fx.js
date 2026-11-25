@@ -64,7 +64,7 @@ function boxAct(r){const a=r.act;return a&&!r.nap&&!(typeof onHold==='function'&
 /* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
 function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
 /* 取る・置く物の高さ：上から入れる物（ふちが顔の高さ）は背のびして storeh、前から入れる家具は胸の高さへ storem、地面の物（神殿のまえの山・材料置き場など）は、しゃがむ store */
-const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
+const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['tskama','makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
 function boxReach(a){const t=boxTarget(a);if(t<0)return'';const id=boxTypeAt(t)||S.obj[anc(t)];return BOXHI.has(id)?'storeh':BOXMID.has(id)?'storem':''}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
@@ -91,8 +91,11 @@ function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=type
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
 const POURU=new WeakMap();/* 水やり：1回3秒の音（pourl）を、おわる0.4秒まえに、つぎをかさねて、とぎれずにつづける */
-function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);sfxLow('pourl',r.x,r.y)}
-function workBeat(r,nm,t,p){if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
+const POURS=new WeakMap();/* その子が鳴らしている水やりの音（かさなる所で2つ） */
+function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);POURLAST=null;sfxLow('pourl',r.x,r.y);if(POURLAST){const L=(POURS.get(r)||[]).slice(-1);L.push(POURLAST);POURS.set(r,L);POURLAST=null}}
+function pourHush(r){const L=POURS.get(r);if(L){L.forEach(pourCut);POURS.delete(r)}POURU.delete(r)}/* 作業が止まったら、鳴っている水の音も、すっと消す */
+/* 話している・場面で止められている子（onHold）と、村の時間が止まっているときは、作業が進まないので音を鳴らさない（話しているあいだ、水やりの音が鳴りつづけた） */
+function workBeat(r,nm,t,p){if(typeof onHold==='function'&&onHold(r)||typeof paused==='function'&&paused()){WBEATP.delete(r);pourHush(r);return}if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
   for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxLow(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);const nat=(nm==='chop'||nm==='mine')&&r.act&&r.act.obj!=null;if(nat&&typeof natJolt==='function')natJolt(r.act.obj,(r.act.obj%W+.5)>=r.x?1:-1);/* 木・岩は、たたくたびに、たたかれた向きへゆれる。木くず・石のかけらも毎回 */if(fx&&(nat||Math.random()<.5)){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
 /* できあがり：1回だけ、ぽん・きらきら */
 function workShowStart(r,a){a.sh=0;r.bubble='';/* 頭の上の物とかさならないように */sfxAt('workdone',r.x,r.y);fxSpr('twinkle',r.x*TS,(r.y-.9)*TS)}

@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2377;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2413;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -87,7 +87,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     const hide=!open;/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
-    if(play&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
+    if(play&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?(k===TSUCHI?'・あたらしいヌシ様が生まれた':'・ヌシ様が帰ってきた！'):'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k>=3&&!(open&&play))info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
     if((k===TSUCHI||k===WIND)&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';if(k===MIZU&&!(L&&L.introSeen))info=wd.desc;
@@ -126,7 +126,7 @@ let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
 let tutCache={k:'',t:0,v:null};
 function craftHintEl(){/* 依頼ボードのしぼりこみで、さがす物がかくれているとき、もとにもどす所をさす */if(craftCan)return[document.querySelector('.cfind .cnow'),'「いま作れる」をタップ'];if(craftQ)return[document.getElementById('craftQ'),'さがす名前をけそう'];const cp=document.getElementById('craftPop');if(cp)return[cp.querySelector('.clr'),'「けす」をタップ'];return[document.querySelector('.cfind .cflt'),'「しぼりこみ」をタップ']}
-function orderTut(id){if(sheet){if(sheet!=='craft'||inv(id)>0||S.orders.some(o=>o.type===id))return{kind:'close'};return craftInTag(id)&&!craftQ&&(!craftCan||canMakeNow(id))?{kind:'row'}:{kind:'tab'}}if(inv(id)>0)return{kind:'place'};if(S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
+function orderTut(id){const away=madeAway(id)>0;/* できて、はこんでいるあいだは、もうたのまない */if(sheet){if(sheet!=='craft'||inv(id)>0||away||S.orders.some(o=>o.type===id))return{kind:'close'};return craftInTag(id)&&!craftQ&&(!craftCan||canMakeNow(id))?{kind:'row'}:{kind:'tab'}}if(inv(id)>0)return{kind:'place'};if(away||S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
 function tutView(){/* 画面のうち、上のバーと下のパネルにかくれていない所 */const ar=$('#app').getBoundingClientRect(),q=$('#questChip').getBoundingClientRect();let b=$('#botUI').getBoundingClientRect().top;const ii=$('#itemInfo');if(!ii.hidden){const t=ii.getBoundingClientRect().top;if(t>0)b=Math.min(b,t)}return[30,q.bottom-ar.top+50,VW-30,b-ar.top-100]}
 function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=(w=>[Math.floor(w.x/TS-sz[0]/2+.5),Math.floor(w.y/TS-sz[1]/2+.5)])(toWorld(V[0]+(V[2]-V[0])*.72,V[1]+(V[3]-V[1])*.66));/* 画面の右下のマス（まん中だとじゃまなので） */
   const k=S.quest+':'+id+':'+vc;if(tutCache.k===k&&performance.now()-tutCache.t<1500)return tutCache.v;let v=null;
@@ -165,7 +165,7 @@ function updTut(){
   else if(qt==='statue'){if(WD===KUSA&&RUINT>=0&&S.obj[RUINT]==='statueb'&&!sheet)lookAt([(RUINT%W+.5)*TS,((RUINT/W)|0)*TS-24],'こわれた神殿をタップ');else if(WD===KUSA&&STATUE<0&&RUINT<0&&!S.obj.includes('site'))placeHint('statue')}/* 操作の案内は1章だけ */
   else if(qt==='springA'){if(inv('hotstone')>0)placeHint('hotstone')}
   else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&(el.disabled||el.classList.contains('lack'))?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
-  else if(qt==='stor'&&sheet==='craft'&&S.orders.some(o=>o.type==='crate')&&inv('crate')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
+  else if(qt==='stor'&&sheet==='craft'&&(S.orders.some(o=>o.type==='crate')||madeAway('crate')>0)&&inv('crate')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
   else if(qt==='farm6'){if(inv('farm')>0)placeHint('farm')}
   else if(qt==='imoseed'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
     else if(!(sel==='seed:imo'&&cseed('imo')>0)){const c=[...document.querySelectorAll('#palItems .chip')].find(b=>b.textContent.includes(CROPS.imo.name+'のたね')&&!b.classList.contains('zero'));if(c){el=c;lbl='たねをえらぶ'}else{el=$('#palMore');lbl='ほかをえらぶ'}}
@@ -180,7 +180,7 @@ function updTut(){
   }
   else if(qt==='stor'){const bid='crate',bn=BL[bid].name;
     if(inv(bid)>0)placeHint(bid);
-    else if(!S.orders.some(o=>o.type===bid)){
+    else if(!S.orders.some(o=>o.type===bid)&&!madeAway(bid)){
       if(sheet==='craft'){if(!craftInTag(bid)||craftQ||craftCan&&!canMakeNow(bid)){[el,lbl]=craftHintEl()}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
@@ -188,7 +188,7 @@ function updTut(){
   else if(qt==='bed'){/* はじめのベッド：はたおり機を置く → はたおり機をタップして布をたのむ → 依頼ボードでベッドをはる → 家の中に置く */
     const pp=document.getElementById('prPop'),L=S.obj.indexOf('loom'),busy=L>=0&&loomWait();
     if(inv('bed')>0){if(pp){el=pp.querySelector('.x');lbl='とじる'}else placeHint('bed')}
-    else if(S.orders.some(o=>o.type==='bed')){if(sheet==='craft'){el=$('#sheetX');lbl='依頼ボードをとじる'}}
+    else if(S.orders.some(o=>o.type==='bed')||madeAway('bed')>0){if(sheet==='craft'){el=$('#sheetX');lbl='依頼ボードをとじる'}}
     else if((S.mat.nuno||0)>0){const g=orderTut('bed');if(pp){el=pp.querySelector('.x');lbl='とじる'}else if(g&&g.kind==='close'){el=$('#sheetX');lbl='とじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.bed.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'ベッドの「はる」をタップ'}}
     else if(nunoLying()){if(pp){el=pp.querySelector('.x');lbl='とじる'}}/* 布はもうおった。箱がいっぱいで地面にあるときは、はたおり機をささない */
     else if(L<0){if(inv('loom')>0)placeHint('loom')}
