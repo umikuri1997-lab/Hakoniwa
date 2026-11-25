@@ -76,8 +76,23 @@ def main():
     used0 = {v for d in old.values() for v in d.get('s', {}).values()}
     new = {k: v for k, v in old.items() if k in MOTIONS and (add or k not in names)}
     jobs = [(n, e) for n in names for e in els]
-    with Pool(min(4, os.cpu_count() or 1)) as pool:
-        for name, el, raw, geo, eye, hd in pool.imap_unordered(job, jobs):
+    cache = os.environ.get('SPIRIT_CACHE')   # 仕事ごとの結果をとっておく所（とちゅうで止まっても、つづきから）
+    if cache: os.makedirs(cache, exist_ok=True)
+    ck = lambda n, e: os.path.join(cache, ('iso_' if iso else '')+n+'_'+e+'.pkl')
+    done = []
+    if cache:
+        import pickle
+        for n, e in list(jobs):
+            if os.path.exists(ck(n, e)): done.append(pickle.load(open(ck(n, e), 'rb'))); jobs.remove((n, e))
+    def results():
+        yield from done
+        with Pool(min(4, os.cpu_count() or 1)) as pool:
+            for r in pool.imap_unordered(job, jobs):
+                if cache:
+                    import pickle; pickle.dump(r, open(ck(r[0], r[1]), 'wb'))
+                yield r
+    if True:
+        for name, el, raw, geo, eye, hd in results():
             src = 'assets/g/'+hashlib.sha1(raw).hexdigest()[:10]+'.webp'; open(os.path.join(ROOT, src), 'wb').write(raw)
             d = new.setdefault(name, {'n': MOTIONS[name]['n'], 'r': MOTIONS[name]['rate'], 's': {}, 'g': {}, 'e': {}, 'h': None})
             d['s'][el] = src; d['g'][el] = geo; d['e'][el] = eye
