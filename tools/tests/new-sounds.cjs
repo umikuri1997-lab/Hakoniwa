@@ -1,4 +1,4 @@
-/* 手もとの音（本物の録音）：うけとった・たっせい・はじめて置いた・ひろった物の音（材質ごと）・はしご・弓・きのこ・水やりのつづく音・畑の動き・ちょう・図鑑・ボタンでない所のタップ・コワイノの足音・流れ星 */
+/* 手もとの音（本物の録音）：うけとった・たっせい・スポット・ひろった物の音（材質ごと）・はしご・弓・きのこ・水やりのつづく音・畑の動き・ちょう・図鑑・ボタンでない所のタップ・コワイノの足音・流れ星 */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await boot();
 await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume();if(sheet)closeSheet()})()`);/* まん中の御神木をクリックしてひらいた画面をとじる（ひらいたままだと村が止まり、音が鳴らない） */
@@ -11,7 +11,7 @@ const out=await run(`(()=>{const o={},name=b=>{for(const k in SBUF)if((SBUF[k]||
  clr();S.drops=[];S.mat=S.mat||{};takeDrop({id:'mat:wood',x:cx,y:cy,n:1},r);o.takeDrop=n('twood')>=1&&n('joyc')===0;/* せいれいが拾った知らせは、ちりりんを鳴らさない */
  clr();sfx('tpuni');o.puni=n('tpuni')===1;clr();sfx('bowdraw');o.bow=n('bowdraw')===1;clr();sfx('starkira');o.kira=n('starkira')===1;
  /* うけとった・たっせい・はじめて置いた：持ち主がえらんだ鉄琴とチャイムの録音（作った音・前の鈴は鳴らさない） */
- clr();sfx('gift');o.gift=n('rwget')===1&&n('joyc')===0;clr();sfx('quest');o.quest=n('rwlevel')===1;clr();sfx('level');o.level=n('rwlevel')===1;clr();j3FirstSnd();o.first=n('rwfirst')===1&&n('tink')===0&&n('starkira')===0;clr();sfx('workdone');o.wdone=n('wdone')===1;
+ clr();sfx('gift');o.gift=n('rwget')===1&&n('joyc')===0;clr();sfx('quest');o.quest=n('rwlevel')===1;clr();sfx('level');o.level=n('rwlevel')===1;clr();sfx('firstput');o.first=n('rwfirst')===1&&n('tink')===0&&n('starkira')===0;clr();sfx('workdone');o.wdone=n('wdone')===1;
  /* 水たまりですべる：効果音ラボの「シャッ、シャッ」 */
  {const rp=rainPud;window.rainPud=()=>true;r.slipJ=-1;r.slipT=0;clr();rainSlip(r);o.slip=n('slip')===1;window.rainPud=rp;r.slipT=0;r.slipJ=-1}
  /* 水やり：3秒の音を、つづけて重ねる（すぐ2回よんでも1つだけ） */

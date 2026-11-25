@@ -122,7 +122,7 @@ def shoot(sp, face, p):
                 o = np.lexsort((z, j)); j, z, cc = j[o], z[o], cc[o]; last = np.r_[j[1:] != j[:-1], True]; j, z, cc = j[last], z[last], cc[last]
                 if nm in ('hood', 'face')+sp.fixed_head_parts: headcov[j] |= (nm != 'face') or facing
                 if nm == 'face':
-                    bt = ((z > zb[j]) | ((idb[j] == hoodi) & facing)) & ~fa[j]
+                    bt = ((z > zb[j]) | ((idb[j] == hoodi) & facing & (not getattr(sp, 'true_depth', False)))) & ~fa[j]   # 持ち主のモデル（true_depth）は、顔もずきんも本当の奥行き
                     zb[j[bt]] = np.maximum(z[bt], zb[j[bt]]+0.5)
                 elif g0:
                     sg = same[idb[j]]; bt = np.where(sg, z+gb > gz[j], z > zb[j])

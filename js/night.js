@@ -113,15 +113,16 @@ function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だ�
 const nightVarNow=()=>{const v=S&&S.nightVar;if(!v||!v.k)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.k:null};/* 今夜の変化（夕方20時から朝6時まで） */
 const HORNDESC='「コワイノ」のおとしもの。ふくと、今夜のふつうの「コワイノ」が1.5倍になる。';
 const hornNow=()=>{if(!S||S.hornD==null)return false;const h=hour(),d=dayNo();return S.hornD===d&&h>=6||S.hornD===d-1&&h<6};/* 角笛の夜（ふいてから朝6時まで） */
+function wavePeek(day){/* 今夜のコワイノを先に見る（見るだけで、もとにもどす。火山の大きなハイカゲの夜のしるしも） */const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},hadSt=!!S.st2,an=S.st2&&S.st2.ashNightAt;try{return waveFor(day)}finally{Object.assign(S,keep);if(!hadSt)delete S.st2;else S.st2.ashNightAt=an}}
 function hornOK(){/* 角笛をふけるのは、草原の昼（6時から20時、今夜のコワイノが決まる前）、1日に1回、とくべつな夜でないとき */if(WD!==KUSA||!S.enemyOn||!(S.horn>0))return false;const h=hour(),d=dayNo();if(h<6||h>=20||S.lastWarn===d||S.hornD===d)return false;
   if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
-  const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},w=waveFor(d+1);Object.assign(S,keep);/* 今夜のコワイノを先に見る（見るだけで、もとにもどす） */return w.length>0&&!w.some(t=>EN[t].boss)}
+  const w=wavePeek(d+1);/* 今夜のコワイノを先に見る（見るだけで、もとにもどす） */return w.length>0&&!w.some(t=>EN[t].boss)}
 function hornBlow(){if(!hornOK())return toast('いまは、ふけない','warn');S.horn--;S.hornD=dayNo();sfx('night');toast('今夜は、「コワイノ」がふえる','warn');if(sheet==='inv')renderSheet()}
 const HERBDESC='つかうと、今夜のふつうの「コワイノ」が半分になる。';
 const herbNow=()=>{if(!S||S.herbD==null)return false;const h=hour(),d=dayNo();return S.herbD===d&&h>=6||S.herbD===d-1&&h<6};/* まよけの夜（つかってから朝6時まで） */
 function herbOK(){/* まよけのハーブをつかえるのは、昼（6時から20時、今夜のコワイノが決まる前）、1日に1回、角笛の夜・とくべつな夜でないとき。オオカゲの夜でもつかえる（オオカゲはへらない） */if(!S.enemyOn||!(S.herb>0))return false;const h=hour(),d=dayNo();if(h<6||h>=20||S.lastWarn===d||S.herbD===d||S.hornD===d)return false;
   if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
-  const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},w=waveFor(d+1);Object.assign(S,keep);return w.some(t=>!EN[t].boss)}
+  const w=wavePeek(d+1);return w.some(t=>!EN[t].boss)}
 function herbUse(){if(!herbOK())return toast('いまは、つかえない','warn');S.herb--;S.herbD=dayNo();sfx('good');toast('今夜は、「コワイノ」がへる','good');if(sheet==='inv')renderSheet()}
 function herbWave(w){/* まよけの夜：ふつうのコワイノを半分（小数点以下切りすて）。オオカゲなどはそのまま */const bs=w.filter(t=>EN[t].boss),nb=w.filter(t=>!EN[t].boss);return bs.concat(nb.slice(0,Math.floor(nb.length/2)))}
 function hornWave(w){/* 角笛の夜：ふつうのコワイノを1.5倍（小数点以下切りすて） */const nb=w.filter(t=>!EN[t].boss),m=Math.floor(nb.length*1.5)-nb.length;for(let i=0;i<m;i++)w.push(nb[i%nb.length]);return w}
@@ -334,7 +335,7 @@ function houseBreakFlee(h){/* 家の壁・ドアがこわされた瞬間、そ�
 const onTower=r=>!!(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'&&(r.act.cl||0)>=.5&&S.obj[r.act.obj]==='watch');/* 見張り台の上に立っている子（見張り台がこわれるまで攻撃されない） */
 const noHit=r=>onTower(r)||WD===YAMI&&typeof yamiSafe==='function'&&yamiSafe(r);/* コワイノがねらわない・たたかないせいれい（見張り台の上の子・闇のステージのトモリ） */
 function hitRes(e,r,D){if(noHit(r))return;if(WD===YAMI&&typeof yamiHitRes==='function'&&yamiHitRes(e,r))return;/* さいごの夜、ゆりかごへ歩くトモリ（yami.js） */{const g=escGuard(r);if(g)r=g}/* 助けてにげる：にげる子への攻撃は、となりの助ける子がうける（support.js） */enAim(e,r.x,r.y);if(BOSSFX[e.type]){shakeScreen('m');fxSpr('shock',r.x*TS,r.y*TS,BOSSFX[e.type].col);sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(WD===KUSA&&r.elem==='fire'&&r.hunger<300&&r.name===keyName('fire')&&S.flags.guard)S.flags.fHurtG=1;/* こもれびのまもりをおぼえたあとに、火の子がたくさんたたかれた */const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.rest=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger,G=gearStat(r),gk=gearGlowNear(e)?.8:1,hu=v=>Math.max(0,Math.round((v-G.hun)*gk*(typeof seaFoeK==='function'?seaFoeK(e):1)));/* 冬のコワイノは攻撃0.8倍 *//* そうび：へるおなか－・光る（整数にする） */sfxAt('ehit',r.x,r.y);/* たたかれた音も「ぽふっ」（持ち主がきめた） */e.swing=performance.now();enLunge(e,r);
-  const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
+  const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;if(S.flags&&!S.flags.tacHit)S.flags.tacHit=1;/* 作戦「まもる」を思いつく（night-prep.js） */const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fighter(r)&&adj){/* 戦える子（火のせいれい・出撃した子）。受けるダメージは、火は hitF、ほかは hitN *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
     r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFS:D.hitF):(sh?D.hitNS:D.hitN)));r.hurt=40;if(r.hunger<250)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
