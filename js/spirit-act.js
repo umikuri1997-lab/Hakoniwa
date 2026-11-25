@@ -139,7 +139,7 @@ function goStow(r,G,next){
 function seatUse(j,o){if(!o)return false;const a=anc(j);return o.obj!=null&&o.obj>=0&&anc(o.obj)===a||o.seat!=null&&anc(o.seat)===a||o.key==='seat'+j||o.stand===j}/* その家具を使う行動（ねる・すわる・遊ぶ・食べる席） */
 function seatStand(G,j,r){let b=-1,bd=1e9;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=j%W+dx,y=((j/W)|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walkR(k)||G.dist[k]<0)continue;const d=Math.abs(dx)+Math.abs(dy)+G.dist[k]*.01+(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===k)?2:0);if(d<bd){bd=d;b=k}}return b>=0?b:j}/* 家具のそばの、歩いて行ける空いたマス（なければ、そのまま） */
 function startAct(r,G,type,stand,o){
-  if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 10分止まったままだった行き先は、しばらくえらばない */
+  if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle'&&type!=='stay')return isNight()?startAct(r,G,'stay',-1,{}):startAct(r,G,'idle',-1,{dur:15});/* 夜は、その場でまつ（ひとやすみは夜に毎コマやめさせられて（NIGHT_OK）、くりかえす） *//* 10分止まったままだった行き先は、しばらくえらばない */
   if(!KEEPC.has(type)&&G&&!(o&&(o.run||o.hunt!=null))&&!r.coffin&&goStow(r,G,type))return;/* べつの行動にうつる前に、持っている物をしまう */
   if(type==='idle'&&stand<0&&G&&!isNight()&&(r.restCD||0)<=S.t){const bj=benchSpot(G,r);if(bj>=0){type='rest';stand=bj;o={key:'o'+bj,obj:anc(bj),seat:bj,dur:Math.max(30,(o&&o.dur)||15)}}}/* ひとやすみは、あいているベンチがあればベンチで */
   if(stand>=0&&G&&seatJ(stand)&&!seatUse(stand,o))stand=seatStand(G,stand,r);else if(stand<0&&G&&type==='idle'){const cj=(r.y|0)*W+(r.x|0);if(seatJ(cj)){const k=seatStand(G,cj,r);if(k!==cj)stand=k}}/* 使わない家具の上には立たない（となりの空いたマスへ）・使いおわった家具の上で、ぼんやりしない */
