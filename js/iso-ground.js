@@ -82,7 +82,7 @@ function igPendDone(){for(const q of IG.c.values())if(q.pend)q.st=true}
 function igDirty(R){if(IG.s!==S)return;for(const r of R){const a=Math.max(0,r[0]-2),b=Math.max(0,r[1]-2),c=Math.min(W,r[2]+3),d=Math.min(H,r[3]+3),xs=[isoX(a*TS,d*TS),isoX(c*TS,b*TS)],ys=[isoY(a*TS,b*TS)-IGM,isoY(c*TS,d*TS)];
   for(let cy=Math.max(0,Math.floor((ys[0]-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((ys[1]+IGP+IGM)/IGH));cy++)for(let cx=Math.max(0,Math.floor((xs[0]-IGP-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((xs[1]+IGP-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(q)q.st=true}}}
 /* ステージを開くときに作る仕事の一覧 */
-function igJobs(L){L.push(()=>{if(IG.s!==S)igClear();IGWK.sk++});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{if(!igNear(cx,cy,IGRING))return;const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))return igJob(q)})}/* 作るのは、画面のまわりの区画だけ */
+function igJobs(L){L.push(()=>{if(IG.s!==S)igClear();IGWK.sk++});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{if(!igNear(cx,cy,0))return;const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))return igJob(q)})}/* 読みこみで作るのは、画面に見えている区画だけ（まわりの IGRING 区画は、遊びはじめてから igDraw が、時間があまったときに作る） */
 /* マップの読みこみ中は、区画のドットごとの計算を、ワーカー（iso-ground-worker.js）にまかせて、いくつも同時に作る。
    ws：ワーカー（読みこみがおわったら、igWorkEnd で手ばなす）・sk：ステージの番号（かわったら init をおくりなおす）・q：計算中の区画（番号 → 区画） */
 const IGWK={ws:null,sk:0,id:0,q:new Map()},IGWKS=['TG','TW','GT','WT','ST','SM','SG','BK','IGBDRIP','IGBSUB','ICLF','IQL','W','H','TS','IQA','IQB','IQW','IQH','IGM','WBAND','WBANDA','WBANK','WBSH','WBANKC','WBSHA','IGSKYH','SKYFACE'];/* init でおくる物 */
