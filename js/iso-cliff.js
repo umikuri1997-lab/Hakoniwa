@@ -65,7 +65,7 @@ function icBlock(c,x,y){const j=y*W+x,h=Math.max(0,hiAt(j)),hv=(a,b)=>a<0||b<0||
 function icBlock0(c,x,y,j,h,hv){const ix=(x-y)*IQW/2,iy=(x+y)*IQH/2,top=cubeAt(j,h),
     gv=REV.has(j)?'g':WD===KUSA?'d':WD===KAZAN?'v':'k',gr=!top&&REV.has(j)?1+(hash(j)<.5?1:0):0;let soilTop=null;
   for(let L=1;L<=h;L++){
-    if(!cubeAt(j,L)){const v=L===h?gv:'m',k=icBlkKey(x,y,L,v,hv),t=icBlkImg(k);if(t){const[ch,im]=t;c.drawImage(im,ix-ch.ax/2,iy+IQH/2-(L-1)*IQL-ch.ay/2,ch.w/2,ch.h/2);if(L===h)soilTop=k;continue}}
+    if(!cubeAt(j,L)){const v=L===h?gv:'m',k=icBlkKey(x,y,L,v,hv),t=icBlkImg(k);if(t){const[ch,im]=t;c.drawImage(im,ix-ch.ax/2,iy+IQH/2-(L-1)*IQL-ch.ay/2,ch.w/2,ch.h/2);if(L===h)soilTop=k;continue}if(L===h)icBlkImg(k+'~top')}/* 上の面の絵のページも、いっしょに読みはじめる（段の絵がとどくのを待つと、読みこみのさいごに、ぜんぶのマスの上の面を作りなおすことになる） */
     for(const side of[0,1]){const n=side?hv(x+1,y):hv(x,y+1);if(L<=n)continue;const s=icSrc(j,L,h);if(!s)continue;const f=icFace(side,s[0],s[1],L===h?gr:0);c.drawImage(f,side?ix:ix-IQW/2,iy+IQH/2-L*IQL)}}/* チップがまだないときも、前の面の絵 */
   if(soilTop&&icBlkTop(c,x,y,h,ix,iy,soilTop))return;
   if(top){const t=cubeTex(top);if(t)c.drawImage(icTop(t,top),ix-IQW/2,iy-h*IQL)}else igTile(c,x,y,ix,iy-h*IQL);dcTop(c,ix,iy-h*IQL);/* 時間の色（daycolor.js） */
