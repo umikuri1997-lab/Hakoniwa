@@ -683,7 +683,7 @@ def ikcookhi(w, face):
 M('cookhi', 8, 5/(2*PI), ikcookhi)
 def ikcookcut(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*u)
-    return dict(ikN=(sx(face, 3), 12, HCOOK+1+3.5*k), ikF=(sx(face, -5), 12, HCOOK+0.5), prop='knife', lean=0.06, hp=0.12)
+    return dict(ikN=(sx(face, 3), 12, HCOOK+1+3.5*k), ikF=(sx(face, -5), 12, HCOOK+0.5), prop='knife', kN=1.25, lean=0.06, hp=0.12)
 M('cookcut', 6, 2.6, ikcookcut)
 def ikcookprep(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.6)) if u < 0.6 else 0
