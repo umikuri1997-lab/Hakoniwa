@@ -83,7 +83,7 @@ class Map:
 def check(m,name,lift=True,house=True,topple=True,kui=True,glass=True,bone=True):
     """topple：石像（G）をたおして、せなか（G・B）を橋にしたか。lift：まきあげの足場（P）に乗れるか。足場は、上の段と下の段のどちらかにいて、止まっている段のほうへだけ出入りできる（さく）"""
     g,lv=m.g,m.lv;find=lambda c:[(x,y) for y in range(H) for x in range(W) if g[y][x]==c]
-    S=find('S')[0];R=find('R')[0];PC=set(find('P'))
+    S=find('S')[0];R=(find('R') or [None])[0];PC=set(find('P'))   # R：下へおりる坂（10階にはない）
     PL=sorted({lv[y][x] for (px,py) in PC for x,y in((px+1,py),(px-1,py),(px,py+1),(px,py-1)) if 0<=x<W and 0<=y<H and (x,y) not in PC and g[y][x] in WALK})
     def ok(x,y,gates):
         if not(0<=x<W and 0<=y<H):return False
@@ -125,8 +125,8 @@ def check(m,name,lift=True,house=True,topple=True,kui=True,glass=True,bone=True)
                 if not any((x+dx,y+dy) in r1 for dx,dy in((1,0),(-1,0),(0,1),(0,-1))):lone.append((g[y][x],x,y))
     opn=[(x,y) for y in range(H) for x in range(W) if g[y][x] in 'TZ' and any((x+dx,y+dy) in r0 for dx,dy in((1,0),(-1,0),(0,1),(0,-1)))]
     if opn:print(name,'門なしでとどく宝箱',opn)
-    print(name,'入口→坂（門なし）',R in r0,' 門の先も入れて',len(r1),'マス  もどれない',len(bad),bad[:5],' とどかない物',lone)
-    return R in r0 and not bad and not lone
+    print(name,'入口→坂（門なし）',R is None or R in r0,' 門の先も入れて',len(r1),'マス  もどれない',len(bad),bad[:5],' とどかない物',lone)
+    return (R is None or R in r0) and not bad and not lone
 
 # ---------- 1階：ねっこの洞窟：根のある空洞が3つ、北から南へ段々に ----------
 def floor0():
@@ -743,8 +743,69 @@ def floor_hakaba():
         if m.g[y][x]=='.':m.put(x,y,'g')
     return m
 
-FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),4:('haison',floor_haison),5:('shinden',floor_shinden),6:('shisetsu',floor_shisetsu),7:('cradle',floor_cradle),8:('hakaba',floor_hakaba)}
-NFLOORS=10   # 階の数。地図のまだない階（10階。R5 で作る）は null
+# ---------- 10階：神の創造炉（いちばんおくの、大きな施設。炉にくべられたもの c が、通ったあとをあつくする。われた炉 K（すず）と、炉から谷の上へのびる大きなひび。まん中の島に、根と土にくるまれた、失敗した神 N。下へおりる坂はない） ----------
+def floor_ro():
+    m=Map(97);cx,cy=28,22
+    m.hole(cx,cy,12,8,1.45)
+    m.levels(lambda x,y:5)
+    # 炉から谷の上へのびる、大きなひび（大穴の北のふちから、地図のはしまで）
+    for y in range(1,15):
+        for x in(cx,cx+1):m.put(x,y,'O')
+    # まん中の島：根と土にくるまれた、失敗した神 N（3×3）。南のふち道から、はば2マスの道がのびる
+    for y in range(H):
+        for x in range(W):
+            if math.hypot((x-cx)/4.4,(y-cy)/3.4)<1 and m.g[y][x]=='O':m.g[y][x]='.'
+    for y in range(cy-1,cy+2):
+        for x in range(cx-1,cx+2):m.put(x,y,'N')
+    for x in(cx-1,cx):
+        for y in range(cy+3,H):
+            if m.g[y][x]=='O':m.put(x,y,'.')
+            elif y>cy+4:break
+    # 入口（東）
+    m.blob(50,22,3.5,2.6);m.stamp(48,22,['.S.']);m.carve([(47,22),(42,22)],0)
+    # 手がかり：われた炉（北東の岩の中。ひびのそば）
+    m.stamp(34,10,['KKKKK']);m.carve([(34,11),(38,11),(38,13)],0)
+    # 土：岩をおす（西の上）
+    m.stamp(1,8,['###########',
+                 '#####..####',
+                 '##..h.....#',
+                 '#.o.h#b....',
+                 '#...h......',
+                 '#T..h......',
+                 '#...h.....#',
+                 '##o.h....g#',
+                 '###########'],lv=5,chest=[{'item':'oldlantern','pt':100}])
+    m.carve([(11,13),(15,13)],1)
+    # 火：たいまつ3本で、石のとびら D の先の宝箱（南西の下）
+    m.stamp(6,34,mirror(['##############',
+                         '###.....t#####',
+                         '#t.........###',
+                         '.......g...D.#',
+                         '###.....t###T#',
+                         '##############']),lv=5,chest=[{'fukuro':1,'pt':100}])
+    m.carve([(20,37),(20,32)],0)
+    # 風と木：風車 m・葉の足場 k（南東）
+    m.stamp(41,30,mirror(['##############',
+                   '#####kkkk#####',
+                   '##o.kkkkk..g##',
+                   '#...kkTkk....#',
+                   '#m..kk.kk.....',
+                   '##o....kk...##',
+                   '#####kkkk#####',
+                   '##############']),lv=5,chest=[{'mapPc':1,'pt':100}])
+    m.carve([(37,30),(37,34),(41,34)],0)
+    # うすい壁 W の先の、かくれた宝箱（南西）
+    m.stamp(6,31,['######','#o..W.','##T###','######'],lv=5,chest=[{'fukuro':1,'pt':100}])
+    m.carve([(12,32),(17,32),(17,29)],0)
+    # 炉にくべられたもの c（速い。通ったあとが、あつい床になる）・光るきのこ g
+    for (x,y) in[(40,16),(41,27),(34,31),(20,31),(15,24),(22,13),(18,17)]:
+        if m.g[y][x]=='.':m.put(x,y,'c')
+    for (x,y) in[(38,14),(37,29),(24,31),(16,20)]:
+        if m.g[y][x]=='.':m.put(x,y,'g')
+    return m
+
+FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),4:('haison',floor_haison),5:('shinden',floor_shinden),6:('shisetsu',floor_shisetsu),7:('cradle',floor_cradle),8:('hakaba',floor_hakaba),9:('ro',floor_ro)}
+NFLOORS=10   # 階の数（10階まで、ぜんぶ地図がある）
 def jsstr(o):return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('"',"'")
 def jsobj(o):
     s=json.dumps(o,ensure_ascii=False,separators=(',',':'))
