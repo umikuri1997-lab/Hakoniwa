@@ -1,13 +1,13 @@
-"""アイコンの絵（js/draw-spirits.js の ICONS が指す assets/g/*.webp）を、大きな絵（アトラス）にまとめる。
-ゲームは、マップを開く前に、アイコンを1まいずつ約350こ読むかわりに、アトラスを読んで切り出す（js/draw-spirits.js の ICI）。
+"""アイコンの絵（js/draw-spirits.js の ICONS・EMOS・EIMG が指す assets/g/*.webp）を、大きな絵（アトラス）にまとめる。
+ゲームは、マップを開く前に、アイコンを1まいずつ約350こ読むかわりに、アトラスを読んで切り出す（js/draw-spirits.js の icoaImg）。
 メニューの <img> は、いままでどおり1まいずつのファイル（ICONS の URL）を使う。
 
 使い方: python3 tools/art/icon_atlas.py
-  - ICONS の行から、ファイルの URL をぜんぶ取りだす（data URL はのぞく）
+  - ICONS・EMOS・EIMG の行から、ファイルの URL をぜんぶ取りだす（data URL はのぞく）
   - 高さの順に、はば2048の段にならべてつめる（棚づめ）。1まいは高さ2048まで
   - 絵は、画質を落とさない WebP（lossless・exact）。ファイル名は中身から作る
   - js/icon-atlas.js を書く（URL → [ページ, x, y, w, h]）。前のアトラスの絵はけす
-ICONS をかえたら、これを動かす（動かさないと、かわったアイコンは1まいずつ読む。ゲームはこわれない）。
+ICONS・EMOS・EIMG をかえたら、これを動かす（動かさないと、かわったアイコンは1まいずつ読む。ゲームはこわれない）。
 """
 import hashlib, io, json, os, re
 from PIL import Image
@@ -18,17 +18,21 @@ OUT = os.path.join(ROOT, 'js', 'icon-atlas.js')
 PW, PH = 2048, 2048
 
 
+TABLES = ('ICONS', 'EMOS', 'EIMG')   # アトラスに入れる表：アイコン・気持ちの絵・絵文字のかわりの絵
+
+
 def icon_urls():
-    for line in open(SRC, encoding='utf8'):
-        if line.startswith('const ICONS={'):
-            body = line[:line.index('};') + 1]
-            seen, out = set(), []
-            for u in re.findall(r"""['"](assets/g/[0-9a-f]+\.webp)['"]""", body):
-                if u not in seen:
-                    seen.add(u)
-                    out.append(u)
-            return out
-    raise SystemExit('ICONS の行がありません')
+    lines = open(SRC, encoding='utf8').read().split('\n')
+    seen, out = set(), []
+    for t in TABLES:
+        line = next((l for l in lines if l.startswith('const ' + t + '={')), None)
+        if line is None:
+            raise SystemExit(t + ' の行がありません')
+        for u in re.findall(r"""['"](assets/g/[0-9a-f]+\.webp)['"]""", line[:line.index('};') + 1]):
+            if u not in seen:
+                seen.add(u)
+                out.append(u)
+    return out
 
 
 def pack(ims):
