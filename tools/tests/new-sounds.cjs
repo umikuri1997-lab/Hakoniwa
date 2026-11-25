@@ -8,7 +8,7 @@ const out=await run(`(()=>{const o={},name=b=>{for(const k in SBUF)if((SBUF[k]||
  const cx=Math.floor(cam.x/TS+VW/cam.z/TS/2),cy=Math.floor(cam.y/TS+VH/cam.z/TS/2);r.x=cx+.5;r.y=cy+.5;
  /* ひろった物：材質の録音 */
  for(const[id,k]of[['mat:wood','twood'],['mat:eda','twood'],['mat:stone','tstone'],['mat:shina','tgrass'],['mat:can','tcan'],['mat:nuno','tcloth'],['food:berry','tgrass'],['food:fish','twater']]){clr();itemSnd(id);o['pick '+id]=itemMat(id)===k&&n(k)>=1&&n('seed')===0}
- clr();S.drops=[];S.mat=S.mat||{};takeDrop({id:'mat:wood',x:cx,y:cy,n:1},r);o.takeDrop=n('twood')>=1;
+ clr();S.drops=[];S.mat=S.mat||{};takeDrop({id:'mat:wood',x:cx,y:cy,n:1},r);o.takeDrop=n('twood')>=1&&n('joyc')===0;/* せいれいが拾った知らせは、ちりりんを鳴らさない */
  clr();sfx('tpuni');o.puni=n('tpuni')===1;clr();sfx('bowdraw');o.bow=n('bowdraw')===1;clr();sfx('starkira');o.kira=n('starkira')===1;
  /* うけとった・たっせい・はじめて置いた：持ち主がえらんだ鉄琴とチャイムの録音（作った音・前の鈴は鳴らさない） */
  clr();sfx('gift');o.gift=n('rwget')===1&&n('joyc')===0;clr();sfx('quest');o.quest=n('rwquest')===1;clr();j3FirstSnd();o.first=n('rwfirst')===1&&n('tink')===0&&n('starkira')===0;clr();sfx('workdone');o.wdone=n('wdone')===1;

@@ -38,10 +38,10 @@ function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.
 function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastRopes();toastNext()},180)},TOASTMS[kind||'']||2000)}
 function toastNext(){const box=$('#toasts');while(TOASTQ.length&&box.querySelectorAll('.toast:not(.out):not(#playHint)').length<TOASTMAX)toastShow(TOASTQ.shift())}
 let TOASTN=0;/* 知らせを出した数（ことわったかを見る build.js の removeAt） */
-function toast(msg,kind,stamp){if(VBG)return;/* 洞窟にいるあいだの村の知らせは出さない（大事なことは cave.js の cvVBack） */kind=kind||'';TOASTN++;const box=$('#toasts');
+function toast(msg,kind,stamp,mute){if(VBG)return;/* 洞窟にいるあいだの村の知らせは出さない（大事なことは cave.js の cvVBack） */kind=kind||'';TOASTN++;const box=$('#toasts');
   for(const t of box.querySelectorAll('.toast:not(.out):not(#playHint)'))if(t._msg===msg){t._n++;t.querySelector('.ttx').firstChild.nodeValue=msg+'（'+t._n+'）';t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');toastTimer(t,kind);return}
   const q=TOASTQ.find(it=>it.msg===msg);if(q){q.n++;return}
-  if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');
+  if(mute);else if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');/* mute：音は鳴らさない（せいれいが拾った知らせは、材質の音だけ） */
   if(TOASTQ.length>=4)TOASTQ.splice(TOASTQ.findIndex(it=>!it.kind)>=0?TOASTQ.findIndex(it=>!it.kind):0,1);/* まちが長くなりすぎたら、小さい知らせからすてる */
   TOASTQ.push({msg,kind,stamp,n:1});toastNext()}
 const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]'};/* せいれいの画面は、メニューの中（持ち主がきめた） */
