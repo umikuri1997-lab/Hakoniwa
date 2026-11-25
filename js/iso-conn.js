@@ -6,7 +6,7 @@
    描くのは地面の描き方（groundTf：せかいの点）のまま。高さ z は画面の点で、せかいの点を左上へ z/(2·IQB) ずらすと、その高さに見える。 */
 const IQWALLH=IQL*2,IQLOWH=6;/* 家の壁の高さ（段差2だん。せいれいの1.6倍。持ち主がきめた）・屋根をはずしたときの手前の壁の高さ（巾木くらい） */
 const IQC={/* 仮の絵の色（もとの色。上の面は明るく、東の面は暗く） */
-  hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',adobewall:'#d9b48a',canalwall:'#bcb4a6',rockwall:'#c9a27a',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
+  hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',adobewall:'#d9b48a',yakiwall:'#b4573a',canalwall:'#bcb4a6',rockwall:'#c9a27a',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
   fence:'#c69a62',misugaki:'#c7b27a',ropefence:'#d8c49a',ashifence:'#c8b478',ishigaki:'#cdb79a',rankan:'#c6c0b4',sagafence:'#dcb98e',ibara:'#5f7a46',kuzure:'#a8a296',logfence:'#9a6a3c',bamboofence:'#a9b85e',parkfence:'#f4efe6',hedge:'#6fae4a',
   gate:'#c69a62',logdoor:'#9a6a3c',loggate:'#9a6a3c',parkdoor:'#f4efe6',parkgate:'#f4efe6',ishidoor:'#b58a5a',sagadoor:'#dcb98e',canalgate:'#c6c0b4',rockgate:'#c9a27a',irongate:'#5a5d68',sdoor:'#8a5a34',stonegate:'#a9a49a',
   door:'#8a5a34',yozoradoor:'#3a2418',canvasdoor:'#e9dfc8',archdoor:'#9a6a3c',itado:'#a07448',niwadoor:'#7a6a4a'};
