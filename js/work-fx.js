@@ -8,7 +8,7 @@ const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
 const KMAIN={pot:'cook',pan:'cookfry',bake:'cookfan',grill:'cookgrill',mix:'cookmix'};
 /* 動きの名前 → [音を出す所（1回の動きの中の0〜1）, 音, 粒]。音のいちばん大きい所が、手の動きの決まった所（打つ・ひく・水にとどく）になるように、音の頭のぶん前から鳴らす（のこぎりは、ひくまん中・石をほる音は、録音の0.15秒あとが打つ音） */
-const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
+const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookhi:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
   loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.37,'saw','chips'],[.87,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],
   wbsaw:[[.37,'saw','chips'],[.87,'saw']],wbham:[[0,'nail','chips']],build:[[0,'bnail']],repair:[[0,'nail']],
   chop:[[.8,'chop','chips']],mine:[[.59,'mine1','pebbles']],draw:[[.4,'dscoop','splash'],[.56,'dlift']],/* 水くみは1回だけ：バケツが水に入る所・ひき上げる所（draw の動きは、くむ行動の進みぐあい 'ph'） */
@@ -21,7 +21,7 @@ function craftOrder(r){return r.act&&r.act.type==='craft'?S.orders.find(q=>q.id=
 function craftP(r){const o=craftOrder(r);return o?Math.min(1,o.prog/Math.max(1,o.need)):0}
 /* いまの動き（料理・もの作りでないときは、行動の名前のまま） */
 function workAnim(r){const a=r.act;if(!a)return'';
-  if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */const t=cookTool(r);return t==='board'?'cookcut':t==='pot'?'cook':CKSTIR.has(t)?(typeof SPM!=='undefined'&&SPM.cookstir?'cookstir':'cookmix'):'cookfan'}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。フライパン・天板・網・くしは、うちわであおぐ） */
+  if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */const t=cookTool(r);return t==='board'?'cookcut':t==='pot'?(S.obj[a.obj]==='campfire'&&typeof SPM!=='undefined'&&SPM.cookhi?'cookhi':'cook'):CKSTIR.has(t)?(typeof SPM!=='undefined'&&SPM.cookstir?'cookstir':'cookmix'):'cookfan'}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。たき火のなべは高いので cookhi。フライパン・天板・網・くしは、うちわであおぐ） */
   if(a.type==='craft'){if(a.sh!=null)return'raise';const p=craftP(r),nm=p<.1?'craftprep':p<.45?'saw':p<.85?'craft':'polish',o=craftOrder(r),wb=WBMO[nm];return o&&o.cs!=null&&S.obj[o.cs]==='wbench'&&typeof SPM!=='undefined'&&SPM[wb]?wb:nm}/* 作業台では、天板の高さで手を動かす（wb*）。作業台がないときは、地面の動き */
   if(a.type==='fish')return a.sh!=null?'raise':a.stage==='do'&&a.t<FISHCAST&&typeof SPM!=='undefined'&&SPM.fishcast?'fishcast':'fish';/* つり：投げる・かかげる */
   if(a.type==='proc'){const o=S.obj[a.obj];return o==='loom'?'loomweave':o==='mill'?'millgrind':'proc'}/* はたおり・粉ひき */

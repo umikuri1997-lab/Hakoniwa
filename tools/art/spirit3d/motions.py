@@ -673,12 +673,17 @@ for _b in ('walk', 'carry'):
 HCOOK, HWB, HLOOM, HMILL = 16.4, 16.4, 20.5, 14.0   # 調理台（天板0.32）・作業台（0.32）・はたおり機（胸の横木0.40）・粉ひき（取っ手、石うす0.21の上）
 def sx(face, a): return a*(1 if face == 0 else -1)
 def ikcook(w, face):
-    """おたまで、なべをかきまぜる：調理台は作業台と同じ高さなので、少し前にかがむ"""
-    return dict(ikN=(sx(face, 4)+2.5*C(w), 12+2.0*S(w), HCOOK+2), ikF=(sx(face, -6), 11, HCOOK+0.5), prop='ladle', kN=2.3, lean=0.06, hp=0.12, yaw=0.04*S(w), top=0.06*S(w))
+    """おたまで、かまどのなべをかきまぜる（なべは口の床の上。少し前にかがむ）"""
+    return dict(ikN=(sx(face, 4)+2.5*C(w), 12+2.0*S(w), HCOOK+2), ikF=(sx(face, -6), 11, HCOOK+0.5), prop='ladle', kN=1.9, lean=0.06, hp=0.12, yaw=0.04*S(w), top=0.06*S(w))
 M('cook', 8, 5/(2*PI), ikcook)
+HFIRE = 23.0   # たき火の上のなべのふち（なべの底0.33・高さ0.12、cooktop.py）
+def ikcookhi(w, face):
+    """たき火の上のなべを、おたまでかきまぜる（なべが高いので、手を高く・おたまは ななめに入れる。奥の手はひざに）"""
+    return dict(ikN=(sx(face, 4)+2.5*C(w), 12+2.0*S(w), HFIRE+4), ikF=(sx(face, -6), 9, 14), prop='ladle', kN=1.9, lean=0.0, hp=0.0, yaw=0.04*S(w), top=0.06*S(w))
+M('cookhi', 8, 5/(2*PI), ikcookhi)
 def ikcookcut(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*u)
-    return dict(ikN=(sx(face, 3), 12, HCOOK+1+3.5*k), ikF=(sx(face, -5), 12, HCOOK+0.5), prop='knife', lean=0.06, hp=0.12)
+    return dict(ikN=(sx(face, 3), 12, HCOOK+1+3.5*k), ikF=(sx(face, -5), 12, HCOOK+0.5), prop='knife', kN=1.25, lean=0.06, hp=0.12)
 M('cookcut', 6, 2.6, ikcookcut)
 def ikcookprep(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.6)) if u < 0.6 else 0
