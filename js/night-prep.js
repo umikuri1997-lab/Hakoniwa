@@ -54,7 +54,7 @@ function npWpPick(j,done){/* 見張り台に立つせいれいを、ポップア
   const ow=oid!=null?S.res.find(q=>q.id===oid&&wpWhoOK(q)):null;add((ow?'':'✓ ')+'だれでも','あいていれば、だれでも立つ',null,null);
   for(const r of S.res){if(r.hidden||!wpWhoOK(r))continue;let mine=-1;for(const k in own)if(own[k]===r.id&&S.obj[k]==='watch')mine=+k;add((ow===r?'✓ ':'')+r.name+'  Lv'+rLv(r),ELEM[r.elem].name+'のせいれい・'+(WPTXT[r.elem]||'')+(mine>=0&&mine!==j?'・ほかの見張り台':''),r.id,r)}
   c.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
-function nightPrepPop(D){const o=npCard('prepPop',360),c=o.firstChild;document.body.appendChild(o);sfx('tap');
+function nightPrepPop(D){const o=npCard('prepPop',360),c=o.firstChild;document.body.appendChild(o);sfx('tap');sfx('npopen');/* ポチのあとに、紙をめくる「ぱさっ」（持ち主がえらんだ） */
   const render=()=>{if(!o.isConnected)return;const night=isNight();c.innerHTML='<b style="display:block;font-size:15px;margin-bottom:8px">今夜のそなえ</b><div class="rows" style="line-height:1.8"></div><div class="np"></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div>';
     const rows=c.querySelector('.rows'),np=c.querySelector('.np'),row=(k,v,warn)=>{const d=document.createElement('div');d.style.cssText='display:flex;justify-content:space-between;gap:12px'+(warn?';color:#a54152':'');d.innerHTML='<span></span><b></b>';d.children[0].textContent=k;d.children[1].textContent=v;rows.appendChild(d)};
     row('今夜の「コワイノ」',D.n?D.n+'ひき'+(D.boss?'（大きな影つき）':''):'来ない見こみ');row('おなかがすいたせいれい',D.hungry+'人',D.hungry>0);row('箱の食料',String(D.food),D.food<=0);
