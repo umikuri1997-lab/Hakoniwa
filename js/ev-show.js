@@ -8,8 +8,9 @@
    文は js/ev-text.js（EVTALK・EVTALKOK・EVCHAT・EVDY・EVDYB）。 */
 const EVMGT=10000,EVOK=.6,EVPLAY={work:1,move:1,sta:1,atk:5,cap:0},EVPLAYFUN=5,EVCLXP=.6,EVCLXMS=3600,EVCOMF=5,EVCOMFD=3,EVDREAMP=.6,EVTAIKOCD=2;
 const EVKIND={taiso:'move',soji:'move',oni:'move',ensoku:'move',takara:'move',mizu:'move',matoate:'move',undo:'move',gochi:'eat',pikunikku:'eat',shukaku:'eat',utage:'eat',cha:'eat',ocha:'eat',yomi:'calm',hoshi:'calm',hokomairi:'calm',onsen:'calm',camp:'calm',hana:'fest',lantern:'fest',himatsuri:'fest',hanabi:'fest',taikokai:'fest'};
-const EVSONGMOVE=new Set(['taiso','soji','oni','ensoku','takara','mizu','matoate','undo','taikokai','himatsuri','hana']);/* 動く曲（MusMus「BGM-141」）。ほかは、しずかな曲（魔王魂「fantasy05」） */
+const EVSONGMOVE=new Set(['soji','oni','ensoku','takara','mizu','matoate','undo','taikokai','himatsuri','hana']);/* 動く曲（MusMus「BGM-141」）。ほかは、しずかな曲（魔王魂「fantasy05」） */
 const EVDECO={undo:'rw',hana:'flower',pikunikku:'flower',lantern:'lamp',hanabi:'lamp',himatsuri:'lamp',camp:'lamp',hoshi:'lamp',taikokai:'lamp',utage:'lamp',onsen:'lamp',ocha:'lamp',hokomairi:'lamp',cha:'flower',gochi:'flower',shukaku:'flower',yomi:'flower'};/* かざりのしゅるい（ほかは旗） */
+const EVNOSONG=new Set(['taiso']),EVNODECO=new Set(['taiso']);/* 曲を鳴らさないイベント（体そうは、みんなの声のメロディ taisoTick だけ）・かざりを出さないイベント */
 /* たのしさ（実数）と、能力のほかに足すごほうび（説明の文。evExtra と同じ数） */
 const EVFUN={taiso:15,soji:10,oni:20,ensoku:20,gochi:15,takara:15,yomi:10,mizu:20,camp:20,cha:15,hoshi:20,onsen:15,matoate:10,pikunikku:20,taikokai:20,ocha:10,hokomairi:10,undo:30,hana:40,lantern:30,shukaku:30,himatsuri:30,utage:30,hanabi:30};
 const EVBOND={oni:3,gochi:2,camp:3,pikunikku:3,utage:3,hanabi:3};
@@ -24,9 +25,9 @@ function evBoxOf(E){const P=Object.values(E.slot||{});let x0=1e9,x1=-1e9,y0=1e9,
   if(x0>1e8){const[cx,cy]=E.c||evTemple();x0=Math.floor(cx)-2;x1=Math.floor(cx)+2;y0=Math.floor(cy)-1;y1=Math.floor(cy)+1}if(x1-x0<3){x0--;x1++}return{x0,x1,y0,y1}}
 /* ---------- はじまり ---------- */
 function evShowBegin(E,P){if(!evShowOn(E)||E.shw)return;E.shw=1;const now=performance.now();EVV.id=E.id;EVV.t0=now;EVV.clx=0;EVV.cid=null;EVV.end=null;EVV.rip=[];EVV.met=[];EVV.lan=[];EVV.pet=[];EVV.shine=0;EVV.flash=0;E.cx=0;E.ek=0;
-  EVV.song=EVSONGMOVE.has(E.id)?'cupmove':'cupcalm';EVV.box=evBoxOf(E);if(typeof MEMRUN!=='undefined'&&MEMRUN)return;
+  EVV.song=EVNOSONG.has(E.id)?'':EVSONGMOVE.has(E.id)?'cupmove':'cupcalm';EVV.box=evBoxOf(E);if(typeof MEMRUN!=='undefined'&&MEMRUN)return;
   if(!EVV.back)EVV.back=evCamCenter();if(E.c)evCamTo(E.c[0]*TS,E.c[1]*TS,1.4);
-  const n=evDecoN();for(let i=0;i<Math.min(n,8);i++)later(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);
+  const n=EVNODECO.has(E.id)?0:evDecoN();for(let i=0;i<Math.min(n,8);i++)later(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);
   later(()=>{if(S.ev!==E)return;sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of evPeople(E))JUMP.set(r,performance.now()+Math.random()*200)},1500);
   if(EVMG[E.id]&&started)later(()=>{if(S.ev===E&&E.ph)evAsk(E)},2300)}
 function evDecoN(){const B=EVV.box;return B?Math.max(3,Math.floor(((B.x1-B.x0+3)*TS-16)/10)):6}
@@ -240,7 +241,7 @@ function evTag(c,x,y,L,a){c.font='10px PixelMplus10, sans-serif';const w=Math.ce
   c.textAlign='center';c.textBaseline='top';L.forEach((t,i)=>{c.fillStyle='#ecd2a4';c.fillText(t,Math.round(x),y0+4+i*12);c.fillStyle='#4a2a14';c.fillText(t,Math.round(x),y0+3+i*12)});return{x0,y0,w,h}}
 function evStamp(c,x,y,a){const s=a<1?1+(1-a)*.8:1,r=Math.round(6*s);c.save();c.globalAlpha=Math.min(1,a*2);pR(c,'#d04030',x-r,y-r+1,r*2,r*2-2);pR(c,'#d04030',x-r+1,y-r,r*2-2,r*2);pR(c,'#f4e9d2',x-r+2,y-r+2,r*2-4,r*2-4);pR(c,'#d04030',x-r+3,y-r+3,r*2-6,r*2-6);pR(c,'#f4e9d2',x-1,y-1,2,2);c.restore()}
 function evShowDraw(now){const E=S&&S.ev,c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const live=E&&E.ph&&evShowOn(E)&&EVV.id===E.id,A=EVV.end;
-  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box)evGarland(c,EVV.box,EVDECO[EVV.id]||'flag',EVV.t0,now);
+  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box&&!EVNODECO.has(EVV.id))evGarland(c,EVV.box,EVDECO[EVV.id]||'flag',EVV.t0,now);
   if(live){const cc=E.c||evTemple(),e=now-EVV.t0;if(e>1300&&e<2700){const u=Math.min(1,(e-1300)/180);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.4)*TS);cupText(c,'せーの！',cc[0]*TS,(EVV.box.y0-2.4)*TS,2.2+(1-u)*1.4,Math.max(0,Math.min(1,(2700-e)/400)))}
     {const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evProps(c,E,evPeople(E),now);
     if(EVV.clx&&EVV.cid===E.id){const ce=now-EVV.clx,tx=EVCLXTX[E.id];if(tx&&ce<2600){const u=Math.min(1,ce/160);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.6)*TS);cupText(c,tx,cc[0]*TS,(EVV.box.y0-2.6)*TS,2.4+(1-u)*1.2,Math.max(0,Math.min(1,(2600-ce)/500)))}{const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evClimaxDraw(c,E,cc,ce,now)}}
