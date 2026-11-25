@@ -1,5 +1,5 @@
 /* ---------- 夜のたからさがし ----------
-   コワイノの来るふつうの夜（オオカゲ・さいごの夜・試練・群れの夜はのぞく）、群れが来たとき（spawnWave の ngSpawn）に、
+   火のせいれいが村にいて、コワイノの来るふつうの夜（オオカゲ・さいごの夜・試練・群れの夜はのぞく）、群れが来たとき（spawnWave の ngSpawn）に、
    村の外の、晴れていて歩いて行ける所に、光るつぶ（S.ng.L：{x,y,t}。t は村からの遠さ 0 近い・1 中くらい・2 遠い）が2〜3こ出る。
    「しらべる」でタップすると（ngTap、印 tk）、たたかうせいれい（isWatch）が、村のまわりのコワイノを追いはらったあとで、ひろいに行く（ngJob・ACT.ngget）。
    ひろったつぶは「夜のたからもの」（ng0〜ng2）になって、頭の上につんで箱へはこぶ（addItem → stowItem の trStow）。
@@ -8,7 +8,7 @@
 const NGNEAR=4,NGMID=9,NGFAR=16,NGFARP=.5,NGT=3,NGMAT=4;/* 村からのマス：4〜8 近い・9〜15 中くらい・16〜 遠い。遠いつぶは半分の夜だけ。ひろう時間3（2分）。近いつぶの素材4こ */
 const NGCOL=['#fff1a8','#bfe4ff','#ffc8ee'],NGID=['ng0','ng1','ng2'];/* 光の色で、よさがわかる（字では出さない） */
 function ngOK(){return !!(S&&!S.free&&!MEMRUN&&!(typeof NOSAVE!=='undefined'&&NOSAVE)&&!(typeof IS_STORY_REPLAY!=='undefined'&&IS_STORY_REPLAY)&&!(typeof caveOn==='function'&&caveOn()))}
-function ngSpawn(){/* spawnWave のおわりによぶ。ふつうの夜だけ */if(!ngOK()||!S.ns||S.ns.boss||S.ns.trial||S.ns.final||S.ns.rush||S.finalNight)return;const d=dayNo();if(S.ng&&S.ng.d===d)return;S.ng={d,L:[]};
+function ngSpawn(){/* spawnWave のおわりによぶ。ふつうの夜だけ */if(!ngOK()||!S.ns||S.ns.boss||S.ns.trial||S.ns.final||S.ns.rush||S.finalNight)return;if(!S.res.some(q=>!q.hidden&&q.elem==='fire'))return;/* 火のせいれいが来るまでは出さない（ひろいに行っても、守れる子がいない） */const d=dayNo();if(S.ng&&S.ng.d===d)return;S.ng={d,L:[]};
   const r0=S.res.find(q=>!q.hidden);if(!r0)return;const G=bfs(r0.x|0,r0.y|0),D=new Int16Array(W*H).fill(-1),Q=[];/* 村からのマスの数（たて・よこ・ななめ） */
   for(let j=0;j<W*H;j++)if(VILL[j]){D[j]=0;Q.push(j)}if(!Q.length)return;
   for(let h=0;h<Q.length;h++){const j=Q[h],x=j%W,y=(j/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const k=yy*W+xx;if(D[k]<0){D[k]=D[j]+1;Q.push(k)}}}
