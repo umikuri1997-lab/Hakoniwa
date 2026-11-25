@@ -44,6 +44,11 @@ def scene(el):
     # 頭（ずきん・顔）の大きさ：うでがめりこまないようにする、頭のまわりのだ円（休みのポーズの、キャラの座標・ドット）
     P = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith(('hood', 'head'))])*100
     P = P@F; hc0 = (P.min(0)+P.max(0))/2; hr0 = (P.max(0)-P.min(0))/2
+    feat = []   # 表情の目をおく所（休みのポーズ・Blender の向き・ドット）：左目・右目・左ほっぺ・右ほっぺ（キャラの −x が左。rig.ISOEYEUV のならび）
+    for pre in ('eye', 'cheek'):
+        Q = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith(pre)])*100
+        for sgn in (-1, 1):
+            q = Q[np.sign(Q[:, 0]) == sgn]; feat.append(np.array([q[:, 0].mean(), q[:, 1].min(), q[:, 2].mean()]))
     rest = {b.name: np.array(b.matrix_local) for b in arm.data.bones}   # アーマチュアの空間（m）
     order = []
     def walk(b):
@@ -51,7 +56,7 @@ def scene(el):
         for c in b.children: walk(c)
     for b in arm.data.bones:
         if b.parent is None: walk(b)
-    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0)
+    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0, feat=feat)
     return _CUR
 
 def rigid(R, pivot, t=(0, 0, 0)):
@@ -98,12 +103,16 @@ def pose(el, p, face):
     for nm in S['order']:
         arm.pose.bones[nm].matrix = Matrix((T[nm]@rest[nm]).tolist())
         bpy.context.view_layer.update()
+    S['T'] = T
+    return T
 
-def triangles(el):
-    """いまのポーズのメッシュの三角形（ドット・Blender の向きのまま）と色"""
+def triangles(el, eyes=True):
+    """いまのポーズのメッシュの三角形（ドット・Blender の向きのまま）・色・材質・種類（fbx_pixel.TAGS）。eyes=False：目・ほっぺのメッシュは写さない（表情の目をゲームでかさねる）"""
     import bpy
     S = scene(el); dg = bpy.context.evaluated_depsgraph_get(); out = []
     for o in S['meshes']:
+        ln = o.name.lower()
+        if not eyes and ln.startswith(('eye', 'cheek')): continue
         ev = o.evaluated_get(dg); me = ev.to_mesh(); me.calc_loop_triangles()
         M = ev.matrix_world; R = M.to_3x3()
         V = np.array([(M @ v.co)[:] for v in me.vertices])*100.0
@@ -114,7 +123,9 @@ def triangles(el):
         for t in me.loop_triangles:
             i = list(t.vertices); col = FP.hx(FP.color_of(o.name, el, dom[i[0]]))
             if el == 'wood' and cp is not None and cp[0][i[0]] != cp[1]: col = FP.hx('#c9ef9b')   # 木の葉脈：明るい黄緑
-            out.append((V[i], N[i], col, mat))
+            tag = 'face' if ln.startswith('head') and not ln.startswith('headacc') else 'head' if ln.startswith(('hood', 'headacc', 'sprout', 'eye', 'cheek')) \
+                else 'arm' if ln == 'body' and dom[i[0]].startswith(('upper_arm', 'forearm', 'hand')) else 'body'
+            out.append((V[i], N[i], col, mat, tag))
         ev.to_mesh_clear()
     return out
 

@@ -4,7 +4,7 @@
   --dbg <フォルダ>                                     → たしかめ用に、動きごとの絵（大きくした物）も出す
   --els wood                                           → その属性だけ（たしかめ用。js は書かない）
   --add light,dark                                     → その属性だけ作って、いまの js/spirit-motions.js に足す（ほかの属性の絵はそのまま）
-光・闇（トモリ・ツキミ）は light_dark.py の LightDark で組む（GPT の H-4）。
+5つの属性は、持ち主のモデル（model/<属性>.fbx）の骨をそのまま動かして写す（fbx_build.py。前の、チップの形から作る3Dは SPIRIT_OLD=1）。光・闇（トモリ・ツキミ）は light_dark.py の LightDark で組む（GPT の H-4）。
 絵のならび：動きと属性ごとに1まい（ゲームは、使う動き・属性の絵だけ読みこむ）。3行（正面・横・うしろ）× コマ数。目の上にかさねる絵（ずきん・顔の上で手前にある、うで・手・道具）があれば、正面・横・うしろの3行を、かさねる所の高さに切りつめて下に。わくは、そのぜんぶのコマの絵が入る大きさ。
 js/spirit-motions.js：SPM = {動きの名前: {s（属性ごとの絵）, n（コマ数）, r（速さ。'ph' は o.ph）, g（属性ごとの [わくのはば, 高さ, わくの左上 x, y]、目の上にかさねる絵があれば [.., わくの上からのずれ, 高さ]）,
   e（属性ごと・向きごと・コマごとの [目のずれ x, y]）, h（向きごと・コマごとの [手前の手 x, y, 奥の手 x, y]、道具の先があれば [.., 先 x, y]）}}"""
@@ -22,6 +22,9 @@ LDELS = ('light', 'dark')   # 光・闇は、light_dark.py の形
 def job(a, *, factory=None):
     """1つの動き・属性：絵（PNG のまま）と、わく・目・手の場所"""
     name, el = a
+    if factory is None and el in ELS and not os.environ.get('SPIRIT_OLD'):   # 5つの属性は、持ち主のモデル（model/<属性>.fbx）の骨を動かして写す（fbx_build）
+        import fbx_build
+        return fbx_build.job(a)
     if factory is None:
         if el in LDELS:
             from light_dark import LightDark as factory

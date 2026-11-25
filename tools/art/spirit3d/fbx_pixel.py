@@ -69,18 +69,20 @@ def shade(cb, nb, mb, light):
         out[g] = np.where(t < 0.55, edge*(1-a)+mid*a, mid*(1-b)+core*b)
     return out
 
-def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
+TAGS = ['', 'body', 'arm', 'head', 'face', 'prop']
+def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=0.0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
     Ws, Hs = W*ss, H*ss
     zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）・3 すける（風のはね）
     zt = np.full(Ws*Hs, -1e9); ct = np.zeros((Ws*Hs, 3)); nt = np.zeros((Ws*Hs, 3))   # すける物（いちばん手前）
+    tg = np.zeros(Ws*Hs, int); hcov = np.zeros(Ws*Hs, bool)   # いちばん手前の物の種類（TAGS）・頭（ずきん・顔）がうつる所
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
-    cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])
+    spin = -(spin+yaw); cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])   # ゲームの view（キャラの座標で rz(spin)）＝ Blender の座標で rz(−spin)
     cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
     for k, tri in enumerate(tris):
-        P, N, col = tri[:3]; mat = tri[3] if len(tri) > 3 else 0
+        P, N, col = tri[:3]; mat = tri[3] if len(tri) > 3 else 0; tag = TAGS.index(tri[4]) if len(tri) > 4 else 0
         if spin: P = P@Rs.T; N = N@Rs.T
         X, Y, Z = cam(P).T; N = cam(N)
         sx = (X+W/2)*ss; sy = (H-12-Y)*ss
@@ -95,16 +97,17 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
         if not m.any(): continue
         z = l0*Z[0]+l1*Z[1]+l2*Z[2]
         j = (ys[m]-.5).astype(int)*Ws+(xs[m]-.5).astype(int); z = z[m]
+        if tag in (3, 4): hcov[j] = True
         nn = l0[m, None]*N[0]+l1[m, None]*N[1]+l2[m, None]*N[2]
         if mat == 3:
             bt = z > zt[j]; j = j[bt]; zt[j] = z[bt]; ct[j] = col; nt[j] = nn[bt]; continue
         bt = z > zb[j]; j = j[bt]
-        zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k; mb[j] = mat
+        zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k; mb[j] = mat; tg[j] = tag
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
         if spin: P = P@Rs.T
         Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
         ok = (sx >= 0) & (sx < Ws) & (sy >= 0) & (sy < Hs); j = sy[ok]*Ws+sx[ok]; z = Q[ok, 2]; cc = np.asarray(C)[ok]
-        bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2
+        bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2; tg[j] = 5
     # 左上の光で3だん
     nb /= np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-9)
     nt /= np.maximum(np.linalg.norm(nt, axis=1, keepdims=True), 1e-9)
@@ -129,7 +132,10 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
         sh = np.roll(np.roll(out, dy, 0), dx, 1); m = ~al & (sh[..., 3] > 0) & (line[..., 3] == 0)
         line[m, :3] = (sh[m, :3]*0.72).astype(np.uint8); line[m, 3] = sh[m, 3]
     out[~al] = line[~al]
-    return out
+    if not info: return out
+    T = tg.reshape(H, ss, W, ss).transpose(0, 2, 1, 3).reshape(H, W, ss*ss)
+    tagd = np.array([[np.bincount(t, minlength=len(TAGS)).argmax() for t in row] for row in T])   # ドットごとの いちばん多い種類
+    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs}
 
 def main():
     dst = sys.argv[1]; Z = 4; tiles = []
