@@ -56,6 +56,7 @@ function applyFeats(){
 }
 let palOpen=false;/* 「おく」をおすと、アイテム欄が大きくひらく。えらぶと小さくなる */
 function dockSync(){document.querySelectorAll('#dock [data-mode]').forEach(b=>b.classList.toggle('on',!LIGHTARM&&b.dataset.mode===(mode==='bulk'?'build':mode)))}/* 道具を使っているあいだは「おく」を光らせる。守りの光をえらんでいるあいだは、どれも光らせない */
+let BULKT='hake';/* 「おく」の道具のどれをえらんだか（hake・move・stamp・bp・swap）。道具の一覧には、その道具だけを出す */
 function setMode(m){
   mode=m;palOpen=m==='build'||m==='bulk';pending=null;selRect=null;$('#confirm').hidden=true;
   if(S&&noTemple()&&m==='build'&&usable('statue'))sel='statue';else if(sel==='statue'&&!noTemple())sel='farm';
@@ -104,13 +105,14 @@ function renderPalette(){
   if(!palOpen&&mode==='build'){/* えらんだ物だけを小さく出す */
     if(sel&&BL[sel]){const id=sel,b=BL[id];box.appendChild(chip(iconURL(id),iname(id),b.kind==='build'?(id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(b.pc)):'×'+inv(id),'sel',()=>{}))}
     const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
-  if(mode==='bulk'){
-    if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたい物をえらんで、なぞる')))}/* もらった道具だけ出す */
-    if(S.mover){lbl(box,'ひっこし');box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide'+(selStamp==='move'?' sel':''),()=>{selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}))}/* ひっこしミトン：家具・建物を、すぐべつの場所へ */
-    if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
-    if((S.bpInv||[]).length){lbl(box,'設計図');S.bpInv.forEach((it,i)=>{const k='bp:'+i;box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide'+(selStamp===k?' sel':''),()=>{sfx('tap');bpPop(i)}))})}/* 家の設計図 */
-    if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
-    if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
+  if(mode==='bulk'){const T=BULKT;
+    {const bk=document.createElement('button');bk.className='chip more';bk.id='palBack';bk.textContent='もどる';bk.onclick=()=>{sfx('tap');setMode('build')};box.appendChild(bk)}/* ほかの道具は「おく」の一覧から */
+    if(T==='hake'&&S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたい物をえらんで、なぞる')))}/* もらった道具だけ出す */
+    if(T==='move'&&S.mover){lbl(box,'ひっこし');box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide'+(selStamp==='move'?' sel':''),()=>{selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}))}/* ひっこしミトン：家具・建物を、すぐべつの場所へ */
+    if(T==='stamp'&&S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
+    if(T==='bp'&&(S.bpInv||[]).length){lbl(box,'設計図');S.bpInv.forEach((it,i)=>{const k='bp:'+i;box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide'+(selStamp===k?' sel':''),()=>{sfx('tap');bpPop(i)}))})}/* 家の設計図 */
+    if(T==='swap'&&S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
+    if(T!=='hake'||!S.bulk)return/* ハケのときだけ、ぬるブロック・種を出す */
   }
   const PF=mode==='build'?PALF:'all',pf=id=>PF==='all'||PF!=='recent'&&palTags(id).includes(PF);
   if(mode==='build'){const bLock0=id=>!noTemple()&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),cand=[...(noTemple()?[]:BLOCKS.filter(id=>inv(id)>0)),...PICKB.filter(id=>inv(id)>0),...Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0),...(S.feat.plant?PLANTS.filter(id=>inv(id)>0):[]),...(cnt('farm')?Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0).map(k=>'seed:'+k):[]),...BUILDS.filter(id=>(usable(id)||bLock0(id))&&recShown(id))];
@@ -119,11 +121,11 @@ function renderPalette(){
     if(PF==='recent'){const L=(S.got||[]).filter(id=>cand.includes(id));if(!L.length)return palEmpty(box,(S.got||[]).length?'さいきんもらった物は、もう置いたよ':'これからもらった物が、ここにならぶよ');lbl(box,'さいきんもらった');
       for(const id of L){const sd=id.startsWith('seed:'),n=sd?cseed(id.slice(5)):inv(id);box.appendChild(chip(iconURL(id),iname(id),'×'+n,sel===id&&!selStamp?'sel':'',pickItem(id)))}return}}
   const n0=box.children.length;
-  if(mode==='build'&&PF==='all'){if((S.bpInv||[]).length||S.mover||S.bulk||S.stamps||S.swap)lbl(box,'どうぐ');if((S.bpInv||[]).length)box.appendChild(chip(bpIcon(),'設計図','×'+S.bpInv.length,'wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));/* 道具は「おく」の中でえらぶ */
-    if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}));
-    if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');setMode('bulk');selStamp=null;toast('ぬりたい物をえらんで、なぞる')}));
-    if(S.stamps)box.appendChild(chip(toolIcon('stamp'),'かたどりスタンプ','スタンプ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));
-    if(S.swap)box.appendChild(chip(toolIcon('swap'),'つけかえトンカチ','つけかえ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}))}
+  if(mode==='build'&&PF==='all'){if((S.bpInv||[]).length||S.mover||S.bulk||S.stamps||S.swap)lbl(box,'どうぐ');if((S.bpInv||[]).length)box.appendChild(chip(bpIcon(),'設計図','×'+S.bpInv.length,'wide',()=>{sfx('tap');BULKT='bp';setMode('bulk');selStamp=null}));/* 道具は「おく」の中でえらぶ */
+    if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');BULKT='move';setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物・生き物をタップ')}));
+    if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');BULKT='hake';setMode('bulk');selStamp=null;toast('ぬりたい物をえらんで、なぞる')}));
+    if(S.stamps)box.appendChild(chip(toolIcon('stamp'),'かたどりスタンプ','スタンプ','wide',()=>{sfx('tap');BULKT='stamp';setMode('bulk');selStamp=null}));
+    if(S.swap)box.appendChild(chip(toolIcon('swap'),'つけかえトンカチ','つけかえ','wide',()=>{sfx('tap');BULKT='swap';setMode('bulk');selStamp=null}))}
   const blocks=noTemple()?[]:BLOCKS.filter(id=>inv(id)>0&&!(mode==='bulk'&&WALLD.has(id))&&pf(id));
   if(mode==='bulk'&&!noTemple()&&inv('spike')>0)blocks.push('spike');/* とげの罠も、なぞってまとめて置ける */
   if(blocks.length){lbl(box,'ブロック');for(const id of blocks){const n=inv(id);box.appendChild(chip(iconURL(id),BL[id].name,'×'+n,(n?'':'zero')+(sel===id&&!selStamp?' sel':''),pickItem(id)))}}
