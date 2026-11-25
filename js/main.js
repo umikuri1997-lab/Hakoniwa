@@ -267,7 +267,7 @@ function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const
   o.querySelector('.rtt').innerHTML='';o.querySelector('.rtt').append(r.name+' が ',Object.assign(document.createElement('b'),{textContent:'Lv'+q.to}),' になった！');
   const g=o.querySelector('.rrows');g.innerHTML='';for(const[k,n]of RSTN){const f=v=>k==='bonus'?'+'+v:k==='atk'&&!v?'なし':String(Math.floor(v+1e-9));/* 画面には小数点を出さない */const up=f(b[k])!==f(a[k]);const x=document.createElement('span'),y=document.createElement('span');x.textContent=n;y.textContent=up?f(a[k])+' → '+f(b[k]):f(b[k]);if(up)y.className='up';g.append(x,y)}
   rlvPick(r);if(q.to!==q.from&&(q.to===3||q.to===5||q.to===10))memo('chart',r.name+'がLv'+q.to+'になった');o.hidden=false;sfx('quest');rlvFx(o,r)}
-/* せいれいのレベルアップを、はでに：絵のうしろでまわるドットの光の帯・きらきら・紙ふぶき・上がっていく鈴・ふえた行が1つずつはねる・マップのその子も光ってとぶ */
+/* せいれいのレベルアップを、はでに：絵のうしろでまわるドットの光の帯・きらきら・紙ふぶき・ふえた行が1つずつはねる・マップのその子も光ってとぶ */
 let RLVRAY=0;
 function rlvFx(o,r){const card=o.querySelector('.rcard'),pt=o.querySelector('.rpt');let cv=card.querySelector('.rlvray');if(!cv){cv=document.createElement('canvas');cv.className='rlvray';cv.width=cv.height=60;card.insertBefore(cv,pt)}
   const col=ELEM[r.elem]?ELEM[r.elem].col:'#ffd35c',t0=performance.now(),id=++RLVRAY,g=cv.getContext('2d'),red=typeof uiReduced==='function'&&uiReduced();
@@ -276,8 +276,7 @@ function rlvFx(o,r){const card=o.querySelector('.rcard'),pt=o.querySelector('.rp
     g.globalAlpha=1;for(let i=0;i<6;i++){const ph=(t*1.3+i/6)%1,an=i*1.05+t*.4,d=12+ph*17,x=Math.round(30+Math.cos(an)*d),y=Math.round(30+Math.sin(an)*d);g.fillStyle='#ffffff';g.globalAlpha=1-ph;g.fillRect(x,y-1,1,3);g.fillRect(x-1,y,3,1)}g.globalAlpha=1;/* きらきら */
     requestAnimationFrame(draw)};requestAnimationFrame(draw);
   if(typeof juiceCheer==='function')juiceCheer('lv');
-  if(typeof j3Ding==='function')[0,4,7,12].forEach((st,i)=>j3Ding(st,i*.11,.55));/* 上がっていく鈴 */
-  const rows=[...o.querySelectorAll('.rrows .up')];rows.forEach((y,i)=>{y.classList.remove('ucntp');setTimeout(()=>{if(!y.isConnected)return;void y.offsetWidth;y.classList.add('ucntp');if(typeof j3Ding==='function')j3Ding(14+i*2,0,.35)},450+i*160)});/* ふえた行が1つずつはねる */
+  const rows=[...o.querySelectorAll('.rrows .up')];rows.forEach((y,i)=>{y.classList.remove('ucntp');setTimeout(()=>{if(!y.isConnected)return;void y.offsetWidth;y.classList.add('ucntp')},450+i*160)});/* ふえた行が1つずつはねる（鈴の音は鳴らさない。持ち主がきめた） */
   pt.classList.remove('rlvpop');void pt.offsetWidth;pt.classList.add('rlvpop');
   if(S.res.includes(r)&&!r.hidden){const now=performance.now();JUMP.set(r,now);fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1,col:'rgba(255,236,150,.95)'});for(let i=0;i<3;i++)later(()=>{if(S.res.includes(r))spawnFX(r.x-.5,r.y-.6,i%2?'#fff3c4':col)},i*160);addFloatG(r.x,r.y,-1.2,'Lv'+rLv(r)+'！','#ffe48a')}}
 /* レベルアップのごほうび：上がったレベルごとに、能力を1つえらんで+LVB（r.lvPend がのこっている数・r.lvb がふやした分） */
