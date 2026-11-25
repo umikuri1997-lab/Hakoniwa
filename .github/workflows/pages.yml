@@ -25,11 +25,18 @@ jobs:
       - uses: actions/configure-pages@v5
         with:
           enablement: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
       - name: Prepare site from committed files
         run: |
           mkdir -p _site/assets
           cp index.html chips.js sw.js .nojekyll _site/
           cp -R js _site/js
+          node tools/minify.cjs _site
+          for f in _site/chips.js _site/js/*.js; do node --check "$f" || exit 1; done
           node tools/jsver.cjs _site
           node tools/sizes.cjs _site
           cp -R assets/. _site/assets/
