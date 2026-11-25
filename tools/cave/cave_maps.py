@@ -80,7 +80,7 @@ class Map:
     def rows(s):return[''.join(r) for r in s.g],[''.join(str(v) for v in r) for r in s.lv]
 
 # ---------- つながりのたしかめ（js/cave.js の cvWalk・cvStepOK と同じ決まり） ----------
-def check(m,name,lift=True,house=True,topple=True,kui=True,glass=True):
+def check(m,name,lift=True,house=True,topple=True,kui=True,glass=True,bone=True):
     """topple：石像（G）をたおして、せなか（G・B）を橋にしたか。lift：まきあげの足場（P）に乗れるか。足場は、上の段と下の段のどちらかにいて、止まっている段のほうへだけ出入りできる（さく）"""
     g,lv=m.g,m.lv;find=lambda c:[(x,y) for y in range(H) for x in range(W) if g[y][x]==c]
     S=find('S')[0];R=find('R')[0];PC=set(find('P'))
@@ -91,6 +91,7 @@ def check(m,name,lift=True,house=True,topple=True,kui=True,glass=True):
         if not house and (c in 'vzd' or m.inhouse(x,y)):return False   # 家の中を通らない
         if c=='U':return glass                                         # ガラスの入れ物（まもりの光でわるまでは、ふさがっている）
         if c=='J':return kui                                         # 根の橋（くいを3本ぬくまでは大穴）
+        if c=='V':return bone                                        # ほねの橋（ほねに3回、とどめをさすまでは大穴）
         if c in 'GB':return topple                                     # 石像のせなか（たおすまでは、石像と大穴）
         return c in WALK or c==HDOOR or (gates and c in GATE) or (lift and c=='P')
     def hv(p):return p[2] if p[:2] in PC else lv[p[1]][p[0]]
@@ -685,8 +686,65 @@ def floor_cradle():
         if m.g[y][x]=='.':m.put(x,y,c)
     return m
 
-FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),4:('haison',floor_haison),5:('shinden',floor_shinden),6:('shisetsu',floor_shisetsu),7:('cradle',floor_cradle)}
-NFLOORS=10   # 階の数。地図のまだない階（9・10階。R5 で作る）は null
+# ---------- 9階：失敗した神の墓場（神になれなかった物の残骸。大穴のふち道に、組みかけのほね c がならぶ。西のふち道から、大穴の中の島（坂）へ、ほねの橋 V をかける。手がかりは、ならべかけのほね K） ----------
+def floor_hakaba():
+    m=Map(83);cx,cy=28,22
+    m.hole(cx,cy,12,8,1.45)
+    m.levels(lambda x,y:5)
+    # 大穴の中の島（坂の所）：東よりに浮かぶ
+    for y in range(H):
+        for x in range(W):
+            if math.hypot((x-cx-6)/3.4,(y-cy-.5)/2.6)<1 and m.g[y][x]=='O':m.g[y][x]='.'
+    m.put(cx+8,cy+1,'R')
+    # ほねの橋：西のふち道から島まで、はば2マス。西から3つに分けて、かける
+    for y in(cy,cy+1):
+        for x in range(W):
+            if m.g[y][x]=='O' and x<cx+3:m.put(x,y,'V')
+    # 入口（北）
+    m.blob(cx,5,4,2.6);m.stamp(cx-1,4,['.S.']);m.carve([(cx,7),(cx,12)],0)
+    # 手がかり：ならべかけのほね（北東の岩の中）
+    m.stamp(34,13,['KKKKK']);m.carve([(36,14),(38,14),(38,17)],0)
+    # 土：岩をおす（西の上）
+    m.stamp(1,8,['###########',
+                 '#####..####',
+                 '##..h.....#',
+                 '#.o.h#b....',
+                 '#...h......',
+                 '#T..h......',
+                 '#...h.....#',
+                 '##o.h....g#',
+                 '###########'],lv=5,chest=[{'item':'doki','pt':90}])
+    m.carve([(11,13),(15,13)],1)
+    # 火：たいまつ3本で、石のとびら D の先の宝箱（南西の下）
+    m.stamp(6,34,mirror(['##############',
+                         '###.....t#####',
+                         '#t.........###',
+                         '.......c...D.#',
+                         '###.....t###T#',
+                         '##############']),lv=5,chest=[{'fukuro':1,'pt':90}])
+    m.carve([(20,37),(20,32)],0)
+    # 風と木：風車 m・葉の足場 k（南東）
+    m.stamp(41,30,mirror(['##############',
+                   '#####kkkk#####',
+                   '##o.kkkkk..g##',
+                   '#...kkTkk....#',
+                   '#m..kk.kk.....',
+                   '##o....kk...##',
+                   '#####kkkk#####',
+                   '##############']),lv=5,chest=[{'mapPc':1,'pt':90}])
+    m.carve([(37,30),(37,34),(41,34)],0)
+    # うすい壁 W の先の、かくれた宝箱（南西）
+    m.stamp(6,31,['######','#o..W.','##T###','######'],lv=5,chest=[{'fukuro':1,'pt':80}])
+    m.carve([(12,32),(17,32),(17,29)],0)
+    # 組みかけのほね c：道ばたに2〜3体ずつ（北西・南西・南・北東のふち道）
+    for (x,y) in[(23,11),(25,12),(40,21),(42,24),(15,19),(15,22),(16,28),(21,32),(24,33),(34,29)]:
+        if m.g[y][x]=='.':m.put(x,y,'c')
+    for (x,y) in[(20,31),(36,26),(18,16),(31,12)]:
+        if m.g[y][x]=='.':m.put(x,y,'g')
+    return m
+
+FLOORS={0:('roots',floor0),1:('lake',floor1),2:('crystal',floor_crystal),3:('mine',floor_mine),4:('haison',floor_haison),5:('shinden',floor_shinden),6:('shisetsu',floor_shisetsu),7:('cradle',floor_cradle),8:('hakaba',floor_hakaba)}
+NFLOORS=10   # 階の数。地図のまだない階（10階。R5 で作る）は null
 def jsstr(o):return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('"',"'")
 def jsobj(o):
     s=json.dumps(o,ensure_ascii=False,separators=(',',':'))
@@ -703,6 +761,7 @@ def write():
         if any('G' in r for r in g):assert not check(m,th+'（石像をたおさない）',topple=False),'石像をたおさなくても坂へ行ける'
         if any('J' in r for r in g):assert not check(m,th+'（くいをぬかない）',kui=False),'くいをぬかなくても坂へ行ける'
         if any('U' in r for r in g):assert not check(m,th+'（ガラスをわらない）',glass=False),'ガラスをわらなくても坂へ行ける'
+        if any('V' in r for r in g):assert not check(m,th+'（ほねの橋なし）',bone=False),'ほねの橋がなくても坂へ行ける'
         out.append('{map:[\n'+',\n'.join("'%s'"%r for r in g)+'],\n lv:['+','.join("'%s'"%r for r in l)+'],\n theme:\'%s\',chest:%s%s}'%(th,jsobj(m.chest),',house:'+jsobj(m.houses) if m.houses else ''))
     src=src[:a]+'const CVFLOORS=[\n'+',\n'.join(out)+'];\n'+src[b:]
     open(p,'w',encoding='utf8').write(src);print('js/cave.js に書いた',len(out))

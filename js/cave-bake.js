@@ -58,7 +58,7 @@ function cvBakeTick(cdt,mv,now){const C=CV;if(!C.sc)return;
     if(D.hot&&!e.asleep&&!e.down){const j=cvCell(e);if(C.g[j]&&!C.wt[j])C.hotT.set(j,C.t+CVROHOT)}}
   for(const[j,u]of C.hotT)if(u<=C.t)C.hotT.delete(j);
   for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
-  cvGlassTick();for(const s of C.sc)cvScTick(s,cdt,mv,now)}
+  cvGlassTick();cvHoneTick();for(const s of C.sc)cvScTick(s,cdt,mv,now)}
 /* ねているバケモノが目をさます広さ（マス） */
 function cvWakeR(e){const C=CV;if(EN[e.type].pray)return cvSkWakeR();if(EN[e.type].nezu&&relOn('ningyo'))return C.dim?CVNEZUWKD:CVNEZUWK;return C.dim?CVWAKED:CVWAKE}
 /* ねむりからさめるか（ためしのからだは、火のせいれいが近づいたときだけ） */
