@@ -16,8 +16,8 @@ from scipy.sparse.csgraph import connected_components
 
 HERE = os.path.dirname(os.path.abspath(__file__)); MODELS = os.path.join(os.path.dirname(HERE), 'models')
 SRC = os.path.join(MODELS, 'god', 'saint_monk.glb'); OUT = os.path.join(MODELS, 'god', 'god_monk.glb')
-COL = {'robe': (247, 238, 223), 'gold': (238, 206, 140), 'skin': (245, 215, 180), 'white': (251, 247, 240),
-       'eye': (110, 80, 60), 'wood': (173, 132, 97), 'halo': (250, 226, 160)}
+COL = {'robe': (244, 237, 225), 'gold': (238, 206, 140), 'skin': (251, 211, 163), 'white': (252, 246, 236),   # 前のカミサマの絵の色（持ち主：この色ぐらいの濃さ）
+       'eye': (130, 90, 66), 'wood': (176, 124, 84), 'halo': (250, 222, 150)}
 REFH = 5.92            # 三面図の、足もと〜輪のてっぺん（三面図の100ドット＝1）
 HEM = ((0.12, 0.20), (0.34, 0.42))   # 三面図の、すその金色の帯（足もとからの高さ）
 GOLDCUFF = 0.022       # そで口のふち：手からこの近さの服の面（モデルの高さ1）
@@ -60,15 +60,40 @@ def classify(V, F, fl):
         d, _ = cKDTree(hp).query(cen[name == 'robe']); idx = np.nonzero(name == 'robe')[0]; name[idx[d < GOLDCUFF*H]] = 'gold'
     return name
 
+def cut_bands(g, H, y0):
+    """服を、すその帯のさかいの高さで切る（面の三角のまま色をわけると、帯のふちがギザギザになる）。帯の所は金色、ほかは服"""
+    planes = sorted({y0+v/REFH*H for a, b in HEM for v in (a, b)}); pieces = [g]; out = []
+    for yp in planes:
+        nxt = []
+        for q in pieces:
+            lo = trimesh.intersections.slice_mesh_plane(q, [0, -1, 0], [0, yp, 0]); hi = trimesh.intersections.slice_mesh_plane(q, [0, 1, 0], [0, yp, 0])
+            nxt += [m for m in (lo, hi) if m is not None and len(m.faces)]
+        pieces = nxt
+    for q in pieces:
+        yc = q.vertices[:, 1].mean(); k = 'gold' if any(y0+a/REFH*H <= yc <= y0+b/REFH*H for a, b in HEM) else 'robe'
+        out.append((k, q))
+    return out
+
 def main():
-    V, F, fl = parts(); name = classify(V, F, fl); sc = trimesh.Scene()
+    V, F, fl = parts(); name = classify(V, F, fl); sc = trimesh.Scene(); H = V[:, 1].max()-V[:, 1].min(); y0 = V[:, 1].min()
+    # すその帯は、服を高さで切ってわける（classify の面ごとの帯はつかわない）
+    hem = np.zeros(len(F), bool); cen = V[F].mean(1)
+    for a, b in HEM: hem |= (cen[:, 1] >= y0+a/REFH*H-0.02*H) & (cen[:, 1] <= y0+b/REFH*H+0.02*H)
+    robe_all = (name == 'robe') | ((name == 'gold') & hem)
+    lowband = robe_all & (cen[:, 1] < y0+(HEM[-1][1]/REFH+0.04)*H)   # 帯のあたりの服だけ切る
+    geoms = {k: [] for k in COL}
+    for k, q in cut_bands(trimesh.Trimesh(V, F[lowband], process=False), H, y0): geoms[k].append(q)
+    geoms['robe'].append(trimesh.Trimesh(V, F[robe_all & ~lowband], process=False))
     for k in COL:
-        m = name == k
-        if not m.any(): continue
-        g = trimesh.Trimesh(V, F[m], process=False); g.remove_unreferenced_vertices()
+        if k == 'robe': continue
+        m = (name == k) & ~(robe_all)
+        if m.any(): geoms[k].append(trimesh.Trimesh(V, F[m], process=False))
+    for k, L in geoms.items():
+        if not L: continue
+        g = trimesh.util.concatenate(L); g.remove_unreferenced_vertices()
         g.visual = trimesh.visual.TextureVisuals(material=trimesh.visual.material.PBRMaterial(name=k, baseColorFactor=list(COL[k])+[255], roughnessFactor=0.8))
         sc.add_geometry(g, node_name=k, geom_name=k)
-    sc.export(OUT); print('glb', OUT, {k: int((name == k).sum()) for k in COL})
+    sc.export(OUT); print('glb', OUT, {k: sum(len(q.faces) for q in L) for k, L in geoms.items()})
 
 if __name__ == '__main__':
     main()
