@@ -241,6 +241,8 @@ function ambTick(){if(!AC||AC.state!=='running')return;cupMusicTick();if(!ambG){
   ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
+const LVSFXS=1.7;/* たっせい・レベルアップの録音（rwlevel）の長さ（秒） */
+function lvSfxOn(){return !!(AC&&lastSfx.level!=null&&AC.currentTime-lastSfx.level<LVSFXS)}/* たっせいの音が、まだ鳴っている */
 /* 音の優先順位：大事な音（DUCKK：たっせい・ハンコ・たたかい）が鳴ったら、うしろの音（lowG）と場所の音（ambD）を LOWDUCK の大きさにして、LOWREL 秒かけてもどす。
    うしろの音は、同時に LOWN こまで。いっぱいなら、いちばん小さい（画面のまん中から遠い）音より大きいときだけ、それを止めて鳴らす */
 let lowG=null,ambD=null,SFXBUS=null;const LOWN=8,LOWDUCK=.5,LOWHOLD=.1,LOWREL=.6,LOWL=[];
