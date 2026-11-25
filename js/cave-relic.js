@@ -26,6 +26,7 @@ const CVRELSEE={kui:['根に、なにかが打ちこまれてる…','根が、�
   shisetsu:['管が、ならんでる','どれも、根のほうへ のびてる…','はしの1つの前に、なにか ころがってる'],
   haison:['いすが、ならんでる','みんな、からっぽ…','はしの1つにだけ、だれかが すわってる'],
   lake:['この水、まっくら','水の中のしみが、光をのんでる','さわらないほうが、いいよね'],
+  hakaba:['ほねが、ならんでる','どれも、とても大きい…','はしの1つの横に、石の板が ある'],
   cradle:['ふだが、ずらっとならんでる','読めない字が、彫ってあるね','はしの1つだけ、ちがう字だ…']};
 CVRELSEE.roots=CVRELSEE.kui;
 function relOn(k){return !!(S&&S.flags&&S.flags.cvItem&&S.flags.cvItem['rel_'+k])||!!(typeof CV!=='undefined'&&CV&&CV.loot&&CV.loot.items&&CV.loot.items['rel_'+k])}
