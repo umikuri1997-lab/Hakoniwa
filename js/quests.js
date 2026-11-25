@@ -268,7 +268,7 @@ function guardInherit(e,L,f,owner,session,after){/* フタバの力（こもれ�
   const kd=Math.max(1,L.findIndex(l=>/guarddemo/.test(l[typeof l[2]==='string'?2:3]||''))),first=L.slice(0,kd),rest=L.slice(kd).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
   const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();if(after)after();};
-  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  const at=(ms,fn)=>later(()=>{if(alive())fn()},ms);
   dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+6200;
     camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.4)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.9};
     f.face=1;sacredScenePose(f,'pray',5600);
@@ -283,12 +283,12 @@ function guardPowerUp(e,L,f,owner,session){/* ヨルノオオカゲが来た夜�
   const first=L.slice(0,k+1).map((l,i)=>{if(i!==k)return l;const c=cueOf(l),m=l.slice();m[c]=(l[c]||'').split('+').filter(x=>x!=='guarddemo').join('+')||0;return m}),rest=L.slice(k+1);
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
   const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
-  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  const at=(ms,fn)=>later(()=>{if(alive())fn()},ms);
   dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+5600;
     camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.3)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.8};
     sacredScenePose(f,'pray',5000);
     at(500,()=>{leafFX(f);sfx('bush')});
-    at(1300,()=>{const cx=f.x*TS,cy=f.y*TS-10;for(let i=0;i<3;i++)setTimeout(()=>{if(alive())fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(150,230,120,.9)'})},i*420);for(let i=0;i<36;i++){const a=i/36*Math.PI*2;fx.push({k:'p',x:cx+Math.cos(a)*8,y:cy+Math.sin(a)*4,vx:Math.cos(a)*90,vy:Math.sin(a)*45-60,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:3})}sfx('shard')});
+    at(1300,()=>{const cx=f.x*TS,cy=f.y*TS-10;for(let i=0;i<3;i++)later(()=>{if(alive())fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(150,230,120,.9)'})},i*420);for(let i=0;i<36;i++){const a=i/36*Math.PI*2;fx.push({k:'p',x:cx+Math.cos(a)*8,y:cy+Math.sin(a)*4,vx:Math.cos(a)*90,vy:Math.sin(a)*45-60,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:3})}sfx('shard')});
     at(3000,()=>{const t=performance.now()+3000;f.shDemo=t;leafFX(f);for(const r of S.res)if(r!==f&&!r.hidden&&Math.hypot(r.x-f.x,r.y-f.y)<=3.6){leafFX(r);r.shDemo=t}addFloatG(f.x,f.y,-1.2,'こもれびのまもりが、強くなった！','#5fbf3f');dlgCue('flash');sfx('level')});
     at(5600,()=>{SCENEHOLD=0;if(rest.length)dialog(rest,()=>{if(alive())finish()});else finish()});
   });
@@ -531,9 +531,9 @@ const UPSPK=['00100','01110','11111','01110','00100'],UPSPKC=['#ffe27a','#fff6d8
 function upSparkSvg(c){let d='';UPSPK.forEach((row,y)=>{for(let x=0;x<5;x++)if(row[x]==='1')d+='M'+x+' '+y+'h1v1h-1z'});return '<svg viewBox="0 0 5 5" width="15" height="15" shape-rendering="crispEdges" aria-hidden="true"><path fill="'+c+'" d="'+d+'"/></svg>'}
 function upSpark(o,n){if(typeof uiReduced==='function'&&uiReduced())return;const L=[];for(let k=0;k<n;k++){const e=document.createElement('i'),a=k/n*6.283,dist=110+Math.random()*60;e.innerHTML=upSparkSvg(UPSPKC[k%UPSPKC.length]);o.appendChild(e);L.push({e,dx:Math.cos(a)*dist,dy:Math.sin(a)*dist,w:Math.round(Math.random()*15)*1000/60})}/* はじめのおくれは1/60秒の倍数 */
   const t0=performance.now(),q=v=>Math.round(v/UPSPKP)*UPSPKP,step=now=>{let live=0;for(const p of L){if(!p.e.isConnected)continue;const u=Math.max(0,Math.min(1,(now-t0-p.w)/UPSPKMS)),k=1-Math.pow(1-u,2);p.e.style.transform='translate('+(q(p.dx*k)-7.5)+'px,'+(q(p.dy*k)-7.5)+'px)';p.e.style.opacity=u<.6?1:Math.round((1-(u-.6)/.4)*4)/4;if(u<1)live++}if(live&&!o.hidden)requestAnimationFrame(step)};requestAnimationFrame(step)}
-function upFx(r,nm,txt,big){const now=performance.now();r.shine=now;if(!inBattle(r)){JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';JUMP.set(r,now);setTimeout(()=>{if(S.res.includes(r)&&!inBattle(r))JUMP.set(r,performance.now())},900)}/* たたかっている子は、よろこばずに、そのままたたかう */
+function upFx(r,nm,txt,big){const now=performance.now();r.shine=now;if(!inBattle(r)){JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';JUMP.set(r,now);later(()=>{if(S.res.includes(r)&&!inBattle(r))JUMP.set(r,performance.now())},900)}/* たたかっている子は、よろこばずに、そのままたたかう */
   fxSpr('levelup',r.x*TS,(r.y-.5)*TS,null,0,r.y*TS);
-  sfx('level');if(big)setTimeout(()=>sfx('good'),350);
+  sfx('level');if(big)later(()=>sfx('good'),350);
   const o=$('#upfx');o.querySelector('.upt').style.backgroundImage='url('+spiritPort(r.elem,120,r.vr)+')';o.querySelector('.utt').textContent=r.name+'の'+nm;const u=o.querySelector('.unn');u.textContent=txt+(big?'！！':'！');u.classList.toggle('big',!!big);
   o.querySelectorAll('i').forEach(e=>e.remove());upSpark(o,big?18:12);
   o.hidden=false;const rays=o.querySelector('.rays');rays.style.animation='none';void rays.offsetWidth;rays.style.animation='';clearTimeout(upFx.t);const end=()=>{o.hidden=true};upFx.t=setTimeout(end,1800);o.onclick=()=>{clearTimeout(upFx.t);end()}}
@@ -581,7 +581,7 @@ function morning(){if(typeof mzMorning==='function')mzMorning();if(typeof windMa
   if(cnt('bell')>0){BELLRING=performance.now();{const j=S.obj.indexOf('bell');if(j>=0)bellRing(j%W+1,((j/W)|0)+1)}for(const r of S.res)if(!r.hidden)funAdd(r,15,'bell')}/* 村の鐘：朝に鳴って、たのしさ+15（いくつあっても1回） */
   const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */if(typeof hapMorning==='function')hapMorning();/* ときどき起きるできごと（happen.js。雨のつぎの朝を見るので、天気のあと） */
   S.today=null;if(S.enemyOn&&dayNo()>=3&&wxE&&wxE.t&&DAYEV[wxE.t]){const k=wxE.t,E=DAYEV[k];S.today=k;/* 日替わりのできごと（前もってきめた日 wxE.t） */
-    setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
+    later(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
     if(E[3])E[3]()}
   if(S.rain&&!(typeof stormNow==='function'&&stormNow()))toast(snowNow()?'きょうは雪':'きょうは雨');
   {const d=dayNo(),EV={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],

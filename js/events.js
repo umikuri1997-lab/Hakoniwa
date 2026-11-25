@@ -236,7 +236,7 @@ function titleNote(r,a){const k=TJOB[a&&a.type];if(!k||!r||IS_STORY_REPLAY||a.st
   memo('',r.name+'の「'+TOKUI[k].n+'」の得意が'+l1+'になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'：「'+TOKUI[k].n+'」の得意 '+l1,'good');JOYU.set(r,performance.now()+3000);addFloatG(r.x,r.y,-2.1,TOKUI[k].n,'#ffe7a8');tokuiStarFx(r,l1);sfx('level')},400)}
 /* 得意の★が上がった：頭の上に★のならび（TKMAX こ）。前からの★がならんでから、あたらしい★がはねて光る（見た目と音だけ。実時間） */
 const TKFXMS=3000,TKPATH={};
-function tokuiStarFx(r,n){if(!r||r.hidden||typeof scnAdd!=='function')return;scnAdd('tkstar',TKFXMS,{r,n});const x=r.x*TS+(n-1-(TKMAX-1)/2)*14,y=r.y*TS-uLift(r)-52;scnAdd('ring',700,{x,y,r0:4,r1:20,col:'#ffe7a8'},700);scnAdd('glow',1200,{x,y,r:14,col:'#fff6c8'},700);setTimeout(()=>{if(S&&S.res.includes(r))sfx('good')},700)}
+function tokuiStarFx(r,n){if(!r||r.hidden||typeof scnAdd!=='function')return;scnAdd('tkstar',TKFXMS,{r,n});const x=r.x*TS+(n-1-(TKMAX-1)/2)*14,y=r.y*TS-uLift(r)-52;scnAdd('ring',700,{x,y,r0:4,r1:20,col:'#ffe7a8'},700);scnAdd('glow',1200,{x,y,r:14,col:'#fff6c8'},700);later(()=>{if(S&&S.res.includes(r))sfx('good')},700)}
 SCN_DRAW.tkstar=(e,t,now)=>{const r=e.r;if(!r||r.hidden)return;const env=scnEnv(t,.06,.15);if(env<=0)return;const el0=t*TKFXMS,K=.5,sz=32*K;/* 32のマス目の星を半分（16点）で */
   for(let i=0;i<TKMAX;i++){const on=i<e.n,nw=i===e.n-1,k=on?'star':'stare',p=TKPATH[k]||(TKPATH[k]=new Path2D(PXI[k]||''));if(nw&&el0<700)continue;/* あたらしい★は、すこしあとで */
     const hop=nw?Math.max(0,1-(el0-700)/360):0,dy=Math.round(Math.sin(Math.min(1,hop)*Math.PI)*8/2)*2,x=Math.round((r.x*TS+(i-(TKMAX-1)/2)*14-sz/2)/2)*2,y=Math.round((r.y*TS-uLift(r)-52-sz/2-dy)/2)*2;

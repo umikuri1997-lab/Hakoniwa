@@ -634,7 +634,7 @@ function caveExit(ok){const C=CV;if(!C)return;cvClose(C);const L=C.loot;
     for(const k in L.items){giveItem(k,L.items[k]);(S.flags.cvItem||(S.flags.cvItem={}))[k]=1;if(BL[k]&&BL[k].relic)(S.relRec||(S.relRec={}))[k]=1}
     if(typeof fossilGive==='function')for(const k in L.fos)fossilGive(k,L.fos[k])}
   /* つれていったせいれいを村へもどす（巣穴の前）。村で待たせた会話は、そのあとに出す */
-  cvAwayBack();try{save()}catch(e){}setTimeout(()=>{if(!CV&&typeof dlgLaterFlush==='function')dlgLaterFlush()},ok?2600:900);/* 村で待たせた会話（もどったカードのあと） */
+  cvAwayBack();try{save()}catch(e){}later(()=>{if(!CV&&typeof dlgLaterFlush==='function')dlgLaterFlush()},ok?2600:900);/* 村で待たせた会話（もどったカードのあと） */
   if(!ok)return toast('洞窟から、だれももどらなかった','warn');
   sfx('arrive');const P=pxPop('洞窟からもどった'),T=cvLootText(L),R=el('<div class="recs"></div>');if(!T.length)T.push('なにもひろわなかった');for(const t of T){const d=el('<div class="st"><span></span></div>');d.firstChild.textContent=t;R.appendChild(d)}P.body.appendChild(R)}
 function cvHomeAsk(){const P=pxPop('村へかえる'),T=cvLootText(CV.loot),R=el('<div class="recs"></div>'),b=el('<button class="btn pri" style="width:100%;margin-top:10px">村へかえる</button>');
@@ -655,7 +655,7 @@ function cvEat(a,k){const C=CV,r=a.r;if(!C||!(C.food[k]>0)||!(S.fs[k]>0))return 
 
 /* ---------- たたかい ---------- */
 function cvSup(a){/* ならんで戦う力（support.js と同じ数）：3マス以内の、なかよしのなかま */let b=0;for(const q of CV.party)if(q!==a&&Math.hypot(q.x-a.x,q.y-a.y)<=SUPR)b=Math.max(b,supAtkOf(bondOf(a.r,q.r)));return b}
-function cvDefeat(e,a){if(e.dead||cvBakeDown(e,a))return;e.dead=true;cvHoneLight(e);const D=EN[e.type],C=CV;if(D.kuzu)cvKuzuRub(e);/* ほりくず人形：岩がのこる（cave-mine.js） */EVAP.push({e,t0:performance.now()+HIT_LAG,dur:1300,die:true});setTimeout(()=>{if(CV===C)sfx('defeat')},HIT_LAG+KO_HOLD);
+function cvDefeat(e,a){if(e.dead||cvBakeDown(e,a))return;e.dead=true;cvHoneLight(e);const D=EN[e.type],C=CV;if(D.kuzu)cvKuzuRub(e);/* ほりくず人形：岩がのこる（cave-mine.js） */EVAP.push({e,t0:performance.now()+HIT_LAG,dur:1300,die:true});later(()=>{if(CV===C)sfx('defeat')},HIT_LAG+KO_HOLD);
   C.loot.pt+=D.pw;if(a&&(S.cvAway||[]).includes(a.r)){a.r.beat=(a.r.beat||0)+1;addSpiritXp(D.xp,a.r)}if(C.focus===e)C.focus=null}
 function cvAttack(a,en){const r=a.r,C=CV,G=gearStat(r),lv=rLv(r),amb=en.asleep?CVAMBUSH:0;/* ふいうち */
   a.face=en.x>=a.x?1:-1;a.turn=Math.abs(en.x-a.x)>Math.abs(en.y-a.y)*.6?1:0;a.fback=en.y<a.y-.3&&Math.abs(en.y-a.y)>Math.abs(en.x-a.x)*.6;a.back=a.fback;a.swing=performance.now();a.path=[];a.chase=false;
@@ -665,25 +665,25 @@ function cvAttack(a,en){const r=a.r,C=CV,G=gearStat(r),lv=rLv(r),amb=en.asleep?C
     if(E.stop)en.stun=waterStop(r,en)*(typeof weakStun==='function'?weakStun(en,'water'):1);
     else{hurtEn(en,Math.max(1,Math.round(rMul(r,'atk')*100)+cvSup(a))+amb,{lag:HIT_LAG,sx:a.x,sy:a.y,el:r.elem});en.stun=Math.max(en.stun||0,1)}}
   if(amb&&!C.note.amb){C.note.amb=1;toast('ふいうち','good')}
-  en.tg=a;if(en.asleep&&EN[en.type].pray){en.prov=1;en.lost=0}/* おがんでいるせきぞうをたたくと、しぼっていても、たたきかえす */if(en.asleep)cvPackWake(en,performance.now());/* ねずみのむれ（cave-haison.js） */en.asleep=false;setTimeout(()=>{if(CV===C){atkFX(a,en);atkSfx(a)}},HIT_LAG);if(en.hp<=0)cvDefeat(en,a)}
+  en.tg=a;if(en.asleep&&EN[en.type].pray){en.prov=1;en.lost=0}/* おがんでいるせきぞうをたたくと、しぼっていても、たたきかえす */if(en.asleep)cvPackWake(en,performance.now());/* ねずみのむれ（cave-haison.js） */en.asleep=false;later(()=>{if(CV===C){atkFX(a,en);atkSfx(a)}},HIT_LAG);if(en.hp<=0)cvDefeat(en,a)}
 function cvHurtRes(a,n,sx,sy){a.r.hunger=Math.max(0,a.r.hunger-n);a.hurtU=performance.now()+3000;if(n>0)hitFx(a,n,{sx,sy,silent:1});cvHudUpd()}
 function cvHit(e,a){const D=EN[e.type],r=a.r,G=gearStat(r),n=Math.max(0,Math.round((r.elem==='fire'?D.hitF:D.hitN)-G.hun));
   enAim(e,a.x,a.y);sfx('hit');e.swing=performance.now();enLunge(e,a);cvHurtRes(a,n,e.x,e.y)}
 function cvDie(a){const C=CV,r=a.r;C.party=C.party.filter(q=>q!==a);S.cvAway=(S.cvAway||[]).filter(q=>q!==r);
   if(STATUE>=0){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.5}/* 村の神殿の前で消えたのと同じ */die(r);cvHudUpd();
-  if(!C.party.length)setTimeout(()=>{if(CV===C)caveExit(false)},600)}
+  if(!C.party.length)later(()=>{if(CV===C)caveExit(false)},600)}
 function cvTarget(a){const C=CV;let b=null,bd=CVAGGRO;const f=C.focus;if(f&&!f.dead&&!f.down&&!cvGlassOn(f)&&Math.hypot(f.x-a.x,f.y-a.y)<CVAGGRO+4)return f;/* タップしたコワイノは、ねていてもねらう */
   for(const e of C.en){if(e.dead||e.asleep||e.down)continue;const d=Math.hypot(e.x-a.x,e.y-a.y)+(a.elem==='water'&&e.stun>1?3:0);if(d<bd){bd=d;b=e}}return b}
 /* まもりの光：村と同じ（パワー1・チャージ・威力・とめる時間・範囲は GUP）。光の落ちた所のまわりは見えるようになり、うすい壁はくずれる */
 function caveLight(tx,ty){const C=CV;PTW.q=true;if(LIGHTCD>0)return toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒'),false;if(S.pt<1)return toast('パワーが足りません'),false;if(tx<0||ty<0||tx>=CVW||ty>=CVH)return false;
   S.pt-=1;LIGHTCD=lightCdMax();const R=gupOf('rng').v[gupLv('rng')],wy=ty+CVOY;fxSpr('godlight',tx*TS+16,wy*TS+26);
-  setTimeout(()=>{if(CV===C)sfxAt('glight',tx,wy)},GLHIT);setTimeout(()=>{if(CV===C){skillFx('light');cvLightHit(tx,ty,R)}},GLFX);return true}
+  later(()=>{if(CV===C)sfxAt('glight',tx,wy)},GLHIT);later(()=>{if(CV===C){skillFx('light');cvLightHit(tx,ty,R)}},GLFX);return true}
 function cvLightHit(tx,ty,R){const C=CV,G=gupOf('stun'),gs=gupLv('stun'),pw=gupOf('pow').v[gupLv('pow')],now=performance.now();let broke=false,gl=false;
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=CVW||y>=CVH)continue;const j=cvJ(x,y),o=C.ob.get(j);
     if(o&&o.k==='W'){C.ob.delete(j);C.g[j]=1;broke=true;cvSpark(x+.5,y+.5,'#d9c7a8',18)}/* うすい壁 */
     if(o&&(o.k==='U'||o.k==='Q')&&cvGlassBreak(j,now))gl=true;/* ガラスの入れ物（cave-baiyou.js） */
     if(o&&o.k==='u'){C.ob.delete(j);cvSpark(x+.5,y+.5,'#a08a6a',14);broke=2}/* ほりくず */
-    if(!dx&&!dy||!C.g[j])continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;setTimeout(()=>{if(CV===C)fxSpr('glspark',x*TS+16,(y+CVOY)*TS+16+GLSPY)},d*GLSTEP)}
+    if(!dx&&!dy||!C.g[j])continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;later(()=>{if(CV===C)fxSpr('glspark',x*TS+16,(y+CVOY)*TS+16+GLSPY)},d*GLSTEP)}
   if(gl){sfx('crack');toast('ガラスの入れ物が、われた。中から、なにかが出てきた','warn')}
   if(broke){sfx('crack');toast(broke===2?'岩がくずれた':'うすい壁がくずれた','good')}
   for(const e of C.en){if(e.dead||Math.max(Math.abs((e.x|0)-tx),Math.abs((e.y|0)-CVOY-ty))>R)continue;if(e.down){e.down=0;e.byLight=1;cvDefeat(e,null);continue}/* くずれたほねに、とどめ */hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+CVOY+.5});e.stun=G.v[gs];e.asleep=false;e.path=[];if(e.hp<=0){e.byLight=1;cvDefeat(e,null)}}
@@ -818,7 +818,7 @@ function cvClearCheck(){const C=CV;if(C.clr)return;for(const[j,o]of C.ob)if(o.k=
     if(first){sfx('quest');const now=performance.now(),x=cvX(j)+.5,y=cvY(j)+.5;for(const a of C.party){a.joyU=now+1600;a.jumpT=now}C.pill={x,y,t0:now};C.flash={x,y,t0:now};if(typeof juiceCheer==='function')juiceCheer();if(!(typeof tsCarveAt==='function'&&tsCarveAt(C,()=>cvClearCard(C))))cvClearCard(C)}else if(typeof tsCarveAt==='function')tsCarveAt(C,()=>{});/* 土：坂のそばのかべの彫り絵（tsuchi.js） */return}}
 /* 階のクリア：坂の所に光の柱（caveRender の C.pill）と紙ふぶき → 「ひらいた」の大きな知らせ（あたらしいイベントと同じ形） */
 const CVPILLMS=2400;
-function cvClearCard(C){const more=C.fl+1<cvFlOpen();setTimeout(()=>{if(CV!==C)return;GIFT_ACTIVE=true;const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="下へおりる坂"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi('star')+'</div><h2>下へおりる坂を見つけた！</h2><div class="idea-items"></div></div>'),it=el('<div class="idea-item"><b></b><span></span></div>');
+function cvClearCard(C){const more=C.fl+1<cvFlOpen();later(()=>{if(CV!==C)return;GIFT_ACTIVE=true;const ov=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="下へおりる坂"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi('star')+'</div><h2>下へおりる坂を見つけた！</h2><div class="idea-items"></div></div>'),it=el('<div class="idea-item"><b></b><span></span></div>');
   it.querySelector('b').textContent=more?(C.fl+2)+'階':'この先';it.querySelector('span').textContent=more?'つぎから、ここから出かけられる':'岩でふさがっている';card.querySelector('.idea-items').append(it);
   const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('good');if(more&&typeof recRevealFx==='function')recRevealFx(card,ov,'ひらいた');
   setTimeout(()=>{if(ov.isConnected)b.disabled=false},1400);b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();GIFT_ACTIVE=false}},1300)}

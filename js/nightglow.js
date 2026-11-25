@@ -15,7 +15,7 @@ function ngSpawn(){/* spawnWave のおわりによぶ。ふつうの夜だけ */
   const C=[[],[],[]];for(let j=0;j<W*H;j++){const v=D[j];if(v<NGNEAR||G.dist[j]<0||S.obj[j]||S.ground[j]||!walk(j)||fogAt(j))continue;const x=j%W,y=(j/W)|0;if(x<2||y<2||x>W-3||y>H-3)continue;if((S.drops||[]).some(q=>q.y*W+q.x===j)||S.tx===j)continue;C[v<NGMID?0:v<NGFAR?1:2].push(j)}
   const hk=k=>hash(d*7919+k*131+(S.nights||0));/* 乱数は、日にちからきめる（ほかの乱数の順番をかえない） */
   for(let t=0;t<3;t++){if(!C[t].length||t===2&&hk(9)>=NGFARP)continue;const j=C[t][Math.floor(hk(t)*C[t].length)];S.ng.L.push({x:j%W,y:(j/W)|0,t})}
-  if(S.ng.L.length){S.flags.ngSeen=1;setTimeout(()=>{if(S&&S.ng&&S.ng.L.length)toast('村の外で、なにかが光っている','good')},2600)}dirty=true}
+  if(S.ng.L.length){S.flags.ngSeen=1;later(()=>{if(S&&S.ng&&S.ng.L.length)toast('村の外で、なにかが光っている','good')},2600)}dirty=true}
 function ngAt(j){return S&&S.ng?S.ng.L.find(g=>g.y*W+g.x===j):null}
 function ngTick(){/* 1秒に1回：朝になったら、ひろわなかったつぶは消える */if(!S||!S.ng||!S.ng.L.length)return;if(!isNight()){S.ng.L=[];dirty=true}}
 function ngTap(tx,ty){/* 「しらべる」でタップ。となりのマスまで当たりにする */if(!S||!S.ng||!S.ng.L.length||!isNight())return false;let g=null,bd=9;for(const q of S.ng.L){const dd=Math.max(Math.abs(q.x-tx),Math.abs(q.y-ty));if(dd<=1&&dd<bd){bd=dd;g=q}}if(!g)return false;

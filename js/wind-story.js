@@ -48,17 +48,17 @@ function wsScene(steps,fin){const owner=S,session=VILLAGE_SESSION,run={};WSRUN=r
   const alive=()=>S===owner&&session===VILLAGE_SESSION,ok=()=>alive()&&WSRUN===run,end=()=>{if(WSRUN===run){WSRUN=null;GIFT_ACTIVE=false}};
   const next=()=>{if(!ok())return end();if(i>=steps.length){camAnim={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:()=>{const a=ok();end();if(a&&fin)fin()}};return}
     const s=steps[i++];if(s.fn)s.fn();
-    if(s.to){camAnim={fz:cam.z,tz:s.to[2],fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:s.to[0]*TS,ty:s.to[1]*TS,t:0,dur:s.to[3]||1.4,done:()=>setTimeout(next,s.ms||0)};return}
-    if(s.dlg){const L=windLines(s.dlg);if(L.length){dialog(L,()=>setTimeout(next,300));return}}
-    if(s.play){startSacredPlay(s.play,-1,[],()=>setTimeout(next,300),()=>{if(!ok())return end();const L=windLines(s.fail||[]);const stop=()=>{end();if(s.onFail)s.onFail()};if(L.length)dialog(L,stop);else stop()});return}
-    setTimeout(next,s.ms||0)};
+    if(s.to){camAnim={fz:cam.z,tz:s.to[2],fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:s.to[0]*TS,ty:s.to[1]*TS,t:0,dur:s.to[3]||1.4,done:()=>later(next,s.ms||0)};return}
+    if(s.dlg){const L=windLines(s.dlg);if(L.length){dialog(L,()=>later(next,300));return}}
+    if(s.play){startSacredPlay(s.play,-1,[],()=>later(next,300),()=>{if(!ok())return end();const L=windLines(s.fail||[]);const stop=()=>{end();if(s.onFail)s.onFail()};if(L.length)dialog(L,stop);else stop()});return}
+    later(next,s.ms||0)};
   musicDuck(4000);next()}
 function windStoryReset(){if(WSRUN){WSRUN=null;GIFT_ACTIVE=false}WV.bird=null}/* 村を切りかえたとき */
 function windEndFrom(){/* ヌシ様がのぼってくる所：雲の海のはしの印の、南の雲の海 */const kj=S.wind.kj!=null?S.wind.kj:windKumoSpot();if(kj!=null)return [kj%W+.5,((kj/W)|0)+3.5];const I=windIsles(S),k=windWheelIsle();return [I.cx[k]+.5,I.cy[k]+8]}
 function windEndScene(){const I=windIsles(S),hx=I.cx[I.mid]+.5,hy=I.cy[I.mid]-6,[gx,gy]=windEndFrom();
   wsScene([{to:[gx,gy-1,1,1.4],ms:200},{dlg:WLIFT_PRE},{play:'windLift',fail:WLIFT_FAIL,onFail:()=>{S.wind.liftD=dayNo()+1;renderQuest();save()}},{fn:()=>{WV.bird={t0:performance.now(),sx:gx,sy:gy,hx,hy};sfx('level');if(typeof hdBig==='function')hdBig(9000)},ms:3200},
     {to:[hx,hy+2,.9,2.2],ms:200,fn:()=>{for(const id of RIDES){const k=S.obj.indexOf(id);if(k<0)continue;for(let q=0;q<5;q++)scnAdd('orb',1300,{x0:(k%W+1)*TS,y0:((k/W|0)+.5)*TS,x1:hx*TS,y1:hy*TS,arc:q%2?40:-40,col:q%2?'#e8f6ff':'#fff6c8',n:1},2400+q*160)}
-      setTimeout(()=>{sfx('good');for(const r of S.res)if(!r.hidden){JUMP.set(r,performance.now());if(typeof JOYU!=='undefined')JOYU.set(r,performance.now()+1800)}},4200)}},{ms:4400},{dlg:WEND_LINES}],
+      later(()=>{sfx('good');for(const r of S.res)if(!r.hidden){JUMP.set(r,performance.now());if(typeof JOYU!=='undefined')JOYU.set(r,performance.now()+1800)}},4200)}},{ms:4400},{dlg:WEND_LINES}],
     ()=>{S.flags.windEnd=1;memo('leaf','風が、ヌシ様のつばさになった');checkQuest();renderQuest();save()})}
 function windStoryTick(){if(!windOn()||S.free||IS_STORY_REPLAY||WSRUN)return;if(typeof MEMRUN!=='undefined'&&MEMRUN)return;windNightTick();
   if(S.flags.windEnd&&!S.cleared&&S.quest>=QUESTS.length&&S.qStory==null){S.cleared=true;S.clearDay=dayNo();toast('空の遊び場に、風がもどった','good');renderQuest();save();return}

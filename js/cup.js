@@ -38,7 +38,7 @@ const CUPV={cd:0,id:null,mg:null,lead:null,leadT:0,cheerT:0,aw:null,fl:null};
 function cupBegin(E,P){CUPV.cd=performance.now();E.cdT=S.t;{const q=document.getElementById('cupCheer');if(q)q.remove()}/* えらばないまま、はじまったら、見ているだけ */CUPV.id=E.id;CUPV.lead=null;CUPV.leadT=performance.now()+4000;E.ck=0;E.item={};E.loot={};E.pg={};
   if(E.id==='cup2')for(const r of P)E.item[r.id]=cupCraftPick(r);if(E.id==='cup4')for(const r of P)E.item[r.id]=cupDishPick(r);
   if(!(camAnim&&camAnim.done)&&E.c)panTo(E.c[0]*TS,E.c[1]*TS);
-  if(typeof AC!=='undefined'&&AC)[0,1,2].forEach(i=>j3Ding(i===2?7:0,i*.65,.5));setTimeout(()=>{if(S.ev===E){sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of P)JUMP.set(r,performance.now()+Math.random()*200)}},1950)}
+  if(typeof AC!=='undefined'&&AC)[0,1,2].forEach(i=>j3Ding(i===2?7:0,i*.65,.5));later(()=>{if(S.ev===E){sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of P)JUMP.set(r,performance.now()+Math.random()*200)}},1950)}
 function cupHold(){const E=S&&S.ev;return !!CUPV.cd&&performance.now()-CUPV.cd<CUPCD&&!!E&&E.cdT!=null&&S.t-E.cdT<4}/* 合図のあいだは、まだ走らない（実時間の合図か、村の時間4分の、早いほう） */
 function cupLive(E,P){/* 1秒ごと（cupTick から）：ミニゲームをはじめる・いまの1位の実況・声援 */
   const now=performance.now();if(!CUPV.cd)CUPV.cd=now-CUPCD;/* 読みこみなおしたあとは、合図なし */
@@ -102,9 +102,9 @@ function cupAward(E,P,R){const top=[0,1,2].map(i=>P.filter(r=>cupPlace(E,R,r.id)
   for(const L of top)for(const r of L)r.reactT=S.t+11.5;/* 表彰台にのぼる子は、表彰のあいだ、その場にいる（村の時間） */
   CUPV.aw={x:Math.floor(cx),y:Math.floor(cy),t0:now,top:top.map(L=>L[0]).filter(Boolean),art,id:E.id,stamped:0};
   const delay=art.length?Math.min(art.length,8)*450+300:0;CUPV.aw.td=delay;
-  setTimeout(()=>{if(!CUPV.aw)return;CUPV.aw.top.forEach((r,i)=>{const j=spots[i];if(S.res.includes(r)&&walk(j)){r.x=j%W+.5;r.y=((j/W)|0)+.5;r.path=[];r.face=1}setTimeout(()=>{if(!CUPV.aw)return;sfx('ostamp');CUPV.aw.stamped=i+1;if(S.res.includes(r)){JUMP.set(r,performance.now());JOYU.set(r,performance.now()+3000)}},500+(2-i)*450)});
-    setTimeout(()=>{if(!CUPV.aw)return;if(typeof juiceCheer==='function')juiceCheer();sfx('clap');sfx('level')},1900)},delay);
-  setTimeout(()=>{CUPV.aw=null},delay+CUPAWD)}
+  later(()=>{if(!CUPV.aw)return;CUPV.aw.top.forEach((r,i)=>{const j=spots[i];if(S.res.includes(r)&&walk(j)){r.x=j%W+.5;r.y=((j/W)|0)+.5;r.path=[];r.face=1}later(()=>{if(!CUPV.aw)return;sfx('ostamp');CUPV.aw.stamped=i+1;if(S.res.includes(r)){JUMP.set(r,performance.now());JOYU.set(r,performance.now()+3000)}},500+(2-i)*450)});
+    later(()=>{if(!CUPV.aw)return;if(typeof juiceCheer==='function')juiceCheer();sfx('clap');sfx('level')},1900)},delay);
+  later(()=>{CUPV.aw=null},delay+CUPAWD)}
 function cupGround(now){/* 表彰台（地面の層）：台にのぼった子の足もと */const A=CUPV.aw;if(!A||now-A.t0<A.td)return;const c=ctx,H0=[14,9,6],C=['#ffd23f','#d8dfe8','#e0a46a'];
   [[0,0],[-1,1],[1,2]].forEach(([dx,i])=>{if(!A.top[i])return;const x=(A.x+dx)*TS+4,y=(A.y+.5)*TS-2,dr=()=>{c.fillStyle='#8a5a32';c.fillRect(x,y,TS-8,H0[i]+4);c.fillStyle=C[i];c.fillRect(x+1,y,TS-10,H0[i]+2);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x+1,y+H0[i],TS-10,2)};isoStand(c,gFoot((A.x+dx+.5)*TS,(A.y+.5)*TS),dr)})}/* クォータービュー：台は、その所に立てて */
 function cupDraw(now){/* 会場の旗・合図・作品・表彰（世界の上の層） */const E=S&&S.ev,c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;

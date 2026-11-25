@@ -226,7 +226,7 @@ const QUESTSF=[
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、この谷、まえよりずっと、すてきになったよね。'],[FB(),'もっとすてきになったら、おいわいしたいねぇ。'],[FA(),'#joy|うん！ 谷のおまつりだ！']]}},
    get story(){return [[FA(),'#joy|見て見て！ 谷じゅうが、きらきらしてる！'],[FB(),'#cry hush|ふたりだけだったころは、しずかで、ちょっとさみしかったねぇ。'],[FA(),'いまは、こんなににぎやか！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなのふるさとだねぇ。']]},gives:{fest:true}},
 ];
-function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
+function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();later(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};
   const a=nm(),b=nm();s.res=[mkRes(s,a,'wood',CX+.5,CY-1.5,'swing'),mkRes(s,b,'earth',CX+1.5,CY-1.5,'chat')];s.fk=[a,b];s.keyN={wood:a,earth:b};
   s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;for(const id of['wbench','crate','loom','bed','table','chair','stool','bench','torch'])s.recipes[id]=true;/* はじめから作れる物 */

@@ -43,7 +43,7 @@ function cvDigUse(j){const C=CV;let ba=null,bp=null;for(const a of C.party){cons
   ba.job={k:'dig',j,t:0};ba.jq=[];ba.path=bp;ba.mv=false;ba.chase=false;cvGo(bp.length?bp[bp.length-1]:cvCell(ba),ba);sfx('tap')}
 /* ほりくず：ほりくず人形がたおれた所に、のこる */
 function cvKuzuRub(e){const C=CV,j=cvCell(e);if(j<0||j>=CVW*CVH||!C.g[j]||C.wt[j]||C.br[j]||C.ob.has(j)||C.party.some(a=>cvCell(a)===j))return;
-  C.ob.set(j,{k:'u',done:false,home:j});cvSpark(cvX(j)+.5,cvY(j)+.5,'#a08a6a',14);setTimeout(()=>{if(CV===C)sfx('tstone')},HIT_LAG+KO_HOLD);if(!C.note.kuzu){C.note.kuzu=1;toast('くずれて、岩がのこった','warn')}}
+  C.ob.set(j,{k:'u',done:false,home:j});cvSpark(cvX(j)+.5,cvY(j)+.5,'#a08a6a',14);later(()=>{if(CV===C)sfx('tstone')},HIT_LAG+KO_HOLD);if(!C.note.kuzu){C.note.kuzu=1;toast('くずれて、岩がのこった','warn')}}
 /* 岩をおすせいれい：おせる岩 b は土のせいれい・ほりくず u は、だれでも（立つマスへ行けるせいれい） */
 function cvPusher(j,s){const C=CV,o=C.ob.get(j);if(!o)return null;if(o.k==='b')return C.party.find(q=>q.elem==='earth')||null;
   let ba=null,bl=1e9;for(const a of C.party){const p=cvBfs(cvCell(a),q=>q===s);if(p&&p.length<bl){bl=p.length;ba=a}}return ba}

@@ -196,7 +196,7 @@ function towerLightTap(j){if(WD!==KAZAN||S.free||S.cleared||altarLit()||S.obj[j]
   sfx('tstone');altarLightRun(j,v=>{const t=st2();
     if(!v){t.litRetry=callDay()+1;dirty=true;renderQuest();return}
     t.lit=1;delete t.litRetry;if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* 火だねを台座にはめる */S.finalNight=true;memo('moonn','守護の台座に、火がともった');dirty=true;checkQuest();renderQuest();
-    setTimeout(()=>toast('台座の光に、山の影が気づいた……','warn'),900)});
+    later(()=>toast('台座の光に、山の影が気づいた……','warn'),900)});
   return true}
 
 /* ---- 湯もみ（シズクのおねがい） ----

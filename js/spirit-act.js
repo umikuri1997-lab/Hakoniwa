@@ -517,4 +517,4 @@ function socialBest(r,G){let best=null,bs=-1e9;if(storyCalled(r))return null;/* 
   return best?{s:bs,b:best}:null}
 function eruptMorning(){/* 火山：5日に1回くらい、朝に火山がゆれて、村の外の地面に岩が3〜5こ落ちる（こわすと石材）。物はこわさない */
   if(WD!==KAZAN||!S.enemyOn||dayNo()<3||(dayNo()%5)!==3)return;const L=[];for(let t=0;t<4000&&L.length<3+((Math.random()*3)|0);t++){const x=OFF+((Math.random()*(W-2*OFF))|0),y=OFF+((Math.random()*(H-2*OFF))|0),j=y*W+x;if(VILL[j]||S.obj[j]||S.floor[j]||S.ground[j]||!walk(j)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y)||L.includes(j))continue;L.push(j)}
-  if(!L.length)return;shakeScreen('m');sfx('bossIn');L.forEach((j,i)=>setTimeout(()=>{if(S.obj[j])return;S.obj[j]='rock';delete S.dyn[j];spawnFX(j%W-.5,(j/W|0)-.6,'#ff9a4a');sfx('hit');dirty=true;if(i===L.length-1)recount()},600+i*350));toast('火山がふんかした！ 岩が落ちてきた')}
+  if(!L.length)return;shakeScreen('m');sfx('bossIn');L.forEach((j,i)=>later(()=>{if(S.obj[j])return;S.obj[j]='rock';delete S.dyn[j];spawnFX(j%W-.5,(j/W|0)-.6,'#ff9a4a');sfx('hit');dirty=true;if(i===L.length-1)recount()},600+i*350));toast('火山がふんかした！ 岩が落ちてきた')}

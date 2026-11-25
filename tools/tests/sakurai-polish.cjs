@@ -30,7 +30,7 @@ const assert=require('node:assert/strict');
   const dt=Date.now()-t0;assert.ok(dt>=900&&dt<3000,'fast-forward ends quickly but after the hold: '+dt);
   console.log('Talk: fast-forward only for seen talks, and it waits for the motions ('+dt+'ms)');
   /* 3. 夜のコワイノをぜんぶ追いはらった：起きている子がよろこぶ。1晩1回 */
-  const j=JSON.parse(await run(`(()=>{S.nightHad=true;S.nushi=0;S.ns={n:1,kill:1,lost:[],hurt:0,broke:0};S.enemies=[{dead:true}];const r=S.res[0];endAct(r);JUMP.delete(r);EVAP.push({e:S.enemies[0],t0:performance.now(),dur:1300,die:true});nightClearJoy();const w=!!S.ns.clr;EVAP.length=0;nightClearJoy();const a=S.ns.clr,b=JUMP.has(r);JUMP.delete(r);nightClearJoy();return JSON.stringify({w,a,b,c:JUMP.has(r)})})()`));
+  const j=JSON.parse(await run(`(()=>{S.nightHad=true;S.nushi=0;S.ns={n:1,kill:1,lost:[],hurt:0,broke:0};S.enemies=[{dead:true}];const r=S.res[0];endAct(r);JUMP.delete(r);EVAP.push({e:S.enemies[0],t0:performance.now(),dur:1300,die:true});nightClearJoy();const w=!!S.ns.clr;EVAP.length=0;nightClearJoy();const a=S.ns.clr,b=JUMP.has(r);JUMP.delete(r);nightClearJoy();S.enemies=[];/* かりのコワイノ（type なし）を、世界の1コマに のこさない */return JSON.stringify({w,a,b,c:JUMP.has(r)})})()`));
   assert.equal(j.w,false,'waits while the last one is falling');assert.equal(j.a,1);assert.equal(j.b,true,'awake spirits jump');assert.equal(j.c,false,'only once a night');
   const j2=JSON.parse(await run(`(()=>{S.ns={n:1,kill:0,lost:[],hurt:0,broke:0};nightClearJoy();return JSON.stringify(!!S.ns.clr)})()`));
   assert.equal(j2,false,'a night with no enemies driven away does not celebrate');
