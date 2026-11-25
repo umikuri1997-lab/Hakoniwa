@@ -23,8 +23,6 @@ p{margin:0;color:var(--sub);max-width:65ch}
 .stage{position:relative;width:100%;max-width:640px;aspect-ratio:1/1;background:var(--stage);border-radius:6px;overflow:hidden;touch-action:none;margin:0 auto}
 .stage img{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;user-select:none}
 .stage .sp{cursor:grab}
-.stage .top{position:absolute;left:0;top:0;width:100%;overflow:hidden}
-.stage .top img{height:auto;aspect-ratio:1/1}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
 .num{font-variant-numeric:tabular-nums;min-width:11em;text-align:center}
 .out{display:flex;flex-direction:column;gap:8px;background:var(--panel);border-radius:6px;padding:12px}
@@ -35,11 +33,9 @@ const D=window.WBD,st=document.getElementById('stage'),bi=document.getElementByI
 const off={};for(const k in D.init)off[k]=D.init[k].slice();let cur=0;
 try{const s=JSON.parse(localStorage.getItem('wbslot')||'null');if(s)for(const k in s)off[k]=s[k]}catch(e){}
 const r5=v=>Math.round(v*2)/2,sx=()=>st.clientWidth/D.CW*D.K*D.IQSX,sy=()=>st.clientWidth/D.CW*D.K*D.IQSY;
-const tp=document.getElementById('top'),sb=document.getElementById('sbar');
-function show(){const R=D.rots[cur];bi.src=R.bench;si.src=R.spirit;sb.src=R.spirit;bi.style.zIndex=1;tp.style.zIndex=2;sb.style.zIndex=2;sb.hidden=R.front;place();
+function show(){const R=D.rots[cur];bi.src=R.bench;si.src=R.spirit;bi.style.zIndex=R.front?1:2;si.style.zIndex=R.front?2:1;place();
   for(const b of document.querySelectorAll('.tabs button'))b.setAttribute('aria-pressed',String(+b.dataset.k===cur))}
-function place(){const o=off[cur],R=D.rots[cur],q=st.clientWidth/D.CW,t='translate('+o[0]*sx()+'px,'+o[1]*sy()+'px)';si.style.transform=t;sb.style.transform=t;
-  tp.style.height=R.front?'100%':Math.max(0,R.cut*q)+'px';si.style.width=st.clientWidth+'px';sb.style.clipPath=R.front?'':'inset('+(R.bar+o[1]*D.K*D.IQSY)*q+'px 0 0 0)';num.textContent='よこ '+o[0]+' ・ たて '+o[1];
+function place(){const o=off[cur];si.style.transform='translate('+o[0]*sx()+'px,'+o[1]*sy()+'px)';num.textContent='よこ '+o[0]+' ・ たて '+o[1];
   code.textContent='const WBSLOT={'+[0,1,2,3].map(k=>k+':['+off[k][0]+','+off[k][1]+']').join(',')+'}';try{localStorage.setItem('wbslot',JSON.stringify(off))}catch(e){}}
 for(const b of document.querySelectorAll('.tabs button'))b.onclick=()=>{cur=+b.dataset.k;show()};
 for(const b of document.querySelectorAll('[data-d]'))b.onclick=()=>{const[d,a]=b.dataset.d.split(',').map(Number);off[cur][a]=r5(off[cur][a]+d);place()};
@@ -61,10 +57,10 @@ html = f'''<title>作業台の立つ位置</title>
 <style>{CSS}</style>
 <main>
 <h1>作業台の立つ位置</h1>
-<p>トンカチを打ちおろした瞬間のせいれいです（ゲームの絵を3倍）。台のむこうに立つ向き（2・3）は、ゲームと同じく、天板より下だけが台にかくれます。向きをえらび、せいれいをドラッグするか矢じるしで、台の前でちょうど作業している位置にずらしてください。4つの向きをきめたら、下の「コピー」をおして、チャットにはりつけて送ってください。</p>
+<p>トンカチを打ちおろした瞬間のせいれいです（ゲームの絵を3倍）。向きをえらび、せいれいをドラッグするか矢じるしで、台の前でちょうど作業している位置にずらしてください。4つの向きをきめたら、下の「コピー」をおして、チャットにはりつけて送ってください。</p>
 <div class="tabs" role="group" aria-label="向き">{tabs}</div>
 <p id="rname"></p>
-<div class="stage" id="stage"><img id="bench" alt="作業台"><div id="top" class="top"><img id="spirit" class="sp" alt="せいれい"></div><img id="sbar" class="sp" alt=""></div>
+<div class="stage" id="stage"><img id="bench" alt="作業台"><img id="spirit" class="sp" alt="せいれい"></div>
 <div class="ctl">
 <button type="button" data-d="-0.5,0" aria-label="左へ">←</button><button type="button" data-d="0.5,0" aria-label="右へ">→</button>
 <button type="button" data-d="-0.5,1" aria-label="上へ">↑</button><button type="button" data-d="0.5,1" aria-label="下へ">↓</button>

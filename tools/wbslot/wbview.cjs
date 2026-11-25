@@ -1,7 +1,7 @@
 /* 作業台の立つ位置のページ（tools/wbslot/）につかう絵を、ゲームそのものの描き方で作る。
    node tools/wbslot/wbview.cjs <出力.json>
    向きごとに：作業台と材料置き場だけの絵（bench）・トンカチを打ちおろした瞬間のせいれいだけの絵（spirit。WBSLOT のずれなし）。どちらも背景なし・同じ大きさ・同じ場所。
-   front：せいれいが台の手前（向き0・1）。cut：台のむこう（向き2・3）で、これより下（台にかくれる所）を描かない行（ゲームの wbBehindClip）。bar：足もとのバーの上の行（ずれなしのとき）。init：いまの WBSLOT。K：ゲームの点1つが絵の何ドットか（WBSLOT の1は、よこ K*IQSX・たて K*IQSY ドット） */
+   front：せいれいが台の手前（向き0・1）。init：いまの WBSLOT。K：ゲームの点1つが絵の何ドットか（WBSLOT の1は、よこ K*IQSX・たて K*IQSY ドット） */
 const path=require('path'),fs=require('fs'),boot=require(path.join(__dirname,'..','sim','boot.cjs'));
 if(!process.env.CHROME_PATH)process.env.CHROME_PATH='/opt/pw-browsers/chromium';
 const OUT=process.argv[2]||'wbslot.json',Z=3,CW=640,CH=640;
@@ -21,7 +21,6 @@ const out=await run(`(async()=>{USERPAUSE=true;const Z=${Z},CW=${CW},CH=${CH};
   render(now);await new Promise(q=>setTimeout(q,400));render(now);await new Promise(q=>setTimeout(q,300));
   const kk=dpr*cam.z;clear();for(const[q,yd]of[[c.b,0],[c.y,1]]){const A=objFootJ(q),qx=q%W,qy=(q/W)|0;standTf(ctx,kk,A.fx,A.fy,A.px,A.py);if(yd)drawWbYard(ctx,j,qx*TS,qy*TS-liftOf(q),now,q);else drawObj(ctx,'wbench',qx*TS,qy*TS-liftOf(q),j,0,now)}const bench=cut();
   for(const q in WBSLOT)WBSLOT[q]=[0,0];clear();{const A=ptFoot(r.x*TS,r.y*TS);standTf(ctx,kk,A.fx,A.fy,A.px,A.py);drawRes(r,now)}const spirit=cut();Object.assign(WBSLOT,JSON.parse(JSON.stringify(SO)));
-  const oy=(cv.height-CH)/2,ft=w2s(r.x*TS,r.y*TS).y*dpr-oy;let cutY=null;if(k>=2){const[dx,dy]=WORKD[k],ex=(c.b%W+.5+dx*WBEDGE)*TS,ey=((c.b/W|0)+.5+dy*WBEDGE)*TS;cutY=w2s(ex,ey).y*dpr-oy-WBTOPH*kk}
-  res.rots.push({k,front:k<2,bench,spirit,cut:cutY,bar:ft+10*IQSY*kk,anim:workAnim(r),face:r.face})}
+  res.rots.push({k,front:k<2,bench,spirit,anim:workAnim(r),face:r.face})}
  clear();dirty=true;return res})()`);
 fs.writeFileSync(OUT,JSON.stringify(out));console.log(errors.length?'エラー: '+JSON.stringify(errors.slice(0,3)):'エラーなし','→',OUT,out.rots.map(q=>q.k+':'+q.anim+':'+q.face).join(' '));await browser.close()})();
