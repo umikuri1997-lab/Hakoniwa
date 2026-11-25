@@ -6,9 +6,6 @@
 const VGIFT=[];/* なかまが物を置くしくみはなくした（持ち主の指示）。古いセーブの待ちは villageGiftTick でけす */
 const vgOn=()=>!!S&&WD===KUSA&&!S.free&&!MEMRUN&&!STORY_REPLAY_RUN&&!STORY_REPLAY_SHELL&&!S.cleared;
 const vgWho=g=>g.el==='wood'?FUTABA:keyName(g.el);
-function vgScan(){/* 会話までおわったできごとを、やることにためる（何もないときは、セーブの中身をかえない） */const add=VGIFT.filter(g=>!(S.vgSeen||{})[g.k]&&qDone(g.k));if(!add.length&&S.flags.vgift1)return;const seen=S.vgSeen||(S.vgSeen={}),P=S.vgift||(S.vgift=[]);
-  if(!S.flags.vgift1){S.flags.vgift1=1;for(const g of add)seen[g.k]=1;return}/* 前のセーブで、もうおわっていたできごとは、置かない */
-  for(const g of VGIFT)if(!seen[g.k]&&qDone(g.k)){seen[g.k]=1;P.push(g.k)}}
 function vgCenter(g){if(g.at==='stump'||g.at==='water'){if(S.sacredRoot==null)return null;const s=fieldStump(S.sacredRoot);return [s%W,(s/W)|0]}return STATUE>=0?[STATUE%W,(STATUE/W)|0]:[CX,CY]}
 function vgCellOK(g,j,G){/* その物を、j（左上）に置けるか */const x=j%W,y=(j/W)|0,b=BL[g.id];
   if(g.at==='water'){if(S.ground[j]!==1||S.obj[j]||!canPlace(g.id,x,y,true))return false;return [-1,1,-W,W].some(d=>G.dist[j+d]>=0&&walk(j+d))}

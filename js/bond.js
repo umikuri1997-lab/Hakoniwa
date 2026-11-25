@@ -220,8 +220,6 @@ function bondMemLine(m,d){/* のこった子 m が、消えた子 d との思い
     const f=ELEM_KEYS.indexOf(m.elem)<=ELEM_KEYS.indexOf(d.elem),G=BOND_MEMG[f?m.elem+'|'+d.elem:d.elem+'|'+m.elem];if(G)return tone(m.elem===d.elem?G[0]:G[f?0:1]||G[0])}
   const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)){const w=BL[did.slice(5)];if(w)return tone('#cry|いっしょに'+w.name+'で遊んだの、たのしかったのに……。')}
   return tone(BOND_DIDL[did]||BOND_DIDL.any)}
-/* 消えた子 d の、なかよしの子（村にいる子だけ）。なかよしがいなければ null */
-function deathMate(d,name){const n=name||(d&&d.mate);if(!n)return null;const m=S.res.find(q=>q.name===n&&!q.hidden);return m||null}
 /* なかよしの子が話す、はじめの3行（おどろき → 思い出 → かなしみ） */
 function deathMateLines(m,d){const n=d.name;
   /* 言いかたごとに4つ（風は5つ）。ぜんぶ出しおわるまで、同じ物を出さない（pickFresh） */

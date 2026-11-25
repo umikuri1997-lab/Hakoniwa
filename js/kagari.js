@@ -143,7 +143,7 @@ function kgrTick(){if(!kgrOn())return;const now=performance.now();if(now-KGRT<10
 function kgrDot(x,y,w,h,col,a=1){if(a<=0)return;ctx.globalAlpha=Math.min(1,a);ctx.fillStyle=col;ctx.fillRect(Math.round(x),Math.round(y),w,h)}
 function kgrFire(X,Y,f,T){/* 小さなたき火：まき2本と、ゆれる火（f：火の強さ 0〜1） */
   kgrDot(X-8,Y-2,16,2,'#7a4a2a');kgrDot(X-6,Y-4,12,2,'#5e3820');
-  if(f<=0)return;const n=Math.round(6*f);for(let i=0;i<n;i++){const ph=(T*1.4+i/n)%1,ox=((i*5)%9)-4,hh=(2+((i*3)%3))*f;kgrDot(X+ox,Y-6-ph*12*f,2,2,ph<.4?'#fff0b0':ph<.7?'#ffb347':'#ff7a3a',(1-ph)*f+.15)}
+  if(f<=0)return;const n=Math.round(6*f);for(let i=0;i<n;i++){const ph=(T*1.4+i/n)%1,ox=((i*5)%9)-4;kgrDot(X+ox,Y-6-ph*12*f,2,2,ph<.4?'#fff0b0':ph<.7?'#ffb347':'#ff7a3a',(1-ph)*f+.15)}
   kgrDot(X-3,Y-7,6,3,'#ffcf6a',.8*f);kgrDot(X-1,Y-10,2,3,'#fff3c4',.8*f)}
 function kgrAsh(X,Y,T,t0,t1,n=10){/* 灰がふりかかる：T が t0〜t1 のあいだ、上からおちる灰の粒 */if(T<t0||T>t1+1)return;for(let i=0;i<n;i++){const s=t0+(i/n)*(t1-t0),q=(T-s)/1;if(q<0||q>1)continue;kgrDot(X-6+((i*7)%12),Y-22+q*18,2,2,i%2?'#9a958f':'#c8c3bc',1-q*.3)}}
 function kgrMound(X,Y,a,glow,T){/* 灰の山（glow：灰の下の火の明るさ） */kgrDot(X-8,Y-4,16,3,'#8e8983',a);kgrDot(X-6,Y-6,12,2,'#a7a29b',a);kgrDot(X-3,Y-8,6,2,'#bdb8b1',a);

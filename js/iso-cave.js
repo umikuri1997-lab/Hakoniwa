@@ -66,7 +66,7 @@ function cvqScrPt(wx,wy,h){const A=cvqPt(wx,wy),cx=camCX(),cy=camCY();return{x:V
 function cvqCamTo(k){const C=CV;if(!C||!C.party.length)return;let x=0,y=0;for(const a of C.party){x+=a.x;y+=a.y}x=x/C.party.length*TS;y=y/C.party.length*TS;const l=cvqLvAt(x,y)*IQD+.3*TS,tx=x-l-VW/cam.z/2,ty=y-l-VH/cam.z/2;cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k}
 function cvqClamp(){const vw=VW/cam.z,vh=VH/cam.z,cx=clamp(camCX(),0,CVW*TS),cy=clamp(camCY(),CVOY*TS,(CVOY+CVH)*TS);cam.x=cx-vw/2;cam.y=cy-vh/2}
 /* 1コマ */
-function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);const k=dpr*cam.z;
+function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1a1511';ctx.fillRect(0,0,cv.width,cv.height);
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;const T=cvqT();if(!T)CVMISS=true;
   const IV=isoView(),M=5,x0=Math.max(0,Math.floor(IV.x0)-M),x1=Math.min(CVW-1,Math.ceil(IV.x1)+M),y0=Math.max(0,Math.floor(IV.y0)-CVOY-M),y1=Math.min(CVH-1,Math.ceil(IV.y1)-CVOY+M);

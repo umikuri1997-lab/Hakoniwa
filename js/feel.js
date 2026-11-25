@@ -144,7 +144,7 @@ let FEELCL=null;
 function feelCloudPat(c){if(FEELCL)return FEELCL;const N=128,t=document.createElement('canvas');t.width=t.height=N;const g=t.getContext('2d');g.fillStyle='#1e2846';
   for(let n=0;n<5;n++){const cx=hash(n*71+3)*N,cy=hash(n*37+9)*N;for(let k=0;k<5;k++){const rx=9+hash(n*5+k)*10,ry=5+hash(n*9+k*3)*5,ex=cx+(hash(n*11+k*7)-.5)*26,ey=cy+(hash(n*13+k*5)-.5)*10;for(const ox of[-N,0,N])for(const oy of[-N,0,N]){g.beginPath();g.ellipse(ex+ox,ey+oy,rx,ry,0,0,7);g.fill()}}}
   return FEELCL=c.createPattern(t,'repeat')}
-function feelClouds(c,now,dk){if(!S||S.rain||dk>.05)return;const h=hour(),a=FEEL_CLOUD*Math.min(1,(h-7)/1,(17-h)/1);if(!(a>0))return;const K=7,ox=(now*.0055)%(128*K),oy=(now*.0012)%(128*K),vw=VW/cam.z,vh=VH/cam.z;
+function feelClouds(c,now,dk){if(!S||S.rain||dk>.05)return;const h=hour(),a=FEEL_CLOUD*Math.min(1,(h-7)/1,(17-h)/1);if(!(a>0))return;const K=7,ox=(now*.0055)%(128*K),oy=(now*.0012)%(128*K);
   c.save();c.imageSmoothingEnabled=true;c.globalAlpha=a;c.globalCompositeOperation='multiply';c.fillStyle=feelCloudPat(c);c.translate(ox,oy);c.scale(K,K);{const IV=isoView(),X=IV.x0*TS,Y=IV.y0*TS,Wd=(IV.x1-IV.x0)*TS,Hd=(IV.y1-IV.y0)*TS+HMAX*IQD;/* 地面にうつるかげ：クォータービューは、見えている地面ぜんぶ */c.fillRect((X-ox)/K-1,(Y-oy)/K-1,Wd/K+2,Hd/K+2)}c.restore()}
 
 /* ---------- 木もれ日（晴れた昼）：葉のある木の落ち影の中に、あたたかい光のまだら ----------
@@ -215,7 +215,7 @@ function feelStep(now){if(!S||!S.res)return;const fid=typeof FOLLOW!=='undefined
 
 /* ---------- 場所の音：カメラの近くにあるときだけ聞こえる（川のせせらぎ・凪いだ池とカエル・お湯の流れこむ温泉・火のパチパチ・葉のざわめき・夏のセミ）。川・池・温泉・火は本物の録音（火は焚き火の録音 SAMPLES.fire。持ち主がきめた）、ほかはその場で作る ---------- */
 const FEELAB={},FEELREC=new Set(['stream','pond','onsen','fire']),FEELRK={fire:'fire'};let FEELAT=0;
-function feelBuf(k){const sr=AC.sampleRate,n=Math.floor(sr*3),b=AC.createBuffer(1,n,sr),d=b.getChannelData(0);let a=0,a2=0,m=.5,m2=.5,tm=.5,tm2=.5;
+function feelBuf(k){const sr=AC.sampleRate,n=Math.floor(sr*3),b=AC.createBuffer(1,n,sr),d=b.getChannelData(0);let a=0,a2=0;
   if(k==='leaves'){for(let i=0;i<n;i++){const w=Math.random()*2-1;a+=(w-a)*.35;a2+=(w-a2)*.06;const s=Math.sin(Math.PI*i/n);d[i]=(a-a2)*(.18+.82*s*s)*.9}}
   else if(k==='semi'){for(let i=0;i<n;i++){const t=i/sr,am=.5+.5*Math.sin(6.283*52*t),sw=.55+.45*Math.sin(6.283*t/3-1.57);d[i]=(Math.sin(6.283*4180*t)+Math.sin(6.283*4420*t+1)*.8+Math.sin(6.283*4760*t+2)*.5)*.2*am*am*sw}}
   const X=Math.floor(sr*.08);for(let i=0;i<X;i++){const u=i/X;d[i]=d[i]*u+d[n-X+i]*(1-u)}/* つなぎ目をならす */return b}

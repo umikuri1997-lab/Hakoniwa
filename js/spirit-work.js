@@ -30,7 +30,7 @@ function tryJob(r,G,k){
     if(isNight()||roomN(r)<1)return false;if(matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))){boxFullNote();return false}/* まき棚は木材だけ入る *//* 箱に1つでも空きがあれば集めにいく（ぴったり満杯までためられる） */const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?(WD===KAZAN?((S.mat.bamboo||0)<(S.mat.wood||0)?[['bamboo'],['ntree','deadtree']]:[['ntree','deadtree'],['bamboo']]):[['ntree','deadtree']]):[['rock',...VEIN_IDS]];/* 火山：木材と竹の、すくないほうを先に切る */
     const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2)&&jobFor(q,r);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
     for(const ns of nat){const nt=q=>ns.includes(S.obj[q])&&free('o'+q,1);j=nearest(G,j=>adjOf(j,nt)>=0,40);if(j>=0){const q=adjOf(j,nt);startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
-  case'cookS':case'cook':{const sp=k==='cookS';if(![...COOKST].some(o=>cnt(o))||!(foodCap()>0)||isNight())return false;const hg=k=>r.cgot?r.cgot.m[k]||0:0,pk={};
+  case'cookS':case'cook':{if(![...COOKST].some(o=>cnt(o))||!(foodCap()>0)||isNight())return false;const pk={};
     if(!S.ovenSet)S.ovenSet={};const ok=q=>{if(!(q in pk))pk[q]=cookPick(q,r);return !!pk[q]};/* 守り神さまがえらんだ料理だけ作る。料理は、その料理の属性のせいれいだけが作る */
     const ov=q=>COOKST.has(S.obj[q])&&(S.obj[q]!=='yudekago'||hotW(q))&&(!WORKF.has(S.obj[q])||workStand(G,q)>=0)&&ok(q)&&!ashed(q)&&!campOut(q)&&free('o'+q,1)&&useFor(q,r)&&!S.res.some(x=>x.cing&&x.cing.ov===q);j=nearest(G,j=>adjOf(j,ov)>=0,80);if(j<0)return false;const q=adjOf(j,ov),R=pk[q];
     if(r.cgot&&r.cgot.rec!==R.key)cgBack(r);const lk=Object.keys(cgLeft(r,R)).map(fkey);if(!lk.length){r.cing={rec:R.key,ov:q,nd:r.cgot?Object.assign({},r.cgot.m):null};r.cgot=null;const st=ovenStand(G,q);startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q});return true}/* 材料がそろっていたら、そのまま料理へ */const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>keysAdj(j,lk)>=0,80);if(sj<0)return false;/* 材料は、料理の家具までの道のりがいちばん短くなる箱からとる（1つの箱にそろっていなければ、いくつかの箱から） */
@@ -69,7 +69,7 @@ function tryJob(r,G,k){
   return false;
 }
 const JOBCAT=[['build','repair'],['craft'],['harvest','water','tend','till','sow','plant'],['cook','chop','mine','drop','weed','seed','offer','gather']];
-const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
+const FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
 const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat','trlook'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
@@ -185,7 +185,7 @@ function goWander(r,G){
   if(!isNight()&&!enemyLive()&&typeof hapDance==='function'&&hapDance(r,G))return;/* きのこの輪でおどる（happen.js） */if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;if(!isNight()&&!enemyLive()&&Math.random()<.25&&typeof goPetAnimal==='function'&&goPetAnimal(r,G))return;/* 飼う生き物をなでにいく *//* 小さな生き物を見つけたら、見にいく */
   if(!isNight()&&!enemyLive()&&typeof goOuting==='function'&&goOuting(r,G))return;/* なかよしと、おでかけ（outing.js） */if(!isNight()&&!enemyLive()&&typeof goTreasure==='function'&&goTreasure(r,G))return;/* たからものをながめる（gifts.js） */
   if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
-  const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!VILL[j])continue;c.push(j)}}
+  const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){if(isNight()&&!VILL[j])continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});
   startAct(r,G,'wander',pick(c));
 }

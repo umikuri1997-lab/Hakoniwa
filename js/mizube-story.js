@@ -118,7 +118,7 @@ function mzStoryMig(){/* 前のならびで「つづき」（mzNext）まで来�
 
 /* ---- 絵（コードの仮のドット絵。1ドットは2） ---- */
 function mzOval(c,cx,cy,rx,ry,col){c.fillStyle=col;for(let q=-ry;q<=ry;q+=2){const w=Math.round(rx*Math.sqrt(Math.max(0,1-q*q/(ry*ry+.01)))/2)*2;if(w>0)c.fillRect(Math.round(cx/2)*2-w,Math.round((cy+q)/2)*2,w*2,2)}}
-function mzKameDraw(c,x,y,i,now){/* ヌシ様のこうら（マス i の、まん中の下が足もと）。水の中では、うすく見える */const cx=x+16,cy=y+18,M=S.mz,wet=S.ground[i]===1&&!S.flags.mzDawn,rise=MZV.rise?Math.min(1,(now-MZV.rise)/2600):S.flags.mzDawn?1:0,lift=Math.round(rise*6/2)*2;
+function mzKameDraw(c,x,y,i,now){/* ヌシ様のこうら（マス i の、まん中の下が足もと）。水の中では、うすく見える */const cx=x+16,cy=y+18,wet=S.ground[i]===1&&!S.flags.mzDawn,rise=MZV.rise?Math.min(1,(now-MZV.rise)/2600):S.flags.mzDawn?1:0,lift=Math.round(rise*6/2)*2;
   c.save();if(wet)c.globalAlpha=.4;
   if(S.flags.mzKame||MZV.kame){const k=MZV.kame?Math.min(1,(now-MZV.kame)/1200):1;c.globalAlpha*=k;mzOval(c,cx+30,cy-lift+2,10,7,'#6f8f73');mzOval(c,cx+30,cy-lift,9,6,'#8fb08f');c.fillStyle='#2f3a33';c.fillRect(cx+32,cy-lift-2,2,2);c.globalAlpha=wet?.4:1}/* 顔 */
   mzOval(c,cx,cy-lift+4,40,18,'#5d6b5c');mzOval(c,cx,cy-lift,38,16,'#8a9484');mzOval(c,cx-4,cy-lift-4,30,10,'#a4ad9c');

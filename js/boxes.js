@@ -15,7 +15,6 @@ const pileJ=()=>STATUE>=0?STATUE:RUINT>=0?RUINT:OBOX;/* フリーモードは、
 const bx=j=>{if(j===PILE)return PIL();const B=BOX();return B[j]||(B[j]={})};
 function boxCapAdd(){let add=typeof pathBox==='function'?pathBox():0;/* むらのちから */const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* ふえるわくの数。しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
 const boxSlots=j=>{const t=boxTypeAt(j);return t?BOXCAP[t]+boxCapAdd():0},boxCap=j=>boxSlots(j)*STACK;/* わくの数・ぜんぶつめたときの数 */
-function boxUsed(j){const b=BOX()[j];let n=0;if(b)for(const k in b)n+=b[k];return n}
 function slotUsed(j){const b=j===PILE?null:BOX()[j];let n=0;if(b)for(const k in b)if(b[k]>0)n+=Math.ceil(b[k]/STACK);return n}/* 使っているわく */
 const stackPart=n=>n>0&&n%STACK?STACK-n%STACK:0;/* つみかけのわくの、のこり */
 function boxOK(j,key){/* その箱に、この物を入れてよいか */const O=BOXONLY[boxTypeAt(j)];if(O&&!O[key])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(isFK(key)?F.food:F.mat)return true;return !!(F.it&&F.it[key])}
@@ -63,9 +62,7 @@ function rsvFree(m,food){/* とっておくのをやめる（使える数にも�
 /* ---- となりの箱をさがす ---- */
 function boxSide(j,k){/* マス j から箱 k をつかえるか（かべかけの物は、壁の正面＝すぐ下のマスからだけ） */const a=anc(k);return !(HOME_WALLS.has(S.obj[a])&&(S.win||{})[a])||a===j-W}
 function putAdj(j,keys){/* マス j のとなりの、keys のどれかを入れられる箱（なければ -1） */return adjOf(j,k=>boxTypeAt(k)&&boxSide(j,k)&&keys.some(key=>boxRoom(anc(k),key)>0))}
-function getAdj(j,keys,pile){/* マス j のとなりの、keys のどれかが入っている箱（pile：神殿のまえもさがす） */return adjOf(j,k=>{const a=anc(k);if(pile!==false&&a===pileJ()&&a>=0)return keys.some(key=>boxHas(PILE,key)>0);return boxTypeAt(k)&&boxSide(j,k)&&keys.some(key=>boxHas(a,key)>0)})}
 const boxIdOf=k=>{const a=anc(k);return a===pileJ()&&!boxTypeAt(k)?PILE:a};
-const FOODKEYS=()=>Object.keys(FOODS).map(fkey),foodIn=()=>Object.keys(S.fs).filter(k=>S.fs[k]>0).map(fkey);
 const carryKeys=r=>Object.keys(r.carry&&typeof r.carry==='object'?r.carry:r.carry?{mugi:1}:{}).map(fkey),cmatKeys=r=>Object.keys(r.cmat||{});
 const anyBox=j=>adjOf(j,k=>!!boxTypeAt(k)&&boxSide(j,k));
 /* ---- 建てる・作るために、とっておいた素材を運ぶ ---- */
@@ -77,7 +74,6 @@ const needKeys=t=>Object.keys(needLeft(t)),hasNeed=t=>needKeys(t).length>0;
 const bmN=r=>r.bm?Object.values(r.bm.m).reduce((a,b)=>a+b,0):0;/* 建てる所・依頼へ運んでいる素材の数 */
 function deliver(r,t){/* 運んできた素材を、建てる所・依頼にわたす */if(!r.bm||r.bm.t!==t.bid)return;const g=t.got||(t.got={});for(const k in r.bm.m)g[k]=(g[k]||0)+r.bm.m[k];r.bm=null}
 function bmDrop(r){/* 運んでいた素材の行き先がなくなった：もちものの素材としてしまいにいく */if(!r.bm)return;for(const key in r.bm.m){const n=r.bm.m[key];if(isFK(key)){r.carry=r.carry&&typeof r.carry==='object'?r.carry:{};const k=key.slice(2);r.carry[k]=(r.carry[k]||0)+n}else{r.cmat=r.cmat||{};r.cmat[key]=(r.cmat[key]||0)+n}}r.bm=null}
-function bmTargets(){/* 素材を運ぶのを待っている所（建てる所・依頼） */const L=[];for(let j=0;j<W*H;j++){if(S.obj[j]!=='site')continue;const d=S.dyn[j];if(!d)continue;if(d.bid==null)d.bid='s'+j;if(hasNeed(d))L.push(d)}for(const o of S.orders||[]){if(o.bid==null)o.bid='o'+o.id;if(hasNeed(o))L.push(o)}return L}
 function siteNeed(j){const d=S.dyn[j];if(!d||S.obj[j]!=='site')return false;if(d.bid==null)d.bid='s'+j;return hasNeed(d)}
 function gotDrop(t,j){/* 建てるのをやめた：運びこんだ素材は、その場所に落とす */const g=t.got||{};const x=j%W,y=(j/W)|0;for(const key in g){const n=g[key];if(!(n>0))continue;const before=(S.drops||[]).length;dropAt(x,y,isFK(key)?'food:'+key.slice(2):'mat:'+key,n);if(S.drops&&S.drops.length>before)S.drops[S.drops.length-1].tap=1}t.got={}}
 function siteRefund(t,j){/* 建てる所・依頼をやめた：とっておいた分はもどし、運んだ分は落とす */if(t.cube){S.inv[t.cube]=(S.inv[t.cube]||0)+1;delete t.cube}/* つむのをやめたブロックは、もちものへ */const left={},fl={},m=needLeft(t);for(const key in m){if(isFK(key))fl[key.slice(2)]=m[key];else left[key]=m[key]}rsvFree(left);rsvFree(fl,true);for(const r of S.res)if(r.bm&&r.bm.t===t.bid)bmDrop(r);if(j!=null&&j>=0){const yk=t.bp!=null?'b'+t.bp:t.bid?yardKey(t.bid):S.obj[j]==='site'&&S.dyn[j]===t?'s'+j:null,y=yardAt(yk);gotDrop(t,y>=0?y:j)}}/* 材料置き場があれば、置き場のところに落とす */

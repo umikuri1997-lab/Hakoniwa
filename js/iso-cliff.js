@@ -10,7 +10,6 @@
 function icBlkDD(j){const x=j%W,y=(j/W)|0;return hiAt(j)>0?x+y+1:x+y-.99}
 const ICK=new Map();/* 作った絵（key → canvas） */
 const ICLF=.94,ICRT=.74;/* 左の面・右の面の明るさ */
-function icClear(){for(const c of ICK.values())c.width=c.height=0;ICK.clear();for(const e of ICT.c.values())e.c.width=e.c.height=0;ICT.c.clear();for(const e of ICT.m.values())e.width=e.height=0;ICT.m.clear()}
 /* 3Dの点（せかいの点 wx,wy、高さ z だん）→ 画面の点（ゲームの点） */
 const icP=(wx,wy,z)=>[(wx-wy)*IQA,(wx+wy)*IQB-z*IQL];
 /* 壁のタイル：side 0 左の面（y+1 がわ）・1 右の面（x+1 がわ）。src は 64×64 の絵、g は上の行に草のたれ（0：なし・1〜2：ばらつき） */

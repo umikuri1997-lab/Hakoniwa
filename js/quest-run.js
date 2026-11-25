@@ -175,7 +175,7 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===KUSA&&grassReunionBl
     const t0=pour.length*gap+(WD===KUSA?500:1600);
     villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===KUSA?'#e5f5ba':'#fff3a0');if(WD===KAZAN){volFx('heatPillar',4800,{x:TX,y:TY});volShot([[TX,TY-4],[TX,TY]],[],2,1.2);}if(WD===KAZAN)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD===KAZAN)flashScreen()},t0);
     // 光がひろがって、荒れた土地に花が咲いていく
-    villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
+    villageTimeout(()=>{const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx(WD===KUSA?'sacred':'bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
     villageTimeout(()=>{for(let k=0;k<(WD===KUSA?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD===KAZAN)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,gy:TY*TS,life:1.2,col:'#e8ffe0'})},k*150);sfx(WD===KUSA?'sacred':'bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===KUSA)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
       // ヌシ様が台座の上にあらわれる
@@ -269,7 +269,7 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
     if(!r||!r.act||(r.act.type!=='npl'&&n.pl.t>3)){n.pl=null;n.pt=rnd(30,90)}else{n.mv=0;n.path=[];{const dx=r.x-n.x,dy=r.y-n.y;if(Math.abs(dx)<.8&&dy>0)n.dir=1;else{n.dir=0;n.face=dx<0?-1:1}}/* 遊びにくる子のほうを向く（前にいれば正面、横にいれば横向き） */if(r.act.type==='npl'&&r.act.stage==='do'){n.fx=(n.fx||0)+dt;if(n.fx>3){n.fx=0;spawnFX(n.x-.5,n.y-1.1,'#ffb8d8')}}return}}
   if(n.pt==null)n.pt=rnd(20,60);n.pt-=dt;
   if(n.pt<=0&&S.cleared&&!isNight()){/* クリア後、ときどき、精霊が遊びにくる（なにもしていない子・おもちゃで遊んでいる子から） */n.pt=20;const c=S.res.filter(r=>!r.hidden&&(!r.act||['wander','idle','play'].includes(r.act.type))&&r.hunger>150&&r.energy>25&&Math.abs(r.x-n.x)+Math.abs(r.y-n.y)<30);
-    if(c.length){const r=pick(c),G=bfs(r.x|0,r.y|0),nj=(n.y|0)*W+(n.x|0),F=(j,ok)=>{const dx=j%W-(n.x|0),dy=(j/W|0)-(n.y|0);return ok(dx,dy)&&walk(j)},st0=nearest(G,j=>F(j,(dx,dy)=>dy===1&&Math.abs(dx)<=1),40),st=st0>=0?st0:nearest(G,j=>F(j,(dx,dy)=>dy===0&&Math.abs(dx)>=2&&Math.abs(dx)<=3||dy===2&&Math.abs(dx)<=1),40);/* ヌシ様の前（下）か、横に少しはなれたところ。うしろに立つと、ヌシ様にかくれて見えない */if(st>=0){endAct(r);startAct(r,G,'npl',st,{});n.pl={id:r.id,t:0};n.path=[];return}}}
+    if(c.length){const r=pick(c),G=bfs(r.x|0,r.y|0),F=(j,ok)=>{const dx=j%W-(n.x|0),dy=(j/W|0)-(n.y|0);return ok(dx,dy)&&walk(j)},st0=nearest(G,j=>F(j,(dx,dy)=>dy===1&&Math.abs(dx)<=1),40),st=st0>=0?st0:nearest(G,j=>F(j,(dx,dy)=>dy===0&&Math.abs(dx)>=2&&Math.abs(dx)<=3||dy===2&&Math.abs(dx)<=1),40);/* ヌシ様の前（下）か、横に少しはなれたところ。うしろに立つと、ヌシ様にかくれて見えない */if(st>=0){endAct(r);startAct(r,G,'npl',st,{});n.pl={id:r.id,t:0};n.path=[];return}}}
   if(!n.path)n.path=[];
   if(!n.path.length){n.mv=0;n.t-=dt;if(n.t>0)return;n.t=rnd(30,90);
     let sx=n.x|0,sy=n.y|0;if(!walk(sy*W+sx)){const c=[];for(let y=sy-2;y<=sy+3;y++)for(let x=sx-2;x<=sx+2;x++){const j=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&walk(j))c.push(j)}c.sort((a,b)=>Math.hypot(a%W+.5-n.x,(a/W|0)+.5-n.y)-Math.hypot(b%W+.5-n.x,(b/W|0)+.5-n.y));if(!c.length)return;n.path=[c[0]];return}/* 台座からおりる */
@@ -317,12 +317,6 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
     EXTRA.forEach((g,i)=>later(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
     later(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}for(const g of EXTRA)SACRED_POSES.delete(g);EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,'')})});
   const tk=()=>{if(!EXTRA.length)return;const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w&&(!SACRED_POSES.has(q)||SACRED_POSES.get(q).anim==='storyListen'));if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now());later(tk,1300)};later(tk,1300)}
-function memScene(done){/* むかしを思い出す：夜、影がせまり、フタバがふるえ、ほかの子が前に立つ。光がはじける */
-  const f=S.res.find(r=>r.name===FUTABA)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
-  for(let n=0;n<26;n++)later(()=>{const a=Math.random()*Math.PI,R=5*TS;fx.push({k:'p',x:f.x*TS+Math.cos(a)*R*(Math.random()<.5?-1:1),y:f.y*TS+Math.sin(a)*R*.6+TS*2,vx:0,vy:-25,life:1.6,col:'#1a1420',r:5})},n*120);
-  S.res.filter(r=>r!==f).forEach((r,i)=>later(()=>{r.face=f.x>=r.x?-1:1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col)},1600+i*300));
-  [400,1400,2400].forEach(t=>later(()=>JUMP.set(f,performance.now()),t));
-  later(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);later(done,5600)}
 function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)later(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)later(()=>leafFX(r),1500+Math.random()*800)}
 let GUEST=null,GUESTRUN=false;
 /* ---------- 温泉宿のお客さん（火山）：草原のなかまが3日に1回とまりに来て、草原の花のたね・苗を売る。朝に来て、つぎの朝に帰る（夜は宿の中） ---------- */

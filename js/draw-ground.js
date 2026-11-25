@@ -5,7 +5,7 @@ const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
 const GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ちぢめたときだけ、くわしい区画から作り、ちぢめるのをやめて GHALFT コマたったら手ばなす（ghalf・ghalfFree）。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
 const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
-function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()},()=>{GRD.nob=true;try{render(performance.now())}catch(e){frameErr('preload',e)}GRD.nob=false}/* はじめの画面を、地面をぬいて1回描き、そこに出る物の絵のページを、地面を作るあいだに読みはじめる */],NX=(W-1)>>4,NY=(H-1)>>4;
+function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()},()=>{GRD.nob=true;try{render(performance.now())}catch(e){frameErr('preload',e)}GRD.nob=false}/* はじめの画面を、地面をぬいて1回描き、そこに出る物の絵のページを、地面を作るあいだに読みはじめる */];
   igJobs(L);L.push(()=>{GRD.any=true});/* ひし形の地面の区画 */
   return {s:S,L,i:0}}
 const STAGEMS=180;/* 読みこみ中、1コマにマップを作る時間（ミリ秒。長いほど、コマのあいだのむだがへって速い。%の出かたは、ゆっくりになる） */
@@ -96,7 +96,7 @@ function wallMarg(c,i,x,y){const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.ha
       for(const sh of [false,true]){const D=dirs.filter(d=>HOME_WALLS.has(typeAt(i+d[0]-W))===sh);if(!D.length)continue;c.save();c.beginPath();for(const d of D)c.rect(x+d[1],y+d[2],d[3],d[4]);c.clip();c._shU=sh;drawFloor(c,S.floor[i+D[0][0]],x,y,i,true);c._shU=null;c.restore()}}/* となりの床マスの上が壁なら、床と同じ「壁の下のかげ」も、壁の下までつなげる */
 }
 // 道は、同じ種類どうしだけつながる（ちがう種類の道は、べつの道としてふちをかく）。マップのはし・水とはつながらない
-function roadLinks(i,iso){const gx=i%W,gy=(i/W)|0,me=S.floor[i],wl=me==='path'||me==='gravel',has=(x,y)=>!iso&&x>=0&&y>=0&&x<W&&y<H&&(S.ground[y*W+x]!==1&&ROADF.has(me)&&(S.floor[y*W+x]===me||slopeFrom(y*W+x)===i||slopeExit(y*W+x)===i&&S.floor[slopeFrom(y*W+x)]===me));return {L:has(gx-1,gy),R:has(gx+1,gy),U:has(gx,gy-1),D:has(gx,gy+1)}}
+function roadLinks(i,iso){const gx=i%W,gy=(i/W)|0,me=S.floor[i],has=(x,y)=>!iso&&x>=0&&y>=0&&x<W&&y<H&&(S.ground[y*W+x]!==1&&ROADF.has(me)&&(S.floor[y*W+x]===me||slopeFrom(y*W+x)===i||slopeExit(y*W+x)===i&&S.floor[slopeFrom(y*W+x)]===me));return {L:has(gx-1,gy),R:has(gx+1,gy),U:has(gx,gy-1),D:has(gx,gy+1)}}
 function slopeExit(k){/* k が坂の低いほうのはしのマスなら、坂をおりた先のマス。ちがえば -1（おりた先の道も、坂へつづける） */const a=stairOf(k);if(a<0||!SLOPES.has(S.obj[a]))return -1;const d=stairDir(a);if(d<0)return -1;const lo=d===0?a:stairOut(a,d);return k===lo?lo+SDIR[d][1]*W+SDIR[d][0]:-1}
 function slopeFrom(k){/* k が坂（のマス）なら、その坂をのぼった先の高いマス。ちがえば -1（のぼった先の道は、坂へつづける） */const a=stairOf(k);if(a<0||!SLOPES.has(S.obj[a]))return -1;const d=stairDir(a);return d<0?-1:stairTop(a,d)}
 function roadCorners(i,iso){const gx=i%W,gy=(i/W)|0,q=roadLinks(i,iso),has=(dx,dy)=>!iso&&gx+dx>=0&&gy+dy>=0&&gx+dx<W&&gy+dy<H&&S.ground[i+dy*W+dx]!==1&&S.floor[i+dy*W+dx]===S.floor[i];return [q.L&&q.U&&!has(-1,-1),q.R&&q.U&&!has(1,-1),q.R&&q.D&&!has(1,1),q.L&&q.D&&!has(-1,1)]}
@@ -193,7 +193,6 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
     f2rr(c,cx-11,y+4,22,17,6,body,C.crD);f2rr(c,cx-13,y+12,6,14,3,body,C.crD);f2rr(c,cx+7,y+12,6,14,3,body,C.crD);f2rr(c,cx-8,y+17,16,9,3,'#fffaf0',C.crD);
     if(id==='sofa1'){c.save();c.translate(cx-2,y+12);c.rotate(-.25);f2rr(c,-5,-4,10,8,2.5,'#9fb4be','#7f949e');c.restore()}else f2rr(c,cx-5,y+8,10,7,3,'#fffaf0');break}
   case'pouf':sh(10);c.fillStyle=C.cr;c.beginPath();c.ellipse(cx,y+22,10,7,0,0,7);c.fill();c.strokeStyle=C.crD;c.stroke();c.fillStyle='#fffaf0';c.beginPath();c.ellipse(cx,y+18,9,4.5,0,0,7);c.fill();c.strokeStyle=C.crD;for(const a of[-.6,0,.6]){c.beginPath();c.moveTo(cx,y+18);c.lineTo(cx+Math.sin(a)*9,y+27);c.stroke()}circ(c,cx,y+18,1.4,C.crD);break;
-    f2rr(c,cx-6,y+8,4,5,1,'#e9f2f6','#9bb');f2flower(c,cx-4,y+6,'#fff');f2rr(c,cx+2,y+10,5,4,1,'#fff','#999');break;
   case'ltable':sh(13);c.fillStyle=C.wdD;for(const dx of[-12,10])c.fillRect(cx+dx,y+19,2.5,9);f2rr(c,cx-14,y+12,28,8,2,C.wd,C.ol);c.fillStyle=C.wdL;c.fillRect(cx-12,y+13,24,2);c.fillStyle=C.cr;c.fillRect(cx-5,y+12,10,8);c.fillStyle=C.crD;c.fillRect(cx-5,y+16,10,.8);
     c.save();c.translate(cx+7,y+14.5);c.rotate(.3);f2rr(c,-3.5,-2.5,7,5,1,'#7d6a5c');c.restore();f2pot(c,cx-9,y+15,5);f2leaf(c,cx-9,y+8,2.5,1.5,-.5,C.gr);f2leaf(c,cx-8,y+9,2.5,1.4,.6,C.grD);break;
   case'sideb':sh(13);f2rr(c,cx-14,y+11,28,18,2,C.wd,C.ol);c.fillStyle=C.wdL;c.fillRect(cx-14,y+11,28,2.5);c.strokeStyle=C.wdD;c.strokeRect(cx-12,y+15,11,11);c.strokeRect(cx+1,y+15,11,11);circ(c,cx-3,y+21,1,C.ol);circ(c,cx+3,y+21,1,C.ol);

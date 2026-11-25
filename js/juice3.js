@@ -28,10 +28,10 @@ function juiceDiaryCount(body,secW,defer){/* diaryBody から（朝に出した�
   if(uiReduced()||!items.length){if(defer)return cb=>{onDone=cb;finish()};finish();return}
   for(const it of items)it.b.textContent='0'+it.sf;
   body.addEventListener('pointerdown',finish,true);/* タップで、すぐにさいごの数 */
-  let i=0,k=0,tick=0;const step=()=>{if(done)return;if(!body.isConnected||S!==st){done=true;return}if(body.closest('.bkstore')){finish();return}/* ページをめくった：見えていない数を数えつづけない（音も） */
+  let i=0,k=0;const step=()=>{if(done)return;if(!body.isConnected||S!==st){done=true;return}if(body.closest('.bkstore')){finish();return}/* ページをめくった：見えていない数を数えつづけない（音も） */
     const it=items[i];if(!it){finish();return}const inc=Math.max(1,Math.ceil(it.n/J3COUNTMAX));k=Math.min(it.n,k+inc);it.b.textContent=k+it.sf;
     const pop=c=>{it.b.classList.remove('ucntp','ucntd');void it.b.offsetWidth;it.b.classList.add(c)};
-    if(it.n>0){sfx('xyl');tick++;pop('ucntp')}/* 1つふえるたびに、一覧のスクロールと同じ「カラッ」と、数がはねる */
+    if(it.n>0){sfx('xyl');pop('ucntp')}/* 1つふえるたびに、一覧のスクロールと同じ「カラッ」と、数がはねる */
     if(k>=it.n){pop('ucntd');const row=it.b.closest('.stat');if(row){row.classList.add('ucntrow');setTimeout(()=>row.classList.remove('ucntrow'),420)}if(it.n>0){j3U('tink',.3,JUICE_SCALE[Math.min(i*2+6,JUICE_SCALE.length-1)]);const q=it.b.getBoundingClientRect();if(typeof sawdust==='function'&&q.width)sawdust(q.left+q.width/2,q.top+q.height/2,6,18)}/* 数がそろった行は、大きくはねて光り、木くずがはじける */
       i++;k=0;setTimeout(step,J3COUNTMS*4)}else setTimeout(step,J3COUNTMS)};
   const go=cb=>{onDone=cb||null;setTimeout(step,450)};if(defer)return go;go()}

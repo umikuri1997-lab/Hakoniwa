@@ -98,7 +98,6 @@ function templeRuinMigrate(){if(S.flags.ruinTemple1)return;S.flags.ruinTemple1=1
 function templeRuinTap(j){j=anc(j);if(S.obj[j]!=='statueb')return false;
   S.obj[j]='site';S.dyn[j]={build:'statue',p:0,need:BL.statue.time,ruin:1};for(const k of templeRuinCells(j).slice(1)){S.obj[k]='site2';S.ref[k]=j}
   sfx('twood');toast('せいれいが神殿を直しにきてくれる');recount();dirty=true;renderQuest();return true}
-function putNear(s,id,cx,cy){for(let r=0;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=(cy+dy)*W+cx+dx;if(!s.obj[k]&&s.ground[k]!==1&&!s.floor[k]){s.obj[k]=id;return}}}
 function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&(b.offerOnly||b.shopOnly)&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* おそなえされる家具は、レシピとして出さない（セーブからも消す） */
   {const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);if(!s.wipe)for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */
   for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */

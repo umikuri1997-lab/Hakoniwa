@@ -8,7 +8,6 @@ const PXI={"tril":"M19 9h1v1h-1zM18 10h2v1h-2zM17 11h3v1h-3zM16 12h4v1h-4zM15 13
 /* なにもないときの、小さな絵とひとこと */
 function nodata(k,t){const d=el('<div class="nodata">'+pxi(k)+'<span>'+t+'</span></div>'),c=typeof nodataSpirit==='function'?nodataSpirit(t):null;/* 村のせいれいがいれば、アイコンのかわりに、せいれいが立つ */if(c)d.querySelector('svg').replaceWith(c);return d}
 /* 入る数がわかるときだけ「持っている数/入る数」。箱がないときは数だけ */
-function capTxt(n,c){return c>0?'（'+n+'/'+c+'）':n>0?'（'+n+'）':''}
 /* できた印（✓）は、ドットのチェックにする */
 const CKD='M6 0h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM2 5h1v1h-1z';/* 7×6ドットのチェック（1ドット＝2px。32のマス目をちぢめると、ドットがにじむ） */
 function ckSet(b,t){if(t.startsWith('✓ ')){b.innerHTML='<svg class="pxi ck" viewBox="0 0 7 6" aria-hidden="true"><path d="'+CKD+'"/></svg>';b.appendChild(document.createTextNode(t.slice(2)))}else b.textContent=t}
@@ -232,8 +231,6 @@ function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=6
 /* 説明は❓をおしたときだけ出す */
 function helpify(r,text){if(!r||!text)return r;const tx=r.querySelector('.tx');if(!tx)return r;const q=document.createElement('button');q.className='qbtn';q.textContent='?';q.setAttribute('aria-label','説明');const nm=tx.querySelector('b').textContent;q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,text)};tx.querySelector('b').appendChild(q);return r}
 const GENRE_TAB={'家具':'家具','収納':'収納','遊び':'あそび道具','庭':'庭の家具','あかり':'あかり','ごはん':'料理家具','ワナ':'ワナ','家づくり':'家づくり','道・囲い':'道・囲い','クエスト':'クエスト'};
-function genreOf(id){const b=BL[id];if(!b)return'';if(b.cat==='living')return'ダイニング家具';if(b.cat==='cook')return'料理家具';for(const[t,ids]of CRAFT_TABS)if(ids.includes(id))return GENRE_TAB[t]||t;return''}/* アイテムのジャンル（名前のとなりに出す） */
-const nameG=id=>{const g=genreOf(id);return BL[id].name+(g?'　【'+g+'】':'')};
 const CAT_TAG={living:'リビング',cook:'キッチン',toy:'遊び',light:'あかり',env:'ガーデン'},TAB_TAG={'家具':'家具','収納':'収納','遊び':'遊び','庭':'ガーデン','あかり':'あかり','ごはん':'キッチン','ワナ':'ワナ','家づくり':'家づくり','道・囲い':'道・囲い','クエスト':'クエスト'};
 const CRAFT_TAGS=['ぜんぶ','リビング','寝室','キッチン','お風呂','収納','かざり','あかり','遊び','ガーデン','家づくり','道・囲い','ワナ','矢','そうび','クエスト'];/* 依頼ボードのタグのならび */
 const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン',achair:'リビング',pouf:'リビング',dtable:'リビング,キッチン',ltable:'リビング',table:'リビング,キッチン',sofa1:'リビング',rug1:'リビング,寝室',rug2:'リビング,寝室',bed:'寝室',yorubed:'寝室',hoshirug:'リビング,寝室',takebench:'ガーデン',shishiodoshi:'ガーデン,かざり',takeakari:'あかり,ガーデン',toro:'あかり,ガーデン',andon:'あかり,リビング',
@@ -617,7 +614,7 @@ function renderSheet(){
     body.appendChild(el('<p class="story">'+S.food+'/'+foodCap()+'</p>'));
     const g=el('<div class="rows"></div>');for(const k in FOODS){const n=S.fs[k]||0;if(!n)continue;const f=FOODS[k];const rc=RECIPES.find(R=>R.out===k),r=helpify(rowEl((icURL(f.e)?'':f.e+' ')+f.name+'　×'+n,(f.dish?'料理・':'')+'おなか'+f.v+(f.pw?'・パワー+'+f.pw:'')+(f.fx?'・'+f.fx:''),icURL(f.e)),rc?DISHD(rc):RAWD(k));g.appendChild(r)}body.appendChild(g);
   }else if(sheet==='oven'){
-    const j=sheetArg;if(!COOKST.has(S.obj[j]))return closeSheet();if(!S.ovenSet)S.ovenSet={};const cur=S.ovenSet[j];T.textContent=BL[S.obj[j]].name;
+    const j=sheetArg;if(!COOKST.has(S.obj[j]))return closeSheet();if(!S.ovenSet)S.ovenSet={};T.textContent=BL[S.obj[j]].name;
     {const m=ovenMul(j),pc=Math.round((1-m)*100);body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('いまの料理の速さ',pc>0?'料理の時間 －'+pc+'%':'ふつう'))}/* かまど：いまの料理の速さ */
     cookSheet(body,j);/* おまかせ・入れる（cook.js） */
     useOwnSec(body,j,S.obj[j]);/* 料理をするせいれい */
