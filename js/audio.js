@@ -171,7 +171,7 @@ function audioInit(){
   {/* 洞窟のこだま：効果音を、おくれてくりかえす（洞窟の中だけ CAVEW をあげる） */const d=AC.createDelay(1),fb=AC.createGain(),lp=AC.createBiquadFilter();d.delayTime.value=CAVEECHO[0];fb.gain.value=CAVEECHO[1];lp.type='lowpass';lp.frequency.value=1800;CAVEW=AC.createGain();CAVEW.gain.value=0;sfxG.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(CAVEW);CAVEW.connect(comp)}
   voxC=AC.createDynamicsCompressor();voxC.threshold.value=-38;voxC.ratio.value=12;voxC.knee.value=4;voxC.attack.value=.003;voxC.release.value=.1;{const vg=AC.createGain();vg.gain.value=.5;voxC.connect(vg);vg.connect(sfxG)}/* 声の大きさ（コンプレッサーのあとで、半分に） *//* 声は、大きいところをおさえて、音の大きさをそろえる（声の音の中に、ほかより大きい所があるため） */
   noiseBuf=AC.createBuffer(1,AC.sampleRate*.3,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-  nextT=AC.currentTime+.15;setInterval(sched,60);setInterval(ambTick,500);loadSamples();
+  nextT=AC.currentTime+.15;opRender();setInterval(sched,60);setInterval(ambTick,500);loadSamples();
 }
 function tone(m,t,dur,type,vol,out,f2){
   const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(typeof m==='number'&&m<200?mf(m):m,t);
@@ -191,7 +191,7 @@ const stageSong=()=>S&&S.enemies&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&
 function stageMusic(){
   curSong=wantSong=stageSong();step=0;bgmSw=0;
   if(!AC)return;
-  bgmG.disconnect();bgmG=AC.createGain();bgmG.gain.value=gainB();bgmG.connect(bgmF);
+  opStop();bgmG.disconnect();bgmG=AC.createGain();bgmG.gain.value=gainB();bgmG.connect(bgmF);
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
   nextT=AC.currentTime+.01;sched();
 }
@@ -201,21 +201,29 @@ function sched(){
   // 昼夜の曲は、フェードアウト→切り替え→フェードインでつなぐ
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
+  if(curSong!=='opening')opStop();else if(OPBUF){if(!OPSRC)opStart();return}/* オープニングの曲は、録音にした物をくりかえす（マップの読みこみで重いと、1音ずつ用意するやり方では、こまぎれの「カッ」「ザッ」になる） */
   while(nextT<AC.currentTime+.3){
     if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。マップの読みこみ中（プロローグのあと・つづきから）も鳴らす（持ち主がきめた。main.js の wantSong）。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
-    const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
-    const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
-    if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
-    if(battle){if(step%2===0)tone(ch[0]+(step%4===2?12:0),t,e*1.7,'triangle',.15,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.5,'sawtooth',.012,bgmG);if(step%4===0)tone(45,t,.14,'sine',.16,bgmG,40);if(step%4===2)noise(t,.09,.05,bgmG,1800);else if(step%2===1)noise(t,.03,.025,bgmG);nextT+=e;step=(step+1)%64;continue}/* たたかい：ベースを8分できざみ、たいこ *//* マップ画面の曲（opening）：サインだけだとスマホのスピーカーで聞こえないので、三角波でほかの曲と同じくらいの大きさに */
-    if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),'triangle',opening?.22:.13,bgmG);
-    if(!night&&step%8===4)tone(ch[0]+7,t,e*3.4,'triangle',opening?.2:.1,bgmG);
-    if(opening){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.2,'sine',.06,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+24,t,e*1.8,'triangle',.05,bgmG)}
-    else if(night){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.8,'sine',.025,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+12,t,e*1.6,'sine',.02,bgmG)}
-    if(bossArr&&(step%8===0||step%8===1))tone(ch[0]-12,t,e*.9,'triangle',step%8===0?.16:.11,bgmG,(mf(ch[0]-12))*.8);/* オオカゲ：どくん、どくん（ひくいベースを2つ） */
-    else{tone(ch[1][step%3]+12,t,e*.55,'square',opening?.024:.012,bgmG);if(step%2===1)noise(t,.03,opening?.05:.025,bgmG)}
+    const e=60/SONGS.opening.bpm/2;openStep(step,nextT,bgmG,e);/* 録音ができるまでは、1音ずつ */
     nextT+=e;step=(step+1)%64;
   }
 }
+/* オープニングの曲の1こま（8分音符1つ）。マップ画面の曲：サインだけだとスマホのスピーカーで聞こえないので、三角波で */
+function openStep(st,t,out,e){const g=SONGS.opening,ch=g.chords[((st/8)|0)%4],n=g.at[st];
+  if(n)tone(n[0],t,n[1]*e*.95,g.lead,.16,out);
+  if(st%8===0){tone(ch[0],t,e*6,'triangle',.22,out);for(const c of ch[1])tone(c,t,e*7.2,'sine',.06,out)}
+  if(st%8===4)tone(ch[0]+7,t,e*3.4,'triangle',.2,out);
+  if(st%4===2)tone(ch[1][(st>>2)%3]+24,t,e*1.8,'triangle',.05,out);
+  tone(ch[1][st%3]+12,t,e*.55,'square',.024,out);if(st%2===1)noise(t,.03,.05,out)}
+/* オープニングの曲を、はじめに1まわし（64こま）の録音にする。おわりからはみ出た音のしっぽは、頭にかさねて、つなぎ目なくくりかえす */
+let OPBUF=null,OPSRC=null;
+function opRender(){const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!OC||!AC)return;
+  try{const g=SONGS.opening,e=60/g.bpm/2,sr=AC.sampleRate,n=Math.round(64*e*sr),O=new OC(1,n+Math.ceil(4*sr),sr),A0=AC,out=O.createGain();out.connect(O.destination);
+    AC=O;try{for(let st=0;st<64;st++)openStep(st,st*e,out,e)}finally{AC=A0}/* tone・noise は AC に作るので、そのあいだだけ、録音のほうにする */
+    const done=b=>{if(!b||OPBUF)return;const src=b.getChannelData(0),buf=AC.createBuffer(1,n,sr),d=buf.getChannelData(0);for(let i=0;i<src.length;i++)d[i%n]+=src[i];OPBUF=buf};
+    O.oncomplete=ev=>done(ev.renderedBuffer);const p=O.startRendering();if(p&&p.then)p.then(done).catch(()=>{})}catch(err){}}
+function opStart(){const e=60/SONGS.opening.bpm/2,t=Math.max(nextT,AC.currentTime+.05),s=AC.createBufferSource();s.buffer=OPBUF;s.loop=true;s.connect(bgmG);s.start(t,(step*e)%OPBUF.duration);OPSRC=s}/* 1音ずつ用意していた所のつづきから */
+function opStop(){if(!OPSRC)return;try{OPSRC.stop()}catch(err){}OPSRC.disconnect();OPSRC=null}
 /* 大きな場面の前の「間」：曲と環境音をしずかにして（ms ミリ秒）、少しまってから音 k を鳴らす */
 let DUCKT=0;
 function musicDuck(ms){if(!AC||AC.state!=='running')return;const t=AC.currentTime,end=t+ms/1000;DUCKT=Math.max(DUCKT,end);for(const g of[bgmG,ambG])if(g){const v=g===ambG?.09:gainB();g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(v*.2,t+.35);g.gain.setValueAtTime(v*.2,DUCKT);g.gain.linearRampToValueAtTime(v,DUCKT+1.2)}}
