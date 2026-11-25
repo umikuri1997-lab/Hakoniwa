@@ -14,4 +14,9 @@ assert.equal((await sc(N,house+"for(let y=CY-1;y<=CY+1;y++)for(let x=CX-1;x<=CX+
 /* 歩いて行って、床で寝て、つかれがとれる */
 const e=await run(`(()=>{S.t=${N};for(let y=CY-20;y<CY+20;y++)for(let x=CX-20;x<CX+20;x++){const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j]}${house};recount();const r=S.res[0];r.x=CX+.5;r.y=CY+.5;r.energy=10;r.hunger=hMax(r);endAct(r);goSleep(r,bfs(r.x|0,r.y|0));for(let i=0;i<400;i++){updRes(r,.25);r.hunger=hMax(r)}return {type:r.act&&r.act.type,stage:r.act&&r.act.stage,energy:r.energy,inHouse:HOUSES.some(h=>h.inside.has((r.y|0)*W+(r.x|0)))}})()`);
 assert.ok(e.type==='sleep'&&e.stage==='do'&&e.inHouse&&e.energy>10,'床で寝てつかれがとれる '+JSON.stringify(e));
+/* 床・地面で寝ているあいだは、気持ち（つかれた・おなかがすいた・にっこり・うるうる）があっても、目をとじた絵のまま */
+const shot="(m,iso)=>{const c=document.createElement('canvas');c.width=160;c.height=160;drawSpirit(c.getContext('2d'),'wood',80,120,.87,1,{dot:1,t:1,anim:'sleepcurl',floorSleep:true,blink:true,mood:m,iso});return c.toDataURL()}";
+await p.waitForFunction(s=>{const f=sacredEval(s);f('',0);f('',1);return sacredEval("[SPM,SPMQ].every(T=>spmCell('sleepcurl','wood',null,0,0,T)&&spmXCell('sleepcurl','wood',null,0,SPMXL.indexOf('shut'),0,T))")},shot,{timeout:60000});/* 寝る絵と、目の絵が読みこまれるまで待つ */
+const eyes=await run(`(()=>{const f=${shot},o=[];for(const iso of [0,1]){const a=f('',iso);for(const m of ['tired','hungry','smile','teary'])if(f(m,iso)!==a)o.push(m+(iso?' iso':''))}return o})()`);
+assert.equal(eyes.join(' / '),'','寝ているのに目があいている');
 assert.deepEqual(errors,[]);console.log('floor sleep ok',JSON.stringify(e));await browser.close()})();
