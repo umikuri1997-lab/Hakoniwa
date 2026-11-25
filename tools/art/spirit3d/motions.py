@@ -36,10 +36,11 @@ def foot(ph):
     else: y, h = -WSTEP*C(ph-PI), WLIFT*S(ph-PI)
     a = math.asin(y/WHIP); return a, h-WHIP*(1-C(a))   # 足をふると足先が上がる分だけ下げて、ついている足を地面からうかせない
 def walk(w, face):
+    # 体のひねり・かたむきは小さく、頭は体と反対に少しもどして前を向いたまま（持ち主：歩くとき頭をふりすぎ）
     bob = -WBOB*C(2*(w-PI/2-WDOWN)); down = armdown(face, {0: 1.15, 2: 0.95, 1: PI/2}[face])
     sN, sF = sides(face, 0.8*S(w), 0.8*S(w+PI)); lM, hM = foot(w-3*PI/2); lP, hP = foot(w-PI/2)
-    return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=0.12*S(w), roll=0.07*S(w),
-                sN=sN, sF=sF, bN=down, bF=down, hy=0.07*S(w), hr=0.03*S(w), hp=0.025*C(2*w), top=0.12*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
+    return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=0.04*S(w), roll=0.023*S(w),
+                sN=sN, sF=sF, bN=down, bF=down, hy=-0.028*S(w), hr=-0.016*S(w), hp=0.025*C(2*w), top=0.12*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
 M('walk', 8, 9/(2*PI), walk)
 # ---- 立つ（クォータービューの絵で、3Dの絵のない立ち姿のかわり。js の spMotion） ----
 M('stand', 4, 0.5, lambda w, face: breathe({}, w))

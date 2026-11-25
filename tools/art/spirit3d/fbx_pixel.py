@@ -85,6 +85,7 @@ def shade(cb, nb, mb, light):
     return out
 
 TAGS = ['', 'body', 'arm', 'head', 'face', 'prop']
+ELEV = 25.0   # 見おろす角度（度。持ち主が「少しだけ見おろす」をえらんだ）
 from numba import njit
 
 @njit(cache=True)
@@ -146,9 +147,12 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     tg = np.zeros(Ws*Hs, int); hcov = np.zeros(Ws*Hs, bool)   # いちばん手前の物の種類（TAGS）・頭（ずきん・顔）がうつる所
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
     spin = -(spin+yaw); cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])   # ゲームの view（キャラの座標で rz(spin)）＝ Blender の座標で rz(−spin)
-    cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
+    cam0 = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
+    ce, se = math.cos(math.radians(ELEV)), math.sin(math.radians(ELEV))
+    def cam(Q):   # 少し見おろす（ELEV 度）：画面の上 ＝ 上と奥のあいだ・奥行き ＝ 手前と上のあいだ
+        C = cam0(Q); return np.stack([C[:, 0], C[:, 1]*ce-C[:, 2]*se, C[:, 1]*se+C[:, 2]*ce], 1)
     if len(tris):
         P = np.array([t[0] for t in tris], float); N = np.array([t[1] for t in tris], float)
         COL = np.array([t[2] for t in tris], float); MAT = np.array([t[3] if len(t) > 3 else 0 for t in tris], np.int64)
