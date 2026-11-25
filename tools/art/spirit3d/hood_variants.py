@@ -44,6 +44,21 @@ def horn(k, yc, n=10):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     return bm
 
+def tailmesh(k, n=12):
+    """しっぽ：絵の よこの行ごとに、はばを太さにした まるい輪をつむ（ふくらみのある葉）。点はチップの絵の座標（根もとが原点・上が +z）"""
+    import bmesh, math
+    a, ax, ay = chip(k); m = a[..., 3] > 0; rows = [r for r in range(m.shape[0]) if m[r].any()]
+    ub = ax+a.shape[1]/2; vb = ay+a.shape[0]
+    bm = bmesh.new(); rings = []
+    for r in rows[::-1]:
+        cs = np.nonzero(m[r])[0]; xc = ax+(cs.min()+cs.max()+1)/2-ub; w = max(0.8, (cs.max()+1-cs.min())/2); z = vb-(ay+r+.5)
+        rings.append([bm.verts.new((xc+w*math.cos(t), 0.55*w*math.sin(t), z)) for t in np.linspace(0, 2*math.pi, n, endpoint=False)])
+    for A, B_ in zip(rings, rings[1:]):
+        for i in range(n): bm.faces.new((A[i], A[(i+1) % n], B_[(i+1) % n], B_[i]))
+    bm.faces.new(rings[0][::-1]); bm.faces.new(rings[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
 def wbox(o):
     P = np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]); return P.min(0), P.max(0)
 
@@ -120,6 +135,34 @@ def build(el):
                 g = o.vertex_groups.new(name='spine'); g.add(list(range(len(o.data.vertices))), 1.0, 'REPLACE')
                 o.parent = arm; o.matrix_parent_inverse = arm.matrix_world.inverted()
                 o.modifiers.new('Armature', 'ARMATURE').object = arm
+    # しっぽ：土は持ち主のまま。風はなし。ほかは、チップのしっぽの形を、ゲームと同じ向き（TAILBACK・TAILTWIST）で、
+    #   持ち主のしっぽと同じ大きさ（平均の寸法の比）にして、しっぽの骨の根もとにつける
+    if el != 'earth':
+        import math
+        from core import TAILBACK, TAILTWIST, rx, rz
+        tl = [o for o in bpy.data.objects if o.type == 'MESH' and any(g.name == 'tail' for g in o.vertex_groups)]
+        ut = tl[0] if tl else None
+        if el == 'wind':
+            for o in tl: bpy.data.objects.remove(o)
+        elif ut:
+            u0, u1 = wbox(ut); usz = float(np.mean(u1-u0))
+            import model_blend as MB
+            R = rx(TAILBACK)@rz(TAILTWIST)
+            def placed(kk):
+                bm_ = tailmesh(kk)
+                for v in bm_.verts:
+                    q = R@np.array(v.co[:]); v.co = Vector((q[0], -q[1], q[2]))   # キャラの前 +y → Blender の −Y
+                return bm_
+            e = placed('sp_earth:tail'); P = np.array([v.co[:] for v in e.verts]); esz = float(np.mean(P.max(0)-P.min(0))); e.free()
+            sc_ = usz/esz
+            tb = arm.matrix_world @ arm.data.bones['tail'].head_local
+            bmT = placed('sp_%s:tail' % el)
+            for v in bmT.verts: v.co = Vector(np.array(v.co[:])*sc_)+tb
+            o = MB.bm_to_obj(bmT, 'tail_'+el, bpy.context.scene.collection, None, smooth=True)
+            g = o.vertex_groups.new(name='tail'); g.add(list(range(len(o.data.vertices))), 1.0, 'REPLACE')
+            o.parent = arm; o.matrix_parent_inverse = arm.matrix_world.inverted()
+            o.modifiers.new('Armature', 'ARMATURE').object = arm
+            bpy.data.objects.remove(ut)
     nm_, nM_ = wbox(hood); kx = kb = kt = 0
     for o in bpy.data.objects: o.select_set(o.type in ('MESH', 'ARMATURE'))
     bpy.ops.export_scene.fbx(filepath=os.path.join(out, 'spirit_%s.fbx' % el), use_selection=True, object_types={'ARMATURE', 'MESH'},
