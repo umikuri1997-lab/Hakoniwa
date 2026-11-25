@@ -349,7 +349,7 @@ const LIGHTCDL=[10,10,9.5,9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.5,3];/* 前の、村
 const GUPC=[100,200,300,500,700,1000,1400,1900,2500,3200],GUPC5=[300,800,1700,3300,5700];/* GUPC5：攻撃のわざ（5段）。GUPC は10段 */
 const GUP=[
  {k:'cd',n:'まもりの光のチャージ',max:5,c:GUPC5,v:[10,8,6.5,5,4,3],vm:[5,4,3.25,2.5,2,1.5],/* vm：1回で GLMULTI ひき以上たおしたあとの、のこりのチャージ秒 */t:['10秒','8秒','6.5秒','5秒','4秒','3秒']},
- {k:'pow',n:'まもりの光の威力',max:5,c:GUPC5,v:[10,14,18,22,26,30],vc:[20,28,36,44,52,60],/* vc：2秒ためて落としたときの威力 */t:['10','14','18','22','26','30']},
+ {k:'pow',n:'まもりの光の威力',max:5,c:GUPC5,v:[10,14,18,22,26,30],vc:[20,28,36,44,52,60],/* vc：ためて、ぴったりにはなしたときの威力 */t:['10','14','18','22','26','30']},
  {k:'stun',n:'まもりの光でとめる時間',max:5,c:GUPC5,v:[2.5,3.75,5.25,6.75,8.25,9.75],vb:[1,1.875,2.625,3.375,4.125,4.875],t:['1.7分・オオカゲなど0.7分','2.5分・オオカゲなど1.25分','3.5分・オオカゲなど1.75分','4.5分・オオカゲなど2.25分','5.5分・オオカゲなど2.75分','6.5分・オオカゲなど3.25分']},
  {k:'rng',n:'まもりの光の範囲',max:4,c:[300,800,1700,3300],v:[0,1,2,3,4],t:['タップしたマス','まわり1マス','まわり2マス','まわり3マス','まわり4マス']},
  {k:'area',n:'こもれびのまもり',max:10,c:GUPC,r:[2,2,2.5,2.5,3,3,3.5,3.5,4,4,4.5],sh:[40,45,50,55,60,65,70,75,80,85,90],cd:[5,4.75,4.5,4.25,4,3.75,3.5,3.25,3,2.75,2.5],t:['まわり2マス・葉のまもり40分・チャージ5秒','まわり2マス・葉のまもり45分・チャージ4.75秒','まわり2.5マス・葉のまもり50分・チャージ4.5秒','まわり2.5マス・葉のまもり55分・チャージ4.25秒','まわり3マス・葉のまもり60分・チャージ4秒','まわり3マス・葉のまもり65分・チャージ3.75秒','まわり3.5マス・葉のまもり70分・チャージ3.5秒','まわり3.5マス・葉のまもり75分・チャージ3.25秒','まわり4マス・葉のまもり80分・チャージ3秒','まわり4マス・葉のまもり85分・チャージ2.75秒','まわり4.5マス・葉のまもり90分・チャージ2.5秒']},
@@ -377,7 +377,7 @@ function glHit(tx,ty,R,foc,ch){/* 光が地面にとどいた：範囲（タッ�
     if(e.hp<=0)defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!fogAt(q))natHit(q);else if(rockHard(q))rockHeat(q)}/* 奥のかたい大岩は、熱くなる */
   const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}if(typeof aniScare==='function')aniScare(tx,ty,R);if(typeof critScare==='function')critScare(tx,ty,R);/* まわりの生き物も、おどろいて、にげる */yamiBirth(tx,ty);if(typeof windGlHit==='function')windGlHit(tx,ty);if(S.kills-K0>=GLMULTI){const vm=gupOf('cd').vm[gupLv('cd')];if(LIGHTCD>vm)LIGHTCD=vm}/* 1回でまとめてたおすと、つぎの光が早くたまる */}
-const GLCHARGEMS=2000,GLCHR=1,GLMULTI=3;/* ためる：地図を GLCHARGEMS ミリ秒おしつづけてはなすと、光のまわりが GLCHR マスふえ、威力が pow の vc になる。1回で GLMULTI ひき以上たおすと、チャージが cd の vm 秒になる */
+const GLCHARGEMS=2000,GLJUSTMS=400,GLCHR=1,GLMULTI=3;/* ためる：地図を GLCHARGEMS ミリ秒おしつづけて、そのあと GLJUSTMS ミリ秒のあいだ（ぴったり）にはなすと、光のまわりが GLCHR マスふえ、威力が pow の vc になる。はなすのが早い・おそいときは、ためていない光。1回で GLMULTI ひき以上たおすと、チャージが cd の vm 秒になる */
 const GLSTEP=45,GLSPY=31,GLSHOCKT=1200;/* 範囲の光は、まん中から1マスごとに GLSTEP ミリ秒おくれる。GLSPY：glspark の光のまん中は、置く所より31点上。GLSHOCKT：おどろいた顔の長さ（ミリ秒） */
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
