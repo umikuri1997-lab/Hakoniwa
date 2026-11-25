@@ -269,6 +269,7 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
     const one=-1,ih=nm==='eat_fruit'?28:nm==='eat_meal'?30:32,iw=ih*ei.width/ei.height,hx=(one>=0?h[one]:(h[0]+h[2])/2)*D,hy=(one>=0?h[one+1]:(h[1]+h[3])/2)*D-(one>=0?ih*.32:4);
     c.save();if(f<0)c.scale(-1,1);c.drawImage(ei,(f<0?-hx:hx)-iw/2,hy-ih/2,iw,ih);c.restore();
     const P=spcVar(el,vr),hands=one>=0?[[h[one],h[one+1]]]:[[h[0],h[1]],[h[2],h[3]]];const[H0,S0,L0]=hex2hsl(P.hand),ol=hsl2hex(H0,S0,Math.max(0,L0-.16));for(const[x,y]of hands)drawMitt(c,x*D,y*D,D,P.hand,ol)}}
+  if(nm==='bathe'){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;for(let k=0;k<6;k++){const p=(ph-.44-k*.025)/.42;if(p<=0||p>=1)continue;const dx=(dir===1?(8+k*3)*p:(k-2.5)*4.5*p)*D,dy=(-(20+(k%3)*5)*p+34*p*p)*D;c.globalAlpha=1-p*.7;c.fillStyle=k%2?'#d6f2ff':'#6fc0ff';c.fillRect(hx+dx-D,hy+dy-D,2*D,2*D)}c.globalAlpha=1}/* 水浴び：はねあげた手から、しずくが前へとぶ（ドット） */
   if((nm==='water'||nm==='tend')&&h.length>4){for(let k=0;k<3;k++){const p=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-p)+')';c.beginPath();c.ellipse(h[4]*D+p*3,h[5]*D+p*24,1.8,2.6,0,0,7);c.fill()}}/* じょうろの先から水のつぶ */
   c.imageSmoothingEnabled=sm;c.restore();
   if(fl&&fl.length>4&&dir!==2)drawFishLine(c,x+h[4]*D*s*f,y+h[5]*D*s,fT[0],fT[1],t,o.fishB);/* さおの先から、水の上のうきへ糸 */
@@ -597,14 +598,14 @@ function drawRes0(r,now){
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<400)px+=(r.face<0?-1:1)*atkLunge(sd)}/* 攻撃のとき：ためて、ふみこんで、当たって止まり、もどる */
   px+=hitOff(r,now,1)[0];/* たたかれたら、のけぞる */if(typeof juiceStopOff==='function')px+=juiceStopOff(r,now);/* さいごの一撃のヒットストップ：ふるえる */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
-  const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:at==='plant'&&r.act.wade&&S.ground[(r.y|0)*W+(r.x|0)]===1?1:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 池のまんなかへハスを植えにいく：水の中はおよぐ（下半分が水にかくれ、まわりに波紋） *//* 水浴び：水の中では下半分がかくれる */if(wade&&!tubB&&(at==='bathe'||at==='plant'))py+=WBANK/IQSY*wade;/* 池・川の水面は岸より一段ひくい（岸の断面 WBANK）：水の中の子は、その分だけ下げて、水面に足をつける */
+  const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wadeH=at==='bathe'?BATHEH:11,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:at==='plant'&&r.act.wade&&S.ground[(r.y|0)*W+(r.x|0)]===1?1:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 池のまんなかへハスを植えにいく：水の中はおよぐ（下半分が水にかくれ、まわりに波紋） *//* 水浴び：水の中では下半分がかくれる */if(wade&&!tubB&&(at==='bathe'||at==='plant'))py+=WBANK/IQSY*wade;/* 池・川の水面は岸より一段ひくい（岸の断面 WBANK）：水の中の子は、その分だけ下げて、水面に足をつける */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */{const sit=!walking&&r.act&&r.act.stage==='do'&&(benchJ>=0||SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]));if(sit)SEATLAST.set(r,{x:px,y:py,t:now});const m=SEATMV.get(r);if(m){const k=(now-m.t0)/SEATMVMS;if(k>=1||k<0)SEATMV.delete(r);else{const e=k*k*(3-2*k),hop=Math.sin(Math.PI*k)*7;px=m.x+(px-m.x)*e;py=m.y+(py-m.y)*e-hop}}}/* すわる家具に、となりのマスから乗る・おりる（SEATMV） */const seated=!walking&&r.act&&r.act.stage==='do'&&SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]);/* いすにすわっているときは、かげを出さない */if(sj<0&&!wade&&!toyR(r)&&!seated)shadow(ctx,px,py+8,flSl?20:12,3.6);/* 横になって寝るときは、ながいかげ */
   if(!sleeping&&!walking){const h=tapHop(r,now);if(h){if(h.free){v.back=false;v.turn=0}py-=h.y}}/* タップされた：ひまな子はこちらを向いて、ぴょん。仕事・遊びのとちゅうの子は、手を止めずに小さくうなずく（tapReact） */
   const lvR=rLv(r);
   const tt=now/1000+r.id*1.7,fy=py+9-bob;
   ctx.save();// 発熱対策：ぼかし影はなし
   if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */if(flSl){const sd=r.id%2?1:-1;ctx.translate(px-sd*FLSLX,fy-FLSLY);ctx.rotate(sd*Math.PI/2);ctx.translate(-px,-fy)}/* 床・地面で寝る：丸くなった絵を、よこにたおす（頭は、子ごとに左か右） *//* 横のベッドでは、頭をまくら（左）にして横になる */
-  if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
+  if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*wadeH);ctx.clip()}
   {const sj3=(r.y|0)*W+(r.x|0),o3=S.obj[sj3];if(o3&&SEATS.includes(o3)&&r.act&&r.act.stage==='do'&&!walking){const c3=chipOf(o3,sj3);if(c3&&c3.cut!=null){ctx.beginPath();ctx.rect(px-60,fy-120,120,((sj3/W)|0)*TS+c3.cut-(fy-120));ctx.clip()}}}/* 後ろ向きのいすにすわる子は、座面の下のはし（チップの cut）より下（足）を描かない */
   const wpA=r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?r.act:null,onWP=wpA&&(wpA.cl||0)>=1;if(wpA&&!onWP)v.back=true;{const sw=Math.max(r.swing||0,r.swingT||0);if(sw&&now>=sw&&now-sw<700)v.back=!!r.fback}/* たたくときは、敵のほうを向く（うしろの敵には、うしろ向き） *//* 見張り台のハシゴは、うしろ向きでよじのぼる。上では弓をかまえる */
   if(!walking&&ad&&(at==='cook'||at==='craft'||at==='fish')&&r.act.sh!=null){v.turn=0;v.back=false}/* できた物をかかげるときは、こちらを向く */
@@ -612,7 +613,7 @@ function drawRes0(r,now){
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
-  else if(wade){const wl=fy-wade*11,rp=(now/900+r.id)%1;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(px,wl,11+rp*6,3+rp*1.5,0,0,7);ctx.globalAlpha=1-rp*.8;ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(px,wl,10,2.6,0,0,7);ctx.stroke()}/* 水面の波紋 */
+  else if(wade){const wl=fy-wade*wadeH,rp=(now/900+r.id)%1;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(px,wl,11+rp*6,3+rp*1.5,0,0,7);ctx.globalAlpha=1-rp*.8;ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(px,wl,10,2.6,0,0,7);ctx.stroke()}/* 水面の波紋 */
   /* ベンチは1つの物として、すわった子の後ろにまとめて描く */
   let by=fy-27;
   const ci=carryIcon(r);
@@ -646,6 +647,7 @@ function drawRes0(r,now){
     else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=12.75,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-31.5);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-31.5,1.125,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-31.5,1.125,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
+const BATHEH=16;/* 水浴び：池・川では、足もとから16（こしまで。持ち主がえらんだ）を水にかくす。ほかの水の中は11 */
 const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','sasa','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','quench','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
 const godOnAltar=()=>STATUE>=0&&S.obj[STATUE+W]==='altar',GODALTARZ=LIFT*.18/.8;/* カミサマは神殿の前の台座の上に立つ（持ち主がきめた）。台座の上の段の高さ（altar.py の TOPZ 0.18 マス。1だんは0.8マス） */
 const godX=()=>STATUE>=0?STATUE%W+.5:RUINT>=0?RUINT%W+.5:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(godOnAltar()?1.5:1.9):RUINT>=0?((RUINT/W)|0)+2.4:CY-6.4;/* 神殿を直す前は、こわれた神殿の前 *//* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
