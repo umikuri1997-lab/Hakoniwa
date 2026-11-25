@@ -16,13 +16,34 @@ import fbx_motion as FM
 import fbx_pixel as FP
 import rig
 
+EXPR = ['n', 'hap', 'shut', 'teary', 'tear', 'shock', 'strain', 'sad', 'brave', 'tired', 'hungry']   # 表情の目（js の XL と同じならび）
+XL = EXPR+['lash:'+e for e in EXPR if e != 'strain']+['cheek']
+WOOD = {'hood': '#6fae4c', 'cheek': '#b6d39e', 'dark': '#4f8a35', 'eye': '#3f5e26', 'hand': '#d6e8c2', 'line': '#e2d6bc'}   # 共通の目の絵（sp:）の色＝木の色（js の SPC.wood）
+ELC = {'earth': {'hood': '#8f6a50', 'cheek': '#c6b1a0', 'dark': '#6f4f3a', 'eye': '#5e3d2a', 'hand': '#e3c3a3', 'line': '#ead6bd'},
+       'water': {'hood': '#78c3fb', 'cheek': '#badef5', 'dark': '#4fa6e8', 'eye': '#1d4f7c', 'hand': '#f3dfc6', 'line': '#ecd9c0'},
+       'fire': {'hood': '#e8604f', 'cheek': '#f2ac9f', 'dark': '#c94a3c', 'eye': '#8f3a22', 'hand': '#ffc887', 'line': '#f0d4ae'},
+       'wind': {'hood': '#a6cc8a', 'cheek': '#d2e2bc', 'dark': '#86b46a', 'eye': '#456a2a', 'hand': '#c8e2b4', 'line': '#c2dcaa'},
+       'wood': WOOD}   # js の SPC と同じ
+_XC = {}
+def xchip(key, el):
+    """表情の目のチップ（sp:face#… など）を、その属性の色にした絵（js の spDot と同じ色のかえ方）"""
+    k = (key, el)
+    if k not in _XC:
+        from core import chip
+        a, ax, ay = chip(key); a = a.copy(); hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)])
+        for r in WOOD:
+            src = hx(WOOD[r]); dst = hx(ELC[el][r]); m = (a[..., :3] == src).all(2) & (a[..., 3] > 0); a[m, :3] = dst
+        _XC[k] = (a, ax, ay)
+    return _XC[k]
+def xkey(l): return 'sp:cheek' if l == 'cheek' else 'sp:lash#'+l[5:] if l.startswith('lash:') else 'sp:face#'+l
+
 def tr(M, P):
     """Blender の 4×4（m）で、Blender の向きの点（ドット）をうごかす"""
     P = np.atleast_2d(P); Q = (M@np.c_[P*0.01, np.ones(len(P))].T).T[:, :3]*100; return Q
 
 def job(a):
     name, el = a; m = MOTIONS[name]; n = m['n']; iso = bool(core.ISOY)
-    fr, fo, meta = {}, {}, {}
+    fr, fo, meta, xl = {}, {}, {}, {}
     faces = (0, 1, 2) if iso else (0,)   # 正面の絵（守り神と話すとき：正面の行だけ使う）は、正面だけ写して、横・うしろの行にも同じ絵を入れる
     for face in faces:
         for i in range(n):
@@ -67,10 +88,12 @@ def job(a):
                 if k in anc:
                     P = np.asarray(anc[k])@FM.F; X, Y, _ = scr3(P); A[k] = [round(float(X[0]), 2), round(float(Y[0]), 2)]
             fr[(face, i)] = img; fo[(face, i)] = ov; meta[(face, i)] = A
+            fit = FM.face_fit(el)   # 表情の目・ほっぺ：顔の3Dの面にはって写した層（表情ごと）
+            xl[(face, i)] = [FP.decal(inf, xchip(xkey(l), el), fit) for l in XL]
     if not iso:
         import copy
         for face in (1, 2):
-            for i in range(n): fr[(face, i)] = fr[(0, i)]; fo[(face, i)] = fo[(0, i)]; meta[(face, i)] = copy.deepcopy(meta[(0, i)])
+            for i in range(n): fr[(face, i)] = fr[(0, i)]; fo[(face, i)] = fo[(0, i)]; meta[(face, i)] = copy.deepcopy(meta[(0, i)]); xl[(face, i)] = xl[(0, i)]
     al = np.stack([f[..., 3] > 0 for f in fr.values()]).any(0); ys, xs = np.nonzero(al)
     x0, x1, y0, y1 = int(xs.min()), int(xs.max())+1, int(ys.min()), int(ys.max())+1; cw, ch = x1-x0, y1-y0
     oa = np.stack([fo[(face, i)][y0:y1, x0:x1, 3] > 0 for face in (0, 1, 2) for i in range(n)]).any(0).any(1); oys = np.nonzero(oa)[0]
@@ -92,4 +115,14 @@ def job(a):
             if all(len(e) > q for e in E):
                 v = 1 if sum(e[q] for e in E)*2 > n else 0
                 for e in E: e[q] = v
-    return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)]
+    # 表情の層の絵：行は 向き×層（XL のならび）、列はコマ。わくは、どの層・コマの絵もはいる大きさ
+    xa = np.stack([L[..., 3] > 0 for v in xl.values() for L in v]).any(0); xys, xxs = np.nonzero(xa)
+    if len(xys):
+        a0, a1, b0, b1 = int(xxs.min()), int(xxs.max())+1, int(xys.min()), int(xys.max())+1; xw, xh = a1-a0, b1-b0
+        xs = np.zeros((xh*3*len(XL), xw*n, 4), np.uint8)
+        for (face, i), v in xl.items():
+            for li, L in enumerate(v): xs[(face*len(XL)+li)*xh:(face*len(XL)+li+1)*xh, i*xw:(i+1)*xw] = L[b0:b1, a0:a1]
+        xb = io.BytesIO(); Image.fromarray(xs).save(xb, 'WEBP', lossless=True, exact=True, quality=100, method=6)
+        xr = (xb.getvalue(), [xw, xh, int(EXT[0]+a0), int(EXT[2]+b0)])
+    else: xr = None
+    return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)], xr
