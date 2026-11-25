@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
     for(let fl=0;fl<CVFLOORS.length;fl++){if(!CVFLOORS[fl])continue;const C=enter(fl,['earth','fire','water']);C.en=[];const K=[...C.ob].find(([,o])=>o.k==='K'||o.k==='Y');if(!K){out.found.push('noK'+fl);caveAbort();continue}
       const a=act('earth'),st=[...Array(CVW*CVH).keys()].find(j=>cvWalk(j)&&cvAdj(j,K[0]));put(a,cvX(st),cvY(st));for(const q of C.party)if(q!==a)put(q,cvX(st),cvY(st));
       cvUse(K[0],K[1]);for(let i=0;i<60&&!C.loot.items['rel_'+CVREL[C.fl]];i++)tick(.1);out.found.push(CVREL[C.fl]+':'+!!C.loot.items['rel_'+CVREL[C.fl]]);caveExit(true);for(const p of document.querySelectorAll('.pxpopw'))p.remove();GIFT_ACTIVE=false}
-    const GOT=['kui','bin','suisho','tsuru','ningyo','nafuda'];out.rec=GOT.every(k=>S.relRec&&S.relRec['rel_'+k]&&(S.inv['rel_'+k]||0)>0);out.on=GOT.every(k=>relOn(k));/* 地図のまだない階（R4・R5）の道具は、ためしに、もたせてたしかめる */for(const k of['fuigo','sekiban','suzu']){S.flags.cvItem['rel_'+k]=1;S.relRec['rel_'+k]=1}
+    const GOT=['kui','bin','suisho','tsuru','ningyo','fuigo','nafuda'];out.rec=GOT.every(k=>S.relRec&&S.relRec['rel_'+k]&&(S.inv['rel_'+k]||0)>0);out.on=GOT.every(k=>relOn(k));/* 地図のまだない階（R4・R5）の道具は、ためしに、もたせてたしかめる */for(const k of['sekiban','suzu']){S.flags.cvItem['rel_'+k]=1;S.relRec['rel_'+k]=1}
     /* 2回めは、もう出ない */
     {const C=enter(0,['earth']);const K=[...C.ob].find(([,o])=>o.k==='K'),a=act('earth'),st=[...Array(CVW*CVH).keys()].find(j=>cvWalk(j)&&cvAdj(j,K[0]));put(a,cvX(st),cvY(st));cvUse(K[0],K[1]);tick(3);out.again=!C.loot.items.rel_kui;caveAbort()}
     /* からの水晶：光すいのそばでも光が小さくならない */
@@ -25,17 +25,17 @@ const assert=require('node:assert/strict');
     {const C=enter(0,['earth','fire','water']);C.en=[];cvBakeEnter(C);const s=C.sc.find(q=>q.k==='koe');s.cd=0;tick(.1);const a=act('earth');s.x=Math.floor(a.x);s.y=Math.floor(a.y-CVOY);s.path=[];tick(.1);out.nafuda=C.party.every(q=>!(q.frzU>performance.now()))&&!s.on;caveAbort()}
     /* ゆりかごのすず：えさが3マスまで近づくと、正体をあらわす */
     {const C=enter(2,['earth','fire','water']);C.en=[];cvBakeEnter(C);const s=C.sc.find(q=>q.k==='esa');C.sc=[s];s.cd=0;tick(.1);const a=act('earth');s.x=Math.floor(a.x)+2;s.y=Math.floor(a.y-CVOY);s.path=[];s.lured=1;const h=a.r.hunger;cvBakeTick(0,.01,performance.now());out.suzu=s.rev>0&&!s.bite&&a.r.hunger===h;caveAbort()}
-    /* 炉のふいご：あつい床で、おなかがへらない */
-    {const C=enter(7,['earth','fire','water']);C.en=[];const[x,y]=open(C);const ea=act('earth');put(ea,x,y);C.hotT.set(cvJ(x,y),C.t+100);const h=ea.r.hunger;cvBakeTick(1,0,performance.now());out.fuigo=ea.r.hunger===h;caveAbort()}
+    /* 炉のふいご：深い階で、いるだけでへるおなか CVDEEPF */
+    {const C=enter(7,['earth','fire','water']);C.en=[];const[x,y]=open(C);const ea=act('earth');put(ea,x,y);const h=ea.r.hunger;cvActor(ea,1,0,performance.now());out.fuigo=+(h-ea.r.hunger).toFixed(3);caveAbort()}/* 炉のふいご：8階で、いるだけでへるおなか（立っている分 CVHUN.stand をのぞく） */
     /* 図鑑 */
     S.bkRec={bk_kui:1,sc_koe:1,sc_te:1};ZKW=WD;const b=document.createElement('div');ZKT=11;zukanBody(b);const b2=document.createElement('div');ZKT=12;zukanBody(b2);
     out.zk=[zkCount(11),zkTotal(11),zkCount(12),zkTotal(12)];out.zkTx=b.textContent.includes('さびたくい')&&b2.textContent.includes('声のこだま');
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
   assert.equal(r.chips,true,'10の道具の家具とチップ');assert.equal(r.n,10);assert.deepEqual(r.rel,['kui','bin','suisho','tsuru','ningyo','kagami','fuigo','nafuda','sekiban','suzu'],'階ごとの道具（STORY.md）');
-  assert.deepEqual(r.found,['kui:true','bin:true','suisho:true','tsuru:true','ningyo:true','kagami:true','nafuda:true'],'地図のある階では、手がかりの物から道具が見つかる');
+  assert.deepEqual(r.found,['kui:true','bin:true','suisho:true','tsuru:true','ningyo:true','kagami:true','fuigo:true','nafuda:true','sekiban:true','suzu:true'],'地図のある階では、手がかりの物から道具が見つかる');
   assert.equal(r.rec,true,'もちものと図鑑に入る');assert.equal(r.on,true);assert.equal(r.again,true,'同じ道具は1回だけ');
-  assert.equal(r.suisho,true,'からの水晶');assert.equal(r.bin,true,'黒い水のびん');assert.equal(r.nafuda,true,'名ふだ');assert.equal(r.suzu,true,'ゆりかごのすず');assert.equal(r.fuigo,true,'炉のふいご');
+  assert.equal(r.suisho,true,'からの水晶');assert.equal(r.bin,true,'黒い水のびん');assert.equal(r.nafuda,true,'名ふだ');assert.equal(r.suzu,true,'ゆりかごのすず');assert.equal(r.fuigo,+(.13+.05).toFixed(3),'炉のふいご：8階0.13');
   assert.deepEqual(r.zk,[10,10,3,14],'図鑑の数');assert.equal(r.zkTx,true,'図鑑に出る');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});

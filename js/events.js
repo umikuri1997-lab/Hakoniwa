@@ -264,12 +264,17 @@ Object.assign(EVNEED,{flower30:{n:'花30本',list:()=>{const L=[];for(let j=0;j<
   hanabi:{n:'たき火',list:()=>evObjs('campfire').filter(j=>!campOut(j)).slice(0,1),cap:()=>99},
   utage:{n:'よみがえった温泉3つ・食卓2つ',list:()=>['a','b','c'].every(springOn)&&evTables().length>=2?evTables():[],cap:()=>99}});
 const SETN={eda:'枝',can:'空き缶',food:'食料',wood:'木材',bamboo:'竹',grass:'草',flower:'花のたね',crop:'作物'},EVCROP=['mugi','imo','tomato'];
-function setHave(k){if(k==='food')return S.food;if(k==='grass')return S.mat[EVGRASS()]||0;if(k==='flower')return[...FLOWERS].reduce((a,id)=>a+inv(id),0);if(k==='crop')return EVCROP.reduce((a,c)=>a+(S.fs[c]||0),0);return S.mat[k]||0}
-function setName(k){return k==='grass'?MATN[EVGRASS()]:k==='flower'?'花のたね':SETN[k]}
+function setTake(L,n,have,take){const out={};for(const id of L){const t=Math.min(have(id),n);if(t<=0)continue;take(id,t);out[id]=t;n-=t;if(n<=0)break}return out}/* 一覧の前から、n こまでとる */
+const SETK={/* はらう物の種類ごとの、数える（have）・とる（pay：P に書く）・もどす（back）・名前（name）。ここにない物は素材（S.mat） */
+  food:{have:()=>S.food,pay:(n,P)=>{P.food=takeFood(n)},back:v=>{for(const f of v)addFood(f,1)}},
+  grass:{have:()=>S.mat[EVGRASS()]||0,name:()=>MATN[EVGRASS()],pay:(n,P)=>{const g=EVGRASS();S.mat[g]-=n;P[g]=n}},/* もどすときは素材 */
+  flower:{have:()=>[...FLOWERS].reduce((a,id)=>a+inv(id),0),pay:(n,P)=>{P.flower=setTake([...FLOWERS],n,id=>inv(id),(id,t)=>{S.inv[id]-=t})},back:v=>{for(const id in v)S.inv[id]=(S.inv[id]||0)+v[id]}},
+  crop:{have:()=>EVCROP.reduce((a,c)=>a+(S.fs[c]||0),0),pay:(n,P)=>{P.crop=setTake(EVCROP,n,id=>S.fs[id]||0,(id,t)=>{S.fs[id]-=t});syncFood()},back:v=>{for(const id in v)addFood(id,v[id])}}};
+function setHave(k){const K=SETK[k];return K?K.have():S.mat[k]||0}
+function setName(k){const K=SETK[k];return K&&K.name?K.name():SETN[k]}
 function setLack(D){for(const k in D.set||{})if(setHave(k)<D.set[k])return setName(k)+'が足りません';return ''}
-function setPay(D){const P={};for(const k in D.set||{}){let n=D.set[k];if(k==='food'){P.food=takeFood(n);continue}if(k==='grass'){const g=EVGRASS();S.mat[g]-=n;P[g]=n;continue}
-  if(k==='flower'||k==='crop'){const L=k==='flower'?[...FLOWERS]:EVCROP,out={};for(const id of L){const have=k==='flower'?inv(id):(S.fs[id]||0),t=Math.min(have,n);if(t<=0)continue;if(k==='flower')S.inv[id]-=t;else S.fs[id]-=t;out[id]=t;n-=t;if(n<=0)break}if(k==='crop')syncFood();P[k]=out;continue}S.mat[k]-=n;P[k]=n}return P}
-function setRefund(P){for(const k in P||{}){if(k==='food'){for(const f of P.food)addFood(f,1);continue}if(k==='flower'){for(const id in P.flower)S.inv[id]=(S.inv[id]||0)+P.flower[id];continue}if(k==='crop'){for(const id in P.crop)addFood(id,P.crop[id]);continue}S.mat[k]=(S.mat[k]||0)+P[k]}}
+function setPay(D){const P={};for(const k in D.set||{}){const n=D.set[k],K=SETK[k];if(K)K.pay(n,P);else{S.mat[k]-=n;P[k]=n}}return P}
+function setRefund(P){for(const k in P||{}){const K=SETK[k];if(K&&K.back)K.back(P[k]);else S.mat[k]=(S.mat[k]||0)+P[k]}}
 function setTxt(D){return Object.keys(D.set||{}).map(k=>setName(k)+D.set[k]).join('・')}
 /* 運動会：3つの競技（かけっこ → つなひき → 玉入れ）。組ごとに勝ち数。かけっこは cup0 と同じコース */
 const UNDOSEG=['race','tug','ball'],UNDON={race:'かけっこ',tug:'つなひき',ball:'玉入れ'};

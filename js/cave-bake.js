@@ -10,7 +10,7 @@ const CVBK={
   bk_kui:{bk:1,name:'くいのホムンクルス',xp:12,pw:8,hp:300,sp:.45,atk:30,hit:30,hitF:90,hitN:80,hitFS:60,hitNS:50,hitFN:90,hitFNS:60,col:'#6a5a48',eye:'#e8d8a0',size:1.1},/* おそいが、じょうぶ */
   bk_sui:{bk:1,name:'光すい',xp:8,pw:6,hp:140,sp:.8,atk:25,hit:20,hitF:40,hitN:60,hitFS:25,hitNS:35,hitFN:40,hitFNS:25,col:'#2a2040',eye:'#b49cff',size:.85,drain:1},/* そばにいると、光の広さが小さくなる */
   bk_yoru:{bk:1,name:'夜の水のかたまり',xp:10,pw:7,hp:200,sp:.7,atk:28,hit:25,hitF:50,hitN:70,hitFS:30,hitNS:40,hitFN:50,hitFNS:30,col:'#0c1018',eye:'#7fe8ff',size:.95,split:1},/* たたくと、2つにわかれる（1回だけ） */
-  bk_tame:{bk:1,name:'ためしのからだ',xp:12,pw:9,hp:240,sp:.6,atk:30,hit:30,hitF:60,hitN:80,hitFS:40,hitNS:50,hitFN:60,hitFNS:40,col:'#9cbcd0',eye:'#2a3a4e',size:1.05,thaw:1},/* 火のせいれいが近づくと、とけて目をさます */
+  bk_tame:{bk:1,name:'ためしのからだ',xp:12,pw:9,hp:240,sp:.6,atk:30,hit:30,hitF:60,hitN:80,hitFS:40,hitNS:50,hitFN:60,hitFNS:40,col:'#9cbcd0',eye:'#2a3a4e',size:1.05},/* ガラスの入れ物の中でねむる（cave-baiyou.js）。入れ物がわれると、目をさます */
   bk_hone:{bk:1,name:'組みかけのほね',xp:12,pw:9,hp:180,sp:.75,atk:28,hit:25,hitF:50,hitN:70,hitFS:30,hitNS:40,hitFN:50,hitFNS:30,col:'#e8dcc0',eye:'#ff8a5a',size:1,rebuild:1},/* たおしても、組みなおして起きる（まもりの光でとどめ） */
   bk_ro:{bk:1,name:'炉にくべられたもの',xp:12,pw:9,hp:160,sp:1.4,atk:22,hit:20,hitF:45,hitN:65,hitFS:28,hitNS:40,hitFN:45,hitFNS:28,col:'#3a1810',eye:'#ffd860',size:.9,hot:1},/* 速い。通った所が、あつい床になる */
   bk_kuzu:{bk:1,name:'ほりくず人形',xp:12,pw:8,hp:220,sp:.6,atk:28,hit:28,hitF:60,hitN:75,hitFS:40,hitNS:45,hitFN:60,hitFNS:40,col:'#7a6650',eye:'#ffd27a',size:1.05,kuzu:1},/* たおすと、そのマスに岩がのこる（cave-mine.js） */
@@ -21,7 +21,7 @@ Object.assign(EN,CVBK);
 const CVBKFL=['bk_kui','bk_yoru','bk_sui','bk_kuzu','bk_nezu','bk_seki','bk_mi','bk_tame','bk_hone','bk_ro'];/* 階（1〜10階）のバケモノ（STORY.md） */
 function cvFoeType(ch,fl){return CVBKFL[fl]||CVFOES[ch]}
 const CVSUIR=3,CVSUIK=.6;/* 光すい：まわりのマス・光の広さ */
-const CVTAMER=3;/* ためしのからだ：火のせいれいが、このマスまで近づくと目をさます */
+const CVTAMER=3;/* ためしのからだ：火のせいれいが、このマスまで近づくと、見るだけの入れ物（Q）がわれる */
 const CVHONET=20;/* 組みかけのほね：組みなおすまで（時計の分） */
 const CVROHOT=10;/* 炉にくべられたもの：通った所が、あつい床のままの時間（時計の分） */
 const CVNEZUWK=1.8,CVNEZUWKD=.6;/* 木のにんぎょうがあるとき、ねているねずみが目をさます広さ（マス）・光をしぼったとき */
@@ -57,16 +57,16 @@ function cvBakeTick(cdt,mv,now){const C=CV;if(!C.sc)return;
     if(e.down&&C.t>=e.down){/* 組みかけのほね：組みなおして起きる */e.down=0;e.hp=e.max;e.asleep=false;e.stun=0;cvSpark(e.x,e.y-CVOY,'#e8dcc0',14);sfx('crack');if(!C.note.hone){C.note.hone=1;toast('ほねが、また組みあがった','warn')}}
     if(D.hot&&!e.asleep&&!e.down){const j=cvCell(e);if(C.g[j]&&!C.wt[j])C.hotT.set(j,C.t+CVROHOT)}}
   for(const[j,u]of C.hotT)if(u<=C.t)C.hotT.delete(j);
-  for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'&&!relOn('fuigo')){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
-  for(const s of C.sc)cvScTick(s,cdt,mv,now)}
+  for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
+  cvGlassTick();cvHoneTick();for(const s of C.sc)cvScTick(s,cdt,mv,now)}
 /* ねているバケモノが目をさます広さ（マス） */
 function cvWakeR(e){const C=CV;if(EN[e.type].pray)return cvSkWakeR();if(EN[e.type].nezu&&relOn('ningyo'))return C.dim?CVNEZUWKD:CVNEZUWK;return C.dim?CVWAKED:CVWAKE}
 /* ねむりからさめるか（ためしのからだは、火のせいれいが近づいたときだけ） */
-function cvWakeOK(e,a){const D=EN[e.type];if(D.pray)return cvSkWakeOK();if(D.thaw)return a.elem==='fire'&&Math.hypot(a.x-e.x,a.y-e.y)<=CVTAMER;return true}
-/* ゆりかごのみはり：ゆりかごのそば・自分のそばに来た子だけ、ねらう。いなければ見回る */
-function cvPatrol(e,mv){const C=CV;let tg=null,bd=1e9;for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);let near=d<=CVMIEYE;if(!near)for(let dy=-CVMIR;dy<=CVMIR&&!near;dy++)for(let dx=-CVMIR;dx<=CVMIR;dx++){const x=(a.x|0)+dx,y=((a.y-CVOY)|0)+dy,o=x>=0&&y>=0&&x<CVW&&y<CVH&&C.ob.get(cvJ(x,y));if(o&&o.k==='Y'){near=true;break}}if(near&&d<bd){bd=d;tg=a}}
+function cvWakeOK(e,a){const D=EN[e.type];if(D.pray)return cvSkWakeOK();if(cvGlassOn(e))return cvGlassWake(e,a);return true}
+/* ゆりかごのみはり：ゆりかご・ぬいていないくいのそば（cvMiGuard）・自分のそばに来た子だけ、ねらう。いなければ見回る */
+function cvPatrol(e,mv){const C=CV;let tg=null,bd=1e9;for(const a of C.party){const d=Math.hypot(a.x-e.x,a.y-e.y);let near=d<=CVMIEYE;if(!near)for(let dy=-CVMIR;dy<=CVMIR&&!near;dy++)for(let dx=-CVMIR;dx<=CVMIR;dx++){const x=(a.x|0)+dx,y=((a.y-CVOY)|0)+dy,o=x>=0&&y>=0&&x<CVW&&y<CVH&&C.ob.get(cvJ(x,y));if(cvMiGuard(o)){near=true;break}}if(near&&d<bd){bd=d;tg=a}}
   if(tg){e.tg=tg;return true}if(e.tg&&Math.hypot(e.tg.x-e.x,e.tg.y-e.y)<CVAGGRO)return true;e.tg=null;
-  if(!e.path.length&&(e.pw=(e.pw||0)-mv)<=0){e.pw=2+Math.random()*3;const Y=[...C.ob].filter(([,o])=>o.k==='Y').map(([j])=>j);if(Y.length){const y=Y[(Math.random()*Y.length)|0],p=cvBfs(cvCell(e),q=>cvAdj(q,y));if(p)e.path=p.slice(0,12)}}
+  if(!e.path.length&&(e.pw=(e.pw||0)-mv)<=0){e.pw=2+Math.random()*3;const Y=[...C.ob].filter(([,o])=>cvMiGuard(o)).map(([j])=>j);if(Y.length){const y=Y[(Math.random()*Y.length)|0],p=cvBfs(cvCell(e),q=>cvAdj(q,y));if(p)e.path=p.slice(0,12)}}
   if(e.path.length)cvMove(e,mv*CVFOE*EN[e.type].sp*.6);return false}
 /* たおれたとき（組みかけのほねは、まもりの光でとどめをさすまで、たおれたまま組みなおす）。true なら、まだ消えない */
 function cvBakeDown(e,a){const D=EN[e.type];if(!D||!D.rebuild||!a)return false;const C=CV;e.down=C.t+CVHONET;e.hp=0;e.path=[];e.tg=null;if(C.focus===e)C.focus=null;sfx('crack');if(!C.note.hdown){C.note.hdown=1;toast('ほねが、くずれた','good')}return true}
@@ -84,7 +84,7 @@ function cvScTick(s,cdt,mv,now){const C=CV,P=CVSC[s.k];if(!C.party.length)return
   if(s.k==='me'){const x=cvX(s.j),y=cvY(s.j),[a,d]=cvNearest(x,y);if(!a)return;
     if(d<cvLR()*.9){cvScOff(s,[3,6]);return}/* 光がとどくと消える */
     if(d<10){const t0=s.t;s.t+=mv*(C.dim?.5:1);if(t0<CVSC.me.gaze/2&&s.t>=CVSC.me.gaze/2){playU('creak',.25,.7);bkSeen('sc_me')}}/* 半分まで見られたら、ぎいっ */
-    if(s.t>=P.gaze){bkSeen('sc_me');let n=0;for(const e of C.en)if(!e.dead&&e.asleep&&!EN[e.type].thaw&&C.party.some(q=>Math.hypot(q.x-e.x,q.y-e.y)<=P.wake)){e.asleep=false;e.wakeT=now;n++}sfx('warn');toast(n?'見られていた。バケモノが目をさました':'暗がりから、だれかが見ていた','warn');cvScOff(s);return}return}
+    if(s.t>=P.gaze){bkSeen('sc_me');let n=0;for(const e of C.en)if(!e.dead&&e.asleep&&!cvGlassOn(e)&&C.party.some(q=>Math.hypot(q.x-e.x,q.y-e.y)<=P.wake)){e.asleep=false;e.wakeT=now;n++}sfx('warn');toast(n?'見られていた。バケモノが目をさました':'暗がりから、だれかが見ていた','warn');cvScOff(s);return}return}
   if(s.k==='esa'){const[a,d]=cvNearest(s.x,s.y);if(!a)return;
     if(s.rev){if(now>s.rev)cvScOff(s);return}
     if(d<=CVRELSUZU&&relOn('suzu')){s.rev=now+900;s.bite=0;bkSeen('sc_esa');cvSpark(s.x+.5,s.y+.5,'#ffe9a8',12);playU('tink',.3,1.3);playU('tink',.22,1.6,.12);if(!C.note.suzu){C.note.suzu=1;toast('すずが鳴った。かわいい生き物じゃない','good')}return}
@@ -125,7 +125,7 @@ function cvBkFrame(e,now){const D=EN[e.type];let v=CVBKV.get(e);if(!v){v={x:e.x,
 function cvBkChip(g,id,fx,fy,f,al){const ch=cvChipOf(id);if(!ch)return false;const im=chipImgs(ch,id)[0];if(!im||!im.ok)return false;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al==null?1:al;g.translate(Math.round(fx),Math.round(fy));if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm;return true}
 function cvBkDraw(e,now){if(!e.down){const D=EN[e.type],[fr,f]=cvBkFrame(e,now),ho=hitOff(e,now,1),x=e.x*TS+ho[0],y=e.y*TS+ho[1];P4('rgba(0,0,0,.3)',x-9*D.size,y+6,18*D.size,3);
     if(cvBkChip(ctx,'bk'+e.type.slice(3)+'#'+fr,x,y+7,f,e.stun>0?.6:1)){
-      if(D.thaw&&e.asleep){ctx.globalAlpha=.55;P4('#c0e2f6',x-10,y-30,20,36);ctx.globalAlpha=.9;P4('#e6f8ff',x-10,y-30,2,36);ctx.globalAlpha=1}/* 氷の中でねむる */
+      if(cvGlassOn(e))cvGlassOver(x,y+7,now,e);/* ガラスの入れ物の中でねむる */
       if(ho[2]){ctx.globalAlpha=.5;P4('#ffffff',x-8,y-28,16,30);ctx.globalAlpha=1}
       if(e.hp<e.max&&!e.asleep){const w=18;P4('rgba(0,0,0,.5)',x-w/2,y-40*D.size-4,w,3);P4('#ff8a8a',x-w/2,y-40*D.size-4,Math.max(1,Math.round(w*e.hp/e.max)),3)}return}}
   cvBkDraw0(e,now)}
@@ -135,7 +135,7 @@ function cvBkDraw0(e,now){const D=EN[e.type],k=e.type,s=D.size,t=now/1000+e.id,h
   if(k==='bk_kui'){R('#4a3a2c',-6,-26+bob,12,26);R('#6a5a48',-5,-25+bob,9,24);R('#8a5a36',-1,-34+bob,3,40);R('#b06a3a',-1,-34+bob,1,10);R('#6a5030',-12,-18+bob,7,2);R('#6a5030',6,-16+bob,8,2);R('#6a5030',-13,-18+bob,2,8);R('#6a5030',13,-16+bob,2,7);R('#5a4a3c',-5,-32+bob,10,8);R(D.eye,-3,-29+bob,2,2);R(D.eye,1,-29+bob,2,2)}
   else if(k==='bk_sui'){const p=.5+.5*Math.sin(t*2);R('#1a1428',-9,-24+bob,18,16);R('#2a2040',-7,-26+bob,14,20);R('#0a0610',-4,-20+bob,8,8);ctx.globalAlpha=.4+.4*p;R('#6a4cc0',-11,-18+bob,2,4);R('#6a4cc0',9,-22+bob,2,5);R('#9a7ef0',-2,-30+bob,4,4);ctx.globalAlpha=e.stun>0?.6:1;R(D.eye,-1,-18+bob,2,2)}
   else if(k==='bk_yoru'){const w=Math.round(Math.sin(t*4)*2);R('#0c1018',-10-w/2,-10,20+w,10);R('#0c1018',-7,-17,14,8);R('#1a2230',-6,-16,5,2);R('#2a3a4e',-9,-3,18,1);R(D.eye,-3,-12,2,2);R(D.eye,2,-12,2,2);if(Math.sin(t*2)>.6)R('#7fe8ff',8,-6,1,1)}
-  else if(k==='bk_tame'){if(e.asleep){ctx.globalAlpha=.85;R('#9ccae6',-9,-30,18,30);R('#c0e2f6',-7,-28,14,26);ctx.globalAlpha=1;R('#5a7086',-4,-24,8,18);R('#5a7086',-2,-27,5,4);R('#e6f8ff',-9,-30,2,30)}
+  else if(k==='bk_tame'){if(e.asleep){R('#7a98ae',-6,-12,12,12);R(D.col,-5,-11,10,10);R(D.col,-4,-17,8,6);R('#7a98ae',-9,-8,4,6);R('#7a98ae',5,-8,4,6);R('#3a5068',-3,-14,2,1);R('#3a5068',1,-14,2,1);R('#e6f8ff',-5,-11,1,5);if(cvGlassOn(e)){ctx.globalAlpha=1;cvGlassOver(x,y,now,e)}}
     else{R('#7a98ae',-6,-24+bob,12,22);R(D.col,-5,-23+bob,10,20);R(D.col,-4,-30+bob,8,7);R('#7a98ae',-10,-18+bob,4,10);R('#7a98ae',6,-18+bob,4,10);R(D.eye,-3,-27+bob,2,2);R(D.eye,1,-27+bob,2,2);R('#e6f8ff',-5,-23+bob,1,8)}}
   else if(k==='bk_hone'){R('#b8a888',-1,-26+bob,2,22);for(let i=0;i<4;i++){R(D.col,-7,-22+i*4+bob,14,2)}R(D.col,-5,-33+bob,10,8);R('#5a4e42',-3,-30+bob,2,2);R('#5a4e42',1,-30+bob,2,2);R(D.eye,-3,-30+bob,1,1);R(D.col,-6,-4,3,4);R(D.col,3,-4,3,4);R(D.col,-11,-20+bob,4,2);R(D.col,8,-18+bob,4,2)}
   else if(k==='bk_ro'){const p=.5+.5*Math.sin(t*6);R('#1a0a06',-8,-18+bob,16,18);R(D.col,-7,-17+bob,14,16);ctx.globalAlpha=.6+.4*p;R('#ff5a20',-4,-14+bob,2,10);R('#ff7a1c',2,-12+bob,2,8);R('#ffd860',-1,-8+bob,2,3);ctx.globalAlpha=e.stun>0?.6:1;R(D.eye,-3,-15+bob,2,2);R(D.eye,1,-15+bob,2,2)}
