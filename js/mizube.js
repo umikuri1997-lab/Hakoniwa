@@ -193,7 +193,7 @@ function mzFallIso(x,y,h0,h1,t){const a=isoSP(x*TS+4,(y+1)*TS),b=isoSP((x+1)*TS-
   ctx.fillStyle='#9ad8ee';ctx.beginPath();ctx.moveTo(a.x,a.y-u);ctx.lineTo(b.x,b.y-u);ctx.lineTo(b.x,b.y-u+dh);ctx.lineTo(a.x,a.y-u+dh);ctx.closePath();ctx.fill();
   ctx.fillStyle='#e6f7fb';for(let k=0;k<3;k++){const q=(k+.5)/3,px=Math.round(a.x+(b.x-a.x)*q),py=Math.round(a.y+(b.y-a.y)*q-u+((t*4+k*9)%Math.max(1,dh-4)));ctx.fillRect(px,py,2,4)}ctx.restore()}
 function mzRows(add,x0,y0,x1,y1,now){if(!mzOn())return;if(MZC.S!==S)mzRefresh();
-  {const M=S.mz;for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if(M.cn[j]||hiAt(j)>0&&S.ground[j])add(y,-1,null,()=>mzRowDraw(y,x,x,now),-1,false,x+y-.97)}}/* マスごとに（そのマスの上の面のすぐあと） */
+  {const M=S.mz;for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if(M.cn[j]||hiAt(j)>0&&S.ground[j])add(y,-1,null,()=>mzRowDraw(y,x,x,now),-1,false,icBlkDD(j)+.02)}}/* マスごとに（そのマスの上の面のすぐあと） */
   for(const C of MZC.comps){const B=S.mz.boats[C.key],n=C.route.length;if(!B||!n)continue;const i=Math.floor(B.d)%n,f=B.d-Math.floor(B.d),a=C.route[i],b=C.route[(i+1)%n],bx=(a%W+.5)*(1-f)+(b%W+.5)*f,by=(((a/W)|0)+.5)*(1-f)+(((b/W)|0)+.5)*f,L=liftOf(a);
     add(by+.02,-1,null,()=>mzBoatDraw(bx*TS,by*TS-L+Math.round(Math.sin(now/500)),B.cg),-1,gFoot(bx*TS,by*TS))}/* クォータービュー：舟の足もとに立てて */
   if(mzKanadeOn()){const p=mzKanadePos(now);if(p)add(p.y+.03,-1,null,()=>mzKanadeDraw(ctx,now),-1,gFoot(p.x*TS,p.y*TS))}/* 白い影（mizube-story.js） */
