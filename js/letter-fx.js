@@ -73,10 +73,10 @@ function letterRead(l){/* 手紙を読む（便せんの紙）。はじめて読
   const close=()=>{if(typing)allText();letterSecret(l,fresh);l.read=1;o.remove();if(sheet==='inv'||sheet==='menu')renderSheet()};
   o.querySelector('.x').onclick=e=>{e.stopPropagation();sfx('tap');close()};o.onclick=e=>{if(typing){allText();return}if(e.target===o&&!anim)close()};
   document.body.appendChild(o);
-  if(!anim){cv.remove();for(const p of P)p.textContent=p.dataset.t;gave=!!l.g;shown=false;giftNow();sfx('open');return}
+  if(!anim){cv.remove();for(const p of P)p.textContent=p.dataset.t;gave=!!l.g;shown=false;giftNow();sfx('page');return}
   /* ふうとうがおりてくる → 封がひらく → 便せんがのびる → ふうとうが下へきえる → 文 */
   const H=pa.offsetHeight;pa.style.height='0px';pa.style.visibility='hidden';cv.style.transform='translateY(-120px)';o.style.background='rgba(40,30,15,0)';playU('pslide',.4);
   lStep(420,k=>{const e=1-Math.pow(1-k,3),bk=k<.8?0:Math.sin((k-.8)/.2*Math.PI)*6;cv.style.transform='translateY('+px15(-120*(1-e)-bk)+'px)';o.style.background='rgba(40,30,15,'+(.35*k).toFixed(2)+')'},()=>{
-    setTimeout(()=>{env(1);sfx('page');playU('tink',.22,1.3);
+    setTimeout(()=>{env(1);sfx('page');
       setTimeout(()=>{pa.style.visibility='';lStep(520,k=>{const e=1-Math.pow(1-k,2);pa.style.height=px15(H*e)+'px'},()=>{pa.style.height='';playU('mpage',.3);
         lStep(300,k=>{cv.style.transform='translateY('+px15(40*k)+'px)';cv.style.opacity=k<.66?1:k<.9?.5:0},()=>{cv.remove();type()})})},260)},280)})}
