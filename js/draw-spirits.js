@@ -235,7 +235,7 @@ function drawMitt(c,x,y,D,col,ol){const X=Math.round(x/D)-2,Y=Math.round(y/D)-2;
 const WHAND={gf_open:{s:28,dy:-4},gf_lift:{s:24,at:'n',dy:-10},gf_ear:{s:20,at:'n',dy:-2},gf_wave:{s:26,at:'n',dy:-10},gf_sniff:{s:22,dy:-4},gf_hug:{s:24,dy:0},gf_spin:{s:20,at:'n',dy:6},gf_read:{s:26,dy:-4},gf_peek:{s:20,at:'n',dy:-4},gf_shake:{s:20,at:'n',dy:-6},lnod:{s:22,dy:0},cookprep:{s:30,dy:-6},cookplate:{s:28,at:'tip',dy:-8},cookfry:{s:22,at:'tip',dy:-6},raise:{s:36,dy:0}};/* 手に持つ物の大きさ・場所（at:'tip' は道具の先。raise は頭の上） */
 function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさね、その上に、ずきん・顔の手前にある、うで・手・道具（G[4]・G[5]）をかさねる */
   const T=o.iso&&typeof SPMQ!=='undefined'&&SPMQ[nm]&&SPMQ[nm].g[spArt(el)]?SPMQ:SPM;/* クォータービュー：前ななめ・うしろななめの絵（js/spirit-motions-iso.js） */const m=T[nm],G=m.g[spArt(el)];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):nm==='carry'&&!o.walk?0:o.walk&&o.wd!=null&&typeof m.r==='number'?((o.wd*WALKPT*m.r/WALKR)%1+1)%1/* 歩いた道のりで進める（WALKPT） */:((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i,T);if(!cell)return false;
-  const fl=nm==='fish'&&o.fishTo?m.h[dir][i]:null;if(fl&&fl.length>4&&dir===2){const tx=x+fl[4]*D*s*f;drawFishLine(c,tx,y+fl[5]*D*s,tx+3*Math.sign(tx-x),o.fishTo[1]-.3*TS,t)}/* うしろ向き（上の水）：糸とうきは体より奥。うきは頭にかくれないよう、竿の先の側 */
+  const fl=nm==='fish'&&o.fishTo?m.h[dir][i]:null,fT=fl&&[o.isx?x+(o.fishTo[0]-x)/ISOSPX:o.fishTo[0],o.fishTo[1]];/* よこを ISOSPX にのばした中なので、うきの場所はもどす */if(fl&&fl.length>4&&dir===2)drawFishLine(c,x+fl[4]*D*s*f,y+fl[5]*D*s,fT[0],fT[1],t);/* うしろ向き（上の水）：糸とうきは体より奥 */
   const vr=o.vr,e=m.e[spArt(el)][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const cwx=((tr?-4:0)+e[0])*D,cwy=((CROWNY[el]||-66)+e[1])*D;if(o.crown&&e[2]<2)drawCrown(c,cwx,cwy,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭より先（頭にかくれる） */
   c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
@@ -255,9 +255,10 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
     const P=spcVar(el,vr),hands=one>=0?[[h[one],h[one+1]]]:[[h[0],h[1]],[h[2],h[3]]];const[H0,S0,L0]=hex2hsl(P.hand),ol=hsl2hex(H0,S0,Math.max(0,L0-.16));for(const[x,y]of hands)drawMitt(c,x*D,y*D,D,P.hand,ol)}}
   if((nm==='water'||nm==='tend')&&h.length>4){for(let k=0;k<3;k++){const p=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-p)+')';c.beginPath();c.ellipse(h[4]*D+p*3,h[5]*D+p*24,1.8,2.6,0,0,7);c.fill()}}/* じょうろの先から水のつぶ */
   c.imageSmoothingEnabled=sm;c.restore();
-  if(fl&&fl.length>4&&dir!==2)drawFishLine(c,x+h[4]*D*s*f,y+h[5]*D*s,o.fishTo[0],o.fishTo[1],t);/* さおの先から、水の上のうきへ糸 */
+  if(fl&&fl.length>4&&dir!==2)drawFishLine(c,x+h[4]*D*s*f,y+h[5]*D*s,fT[0],fT[1],t);/* さおの先から、水の上のうきへ糸 */
   spmFree(performance.now());return true}
-function fishTo(r){/* つっている子の、うきの場所（見る水のマスのまん中） */const a=r.act;if(!a||a.type!=='fish'||a.stage!=='do')return null;const w=fishW(a.stand);if(w<0)return null;return[(w%W+.5)*TS,((w/W|0)+.55)*TS]}
+function fishTo(r){/* つっている子の、うきの場所（見る水のマスのまん中）。せいれいは足もとで立てて描く（standTf）ので、水のマスの画面の点（ひし形）を、いまの描き方の点にもどす。水面は岸より WBANK ひくい（洞窟はない） */const a=r.act;if(!a||a.type!=='fish'||a.stage!=='do')return null;const w=fishW(a.stand);if(w<0)return null;
+  const B=gFoot((w%W+.5)*TS,((w/W|0)+.55)*TS),k=dpr*cam.z,O=isoOff(k),X=k*B.px+O[0],Y=k*(B.py+(caveOn()?0:WBANK))+O[1],T=ctx.getTransform().invertSelf();return[T.a*X+T.c*Y+T.e,T.b*X+T.d*Y+T.f]}
 function drawFishLine(c,tx,ty,wx,wy,t){/* 糸・波の輪・うき（うきと波は1ドットの四角） */
   const X=Math.round(wx),Y=Math.round(wy+Math.sin(t*3)*1.2);
   c.save();c.fillStyle='rgba(255,255,255,.5)';const rp=Math.sin(t*1.6)>0?1:0;c.fillRect(X-5-rp,Y+1,3,1);c.fillRect(X+3+rp,Y+1,3,1);c.fillRect(X-3-rp,Y+2,7+rp*2,1);/* 波の輪 */
