@@ -89,5 +89,9 @@ const assert=require('node:assert/strict');
     assert.equal(v.name,'ホムラ','Homura writes in the volcano');assert.equal(v.boku,0,'Homura does not say ぼく');assert.ok(v.atai>0,'Homura says あたい');
     assert.ok(v.ft&&v.fw==='ホムラ'&&v.ph===1,'note and photo');assert.equal(v.gft,null);assert.equal(v.gph,null,'no note or photo without Homura');
     assert.deepEqual(V.errors,[]);await V.browser.close();console.log('Diary: Homura writes in the volcano')}
-  await browser.close();console.log('Diary: ok');
+  /* 朝の会話（talkOnce の0.9秒）が、日記の出る1.5秒より先でも、日記を先に出し、会話は日記をとじてから */
+  {const w=JSON.parse(await run(`(()=>{if(sheet)closeSheet();$('#dialog').hidden=true;DLGQ.length=0;DLGGAP=0;S.dy=null;dyEv('朝の会話のテスト');diaryClose();delete S.flags.dyTalkT;talkOnce('dyTalkT',[[S.res[0].name,'朝の会話のテスト']]);clockStep(2000);
+    const a={sheet,arg:sheetArg,dlg:!$('#dialog').hidden};closeSheet();clockStep(1000);a.after=!$('#dialog').hidden&&$('#dialog').textContent.includes('朝の会話のテスト');return JSON.stringify(a)})()`));
+    assert.equal(w.sheet,'diary','diary opens even if a talk comes first '+JSON.stringify(w));assert.equal(w.dlg,false,'talk waits');assert.ok(w.after,'talk shows after the diary closes '+JSON.stringify(w));console.log('Diary: morning talk waits for the diary')}
+  assert.deepEqual(errors,[]);await browser.close();console.log('Diary: ok');
 })().catch(e=>{console.error(e);process.exit(1)});
