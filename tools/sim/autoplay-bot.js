@@ -20,6 +20,7 @@ B.ensure=(id,n,nx,ny,ok)=>{if(B.have(id)>=n)return true;const b=BL[id];if(!b)ret
 B.ui=()=>{
   for(const P of[typeof ROUTEPOP!=='undefined'&&ROUTEPOP,typeof LVPOP!=='undefined'&&LVPOP]){const b=P&&P.querySelector('.btn');if(b){b.click();return true}}/* お話の道・レシピをえらぶ：はじめの物 */
   const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b){b.click();return true}if(document.querySelector('.idea-reveal'))return true;
+  {const e=document.querySelector('#rlv');if(e&&!e.hidden){const b=[...e.querySelectorAll('.rpick button')].find(b=>!b.disabled&&!b.classList.contains('pri'));if(b){b.click();return true}}}/* せいれいのレベルアップ：ごほうびを1つえらぶ（「とじる」だと、えらばずにとじて、すぐまた開く） */
   for(const id of ['#lvup','#rlv']){const e=document.querySelector(id);if(e&&!e.hidden){const bs=[...e.querySelectorAll('button')].filter(b=>!b.classList.contains('lvic'));if(bs.length){bs[bs.length-1].click();return true}}}
   {const y=document.querySelector('.askyn .btn.pri');if(y){y._held=1;y.click();y._held=0;return true}}/* 材料をわたすクエストの「もらってもいい？」は「わたす」 */
   if(vis('#dialog')){const bs=[...document.querySelectorAll('#dlgBtns button')].filter(b=>b.offsetParent!==null);try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}if(bs.length)bs[0].click();return true}
