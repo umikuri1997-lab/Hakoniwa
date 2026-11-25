@@ -63,8 +63,10 @@ def shade(cb, nb, mb, light):
     sp0 = (mb == 1) & (nb@hv > 0.996); out[sp0] = 255   # 水：つやつや（小さな点の白い光。広がるつやにしない）
     g = mb == 2
     if g.any():   # 火：光っている色（かげはつけず、外がわは明るい朱色・こちらを向く所ほど 白っぽい黄色）
-        t = np.clip(nb[g]@view, 0, 1)[:, None]**0.7; edge = np.array([255, 120, 70.0]); core = np.array([255, 246, 190.0])
-        out[g] = (cb[g]*0.35+edge*0.65)*(1-t*0.85)+core*(t*0.85)
+        t = np.clip(nb[g]@view, 0, 1)[:, None]
+        edge = np.array([255, 84, 48.0]); mid = np.array([255, 150, 40.0]); core = np.array([255, 226, 92.0])   # あざやかなまま（白くしない）
+        a = np.clip(t/0.55, 0, 1); b = np.clip((t-0.55)/0.45, 0, 1)
+        out[g] = np.where(t < 0.55, edge*(1-a)+mid*a, mid*(1-b)+core*b)
     return out
 
 def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):

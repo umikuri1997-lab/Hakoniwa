@@ -26,8 +26,8 @@ def scene(el):
     bpy.ops.import_scene.fbx(filepath=os.path.join(HERE, 'model', el+'.fbx'))
     arm = [o for o in bpy.data.objects if o.type == 'ARMATURE'][0]
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
-    for o in meshes:   # 顔（Head・目・ほっぺ）を少し下げる（持ち主のたのみ）
-        if o.name.lower().startswith(('head', 'eye', 'cheek')) and not o.name.lower().startswith('headacc'):
+    for o in meshes:   # 顔（目・ほっぺ）を少し下げる（持ち主のたのみ。あたまごと下げると、あごがずきんの下から出る）
+        if o.name.lower().startswith(('eye', 'cheek')):
             mw = o.matrix_world.copy(); mw.translation.z -= FACE_DOWN*0.01; o.matrix_world = mw
     dom = {}
     for o in meshes:
