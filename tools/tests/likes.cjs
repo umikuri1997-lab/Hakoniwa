@@ -16,6 +16,13 @@ const sn=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS
   return {f1,face1,f2,fk:r.fk,ng,lk,left:S.fs,txt:[foodKnownText(r,0),foodKnownText(r,2)],nm:[FOODS[ng].name,FOODS[lk].name]}})()`);
 assert.ok(typeof sn==='object','おやつ '+sn);assert.equal(sn.f1,50+10-5,'にがて：おやつ+10、にがて－5');assert.ok(sn.face1,'にがての顔');assert.equal(sn.f2,50+10+3,'すき：+3');
 assert.equal(sn.fk[sn.ng],0);assert.equal(sn.fk[sn.lk],2);assert.deepEqual(sn.txt,sn.nm,'プロフィールに出る');assert.equal((sn.left[sn.ng]||0)+(sn.left[sn.lk]||0),0,'えらんだ物がへる');
+/* 遊ぶ・食べるまで、好きな遊び・すきな食べ物を言わない（ひとこと・お話・手紙・おねがいのお礼・「〇〇が食べたい」） */
+const hid=await run(`(()=>{const r=S.res[1];r.kn={};r.fk={};const lk=LIKES[r.like],says=[];for(let i=0;i<40;i++){S.t+=30;says.push(sayLine(r))}const P=smallTalk(r).map(x=>JSON.stringify(x)).join();
+  S.seenIt=S.seenIt||{};const K=Object.keys(FOODS).filter(k=>!FOODS[k].bad);for(const k of K)S.seenIt['f:'+k]=1;const w0=wantPick(r);const lk2=K.find(k=>foodLike(r,k)===2);r.fk[lk2]=2;const w1=wantPick(r);
+  r.ong={t:'food',k:K[0],d:dayNo()};r.ongD=null;const L=ongGot(r,'food',K[0])||[];const pk=r.ongPk;
+  return {say:says.some(x=>x.indexOf(lk)>=0),talk:P.indexOf(lk)>=0,w0,w1,lk2,ong:L.join().indexOf(lk)>=0,pk}})()`);
+assert.equal(hid.say,false,'ひとことで好きな遊びを言わない');assert.equal(hid.talk,false,'お話で好きな遊びを言わない');assert.equal(hid.w0,null,'食べていない物を食べたいと言わない');assert.equal(hid.w1,hid.lk2,'食べてすきとわかった物は言う');
+assert.equal(hid.ong,false,'おねがいのお礼で好きな遊びを言わない');assert.notEqual(hid.pk,'lk');
 /* 箱からとるとき：にがては、ふつうよりあと */
 const ord=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&!FOODS[k].dish);const ng=K.find(k=>foodLike(r,k)===0),nm=K.find(k=>foodLike(r,k)===1&&FOODS[k].v===(FOODS[ng]||{}).v);return ng&&nm?[ng,nm].sort((a,b)=>foodLike(r,b)-foodLike(r,a))[0]===nm:'skip'})()`);
 assert.ok(ord===true||ord==='skip','にがてはあと');
