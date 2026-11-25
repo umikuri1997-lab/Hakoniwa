@@ -1,4 +1,4 @@
-/* 限定の家具（gift-furn.js）：プレゼントをあける場面（つつみ → 中身ごとの動き → 返事）・お返し（だいすきでかならず）・10回めの節目・大会の曲のえらび方 */
+/* 限定の家具（gift-furn.js）：プレゼントをあける場面（つつみ → 紙をひらく → 中身ごとの動き → 返事）・お返し（だいすきでかならず）・10回めの節目・大会の曲のえらび方 */
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',args:['--no-sandbox']});const p=await browser.newPage({viewport:{width:420,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
 await p.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);'});});
@@ -12,8 +12,10 @@ assert.deepEqual(JSON.parse(base),{n:25,shop:true,el:true,comfy:true,mot:true,ro
 /* だいすきの物をあげる：つつみをあける → 中身の動き → 返事の会話 → お返しのつつみ（水のせいれいの物） */
 const love=await run(`(()=>{const r=S.res[0];S.flags.gfGot={};const id=GIFTIDS.find(q=>giftLike(r,q)===2);giveItem(id,1);presentGive(r,id);const ps=sacredPose(r);return JSON.stringify({id,open:ps&&ps.anim,wrap:ps&&ps.gfood})})()`);
 const L=JSON.parse(love);assert.equal(L.open,'gf_open','つつみを両手でかかえる');assert.ok(/^ic:gfwrap_/.test(L.wrap),L.wrap);
-await p.waitForTimeout(GFOPEN());
-function GFOPEN(){return 1600}
+await p.waitForTimeout(1550);
+const unf=JSON.parse(await run(`JSON.stringify({anim:(sacredPose(S.res[0])||{}).anim,food:(sacredPose(S.res[0])||{}).gfood,snd:!!SAMPLES.gfopen,spm:!!SPM.gf_unfold&&SPM.gf_unfold.r==='ph'})`));
+assert.deepEqual(unf,{anim:'gf_unfold',food:'ic:gfopen_water',snd:true,spm:true},'両手で紙をひらく');
+await p.waitForTimeout(650);
 const mid=JSON.parse(await run(`JSON.stringify({anim:(sacredPose(S.res[0])||{}).anim,food:(sacredPose(S.res[0])||{}).gfood})`));
 assert.equal(mid.anim,await run(`GFMOT['${L.id}']`),'中身ごとの動き');assert.equal(mid.food,'ic:'+L.id);
 await p.waitForTimeout(5200);

@@ -49,6 +49,8 @@ Object.assign(SAMPLES,{"dscoop":["assets/g/7567dbe225.mp3","assets/g/3df26569c5.
 Object.assign(SAMPLES,{"moya": ["assets/g/3b48b35943.mp3", "assets/g/2d7c698059.mp3", "assets/g/57ccb5ca93.mp3"]});/* もやもや（たのしさが低いとき）：持ち主がくれた声を、尻上がりにしないで、ゆっくりの「もやん」1回ぶんずつにした（tools/sound/owner_moya.py） */
 Object.assign(SAMPLES,{"cavedrip":["assets/g/c71f5bdd7f.mp3","assets/g/ea04850a8c.mp3","assets/g/dda10e0646.mp3","assets/g/83d7df255d.mp3","assets/g/945908278f.mp3","assets/g/cb53c608a7.mp3"],"caveamb":["assets/g/b2cdd41001.mp3"]});/* 洞窟のしずく・洞窟の空気の音：本物の録音（OpenGameArt「Dripping water loop」「Loopable Dungeon Ambience」CC0。tools/sound/cave_amb.py） */
 Object.assign(SAMPLES,{"thunder":["assets/g/838e080f8c.mp3","assets/g/76dfb6bdbe.mp3"]});/* あらしのかみなり：本物の録音（OpenGameArt「Rain + Long Thunder」CC0。tools/sound/thunder.py） */
+Object.assign(SAMPLES,{"nppage":["assets/g/755187792f.mp3"]});/* 「今夜のそなえ」が出る音：紙をめくる「ぱさっ」（davidbain の CC0 の録音を切った。持ち主がえらんだ。tools/sound/nightprep_rec.py） */
+Object.assign(SAMPLES,{"gfopen":["assets/g/9791181c5a.mp3"]});/* プレゼントのつつみをひらく：つつみ紙の「かさっ」（Eipeiknip の録音。持ち主がえらんだ。reward_rec.py） */
 Object.assign(SAMPLES,{"rwget":["assets/g/5b40bc0a75.mp3"],"rwlevel":["assets/g/3e2df49689.mp3"],"rwfirst":["assets/g/654e58828e.mp3"],"wdone":["assets/g/57c354d44f.mp3"]});/* うけとった・レベルアップとたっせい・はじめて置いた・作業台と料理の「できた」（おもちゃの鉄琴・qubodup の「Level Up」・チャイム・あわの録音、tools/sound/reward_rec.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"joyc":["assets/g/658e945ea5.mp3"],"potg":["assets/g/4b6de3da31.mp3"]});/* せいれいがよろこぶ音（カリンバのオルゴールの「ちりりん」）・なべがぐつぐつにえる音：持ち主がえらんだ CC0 の録音（tools/sound/joy_pot、credits.json） */Object.assign(SAMPLES,{"treefall":["assets/g/9d8376a84b.mp3"]});/* 木がたおれる音：持ち主がくれた音（tools/sound/owner_treefall.py） */Object.assign(SAMPLES,{"harvdone":["assets/g/6f531d4897.mp3"]});/* しゅうかくしおわった音：かれ葉がこすれる本物の録音（OpenGameArt qubodup CC0。tools/sound/harvest_done.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"goso":["assets/g/392c341186.mp3"]});/* 箱にしまう・取るあいだのゴソゴソ（持ち主がくれた音。tools/sound/gosogoso_loop.py で、つなぎ目なく1まわり1.0337秒を3つならべた形） */
@@ -186,7 +188,6 @@ function stageMusic(){
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
   nextT=AC.currentTime+.01;sched();
 }
-let PROLD=0;/* プロローグのあとの「マップを読みこみ中…%」のあいだ：曲を鳴らさない（持ち主がきめた） */
 function sched(){
   if(!AC||AC.state!=='running')return;
   if(nextT<AC.currentTime)nextT=AC.currentTime+.05;
@@ -194,7 +195,7 @@ function sched(){
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
-    if(curSong!=='opening'||PROLD){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。プロローグのあとの読みこみ中は鳴らさない。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
+    if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。マップの読みこみ中（プロローグのあと・つづきから）も鳴らす（持ち主がきめた。main.js の wantSong）。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
     const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
     if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
@@ -364,6 +365,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'loombeat':if(playU('loomk',.3))break;{const r=.94+Math.random()*.12;knock(420*r,t,.08,o,.08);knock(700*r,t+.015,.03,o,.05)}break;/* はたおり：おさをごとん（本物の録音） */
   case'grind':{const r=.93+Math.random()*.14;rustle(t,.32,.05,o,260*r,420*r,1.2);knock(110*r,t,.03,o,.12)}break;/* 粉ひき：石うすが、ごりごり */
   case'saw':rustle(t,.2,.07,o,1500,2600,2.4);knock(160,t+.02,.03,o,.06);break;/* のこぎり：ごりっ */
+  case'npopen':playS('nppage',1,.08);break;/* 「今夜のそなえ」が出る：ボタンの「ポチ」の0.08秒あとに、紙をめくる「ぱさっ」（持ち主がえらんだ） */
   case'workdone':if(playS('wdone',.35))break;knock(420,t,.1,o,.07);break;/* 作業台・料理の「できた」：あわがはじける「ぽん」（el_boss の録音。持ち主がえらんだ。読みこむ前だけ作った音） */
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
   case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6,0,RMRT))break;noise(t,.18,.09,o,900);break;

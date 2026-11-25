@@ -6,7 +6,7 @@
    描くのは地面の描き方（groundTf：せかいの点）のまま。高さ z は画面の点で、せかいの点を左上へ z/(2·IQB) ずらすと、その高さに見える。 */
 const IQWALLH=IQL*2,IQLOWH=6;/* 家の壁の高さ（段差2だん。せいれいの1.6倍。持ち主がきめた）・屋根をはずしたときの手前の壁の高さ（巾木くらい） */
 const IQC={/* 仮の絵の色（もとの色。上の面は明るく、東の面は暗く） */
-  hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',adobewall:'#d9b48a',canalwall:'#bcb4a6',rockwall:'#c9a27a',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
+  hwall:'#c89a64',bamboowall:'#b9c46a',canvaswall:'#efe6d2',acaciawall:'#b0703f',timberwall:'#e8dcc0',adobewall:'#d9b48a',yakiwall:'#b4573a',canalwall:'#bcb4a6',rockwall:'#c9a27a',mosswall:'#8f9a78',moonwall:'#cfd6e6',logwall:'#a8743f',plasterwall:'#efe8da',brickwall:'#c0674a',yozorawall:'#522d1d',wall:'#a9a49a',
   fence:'#c69a62',misugaki:'#c7b27a',ropefence:'#d8c49a',ashifence:'#c8b478',ishigaki:'#cdb79a',rankan:'#c6c0b4',sagafence:'#dcb98e',ibara:'#5f7a46',kuzure:'#a8a296',logfence:'#9a6a3c',bamboofence:'#a9b85e',parkfence:'#f4efe6',hedge:'#6fae4a',
   gate:'#c69a62',logdoor:'#9a6a3c',loggate:'#9a6a3c',parkdoor:'#f4efe6',parkgate:'#f4efe6',ishidoor:'#b58a5a',sagadoor:'#dcb98e',canalgate:'#c6c0b4',rockgate:'#c9a27a',irongate:'#5a5d68',sdoor:'#8a5a34',stonegate:'#a9a49a',
   door:'#8a5a34',yozoradoor:'#3a2418',canvasdoor:'#e9dfc8',archdoor:'#9a6a3c',itado:'#a07448',niwadoor:'#7a6a4a'};
@@ -40,7 +40,7 @@ function iqCut(c,i,o,m,lv){const w=HOME_WALLS.has(o)?o:[i-1,i+1,i-W,i+W].map(typ
 /* アイコン・タイトルの場面（ICON）：よこにつながった1マス（ドア・門はよこ向き）の絵。絵の中のマスのまん中の地面の点を (x,y) に（家具のクォータービューの絵と同じ）。ページを読みこみ中なら何も描かず、とどいたらアイコンを作りなおす */
 function iqIconKey(id){return'iso:'+id+':'+(HOME_DOORS.has(id)||GATE_IDS.has(id)?'h':'3')}
 function iqIconDraw(c,id,x,y){const L=id==='window'?['iso:hwall:3','iso:win:window:h']:[iqIconKey(id)];/* 窓は、木の壁にかけた形 */if(!L.every(k=>window.CHIPS&&CHIPS[k]))return false;
-  for(const key of L){const src=CHIPS[key].src||CHIPS[key],im=chipImgs(src,'iso')[0];if(!im.ok){const a=CHA[src.f[0][0]];if(a&&!a.ok&&!a.bad)a.q.push(()=>{if(typeof iconCache!=='undefined')for(const k in iconCache)if(k===id||k.startsWith('st_'))delete iconCache[k]});return true}}
+  for(const key of L){const src=CHIPS[key].src||CHIPS[key],im=chipImgs(src,'iso')[0];if(!im.ok){const a=CHA[src.f[0][0]];if(a&&!a.ok&&!a.bad&&!a.fr)a.q.push(()=>{if(typeof iconCache!=='undefined')for(const k in iconCache)if(k===id||k.startsWith('st_'))delete iconCache[k]});return true}}
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;for(const key of L){const src=CHIPS[key].src||CHIPS[key],k=src.g===64?.5:1;c.drawImage(chipImgs(src,'iso')[0],x-src.ax*k,y-src.ay*k,src.w*k,src.h*k)}c.imageSmoothingEnabled=sm;return true}
 function iqSiteKey(id,i){const g=iqGrp(id),door=HOME_DOORS.has(id)||GATE_IDS.has(id),m=iqMask(i,g);return'iso:'+id+':'+(door?(iqDoorHz(i,id,g)?'h':'v'):m)}/* 工事中の足場の上のうすい形：そのマスのつなぎ方で */
 /* 設計図の、建てる前のうすい形：設計図の中のおなじなかまとつないだ形で、そのマスに */

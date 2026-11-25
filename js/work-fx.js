@@ -92,8 +92,11 @@ setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
 const POURU=new WeakMap();/* 水やり：1回3秒の音（pourl）を、おわる0.4秒まえに、つぎをかさねて、とぎれずにつづける */
 const POURS=new WeakMap();/* その子が鳴らしている水やりの音（かさなる所で2つ） */
-function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);POURLAST=null;sfxLow('pourl',r.x,r.y);if(POURLAST){const L=(POURS.get(r)||[]).slice(-1);L.push(POURLAST);POURS.set(r,L);POURLAST=null}}
-function pourHush(r){const L=POURS.get(r);if(L){L.forEach(pourCut);POURS.delete(r)}POURU.delete(r)}/* 作業が止まったら、鳴っている水の音も、すっと消す */
+const POURR=new Set();/* 水やりの音を鳴らしている子 */
+function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);POURR.add(r);POURLAST=null;sfxLow('pourl',r.x,r.y);if(POURLAST){const L=(POURS.get(r)||[]).slice(-1);L.push(POURLAST);POURS.set(r,L);POURLAST=null}}
+function pourHush(r){const L=POURS.get(r);if(L){L.forEach(pourCut);POURS.delete(r)}POURU.delete(r);POURR.delete(r)}/* 作業が止まったら、鳴っている水の音も、すっと消す */
+/* 水やりをやめたら（ほかの作業・歩きだす・作業がおわる）、3秒の音のおわりを待たずに、すぐ消す */
+setInterval(()=>{for(const r of POURR){const a=r.act;if(!a||(a.type!=='water'&&a.type!=='tend')||a.stage!=='do')pourHush(r)}},100);
 /* 話している・場面で止められている子（onHold）と、村の時間が止まっているときは、作業が進まないので音を鳴らさない（話しているあいだ、水やりの音が鳴りつづけた） */
 function workBeat(r,nm,t,p){if(typeof onHold==='function'&&onHold(r)||typeof paused==='function'&&paused()){WBEATP.delete(r);pourHush(r);return}if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
   for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxLow(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);const nat=(nm==='chop'||nm==='mine')&&r.act&&r.act.obj!=null;if(nat&&typeof natJolt==='function')natJolt(r.act.obj,(r.act.obj%W+.5)>=r.x?1:-1);/* 木・岩は、たたくたびに、たたかれた向きへゆれる。木くず・石のかけらも毎回 */if(fx&&(nat||Math.random()<.5)){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}

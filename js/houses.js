@@ -5,7 +5,7 @@ const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,tanpopo:1,ayame:1,iwakagami:1,tsukimi:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
 const COMFY={tsubo:6,rel_kui:5,rel_tsuru:5,rel_ningyo:5,rel_kagami:5,rel_suisho:5,rel_bin:5,rel_nafuda:5,rel_sekiban:5,rel_fuigo:5,rel_suzu:5,gekkolamp:5,hotarukago:4,shitone:8,tsukimidai:6,terraceseat:6,madobachi:6,canallamp:5,araiba:5,shimahammock:6,fusenya:6,kagoisu:5,kazakadan:4,kazelamp:5,oldlantern:6,doki:6,g_w_kinoko:6,g_w_acorn:5,g_w_clover:8,g_w_shelf:8,g_w_stump:10,g_e_planter:6,g_e_lantern:5,g_e_bath:8,g_e_arch:8,g_e_geode:12,g_f_hanger:6,g_f_lamp:5,g_f_table:8,g_f_screen:8,g_f_sofa:12,g_k_fan:4,g_k_egg:6,g_k_screen:8,g_k_chest:6,g_s_jelly:5,g_s_vanity:6,g_s_table:8,g_s_tank:10,g_s_sofa:12,cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,dtable:12,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
-const DECAYW=new Set(['hwall','bamboowall','canvaswall','acaciawall','timberwall','adobewall','canalwall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
+const DECAYW=new Set(['hwall','bamboowall','canvaswall','acaciawall','timberwall','adobewall','yakiwall','canalwall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
 const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
 function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa=(o,v)=>{PT[o]=(PT[o]||0)+v};/* PT：家具ごとの点（住み心地のくわしい計算 comfyPop で出す） */
@@ -72,7 +72,7 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(m)L.push(m.name+'とあそぶの、たのしい！');
   const fi=prefKnown(r,'fd')?L.length:-1;/* 好きな料理は、食べてわかるまで言わない */if(fi<0);else if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
   if(r.fun>=80)L.push('ここでのくらし、たのしいよ');
-  const li=L.length;L.push(LIKES[r.like]+'がすき！');
+  const li=prefKnown(r,'lk')?L.length:-1;/* 好きな遊びは、遊んでわかるまで言わない */if(li>=0)L.push(LIKES[r.like]+'がすき！');
   const i=(Math.floor(S.t/30)+r.id)%L.length;SAYPK=i===fi?'fd':i===li?'lk':null;/* 好みを言ったひとこと（prefs.js） */return L[i]}
 let SAYPK=null;/* 村のようすで、ひとことが変わる */
 function helloLine(r){const k=elemKey(r);
@@ -174,7 +174,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
-  if(x1<0&&Object.values(CHA).some(a=>!a.ok&&!a.bad)){const u=ICWAIT[id]||(ICWAIT[id]="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='144'><!--"+encodeURIComponent(id)+"--></svg>");return u}/* チップのページを読みこみ中：とっておかず、id ごとのかりの空の絵。読みおわったら icWaitDone が、出ている絵を入れかえる */
+  if(x1<0&&Object.values(CHA).some(a=>!a.ok&&!a.bad&&!a.fr)){const u=ICWAIT[id]||(ICWAIT[id]="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='144'><!--"+encodeURIComponent(id)+"--></svg>");return u}/* チップのページを読みこみ中：とっておかず、id ごとのかりの空の絵。読みおわったら icWaitDone が、出ている絵を入れかえる */
   const c=document.createElement('canvas');c.width=144;c.height=144;
   if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
   const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;

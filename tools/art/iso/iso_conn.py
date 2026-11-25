@@ -27,7 +27,7 @@ WP,HP=216,270   # 高さ2の壁のてっぺんの奥の角は、地面の点か�
 OWN=(0,1,0,1)   # のこすマスのはんい（たしかめるときだけかえる）
 EXT=0.45   # 腕を、となりのマスへのばす長さ
 EDGE=1e-3   # マスの東・南のはしちょうどにある面（柵のドアの柱の東の面など）も、このマスの物にする（ないと、柱の東の面が切れる）
-WALLS=['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','adobewall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']
+WALLS=['hwall','bamboowall','canvaswall','acaciawall','timberwall','canalwall','adobewall','yakiwall','rockwall','mosswall','moonwall','logwall','plasterwall','brickwall','yozorawall']
 WT,WH,LH=0.3,2.0,0.2
 def frow(z,h):
     """壁の正面の絵（高さ1の64行）の、高さ z の行。h が1より高い壁は、上の0.5・下の0.5はそのまま、あいだは16〜47行をくりかえす"""
@@ -309,7 +309,7 @@ def build_all(out,ids):
                 if C is None:C=chipsrc()
                 top,front=wall_tex(C,iid)
                 for low in(False,True):res['iso:%s:%d%s'%(iid,m,'~low' if low else '')]=crop(render(wall_parts(m,top,front,LH if low else WH),None))
-                if m==0:res.update(build_cuts([iid],C))
+                if m==0 and any(k.startswith('iso:%s:'%iid) for k in C):res.update(build_cuts([iid],C))   # 新しい壁は、まだ絵がないので、絵を入れたあとの --cut でつくる
             elif iid=='hedge':res['iso:hedge:%d'%m]=crop(hedge_render(m))
             else:
                 res['iso:%s:%d'%(iid,m)]=crop(fence_render(iid,m));sd=stake_sides(iid,m)
