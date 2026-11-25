@@ -103,6 +103,7 @@ def paper_css():
     return '\n'.join([
         '/* 紙のわく：辺が1ドットずつゆるくでこぼこ・下に紙のかげ（tools/ui/paper_ui.py で作る） */',
         rule(PAPER_SEL, base),
+        rule('body.wd0 #planPop .pxcard', base),  # 今日の役は、草原でも紙（持ち主がたのんだ）
         rule('.godSay', gold),
     ])
 
