@@ -10,26 +10,31 @@
 - Water drop / Splash / bxyorna  https://freesound.org/people/bxyorna/sounds/410335/
 - Fish Splashing Pond.wav / kylecutsfilms  https://freesound.org/people/kylecutsfilms/sounds/443380/
 - Water Drop Sound.wav / metaepitome  https://freesound.org/people/metaepitome/sounds/165206/
+- Rock In Water Splash-Plop 3.aif / jc144940  https://freesound.org/people/jc144940/sounds/178732/
+- Single Water Drop / paespedro  https://freesound.org/people/paespedro/sounds/174718/
+- Water Drip 01.wav / erkanozan  https://freesound.org/people/erkanozan/sounds/51754/
+- cartoon pop or drip / AlaskaRobotics  https://freesound.org/people/AlaskaRobotics/sounds/221091/
 やること：モノ・60Hzより下をけずる → 切る（出だし4ms・おわり40%をなめらかに）→ 速さ（高さ）→ 約 -20 LUFS（ピークは -1.5 dBFS まで）。
 使いかた：python3 tools/sound/fish_rec.py cand <フォルダ>  → 候補の mp3 をフォルダに
           python3 tools/sound/fish_rec.py                → PICK の音を assets/g に作り、js/audio.js にはる SAMPLES の行を出す"""
 import os, sys, hashlib, subprocess, tempfile, urllib.request
 D = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(D, '..', '..', 'assets', 'g')
 SRC = {'391948': '391948_6450069', '391966': '391966_6450069', '398032': '398032_7586736', '273870': '273870_1031833',
-       '273868': '273868_1031833', '410335': '410335_7963426', '443380': '443380_4089273', '165206': '165206_1053041'}
+       '273868': '273868_1031833', '410335': '410335_7963426', '443380': '443380_4089273', '165206': '165206_1053041',
+       '178732': '178732_2596329', '174718': '174718_1850811', '51754': '51754_616218', '221091': '221091_1282865'}
 # 名前: [(もと, はじめ秒, 長さ秒, 速さ), …]（A・B・C）
-CAND = {'fishplop': [('391948', 0.0, 0.35, 1.0), ('273870', 0.03, 0.34, 1.0), ('410335', 0.0, 0.40, 1.0)],   # うきが水に落ちる「ぽちゃん」
-        'fishnib':  [('165206', 0.0, 0.22, 1.0), ('273870', 0.03, 0.24, 1.3), ('273868', 0.07, 0.28, 1.2)],   # 魚がつつく「ちょん」
+CAND = {'fishplop': [('178732', 0.0, 0.45, 1.0), ('174718', 0.0, 0.45, 1.0), ('174718', 0.0, 0.47, 0.8)],   # うきが水に落ちる「ぽちゃん」（1回めの 391948・273870・410335 は持ち主が「だめ」）
+        'fishnib':  [('51754', 0.0, 0.29, 1.0), ('221091', 0.0, 0.14, 1.0), ('174718', 0.0, 0.22, 1.4)],    # 魚がつつく「ちょん」（1回めの 165206・273870・273868 は「だめ」）
         'fishbig':  [('398032', 0.0, 0.70, 1.0), ('391966', 0.15, 0.75, 1.0), ('410335', 0.0, 1.00, 0.85)],  # うきがしずむ「ずぼっ」
         'fishesc':  [('443380', 0.55, 0.85, 1.0), ('443380', 1.50, 0.80, 1.0), ('398032', 0.10, 0.90, 1.15)]}  # にげられた「バシャッ」
-PICK = {}   # 持ち主がえらんだ物：名前 → 0・1・2
+PICK = {'fishbig': 0, 'fishesc': 2, 'fishplop': 1, 'fishnib': 1}   # 持ち主がえらんだ物：名前 → 0・1・2
 def run(a):
   r = subprocess.run(a, capture_output=True, text=True)
   if r.returncode: print(r.stderr[-1500:]); sys.exit(1)
 def src(k, tmp):
   p = os.path.join(tmp, k+'.mp3')
   if not os.path.exists(p):
-    u = SRC[k]; urllib.request.urlretrieve('https://cdn.freesound.org/previews/%s/%s-hq.mp3' % (u[:3], u), p)
+    u = SRC[k]; urllib.request.urlretrieve('https://cdn.freesound.org/previews/%s/%s-hq.mp3' % (int(k)//1000, u), p)
   return p
 def make(c, out, tmp):
   k, s, d, sp = c; fo = d*0.4
@@ -42,6 +47,7 @@ if __name__ == '__main__':
   if len(sys.argv) > 2 and sys.argv[1] == 'cand':
     os.makedirs(sys.argv[2], exist_ok=True)
     for n, L in CAND.items():
+      if n in PICK: continue
       for i, c in enumerate(L): make(c, os.path.join(sys.argv[2], '%s_%s.mp3' % (n, 'ABC'[i])), tmp)
     sys.exit()
   for n, i in PICK.items():
