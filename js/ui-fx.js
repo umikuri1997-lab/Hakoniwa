@@ -7,7 +7,7 @@ function uiReduced(){return !!(window.matchMedia&&matchMedia('(prefers-reduced-m
 function spiritCanvas(r,w,h,foot,mood){const el=r?r.elem:'wood';if(typeof spDotReady!=='function'||!spDotReady(el))return null;
   const c=document.createElement('canvas');c.width=w;c.height=h;drawSpirit(c.getContext('2d'),el,w/2,foot,.87,1,{dot:1,t:0,vr:r?r.vr:KEYVR['フタバ'],mood:mood||'smile',walk:false,work:false});return c}
 /* 上の数（パワー・せいれい・食料・素材）：ふえたら、数字がはねて、キラッと光る */
-function uiNumWatch(){for(const id of['pt','resN','food','matN']){const e=document.getElementById(id);if(!e)continue;UIFX.prev[id]=parseInt(e.textContent,10);new MutationObserver(()=>uiNumChanged(id,e)).observe(e,{childList:true,characterData:true,subtree:true})}}
+function uiNumWatch(){for(const id of['pt','resN','food']){const e=document.getElementById(id);if(!e)continue;UIFX.prev[id]=parseInt(e.textContent,10);new MutationObserver(()=>uiNumChanged(id,e)).observe(e,{childList:true,characterData:true,subtree:true})}}
 function uiNumChanged(id,e){const v=parseInt(e.textContent,10),p=UIFX.prev[id],pt=UIFX.prevT&&UIFX.prevT[id];(UIFX.prevT=UIFX.prevT||{})[id]=e.textContent;UIFX.prev[id]=v;
   if(document.body.classList.contains('wd0')&&started&&!uiReduced()&&isFinite(p)&&isFinite(v)&&v!==p&&pt!=null)uiRoll(e,pt,v>p);/* 草原は、数がかわるたびに、木のめくり数字のように、くるっとまわる */
   if(!(v>p)||!started||uiReduced())return;const ld=typeof STLD!=='undefined'&&STLD||typeof stageReady==='function'&&!stageReady()||!$('#pro').hidden||typeof LDEND!=='undefined'&&performance.now()-LDEND<1500;/* マップの読みこみ中（プロローグのあとの「読みこみ中…%」も）と、読みこみがおわって村が出てから1.5秒（はじめに数が入るとき）は鳴らさない（持ち主がきめた） */
