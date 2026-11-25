@@ -78,7 +78,7 @@ function phLook(){const f=dyWriter(),D=S.dy;if(!f||!D||f.hidden)return;const h=h
 function phTick(now){if(!phOn())return;const h=hour();
   if(typeof dyNoon==='function')dyNoon(h);
   if(now>=PHCHK){PHCHK=now+1000;try{phLook()}catch(e){}}
-  const q=PHQ;if(!q||now<q.at)return;PHQ=null;if(q.st!==S||!S.dy||S.dy.d!==q.d)return;
+  const q=PHQ;if(!q||now<q.at)return;if(typeof HDBIG!=='undefined'&&now<HDBIG){q.at=HDBIG+PHDELAY;return}/* 見せ場の光（召喚など）のあいだは写さない。光がおさまってから */PHQ=null;if(q.st!==S||!S.dy||S.dy.d!==q.d)return;if(q.k==='new'){const r=S.res.find(r=>r.name===q.n&&!r.hidden);if(r)q.B=phBoxOf(r.x,r.y,1)}/* まっているあいだに歩いたら、いまいる所を写す */
   const w=WD,st=S,vn=S.vname||'',P=phSnap(now,phFrame(q.B));if(!P)return;
   P.then(async b=>{if(!b||S!==st)return;try{const D=S.dy;if(!D||D.d!==q.d||D.phP!=null&&D.phP>=q.pr)return;
     const L=await phList(w);for(let i=0;i<=L.length-PHN;i++)await phDel(L[i].id);const id=await phAdd({w,v:st.vk||'',d:q.d,h,vn,at:Date.now(),b});

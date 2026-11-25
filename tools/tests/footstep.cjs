@@ -1,11 +1,11 @@
-/* せいれいの足音（audio.js の footTick）：歩く動きの、足がつくコマ（1/4・3/4）に合わせて鳴り、地面で音がかわる（草・木の床・石畳、雨の日の外の草地・道はぬれた地面の音、家の中・橋・石畳はふつう）。寝ている子・止まっている子は鳴らない。コワイノも、とても小さく鳴る */
+/* せいれいの足音（audio.js の footTick）：歩く動きの、足がつくコマ（1/4・3/4。コマは歩いた道のりで進む）に合わせて鳴り、地面で音がかわる（草・木の床・石畳、雨の日の外の草地・道はぬれた地面の音、家の中・橋・石畳はふつう）。寝ている子・止まっている子は鳴らない。コワイノも、とても小さく鳴る */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await boot();
 await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume();if(sheet)closeSheet()})()`);/* まん中の御神木をクリックしてひらいた画面をとじる（ひらいたままだと村が止まり、音が鳴らない） */
 await page.waitForFunction(()=>sacredEval(`AC.state==='running'&&['fgrass','fwood','fsoil','fstone','fwet','fsnow'].every(k=>(SBUF[k]||[]).some(Boolean))`),{},{timeout:30000});
-const out=await run(`(()=>{const o={},name=b=>{for(const k in SBUF)if((SBUF[k]||[]).includes(b))return k;return'?'},L=[];const st=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...a){L.push(name(this.buffer));return st.apply(this,a)};
+const out=await run(`(()=>{if(sheet)closeSheet();/* 音を待つあいだに、またひらいた画面（村が止まる）をとじる */const o={},name=b=>{for(const k in SBUF)if((SBUF[k]||[]).includes(b))return k;return'?'},L=[];const st=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...a){L.push(name(this.buffer));return st.apply(this,a)};
  const r=S.res[0];r.nap=false;RHOLD.set(r,0);S.enemies=[];const cx=Math.floor(cam.x/TS+VW/cam.z/TS/2),cy=Math.floor(cam.y/TS+VH/cam.z/TS/2);let j=cy*W+cx;
- const walkOn=(set)=>{L.length=0;r.act=null;r.x=cx+.5;r.y=cy+.5;FOOTP.delete(r);const T0=performance.now();LOWL.length=0;footTick(T0);for(let i=1;i<=8;i++){set();r.x=cx+.5+i*.3;footTick(T0+i*100)}return L.filter(k=>k[0]==='f'||k==='twater')};
+ const walkOn=(set)=>{L.length=0;r.act=null;r.x=cx+.5;r.y=cy+.5;FOOTP.delete(r);const T0=performance.now();LOWL.length=0;footTick(T0);spWalkD(r,r.x,r.y,true);for(let i=1;i<=8;i++){set();r.x=cx+.5+i*.3;spWalkD(r,r.x,r.y,true);footTick(T0+i*100)}/* 描くとき（spWalkD）と同じく、歩いた道のりを足す。足音は、その道のりの歩に合わせて鳴る */return L.filter(k=>k[0]==='f'||k==='twater')};
  for(let i=0;i<4;i++){REV.add(j+i);S.floor[j+i]=null}o.grass=walkOn(()=>{});
  for(let i=0;i<4;i++)S.floor[j+i]='floor';o.wood=walkOn(()=>{});for(let i=0;i<4;i++)S.floor[j+i]=null;
  {const rn=S.rain,sn=window.seasonNow;window.seasonNow=()=>0;S.rain=true;o.wet=walkOn(()=>{});/* 雨の日の外の草地 */

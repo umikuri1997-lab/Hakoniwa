@@ -52,7 +52,7 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   const items=new Map(),g0=ITEM_GIFTS[0],ttl=g0.title||'うけとった！',rec=!!g0.rec;while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S&&(ITEM_GIFTS[0].title||'うけとった！')===ttl&&!!ITEM_GIFTS[0].rec===rec)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);/* 見出しがおなじものだけ、1まいにまとめる */
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi(rec?'paper':'box')+'</div><h2></h2><div class="idea-items"></div></div>');
   card.querySelector('h2').textContent=ttl;for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=rec?BL[id].name:iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
-  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx(rec?'good':'gift');/* うけとった：鉄琴の「ちん・ちーん」 */const prior=document.activeElement;
+  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);if(rec)sfx('good');else if(!(typeof lvSfxOn==='function'&&lvSfxOn()))sfx('gift');/* うけとった：鉄琴の「ちん・ちーん」。たっせいの音が鳴っているあいだは鳴らさない（持ち主がえらんだ） */const prior=document.activeElement;
   if(rec)recRevealFx(card,overlay);/* あたらしいレシピ：ひらめきの演出（ためて → はじける → 1つずつぺたっ） */
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},rec?650+items.size*240+500:650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
@@ -105,8 +105,8 @@ function storyWho(q){if(q.story&&spkOK(q.story[0]&&q.story[0][0]))return q.story
 function startTalk(){if(!$('#dialog').hidden)return;if(isNight())return toast('お話は、朝になってから');
   if(S.qStory!=null){const sq=QUESTS[S.qStory];TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
-    if(sq.field)sacredShot('care');else stageMotion('cheer');/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ */
-    let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory&&!(S.flags.qPassed&&S.flags.qPassed[sq.id]))S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ。古いセーブで、ならびをかえて前へもどした目標（qPassed）のお礼なら、いまの目標（畑）はとばさない */S.qStory=null;if(sq.field)sacredEndDirection();const after=questGives(sq);inspireQuest(sq,'clear');rewardPower(sq.reward??5);renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
+    if(sq.field)sacredShot('care');else stageMotion('cheer',true);/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ（音は、たっせいのときに鳴らしたので、鳴らさない） */
+    let once=0;return dialog(Object.assign(ideaDialogue(sq,sq.story,'clear'),{quiet:true}),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory&&!(S.flags.qPassed&&S.flags.qPassed[sq.id]))S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ。古いセーブで、ならびをかえて前へもどした目標（qPassed）のお礼なら、いまの目標（畑）はとばさない */S.qStory=null;if(sq.field)sacredEndDirection();const after=questGives(sq);inspireQuest(sq,'clear');rewardPower(sq.reward??5);renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   {const e=grassEndingTalk();if(e)return startGrassEndingTalk(e)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;if(earthIntroQuest(q)&&!earthIntroSpeaker(q))return checkQuest();TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
   if(q.field)sacredShot('care');let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.talk.done)q.talk.done();if(q.field)sacredEndDirection();if(WD===KUSA&&q.id==='nushi')acceptFinalDefense();recount();
@@ -130,6 +130,8 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   if(!S.cleared){const wt=mainTalkWaitText(q);
     if(wt)t=wt;
     else{if(q.prog)pr=q.prog();const wn=questWaitNote(q);if(wn)pr=pr?pr+'　'+wn:wn}}
+  {const wp=typeof winterPrepNote==='function'?winterPrepNote():'';if(wp)pr=pr?pr+'　'+wp:wp}/* 冬じたく（season.js） */
+  {const pn=typeof planNote==='function'?planNote():'';if(pn)pr=pr?pr+'　'+pn:pn}/* 今日の人で（day-plan.js） */
   {const wn=waveNote();if(wn)pr=pr?pr+'　'+wn:wn}/* 草原の夜：つぎの波まで（waves.js） */
   {const nl=nightLeftNote();if(nl)pr=pr?pr+'　'+nl:nl}/* 夜：今夜のコワイノの、のこり（waves.js） */
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){if(qt.dataset.t&&qt.dataset.t!==t){const c=$('#questChip');if(c){c.classList.remove('qbump');void c.offsetWidth;c.classList.add('qbump')}}/* 目標がかわったら、札をはねさせる */qt.dataset.t=t;qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;if(pr)pr.split('　').forEach((x,i)=>{const w=document.createElement('i');w.textContent=(i?'　':'')+x;g.appendChild(w)});qt.append(m,g)}/* 進みぐあいは「　」の区切りごとにまとめて、ことばのとちゅうで行をかえない *//* 進み具合は2行目に */

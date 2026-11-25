@@ -23,7 +23,7 @@ const cX=e=>e.clientX-cvRect().left,cY=e=>e.clientY-cvRect().top;
 window.addEventListener('scroll',()=>{CVR=null;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName))return;if(scrollX||scrollY)scrollTo(0,0)},{passive:true});/* ページがずれたままにしない */
 window.addEventListener('resize',()=>{CVR=null});document.addEventListener('focusout',()=>setTimeout(()=>{CVR=null;if(scrollX||scrollY)scrollTo(0,0)},120));
 const ptrs=new Map();let gest=null,GLHOLD=0;
-let GLRING=null;function glRing(x,y){glRingOff();const d=document.createElement('div');d.className='glring';d.style.left=x+'px';d.style.top=y+'px';d.style.setProperty('--ms',GLCHARGEMS+'ms');d.addEventListener('animationend',()=>{d.classList.add('full');sfx('chime')});document.body.appendChild(d);GLRING=d}/* ためている輪：2秒でいっぱいになり、光る（見た目のみ。はなしたときの長さで決まる） */
+let GLRING=null;function glRing(x,y){glRingOff();const d=document.createElement('div');d.className='glring';d.style.left=x+'px';d.style.top=y+'px';d.style.setProperty('--ms',GLCHARGEMS+'ms');d.addEventListener('animationend',()=>{if(GLRING!==d)return;d.classList.add('full');setTimeout(()=>{if(GLRING===d){d.classList.remove('full');d.classList.add('late')}},GLJUSTMS)});document.body.appendChild(d);GLRING=d}/* ためている輪：2秒でいっぱいになり、ぴったりの GLJUSTMS ミリ秒だけ光って、すぎると暗くなる（音はなし。見た目のみ。はなしたときの長さで決まる） */
 function glRingOff(){if(GLRING){GLRING.remove();GLRING=null}}
 
 cv.addEventListener('pointerdown',e=>{
@@ -41,7 +41,7 @@ cv.addEventListener('pointermove',e=>{
     const k=BL[sel]&&BL[sel].kind;
     if(gest.grab)gest.type='grab';/* 置く前の家具の絵をつまんで、ずらす */
     else if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=tapW(gest.sx,gest.sy);leafAdd(Math.floor(w0.y/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
-    else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=tapW(gest.sx,gest.sy);gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
+    else if(mode==='bulk'&&BULKT==='hake'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=tapW(gest.sx,gest.sy);gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
     else{gest.type='pan';pickCancel();glRingOff()}}
   if(gest.type==='grab'){grabMove(cX(e),cY(e));return}
   if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */camPan(gest.cx,gest.cy,dx,dy);clampCam(1);const t=performance.now(),V=gest.vs||(gest.vs=[]);V.push({t,x:cX(e),y:cY(e)});while(V.length>2&&t-V[0].t>FLINGWIN)V.shift()}/* 指の速さ（はなしたときの慣性） */
@@ -117,7 +117,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
   const w0=toWorld(sx,sy),w=tapW(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);TAPS={sx,sy,w};/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */if(mode==='look'&&yamiTap(w0.x/TS,w0.y/TS,tx,ty))return;if(mode==='look'&&typeof ngTap==='function'&&ngTap(tx,ty))return;if(mode==='look'&&typeof hapTap==='function'&&hapTap(tx,ty))return;/* ときどき起きるできごと（happen.js） *//* 夜のたからさがし：光るつぶ（nightglow.js） *//* 闇のステージ：ヨリ・夜の仕事のあと（yami.js） */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){LEAFDRAG=[];leafAdd(ty*W+tx);const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
-  if(LIGHTARM){const ch=GLHOLD>=GLCHARGEMS,en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en,ch);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty,null,ch);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
+  if(LIGHTARM){const ch=GLHOLD>=GLCHARGEMS&&GLHOLD<GLCHARGEMS+GLJUSTMS/* ぴったりにはなしたときだけ、ためた光 */,en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en,ch);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty,null,ch);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
@@ -164,7 +164,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
       if(o==='boulder'&&rockHard(j))return toast(rockHot(j)?'大岩：赤く熱くなっている':'大岩：かたくて、くだけない');
       if(o==='boulder')return toast('大岩：のこり '+Math.max(0,4-(S.hp['n'+j]||0))+'/4');
       if(o==='crack'){const t=st2();if(!(t.hai>0))return toast('ひびわれ：ハイカゲの灰でうめられる（灰'+(t.hai||0)+'）');t.hai--;clearObj(j);S.floor[j]='path';burst(j,'block');sfx('level');recount();dirty=true;toast('ひびわれを、灰でうめた（灰－1）','good');return checkQuest()}}
-    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx(o==='kinoko'?'tpuni':WEEDS.has(o)?'tgrass':dp.id==='mat:can'?'tcan':'twood');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
+    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){const wd=WEEDS.has(o)&&(o==='kinoko'?foodCap()-S.food>0:matCap()-matTot()>0),dd=dp&&(dp.id.startsWith('mat:')?matCap()-matTot()>0:dp.id.startsWith('food:')?foodCap()-S.food>0:true);if(!wd&&!dd)return toast('箱に入りません');const nm=[];if(wd){(S.wreq||(S.wreq={}))[j]=1;nm.push(BL[o].name)}if(dd){dp.tap=1;nm.push(dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの')}sfx(wd?(o==='kinoko'?'tpuni':'tgrass'):dp.id==='mat:can'?'tcan':'twood');return toast(nm.join('と')+'：せいれいがとりにいく')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく。草の下に落とし物があれば、両方（箱に入らない方は、とりにいかない） */
     if(HOME_WALLS.has(o)||HOME_DOORS.has(o)){const w=houseWhy(j);if(w)toast(w)}/* 家にならないかべ・ドアをタップすると、理由を出す */
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);
@@ -195,7 +195,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('神殿。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */
     if(o==='statueb'){templeRuinTap(j);return}
     if(o==='kazaanab'){windHoleTap(j);return}
-    if((o==='anagura'||o==='tsrubble')&&tsTap(j))return;/* 土：あなぐまの巣穴（tsuchi.js） */
+    if((o==='anagura'||o==='tsrubble'||o==='tsroot'||o==='tsnushi')&&tsTap(j))return;/* 土：あなぐまの巣穴（tsuchi.js） */
     if(RIDEB[o]){windRideTap(j);return}/* こわれた遊具：せいれいが直しにくる *//* ふさがった風穴：せいれいが石をどけにくる（wind.js） */
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
     {const c=ty*W+tx,lo=!o||WEEDS.has(o),rc=RFC.has(c)?c:lo&&RFC.has(c+W)?c+W:lo&&RFC.has(c+2*W)?c+2*W:-1;if(rc>=0&&lo)return openSheet('roof',RFC.get(rc))}/* ガゼボ・東屋：下に物がなければ、屋根の説明（屋根の絵はマスの上へはみ出すので、2マス上までみる） */
@@ -203,7 +203,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
     if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
     if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
-    if(S.ground[j]===1&&typeof tsBridgeTap==='function'&&tsBridgeTap(j))return;/* 土：地われに石の大橋をかける（tsuchi-bridge.js） */
+    if(S.ground[j]===1&&typeof tsBridgeTap==='function'&&(tsBridgeTap(j)||tsFillTap(j)))return;/* 土：地われに石の大橋をかける（tsuchi-bridge.js） */
     if(S.ground[j]===1)return toast(skyJ(j)?'雲の海。橋をかけると、わたれる':riftJ(j)?'地われ。ふかくて、底が見えない':'池。そばでつりができる');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }

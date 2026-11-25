@@ -8,6 +8,8 @@ for(const id of removed)assert(!Object.hasOwn(chips,id),'Unused chip returned: '
 const houses=fs.readFileSync(path.join(root,'js/houses.js'),'utf8');
 vm.runInContext(houses.split('\n').find(line=>line.startsWith('const GCH=')),context);
 for(const id of vm.runInContext('GCH',context))assert(Object.hasOwn(chips,id),'Ground loading requires missing chip: '+id);
+vm.runInContext(houses.split('\n').find(line=>line.startsWith('const WCH=')),context);
+for(const id of vm.runInContext('WCH',context))assert(Object.hasOwn(chips,id),'Water loading requires missing chip: '+id);
 for(let n=0;n<8;n++)for(const base of ['ground','groundr'])assert(chips[base+'#'+n],'Free/volcanic ground variant removed');
 for(const id of ['bedge:HLR','bedge:VUD','story:stump','story:bud','story:leaf','story:sapling','story:tree-young','story:tree','story:stone'])assert(chips[id],'Required edge/story chip removed: '+id);
 const objects=fs.readFileSync(path.join(root,'js/draw-objects.js'),'utf8');

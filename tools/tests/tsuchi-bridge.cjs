@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:2});
   const J=async s=>JSON.parse(await run(`JSON.stringify(${s})`));
-  const a=await J(`(()=>{const L=tsBrCells(),rows=[...new Set(L.map(j=>(j/W)|0))].sort(),r={n:L.length,rows,rift:L.every(j=>riftJ(j)&&!walk(j)),nat:[...tsBrX()].every(x=>walk(TSBRY*W+x)),q:QUESTS.map(q=>q.id).slice(-3),
+  const a=await J(`(()=>{const L=tsBrCells(),rows=[...new Set(L.map(j=>(j/W)|0))].sort(),r={n:L.length,rows,rift:L.every(j=>riftJ(j)&&!walk(j)),nat:[...tsBrX()].every(x=>walk(TSBRY*W+x)),q:QUESTS.map(q=>q.id).slice(QUESTS.map(q=>q.id).indexOf('tsbridge')-2,QUESTS.map(q=>q.id).indexOf('tsbridge')+1),
       west:L.map(j=>j%W).reduce((m,x)=>Math.min(m,x),99),east:L.map(j=>j%W).reduce((m,x)=>Math.max(m,x),0)};r.west1=walk(L[0]%W-1+((L[0]/W)|0)*W);return r})()`);
   console.log(JSON.stringify(a));assert.equal(a.n,6,'はば3×2行');assert.deepEqual(a.rows,[a.rows[0],a.rows[0]+1]);assert.ok(a.rift);assert.ok(a.nat,'自然の岩の橋は歩ける');assert.deepEqual(a.q,['tsookage','tscave3','tsbridge']);
   /* 目標のまえは、タップしても何も起きない */
@@ -23,4 +23,14 @@ const assert=require('node:assert/strict');
   /* らんかんの花：えらぶ → 橋の絵を描いても、エラーが出ない */
   const e=await J(`(()=>{S.ts.brFlower='salvia';S.flags.tsBridge=1;try{rebuildStatic(true);render(performance.now())}catch(x){return{err:String(x)}}return{ok:1,f:S.ts.brFlower,col:TSBRFL[S.ts.brFlower]}})()`);
   console.log(JSON.stringify(e));assert.ok(e.ok);
+  /* 地われをうめる（橋のあと）：橋のとなりの行から1行ずつ。となりでない行・上限の外はうめられない。切りはなされたマスは水にならない */
+  const f=await J(`(()=>{const r={};const y0=TSBRY-1;r.row0=tsFillRow(y0);r.row1=tsFillRow(y0-1);r.sRow=tsFillRow(TSBR2Y+2);r.far=tsFillRow(TSBR2Y+2+TSFILLROWS);
+      r.gapWater=[...Array(W).keys()].some(x=>{const j=(TSBRY+2)*W+x;return S.ground[j]===1&&Math.abs(x-tsRiftAt(TSBRY))<4});
+      const cells=tsRowRift(y0);r.n=cells.length;S.pt=500;S.mat.sagan=60;S.mat.stone=20;
+      r.tap=tsFillTap(cells[0]);const b=[...document.querySelectorAll('.pxpopw button')].find(b=>b.textContent==='うめる');b.click();
+      r.sites=cells.filter(k=>S.obj[k]==='site').length;r.pt=S.pt;for(const k of cells)finishBuild(k,null);
+      r.after=[cells.every(k=>S.ground[k]===0&&walk(k)),tsRowRift(y0).length,tsFillRow(y0-1),tsFillRow(y0-2),tsKind(cells[0]%W,y0)];
+      const loose=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;if(S.ground[j]===1&&!riftJ(j)&&Math.abs(x-tsRiftAt(y))<4&&y<TSBRY+8&&y>TSBRY-3)loose.push(j)}r.loose=loose.length;
+      rebuildStatic(true);render(performance.now());return r})()`);
+  console.log(JSON.stringify(f));assert.equal(f.row0,true);assert.equal(f.row1,false,'となりでない行は、まだ');assert.equal(f.sRow,true);assert.equal(f.far,false,'上限の外');assert.equal(f.gapWater,false,'橋とあいだの行は水にならない');assert.ok(f.tap);assert.equal(f.sites,f.n);assert.equal(f.pt,500-4*f.n);assert.deepEqual(f.after,[true,0,true,false,'b']);assert.equal(f.loose,0);
   assert.deepEqual(errors,[]);await browser.close();console.log('ok')})().catch(e=>{console.error(e);process.exit(1)});

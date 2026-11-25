@@ -153,10 +153,10 @@ def build(sc,parts):
         elif k=='log':   # 丸太・まき：a→b の円柱（ななめにおける）。まわりは皮（col、皮のテクスチャ）、両はしの切り口は明るい木と年輪
             a,b,r=np.array(d[0],float),np.array(d[1],float),d[2];ax=b-a;ax/=np.linalg.norm(ax);u=np.cross(ax,[0,0,1.0])
             if np.linalg.norm(u)<1e-6:u=np.array([1.0,0,0])
-            u/=np.linalg.norm(u);v=np.cross(ax,u);n=16;R_=lambda e,t,f=1.0:e+r*f*(math.cos(t)*u+math.sin(t)*v)
+            u/=np.linalg.norm(u);v=np.cross(ax,u);n=getattr(p,'detail',64);R_=lambda e,t,f=1.0:e+r*f*(math.cos(t)*u+math.sin(t)*v)
             t_=sc.tcur;sc.texture(barktex() if getattr(p,'bark',True) else None);sc.part()
             for i in range(n):t0,t1=2*math.pi*i/n,2*math.pi*(i+1)/n;sc.quad(R_(a,t0),R_(b,t0),R_(b,t1),R_(a,t1),tuple(c))
-            sc.texture(None);sc.part()
+            pb=sc.pid;sc.texture(None);sc.part();sc.over(sc.pid,pb)   # 切り口は皮より手前（ふちの線は皮のがわ。切り口へ線がとびこまない）
             for e in(a,b):
                 for i in range(n):
                     t0,t1=2*math.pi*i/n,2*math.pi*(i+1)/n

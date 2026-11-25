@@ -31,7 +31,7 @@ let S=null;
 const resv=new Map();
 let RUINT=-1/* こわれた神殿（直している途中もふくむ）のマス。recount で作る */,STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],HOTL=[]/* ほたるの草むらのマス */,DRUMS=[]/* 合図の太鼓のマス */,JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),NEARSUI=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARJORO=new Set(),NEARMIZU=new Set()/* 苔むした石の水ばちのまわり5マス：芽が、植えたその日に育つ */,NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;
 function newState(w){w=w||0;
-  const s={v:8,mig:SAVE_VER,box:{},pile:{},rsv:{},flags:{blk2:1,route:[],ltWhole1:1,lvPick1:1,dig2:1,gf25:1,windFoe1:1,mizuFoe1:1,mzq3:1,mzq2:1,mzGate3:1,wseed1:1,altarLit1:1,volSub1:1,ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,hun2:1,evOpen1:1,trapSub1:1,board2x1:1,board4:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,kgIns1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:SAVE_VER,box:{},pile:{},rsv:{},flags:{blk2:1,ltWhole1:1,lvPick1:1,dig2:1,gf25:1,windFoe1:1,mizuFoe1:1,mzq3:1,mzq2:1,mzGate3:1,wseed1:1,altarLit1:1,volSub1:1,ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,hun2:1,evOpen1:1,trapSub1:1,board2x1:1,board4:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,kgIns1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:w===TSUCHI?16*60:12*60,/* 草原は15時・土は夕方16時（はじまりの地ゆれ）からはじまる */speed:1,
@@ -331,7 +331,8 @@ function sortieOn(){return !!(S&&(S.free||S.flags&&S.flags.sortie))}/* 出撃（
 function sortieGuard(r){return !!r&&WD===KUSA&&!!S&&r.name===POKO&&!!(S.flags&&S.flags.guard)}/* こもれびのまもりをおぼえたフタバは、出撃をえらべる（はじめは出撃する） */
 function sortieOK(r){return r.elem!=='light'&&r.elem!=='dark'&&(sortieOn()||sortieGuard(r))}/* 光・闇のせいれいは、たたかわない */
 function sortieDef(r){return r.elem==='fire'||sortieGuard(r)}/* はじめの出撃：火のせいれいと、こもれびのまもりをおぼえたフタバ */
-function fighter(r){if(!r)return false;if(kiriSitting(r))return false;/* 草原の転のあと、花畑がおわるまで、フタバはたたかわない（kiri.js） */if(r.name===POKO&&WD===KUSA&&S.ns&&S.ns.final&&isNight())return true;/* 草原のさいごの夜は、フタバはかならず出撃 */if(!sortieOK(r))return r.elem==='fire';return r.sortie==null?sortieDef(r):r.sortie===true}/* 夜にコワイノと近接でたたかう子。r.sortie：えらんだ出撃（なければ sortieDef） */
+function fighter(r){if(isNight()&&typeof tacNow==='function'&&tacNow()==='watch')return false;/* 作戦「見張り台まかせ」の夜は、たたかわずに家に入る（night-prep.js） */return fighter0(r)}
+function fighter0(r){if(!r)return false;if(kiriSitting(r))return false;/* 草原の転のあと、花畑がおわるまで、フタバはたたかわない（kiri.js） */if(r.name===POKO&&WD===KUSA&&S.ns&&S.ns.final&&isNight())return true;/* 草原のさいごの夜は、フタバはかならず出撃 */if(!sortieOK(r))return r.elem==='fire';return r.sortie==null?sortieDef(r):r.sortie===true}/* 夜にコワイノと近接でたたかう子。r.sortie：えらんだ出撃（なければ sortieDef） */
 function foeHitsFire(e){if(typeof e.tg!=='number')return false;const q=S.res.find(q=>q.id===e.tg);return !!q&&fighter(q)&&!q.hidden&&Math.hypot(q.x-e.x,q.y-e.y)<((EN[e.type]||{}).rng||1)+.5}/* 火のせいれいをたたいているコワイノ（とどかない所からでも、火のせいれいが近よって攻撃する） *//* だれかの3マス以内・だれかのいる家に来たコワイノと、塀・壁・建物をこうげきしているコワイノ（火の子がむかえうつ） */
 const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return S.ref[j];if(S.obj[j]==='site2')for(const k of[j-1,j+1,j-W])if(S.obj[k]==='site')return k;return j};/* 古いセーブの神殿の足場にも対応 */
 const typeAt=j=>S.obj[anc(j)];
@@ -348,7 +349,7 @@ const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)retur
 let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */
 /* 作業する向きがきまっている家具（WORKF）：作業するマスは、その向きの前（向き0 前＝下・1 右・2 後ろ＝上・3 左）。2×2は前の2マス、作業台は台のマス（wbCells の b）の前。
    せいれいは、そのマスに立って家具のほうを向く。どのマスも歩けない（物がある・水など）と作業できない。流し台は、せいれいの作業はないが、置くときに同じく出す */
-const WORKF=new Set(['loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
+const WORKF=new Set(['tskama','loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
 function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと、置く前の場所でも */id=id||S.obj[j];if(rot==null)rot=rotAt(j);rot&=3;const[dx,dy]=WORKD[rot];
   const cells=id==='wbench'?[rot>=2?(rot%2?j+W:j+1):j].map(b=>[b%W,(b/W)|0]):fp(id,j%W,(j/W)|0,rot),own=new Set(cells.map(([x,y])=>y*W+x)),L=[];
   for(const[x,y]of cells){const nx=x+dx,ny=y+dy,k=ny*W+nx;if(nx<0||ny<0||nx>=W||ny>=H||own.has(k)||(id==='wbench'&&own.size===1&&fp(id,j%W,(j/W)|0,rot).some(([a,b])=>b*W+a===k)))continue;L.push(k)}return L}
@@ -392,7 +393,12 @@ const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];
 function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LADDERS.has(S.obj[b]))return false;const d=ladderDir(b);return d>=0&&ladderTop(b,d)===a}
 const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
 const CLB=new WeakMap(),CLBM=.1,CLBD=4;/* 段差をよじのぼる・おりるせいれい：{a:もとのマス,n:つぎのマス,px,py:よじのぼる所,k:0〜1}。ふちまでふつうに歩き、低いマスのがわ（壁の前、マスのさかいから CLBM）で、まっすぐ上・下へよじのぼる（歩く CLBD マスぶんの時間。歩く1マスとあわせて5倍） */
-function clbPt(a,n){/* よじのぼる所：マスのさかいから、低いマスのがわへ CLBM */const ax=a%W+.5,ay=((a/W)|0)+.5,sx=n%W-a%W,sy=((n/W)|0)-((a/W)|0),m=hiAt(a)<hiAt(n)?-CLBM:CLBM;return{px:ax+sx*(.5+m),py:ay+sy*(.5+m)}}
+function clbPt(a,n){/* よじのぼる所：マスのさかいから、低いマスのがわへ CLBM。おくのがけ（clbHop）は、もとのマスのがわ（ふみきる所）と、つぎのマスのがわ（おりる所 qx,qy） */const ax=a%W+.5,ay=((a/W)|0)+.5,sx=n%W-a%W,sy=((n/W)|0)-((a/W)|0);if(clbHop(a,n))return{px:ax+sx*(.5-CLBM),py:ay+sy*(.5-CLBM),qx:ax+sx*(.5+CLBM),qy:ay+sy*(.5+CLBM),hop:true};const m=hiAt(a)<hiAt(n)?-CLBM:CLBM;return{px:ax+sx*(.5+m),py:ay+sy*(.5+m)}}
+const clbHop=(a,n)=>hiAt(Math.min(a,n))<hiAt(Math.max(a,n));/* おくのがけ（高いマスのうしろ・左うしろの面。壁が見えない）：よじのぼらず、ぴょんと上がる・おりる */
+const HOPSTAND=.55,HOPCROUCH=.8,HOPARC=10;/* おくのがけ：よじのぼる時間（CLBD）のうち、ふちでがけを見上げる・かがむ・とぶ所のさかい（0〜1）と、とぶ弧の高さ（ドット） */
+function hopAt(C){/* おくのがけを、とんでいる所：{u:とぶ進み 0〜1, x,y, z:高さ（ドット）}。上がるときは先に高さを上げてからふちをこえ、おりるときはふちをこえてから高さを下げる（うしろのブロックにかくれない） */
+  const u=Math.max(0,Math.min(1,(C.k-HOPCROUCH)/(1-HOPCROUCH))),ha=Math.max(0,hiAt(C.a)),hn=Math.max(0,hiAt(C.n)),up=hn>ha,m=up?Math.min(1,u/.6):Math.max(0,(u-.4)/.6),h=up?Math.sin(Math.PI/2*m):1-Math.cos(Math.PI/2*m),g=up?Math.max(0,(u-.4)/.6):Math.min(1,u/.6);
+  return{u,x:C.px+(C.qx-C.px)*g,y:C.py+(C.qy-C.py)*g,z:LIFT*(ha+(hn-ha)*h)+Math.sin(Math.PI*u)*HOPARC}}
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return liftOf(c)+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return liftOf(c);const d=stairDir(a);if(d<0)return liftOf(c);const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
@@ -412,10 +418,10 @@ function genRiver(s,w,o){/* 川：草原（とフリー）は北のはしから�
   for(const v of[Math.round(CY-26+R()*8),Math.round(CY-3+R()*6),Math.round(CY+20+R()*8)]){ford(v);ford(v+1)}
   {const fu=Math.round((ex+mx)/2);for(let v=0;v<H;v++){const j=J(fu,v);if(riv[j])s.ground[j]=2;const k=J(fu+(side<0?1:-1),v);if(riv[k])s.ground[k]=2}}
   return riv}
-function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だんの台地。まん中も外と同じ（はじめからある物のマスと、そのまわり1マス・神殿と御神木の置き場だけ平ら）。水・浅瀬のまわり・床・人の作った物の所には作らない。となりとの差は1だんまで（段々の台地） */
+function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だんの台地。まん中も外と同じ（はじめからある物のマスと、そのまわり2マス・神殿と御神木の置き場だけ平ら）。水・浅瀬のまわり・床・人の作った物の所には作らない。となりとの差は1だんまで（段々の台地） */
   const R=mulberry(LANDSEED(w)+77),h=new Array(W*H).fill(0);
-  const keep=new Uint8Array(W*H),box=(x0,y0,x1,y1)=>{for(let y=Math.max(0,y0);y<=Math.min(H-1,y1);y++)for(let x=Math.max(0,x0);x<=Math.min(W-1,x1);x++)keep[y*W+x]=1};/* 平らにのこす所：はじめからある物のマスと、そのまわり1マス */
-  for(let j=0;j<W*H;j++){const o=s.obj[j];if(s.floor[j]||o&&!HI_OK.has(o))box(j%W-1,((j/W)|0)-1,j%W+1,((j/W)|0)+1)}
+  const keep=new Uint8Array(W*H),box=(x0,y0,x1,y1)=>{for(let y=Math.max(0,y0);y<=Math.min(H-1,y1);y++)for(let x=Math.max(0,x0);x<=Math.min(W-1,x1);x++)keep[y*W+x]=1};/* 平らにのこす所：はじめからある物のマスと、そのまわり2マス */
+  for(let j=0;j<W*H;j++){const o=s.obj[j];if(s.floor[j]||o&&!HI_OK.has(o))box(j%W-2,((j/W)|0)-2,j%W+2,((j/W)|0)+2)}
   {let y=w===0?CY-4:CY;while(y>1&&s.floor[(y-1)*W+CX])y--;box(CX-2,y-4,CX+4,y)}/* こわれた神殿の置き場（templeRuinPlace と同じ所） */
   if(w===0)box(CX-4,CY-4,CX+3,CY+3);/* 草原：御神木の切り株（sacredRootEnsure） */box(CX-1,CY-3,CX+1,CY);/* はじめのせいれいの立つ所 */
   const ok=j=>{const x=j%W,y=(j/W)|0;if(x<2||y<2||x>=W-2||y>=H-2)return false;if(keep[j])return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(s.ground[j+b*W+a])return false;if(w===1&&Math.abs(x+.5-CX)<9&&y<OFF+16)return false;/* 火山：北の火口のまわりは平ら */return true};

@@ -41,9 +41,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const cd=await run(`[plantChip('deadtree',0)===CHIPS['deadtree~v'],plantChip('tree',0)===CHIPS['tree~v'],iname('tree'),iname('deadtree')]`);assert.deepEqual(cd,[true,true,'とんがりの木の苗','とんがりの木']);
  const gr=await run(`(()=>{const w=WD;WD=0;const c=plantChip('deadtree',0),r=[[CHIPS.deadtree,CHIPS['deadtree#1'],CHIPS['deadtree#2']].includes(c&&(c.src||c)),iname('tree')];WD=w;return r})()`);assert.deepEqual(gr,[true,'木の苗']);
  /* 竹の壁 */
- const bw=await run(`(()=>{const s=newState(1);return [s.obj.filter(o=>o==='bamboowall').length>5,s.obj.includes('hwall'),!!s.unlocked.bamboowall,!!QUESTS2[0].gives.items.bamboowall,stageItemOK('hwall'),stageItemOK('bamboowall'),HOME_WALLS.has('bamboowall'),!!CHIPS['bamboowall:HLR'],!!CHIPS['bamboowall.door#h0'],!CHIPS.bamboowall]})()`);
+ const bw=await run(`(()=>{const s=newState(1);return [s.obj.filter(o=>o==='bamboowall').length>5,s.obj.includes('hwall'),!!s.unlocked.bamboowall,!!QUESTS2[0].gives.items.bamboowall,stageItemOK('hwall'),stageItemOK('bamboowall'),HOME_WALLS.has('bamboowall'),!!CHIPS['iso:bamboowall:3'],!!CHIPS['iso:door:h'],!CHIPS.bamboowall]})()`);
  assert.deepEqual(bw,[true,false,true,true,false,true,true,true,true,true],'竹の壁');
  /* 御簾垣・石組み */
- const ms=await run(`(()=>{const s=newState(1);return [!!s.unlocked.misugaki,!!QUESTS2[0].gives.items.misugaki,stageItemOK('fence'),stageItemOK('misugaki'),FENCE_IDS.has('misugaki'),!!CHIPS['misugaki:HLR'],!!CHIPS['misugaki.gate#h3'],!!CHIPS['rim:c0']&&!CHIPS['rim:T'],typeof drawOnsenRim]})()`);
+ const ms=await run(`(()=>{const s=newState(1);return [!!s.unlocked.misugaki,!!QUESTS2[0].gives.items.misugaki,stageItemOK('fence'),stageItemOK('misugaki'),FENCE_IDS.has('misugaki'),!!CHIPS['iso:misugaki:3'],!!CHIPS['iso:misugaki.gate:h#3'],!!CHIPS['rim:c0']&&!CHIPS['rim:T'],typeof drawOnsenRim]})()`);
  assert.deepEqual(ms,[true,true,false,true,true,true,true,true,'function'],'御簾垣');
  assert.deepEqual(errors,[]);console.log('volcano-land: ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

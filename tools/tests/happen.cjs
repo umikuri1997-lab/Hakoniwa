@@ -14,9 +14,9 @@ const assert=require('node:assert/strict');
     /* 18時にもどる */at(7);S.dyn[fj]={g:100,sown:true,crop:'imo'};S.hap={d:dayNo(),k:'kabu',j:fj,ph:'wait',tk:0,crop:'imo'};at(18.2);hapTick();out.kabu18=S.hap.ph;
     /* ヒナ */at(7);const G=hapG();let hj=-1,tj=-1;for(let j=0;j<W*H&&hj<0;j++){if(!VILL[j]||S.obj[j]||S.floor[j]||S.ground[j]||!walk(j)||G.dist[j]<0)continue;const t=hapNest(G,j);if(t>=0){hj=j;tj=t}}
     if(hj<0){for(let j=0;j<W*H&&hj<0;j++)if(VILL[j]&&!S.obj[j]&&walk(j)&&G.dist[j]>=0&&!S.obj[j+3]&&G.dist[j+4]>=0){S.obj[j+3]='tree';recount();hj=j;tj=hapNest(hapG(),j)}}
-    S.drops=[];S.hap={d:dayNo(),k:'hina',j:hj,tj,ph:'wait',tk:0};out.hTap=hapTap(hj%W,(hj/W)|0);for(const q of S.res)endAct(q),q.act=null;
+    S.drops=[];S.hap={d:dayNo(),k:'hina',j:hj,tj,ph:'wait',tk:0};out.hTap=hapTap(hj%W,(hj/W)|0);for(const q of S.res)endAct(q),q.act=null;{const q=S.res.find(q=>q.elem!=='earth')||S.res[0];S.food=Math.max(S.food,foodLow()+5);const T0=tryJob;tryJob=(r2,G2,k)=>k==='build'||k==='plant'?(r2.act={type:'busy'},true):T0(r2,G2,k);goWork(q,hapG());tryJob=T0;out.hFirst=q.act&&q.act.type;if(q.act&&q.act.type!=='busy')endAct(q);q.act=null}/* 建てる・植える仕事があっても（いそがしい村）、たのんだヒナを先に */
     for(let i=0;i<3000&&S.hap.ph!=='nest';i++)stepWorld(.5);out.hina=S.hap.ph;at(17.1);hapTick();out.par=S.hap.ph;HAPFX.t0-=3000;hapTick();out.hEnd=S.hap.ph;out.hDrop=S.drops.filter(d=>d.id==='food:berry').reduce((a,d)=>a+d.n,0);out.hSeed=S.drops.filter(d=>FLOWERS2.includes(d.id)).length;
-    at(7);S.hap={d:dayNo(),k:'hina',j:hj,tj,ph:'wait',tk:0};at(18.1);hapTick();out.hBye=S.hap.ph+':'+(HAPFX&&HAPFX.k);
+    at(7);S.hap={d:dayNo(),k:'hina',j:hj,tj,ph:'wait',tk:0};at(18.1);hapTick();out.hBye=S.hap.ph+':'+(HAPFX&&HAPFX.k);{const F=HAPFX,n0=performance.now(),cnt=t=>{F.t0=n0-t;const D=[];hapDraw((k,t2,bb,d)=>D.push(d),()=>true,ctx,n0);D.forEach(f=>f());return D.length};out.byeIn=cnt(1000);out.byeOut=cnt(HAPBYEIN+1000);HAPFX=F;F.t0=n0-(HAPBYEIN+HAPBYEOUT+700);hapDraw(()=>{},()=>true,ctx,n0);out.byeGone=HAPFX===null}/* 帰るとき：とんで来る（地面のヒナと親鳥）・つれて行く（いっしょ）・おわると消える */
     /* きんいろの木 */at(7);let tr=S.obj.findIndex((o,j)=>(o==='tree'||o==='fruit')&&hapStands(hapG(),j).length);out.tree=tr>=0;
     if(tr>=0){S.drops=[];S.hap={d:dayNo(),k:'kin',j:tr,ph:'wait',tk:0};out.kTap=hapTap(tr%W,(tr/W)|0);for(const q of S.res)endAct(q),q.act=null;run(3000);out.kin=S.hap.ph;
       out.apple=S.res.reduce((a,q)=>a+((q.carry||{}).apple||0),0)+S.drops.filter(d=>d.id==='food:apple').reduce((a,d)=>a+d.n,0);
@@ -31,7 +31,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(r));
   assert.ok(r.seen.length>=2&&r.seen.includes('kin'),'朝に、いくつかのできごとが出る');
   assert.equal(r.block,true,'大きなかぶの畑は、ふつうに収穫しない');assert.equal(r.tap,true);assert.equal(r.kabu,'end','みんなでぬいた');assert.equal(r.farm,0);assert.ok(r.kabuFood>=8,'収穫8こ');assert.equal(r.kabu18,'end','18時にもどる');
-  assert.equal(r.hTap,true);assert.equal(r.hina,'nest','木へとどけた');assert.equal(r.par,'par','17時に親鳥');assert.equal(r.hEnd,'end');assert.equal(r.hDrop,3,'ベリー3こ');assert.equal(r.hSeed,1,'花のたね1つ');assert.equal(r.hBye,'end:bye','18時に親鳥がつれていく');
+  assert.equal(r.hTap,true);assert.equal(r.hFirst,'hhina','建てる・植えるより先に、ヒナをむかえに行く');assert.equal(r.byeIn,2,'とんで来るあいだは、地面のヒナと親鳥');assert.equal(r.byeOut,1);assert.equal(r.byeGone,true);assert.equal(r.hina,'nest','木へとどけた');assert.equal(r.par,'par','17時に親鳥');assert.equal(r.hEnd,'end');assert.equal(r.hDrop,3,'ベリー3こ');assert.equal(r.hSeed,1,'花のたね1つ');assert.equal(r.hBye,'end:bye','18時に親鳥がつれていく');
   assert.equal(r.tree,true);assert.equal(r.kTap,true);assert.equal(r.kin,'end');assert.ok(r.apple>=5,'りんご5こ');assert.equal(r.kin18,'end:fall');
   assert.equal(r.ring,true);assert.equal(r.dance,'hdance');assert.equal(r.danced,true);assert.equal(r.fun,true);assert.equal(r.again,false,'1人1回');assert.equal(r.kino,'end');assert.equal(r.kDrop,3,'きのこ3こ');
   assert.ok(r.draw>=1);

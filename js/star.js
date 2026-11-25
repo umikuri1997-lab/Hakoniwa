@@ -1,13 +1,13 @@
 /* ---------- 流れ星の夜 ----------
-   雨でない夜の20〜23時に、1晩に1回、30%の夜（STARP）に流れ星が空を流れる（実時間4秒、STARMS）。
+   雨でない夜の20〜23時に、流れ星が空を流れる（実時間4秒、STARMS）。流れたら、つぎの2晩は流れない（3晩目。星見の望遠鏡があると、つぎの1晩だけ。STARGAP）。雨で流れなかったら、つぎの雨でない夜に流れる。
    流れているあいだに星そのものをタップすると、おねがいを3つからえらぶ（S.starW）。つぎの朝6時に、おくりものがとどく（starMorning）。
    起きているひまなせいれいは、流れ星のあいだ空を見上げる（starLook、絵は qlookup）。 */
-const STARP=.3,STARPT=.4/* 星見の望遠鏡があるとき */,STARMS=4000,STARH0=20,STARH1=23,STARMAT=15,STARSEED=3,STARFUN=20,STARHIT=56;
+const STARGAP=3,STARGAPT=2/* 流れてから、つぎに流れるまでの晩の数（星見の望遠鏡があるとき） */,STARMS=4000,STARH0=20,STARH1=23,STARMAT=15,STARSEED=3,STARFUN=20,STARHIT=56;
 const STARWISH={yutaka:{n:'ゆたかに',d:'つぎの朝、素材が15こ'},minori:{n:'みのりを',d:'つぎの朝、たねが3こ'},genki:{n:'げんきに',d:'つぎの朝、みんなのたのしさ+20'}};
 let STAR=null;/* いま流れている流れ星（実時間。セーブしない） */
 function starTick(){/* 1秒に1回 */if(!S||IS_STORY_REPLAY||(typeof NOSAVE!=='undefined'&&NOSAVE))return;const d=dayNo(),h=hour(),st=S.starN||(S.starN={});
-  if(st.d!==d&&h>=STARH0&&h<STARH1){st.d=d;st.at=Math.random()<(S.obj.includes('telescope')?STARPT:STARP)?STARH0+.3+Math.random()*(STARH1-STARH0-.8):-1}/* 20時に、今夜流れるか・何時かをきめる */
-  if(st.at>0&&st.shown!==d&&h>=st.at&&h<STARH1&&!S.rain&&!STAR&&$('#dialog').hidden&&!sheet){st.shown=d;starStart()}}
+  if(st.d!==d&&h>=STARH0&&h<STARH1){st.d=d;st.at=st.last==null||d-st.last>=(S.obj.includes('telescope')?STARGAPT:STARGAP)?STARH0+.3+Math.random()*(STARH1-STARH0-.8):-1}/* 20時に、今夜流れるか・何時かをきめる */
+  if(st.at>0&&st.shown!==d&&h>=st.at&&h<STARH1&&!S.rain&&!STAR&&$('#dialog').hidden&&!sheet){st.shown=d;st.last=d;starStart()}}
 function starStart(){const now=performance.now(),k=Math.random();STAR={t0:now,x0:.62+k*.3,y0:.06+Math.random()*.08,x1:.18+k*.25,y1:.3+Math.random()*.1,tap:false};/* 流れているあいだは、音を出さない */
   for(const r of S.res)if(starIdle(r))r.bubble='✨'}
 function starIdle(r){if(!r||r.hidden)return false;const a=r.act;if(!a)return true;if(a.stage==='walk')return false;return ['idle','wander','rest','chat','chatwait','sunset','quirk','critwatch','admire','ownseat','fish','play','patrol'].includes(a.type)}

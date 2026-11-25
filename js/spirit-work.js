@@ -117,7 +117,7 @@ function jobWork(r,G,dry){if(isNight())return false;const j=jobOf(r);if(j<0)retu
   const k=o==='lumber'?'chop':'mine';if(!canJob(r,k)||roomN(r)<1||matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))||!free('o'+j,2))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,k,q,{key:'o'+j,obj:j,camp:true});return true}
 function grassNeed(){/* いまの目標で作る物（御神木の調べの準備）に足りない草：素材のキー→足りない数。なければ null */
   const q=QUESTS[S.quest];if(!q||!S.qTalked||typeof FIELD_PREP==='undefined')return null;const p=FIELD_PREP[q.id];if(!p||!p.build||fieldBuildOK(q.id))return null;
-  const id=p.build.ids[0],m=(BL[id]||{}).mat;if(!m||inv(id)>0||S.orders.some(o=>o.type===id))return null;const out={};let n=0;for(const k in m)if(GRASSK.includes(k)&&(S.mat[k]||0)<m[k]){out[k]=m[k]-(S.mat[k]||0);n++}return n?out:null}
+  const id=p.build.ids[0],m=(BL[id]||{}).mat;if(!m||inv(id)>0||madeAway(id)>0||S.orders.some(o=>o.type===id))return null;const out={};let n=0;for(const k in m)if(GRASSK.includes(k)&&(S.mat[k]||0)<m[k]){out[k]=m[k]-(S.mat[k]||0);n++}return n?out:null}
 const GRASSFAR=60;const SEEKR=10,SEEKRW=15;function seekR(r){return r.elem==='wind'?SEEKRW:SEEKR}/* 雑草・きのこ・落とし物を見つける広さ（まわりのマス） *//* 目標に足りない草は、この歩数までとりに行く */
 const WOODLOW=10;/* 木材がこれより少ないときは、雑草・枝ひろいより先に木を切る */
 let BOXFULL=0;/* 箱がいっぱいを知らせたときの、しまえる数（セーブしない） */
@@ -132,6 +132,7 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
   // 食料がゼロなら、まず食べ物を集める
   if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が人数×2より少なくなったら、ほかの仕事より先に食べ物をあつめる */
+  if(typeof hapJob==='function'&&hapJob(r,G))return true;/* ときどき起きるできごと：タップしてたのんだ大きな作物・ヒナ・きんいろの実（happen.js）。建てる・作るより先（後ろにあると、ほかの仕事がおわらず、とりに行かなかった） */
   for(const k of['build','craft'])if(tryJob(r,G,k))return true;
   if(typeof bpJob==='function'&&bpJob(r,G))return true;/* 家の設計図：置く所の木・岩をかたづける *//* 建てる・依頼のものづくりは、遠くても、ふだんの仕事（植える・ひろう・畑・木・石・草）より先 */
   // おつげがあれば、それを先にする
@@ -150,7 +151,7 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;
-  if(typeof hapJob==='function'&&hapJob(r,G))return true;/* ときどき起きるできごと：タップした大きな作物・ヒナ・きんいろの実（happen.js） *//* 「しらべる」でタップしたかげの巣（defense.js） */
+  /* 「しらべる」でタップしたかげの巣（defense.js） */
   if(wreqList().length&&tryJob(r,G,'weed'))return true;/* 「しらべる」でタップした草・きのこは、畑の世話より先（畑の多い村では、畑の世話がおわらず、いつまでもとりに行かなかった） */
   if((S.drops||[]).some(q=>q.lt||q.tap)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(r.elem==='earth'&&tryJob(r,G,'till'))return true;/* 土のせいれいは、おつげがあっても、畑づくりを先にする */
@@ -301,8 +302,8 @@ function moveR(r,dt){
     const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=MZLANE&&MZLANE[j]?1/3:(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* 舟の道（水のステージ）は、舟にのって歩く3倍の速さ *//* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる時間は、下の CLB（ふちでまっすぐ上・下）。歩く1マスとあわせて5倍 *//* 浅瀬は2倍倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(r.path.length===1&&r.act&&j===r.act.stand&&seatCell(j)&&j!==(r.y|0)*W+(r.x|0)){{const cj=(r.y|0)*W+(r.x|0);if(cj===seatBack(j)){/* 背もたれのがわからは乗らない：前か横へまわってから乗る */const G=roadSearch(r.x|0,r.y|0);let best=null;for(const n of seatSides(j)){if(G.dist[n]<0)continue;const p=avoidPath(r,G,n);if(p.length&&(!best||p.length<best.length))best=p}if(best){r.path=best.concat([j]);continue}}}SEATMV.set(r,{k:'in',x:r.x*TS,y:r.y*TS,t0:performance.now()});r.x=tx;r.y=ty;r.path.shift();break}/* となりのマスから、すわる位置へ、ぴょんと乗る */
-    {const cj=(r.y|0)*W+(r.x|0);let C=CLB.get(r);if(C&&C.n!==j){CLB.delete(r);C=null}if(!C&&jumpEdge(cj,j)&&Math.abs(j%W-cj%W)+Math.abs(((j/W)|0)-((cj/W)|0))===1){C=Object.assign({a:cj,n:j,k:-1},clbPt(cj,j));CLB.set(r,C)}/* 段差：ふちまで歩いて、そこでまっすぐ上・下へよじのぼる（clbPt） */
-      if(C&&C.k<1){if(C.k<0){const ex=C.px-r.x,ey=C.py-r.y,e=Math.hypot(ex,ey);if(e<=step){r.x=C.px;r.y=C.py;step-=e;C.k=0}else{r.x+=ex/e*step;r.y+=ey/e*step;step=0;continue}}const q=Math.min(step,(1-C.k)*CLBD);C.k+=q/CLBD;step-=q;if(C.k<1)continue;C.k=1;continue}}
+    {const cj=(r.y|0)*W+(r.x|0);let C=CLB.get(r);if(C&&C.n!==j){CLB.delete(r);C=null}if(!C&&jumpEdge(cj,j)&&Math.abs(j%W-cj%W)+Math.abs(((j/W)|0)-((cj/W)|0))===1){C=Object.assign({a:cj,n:j,k:-1},clbPt(cj,j));CLB.set(r,C)}/* 段差：ふちまで歩いて、そこでまっすぐ上・下へよじのぼる（clbPt）。壁が見えないおくのがけは、ぴょんと上がる・おりる（clbHop） */
+      if(C&&C.k<1){if(C.k<0){const ex=C.px-r.x,ey=C.py-r.y,e=Math.hypot(ex,ey);if(e<=step){r.x=C.px;r.y=C.py;step-=e;C.k=0}else{r.x+=ex/e*step;r.y+=ey/e*step;step=0;continue}}const q=Math.min(step,(1-C.k)*CLBD);C.k+=q/CLBD;step-=q;if(C.k>=1)C.k=1;if(C.hop){const P=hopAt(C);r.x=P.x;r.y=P.y}/* おくのがけ：ふちでがけを見上げて、かがんで、ぴょんととぶ（hopAt） */continue}}
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();CLB.delete(r);step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
   if(r.path.length){const g=r.path[r.path.length-1],n0=r.path[0],dd=Math.hypot(n0%W+.5-r.x,((n0/W)|0)+.5-r.y);
@@ -326,7 +327,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
   if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;lgR(r,'10分うごかない '+lgActTxt(r.act));if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',storyWaiting=storyWaitProtected(r)||preBedCalm();
-  const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='quirk'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=(sleeping?.015:wk?1.5:mv?.2:.1)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1)*(WD===KAZAN&&r.sprC===dayNo()?SPR_EFF.c:1)*(1-(typeof pathA==='function'?pathA('hun'):0)/100)*(typeof seaHun==='function'?seaHun(r):1);/* 冬は、おなかのへり1.2倍（seaHun） */
+  const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='quirk'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=((sleeping?.015:wk?1.5:mv?.2:.1)+(typeof winterShort==='function'?winterShort():0))*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1)*(WD===KAZAN&&r.sprC===dayNo()?SPR_EFF.c:1)*(1-(typeof pathA==='function'?pathA('hun'):0)/100)*(typeof seaHun==='function'?seaHun(r):1);/* 冬は、おなかのへり1.2倍（seaHun） */
   if(!sleeping&&!storyWaiting)funAdd(r,-FUNPH/FUNHOUR*dt*funDecayK(r),'time');/* へりかたの倍は funDecayK（fun-why.js）。いま効いている物の一覧と同じ *//* なかよしが消えたあとは、しょんぼり */
   {const jj=(r.y|0)*W+(r.x|0),ev=ENVG?ENVG[jj]+(ENVE[r.elem]?ENVE[r.elem][jj]:0):0;if(ev>0&&!sleeping){funAdd(r,ev*.004*dt,'env');if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.004*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
   // 家の中で寝ている子は、壁が壊れて「コワイノ」が入ってこない限り起きない
@@ -335,12 +336,12 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   r.fun=Math.max(0,r.fun);
   if(sleeping&&isWatch(r)&&isNight()&&S.enemyOn&&(r.hunger<hMax(r)*.5?S.food>0:true)){endAct(r);addFloatG(r.x,r.y,-1.4,'見張りの時間','#ffd38a')}/* 家の中で寝ている子もふくめて、見張りの番なら起きる */
   if(r.elem==='fire'&&!r.hidden&&!sleeping&&!(r.act&&(r.act.type==='flee'||r.act.type==='faint'))&&!((r.fatk||0)>S.t)){const lv=rLv(r),G=gearStat(r),rc=1.5+G.rch;/* そうび：とどくきょり */let en=null,bd=Math.max(3,rc);for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd&&(d<rc||overFence(r.x,r.y,e.x,e.y))&&!fenceBetween(r.x,r.y,e.x,e.y)){bd=d;en=e}}/* 柵・塀ごしなら、柵をはさんだとなりのマスまでとどく（3より近い） */
-    if(en){r.fatk=S.t+5*G.iv/rMul(r,'work');/* 作業の速さが、攻撃の速さにもなる */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),dmg=Math.max(5,Math.round((fAtk(r,lv)+ba+G.atk+supAtk(r))*fireMul(r)));/* supAtk：ならんで戦う力（support.js） */for(let i=0;i<G.hit;i++)hurtEn(en,dmg,{lag:HIT_LAG+i*90,sx:r.x,sy:r.y,dt:'fire',el:'fire'});/* そうび：攻撃・回数 */en.stun=Math.max(en.stun||0,1);en.aggro=r.id;en.aggroT=S.t;/* たたかれたコワイノは、その子をねらう */r.face=en.x>=r.x?1:-1;r.fback=en.y<r.y-.3&&Math.abs(en.y-r.y)>Math.abs(en.x-r.x)*.6;/* うしろ（北）の敵には、うしろを向いてたたく */r.swing=performance.now();villageTimeout(()=>{atkFX(r,en);atkSfx(r)},HIT_LAG);/* 斬撃の絵と音は、ふみこんで当たる瞬間に */if(en.hp<=0)defeat(en,r.name+'が'+EN[en.type].name+'を追いはらった！',r);gearStrike(r,en,dmg)}}/* 火のせいれいは、となりのコワイノに自分から攻撃する */
+    if(en){r.fatk=S.t+5*G.iv/rMul(r,'work');/* 作業の速さが、攻撃の速さにもなる */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),dmg=Math.max(5,Math.round((fAtk(r,lv)+ba+G.atk+supAtk(r))*fireMul(r)));/* supAtk：ならんで戦う力（support.js） */for(let i=0;i<G.hit;i++)hurtEn(en,dmg,{lag:HIT_LAG+i*90,sx:r.x,sy:r.y,dt:'fire',el:'fire'});/* そうび：攻撃・回数 */en.stun=Math.max(en.stun||0,1);comboNote(r,en);/* 合わせわざ（bond.js） */en.aggro=r.id;en.aggroT=S.t;/* たたかれたコワイノは、その子をねらう */r.face=en.x>=r.x?1:-1;r.fback=en.y<r.y-.3&&Math.abs(en.y-r.y)>Math.abs(en.x-r.x)*.6;/* うしろ（北）の敵には、うしろを向いてたたく */r.swing=performance.now();villageTimeout(()=>{atkFX(r,en);atkSfx(r)},HIT_LAG);/* 斬撃の絵と音は、ふみこんで当たる瞬間に */if(en.hp<=0)defeat(en,r.name+'が'+EN[en.type].name+'を追いはらった！',r);gearStrike(r,en,dmg)}}/* 火のせいれいは、となりのコワイノに自分から攻撃する */
   if(r.elem!=='fire'&&fighter(r)&&!r.hidden&&!sleeping&&!(r.act&&(r.act.type==='flee'||r.act.type==='faint'||r.act.type==='watchpost'))&&!((r.fatk||0)>S.t)){const E=SORTIE[r.elem]||SORTIE.wood;let en=null,bd=Math.max(3,E.rng);for(const e of S.enemies){if(!e.spawned||e.dead||E.stop&&(e.stun||0)>0)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd&&(d<E.rng||overFence(r.x,r.y,e.x,e.y))&&!fenceBetween(r.x,r.y,e.x,e.y)){bd=d;en=e}}/* 出撃した火のせいれいでない子：近接。うち方は見張り台と同じく属性ごと（SORTIE）。水は止めるだけ */
     if(en){r.fatk=S.t+E.cd/rMul(r,'work');S.flags.sortieHit=1;r.face=en.x>=r.x?1:-1;r.fback=en.y<r.y-.3&&Math.abs(en.y-r.y)>Math.abs(en.x-r.x)*.6;r.swing=performance.now();
       if(E.stop){en.stun=waterStop(r,en)*weakStun(en,'water');en.path=[];villageTimeout(()=>{atkFX(r,en);atkSfx(r)},HIT_LAG)}/* 1分＋攻撃力1につき30秒（オオカゲなどは半分）止まる。ダメージなし */
       else{hurtEn(en,Math.max(1,Math.round(rMul(r,'atk')*100)),{lag:HIT_LAG,sx:r.x,sy:r.y,el:r.elem});en.stun=Math.max(en.stun||0,1);villageTimeout(()=>{atkFX(r,en);atkSfx(r)},HIT_LAG);if(en.hp<=0)defeat(en,r.name+'が'+EN[en.type].name+'を追いはらった！',r)}
-      en.aggro=r.id;en.aggroT=S.t}}/* たたかれたコワイノは、その子をねらう */
+      comboNote(r,en);/* 合わせわざ（bond.js） */en.aggro=r.id;en.aggroT=S.t}}/* たたかれたコワイノは、その子をねらう */
   if(r.act&&!isNight()&&!URGNO.includes(r.act.type)&&!(r.act.type==='play'&&r.act.stage==='do')&&r.act.type!=='splay'/* 遊び家具・季節の遊びは、はじめたら、さいごまで */&&!heldN(r)&&!r.meal&&!r.cing&&r.hunger>=175&&r.energy>=25&&!(r.uchk>S.t)){r.uchk=S.t+2;if(hasUrgent(r)){// 建物や依頼は、いまの作業をやめてでも向かう
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);const G=bfs(r.x|0,r.y|0);if(!(tryJob(r,G,'build')||tryJob(r,G,'craft'))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}
   if(fighter(r)&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
