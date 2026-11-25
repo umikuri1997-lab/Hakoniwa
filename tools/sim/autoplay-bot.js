@@ -48,7 +48,7 @@ B.boxTick=()=>{if(isNight())return;const cap=boxSlotTot(),tot=(()=>{let n=0;for(
   if(!B.uc||B.ucD!==dayNo()){B.uc=B.usedMats();B.ucD=dayNo()}const Q=S.otakiQ||(S.otakiQ={});B.qneed={};{const q=QUESTS[S.quest];if(q&&FIELD_PREP&&FIELD_PREP[q.id])for(const id of (FIELD_PREP[q.id].build||{}).ids||[])Object.assign(B.qneed,(BL[id]||{}).mat||{})}
   for(const k in MATTRADE){const n=S.mat[k]||0,tr=MATTRADE[k],keep=tight?((k==='wood'||k==='stone')?99:(B.qneed&&B.qneed[k])||0):Math.max(5,B.uc[k]||0);if(tot<cap*.8)continue;if(n<keep+tr||Q[k])continue;const v=Math.floor((n-keep)/tr)*tr;if(v>0){rsvAdd({[k]:v});Q[k]=v;B.lg('OTAKI '+k+' '+v)}}
   const want=BOXL.length+1;if(B.have('crate')<want&&!B.ordered('crate')&&inv('crate')<1){if(recipeKnown('crate')&&(S.mat.wood||0)>=8){orderFurn('crate');if(B.ordered('crate'))B.lg('ORDER crate')}}
-  if(inv('crate')>0){const inRing=(x,y)=>x>41&&x<63&&y>42&&y<60;if(B.put('crate',51,51,crateIn)||B.put('crate',52,56,inRing))B.lg('PUT crate')}};
+  if(inv('crate')>0){const inRing=(x,y)=>x>41&&x<63&&y>42&&y<60;if(B.put('crate',49,50,crateIn)||B.put('crate',52,56,inRing))B.lg('PUT crate')}};
 /* サブクエスト：受けたものを、ぜんぶクリアしにいく */
 B.subTick=()=>{if(isNight())return;const st=S.subSt||{},done=S.subDone||{};
   for(const q of SUBQ){if(done[q.k]||st[q.k]!==2)continue;let ok=false;try{ok=q.ok&&q.ok()}catch(e){}if(ok)continue;const f=B.SUB[q.k];if(f){try{f(q)}catch(e){B.lg('sub err '+q.k+' '+e.message)}}else if(!B.subMiss||!B.subMiss[q.k]){(B.subMiss=B.subMiss||{})[q.k]=1;B.lg('SUB NOHANDLER '+q.k)}}};
@@ -56,7 +56,7 @@ B.SUB={
   oracle:()=>{S.oracle='wood';S.flags.oracleSet=true;checkQuest();try{openSheet('menu')}catch(e){}closeSheet()},
   lighttry:()=>{if(LIGHTCD>0||S.pt<20)return;let best=-1,bd=1e9;S.obj.forEach((o,j)=>{if(o!=='deadtree'&&o!=='tree'&&o!=='rock')return;if(o==='tree'&&!(BL[o]&&BL[o].natural))return;const d=Math.hypot(j%W-52,((j/W)|0)-52);if(d<bd){bd=d;best=j}});if(best>=0){try{natLight(best)}catch(e){B.lg('natLight err '+e.message)}}},
   seedwait_gate:()=>{},/* 南の柵のドアで、そろう */
-  table1:()=>{B.ensure('table',1,49,50,inHouse)},
+  table1:()=>{B.ensure('table',1,47,49,inHouse)},
   chair2:()=>{const t=S.obj.indexOf('table');if(t<0)return;const tx=t%W,ty=(t/W)|0,near=(x,y)=>Math.abs(x-tx)<=1&&Math.abs(y-ty)<=1;B.ensure('chair',2,tx,ty,near)},
   farm10:()=>{B.ensure('farm',10,44,56)},
   deco3:()=>{const n=CN(DECOQ);if(n>=3)return;for(const id of DECOQ){if(inv(id)>0){B.put(id,58,47);return}}const c=DECOQ.find(id=>recipeKnown(id)&&lvOK(id));if(c&&!S.orders.some(o=>DECOQ.includes(o.type)))orderFurn(c)},
@@ -72,10 +72,10 @@ B.flower=(id,x,y)=>{if(inv(id)>0&&cnt('sprout')<10){B.plantAll(id,x,y);return}if
 Object.assign(B.SUB,{
   salvia3:()=>B.flower('salvia',46,46),lotus3:()=>B.flower('lotus',60,56),lily5:()=>B.flower('lily',44,47),clover3:()=>B.flower('clover',45,58),
   watch2:()=>{if(cnt('watch')+B.sites('watch')<2)B.put('watch',47,62,(x,y)=>y>=61&&y<=64&&!watchNear(y*W+x))},lv_watch2:()=>{},lv_toy2:()=>{},seedwait_food:()=>{},food40:()=>{},bossfood:()=>{},
-  bed3:()=>{if(houseBedCount()+inv('bed')<3){if(!B.ordered('bed'))orderFurn('bed')}else if(inv('bed')>0)B.put('bed',48,51,inHouse)},
-  light3:()=>B.anyOf(LIGHTQ,3,53,52),houselight:()=>B.anyOf(LIGHTQ.filter(id=>INDL.has(id)),1,50,50,inHouse),
+  bed3:()=>{if(houseBedCount()+inv('bed')<3){if(!B.ordered('bed'))orderFurn('bed')}else if(inv('bed')>0)B.put('bed',47,50,inHouse)},
+  light3:()=>B.anyOf(LIGHTQ,3,53,52),houselight:()=>B.anyOf(LIGHTQ.filter(id=>INDL.has(id)),1,48,49,inHouse),
   sticky1:()=>B.furnN('sticky',2,52,62,(x,y)=>y>=61&&y<=64),puddle1:()=>B.furnN('puddle',2,50,62,(x,y)=>y>=61&&y<=64),
-  toy2:()=>B.furnN('sandbox',1,57,47),swing1:()=>B.furnN('swing',1,57,45),stor2:()=>B.furnN('taru',1,51,49,inHouse),mbox2:()=>B.furnN('makidana',1,52,56),
+  toy2:()=>B.furnN('sandbox',1,57,47),swing1:()=>B.furnN('swing',1,57,45),stor2:()=>B.furnN('taru',1,49,48,inHouse),mbox2:()=>B.furnN('makidana',1,52,56),
   stele1:()=>B.furnN('stele',1,45,45),fountain1:()=>B.furnN('fountain',1,58,53),lighthouse1:()=>B.furnN('lighthouse',1,44,50),lumber1:()=>B.furnN('lumber',1,46,52),quarry1:()=>B.furnN('quarry',1,58,58),
   drum1:()=>B.furnN('drum',1,49,62,(x,y)=>y>=61&&y<=64),pit1:()=>B.furnN('pit',1,55,64,(x,y)=>y>=63&&y<=66),nebari1:()=>B.flower('nebari',47,64),hotaru1:()=>B.flower('hotaru',57,64),
   arrow2:()=>{if(!B.ordered('arrow2')&&recipeKnown('arrow2'))orderFurn('arrow2')},
@@ -106,14 +106,14 @@ B.tick=()=>{ if(!B.on||!S)return; try{
   const q=QUESTS[S.quest];if(q&&B.H[q.id])B.H[q.id](q);
   B.H._all();
 }catch(e){B.lg('BOT ERR '+e.message+' '+(e.stack||'').split('\n')[1])}};
-const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,crateIn=(x,y)=>y===51&&x>=48&&x<=51/* 木箱は、家のいちばん下の列だけ（ドアの内がわ・家の中の通り道をふさがない。ふさぐと、せいれいが箱へ行けなくなる） */,SR=()=>{const j=S.sacredRoot;return [j%W,(j/W)|0]};
+const H=B.H,inHouse=(x,y)=>x>=46&&x<=49&&y>=48&&y<=50,crateIn=(x,y)=>y===50&&x>=46&&x<=49/* 木箱は、家のいちばん下の列だけ（ドアの内がわ・家の中の通り道をふさがない。ふさぐと、せいれいが箱へ行けなくなる） */,SR=()=>{const j=S.sacredRoot;return [j%W,(j/W)|0]};
 B.plantAll=(id,nx,ny)=>{let n=0;while(inv(id)>0&&cnt('sprout')<10&&n++<10){if(!B.put(id,nx||58,ny||58))break}};
 B.sow=k=>{let n=0;for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='farm')continue;const d=S.dyn[j];if(!d||d.crop)continue;if(cseed(k)<1)break;place('seed:'+k,j%W,(j/W)|0);n++}return n};
-H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,crateIn);H.mbox=()=>{};
-H.wbench=()=>B.ensure('wbench',1,50,51,(x,y)=>crateIn(x,y)&&benchBoxes(y*W+x).length>0);/* 作業台は、木箱のとなり */
-H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
+H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,49,50,crateIn);H.mbox=()=>{};
+H.wbench=()=>B.ensure('wbench',1,48,50,(x,y)=>crateIn(x,y)&&benchBoxes(y*W+x).length>0);/* 作業台は、木箱のとなり */
+H.wall=()=>{for(const k of starterGapCells(S))if(!S.obj[k])place('hwall',k%W,(k/W)|0)};/* 家のすきまは、ゲームの starterGapCells（置く場所をべた書きしない） */
 B.weave=n=>{/* はたおり機で、布を n こまで（はたおり機がなければ、置く・たのむ） */if(B.have('loom')<1){if(inv('loom')>0)B.put('loom',56,52);else if(!B.ordered('loom')&&recipeKnown('loom'))orderFurn('loom');return}const j=S.obj.indexOf('loom');if(j<0||(S.mat.nuno||0)+prCount(j)>=n)return;for(const k of GRASSKEYS){const c=Math.min(Math.floor((S.mat[k]||0)/3),n-(S.mat.nuno||0)-prCount(j),PROC.loom.cap-prCount(j));if(c>0){const Q=(S.prQ||(S.prQ={}))[j]||(S.prQ[j]={});rsvAdd({[k]:c*3});Q[k]=(Q[k]||0)+c*3;return}}};
-H.bed=()=>{if(houseBedCount()+inv('bed')+B.sites('bed')<1&&!B.ordered('bed'))B.weave(1);B.ensure('bed',1,48,49,inHouse)};
+H.bed=()=>{if(houseBedCount()+inv('bed')+B.sites('bed')<1&&!B.ordered('bed'))B.weave(1);B.ensure('bed',1,47,48,inHouse)};
 H.path=()=>{if(pathMade()<5)B.put('path',58,60)};
 H.fence4=()=>B.ensure('fence',4,54,76);
 H.watch1=()=>{B.ensure('watch',1,56,70);B.ensure('spike',2,54,72)};/* 切り株のまわり（調べの物を置く所）は、あけておく */
@@ -141,7 +141,7 @@ H._all=()=>{
   if((S.mat.eda||0)<12){let c=0;for(const d of S.drops){if(d.id==='mat:eda'&&!d.tap&&Math.hypot(d.x-54,d.y-54)<22&&!(S.fog&&fogAt(d.y*W+d.x))){d.tap=1;if(++c>=6)break}}}
   if((S.mat.kasa||0)<8){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0k'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}
   if(houseBedCount()+inv('bed')<n){if(!B.ordered('bed')){B.weave(1);orderFurn('bed')}}
-  if(inv('bed')>0)(B.put('bed',48,49,inHouse)||B.put('bed',60,49));
+  if(inv('bed')>0)(B.put('bed',47,48,inHouse)||B.put('bed',60,49));
   if(S.quest>8){for(const [id,k] of [['chair',2],['bench',2],['swing',1],['campfire',1],['sandbox',1]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>50)B.ensure(id,k,60,50)}
   if(S.enemyOn&&S.quest>10){
     if((S.inv.arrow||0)<20*Math.max(1,cnt('watch'))&&!B.ordered('arrow')&&recipeKnown('arrow')&&(S.mat.eda||0)>=1&&(S.mat.stone||0)>=1)orderFurn('arrow');/* 見張り台1台につき20本 */
