@@ -64,7 +64,7 @@ def hsv2rgb(x):
     r = np.choose(i, [v, q, p, p, t, v]); g = np.choose(i, [t, v, v, q, p, p]); b = np.choose(i, [p, p, t, v, v, q])
     out = np.stack([r, g, b], 1); out[s == 0] = np.stack([v, v, v], 1)[s == 0]; return out
 
-def shade(cb, nb, mb, light):
+def shade(cb, nb, mb, light, soft=None):
     """かげは明度でなく彩度で（持ち主がきめた）：明るさ（HSV の V）はかえず、かげの段ほどあざやかに。
     つや（水のずきん）：光と目のあいだの向きの所に白いつや。光る（火のずきん）：かげをつけず、こちらを向いた所ほど明るい黄色へ。"""
     import colorsys
@@ -72,7 +72,11 @@ def shade(cb, nb, mb, light):
     out = cb.copy(); m = cb.sum(1) > 0
     hsv = rgb2hsv(cb[m]/255) if m.any() else np.zeros((0, 3))
     if len(hsv):
-        hsv[:, 1] = np.minimum(1, hsv[:, 1]+np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0))
+        add = np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0)
+        if soft is not None:   # 体（うで・足も）：かげをぼかす（光の当たり方で、7だんに少しずつ。頭はいままでの3だん）
+            t = np.round(np.clip((0.55-dl[m])/0.9, 0, 1)*6)/6; sa = 0.20*t+np.where(hsv[:, 1] < 0.08, 0.06*t, 0)
+            add = np.where(soft[m], sa, add)
+        hsv[:, 1] = np.minimum(1, hsv[:, 1]+add)
         out[m] = hsv2rgb(hsv)*255
     view = np.array([0, 0, 1.0]); hv = light+view; hv /= np.linalg.norm(hv)
     sp0 = (mb == 1) & (nb@hv > 0.996); out[sp0] = 255   # 水：つやつや（小さな点の白い光。広がるつやにしない）
@@ -177,7 +181,7 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     # 左上の光で3だん
     nb /= np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-9)
     nt /= np.maximum(np.linalg.norm(nt, axis=1, keepdims=True), 1e-9); nt2 /= np.maximum(np.linalg.norm(nt2, axis=1, keepdims=True), 1e-9)
-    img = shade(cb, nb, mb, light); has = zb > -1e8
+    img = shade(cb, nb, mb, light, soft=(tg == 1) | (tg == 2)); has = zb > -1e8
     # すける物：うしろから順に（2まいめ → 手前）、うしろの色と 45:55 でまぜる。うしろが何もない所は、すける物だけ（うすく）
     w2 = (zt2 > -1e8) & (zt2 > zb); w1 = (zt > -1e8) & (zt > zb)
     t2 = shade(ct2, nt2, np.zeros(len(ct2), int), light); t1 = shade(ct, nt, np.zeros(len(ct), int), light)
