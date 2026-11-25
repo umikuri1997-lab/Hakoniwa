@@ -102,7 +102,7 @@ function stepWorld(dt){GODJ=godHere()?Math.floor(godY())*W+Math.floor(godX()):-1
   passGreet(dt);
   sepRes(dt);
   for(const e of S.enemies)updEnemy(e,dt);if(WD===TSUCHI&&typeof tsNightTick==='function')tsNightTick(dt);/* 土：夜の水のかたまり・あつい床（tsuchi-night.js） */nightClearJoy();
-  updTowers(dt);
+  updTowers(dt);if(typeof vgoalTick==='function')vgoalTick();/* 村の大きな目標（village-goal.js） */
   if(S.nushi)updNushi(dt);
   yamiTick(prevH,h,dt);if(typeof tsStep==='function')tsStep();/* 土：ひらいた土地で待つハニ（tsuchi.js） *//* 闇のステージ：6時〜23時の小さな群れ */if(prevH<6&&h>=6&&S.nightHad){S.nightHad=false;const yk=WD===YAMI&&S.enemies.some(e=>!e.dead)/* 闇のステージには朝の光がない：のこったコワイノは、追いはらうまでのこる */,hk=!yk&&typeof tsBkMorning==='function'?tsBkMorning():[]/* 土：バケモノは消えずに、地われへ歩いてもどる */,left=yk?0:S.enemies.length-hk.length;if(!yk){const t0=performance.now();for(const e of S.enemies)if(e.spawned&&!e.dead&&!hk.includes(e)){const dl=Math.random()*500,x=e.x*TS,y=e.y*TS;EVAP.push({e,t0:t0+dl});later(()=>fxSpr('dawnfade',x,y),dl)}}/* 朝の光で、とけて消える */if(left)sfx('evap');if(!yk)S.enemies=hk;
     if(S.ns&&!S.nightHurt&&!yk){const rw=Math.min(10,3+Math.floor((S.nights||0)/2));S.ns.rw=rw;if(!S.flags.safeMemo){S.flags.safeMemo=1;omo('night');memo('moon','はじめて夜をぶじに守りきった')}S.pt+=rw;S.totalPt+=rw;if(typeof STATUE!=='undefined'&&STATUE>=0&&typeof juiceFly==='function'&&1)juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',rw);for(const r of S.res)funAdd(r,10,'night')}/* けがも被害もない夜は、ごほうび（パワーと、みんなのたのしさ） */streakMorning();/* 守りつづけた夜（defense.js） */

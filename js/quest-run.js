@@ -130,6 +130,7 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   if(!S.cleared){const wt=mainTalkWaitText(q);
     if(wt)t=wt;
     else{if(q.prog)pr=q.prog();const wn=questWaitNote(q);if(wn)pr=pr?pr+'　'+wn:wn}}
+  {const vn=typeof vgoalNote==='function'?vgoalNote():'';if(vn)pr=pr?pr+'　'+vn:vn}/* 村の大きな目標（village-goal.js） */
   {const wn=waveNote();if(wn)pr=pr?pr+'　'+wn:wn}/* 草原の夜：つぎの波まで（waves.js） */
   {const nl=nightLeftNote();if(nl)pr=pr?pr+'　'+nl:nl}/* 夜：今夜のコワイノの、のこり（waves.js） */
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){if(qt.dataset.t&&qt.dataset.t!==t){const c=$('#questChip');if(c){c.classList.remove('qbump');void c.offsetWidth;c.classList.add('qbump')}}/* 目標がかわったら、札をはねさせる */qt.dataset.t=t;qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;if(pr)pr.split('　').forEach((x,i)=>{const w=document.createElement('i');w.textContent=(i?'　':'')+x;g.appendChild(w)});qt.append(m,g)}/* 進みぐあいは「　」の区切りごとにまとめて、ことばのとちゅうで行をかえない *//* 進み具合は2行目に */
