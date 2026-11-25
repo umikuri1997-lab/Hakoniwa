@@ -73,7 +73,7 @@ def main():
     if os.path.exists(jsf):
         m = re.search(r'const '+VAR+r'=(\{.*\});', open(jsf, encoding='utf8').read(), re.S)
         if m: old = json.loads(m.group(1))
-    used0 = {v for d in old.values() for v in d.get('s', {}).values()}
+    used0 = {v for d in old.values() for v in list(d.get('s', {}).values())+list(d.get('x', {}).values())}
     new = {k: v for k, v in old.items() if k in MOTIONS and (add or k not in names)}
     jobs = [(n, e) for n in names for e in els]
     cache = os.environ.get('SPIRIT_CACHE')   # 仕事ごとの結果をとっておく所（とちゅうで止まっても、つづきから）
@@ -92,16 +92,21 @@ def main():
                     import pickle; pickle.dump(r, open(ck(r[0], r[1]), 'wb'))
                 yield r
     if True:
-        for name, el, raw, geo, eye, hd in results():
+        for res in results():
+            name, el, raw, geo, eye, hd = res[:6]; xr = res[6] if len(res) > 6 else None
             src = 'assets/g/'+hashlib.sha1(raw).hexdigest()[:10]+'.webp'; open(os.path.join(ROOT, src), 'wb').write(raw)
             d = new.setdefault(name, {'n': MOTIONS[name]['n'], 'r': MOTIONS[name]['rate'], 's': {}, 'g': {}, 'e': {}, 'h': None})
             d['s'][el] = src; d['g'][el] = geo; d['e'][el] = eye
+            for k in ('x', 'xg'): d.setdefault(k, {}).pop(el, None)
+            if xr:   # 表情の目・ほっぺの層（持ち主のモデルから写した絵）
+                xsrc = 'assets/g/'+hashlib.sha1(xr[0]).hexdigest()[:10]+'.webp'; open(os.path.join(ROOT, xsrc), 'wb').write(xr[0])
+                d['x'][el] = xsrc; d['xg'][el] = xr[1]
             if el == 'wood' or d['h'] is None: d['h'] = hd   # 手・道具の先の場所（属性によらない）
             if dbg:
                 im = Image.open(io.BytesIO(raw)); bg = Image.new('RGBA', im.size, (200, 220, 180, 255)); bg.alpha_composite(im); bg.save(os.path.join(dbg, f'{name}_{el}.png'))
             print(name, el, src, len(raw), 'bytes', flush=True)
     if els != ALL and not add: print('属性をしぼったので、js は書かない'); return
-    used = {v for d in new.values() for v in d['s'].values()}
+    used = {v for d in new.values() for v in list(d['s'].values())+list(d.get('x', {}).values())}
     for f in used0-used:   # どの動きも使わなくなった絵だけ消す
         if os.path.exists(os.path.join(ROOT, f)): os.remove(os.path.join(ROOT, f))
     body = json.dumps({k: new[k] for k in sorted(new)}, separators=(',', ':'), ensure_ascii=False)
