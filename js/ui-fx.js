@@ -12,7 +12,7 @@ function uiNumChanged(id,e){const v=parseInt(e.textContent,10),p=UIFX.prev[id],p
   if(document.body.classList.contains('wd0')&&started&&!uiReduced()&&isFinite(p)&&isFinite(v)&&v!==p&&pt!=null)uiRoll(e,pt,v>p);/* 草原は、数がかわるたびに、木のめくり数字のように、くるっとまわる */
   if(!(v>p)||!started||uiReduced())return;
   const now=performance.now();if(now-(UIFX.spk[id]||0)<350)return;UIFX.spk[id]=now;/* 続けてふえるときは、0.35秒に1回だけ */
-  if(!document.body.classList.contains('wd0')){e.classList.remove('nbump');void e.offsetWidth;e.classList.add('nbump')}sfx('count');
+  if(!document.body.classList.contains('wd0')){e.classList.remove('nbump');void e.offsetWidth;e.classList.add('nbump')}
   const tag=e.closest('.htag');if(tag){const s=document.createElement('i');s.className='nspk';tag.appendChild(s);setTimeout(()=>s.remove(),520)}}
 /* 草原の数字：前の数が上（へったときは下）へまわってきえ、新しい数が下（上）からまわって出る。前の数は、同じ所にかさねた写し */
 function uiRoll(e,old,up){const tag=e.closest('.htag');if(!tag)return;for(const o of tag.querySelectorAll('.nold'))o.remove();
