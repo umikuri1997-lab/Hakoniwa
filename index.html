@@ -7,6 +7,7 @@
 
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preload" href="assets/f/b393d8f070.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/f/b499e6e29b.woff2" as="font" type="font/woff2" crossorigin>
+<script>/* まえにマップを開いたときに読んだ絵（draw-ground.js の ldPreSave）を、プログラムと同時に読みはじめる（プログラムのあとで同じ絵を読むときは、とどいた物を使う）。読みこみの時間をはかる一覧が、とちゅうで切れないように大きくする */(function(){try{performance.setResourceTimingBufferSize&&performance.setResourceTimingBufferSize(3000);var PRE=JSON.parse(localStorage.getItem('hakoniwa-pre')||'[]');window.__pre=[];for(var i=0;i<PRE.length&&i<200;i++)if(/^assets\/[\w\/.-]+\.webp(\?[\w=.&-]*)?$/.test(PRE[i])){var im=new Image();im.src=PRE[i];window.__pre.push(im)}}catch(e){}})()</script>
 <div id="boot" style="position:fixed;inset:0;z-index:99;background:radial-gradient(ellipse at 50% 28%,#a8cb83 0%,#7fa66b 48%,#55775a 100%)"></div><!-- 読みこみのはじめから、タイトルと同じ色を出す（タイトルが出たら、かくす） -->
 <style>
 /* 起動中はゲーム画面を出さず、最初からタイトルを表示する。 */
@@ -1110,7 +1111,7 @@ window.__ldWant=function(){return RP?0:want};/* 1：はじめる、2：つづき
 function go(){/* ぜんぶ読みこめたら、書いてある順に、あいだをあけずに動かす（ファイルのあいだで、絵の読みこみなどの知らせが先に動かないように） */for(let i=0;i<N;i++)if(X[i]==null)return;if(ran)return;ran=1;
   if(X.every(function(t){return t!==false})){for(let i=0;i<N;i++){const s=document.createElement('script');s.text=X[i]+'\n//# sourceURL='+U[i].split('?')[0];document.body.appendChild(s)}return}
   for(let i=0;i<N;i++){const s=document.createElement('script');s.src=U[i];s.async=false;document.body.appendChild(s)}}/* 読めなかった物があれば、ふつうに読みこむ（async=false で、書いてある順に、なるべく続けて動かす） */
-window.JSV=U[0].split('?')[1]||'';/* js のバージョン（?v= のあと。ワーカーのファイルを読むときに使う） */
+window.JSV="v=dev";/* 地面のワーカーのファイルを読むときの番号（公開のとき tools/jsver.cjs が、ワーカーのファイルの中身から作る） */
 U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
   x.onprogress=function(e){L[i]=e.loaded;if(e.lengthComputable)T[i]=e.total;show()};
   x.onload=function(){if(x.status>=200&&x.status<300){L[i]=T[i]||E[i];X[i]=x.responseText}else X[i]=false;show();go()};
@@ -1169,7 +1170,7 @@ U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
 緑地と荒地の境界はdrawGrassBoundaryで道の縁に似た草・土のまだらな入り込みを描き、端は丸くつないで角を作らない。緑地内部・水辺には適用しない。
 会話の全身立ち絵はdialogueSpiritAnimとdrawSpiritのtalk系で腕・姿勢も動かす。台詞後は待機へ戻す。
 セリフの印は、恐怖・襲撃・悲しみの場面では、よろこびより先にそれを選ぶ。号泣顔は使わず、強い悲しみも両目をうるませる。片目の涙は台詞の流れに合わせて使う。食卓は葉を使う案と風で飛ぶ問題を挟んでから「土がつかず風にも飛ばされない場所」へ発想をつなげる。
-ゲームのプログラムは js/ の中のファイル（index.html は画面のかたちと見た目だけ。最初の文字をすぐ出すため分けている）。公開時に ?v= はコミットごとに自動で書きかわる。
+ゲームのプログラムは js/ の中のファイル（index.html は画面のかたちと見た目だけ。最初の文字をすぐ出すため分けている）。公開時に ?v= は、ファイルごとの中身の番号に自動で書きかわる（tools/jsver.cjs。かわっていないファイルは読みなおさない）。
 
 【これからのステージの予定】（ユーザーの希望。まだ作っていない）
 ・水の子のステージ：効率化・自動化についての、いろいろな物をふやせるようにする（運ぶ・あつめる・そだてるの手間をへらす物など）。

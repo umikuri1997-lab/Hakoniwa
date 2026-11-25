@@ -1,5 +1,8 @@
 'use strict';
 const lastOf=a=>a&&a.length?a[a.length-1]:undefined;/* さいごの1つ（Array.prototype.at は、古い iPhone（iOS 15.3 まで）にない） */
+const LATEIMG=[],LATESRC=new Set();let LATEGO=false;/* マップを開くのにいらない絵（ヌシ様・おまつり・吹き出し・効果）は、マップが開いてから読む（要る絵を先にとどける。lateGo は stageStep） */
+function lateSrc(im,src){LATESRC.add(src);if(LATEGO)im.src=src;else LATEIMG.push([im,src])}
+function lateGo(){if(LATEGO)return;LATEGO=true;window.__pre=null;/* index.html で先に読んだ絵は、もう持たない */for(const [im,s] of LATEIMG)im.src=s;LATEIMG.length=0}
 const IS_STORY_REPLAY=typeof location!=='undefined'&&new URLSearchParams(location.search).has('storyReplay');
 /* Web版：同じ端末・ブラウザに保存。書き込み失敗を利用者に伝える。 */
 const KV=(()=>{

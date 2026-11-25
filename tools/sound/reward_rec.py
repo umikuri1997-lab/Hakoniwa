@@ -2,13 +2,15 @@
 """うけとった・たっせい・はじめて置いた・作業台と料理の「できた」 の音（持ち主がサンプルページの4つの候補からえらんだ）。音は作らない（録音を切って、ならべて、大きさをそろえるだけ）。
 - rwget（うけとった）：おもちゃの鉄琴の ソ→ド（0.13秒あと）。「ちん・ちーん」。0.95秒で切る
 - rwlevel（村レベルアップ・たっせい・あたらしいレシピ など、sfx('level') と sfx('quest')）：qubodup の「Level Up」まるごとを、高さはそのままで1.5倍の速さに（1.7秒→約1.13秒。持ち主が10の候補からえらび、あとで1.5倍にした。前のたっせいの「ドミソド」はやめた）
-- rwfirst（はじめて置いた）：チャイムの「きらーん」（1.25秒から2.6秒ぶん）
+- rwfirst（スポットができた場面）：チャイムの「きらーん」（1.25秒から2.6秒ぶん）
 - wdone（作業台・料理の「できた」）：あわがはじける「ぽん」（0.04秒から0.3秒ぶん。持ち主が9つの候補からえらんだ）
+- gfopen（プレゼントのつつみがひらく）：つつみ紙が「かさっ」（1.03秒から0.6秒ぶん。持ち主が9つの候補からえらんだ）
 もとの録音（どれも CC0。freesound のページで CC0 をたしかめる。おとすのは freesound の試聴の mp3）：
 - Toy Glockenspiel / mooncubedesign  https://freesound.org/people/mooncubedesign/sounds/420501/  （ド6〜ド7の8つの音が4秒ずつ）
 - GLEAM-GLOW-SFX-CHIME.wav / newagesoup  https://freesound.org/people/newagesoup/sounds/351408/
 - Level Up / qubodup  https://freesound.org/people/qubodup/sounds/442943/
 - The Best Bubble Pop Sound For Game and UI / el_boss  https://freesound.org/people/el_boss/sounds/669918/
+- Wrapping Paper Rustle / Eipeiknip  https://freesound.org/people/Eipeiknip/sounds/344433/
 やること：モノ・60Hzより下をけずる → 切る（出だし4ms・おわり40%をなめらかに）→ ならべる → おわりを消えるように → 約 -20 LUFS（ピークは -1.5 dBFS まで）。
 使いかた：python3 tools/sound/reward_rec.py [名前…]（名前をつけると、その音だけ作る）   さいごに js/audio.js にはる SAMPLES の行を出す。"""
 import os, re, sys, json, hashlib, subprocess, tempfile, urllib.request
@@ -16,7 +18,8 @@ D = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(D, '..', '..'
 URL = {'glock': 'https://cdn.freesound.org/previews/420/420501_5426702-hq.mp3',
        'gleam': 'https://cdn.freesound.org/previews/351/351408_4067257-hq.mp3',
        'pop': 'https://cdn.freesound.org/previews/669/669918_9129912-hq.mp3',
-       'lvup': 'https://cdn.freesound.org/previews/442/442943_71257-hq.mp3'}
+       'lvup': 'https://cdn.freesound.org/previews/442/442943_71257-hq.mp3',
+       'wrap': 'https://cdn.freesound.org/previews/344/344433_3278936-hq.mp3'}
 def run(a):
   r = subprocess.run(a, capture_output=True, text=True)
   if r.returncode: print(r.stderr[-1500:]); sys.exit(1)
@@ -27,6 +30,7 @@ RECIPE = {
   'rwlevel': ([('lvup', 0, 1.7, 0)], 1.7, .4, 1.5),
   'rwfirst': ([('gleam', 1.25, 2.6, 0)], 2.6, .6),
   'wdone': ([('pop', .04, .3, 0)], .3, .1),
+  'gfopen': ([('wrap', 1.03, .6, 0)], .6, .2),
 }
 res = {}
 with tempfile.TemporaryDirectory() as td:

@@ -8,7 +8,7 @@ function roadSearch(sx,sy,block){
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(waterJ(i)&&waterJ(j)&&!solidOf(j))&&!(MZLANE&&MZLANE[j]&&!solidOf(j)&&hiAt(i)===hiAt(j))||block&&block.has(j)||cliffUp(i,j)||seatBackStep(i,j))continue;/* 水の中にいるときは、水の中も歩ける（雲の海は歩けない） *//* いす・ベンチの背もたれのがわからは、乗りおりしない */
-      const fl=S.floor[j],nc=c+(MZLANE&&MZLANE[j]?2:((FWALK[fl]||{}).cost||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1))+(seatJ(j)?SEATCOST:0)+(hiAt(i)-hiAt(j)>=2?FALLCOST*(hiAt(i)-hiAt(j)-1):0);/* とびおりは、ほかに道があればさける *//* 通れる家具の上は、ほかに道がないときだけ *//* 舟の道は、歩く3倍の速さ（重み 6÷3） *//* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
+      const fl=S.floor[j],nc=c+(MZLANE&&MZLANE[j]?2:((FWALK[fl]||{}).cost||6)*(jumpEdge(i,j)&&!clbHop(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1))+(seatJ(j)?SEATCOST:0)+(hiAt(i)-hiAt(j)>=2?FALLCOST*(hiAt(i)-hiAt(j)-1):0);/* とびおりは、ほかに道があればさける *//* 通れる家具の上は、ほかに道がないときだけ *//* 舟の道は、歩く3倍の速さ（重み 6÷3） *//* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -64,11 +64,10 @@ function addPt(pw,r,xp){if(!pw&&!xp)return;/* pw：もらえるパワー、xp：
   S.ptFrac=(S.ptFrac||0)+pw;let n=Math.floor(S.ptFrac+1e-9);S.ptFrac=Math.max(0,S.ptFrac-n);if(!n)return;/* パワーは小数のまま足していき、1たまるごとにふえる */
   S.pt+=n;S.totalPt+=n;if(r){addFloatG(r.x,r.y,-1,'+'+n,'#ecdcbc');typeof juiceFly==='function'&&juiceFly(r.x,r.y,'pt',n)}else if(typeof STATUE!=='undefined'&&STATUE>=0&&typeof juiceFly==='function'&&1)juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',n)}
 const RMCOMBO={t:0,n:0},RMCOMBOMS=900,RMSTEPS=6,RMSEMI=1;/* つづけてこわす：RMCOMBOMS ミリ秒のうちのつぎは、RMSEMI 半音ずつ下げる（RMSTEPS 回まで） */
-const RMFX=[],RMFXMS=240,RMFXUP=8,RMHOLD=90,RMPOP=160;/* RMHOLD・RMPOP：木・岩（hit）は、RMHOLD ミリ秒、白く光って横にふるえてとまり、RMPOP ミリ秒で少しふくらんで消える *//* こわした物の写し：RMFXMS ミリ秒で RMFXUP 点うきあがって、ちぢんで消える（セーブしない） */
+const RMFX=[],RMFXMS=240,RMFXUP=8;/* こわした物の写し：RMFXMS ミリ秒で RMFXUP 点うきあがって、ちぢんで消える（セーブしない） */
 function rmGhost(j){const g=typeof RMGH!=='undefined'?RMGH:null;if(!g||g.j!==j||S.obj[j]===g.o)return;if(RMFX.length>12)RMFX.shift();RMFX.push(Object.assign({t0:performance.now(),S},g))}
-function rmFxMs(f){return f.hit?RMHOLD+RMPOP:RMFXMS}
-function drawRmHit(f,now){const d=now-f.t0;if(d<0||d>=RMHOLD+RMPOP)return;const x=(f.j%W)*TS,bx=x+TS/2,by=f.py+TS*.9,hold=d<RMHOLD,u=hold?0:(d-RMHOLD)/RMPOP,k=1+.15*u,ox=hold?(Math.floor(d/30)%2?1.5:-1.5):0;ctx.save();ctx.globalAlpha*=1-u;ctx.translate(bx+ox,by);ctx.scale(k,k);ctx.translate(-bx,-by);try{drawObj(ctx,f.o,x,f.py,f.j,f.g,now);if(hold){ctx.globalCompositeOperation='lighter';ctx.globalAlpha*=.85;drawObj(ctx,f.o,x,f.py,f.j,f.g,now)}}catch(e){}ctx.restore()}/* 白く光る：同じ絵を「たす」でかさねる（作業用のキャンバスを使わない） */
-function drawRmFx(f,now){if(f.hit)return drawRmHit(f,now);const u=(now-f.t0)/RMFXMS;if(u<0||u>=1)return;const x=(f.j%W)*TS,bx=x+TS/2,by=f.py+TS*.9,k=1-.6*u*u,up=-RMFXUP*(1-Math.pow(1-u,2));ctx.save();ctx.globalAlpha*=1-u*u;ctx.translate(bx,by+up);ctx.scale(k,k);ctx.translate(-bx,-by);try{drawObj(ctx,f.o,x,f.py,f.j,f.g,now)}catch(e){}ctx.restore()}
+function rmFxMs(f){return RMFXMS}
+function drawRmFx(f,now){const u=(now-f.t0)/RMFXMS;if(u<0||u>=1)return;const x=(f.j%W)*TS,bx=x+TS/2,by=f.py+TS*.9,k=1-.6*u*u,up=-RMFXUP*(1-Math.pow(1-u,2));ctx.save();ctx.globalAlpha*=1-u*u;ctx.translate(bx,by+up);ctx.scale(k,k);ctx.translate(-bx,-by);try{drawObj(ctx,f.o,x,f.py,f.j,f.g,now)}catch(e){}ctx.restore()}
 function burst(j,kind,snd){
   const cx=(j%W)*TS+16,cy=((j/W)|0)*TS+18;
   fxSpr(kind==='block'?'dust':kind==='plant'?'petals':'burst',cx,cy);

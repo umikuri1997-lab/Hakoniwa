@@ -557,6 +557,11 @@ def gf_open(w, face):
     r = 0.18*S(w*2)
     return breathe(dict(sN=1.35+r, sF=1.35-r, bN=-0.85, bF=-0.85, lean=0.08, hp=0.18, hy=0.06*S(w)), w, 0.5)
 M('gf_open', 8, 0.9, gf_open)
+def gf_unfold(w, face):
+    """つつみをひらく（1回だけ。ゲームは、ひらく時間の進みぐあいでコマをえらぶ 'ph'）：むねの前でかかえた両手を、左右へひろげて、つつみ紙をひらく。少しのけぞって、中をのぞく"""
+    u = (w/(2*PI)) % 1; k = S(PI/2*min(1, u/0.7))
+    return dict(sN=1.35-0.6*k, sF=1.35-0.6*k, bN=-0.85+1.9*k, bF=-0.85+1.9*k, lean=0.08-0.12*k, hp=0.18+0.06*k, z=0.4*k, top=0.1*k)
+M('gf_unfold', 8, 'ph', gf_unfold)
 def gf_lift(w, face):
     """光にかざす：手前の手を高く上げて、見上げる。少しずつ角度をかえる"""
     return breathe(dict(sN=2.3+0.08*S(w), bN=0.2, tN=0.2*S(w), sF=0.2, bF=-0.3, lean=-0.1, hp=-0.32, hy=0.12*S(w)), w, 0.5)

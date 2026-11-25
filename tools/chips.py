@@ -17,7 +17,7 @@ import sys, json, base64, io, hashlib, os, re, subprocess
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE = 1024   # アトラスの1ページ（ひろげると4MB）。ゲームは使う物のページだけ読むので、小さいほうがむだがない
+PAGE = 512    # アトラスの1ページ（ひろげると1MB）。ゲームは使う物のページだけ読むので、小さいほうがむだがない
 NSFAM = {'iso', 'story', 'crop', 'ani', 'cave', 'fx', 'drop', 'mat', 'cover', 'tex', 'kg', 'sp', 'crit'}
 def fam(k):
     """チップの種類（ページにまとめる単位）：id の : の前（向き・コマ・部品の印はのぞく）。iso: などは2つめまで（屋根は色ごと）"""
@@ -178,8 +178,8 @@ def pack_imgs(head, C):
     from concurrent.futures import ProcessPoolExecutor
     jobs = []
     for n, pg in enumerate(pages):
-        bbox = pg.getbbox(); pg = pg.crop((0, 0, pg.width, bbox[3] if bbox else 1))  # 下のあいた所は切る
         fr = [(x0, y0, w, h, frames[i].convert('RGBA').tobytes()) for i, (pn, x0, y0, w, h) in pos.items() if pn == n]
+        pg = pg.crop((0, 0, pg.width, max([y0 + h for x0, y0, w, h, _ in fr] or [1])))  # 下のあいた所は切る（絵の下はしまで。透明な行も絵のうち）
         jobs.append((pg.size, pg.tobytes(), fr))
     with ProcessPoolExecutor() as ex: datas = list(ex.map(_page_webp, jobs))
     names = []
