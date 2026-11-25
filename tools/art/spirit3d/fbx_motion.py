@@ -13,7 +13,7 @@ import rig
 import fbx_pixel as FP
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FACE_DOWN = 2.0   # 顔を下げる量（ドット）
+FACE_DOWN = 0.0   # 目・ほっぺはモデルの場所のまま（持ち主：目の位置を勝手にかえない）
 F = np.diag([1.0, -1.0, 1.0])   # キャラの座標（前 +y）⇔ Blender（前 −Y）
 
 def blend(R): return F@R@F
@@ -33,6 +33,7 @@ def scene(el):
     for o in meshes:
         names = {g.index: g.name for g in o.vertex_groups}
         dom[o.name] = [names.get(max(v.groups, key=lambda g: g.weight).group, '') if v.groups else '' for v in o.data.vertices]
+    restV = {o.name: np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices])*100 for o in meshes}   # 休みのポーズの点（ドット）
     comp = {}   # 木のずきん：はなれた かたまり（いちばん大きい物のほかは 葉脈）
     from scipy.sparse import coo_matrix
     from scipy.sparse.csgraph import connected_components
@@ -49,6 +50,7 @@ def scene(el):
         Q = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith(pre)])*100
         for sgn in (-1, 1):
             q = Q[np.sign(Q[:, 0]) == sgn]; feat.append(np.array([q[:, 0].mean(), q[:, 1].min(), q[:, 2].mean()]))
+    HV = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith('head') and not o.name.lower().startswith('headacc')])*100   # 顔（Head）の点（休み・ドット）
     rest = {b.name: np.array(b.matrix_local) for b in arm.data.bones}   # アーマチュアの空間（m）
     order = []
     def walk(b):
@@ -56,7 +58,7 @@ def scene(el):
         for c in b.children: walk(c)
     for b in arm.data.bones:
         if b.parent is None: walk(b)
-    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0, feat=feat)
+    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0, feat=feat, HV=HV, restV=restV)
     return _CUR
 
 def rigid(R, pivot, t=(0, 0, 0)):
@@ -77,7 +79,9 @@ def pose(el, p, face):
     T = {}
     for nm in rest:
         if nm in ('root',): T[nm] = np.eye(4)
-        elif nm in ('neck', 'head', 'hood_tip'): T[nm] = Th
+        elif nm in ('neck', 'head'): T[nm] = Th
+        elif nm == 'hood_tip':   # 頭の上の物：根もとで、よこへゆれる（top）
+            tb = F@rest['hood_tip'][:3, 3]*100; T[nm] = Th@rigid(ry(g('top')), tb)
         elif nm.startswith(('thigh', 'shin', 'foot')):
             s = 'M' if nm.endswith('.R') else 'P'   # ゲームの M はキャラの −x（モデルの .R）
             hip = F@rest['thigh'+nm[nm.index('.'):]][:3, 3]*100
@@ -87,6 +91,9 @@ def pose(el, p, face):
             near = side == NEARSIDE[face]; k = 'N' if near else 'F'
             Rd = ry(side*math.pi/2)   # 横へのびたうで（side·x）→ まっすぐたらしたうで（−z）
             sh = F@rest['upper_arm'+nm[nm.index('.'):]][:3, 3]*100
+            if 'ik'+k in p:   # 家具の高さに合わせる作業：手のまん中を ik の所に置く（2本の骨の IK）
+                T[nm] = ikarm(S, Tb, p['ik'+k], side, nm)
+                continue
             # 頭にめりこむときは、めりこまなくなるまで、うでを外へ開く（b を足す）
             Thi = np.linalg.inv(Th); lift = 0.0
             for _ in range(16):
@@ -105,6 +112,33 @@ def pose(el, p, face):
         bpy.context.view_layer.update()
     S['T'] = T
     return T
+
+def align(a, b):
+    """向き a を 向き b にする、いちばん小さい回転"""
+    a = a/np.linalg.norm(a); b = b/np.linalg.norm(b); v = np.cross(a, b); c = float(a@b); sn = np.linalg.norm(v)
+    if sn < 1e-9: return np.eye(3) if c > 0 else rz(math.pi)
+    K = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])/sn; t = math.atan2(sn, c)
+    return np.eye(3)+math.sin(t)*K+(1-math.cos(t))*K@K
+
+def armpts(S, side):
+    """休みのうでの点（キャラの座標・ドット）：かた・ひじ・手のまん中"""
+    sfx = '.L' if side > 0 else '.R'; R = S['rest']; A = S['arm'].data.bones
+    sh = F@R['upper_arm'+sfx][:3, 3]*100; el = F@R['forearm'+sfx][:3, 3]*100
+    hm = F@((R['hand'+sfx][:3, 3]+np.array(A['hand'+sfx].tail_local[:]))/2)*100
+    return sh, el, hm
+
+def ikarm(S, Tb, P, side, nm):
+    """2本の骨の IK：かた（体といっしょに動いた所）から、手のまん中を P に。ひじは 下・うしろ・外 へまげる"""
+    sh, el0, hm0 = armpts(S, side); L1 = np.linalg.norm(el0-sh); L2 = np.linalg.norm(hm0-el0)
+    Sc = F@(Tb@np.r_[F@sh*0.01, 1])[:3]*100; P = np.asarray(P, float)
+    v = P-Sc; dd = max(1e-6, np.linalg.norm(v)); t = v/dd; d = min(max(dd, abs(L1-L2)+0.05), L1+L2-0.05)
+    q = np.array([side*0.6, -0.5, -0.6]); qp = q-t*(q@t); qp = qp/max(1e-6, np.linalg.norm(qp))
+    ca = (L1*L1+d*d-L2*L2)/(2*L1*d); a = math.acos(max(-1, min(1, ca)))
+    E = Sc+L1*(math.cos(a)*t+math.sin(a)*qp); Pc = Sc+t*d
+    R1 = align(el0-sh, E-Sc)
+    if nm.startswith('upper_arm'): return rigid(R1, sh, Sc-sh)
+    R2 = align(R1@(hm0-el0), Pc-E)@R1
+    return rigid(R2, el0, E-el0)
 
 def triangles(el, eyes=True):
     """いまのポーズのメッシュの三角形（ドット・Blender の向きのまま）・色・材質・種類（fbx_pixel.TAGS）。eyes=False：目・ほっぺのメッシュは写さない（表情の目をゲームでかさねる）"""
@@ -125,21 +159,54 @@ def triangles(el, eyes=True):
             if el == 'wood' and cp is not None and cp[0][i[0]] != cp[1]: col = FP.hx('#c9ef9b')   # 木の葉脈：明るい黄緑
             tag = 'face' if ln.startswith('head') and not ln.startswith('headacc') else 'head' if ln.startswith(('hood', 'headacc', 'sprout', 'eye', 'cheek')) \
                 else 'arm' if ln == 'body' and dom[i[0]].startswith(('upper_arm', 'forearm', 'hand')) else 'body'
-            out.append((V[i], N[i], col, mat, tag))
+            out.append((V[i], N[i], col, mat, tag, S['restV'][o.name][i]))
         ev.to_mesh_clear()
     return out
 
 _OLD = {}
 def props(el, p, face):
-    """道具の点（rig.posed と同じ場所。キャラの座標 → Blender の向き）と色"""
-    sp = _OLD.get('sp') or _OLD.setdefault('sp', Spirit('wood'))
-    parts, anc = rig.posed(sp, face, p)
-    out = []
-    for nm, (P, C, kind) in parts.items():
-        if kind == 'p': out.append((np.asarray(P)@F, np.asarray(C)))
+    """道具の点（Blender の向き・ドット）と色、道具の先（キャラの座標）。道具は、モデルの手の骨といっしょに動く
+    （うでの座標 u：かたから手・v：たらしたときの外・w：前 を、横へのびた休みのうでに置いて、手の骨の動きをかける。手のまん中が rig.HANDU）"""
+    import props as PR
+    S = scene(el); T = S['T']; out = []; anc = {}
+    for key, k in (('prop', 'N'), ('propF', 'F')):
+        pn = p.get(key)
+        if not pn: continue
+        side = NEARSIDE[face] if k == 'N' else -NEARSIDE[face]; sfx = '.L' if side > 0 else '.R'
+        sh, el0, hm0 = armpts(S, side); du = np.linalg.norm(hm0-sh)-rig.HANDU[0, 0]
+        (P, C), fx = PR.prop(pn); kw = p.get('k'+k, 0.0)
+        if kw: P = rig.wrist(P, kw); fx = {a: (v if a == 'up' else rig.wrist(v[None], kw)[0]) for a, v in fx.items()}
+        def put(U):
+            U = np.atleast_2d(U); Q = sh+np.stack([side*(U[:, 0]+du), U[:, 2], U[:, 1]], 1)   # 休みの うで（キャラの座標）
+            M = T['hand'+sfx]; W = (M@np.c_[(Q@F)*0.01, np.ones(len(Q))].T).T[:, :3]*100   # Blender（ドット）
+            return W
+        Wp = put(P); hc = put(rig.HANDU)[0]
+        if 'up' in fx:   # たいらに持つ道具：道具の「上」を、まうえへ
+            u0 = put(rig.HANDU[0]+fx['up'])[0]-hc; u0 = u0/np.linalg.norm(u0); R = align(u0, np.array([0, 0, 1.0]))
+            Wp = (Wp-hc)@R.T+hc
+        out.append((Wp, np.asarray(C)))
+        for a, v in fx.items():
+            if a == 'up': continue
+            w_ = put(v)[0]
+            if 'up' in fx: w_ = (w_-hc)@R.T+hc
+            anc[a+k] = F@w_   # キャラの座標
     return out, anc
 
 def frame(el, p, face):
     pose(el, p, face)
     pts, anc = props(el, p, face)
     return FP.render(triangles(el), face, points=pts, spin=p.get('spin', 0.0))
+
+def face_pt(el, x, z):
+    """顔（Head）の、正面から見て (x, z) の所の、いちばん前（Blender の −Y）の点（休み・ドット）"""
+    HV = scene(el)['HV']; r = 1.5
+    while True:
+        m = (np.abs(HV[:, 0]-x) < r) & (np.abs(HV[:, 2]-z) < r)
+        if m.any(): return np.array([x, HV[m, 1].min(), z])
+        r *= 1.5
+
+def face_fit(el):
+    """休みの顔の点（Blender・ドット）→ 表情の目のチップの場所 (u, v)。モデルの両目のまん中・あいだを、チップの目（±9.5, −40.5）に合わせる"""
+    F4 = scene(el)['feat']; L, R = F4[0], F4[1]; mx, mz = (L[0]+R[0])/2, (L[2]+R[2])/2; s = 19.0/max(1e-6, abs(R[0]-L[0]))
+    yc = scene(el)['HV'][:, 1].mean()   # 頭のまん中（前うしろ）。それより前（Blender の −Y）の面にだけはる（うしろの面に目を出さない）
+    return lambda P: ((P[:, 0]-mx)*s, -40.5-(P[:, 2]-mz)*s, P[:, 1] < yc)
