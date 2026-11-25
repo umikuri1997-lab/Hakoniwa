@@ -163,24 +163,34 @@ let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたと
 }
 const iconCache={};
 let ICONTMP=null;
+const ITIP=ITIA.p.map(u=>{const a={im:new Image(),ok:0,bad:0};a.im.onload=()=>{a.ok=1;icWaitDone()};a.im.onerror=()=>{a.bad=1;icWaitDone()};a.im.src=u;return a});/* 物のアイコンのアトラス（tools/art/item_icons.cjs が先に作る）。はじめに読んで、マップを開く前にそろえる（assetsOK） */
 const ICWAIT={};/* チップのページを読みこみ中に作ったアイコン：id → かりの空の絵の URL */
 function icPend(){for(const k in CHA){const a=CHA[k];if(!a.ok&&!a.bad&&!a.fr)return true}return false}/* 読みこみ中のチップのページがあるか */
 function icWaitURL(k){return ICWAIT[k]||(ICWAIT[k]="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='144'><!--"+encodeURIComponent(k)+"--></svg>")}
 function icWaitDone(){for(const id in ICWAIT){const w=ICWAIT[id],u=id.startsWith('st_')?stampIcon(id.slice(3)):iconURL(id);if(u===w)continue;delete ICWAIT[id];for(const im of document.querySelectorAll('img'))if(im.getAttribute('src')===w)im.src=u}}/* チップのページを読みおわったら、メニューに出ているかりの絵を、ほんとうのアイコンに */
-function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細かさで描いてから、絵のある範囲だけを切り出して、144×144にきちんと入れる（全体がうつる） */
+function iconDraw(id){/* アイコンのもとの絵を、大きなキャンバス（ICONTMP）に2倍の細かさで描く。返す：絵のある範囲 [x0,y0,はば,高さ]（何もなければ はば0）・チップのページを読みこみ中なら null */
+  const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
+  const p0=CHPN;ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
+  if(CHPN>p0)return null;/* チップのページを読みこみ中：とちゅうの絵（コードの仮の絵・影だけ）でアイコンを作らない */
+  const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0)return icPend()?null:[0,0,0,0];/* 何も描けなかった：読みこみ中なら、ページを待つ */
+  return [x0,y0,x1-x0+1,y1-y0+1]}
+let ICONCUT=null;
+function iconFit(src,x0,y0,bw,bh){/* もとの絵の、絵のある範囲だけを、144×144にきちんと入れる（全体がうつる。画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで。はじめに、その範囲だけの絵に切り出してから、ちぢめる（アトラスからでも、その場で描いた絵からでも、ドットまで同じになる。アトラスのとなりの絵がまざらない） */
+  const c=document.createElement('canvas');c.width=144;c.height=144;
+  if(bw>0){const k=ICONCUT||(ICONCUT=document.createElement('canvas'));k.width=bw;k.height=bh;const kg=k.getContext('2d');kg.imageSmoothingEnabled=false;kg.drawImage(src,x0,y0,bw,bh,0,0,bw,bh);
+    const g=c.getContext('2d'),sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(k,0,0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh);k.width=k.height=0}
+  const u=c.toDataURL();c.width=c.height=0;return u}
+function iconCube3(src,x,y){/* つむブロックのアイコン（48ドット）を、3倍のドット絵で144に */const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(src,x,y,48,48,0,0,144,144);const u=c.toDataURL();c.width=c.height=0;return u}
+function iconURL(id){/* 物のアイコン（144×144 の絵の URL）。先に作ってある物（js/item-icons.js。tools/art/item_icons.cjs）は、アトラスから切り出すだけ。アトラスにない物・読めなかったときだけ、その場で作る */
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
   if(BL[id]&&BL[id].g)return gearIcon(id);/* そうび・矢：ドット絵 */
   if(iconCache[id])return iconCache[id];
+  const e=ITIA.m[id];if(e){const pg=ITIP[e[0]];if(pg.ok){delete ICWAIT[id];return iconCache[id]=e[5]?iconCube3(pg.im,e[1],e[2]):iconFit(pg.im,e[1],e[2],e[3],e[4])}if(!pg.bad)return icWaitURL(id)}/* アトラスを読みこみ中：かりの空の絵。読みおわったら icWaitDone が、出ている絵を入れかえる */
   if(typeof PICKB!=='undefined'&&PICKB.includes(id)){const u=cubeIcon(id);if(u)iconCache[id]=u;return u}/* つむブロック：マイクラのような、ななめから見た立方体 */
-  const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
-  const p0=CHPN;ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
-  if(CHPN>p0)return icWaitURL(id);/* チップのページを読みこみ中：とちゅうの絵（コードの仮の絵・影だけ）でアイコンを作らない。とっておかず、id ごとのかりの空の絵。読みおわったら icWaitDone が、出ている絵を入れかえる */
-  const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
-  if(x1<0&&icPend())return icWaitURL(id);/* 何も描けなかった：ページを待つ */
-  const c=document.createElement('canvas');c.width=144;c.height=144;
-  if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
-  const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;
+  const r=iconDraw(id);if(!r)return icWaitURL(id);/* チップのページを読みこみ中：とっておかず、id ごとのかりの空の絵 */
+  return iconCache[id]=iconFit(ICONTMP,r[0],r[1],r[2],r[3]);
 }
 const INVMOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc',kinoko:'kinoko'};/* 持ち物の素材のうち、絵のファイルがない物は、その草の絵（ui.js の持ち物） */
 const ICWARM={ms:4,gap:1000,t:0,q:[]};/* 持ち物のアイコンを、ゲームの手があいているときに先に作っておく（持ち物を開いたときにその場で作らない）。1コマに ms ミリ秒まで・持っている物の一覧は gap ミリ秒ごとに見なおす */
