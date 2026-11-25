@@ -25,7 +25,7 @@ function cvHoneTick(){const C=CV,H=C.hone;if(!H||H.seen||cvHoneCount()>=CVHONEN)
   for(const j of H.V)if(C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<=4)){H.seen=true;toast('大穴の橋が、とぎれている。ほねを、まもりの光でくずして、組めそう');return}}
 /* ---------- 絵（仮のドット絵） ---------- */
 /* ほねの橋（地面にはる。ゲームの点で1マス）：大きなほねを、よこにならべた橋 */
-function cvHoneBridgeDraw(x,y){const C=CV,j=cvJ(x,y),ox=x*TS,oy=(y+CVOY)*TS,F=(c,a,b,w,h)=>P4(c,ox+a,oy+b,w,h),h=n=>hash((j*11+n*37+7)>>>0);
+function cvHoneBridgeDraw(x,y){const j=cvJ(x,y),ox=x*TS,oy=(y+CVOY)*TS,F=(c,a,b,w,h)=>P4(c,ox+a,oy+b,w,h),h=n=>hash((j*11+n*37+7)>>>0);
   F('#4a4034',0,0,TS,TS);F('#7a6e58',0,2,TS,TS-4);
   for(let i=0;i<4;i++){const yy=2+i*7;F('#b8a888',0,yy,TS,3);F('#e8dcc0',0,yy,TS,1);F('#e8dcc0',((h(i)*20)|0),yy+1,9,2);F('#8a7a62',((h(i+4)*20)|0)+3,yy+2,3,1)}/* よこたわる、ほね */
   F('#5a4e42',0,(h(9)*TS)|0,TS,1);if(h(10)<.5){F('#e8dcc0',(h(11)*22)|0,(h(12)*22)|0,4,2)}/* ひび・かけら */

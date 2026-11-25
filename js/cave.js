@@ -558,7 +558,7 @@ function cvLos(x0,y0,x1,y1){/* マスのまん中からまん中へ。とちゅ�
   const n=Math.ceil(Math.hypot(x1-x0,y1-y0)*3);for(let i=1;i<n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n,j=cvJ(x|0,y|0);if(j===cvJ(x1|0,y1|0))break;if(j!==cvJ(x0|0,y0|0)&&cvOpaque(j))return false}return true}
 function cvReveal(cx,cy,R){const C=CV;for(let y=Math.max(0,Math.floor(cy-R));y<=Math.min(CVH-1,Math.ceil(cy+R));y++)for(let x=Math.max(0,Math.floor(cx-R));x<=Math.min(CVW-1,Math.ceil(cx+R));x++){const j=cvJ(x,y);if(C.seen[j]||Math.hypot(x+.5-cx,y+.5-cy)>R)continue;if(cvLos(cx,cy,x+.5,y+.5))C.seen[j]=1}}
 /* 道さがし：goal(j) が true のマスまで。かえす：マスのならび（いまのマスはのぞく）。行けなければ null */
-function cvBfs(sj,goal){const C=CV,prev=new Int32Array(CVW*CVH).fill(-2),q=[sj];prev[sj]=-1;
+function cvBfs(sj,goal){const prev=new Int32Array(CVW*CVH).fill(-2),q=[sj];prev[sj]=-1;
   for(let h=0;h<q.length;h++){const j=q[h];if(goal(j)){const p=[];for(let k=j;k!==sj;k=prev[k])p.push(k);return p.reverse()}
     const x=cvX(j),y=cvY(j);for(const[dx,dy]of DIRS){let a=x+dx,b=y+dy;if(a<0||b<0||a>=CVW||b>=CVH)continue;let k=cvJ(a,b);if(!cvWalk(k)||!cvStepOK(j,k))continue;
       if(prev[k]!==-2)continue;prev[k]=j;q.push(k)}}return null}
@@ -879,7 +879,6 @@ const CVTHEMES={
   ro:{name:'神の創造炉',out:'void',deco:{roots:.2,plant:.02,plants:[0,1,9],edge:[1,9],vine:.12,gmoss:.01,big:.03},glow:'#ff9a50',moss:.05,ptex:'pebble',mossc:['#1c1210','#2e1c16','#402820','#563428','#6e4434','#8a5a44'],crys:null,rock:['#14100e','#2a1c18','#3e2a22','#54382c','#6c4838','#88604a'],floor:['#34281f','#5c4636','#624c3b','#685240','#705a46','#8a7258'],water:['#d8eedc','#8cc8b0','#4c8e80','#2a5a54','#bfe8d8'],void:'#0a0605',dark:'10,5,4'}};/* 10階：いちばんおくの、神をつくる炉（すすとおき火の色） */
 const cvTheme=()=>CVTHEMES[CV.F.theme]||CVTHEMES.roots;
 const cvRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
-const cvMix=(a,b,t)=>{const p=cvRGB(a),q=cvRGB(b);return '#'+p.map((v,i)=>Math.round(v+(q[i]-v)*t).toString(16).padStart(2,'0')).join('')};
 /* 絵のチップを、こさの番号で読めるようにする（1回だけ）。読みこみ中なら null */
 function cvTexData(){const C=CV;if(C.tx)return C.tx;const T={};for(const k of['cols','ccols','ground','moss','caus','pebble']){const id='cave:'+k,ch=cvChipOf(id);if(!ch)continue;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
     const d=im.getContext('2d').getImageData(0,0,im.width,im.height).data,L=new Int8Array(im.width*im.height);for(let i=0;i<L.length;i++)L[i]=d[i*4+3]?Math.min(5,Math.round(d[i*4]/50)):-1;
@@ -921,7 +920,7 @@ function cvToneChip(id,R,key){const c=cvToneImg(id,R,key);if(!c)return null;if(!
 /* 水晶の形 cave:crys#m（0 小さい1本・1と2 かたまり・3 細長い1本・4 とても大きなかたまり・5 ひくいかたまり・6 おうぎ・7 かけら） */
 const CVCRYSM=[0,1,2,3,4,5,7,1,2,3,4,5,1,2,3,0,5,4,2,6];/* かべぎわの水晶の形（大きな物が多め。おうぎの3本 6 は、自然に見えないので少しだけ。持ち主） */
 const CVCRYSP=[0,3,5,7,7,0,5,3];/* 床のまだらの上の水晶の形（小さな物が多め。おうぎ 6 は使わない） */
-function cvDrawDeco(d,now){const C=CV,ox=cvX(d.j)*TS+d.dx,oy=(cvY(d.j)+CVOY)*TS,t=now/1000+d.j;
+function cvDrawDeco(d,now){const ox=cvX(d.j)*TS+d.dx,oy=(cvY(d.j)+CVOY)*TS,t=now/1000+d.j;
   if(d.k==='crys'){const c=cvToneChip('cave:crys#'+d.m,cvTheme().crys[d.v],'c'+d.v+'_'+d.m);if(c)isoLocal(d.flip?{sx:-1,sy:1}:null,()=>drawChip(ctx,c,'cave:crys#'+d.m,ox,oy+(d.dy||0),now));/* 左右反対は、足もとのまわりで（isoLocal） */
     const p=(t*.6)%2.6;if(p<.6){const s=Math.sin(p/.6*Math.PI),q=cvTheme().crys[d.v][5];ctx.globalAlpha=s;const sx=ox+4+((d.j*7)%24),sy=oy-8+((d.j*3)%18);P4(q,sx,sy,1,1);if(s>.6){P4(q,sx-1,sy,3,1);P4(q,sx,sy-1,1,3)}ctx.globalAlpha=1}return}/* きらっ */
   if(d.k==='shroom'){if(d.flip){ctx.save();ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}isoLocal(d.flip?{sx:-1,sy:1}:null,()=>cvChip(ctx,'cave:kinoko#'+d.v,ox,oy,now));if(d.flip)ctx.restore();const p=(t*.35)%1;ctx.globalAlpha=Math.sin(p*Math.PI)*.8;P4('#b6fff0',ox+14+Math.round(Math.sin(t*2)*4),oy-6-Math.floor(p*20),1,1);P4('#b6fff0',ox+4+Math.round(Math.cos(t*1.7)*3),oy+2-Math.floor(((p+.5)%1)*14),1,1);ctx.globalAlpha=1;return}

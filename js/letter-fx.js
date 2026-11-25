@@ -68,7 +68,7 @@ function letterRead(l){/* 手紙を読む（便せんの紙）。はじめて読
   let typing=null,shown=false,gave=!!l.got;
   const giftNow=()=>{if(shown)return;shown=true;letterSecret(l,fresh);if(!l.g)return;gp.hidden=false;gp.textContent=(gave&&!fresh?'入っていた：':'いっしょに入っていた：')+giftName(l.g);if(fresh)setTimeout(()=>letterPack(l),420)};/* はじめて読んだ手紙のお礼の品は、つつみをあける（letterPack） */
   const allText=()=>{for(const p of P)p.textContent=p.dataset.t;typing=null;giftNow()};
-  const type=()=>{let i=0,c=0;const N=P.map(p=>p.dataset.t.length),sum=N.reduce((a,v)=>a+v,0),t0=performance.now();typing=1;const go=()=>{if(!typing)return;const n=Math.min(sum,Math.floor((performance.now()-t0)/LTYPE));let r=n;for(let k=0;k<P.length;k++){P[k].textContent=P[k].dataset.t.slice(0,Math.max(0,Math.min(N[k],r)));r-=N[k]}if(n>=sum)return allText();requestAnimationFrame(go)};go()};
+  const type=()=>{const N=P.map(p=>p.dataset.t.length),sum=N.reduce((a,v)=>a+v,0),t0=performance.now();typing=1;const go=()=>{if(!typing)return;const n=Math.min(sum,Math.floor((performance.now()-t0)/LTYPE));let r=n;for(let k=0;k<P.length;k++){P[k].textContent=P[k].dataset.t.slice(0,Math.max(0,Math.min(N[k],r)));r-=N[k]}if(n>=sum)return allText();requestAnimationFrame(go)};go()};
   if(fresh&&l.g&&!l.got){l.got=1;giftGive(l.g)}/* お礼の品は、ひらいたときにうけとる（とちゅうでとじても、なくならない） */
   const close=()=>{if(typing)allText();letterSecret(l,fresh);l.read=1;o.remove();if(sheet==='inv'||sheet==='menu')renderSheet()};
   o.querySelector('.x').onclick=e=>{e.stopPropagation();sfx('tap');close()};o.onclick=e=>{if(typing){allText();return}if(e.target===o&&!anim)close()};

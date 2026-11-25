@@ -80,7 +80,7 @@ function volBeat(c){
   case 'ashiyu':{const[sx,sy]=HSPC.b,b1=volNear(['bench','takebench'],sx,sy,10),b2=volNear(['bench','takebench'],sx,sy,10,b1),done=volTask(d,30000);let n=0;const one=()=>{if(++n===2)done(900);};volShot([[sx,sy]],[h,s]);
     const seat=(r,b,dx)=>{if(!r)return one();const[x,y]=b>=0?volXY(b):[sx+dx,sy+1.5];volWalk(r,x,y,{side:true},()=>volHop(r,x,y-.05,320,()=>{volFace(r,sx);volPose(r,'storyListen',600000,{sit:true});one();}));};seat(h,b1,-1);seat(s,b2,1);break;}
   case 'ripple':{if(!s)break;volFx('ripple',2200,{x:s.x+(s.face||1)*.35,y:s.y+.35});sfx('wave');volHold(1000);break;}
-  case 'scaredS':{if(!s)break;const vx=VOLJ%W+.5,vy=OFF+2;volFace(s,vx);volPose(s,'stepBack',900,{});villageTimeout(()=>volPose(s,'tremble',600000,{}),900);
+  case 'scaredS':{if(!s)break;const vx=VOLJ%W+.5;volFace(s,vx);volPose(s,'stepBack',900,{});villageTimeout(()=>volPose(s,'tremble',600000,{}),900);
     if(h){const done=volTask(d,30000);volWalk(h,s.x,s.y-1,{},()=>{volPose(h,'shield',600000,{back:true});volShot([[s.x,s.y-2.5]],[h,s],2.4,1);done(900);});}volShot([[s.x,s.y-2.5]],[h,s]);volHold(1000);break;}/* 山のほう（北）をすこし入れる */
   case 'pointDevice':{if(!s)break;const[x,y]=volXY(D2);volFace(s,x);volPose(s,'point',600000,{});volShot([[x,y]],[s,h],2.2,1);volHold(1200);break;}
   case 'ashFall':{volFx('ashFall',600000,{n:36});volShot([],[h,s],2.2,1);volHold(700);break;}

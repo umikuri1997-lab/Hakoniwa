@@ -124,7 +124,7 @@ function evEnd(){const E=S.ev,D=EVENTS[E.id];if(E.tr)for(const t of E.tr)if(!t.g
     if(show){const L=[up.length?up.join('・'):'たのしかった！','たのしさ+'+fn];if(X[r.id])L.push(X[r.id]);tags.push({r,L});return}
     villageTimeout(()=>{if(!S.res.includes(r))return;JUMP.set(r,performance.now());addFloatG(r.x,r.y,-1.6,up.length?up.join('・'):'たのしかった！','#ffe7a8')},300+i*350)});
   if(show){evAfter(E,P);evShowEnd(E,tags)}
-  if(D.cup){const nm=id=>(S.res.find(q=>q.id===id)||{}).name||'',top=[0,1,2].map(i=>P.filter(r=>cupPlace(E,R,r.id)===i).map(r=>r.name).join('・')).map((n,i)=>n?(i+1)+'位 '+n:'').filter(Boolean);memo('',D.n+'：'+top.join('　'));toast(D.n+'　'+top.join('　'),'good');sfx('level');if(typeof cupAward==='function'){cupLoot(E,P);cupAward(E,P,R)}/* 作った物・とれた物と、表彰台（cup.js） */
+  if(D.cup){const top=[0,1,2].map(i=>P.filter(r=>cupPlace(E,R,r.id)===i).map(r=>r.name).join('・')).map((n,i)=>n?(i+1)+'位 '+n:'').filter(Boolean);memo('',D.n+'：'+top.join('　'));toast(D.n+'　'+top.join('　'),'good');sfx('level');if(typeof cupAward==='function'){cupLoot(E,P);cupAward(E,P,R)}/* 作った物・とれた物と、表彰台（cup.js） */
     P.filter(r=>cupPlace(E,R,r.id)===0).forEach(r=>villageTimeout(()=>{if(S.res.includes(r))JOYU.set(r,performance.now()+4000)},200));return}
   if(D.bday)return toast(D.n+'がおわった！','good'),sfx('good');
   memo('',D.n+'をした');toast(D.n+'がおわった！'+(P.length?'　'+evGainTxt(E.id):''),'good');sfx('good')}
@@ -193,7 +193,7 @@ function evMorning(){if(!S||S.free&&false)return;const d=dayNo();
   villageTimeout(()=>toast('きょうは、'+EVENTS[id].n+'！','good'),2600)}
 /* 大会の場所：まっすぐのコース（よこ L マス × たて n 行。かけっこ・リレー）／ひろば（すもう・ものづくり） */
 function evTrack(G,cx,cy,n,L){let best=null,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>50)continue;const x=j%W,y=(j/W)|0;if(x+L>=W||y+n>=H)continue;const h0=hiAt(j);let ok=true;for(let b=0;b<n&&ok;b++)for(let a=0;a<L;a++){const k=(y+b)*W+x+a;if(!walk(k)||S.obj[k]||S.ground[k]||hiAt(k)!==h0||G.dist[k]<0||sacredNoBuild(k)){ok=false;break}}if(!ok)continue;const s=Math.hypot(x+L/2-cx,y+n/2-cy);if(s<bd){bd=s;best={x,y}}}return best}
-function cupStart(E,L,G,tx,ty){const D=EVENTS[E.id];E.sc={};E.order=[];
+function cupStart(E,L,G,tx,ty){E.sc={};E.order=[];
   if(E.id==='cup0'||E.id==='cup3'){const n=Math.min(L.length,8),len=E.id==='cup0'?10:7;let t=evTrack(G,tx,ty,n,len),m=n;if(!t){for(m=n-1;m>=2&&!t;m--)t=evTrack(G,tx,ty,m,len);m++}if(!t)return false;E.tk={x:t.x,y:t.y,n:m,len};
     L.forEach((r,i)=>{E.slot[r.id]=(t.y+i%m)*W+t.x;E.lane=E.lane||{};E.lane[r.id]=i%m});E.c=[t.x+len/2,t.y+m/2];return true}
   if(EVENTS[E.id].need)return cupNearStart(E,L,G,tx,ty);/* 木こり・釣り・採掘：木・水・岩のとなり（cup.js） */

@@ -32,7 +32,6 @@ function juiceHouseDraw(now){for(let i=JHS.length-1;i>=0;i--){const H=JHS[i],e=n
 /* ---------- 2. さいごの一撃のヒットストップ ---------- */
 function juiceStop(r,n0){/* juiceBreak から。n0：その一撃の前の fx の数（そのあとに入れた絵と粒を、一瞬とめる） */const now=performance.now(),w=now+JSTOPMS;for(let i=Math.max(0,n0);i<fx.length;i++){fx[i].w0=w;if(fx[i].k==='spr')fx[i].jit=1}if(r)JSTOPR.set(r,now)}
 function juiceStopOff(r,now){const t=JSTOPR.get(r);if(t==null)return 0;const d=now-t;if(d<0||d>JSTOPMS+60)return 0;return(Math.floor(d/30)%2?1:-1)*(d<JSTOPMS?1.5:.75)}/* とまっているあいだ、左右にふるえる */
-function fxWaiting(f,now){return f.w0!=null&&now<f.w0}
 
 /* ---------- 3. つづけてしまう音 ---------- */
 function juiceStoreNote(){/* juiceFly から（食べ物・素材）。かえす数：とどいたときに鳴らす音の高さ（半音） */const now=performance.now(),C=JSTORE;if(now-C.t<JSTORECOMBO)C.n++;else C.n=0;C.t=now;return JUICE_SCALE[Math.min(C.n,JUICE_SCALE.length-1)]}

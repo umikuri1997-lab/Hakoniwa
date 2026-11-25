@@ -12,7 +12,6 @@ const IQRING=IQH/IQW*IQSX/IQSY;/* 地面の輪（たて:よこ）：ひし形の
 const IQFOGH=1.5,IQFOGN=8;/* 霧のあつみ（段の数）と、かさねる枚数 */
 /* マス j の段（0 より下は 0） */
 function isoLv(j){return j>=0&&j<W*H?Math.max(0,hiAt(j)):0}
-function isoLvAt(wx,wy){if(caveOn())return cvqLvAt(wx,wy);/* 洞窟（iso-cave.js） */return isoLv(clamp(Math.floor(wy/TS),0,H-1)*W+clamp(Math.floor(wx/TS),0,W-1))}
 /* 地面の描き方を、段 lv の高さに */
 function isoGroundLv(c,lv){groundTf(c,dpr*cam.z);if(lv)c.translate(-lv*IQD,-lv*IQD)}
 /* 地面の物を描くとき、せかいの点の y からひく高さ（クォータービューは0。段は isoGroundLv でつける） */

@@ -54,8 +54,8 @@ function pzSlide(done){const o=pzShell(PZNAME.slide,'石をタップして、空
     if(Math.abs((e0%N)-x)+Math.abs(((e0/N)|0)-y)!==1){pzSnd('knockw',.3);return}b[e0]=b[i];b[i]=8;pzSnd('tstone',.55);draw();if(b.join()==='0,1,2,3,4,5,6,7,8'){ok=true;draw();pzSolved(o,done)}});
   o.querySelector('.rs').onclick=()=>{sfx('tap');reset();draw()};reset();draw()}
 /* ---------- 3. 箱入り娘（4×5） ---------- */
-function pzKlotski(k,done){const o=pzShell(PZNAME[k],'木の駒をゆびですべらせて、大きな駒を下の口から出そう');const T=12,Wd=4*T+6,Hd=5*T+8,K=pzK(Wd)>5?5:pzK(Wd),c=pzCanvas(o,Wd,Hd,K),g=c.getContext('2d');let P,ok=false,drag=null,moves=0;
-  const reset=()=>{P=KHLAY[k].map(p=>p.slice());moves=0};
+function pzKlotski(k,done){const o=pzShell(PZNAME[k],'木の駒をゆびですべらせて、大きな駒を下の口から出そう');const T=12,Wd=4*T+6,Hd=5*T+8,K=pzK(Wd)>5?5:pzK(Wd),c=pzCanvas(o,Wd,Hd,K),g=c.getContext('2d');let P,ok=false,drag=null;
+  const reset=()=>{P=KHLAY[k].map(p=>p.slice())};
   const occ=(skip)=>{const a=Array(20).fill(-1);P.forEach((p,i)=>{if(i===skip)return;for(let y=0;y<p[3];y++)for(let x=0;x<p[2];x++)a[(p[1]+y)*4+p[0]+x]=i});return a};
   const draw=()=>{g.clearRect(0,0,Wd,Hd);pzBevel(g,0,0,Wd,Hd,'#a8743f','#c99a68','#6e4527');g.fillStyle='#5c3a22';g.fillRect(3,3,4*T,5*T);g.fillStyle='#f4e9d2';g.fillRect(3+T,3+5*T,2*T,Hd-3-5*T);/* 下の口 */
     P.forEach((p,i)=>{const x=3+p[0]*T,y=3+p[1]*T,w=p[2]*T,h=p[3]*T;if(i===0){pzBevel(g,x+1,y+1,w-2,h-2,'#e9a65a','#ffd9a0','#a86a2c');g.fillStyle='#fff3c8';g.fillRect(x+w/2-2,y+h/2-2,4,4);g.fillStyle='#f6b84a';g.fillRect(x+w/2-1,y+h/2-1,2,2)}/* 大きな駒：ヌシ様の光の印 */
@@ -63,7 +63,7 @@ function pzKlotski(k,done){const o=pzShell(PZNAME[k],'木の駒をゆびです�
   c.addEventListener('pointerdown',e=>{if(ok)return;const r=c.getBoundingClientRect(),x=Math.floor(((e.clientX-r.left)/K-3)/T),y=Math.floor(((e.clientY-r.top)/K-3)/T),a=occ(-1);if(x<0||y<0||x>3||y>4)return;const i=a[y*4+x];if(i<0)return;drag={i,x0:e.clientX,y0:e.clientY};c.setPointerCapture&&c.setPointerCapture(e.pointerId)});
   c.addEventListener('pointermove',e=>{if(!drag||ok)return;const dx=e.clientX-drag.x0,dy=e.clientY-drag.y0,s=T*K*.55;let mx=0,my=0;if(Math.abs(dx)>s&&Math.abs(dx)>=Math.abs(dy))mx=Math.sign(dx);else if(Math.abs(dy)>s)my=Math.sign(dy);if(!mx&&!my)return;
     const p=P[drag.i],a=occ(drag.i),nx=p[0]+mx,ny=p[1]+my;let can=nx>=0&&ny>=0&&nx+p[2]<=4&&ny+p[3]<=5;for(let yy=0;yy<p[3]&&can;yy++)for(let xx=0;xx<p[2];xx++)if(a[(ny+yy)*4+nx+xx]>=0){can=false;break}
-    drag.x0=e.clientX;drag.y0=e.clientY;if(!can){if(!drag.bump){pzSnd('knockw',.3);drag.bump=1}return}drag.bump=0;p[0]=nx;p[1]=ny;moves++;pzSnd('twood',.5,.95+Math.random()*.1);draw();
+    drag.x0=e.clientX;drag.y0=e.clientY;if(!can){if(!drag.bump){pzSnd('knockw',.3);drag.bump=1}return}drag.bump=0;p[0]=nx;p[1]=ny;pzSnd('twood',.5,.95+Math.random()*.1);draw();
     if(P[0][0]===1&&P[0][1]===3){ok=true;drag=null;pzSolved(o,done)}});
   const up=()=>{drag=null};c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
   o.querySelector('.rs').onclick=()=>{sfx('tap');reset();draw()};reset();draw()}

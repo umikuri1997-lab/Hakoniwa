@@ -4,15 +4,6 @@ function darkness(){const h=hour();if(WD===YAMI&&!S.cleared)return yamiDark(h);/
 const motes=Array.from({length:26},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.4,1)}));
 let selRect=null;
 
-function drawMark(el,px,by,now){
-  const c=ctx;
-  if(el==='wood'){c.strokeStyle='#3f8a3d';c.lineWidth=1.5;c.beginPath();c.moveTo(px,by-9);c.lineTo(px,by-13);c.stroke();
-    c.fillStyle='#5fbf4f';c.beginPath();c.ellipse(px-3,by-14,3.5,2,-.5,0,7);c.fill();c.beginPath();c.ellipse(px+3,by-14,3.5,2,.5,0,7);c.fill()}
-  else if(el==='water'){c.fillStyle='#3f9ee8';c.beginPath();c.moveTo(px,by-19);c.quadraticCurveTo(px+4,by-13,px,by-10);c.quadraticCurveTo(px-4,by-13,px,by-19);c.fill();circ(c,px-1,by-13,1,'#dff2ff')}
-  else if(el==='fire'){const f=Math.sin(now/120);c.fillStyle='#ff6a3d';c.beginPath();c.moveTo(px-4,by-9);c.quadraticCurveTo(px-4,by-15,px+f,by-19);c.quadraticCurveTo(px+4,by-15,px+4,by-9);c.fill();circ(c,px,by-11,2,'#ffd35c')}
-  else if(el==='earth'){c.fillStyle='#9a6f30';c.beginPath();c.ellipse(px,by-11,5,3,0,0,7);c.fill();c.fillStyle='#d9b06a';c.fillRect(px-2,by-13,3,1.5)}
-  else if(el==='wind'){c.strokeStyle='#3fc0a0';c.lineWidth=1.8;c.beginPath();c.arc(px,by-13,3.5,Math.PI*.2+now/400,Math.PI*1.7+now/400);c.stroke()}
-}
 /* ---------- 精霊の絵 ---------- */
 const SPART={};function spArt(el){return SPART[el]||el}/* 絵の形をかりる属性（いまはない。光・闇も、じぶんの絵：GPT の H-4） */
 const SPC={
@@ -64,7 +55,6 @@ const emoSrc=t=>{t=nfe(t);return EIMG[t]||(EMO_IC[t]&&ICONS[EMO_IC[t]])||(EMO_OF
 const hex2hsl=h=>{const n=parseInt(h.slice(1),16),r=(n>>16)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let H=0,S2=0;if(mx!==mn){const d=mx-mn;S2=l>.5?d/(2-mx-mn):d/(mx+mn);H=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;H*=60}return[H,S2,l]};
 const hsl2hex=(H,S2,l)=>{const k=n=>(n+H/30)%12,a=S2*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));return'#'+[f(0),f(8),f(4)].map(v=>Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0')).join('')};
 const SPCV={};function spcVar(el,v){const B=SPC[el]||SPC.wood;if(!v||(!v.h&&!v.l))return B;const k=el+v.h+'_'+v.l;if(SPCV[k])return SPCV[k];const o={};for(const q in B){if(q==='line'||q==='hand'){o[q]=B[q];continue}const[H,S2,l]=hex2hsl(B[q]);o[q]=hsl2hex((H+v.h+360)%360,S2,Math.max(.08,Math.min(.92,l+v.l)))}return SPCV[k]=o}
-let HOODB=[4,-.05];
 let EATSIDE=-.1;
 function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・かたむき・道具など（描き方とは別） */
   const rs=o.anim==='rest'?.5:1;/* ベンチで休むときは、息・腕のゆれを半分に */
@@ -454,7 +444,7 @@ function drawSpirit(c,el,x,y,s,f,o){
   }
   // 顔
   if(!back){const ey=(el==='wind'?-53:-50)+TUNE.eyeY,xn=TUNE.eyeGap+tr*TUNE.sEye,xf=-TUNE.eyeGap+tr*14,/* 横顔の目は少し奥 */sf=1,showF=tr<.85;
-    const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',my=ey+9,mx=(xn+xf)/2+tr*TUNE.sMouth;c.strokeStyle=P.eye;c.fillStyle=P.eye;c.lineWidth=2.1;
+    const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'';c.strokeStyle=P.eye;c.fillStyle=P.eye;c.lineWidth=2.1;
     const eyeL=(x,w,k)=>{c.beginPath();if(k==='happy'){c.moveTo(x-3*w,ey+1.5);c.quadraticCurveTo(x,ey-3.5,x+3*w,ey+1.5)}else{c.moveTo(x-3*w,ey);c.quadraticCurveTo(x,ey+2.5,x+3*w,ey)}c.stroke()};
     if(o.vr&&o.vr.cheek){const ck=P.cheek;/* ほっぺは、頭巾の色をうすくした色 */E(xn+5+tr*TUNE.sCheek,ey+8-tr*2,4.2*TUNE.cheekS*(1-tr*.25),2.6*TUNE.cheekS,0,ck);if(showF)E(xf-5*sf,ey+8,4.2*TUNE.cheekS*sf,2.6*TUNE.cheekS,0,ck)}/* ほっぺ（目より下のレイヤー） */
     if(o.sleep||(o.blink&&!md))[[xn,1],showF&&[xf,sf]].forEach(e=>e&&eyeL(e[0],e[1]));
@@ -763,9 +753,6 @@ function drawNushiOld(now){
 }
 /* ---------- 「コワイノ」の絵 ---------- */
 // 足元(0,0)基準・高さ約100単位。o:{t,back,walk,flash}
-// 攻撃：ためは短く、最後にすばやくふりかぶって叩きつける
-function atkLift(p){if(p<=0)return 0;if(p<.84)return Math.sin(p*40)*.04;if(p<.95)return (p-.84)/.11*2.7;if(p<.985)return 2.7-(p-.95)/.035*3.1;return -.4}
-function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
 // コワイノのドット絵：モーション（待機・歩き・攻撃・やられ）ごとのコマを切りかえる。コマはたてにならべた1まいの絵（n＝コマ数）。大きさは種類ごとの絵（どれも1ドット＝1）
 const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];

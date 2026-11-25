@@ -9,7 +9,6 @@ function drawWin0(c,i,x,y){const wa=houseArt('wall-window');if(wa&&wa.complete&&
 const HOUSEART={};function houseArt(k){let im=HOUSEART[k];if(!im){im=HOUSEART[k]=new Image();im.onload=()=>artLoaded();im.src='assets/'+k+'.png?v=102'}return im}/* 前の正面の壁の絵（窓・板）。クォータービューでは描かないので、はじめに使うときに読む（起動では読まない） */
 
 
-const WALLMAT={plasterwall:'plaster',logwall:'log',brickwall:'brick',yozorawall:'night'};
 function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28が板、その下が巾木）。世界の座標で模様をつなぐので、マスのさかいめに継ぎ目が出ない */
   if(b<=a)return;const gx=(i!=null&&!ICON?(i%W)*TS:0)-x,FH=28.4;
   if(!c._noSh){c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2)}c.save();c.beginPath();c.rect(a,y,b-a,FH);c.clip();
@@ -174,7 +173,7 @@ function drawObj0(c,id,x,y,i,g,now){
   if(id==='tower'&&WD===KUSA){drawStoryTree(c,x,y,i,now,ICON);return;}
   if(STAIRS.has(id)){drawStair(c,id,x,y,0,y+3,y+29);return}/* 地図の階段・坂は iso-cliff.js（icStair）。ここはアイコンだけ */
   if(CANOPY.has(id)){if(ICON||i==null){const ch=window.CHIPS&&CHIPS[id],bk=window.CHIPS&&CHIPS[id+':back'];if(bk)drawChip(c,bk,id,x,y,0,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;c.save();c.translate(x+3,y+11);c.scale(.4,.4);drawRoofItem(c,id,0,0);c.restore()}else drawRoofItem(c,id,x,y);return}/* ガゼボ・東屋（アイコンは小さく） */
-  if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
+  if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
   if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=(CONN[id]==='f'||CONN[id]==='w')&&id!=='misugaki'&&!ICON&&i!=null&&GLX[typeAt(i-1)];/* 御簾垣の戸は、柱がマスの中におさまる */if(gL){const gx=GLX[typeAt(i-1)];c.save();c.beginPath();c.rect(x+gx,y-64,96,160);c.clip()}/* 丸太の塀のドアの右の柱も、となりのマスにはみ出す *//* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id!=='wall'&&HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);if(!ICON&&i!=null&&DECAYW.has(id)&&decayed(i))drawCrack(c,id,x,y,i);/* 朽ちた壁：ひびをかさねる */return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
@@ -251,7 +250,7 @@ function drawObj0(c,id,x,y,i,g,now){
     const door=id==='door';
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
     const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||!door&&HOME_DOORS.has(t))};/* 家の壁・ドアは、柵や石の塀とはつながらない。ドアどうしはつながらない */const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);
-    const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L||ICON?x:x+5,hx1=R||ICON?x+TS:x+27;
+    const MAT=c._mat||'wood',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L||ICON?x:x+5,hx1=R||ICON?x+TS:x+27;
     const top=()=>{const rs=[];if(hasH)rs.push([hx0-(L?2:0),y-T,hx1+(R?2:0),y,hx0,y-T,hx1,y]);if(hasV)rs.push([x+5,y-T-(U?2:0),x+27,y-T+(D?TS+2:T),x+5,y-T,x+27,y-T+(D?TS:T)]);drawSection(c,x,y-T,rs)};/* 断面：エリア全体をひとつにつなげた輪郭（たて・よこのくぎりなし） */
     const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
     const side=(a,b)=>{/* 柱・縦の壁のはしの正面：たて板 */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.fillStyle='#8a5e3c';c.fillRect(a,y,b-a,TS);c.fillStyle='#a8784e';for(const lx of[a+5,a+11,a+17])if(lx<b-2)c.fillRect(lx,y,1,TS);c.fillStyle='#b88550';c.fillRect(a,y,1.5,TS);c.fillRect(b-1.5,y,1.5,TS)};/* 柱には巾木をつけない */

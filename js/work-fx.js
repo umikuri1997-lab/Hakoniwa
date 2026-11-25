@@ -6,7 +6,6 @@ const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の�
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
-const KMAIN={pot:'cook',pan:'cookfry',bake:'cookfan',grill:'cookgrill',mix:'cookmix'};
 /* 動きの名前 → [音を出す所（1回の動きの中の0〜1）, 音, 粒]。音のいちばん大きい所が、手の動きの決まった所（打つ・ひく・水にとどく）になるように、音の頭のぶん前から鳴らす（のこぎりは、ひくまん中・石をほる音は、録音の0.15秒あとが打つ音） */
 const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookhi:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
   loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.37,'saw','chips'],[.87,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],

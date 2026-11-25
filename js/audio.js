@@ -325,7 +325,6 @@ function sfx(k){
   case'atk_wood':playU('atkW',0.5);break;/* 持ち主がえらんだ本物の録音 */
   case'atk_wind':playU('atkK',0.5);break;/* 持ち主がえらんだ本物の録音 */
   case'atk_water':playU('atkS',0.45);break;/* 持ち主がえらんだ本物の録音 */
-  case'next':tone(88,t,.04,'triangle',.05,o);break;
   case'good':if(!playS('joyc',.14))seq([84,88],.07,'sine',.03);break;/* よろこぶ音：オルゴールのちりりん（読みこむ前だけ、前の作った音） */
   case'warn':seq([62,57],.14,'square',.035,.22);break;
   case'level':if(playS('rwlevel',.137))break;seq([67,72,76,79],.09,'triangle',.058,.16);break;/* たっせい・村レベルアップ・あたらしいレシピ など：qubodup の「Level Up」の録音（高さはそのままで1.5倍の速さ。持ち主がえらんだ。キラリン系の -35 LUFS。読みこむ前だけ、前の作った音） */

@@ -23,7 +23,7 @@ function evCamTo(x,y,sec){if(camAnim&&camAnim.done)return;const[fx,fy]=evCamCent
 function evBoxOf(E){const P=Object.values(E.slot||{});let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const j of P){x0=Math.min(x0,j%W);x1=Math.max(x1,j%W);y0=Math.min(y0,(j/W)|0);y1=Math.max(y1,(j/W)|0)}
   if(x0>1e8){const[cx,cy]=E.c||evTemple();x0=Math.floor(cx)-2;x1=Math.floor(cx)+2;y0=Math.floor(cy)-1;y1=Math.floor(cy)+1}if(x1-x0<3){x0--;x1++}return{x0,x1,y0,y1}}
 /* ---------- はじまり ---------- */
-function evShowBegin(E,P){if(!evShowOn(E)||E.shw)return;E.shw=1;const now=performance.now(),D=EVENTS[E.id];EVV.id=E.id;EVV.t0=now;EVV.clx=0;EVV.cid=null;EVV.end=null;EVV.rip=[];EVV.met=[];EVV.lan=[];EVV.pet=[];EVV.shine=0;EVV.flash=0;E.cx=0;E.ek=0;
+function evShowBegin(E,P){if(!evShowOn(E)||E.shw)return;E.shw=1;const now=performance.now();EVV.id=E.id;EVV.t0=now;EVV.clx=0;EVV.cid=null;EVV.end=null;EVV.rip=[];EVV.met=[];EVV.lan=[];EVV.pet=[];EVV.shine=0;EVV.flash=0;E.cx=0;E.ek=0;
   EVV.song=EVSONGMOVE.has(E.id)?'cupmove':'cupcalm';EVV.box=evBoxOf(E);if(typeof MEMRUN!=='undefined'&&MEMRUN)return;
   if(!EVV.back)EVV.back=evCamCenter();if(E.c)evCamTo(E.c[0]*TS,E.c[1]*TS,1.4);
   const n=evDecoN();for(let i=0;i<Math.min(n,8);i++)later(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);

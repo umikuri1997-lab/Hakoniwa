@@ -17,8 +17,6 @@ function sumElem(){
   for(const el of ELEM_KEYS){if(!S.flags.nodokaCame){const sc=SECOND[WD];if(el===sc.elem&&sc.ok()){best=el;break}}/* 2人目のキーキャラが来られるときは、そちらが先（草原：ききょう2つで土の子、火山：温泉で水のせいれい） */if(sumCap(el))continue;/* よべる数は、えらぶ画面（sumCands）と同じ */const n=needFor(el),v=ATTR[el];if(v>=n&&v/n>bs){bs=v/n;best=el}}
   return best}
 function sumCands(){return ELEM_KEYS.map(el=>{const cap=sumCap(el),n=needFor(el),v=ATTR[el];return {el,v,n,cap,ok:!cap&&v>=n}})}/* 呼べる属性の候補（いまの力と目もり） */
-function checkSummon(){
-  if(!S||!S.feat.summon||S.summonNext||S.summon)return;const el=sumElem();if(!el)return;S.summonNext=el}
 function storySummonNow(){/* 草原の2人目（土のせいれい）は、ききょうが咲いて呼ぶ話を聞いたら、朝を待たずに昼のうちに呼べる（1日1回はそのまま） */
   if(!S||WD!==KUSA||S.free||S.summon||S.summonNext||!S.feat.summon||S.flags.nodokaCame||isNight()||calledToday())return false;const el=sumElem();if(el!==SECOND[WD].elem||!SECOND[WD].ok())return false;S.summon={elem:el};sfx('arrive');toast('神殿に「！」が出ている','good');return true}
 /* おみおくりの前（unb）なのに、お墓も棺もない子は、おみおくりがすんだことにする（お墓を置く空きがなかった・お墓がなくなった、など。unb がのこると二度と呼びもどせない） */
@@ -127,7 +125,6 @@ function herbUse(){if(!herbOK())return toast('いまは、つかえない','warn
 function herbWave(w){/* まよけの夜：ふつうのコワイノを半分（小数点以下切りすて）。オオカゲなどはそのまま */const bs=w.filter(t=>EN[t].boss),nb=w.filter(t=>!EN[t].boss);return bs.concat(nb.slice(0,Math.floor(nb.length/2)))}
 function hornWave(w){/* 角笛の夜：ふつうのコワイノを1.5倍（小数点以下切りすて） */const nb=w.filter(t=>!EN[t].boss),m=Math.floor(nb.length*1.5)-nb.length;for(let i=0;i<m;i++)w.push(nb[i%nb.length]);return w}
 function mureSpot(){/* 群れの夜：南のはし（晴れている所の南のはし fogSouth）の1か所のまわり3マスから出る */const v=S.nightVar;if(v.x==null||v.y==null||v.s!==S.nights){const p=spawnSpot();v.x=p[0]|0;v.y=p[1]|0;v.s=S.nights}const R=spawnReach();for(let t=0;t<40;t++){const x=v.x+((Math.random()*7)|0)-3,y=x>=0&&x<W?fogSouth(x):-1,j=y*W+x;if(y<0||S.ground[j]===1||solidOf(j)||R[j]<0)continue;return [x+.5,y+.5]}return [v.x+.5,v.y+.5]}/* 見つからなければ、えらんだ1か所（spawnSpot は、歩いて村へ来られる所） */
-function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
 function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(late>0?Math.max(12,35-late*2):35,(hasBoss?180:220)/Math.max(1,total-1))*(nightVarNow()==='ushio'?.5:1);/* かげのうしおは、来る間かくが半分 */return index*spacing}/* 夜0時ごろから4時までに全員が到着。ボスの登場演出ぶんも見込む */
 function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りをやめる */
   const hasBoss=list.some(type=>EN[type].boss),wv=wavesOn(),n0=S.enemies.length;list.forEach((type,k)=>{const d=EN[type];const hp=d.hp+(WD===KUSA&&S.bossKills&&!d.boss?NIGHTHP[Math.min(NIGHTHP.length-1,Math.floor((S.nights||0)/10))]:0);S.enemies.push({id:S.nid++,type,x:0,y:0,hp,max:hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});const nsc=wv?waveApply(S.enemies.slice(n0)):0;/* 草原：波に分けて来る・先ぶれ（waves.js） */

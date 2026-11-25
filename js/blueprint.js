@@ -59,7 +59,7 @@ const BPS={/* 設計図。rows の字：「.」床（fl、なければフロー�
   takibi:{name:'たき火のひろば',cat:'garden',el:'fire',pc:20,rw:15,story:1,key:'campfire',rows:['     ','ppppp','pp pp','ppppp','     '],furn:[[2,2,'campfire'],[0,0,'stool'],[4,0,'stool'],[2,4,'stool']]},
   otoshiana:{name:'おとしあなのみち',cat:'guard',el:'earth',pc:20,rw:15,rows:['     '],furn:[[0,0,'pit'],[1,0,'spike'],[2,0,'pit'],[3,0,'spike'],[4,0,'pit']]},
 };
-const BPCAT={house:'家',garden:'庭',farm:'畑',play:'遊び場',guard:'守り'},BPCOMF=10,BPGIVEFUN=30,BPFISH=.02,BPCHEST=.5,BPTALK=.15,BPTALKCD=3,BPELW=3;/* つり2%・霧の宝箱50%・お話15%（3日に1回まで）。くれるせいれいと同じ属性の設計図は、えらばれやすさ3 */
+const BPCAT={house:'家',garden:'庭',farm:'畑',play:'遊び場',guard:'守り'},BPCOMF=10,BPGIVEFUN=30,BPFISH=.02,BPTALK=.15,BPTALKCD=3,BPELW=3;/* つり2%・霧の宝箱50%・お話15%（3日に1回まで）。くれるせいれいと同じ属性の設計図は、えらばれやすさ3 */
 const BPT={floor:8,wall:12,door:15,win:18,furn:40,path:8,farm:8,edge:8,fence:12,gate:15,plant:10};/* 1つずつの部品を建てる時間（建物は BL の time） */
 const BPWM={hwall:{wood:1},bamboowall:{bamboo:1},canvaswall:{wood:1},acaciawall:{wood:1,stone:1},timberwall:{wood:1,nendo:1},adobewall:{wood:1,sagan:1},yakiwall:{yaki:1,sagan:1},canalwall:{maruishi:1,nendo:1},rockwall:{sagan:1,stone:1},mosswall:{stone:1,kogi:1},moonwall:{stone:1,gekko:1},logwall:{wood:1},plasterwall:{wood:1,stone:1},brickwall:{stone:2},yozorawall:{wood:1,stone:1}};/* 壁1マスの素材 */
 const BPWINM={hwall:{wood:3},bamboowall:{bamboo:1,wood:2},canvaswall:{wood:3},acaciawall:{wood:3,stone:1},timberwall:{wood:3,nendo:1},adobewall:{wood:3,sagan:1},yakiwall:{yaki:1,wood:2,sagan:1},canalwall:{maruishi:2,wood:2},rockwall:{sagan:2,wood:2},mosswall:{stone:2,kogi:1},moonwall:{stone:2,gekko:1},logwall:{wood:3},plasterwall:{wood:3,stone:1},brickwall:{stone:2,wood:2},yozorawall:{wood:3,stone:1}};/* 窓のある壁1マスの素材 */
@@ -212,7 +212,7 @@ const BPDIFF={15:'かんたん',30:'ふつう',50:'むずかしい'};
 const BPPLAN={wall:'#5b3d24',fence:'#7a5634',glass:'#cfe6ee'};/* 設計図を見る画面の、平面図の壁・柵の色 */
 function bpPlanLine(c,px,py,cs,nb,th,col){/* マスのまん中から、つながるとなり（nb：左・右・上・下）へ、太さ th の帯 */const m=cs/2,h=th/2;c.fillStyle=col;c.fillRect(px+m-h,py+m-h,th,th);
   if(nb[0])c.fillRect(px,py+m-h,m,th);if(nb[1])c.fillRect(px+m,py+m-h,m,th);if(nb[2])c.fillRect(px+m-h,py,th,m);if(nb[3])c.fillRect(px+m-h,py+m,th,m)}
-function bpPreview(k,cv){const b=BPS[k],{w,h}=bpSize(k),cs=Math.max(12,Math.min(32,Math.floor(264/Math.max(w,h)))),c=cv.getContext('2d');cv.width=w*cs;cv.height=h*cs;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
+function bpPreview(k,cv){const {w,h}=bpSize(k),cs=Math.max(12,Math.min(32,Math.floor(264/Math.max(w,h)))),c=cv.getContext('2d');cv.width=w*cs;cv.height=h*cs;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
   const L=[],ps=bpPieces(k),dd=bpDoorDirs(ps);for(const p of ps){const[dx,dy,t,id,rot]=p;let a=1,bh=1;if(t==='furn'||t==='build'){const z=szR(id,rot||0)||[1,1];a=z[0];bh=z[1]}L.push({x:dx,y:dy,w:a,h:bh,id:t==='win'?'window':t==='farm'?'farm':id,t})}
   const ord={floor:0,path:0,farm:0,edge:1,wall:2,win:2,fence:2,door:3,gate:3,plant:4,furn:5,build:5},img={},PLAN=new Set(['wall','win','fence','door','gate']);
   const WAL=new Set(L.filter(q=>q.t==='wall'||q.t==='win'||q.t==='door').map(q=>q.x+','+q.y)),FEN=new Set(L.filter(q=>q.t==='fence'||q.t==='gate').map(q=>q.x+','+q.y));/* つながる相手 */

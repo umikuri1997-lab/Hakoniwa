@@ -30,7 +30,6 @@ function phMine(p,e){return p.v?p.v===S.vk:!!S.vkOld||!!(e&&e.ph===p.id)}/* 見�
 function phList(w){return phTx('readonly',(s,put)=>{const q=s.index('w').getAll(w);q.onsuccess=()=>put(q.result.sort((a,b)=>a.id-b.id))})}
 function phDel(id){return phTx('readwrite',s=>{s.delete(id)})}
 function phAdd(rec){return phTx('readwrite',(s,put)=>{const q=s.add(rec);q.onsuccess=()=>put(q.result)})}
-function phGet(id){return phTx('readonly',(s,put)=>{const q=s.get(id);q.onsuccess=()=>put(q.result||null)})}
 /* セーブの書き出し・読みこみ（ui.js）：写真もファイルに入れて、ほかのスマホやパソコンへ移す。絵は data: の文字にする */
 function phAll(){return phTx('readonly',(s,put)=>{const q=s.getAll();q.onsuccess=()=>put(q.result||[])})}
 const phB64=b=>new Promise((ok,ng)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=()=>ng(f.error);f.readAsDataURL(b)});
