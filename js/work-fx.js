@@ -2,7 +2,7 @@
    動きの絵は spirit3d（cookprep・cookcut・cookmix・cook・cookfry・cookfan・cookgrill・cookplate・raise・craftprep・saw・craft・polish、作業台の上では wbprep・wbsaw・wbham・wbpolish）。
    音と粒は、描くときの時刻（drawSpiritDot の t）と同じ時刻で、動きの決まった所（WBEAT）をこえたときに出す（手の動きとずれない）。 */
 const WORKSHOW=4;
-const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBSLOT={0:[17,-16.5],1:[-17,-16.5],2:[-14,7],3:[14,7]},WBFACE={0:1,1:-1,2:1,3:1};/* 作業台で作るせいれいの、絵のずれ（向きごと。作業する所のマスのまん中に立てて描く点からの、drawRes0 の px・py。SEATOFF と同じ）。持ち主が「作業台の立つ位置」のページ（tools/wbslot/）できめる数。はじめの数は、天板の手前のふちから、台の前に立つ向き0・1は6点・台のうしろに立つ向き2・3は10点に足もと、よこは台のまん中。WBFACE：絵の左右（r.face）。ななめの絵は、反転すると、ちがうななめを向く（前ななめは反転なしで左下＝南、うしろななめは右上＝北）ので、台のほうを向く左右にそろえる *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
+const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBSLOT={0:[14,-21.5],1:[-16,-19],2:[-16,0.5],3:[11,4.5]},WBFACE={0:1,1:-1,2:1,3:1};/* 作業台で作るせいれいの、絵のずれ（向きごと。作業する所のマスのまん中に立てて描く点からの、drawRes0 の px・py。SEATOFF と同じ）。持ち主が「作業台の立つ位置」のページ（tools/wbslot/）できめる数。WBFACE：絵の左右（r.face）。ななめの絵は、反転すると、ちがうななめを向く（前ななめは反転なしで左下＝南、うしろななめは右上＝北）ので、台のほうを向く左右にそろえる *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
