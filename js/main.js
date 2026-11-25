@@ -26,7 +26,7 @@ function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]
 function refreshStageInfo(){for(const w of[...STAGES,YAMI,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
 /* ステージごとのセーブ */
 /* ステージは属性の数だけ（木・火・水・土・風）と、さいごの庭 */
-function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}later(()=>toast('フリーモードがひらいた！','good'),400)}
+function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}setTimeout(()=>toast('フリーモードがひらいた！','good'),400)}
   const L=LIVE[FREE],k=FREE,card=el(`<div class="wcard open"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn">FREE MODE</span><h3>フリーモード</h3><p></p><div class="wbtns"></div></div></div>`);
   card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・おまつりをひらいた！':''):'高い丘にかこまれた、花の谷。災いもほとんどない、しずかな土地で、のんびり、自分だけの村をつくろう。';
   const bt=card.querySelector('.wbtns');
