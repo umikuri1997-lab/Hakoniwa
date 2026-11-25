@@ -10,6 +10,10 @@ const assert=require('node:assert/strict');
   assert.ok(dt>=250-5&&dt<250+150,'shake at the hit: '+dt);
   const len=Number(await run(`(async()=>{const r=await fetch(SAMPLES.glight[0]);const b=await new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,44100,44100).decodeAudioData(await r.arrayBuffer());return b.duration})()`));
   assert.ok(len>1.5,'long tail: '+len);
+  /* ぴったりにためた光は、低いひびきをかさねた音（glightc）。ためていない光は glight */
+  const snd=JSON.parse(await run(`(async()=>{const L=[],f0=sfxAt;sfxAt=(k,...a)=>{if(k.startsWith('glight'))L.push(k);return f0(k,...a)};lightSnd(CX,CY,true);lightSnd(CX,CY);await new Promise(r=>setTimeout(r,400));sfxAt=f0;return JSON.stringify(L)})()`));
+  assert.deepEqual(snd.sort(),['glight','glightc'],'ためた光の音: '+snd);
+  assert.ok(Number(await run(`(async()=>{const r=await fetch(SAMPLES.glightc[0]);const b=await new OfflineAudioContext(1,44100,44100).decodeAudioData(await r.arrayBuffer());return b.duration})()`))>2,'glightc loads');
   /* 当たる前と後 */
   const before=JSON.parse(await run(`(()=>{const x=CX+6,y=CY+6,j=y*W+x;S.obj[j]='rock';S.hp['lp'+j]=LIGHTHIT.rock*2;S.drops=[];const e={id:S.nid++,type:'basic',x:CX+6.5,y:CY+3.5,hp:999,max:999,spawned:true,path:[],atk:0,stun:0,flash:0};S.enemies=[e];window.__e=e;window.__j=j;
     const r=S.res[0];r.hidden=false;r.nap=false;r.x=CX+7.5;r.y=CY+7.5;window.__r=r;S.pt=10;LIGHTCD=0;

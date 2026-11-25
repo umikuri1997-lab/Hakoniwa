@@ -9,7 +9,7 @@ function drawTopFx(){let sm=null;for(const f of fx){if(f.k!=='spr'||!TOPFX.has(f
 const GLHIT=110;/* まもりの光の音は、光の槌が地面に当たるコマ（0.25秒）に、音のいちばん大きい所（0.14秒）をそろえる */
 const GLFX=250;/* 画面のゆれと光、ダメージ・とめる・素材が落ちる（glHit）も、光の槌が地面に当たるコマ（0.25秒、godlight の5コマめ）に合わせる */
 const ATRAIL=14,ABURSTY=31;/* 木の矢の光のすじのつぶの数・arrowburst の光のまん中は置く所より31点上 */
-function lightSnd(x,y){villageTimeout(()=>sfxAt('glight',x,y),GLHIT);villageTimeout(()=>skillFx('light'),GLFX)}
+function lightSnd(x,y,ch){villageTimeout(()=>sfxAt(ch?'glightc':'glight',x,y),GLHIT);/* ぴったりにためた光は、低いひびきのある音 */villageTimeout(()=>skillFx('light'),GLFX)}
 function fxSpr(n,x,y,col,fl,gy){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x,y,col,fl:fl||1,life:1,dur:g.n/g.fps,gy})}/* エフェクトを1回ながす（x,y は世界の座標。gy：x,y が地面より上のときの、地面の y。クォータービューの足もと iso-fx.js） */
 'use strict';
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
@@ -141,7 +141,7 @@ function farClear(){for(const f of FAR.c.values())if(f.c)f.c.width=f.c.height=0;
 const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'||VEINS[S.obj[j]]?7:30)-liftOf(j);/* 木・岩の上の、のこりのバーの上はし */
 function drawArrowTags(x0,y0,x1,y1){/* 見張り台の上の、木の矢の本数（夜の暗さより上にかく） */
   for(const j of TOWERS){if(S.obj[j]!=='watch')continue;const tx=(j%W)*TS,ty=((j/W)|0)*TS-liftOf(j+W);if(j%W<x0-2||j%W>x1+1||((j/W)|0)<y0-2||((j/W)|0)>y1+3)continue;/* 見張り台の上の、木の矢の本数（せいれいが立つ所より上） */
-    const n=ammoTotal(),L=S.hp['L'+j]||1,ch=chipOf('watch',j),cx=tx+32,cy=ch?ty+ch.ay/(ch.g===64?2:1)-6:ty-58-(L>1?16:0),/* 札は、見張り台の絵（旗・星もふくめて）のすぐ上 */t=String(n);ctx.save();isoUITf(ctx,objFootJ(j),cx,cy);/* クォータービュー：見張り台と同じ立て方の所に、札は、のばさずに */ctx.font='9px "PixelMplus10","Hikomi","Hiragino Maru Gothic ProN",sans-serif';const tw=ctx.measureText(t).width,w=tw+19,lx=cx-w/2;
+    let cx=tx+32;const n=ammoTotal(),L=S.hp['L'+j]||1,ch=chipOf('watch',j),P=ch&&ch.iso?isoChipAt(ctx,j,tx,ty,'watch'):null,cy=P?P.y+ch.ay/2-9:ch?ty+ch.ay/(ch.g===64?2:1)-6:ty-58-(L>1?16:0),/* 札は、見張り台の絵（旗・星もふくめて）のすぐ上 */t=String(n);ctx.save();if(P){isoScreenTf(ctx);cx=P.x}else isoUITf(ctx,objFootJ(j),cx,cy);/* クォータービュー：見張り台の絵と同じ画面の点から（高さを、立てる物ののばし方でのばさない） */ctx.font='9px "PixelMplus10","Hikomi","Hiragino Maru Gothic ProN",sans-serif';const tw=ctx.measureText(t).width,w=tw+19,lx=cx-w/2;
     ctx.fillStyle='rgba(122,86,52,.82)';ctx.fillRect(lx,cy-6,w,12);ctx.fillRect(lx+1,cy-7,w-2,14);ctx.fillStyle='rgba(244,233,210,.9)';ctx.fillRect(lx+1,cy-5,w-2,10);ctx.fillRect(lx+2,cy-6,w-4,12);ctx.fillStyle='#8a5a33';ctx.fillRect(lx+3,cy-.5,9,1.4);ctx.fillStyle='#6b7480';ctx.beginPath();ctx.moveTo(lx+14,cy+.2);ctx.lineTo(lx+10.5,cy-2.6);ctx.lineTo(lx+10.5,cy+3);ctx.closePath();ctx.fill();ctx.fillStyle='#c0503a';ctx.fillRect(lx+2.5,cy-2,1.2,1.4);ctx.fillRect(lx+2.5,cy+1,1.2,1.4);/* 木の矢の絵 */
     ctx.fillStyle=n>0?'#3b2a1a':'#c0392b';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,lx+16,cy+.5);ctx.textAlign='start';ctx.textBaseline='alphabetic';ctx.restore()}}
 /* 頭の上の短い文字（addFloat）。夜の暗さ・HD-2D の仕上げより上に描く */
@@ -290,7 +290,7 @@ function render(now){RFN++;hdFrame();
     else if(s.water){}
     else if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
     else{const q=(p-1/2.4)/(1-1/2.4);ctx.globalAlpha=1-q;ctx.strokeStyle='#fff3b0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(X(1),Y(1),6+q*18,0,7);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.7)';ctx.beginPath();ctx.arc(X(1),Y(1),9*(1-q),0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;groundTf(ctx,k);
-  feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・かげろう・雨のはね・雲のかげ（feel.js） */
+  feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・雨のはね・雲のかげ（feel.js） */
   drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);if(typeof drawWindScene==="function")drawWindScene(ctx,now);if(typeof drawWindNushi==="function")drawWindNushi(ctx,now);/* さいごの朝・クリアのあとのヌシ様（wind-story.js） */if(typeof mzMistDraw==='function')mzMistDraw(ctx,x0,y0,x1,y1);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);

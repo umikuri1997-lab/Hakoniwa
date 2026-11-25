@@ -35,11 +35,27 @@ def foot(ph):
     if ph < PI: y, h = WSTEP*(1-2*ph/PI), 0.0
     else: y, h = -WSTEP*C(ph-PI), WLIFT*S(ph-PI)
     a = math.asin(y/WHIP); return a, h-WHIP*(1-C(a))   # 足をふると足先が上がる分だけ下げて、ついている足を地面からうかせない
-def walk(w, face):
-    bob = -WBOB*C(2*(w-PI/2-WDOWN)); down = armdown(face, {0: 1.15, 2: 0.95, 1: PI/2}[face])
-    sN, sF = sides(face, 0.8*S(w), 0.8*S(w+PI)); lM, hM = foot(w-3*PI/2); lP, hP = foot(w-PI/2)
-    return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=0.12*S(w), roll=0.07*S(w),
-                sN=sN, sF=sF, bN=down, bF=down, hy=0.07*S(w), hr=0.03*S(w), hp=0.025*C(2*w), top=0.12*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
+WALKST = {   # 属性ごとの歩き方（持ち主がえらんだ案）。足の運び方（WSTEP）と速さは同じ。bob：上下・peak：上がる所のとがり・slow：上下を1歩でなく1まわりに1回（ゆったり）
+    #   roll・yaw：体のゆれ・arm：うでのふり・down：うでの下げ方（画面の中で水平からの角度）・top：頭の上の物のゆれ・nod：頭のうなずき
+    'base':  dict(bob=2.6, peak=0.6, slow=0, roll=0.05, yaw=0.03, arm=1.0, down=0.95, top=0.18, nod=0.05),
+    'earth': dict(bob=1.2, peak=0.0, slow=0, roll=0.08, yaw=0.02, arm=0.6, down=1.1, top=0.10, nod=0.03),   # どっしり・のっしのっし
+    'water': dict(bob=0.8, peak=0.0, slow=0, roll=0.02, yaw=0.02, arm=0.45, down=1.15, top=0.08, nod=0.02),  # すーっと なめらか
+    'fire':  dict(bob=3.4, peak=1.0, slow=0, roll=0.04, yaw=0.03, arm=1.3, down=0.85, top=0.25, nod=0.06),   # ぴょんぴょん元気
+    'wind':  dict(bob=2.2, peak=0.0, slow=1, roll=0.02, yaw=0.02, arm=0.6, down=0.95, top=0.15, nod=0.03),   # ふわふわ軽く
+    'wood':  dict(bob=1.6, peak=0.2, slow=0, roll=0.06, yaw=0.03, arm=0.7, down=1.05, top=0.30, nod=0.04),   # のんびり・よたよた・頭の葉をゆらす
+}
+def walk_el(st):
+    def f(w, face):
+        # 体はついた足のほうへ少しゆれ、頭は体と反対にもどして前を向いたまま（持ち主：頭をふりすぎない・胸をそらせない）
+        ph = 2*(w-PI/2-WDOWN)
+        bob = -st['bob']*C(w-PI/2) if st['slow'] else -st['bob']*C(ph)+st['peak']*max(0.0, -C(ph))
+        down = armdown(face, {0: st['down'], 2: st['down']-0.15, 1: PI/2}[face])
+        sN, sF = sides(face, st['arm']*S(w), st['arm']*S(w+PI)); lM, hM = foot(w-3*PI/2); lP, hP = foot(w-PI/2)
+        return dict(z=bob, legM=lM, legP=lP, liftM=hM, liftP=hP, yaw=st['yaw']*S(w), roll=st['roll']*S(w),
+                    sN=sN, sF=sF, bN=down, bF=down, hy=-0.7*st['yaw']*S(w), hr=-0.9*st['roll']*S(w), hp=st['nod']*C(2*w), top=st['top']*S(w-0.6), tail=0.2*S(w+0.8), wing=0.12*S(w*10/9))
+    return f
+walk = walk_el(WALKST['base'])
+WALKEL = {el: walk_el(WALKST[el]) for el in ('earth', 'water', 'fire', 'wind', 'wood')}   # 持ち主のモデルで写すとき（fbx_build）、属性ごとにこちらを使う
 M('walk', 8, 9/(2*PI), walk)
 # ---- 立つ（クォータービューの絵で、3Dの絵のない立ち姿のかわり。js の spMotion） ----
 M('stand', 4, 0.5, lambda w, face: breathe({}, w))
@@ -625,3 +641,52 @@ for _b in ('walk', 'carry'):
             def _f(w, face, f0=_m['f'], s=_s*HTURN*_i/HTSTEP):
                 p = f0(w, face); p['hy'] = p.get('hy', 0.0)+s; return p
             M(_b+_k+str(_i), _m['n'], _m['rate'], _f)
+
+# ---- 家具の高さに合わせた作業の動き（持ち主のモデルで写すとき。fbx_motion が IK で うでを まげる） ----
+# ikN・ikF：手前の手・奥の手の、手のまん中を置く所（キャラの座標・ドット。足もとが原点・前が +y）。高さは家具の作業面（tools/art/furn3d/items の設計図の高さ × 1マスの高さ51.2ドット）。
+# 手前の手はキャラの x が NEARSIDE（正面は +x、横・うしろは −x）。sx(face, a)：手前の手がわに a ドット。
+HCOOK, HWB, HLOOM, HMILL = 27.6, 16.4, 20.5, 14.0   # 調理台（天板0.54）・作業台（0.32）・はたおり機（胸の横木0.40）・粉ひき（取っ手、石うす0.21の上）
+def sx(face, a): return a*(1 if face == 0 else -1)
+def ikcook(w, face):
+    """おたまで、なべをかきまぜる：調理台がかたより高いので、つま先だちで手をのばす"""
+    return dict(z=2.5, ikN=(sx(face, 4)+2.5*C(w), 12+2.0*S(w), HCOOK+2), ikF=(sx(face, -6), 11, HCOOK+0.5), prop='ladle', hp=-0.05, yaw=0.04*S(w), top=0.06*S(w))
+M('cook', 8, 5/(2*PI), ikcook)
+def ikcookcut(w, face):
+    u = (w/(2*PI)) % 1; k = S(PI*u)
+    return dict(z=2.5, ikN=(sx(face, 3), 12, HCOOK+1+3.5*k), ikF=(sx(face, -5), 12, HCOOK+0.5), prop='knife', hp=0.0)
+M('cookcut', 6, 2.6, ikcookcut)
+def ikcookprep(w, face):
+    u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.6)) if u < 0.6 else 0
+    return dict(z=2.5*k, ikN=(sx(face, 4), 8+5*k, 22+(HCOOK+1-22)*k), ikF=(sx(face, -4), 8+5*k, 22+(HCOOK+1-22)*k), hp=0.05-0.08*k)
+M('cookprep', 8, 0.55, ikcookprep)
+def ikcookmix(w, face):
+    return dict(z=2.5, ikN=(sx(face, 2)+1.5*C(w), 11+1.5*S(w), HCOOK+5), ikF=(sx(face, -3), 11, HCOOK+2), prop='whisk', propF='bowl', hp=0.0, yaw=0.04*S(w))
+M('cookmix', 8, 7/(2*PI), ikcookmix)
+def ikcookstir(w, face):
+    return dict(z=2.5, ikN=(sx(face, 3)+1.5*C(w), 12+1.5*S(w), HCOOK+3), ikF=(sx(face, -6), 11, HCOOK+0.5), prop='whisk', hp=0.0, yaw=0.04*S(w))
+M('cookstir', 8, 7/(2*PI), ikcookstir)
+def ikcookplate(w, face):
+    k = S(w*2)
+    return dict(z=2.5, ikN=(sx(face, 4), 11, HCOOK+1.5), ikF=(sx(face, -2)+1.5*k, 12, HCOOK+3), prop='plate', hp=0.05)
+M('cookplate', 8, 0.45, ikcookplate)
+def ikwbsaw(w, face):
+    return dict(ikN=(sx(face, 4), 12+3*S(w), HWB+2), ikF=(sx(face, -6), 12, HWB+0.5), prop='saw', lean=0.06, yaw=0.05*S(w), hp=0.12)
+M('wbsaw', 8, 8/(2*PI), ikwbsaw)
+def ikwbpolish(w, face):
+    return dict(ikN=(sx(face, 3)+2.5*C(w), 12+2*S(w), HWB+1), ikF=(sx(face, -6), 11, HWB+0.5), prop='cloth', lean=0.06, hp=0.12, yaw=0.04*C(w))
+M('wbpolish', 8, 6/(2*PI), ikwbpolish)
+def ikwbprep(w, face):
+    u = (w/(2*PI)) % 1; k = S(PI*u)
+    return dict(ikN=(sx(face, 4), 8+5*k, 15+(HWB+1-15)*k), ikF=(sx(face, -4), 8+5*k, 15+(HWB+1-15)*k), lean=0.04+0.06*k, hp=0.08+0.08*k)
+M('wbprep', 8, 0.6, ikwbprep)
+def ikloomweave(w, face):
+    u = (w/(2*PI)) % 1
+    if u < 0.55: k = S(PI*u/0.55); xa = -4+8*(u/0.55); nN = (sx(face, xa), 12, HLOOM+1); nF = (sx(face, -6), 12, HLOOM+0.5)   # ひを よこへわたす
+    elif u < 0.75: k = (u-0.55)/0.2; nN = (sx(face, 4), 12+2*k, HLOOM+1); nF = (sx(face, -4), 12+2*k, HLOOM+1)            # おさに手をかけて前へ
+    else: k = S(PI*min(1, (u-0.75)/0.25*2.5)); nN = (sx(face, 4), 14-4*k, HLOOM+1); nF = (sx(face, -4), 14-4*k, HLOOM+1)  # とんっと引きよせる
+    return dict(ikN=nN, ikF=nF, lean=0.05, hp=0.1, hr=0.03*S(w))
+M('loomweave', 10, 0.6, ikloomweave)
+def ikmillgrind(w, face):
+    c, s = C(w), S(w)
+    return dict(ikN=(sx(face, 2)+3*c, 12+3*s, HMILL), ikF=(sx(face, -2)+3*c, 12+3*s, HMILL), lean=0.1+0.06*s, yaw=0.06*c, z=-0.6-0.4*s, legz=-0.3, hp=0.12)
+M('millgrind', 8, 0.5, ikmillgrind)

@@ -33,7 +33,7 @@ const SONGS={
        [71,2],[72,2],[71,2],[69,2],[67,2],[65,2],[67,2],[69,2],[67,2],[65,2],[64,2],[62,2],[64,6],[0,2]]};
 /* オオカゲがいる夜：ふだんの夜の曲を、少しだけ速く、ひくい心臓の音のようなベースをかさねる（sched の bossArr） */SONGS.nightB=Object.assign({},SONGS.night,{bpm:72});SONGS.nightVB=Object.assign({},SONGS.nightV,{bpm:64});
 for(const k in SONGS){const g=SONGS[k];g.at=new Array(64).fill(null);let p=0;for(const[m,l]of g.mel){if(m)g.at[p%64]=[m,l];p+=l}}
-const SAMPLES={"bell":["assets/g/cb9ff20140.mp3"],"pat":["assets/g/e2b825e14e.mp3"],"voice":["assets/g/fc5ad15d4b.mp3"],"paper":["assets/g/b7b70de2d3.mp3"],"night":["assets/g/982aef2204.mp3"],"chop":["assets/g/1d86cabda1.mp3","assets/g/676cf2fa6d.mp3","assets/g/a8dd704564.mp3"],"dig":["assets/g/56f3308409.mp3"],"splash":["assets/g/05adadaa1c.mp3"],"cast":["assets/g/93da972520.mp3"],"nail":["assets/g/b121a3b6b8.mp3"],"bush":["assets/g/3c69ed59fd.mp3"],"bubble":["assets/g/3dae9cab95.mp3"],"catch":["assets/g/269701117d.mp3"],"box":["assets/g/8c8eeb8b61.mp3"],"fire":["assets/g/e54c43d515.mp3"],"boil":["assets/g/55a7541497.mp3"],"rain":["assets/g/7178ec736f.mp3"],"birds":["assets/g/c0eec144c6.mp3"],"amb_morn":["assets/g/cecc7fdf2e.mp3"],"amb_spr":["assets/g/bb13746d18.mp3"],"amb_sum":["assets/g/48649f26f9.mp3"],"amb_snight":["assets/g/36b79a1b68.mp3"]};/* 季節・時間の環境音（amb_〜）は tools/sound/season_amb.py */const SBUF={};
+const SAMPLES={"bell":["assets/g/cb9ff20140.mp3"],"pat":["assets/g/e2b825e14e.mp3"],"voice":["assets/g/fc5ad15d4b.mp3"],"paper":["assets/g/b7b70de2d3.mp3"],"night":["assets/g/982aef2204.mp3"],"chop":["assets/g/1d86cabda1.mp3","assets/g/676cf2fa6d.mp3","assets/g/a8dd704564.mp3"],"dig":["assets/g/56f3308409.mp3"],"splash":["assets/g/05adadaa1c.mp3"],"cast":["assets/g/93da972520.mp3"],"nail":["assets/g/b121a3b6b8.mp3"],"bush":["assets/g/3c69ed59fd.mp3"],"bubble":["assets/g/3dae9cab95.mp3"],"catch":["assets/g/269701117d.mp3"],"box":["assets/g/8c8eeb8b61.mp3"],"fire":["assets/g/e54c43d515.mp3"],"boil":["assets/g/55a7541497.mp3"],"rain":["assets/g/7178ec736f.mp3"],"birds":["assets/g/c0eec144c6.mp3"],"amb_morn":["assets/g/cecc7fdf2e.mp3"],"amb_spr":["assets/g/bb13746d18.mp3"],"amb_sum":["assets/g/30cea289a6.mp3"],"amb_snight":["assets/g/f81c60f177.mp3"]};/* 季節・時間の環境音（amb_〜）は tools/sound/season_amb.py */const SBUF={};
 Object.assign(SAMPLES,{"cv_bird":["assets/g/c8f27e82a0.mp3","assets/g/d5a88a07a1.mp3","assets/g/5dae17a6bb.mp3","assets/g/2853515b46.mp3"],"cv_risu":["assets/g/4c78fed31b.mp3","assets/g/9edc31c156.mp3"],"cv_nezumi":["assets/g/501d60a27f.mp3","assets/g/7af1d6b1ad.mp3"],"cv_usagi":["assets/g/448b608b82.mp3"],"cv_hari":["assets/g/59206ffa86.mp3"],"cv_mogura":["assets/g/3085bc7ee5.mp3"],"cv_frog":["assets/g/2e14f342ca.mp3","assets/g/672e9ac7f4.mp3"],"cv_bee":["assets/g/08dea7c333.mp3","assets/g/f6f6d54ef1.mp3"],"cv_bug":["assets/g/f55c26356a.mp3","assets/g/b62bdf400b.mp3"],"cv_tonbo":["assets/g/5a2cccf54c.mp3"],"cv_hotaru":["assets/g/f6cafbb03a.mp3","assets/g/45888ac778.mp3","assets/g/afa9f4627a.mp3"],"cv_snail":["assets/g/d33577f724.mp3"]});/* 小さな生き物の鳴き声（OpenGameArt の CC0 の録音、tools/sound/critter_voice.py） */
 Object.assign(SAMPLES,{"mine":["assets/g/ba69ed4c76.mp3"]});Object.assign(SAMPLES,{"digSoil":["assets/g/f3b927e9d4.mp3"],"blkStone":["assets/g/f98e722ff3.mp3"]});/* ブロックをこわす音：ほる音の0.12秒まで・石をほる音の0.5秒まで（切っただけ） */
 Object.assign(SAMPLES,{"tpuni":["assets/g/6b79a88272.mp3","assets/g/a9d3a9c033.mp3","assets/g/72120899ad.mp3","assets/g/6074b7cd9b.mp3","assets/g/552f80bbbc.mp3"],"loomk":["assets/g/bdeafe2c64.mp3","assets/g/c36dad1860.mp3","assets/g/5be427e58a.mp3"],"shutl":["assets/g/e3b3fdc4e1.mp3","assets/g/eb9922b92c.mp3","assets/g/4eee98ed5d.mp3"]});/* きのこ・はたおり（Kenney の CC0、tools/sound/ui_asmr.py） */
@@ -56,7 +56,7 @@ Object.assign(SAMPLES,{"joyc":["assets/g/658e945ea5.mp3"],"potg":["assets/g/4b6d
 Object.assign(SAMPLES,{"goso":["assets/g/392c341186.mp3"]});/* 箱にしまう・取るあいだのゴソゴソ（持ち主がくれた音。tools/sound/gosogoso_loop.py で、つなぎ目なく1まわり1.0337秒を3つならべた形） */
 Object.assign(SAMPLES,{"gravel":["assets/g/1367715265.mp3"],"wdon":["assets/g/6e3c4c3694.mp3"],"arrow": ["assets/g/4020d45f73.mp3"], "bush2": ["assets/g/0f9eb4e9b6.mp3"], "door": ["assets/g/02047b788c.mp3"], "kill": ["assets/g/c3aac5194a.mp3"], "munch": ["assets/g/83541e7fe0.mp3"], "nail2": ["assets/g/f10fe51343.mp3"], "pick": ["assets/g/443dd77412.mp3"], "place": ["assets/g/c75dd30fa4.mp3"], "punch": ["assets/g/5124e82f60.mp3"], "shoot": ["assets/g/8c1be13e0e.mp3"], "trickle": ["assets/g/017cf8add7.mp3"], "wallbreak": ["assets/g/43e010b66b.mp3"], "wave": ["assets/g/241549ec96.mp3"]});/* 効果音ラボ（ユーザー提供） */
 Object.assign(SAMPLES,{"tonton":["assets/g/d659bed8d7.mp3","assets/g/b635eb8871.mp3","assets/g/5c204e10f1.mp3","assets/g/ba26bd4423.mp3"],"potclk":["assets/g/17e80015f2.mp3","assets/g/585623a7e1.mp3","assets/g/64ea90268e.mp3"],"tink":["assets/g/329095dca9.mp3","assets/g/d5c75b01cb.mp3","assets/g/77a6e1091e.mp3"],"plate":["assets/g/ec6e73db00.mp3","assets/g/094fbbae9e.mp3","assets/g/a35b4f6573.mp3"],"cloth":["assets/g/aee6f07e05.mp3","assets/g/8af3bc4e78.mp3","assets/g/d6540587a2.mp3","assets/g/5f2f5f0c54.mp3"]});/* 料理・もの作りの手もとの音（Kenney CC0、tools/sound/ui_asmr.py） */
-Object.assign(SAMPLES,{"glight":["assets/g/449e80d89c.mp3"]});/* まもりの光：持ち主がくれた音に、こだまをかさねて余韻を長くした（tools/sound/glight_tail.py） */
+Object.assign(SAMPLES,{"glight":["assets/g/449e80d89c.mp3"]});/* まもりの光：持ち主がくれた音に、こだまをかさねて余韻を長くした（tools/sound/glight_tail.py） */Object.assign(SAMPLES,{"glightc":["assets/g/c50d03e358.mp3"]});/* ぴったりにためたまもりの光：glight に本物の録音の低いひびきをかさねた（tools/sound/glight_charge.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"spike":["assets/g/5e814bb008.mp3"],"poison":["assets/g/1b43a21e56.mp3"]});/* 効果音ラボ（ユーザー提供）：とげの罠は「芝生の上を歩く」のひと足ぶん、どくの罠は「水中で息を吐く」 */
 SAMPLES.shard=['assets/g/9464bc7161.mp3'];/* ヌシのかけらをはめる音（ユーザーの音） */
 SAMPLES.furniturePlace=['assets/g/e33cbd97b8.mp3'];/* 家具を置く音：ユーザー提供 */
@@ -83,6 +83,13 @@ function greetVoice(r,dl){if(!AC||!SND.sfx||AC.state!=='running'||VOICE)return;c
   cp.threshold.value=-38;cp.ratio.value=12;cp.knee.value=4;cp.attack.value=.003;cp.release.value=.1;g.gain.value=.5*CHATK*q.v*(SND.vv??1);
   src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}if(lowG&&!lowOK(q.v))return;if(lowG)lowAdd(src,g,q.v);h.connect(lowG||sfxG);
   src.start(t,Math.random()*Math.max(0,b.duration-d-.1));src.stop(t+d+.05)}
+/* なでたあと、ぴょんとはねるときの「ふふっ」（patJoy）：会話の声（SAMPLES.voice）を、その子の声の高さで2つ、みじかく（2つめは少し下がる）。高い所をけずって、こもった笑いに。
+   マップの場所の音と同じく、左右・遠いほど小さく。持ち主が聞きくらべてえらんだ。JOYFS は [はじまり秒, 録音の読みはじめ秒, 長さ秒, はじめの高さ, おわりの高さ, 消える秒]。大きさ JOYFV は、ほかのキラリン系と同じ -35 LUFS */
+const JOYFV=.27,JOYFS=[[0,.12,.08,1.25,1.22,.03],[.15,.55,.12,1.2,1.1,.06]];
+function joyFufu(r){if(!AC||!SND.sfx||AC.state!=='running'||VOICE||VBG)return;const b=(SBUF.voice||[])[0];if(!b)return;const q=sfxPos(r.x,r.y);if(!q)return;const vo=voVo(r),dest=voiceDest(q,1800,JOYFV),t0=AC.currentTime+.02;
+  for(const[st,off,d,a,z,rel]of JOYFS){const t=t0+st,src=AC.createBufferSource(),e=AC.createGain();src.buffer=b;src.playbackRate.setValueAtTime(vo*a,t);src.playbackRate.linearRampToValueAtTime(vo*z,t+d);
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(1,t+.025);e.gain.setValueAtTime(1,t+d-rel);e.gain.linearRampToValueAtTime(0,t+d);src.connect(e);e.connect(dest);src.start(t,off);src.stop(t+d+.02)}
+  lastSfx.fufu=AC.currentTime}
 /* 鼻歌・もやもやの音（work-fx.js の drawHum・drawMoya）：音符・もやもやが出ているあいだ、画面のまん中にいちばん近い1人（見守っている子がいれば、その子）だけ、
    その子の声の高さで小さく、つぎつぎ鳴らす。会話の画面の声が出ているあいだは鳴らさない。
    鼻歌は、会話の声の母音をのばした音（SAMPLES.vowel）1本を1つの音にし（vNote）、高い音をけずって口をとじた「ん〜」にした、スキップのリズムの「るんるん」のフレーズ（humPhrase）。もやもやは録音（SAMPLES.moya） */
@@ -215,8 +222,6 @@ function musicDuck(ms){if(!AC||AC.state!=='running')return;const t=AC.currentTim
 function quietBeat(ms,k){musicDuck(ms);if(k)setTimeout(()=>sfx(k),380)}
 let ambG=null;const AMB={};
 /* 夕方の虫の声：短い高い音を2回ずつ（のこした音の素材はつかわず、その場でつくる）。夕方（17.5〜20時）だけ、ときどき */
-let AMBNEXT=0;
-function ambAccent(on,h){if(!on||!ambG||!(h>=17.5&&h<20))return;const t=AC.currentTime;if(t<AMBNEXT||DUCKT>t)return;AMBNEXT=t+2.5+Math.random()*4;const f=3800+Math.random()*900;for(let i=0;i<2+(Math.random()*2|0);i++){tone(f,t+i*.11,.06,'sine',.02,ambG,f*.97)}}
 let ambF=null,AMBIN=false;
 /* 家の中を映しているか：画面のまん中のマスが、屋根をはずした家の中（ふだんの拡大より、ちぢめていないとき） */
 function ambIndoor(){if(!S||!started||typeof HOUSES==='undefined'||!HOUSES.length||typeof cam==='undefined')return false;const vw=VW/cam.z,vh=VH/cam.z,cx=((cam.x+vw/2)/TS)|0,cy=((cam.y+vh/2)/TS)|0;if(cx<0||cy<0||cx>=W||cy>=H)return false;
@@ -239,7 +244,6 @@ function ambTick(){if(!AC||AC.state!=='running')return;cupMusicTick();if(!ambG){
     /* 昼：朝（5時〜7時半）は朝の音、そのあとは季節の音（春・夏はもらった音、秋・冬は鳥の声）。夜：夏はもらった夏の夜の音、ほかは虫の声（大きさ0.5） */
     const day=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5):h<17?1:cl((18.5-h)/1.5),mo=h<7?1:h<8?8-h:0,nt=h>=17.5?cl((h-17.5)/1.5)*.5:h<5.5?cl((5.5-h)/1)*.5:0;
     want.amb_morn=day*mo;want[se===0?'amb_spr':se===1?'amb_sum':'birds']=day*(1-mo);want[se===1?'amb_snight':'night']=nt}}
-  ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
 const LVSFXS=1.7;/* たっせい・レベルアップの録音（rwlevel）の長さ（秒） */
@@ -247,7 +251,7 @@ function lvSfxOn(){return !!(AC&&lastSfx.level!=null&&AC.currentTime-lastSfx.lev
 /* 音の優先順位：大事な音（DUCKK：たっせい・ハンコ・たたかい）が鳴ったら、うしろの音（lowG）と場所の音（ambD）を LOWDUCK の大きさにして、LOWREL 秒かけてもどす。
    うしろの音は、同時に LOWN こまで。いっぱいなら、いちばん小さい（画面のまん中から遠い）音より大きいときだけ、それを止めて鳴らす */
 let lowG=null,ambD=null,SFXBUS=null;const LOWN=8,LOWDUCK=.5,LOWHOLD=.1,LOWREL=.6,LOWL=[];
-const DUCKK=new Set(['quest','level','shard','arrive','ostamp','stamp','ehit','hit','defeat','glight','bossIn','bossKO','atk_fire','atk_earth','atk_wood','atk_wind','atk_water']);
+const DUCKK=new Set(['quest','level','shard','arrive','ostamp','stamp','ehit','hit','defeat','glight','glightc','bossIn','bossKO','atk_fire','atk_earth','atk_wood','atk_wind','atk_water']);
 function sfxBus(){return SFXBUS||sfxG}
 function lowDuck(){if(!AC)return;const t=AC.currentTime;for(const n of[lowG,ambD]){if(!n)continue;const g=n.gain,v=Math.min(1,g.value);g.cancelScheduledValues(t);g.setValueAtTime(v,t);g.linearRampToValueAtTime(LOWDUCK,t+.03);g.setValueAtTime(LOWDUCK,t+.03+LOWHOLD);g.linearRampToValueAtTime(1,t+.03+LOWHOLD+LOWREL)}}
 function lowOK(v){if(LOWL.length<LOWN)return true;let m=0;for(let i=1;i<LOWL.length;i++)if(LOWL[i].v<LOWL[m].v)m=i;if(LOWL[m].v>=v)return false;const e=LOWL.splice(m,1)[0];try{e.g.gain.setTargetAtTime(0,AC.currentTime,.02);e.src.stop(AC.currentTime+.08)}catch(_){}return true}
@@ -394,7 +398,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'wbreak':playS('wallbreak',.5);break;
   case'pour':playSeg('trickle',.4,1.8);break;
   case'shoot':playS('shoot',.5);break;
-  case'glight':playS('glight',.45);break;
+  case'glight':playS('glight',.45);break;case'glightc':playS('glightc',.45);break;
   case'clap':for(let i=0;i<6;i++){const d=t+i*.13+Math.random()*.03;noise(d,.04,.12,o,2200+Math.random()*900);noise(d+.05,.03,.08,o,1800)}break;
   case'post':if(playS('paper',1.35))break;noise(t,.06,.45,o,2500);tone(520,t+.04,.07,'triangle',.45,o);tone(880,t+.1,.08,'square',.21,o);break;
   case'repair':tone(600,t,.05,'square',.04,o);tone(600,t+.12,.05,'square',.04,o);tone(88,t+.24,.12,'triangle',.05,o);break;

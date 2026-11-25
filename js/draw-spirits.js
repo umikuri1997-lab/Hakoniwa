@@ -185,6 +185,15 @@ function spmCell(nm,el,vr,dir,i,T){/* せいれいの色にした1コマ（色�
   g.putImageData(d,0,0);SPMC.set(k,cv);
   while(SPMC.size>SPMCAP){const[k0,c0]=SPMC.entries().next().value;c0.width=c0.height=0;SPMC.delete(k0)}
   return[cv,0,0]}
+const SPMXL=['n','hap','shut','teary','tear','shock','strain','sad','brave','tired','hungry','lash:n','lash:hap','lash:shut','lash:teary','lash:tear','lash:shock','lash:sad','lash:brave','lash:tired','lash:hungry','cheek'];/* 表情の目・ほっぺの層のならび（tools/art/spirit3d/fbx_build.py の XL と同じ） */
+function spmXCell(nm,el,vr,dir,li,i,T){/* 表情の目・ほっぺの層の1コマ（持ち主のモデルの顔の3Dの面にはって写した絵。色のかえ方は spmCell と同じ） */
+  const m=(T||SPM)[nm],ae=spArt(el),X=m.xg&&m.xg[ae],src=m.x&&m.x[ae];if(!X||!src||li<0)return null;let g=SPMI[src];if(!g){g=SPMI[src]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=src}g.u=performance.now();if(!g.ok)return null;
+  const im=g.img,sx=i*X[0],sy=(dir*SPMXL.length+li)*X[1],A=SPC[ae],B=spcVar(el,vr);if(A===B)return[im,sx,sy];
+  const k=src+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+li+'|'+i;let cv=SPMC.get(k);if(cv){SPMC.delete(k);SPMC.set(k,cv);return[cv,0,0]}
+  cv=document.createElement('canvas');cv.width=X[0];cv.height=X[1];const c2=cv.getContext('2d');c2.drawImage(im,sx,sy,X[0],X[1],0,0,X[0],X[1]);
+  const d=c2.getImageData(0,0,X[0],X[1]),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
+  for(let q=0;q<p.length;q+=4){if(!p[q+3])continue;const h='#'+((1<<24)|(p[q]<<16)|(p[q+1]<<8)|p[q+2]).toString(16).slice(1),to=M[h];if(to){p[q]=parseInt(to.slice(1,3),16);p[q+1]=parseInt(to.slice(3,5),16);p[q+2]=parseInt(to.slice(5,7),16)}}
+  c2.putImageData(d,0,0);SPMC.set(k,cv);while(SPMC.size>SPMCAP){const[k0,c0]=SPMC.entries().next().value;c0.width=c0.height=0;SPMC.delete(k0)}return[cv,0,0]}
 const ISOEYEUV=[[-9,-40],[9,-40],[-15,-35],[15,-35]];/* 左・右の目、左・右のほっぺのまん中（絵の点。rig.py の ISOEYEUV と同じ） */const SPMSIT=new Set(['sunset','ysit','tkwatch']);/* 地面にすわる動き（sitF でも3Dの絵） */
 /* つり：おわりの FISHPULL（行動の時間）は、魚がかかって、うきのまわりで水がバシャバシャ・さおをぐいぐい引く */
 const FISHPULL=8,FISHEND=50;function fishPullNow(r){const a=r.act;return !!(a&&a.type==='fish'&&a.stage==='do'&&a.t>=FISHEND-FISHPULL)}
@@ -241,7 +250,8 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
   c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
   if(e[2]<2){const S2=e[2]===1?'S':'',md=o.mood==='cry'?'teary':o.mood||'',fm=o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D,wy=0;/* 目の場所は、持ち主のモデルの目から（クォータービューも、守り神と話すときの正面の絵も） */
     const eyes=(X,Y,w)=>{if(vr&&vr.cheek&&w!==1)spr('sp:cheek'+S2,X,Y);if(w===2)return;spr('sp:face'+S2+'#'+fm,X,Y);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,X,Y)};/* w：1 目だけ・2 ほっぺだけ */
-    if(e.length>4&&!S2){for(let k=0;k<4;k++){const q=e.slice(4+k*7,11+k*7);if(q.length<7||!q[6])continue;const U=ISOEYEUV[k];c.save();c.transform(q[2],q[3],q[4],q[5],q[0]*D-(q[2]*U[0]+q[4]*U[1])*D,q[1]*D-(q[3]*U[0]+q[5]*U[1])*D);c.beginPath();c.rect(k%2?0:-60*D,-90*D,60*D,100*D);c.clip();eyes(0,wy,k<2?1:2);c.restore()}}/* 左右の目・ほっぺを、それぞれ持ち主のモデルの顔の3Dの面の場所とちぢみ方で（tools/art/spirit3d/fbx_build.py） */
+    const XG=m.xg&&m.xg[spArt(el)];if(XG&&m.x[spArt(el)]){if(e[3])c.scale(-1,1);/* あとの もどし（if(e[3])c.scale(-1,1)）と つりあわせる */const lay=nm2=>{const cl=spmXCell(nm,el,vr,dir,SPMXL.indexOf(nm2),i,T);if(cl){if(e[3])c.scale(-1,1);c.drawImage(cl[0],cl[1],cl[2],XG[0],XG[1],XG[2]*D,XG[3]*D,XG[0]*D,XG[1]*D);if(e[3])c.scale(-1,1)}};if(vr&&vr.cheek)lay('cheek');lay(fm);if(vr&&vr.lash&&fm!=='strain')lay('lash:'+fm)}/* 表情の目・ほっぺは、3Dの顔にはって写した層をそのまま（ずらさない・のばさない） */
+    else if(e.length>4){const eyesQ=(X,Y,w)=>{if(vr&&vr.cheek&&w!==1)spr('sp:cheek',X,Y);if(w===2)return;spr('sp:face#'+fm,X,Y);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash#'+fm,X,Y)};for(let k=0;k<4;k++){const q=e.slice(4+k*7,11+k*7);if(q.length<7||!q[6])continue;const U=ISOEYEUV[k];c.save();c.transform(q[2],q[3],q[4],q[5],q[0]*D-(q[2]*U[0]+q[4]*U[1])*D,q[1]*D-(q[3]*U[0]+q[5]*U[1])*D);c.beginPath();c.rect(k%2?0:-60*D,-90*D,60*D,100*D);c.clip();eyesQ(0,wy,k<2?1:2);c.restore()}}/* 左右の目・ほっぺを、それぞれ持ち主のモデルの顔の3Dの面の場所とちぢみ方で（tools/art/spirit3d/fbx_build.py） */
     else{if(e[3]){c.scale(-1,1)}
     eyes(e[3]?-ex:ex,ey)}
     if(e[3])c.scale(-1,1);if(o.crown)drawCrown(c,cwx,cwy,D,null,0,0,'f');if(G[5]){const ov=spmCell(nm,el,vr,dir+3,i,T);if(ov)c.drawImage(ov[0],ov[1],ov[2],G[0],G[5],G[2]*D,(G[3]+G[4])*D,G[0]*D,G[5]*D)}}/* 目の上に、手前のうで・手・道具をもう1回 */
