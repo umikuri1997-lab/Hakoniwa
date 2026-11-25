@@ -110,7 +110,7 @@ def pose(el, p, face):
     for nm in S['order']:
         arm.pose.bones[nm].matrix = Matrix((T[nm]@rest[nm]).tolist())
         bpy.context.view_layer.update()
-    S['T'] = T
+    S['T'] = T; S['wingfold'] = g('wingfold')
     return T
 
 def align(a, b):
@@ -160,6 +160,10 @@ def triangles(el, eyes=True):
         V = np.array([(M @ v.co)[:] for v in me.vertices])*100.0
         N = np.array([(R @ v.normal).normalized()[:] for v in me.vertices])
         dom = S['dom'][o.name]; base = FP.hx(FP.color_of(o.name, el, ''))
+        if ln.startswith('hane') and S.get('wingfold'):   # はねをたたむ（wingfold：ラジアン）：休みの形で、はねを根もとのまわりに下へ回して体にそわせ、腰の骨の動きをかける（はねは腰の骨にだけつく）
+            R0 = S['restV'][o.name]; zr = float(np.median(R0[np.abs(R0[:, 0]) < 10, 2])); dx = R0[:, 0]; dz = R0[:, 2]-zr
+            r = np.hypot(dx, dz); th = np.maximum(np.arctan2(dz, np.abs(dx))-S['wingfold'], -1.35); Q = R0.copy(); Q[:, 0] = np.sign(dx)*r*np.cos(th); Q[:, 2] = zr+r*np.sin(th)
+            Th_ = S['T']['hips']; V = (Th_@np.c_[Q*0.01, np.ones(len(Q))].T).T[:, :3]*100.0
         hood = o.name.lower().startswith('hood'); cp = S['comp'].get(o.name)
         mat = (1 if el == 'water' else 2 if el == 'fire' else 0) if hood else 3 if o.name.lower().startswith('hane') else 0   # 水のずきんは つや・火のずきんは 光る・風のはねは すける
         for t in me.loop_triangles:
