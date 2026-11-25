@@ -310,7 +310,7 @@ function sfx(k){
   case'good':if(!playS('joyc',.4))seq([84,88],.07,'sine',.06);break;/* よろこぶ音：オルゴールのちりりん（読みこむ前だけ、前の作った音） */
   case'warn':seq([62,57],.14,'square',.035,.22);break;
   case'quest':if(playS('rwquest',.45))break;seq([72,76,79,84,79,84],.09,'triangle',.08,.16);break;/* たっせい：おもちゃの鉄琴の「ドミソド」（読みこむ前だけ、前の作った音） */
-  case'gift':if(playS('rwget',.45))break;if(!playS('joyc',.4))seq([84,88],.07,'sine',.06);break;/* うけとった：おもちゃの鉄琴の「ちん・ちーん」 */
+  case'gift':if(playS('rwget',.22))break;if(!playS('joyc',.4))seq([84,88],.07,'sine',.06);break;/* うけとった：おもちゃの鉄琴の「ちん・ちーん」 */
   case'firstput':if(playS('rwfirst',.5))break;tone(2093,t,.5,'sine',.03,o);break;/* はじめて置いた家具：チャイムの「きらーん」 */
   case'level':seq([67,72,76,79],.09,'triangle',.08,.16);[72,76,79,84].forEach(m=>tone(m,t+.4,1.1,'sine',.035,o));[96,100,103,108].forEach((m,i)=>tone(m,t+.7+i*.05,.25,'triangle',.025,o));break;
   case'bossIn':noise(t,1.6,.16,o,60);tone(110,t,1.6,'sawtooth',.06,o,40);tone(55,t,2.2,'sine',.12,o,35);[45,46,51].forEach((m,i)=>tone(m,t+.25+i*.02,2.4,'triangle',.05,o));break;/* オオカゲの登場：ひくい地ひびきと、にごった和音 */
