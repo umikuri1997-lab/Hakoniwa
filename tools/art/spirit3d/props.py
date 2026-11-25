@@ -66,14 +66,14 @@ def pick():
 def hoe():
     return join(handle(20, 1.3), box(H+[-3.5, 0, 20], [3.5, 0.8, 4.5], STEEL)), {'tip': H+[-7, 0, 20]}
 def can():
-    """じょうろ：取っ手を上からにぎり、胴は手の下。そそぎ口は前へのび、胴ごと前へかたむけて、先（はす口）が前の下を向く（うでの向きによらず、まうえをそろえる 'up'）"""
+    """じょうろ：取っ手を上からにぎり、胴は手の下。そそぎ口は前へのび、胴ごと前へかたむけて、先（はす口）が前の下を向く（うでの向きによらず、まうえをそろえる 'up'・口をからだの正面へ向ける 'fwd'）"""
     f, u = _fu(1.0); a = 0.7; f2 = f*math.cos(a)-u*math.sin(a); u2 = u*math.cos(a)+f*math.sin(a); v = np.array([0, 1.0, 0])
     c = H-u2*4.2-f2*0.5; R = np.stack([f2, v, u2], 1)
     body = box(c, [3.6, 3.2, 3.2], hx('#8fb4c8'), R); top = box(c+u2*3.0, [3.4, 3.0, 0.5], hx('#a9c8d9'), R)
     grip = cyl(c+u2*3.2-f2*2.5, c+u2*4.6, 0.8, hx('#7fa3b8'))
     s0 = c+f2*3.0-u2*1.0; s1 = c+f2*10.0+u2*1.6
     spout = cyl(s0, s1, 1.15, hx('#8fb4c8')); rose = ball(s1+f2*0.6, 1.9, hx('#a9c8d9'))
-    return join(body, top, grip, spout, rose), {'tip': s1+f2*1.2-u2*0.6, 'up': u}
+    return join(body, top, grip, spout, rose), {'tip': s1+f2*1.2-u2*0.6, 'up': u, 'fwd': f}
 def ladle():
     return join(handle(12, 0.9, 2.0, WOOD2), ball(H+[3.0, 0, 13], 3.0, GREY, (0.6, 1, 1))), {'tip': H+[3.0, 0, 13]}
 def duster():
@@ -152,6 +152,6 @@ def prop(name):
     if name not in _C:
         global Q
         q0 = Q; Q = q0/SCALE; (P, C), fx = PROPS0[name](); Q = q0
-        P = H+(P-H)*SCALE; fx = {k: (v if k == 'up' else H+(v-H)*SCALE) for k, v in fx.items()}   # up は向きだけ
+        P = H+(P-H)*SCALE; fx = {k: (v if k in ('up', 'fwd') else H+(v-H)*SCALE) for k, v in fx.items()}   # up・fwd は向きだけ
         _C[name] = ((P, C), fx)
     return _C[name]

@@ -378,7 +378,8 @@ def hammer(w, face):
 for nm in ('build', 'repair', 'craft'): M(nm, 8, 2.6/2, hammer)
 def watering(w, face):
     """じょうろを、となりの畑のマスの上へさし出して、かたむけて水をやる：手前のうでを前へほぼ水平にのばし、からだも前へかがむ（水のつぶは、ゲームでじょうろの先から）"""
-    return breathe(dict(sN=1.55+0.08*S(w), bN=-0.2, tN=0.0, prop='can', sF=0.3, bF=-0.1, lean=0.24, legM=0.15, legP=-0.15, hp=0.2), w)
+    up = 0.55 if face == 2 else 0.0   # うしろななめ：せいれいはまっすぐ正面から写すので、前へのばした手が画面で上がらない。畑のマスは画面のななめ上なので、手を高く上げて、じょうろを畑の上に見せる
+    return breathe(dict(sN=1.45+up+0.08*S(w), bN=-0.85, tN=0.0, prop='can', sF=1.25+up+0.08*S(w), bF=-0.85, lean=0.24-0.3*up, legM=0.15, legP=-0.15, hp=0.2-0.2*up), w)
 M('water', 8, 2/(2*PI), watering); M('tend', 8, 2/(2*PI), watering)
 def drawwater(w, face):
     """水くみ（1回だけ）：かがんでバケツを水へおろし（〜.4）、水に入れて少しまつ（〜.5）、両手でひき上げ（〜.75）、胸の前でかかえてひと息（〜1）。
