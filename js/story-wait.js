@@ -129,7 +129,6 @@ function storyWaitReason(r,obj){
   if(r.meal||hungry(r)||['eat','fetch','eatwait','forage'].includes(r.act?.type))return n+'がごはんを食べてから向かう';
   if(['sleep','faint'].includes(r.act?.type)||r.energy<20)return n+'が休んでから向かう';
   if(r.cing||r.act?.type==='cook')return n+'が料理を終えてから向かう';
-  if(carryN(r)||matN(r))return n+'が荷物をしまってから向かう';
   if(HOLD.has(r.id)||onHold(r))return n+'の用事が終わるのを待とう';
   const b=STORY_WAIT_BLOCKS.get(r);
   if(b?.owner===S&&b.session===VILLAGE_SESSION&&b.obj===obj&&b.until>=S.t)return n+(b.reason==='crowded'?'の立つ場所を空けよう':'が通れない。道をあけよう');
