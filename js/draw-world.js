@@ -9,7 +9,7 @@ function drawTopFx(){let sm=null;for(const f of fx){if(f.k!=='spr'||!TOPFX.has(f
 const GLHIT=110;/* まもりの光の音は、光の槌が地面に当たるコマ（0.25秒）に、音のいちばん大きい所（0.14秒）をそろえる */
 const GLFX=250;/* 画面のゆれと光、ダメージ・とめる・素材が落ちる（glHit）も、光の槌が地面に当たるコマ（0.25秒、godlight の5コマめ）に合わせる */
 const ATRAIL=14,ABURSTY=31;/* 木の矢の光のすじのつぶの数・arrowburst の光のまん中は置く所より31点上 */
-function lightSnd(x,y){villageTimeout(()=>sfxAt('glight',x,y),GLHIT);villageTimeout(()=>skillFx('light'),GLFX)}
+function lightSnd(x,y,ch){villageTimeout(()=>sfxAt(ch?'glightc':'glight',x,y),GLHIT);/* ぴったりにためた光は、低いひびきのある音 */villageTimeout(()=>skillFx('light'),GLFX)}
 function fxSpr(n,x,y,col,fl,gy){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x,y,col,fl:fl||1,life:1,dur:g.n/g.fps,gy})}/* エフェクトを1回ながす（x,y は世界の座標。gy：x,y が地面より上のときの、地面の y。クォータービューの足もと iso-fx.js） */
 'use strict';
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */

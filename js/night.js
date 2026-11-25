@@ -369,7 +369,7 @@ function guardLight(e,ch){return glCast(Math.floor(e.x),Math.floor(e.y),e,ch)}/*
 function glCast(tx,ty,foc,ch){/* まもりの光：タップしたマス（tx,ty）に光の槌を落とす。パワー1・チャージは GUP の cd。当たるのは、光が地面にとどくとき（GLFX）。範囲は GUP の rng */PTW.q=true;
   if(LIGHTCD>0){skillDeny('#guardStatus');toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return false}if(S.pt<1){skillDeny('#guardStatus');toast('パワーが足りません');return false}if(tx<0||ty<0||tx>=W||ty>=H)return false;S.pt-=1;LIGHTCD=lightCdMax();
   const j=ty*W+tx,R=gupOf('rng').v[gupLv('rng')]+(ch?GLCHR:0)/* ためたときは、まわり+1マス */,cx=foc?foc.x*TS:tx*TS+16,cy=foc?foc.y*TS+8:ty*TS+26-liftOf(j);
-  fxSpr('godlight',cx,cy);lightSnd(tx,ty);const S0=S;villageTimeout(()=>{if(S===S0)glHit(tx,ty,R,foc,ch)},GLFX);return true}
+  fxSpr('godlight',cx,cy);lightSnd(tx,ty,ch);const S0=S;villageTimeout(()=>{if(S===S0)glHit(tx,ty,R,foc,ch)},GLFX);return true}
 function glHit(tx,ty,R,foc,ch){/* 光が地面にとどいた：範囲（タップしたマスから R マス、ななめも）のコワイノにダメージととめる、木・岩には素材を落とす。まわりのせいれいはおどろく */
   const inR=(x,y)=>Math.max(Math.abs((x|0)-tx),Math.abs((y|0)-ty))<=R,G=gupOf('stun'),gs=gupLv('stun'),pw=ch?gupOf('pow').vc[gupLv('pow')]:gupOf('pow').v[gupLv('pow')],K0=S.kills;
   if(R>0)for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H||!dx&&!dy)continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;/* ふちのマスは、ぜんぶ。中は1マスおき */const q=y*W+x;villageTimeout(()=>fxSpr('glspark',x*TS+16,y*TS+16+GLSPY-liftOf(q)),d*GLSTEP)}
