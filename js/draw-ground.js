@@ -9,11 +9,21 @@ function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画
   igJobs(L);L.push(()=>{GRD.any=true});/* ひし形の地面の区画 */
   return {s:S,L,i:0}}
 const STAGEMS=180;/* 読みこみ中、1コマにマップを作る時間（ミリ秒。長いほど、コマのあいだのむだがへって速い。%の出かたは、ゆっくりになる） */
-function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<STAGEMS){let r;try{r=J.L[J.i]()}catch(e){frameErr('preload',e)}if(r===false)break;J.i++}/* false：ワーカーがいっぱい。つぎのコマに */if(J.i>=J.L.length){if(igWorkBusy())return;/* ワーカーの区画がそろうまで待つ */if(!J.warm){igWorkEnd();J.warm=performance.now();try{render(now)}catch(e){frameErr('preload',e)}return}/* はじめの画面を1回描いて（読みこみ中の画面のうしろ）、そこに出る物の絵のページを読みはじめる */if(chaReady()||performance.now()-J.warm>15000){GRD.job=null;GRD.pre=J.s;tmpFree()}}}/* 読みはじめたページがそろったら、マップを開く */
+function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<STAGEMS){let r;try{r=J.L[J.i]()}catch(e){frameErr('preload',e)}if(r===false)break;J.i++}/* false：ワーカーがいっぱい。つぎのコマに */if(J.i>=J.L.length){ldMark('b');if(igWorkBusy())return;/* ワーカーの区画がそろうまで待つ */if(!J.warm){ldMark('c');igWorkEnd();J.warm=performance.now();try{render(now)}catch(e){frameErr('preload',e)}return}/* はじめの画面を1回描いて（読みこみ中の画面のうしろ）、そこに出る物の絵のページを読みはじめる */if(chaReady()||performance.now()-J.warm>15000){GRD.job=null;GRD.pre=J.s;tmpFree();ldMark('d');ldShow()}}}/* 読みはじめたページがそろったら、マップを開く */
 function chaReady(){for(const k in CHA){const a=CHA[k];if(!a.ok&&!a.bad)return false}return true}/* 読みはじめたアトラスのページが、ぜんぶ読みこめたか（使わない物のページは読まない） */
 function assetPct(){/* 絵の読みこみの進みぐあい（0〜1）。マップチップのアトラス（読みはじめたページ）で半分、ほかの絵で半分 */let n=0,d=0,cn=0,cp=0;for(const k in CHA){const a=CHA[k];cp++;if(a.ok||a.bad)cn++}/* アトラスは、読みはじめたページだけ */for(const k in ICI){const im=ICI[k];d++;if(im.ok||im.bad||im.complete)n++}for(const k in ART){const a=ART[k];d++;if(a.ok||a.bad)n++}return ((cp?cn/cp:1)+(d?n/d:1))/2}
 function loadPct(){/* 読みこみの%：絵の読みこみが30%、マップを作るのが70% */const J=GRD.job;return Math.min(99,Math.floor(J&&J.s===S?30+70*J.i/J.L.length:30*assetPct()))}
 function assetsOK(){/* 絵が読みこめたか（マップチップのアトラスは読みはじめたページ・アイコン・そのほかの絵）。地面と水の絵は、ここで読みはじめる */if(!chaReady())return false;for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===KAZAN||waterChipsOK())}
+/* 読みこみの時間をはかって、おわったら画面の上に出す（スマホでどこがおそいかをしらべるための、かりのしかけ。わかったらけす） */
+let LDT=null,LDCG=null,LDTITLE=null;/* LDCG：「つづきから」でセーブを開きはじめた時刻・LDTITLE：タイトルのボタンが出た時刻（ページを開いてから） */
+function ldStart(){LDT={s:S,w:performance.now(),cg:LDCG};LDCG=null}
+function ldMark(k){if(LDT&&LDT.s===S&&LDT[k]==null)LDT[k]=performance.now()}
+function ldShow(){const T=LDT;if(!T||T.s!==S||T.d==null)return;LDT=null;const sec=(a,b)=>a==null||b==null?'？':((b-a)/1000).toFixed(1)+'秒',L=['読みこみの時間（しらべるためのかり）'];
+  if(LDTITLE!=null){L.push('ページを開く→タイトル '+sec(0,LDTITLE));LDTITLE=null}
+  if(T.cg!=null)L.push('セーブを開く '+sec(T.cg,T.w));
+  L.push('絵の読みこみ '+sec(T.w,T.a),'地面の区画を作る '+sec(T.a,T.b),'区画のしあげ待ち '+sec(T.b,T.c),'物の絵のページ待ち '+sec(T.c,T.d),'ぜんぶ '+sec(T.cg!=null?T.cg:T.w,T.d));
+  let d=document.getElementById('ldTime');if(!d){d=document.createElement('div');d.id='ldTime';d.style.cssText='position:fixed;left:8px;top:8px;z-index:70;padding:8px 10px;border-radius:8px;background:rgba(30,24,16,.9);color:#fff3d6;font-size:13px;line-height:1.5;white-space:pre';d.onclick=()=>{d.hidden=true};document.body.appendChild(d)}
+  d.textContent=L.join('\n')+'\n（タップでとじる）';d.hidden=false;clearTimeout(d._t);d._t=setTimeout(()=>{d.hidden=true},30000)}/* 画面の部品なので setTimeout */
 const stageReady=()=>GRD.pre===S;/* マップ全体を作りおわったか。おわるまで、マップを見せず、時間も止める */
 function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:15px';document.body.appendChild(d)}if(!d.querySelector('#ldTxt')){d.style.flexDirection='column';d.style.gap='6px';d.innerHTML='<canvas id="ldWalk" width="320" height="150" style="width:160px;height:75px;image-rendering:pixelated"></canvas><span id="ldTxt"></span>'}/* 歩くせいれいと、読みこみの文 */if(on){d.querySelector('#ldTxt').textContent='マップを読みこみ中… '+loadPct()+'%';if(typeof ldWalk==='function')ldWalk(d.querySelector('#ldWalk'))}d.hidden=!on;return d}
 const GHALFT=600;/* ちぢめるのをやめてから、半分の絵を手ばなすまでのコマ（約10秒） */

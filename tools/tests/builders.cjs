@@ -26,6 +26,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(p));
   assert.ok(p.txt.includes('パワー+20'),p.txt);assert.equal(p.d,20);
   /* できあがりの絵：建てている所は、足場の上に物の絵がうすく出る。設計図の家具の部品も */
+  await run(`siteGhost(document.createElement('canvas').getContext('2d'),{build:'well',p:0,need:10,got:{}},0,0,performance.now(),null)`);for(let k=0;k<100&&!(await run('chaReady()'));k++)await new Promise(z=>setTimeout(z,100));/* 井戸の絵のページを読みおえてから、色をはかる */
   const g=JSON.parse(await run(`(()=>{const cv=document.createElement('canvas');cv.width=cv.height=200;const c=cv.getContext('2d');const sum=()=>{const d=c.getImageData(0,0,200,200).data;let n=0;for(let i=3;i<d.length;i+=4)n+=d[i];return n};
     const d={build:'well',p:0,need:10,got:{}};siteGhost(c,d,80,120,performance.now(),null);const a0=sum();c.clearRect(0,0,200,200);d.p=10;siteGhost(c,d,80,120,performance.now(),null);const a1=sum();
     c.clearRect(0,0,200,200);siteGhost(c,{build:'stairs',p:5,need:10},80,120,performance.now(),null);const st=sum();

@@ -29,7 +29,8 @@ const assert=require('node:assert/strict');
   if(process.env.SHOT_DIR){const u=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(L[0].b)})));require('fs').writeFileSync(process.env.SHOT_DIR+'/built.jpg',Buffer.from(u.split(',')[1],'base64'))}
   await run(`phWant('see',phBoxOf(CX,CY,1),'','sunset')`);await page.waitForTimeout(2400);
   const k1=await run(`S.dy.phK`);assert.equal(k1,'built','a smaller thing does not replace it');
-  await run(`phWant('spot',phBoxOf(CX+3,CY,1),'しょくたく')`);
+  await run(`hdBig(3500);phWant('spot',phBoxOf(CX+3,CY,1),'しょくたく')`);await page.waitForTimeout(2400);/* 見せ場の光（召喚など）のあいだは写さない */
+  const k2=await run(`S.dy.phK`);assert.equal(k2,'built','no picture while the big light is on');
   await page.waitForFunction(()=>sacredEval("S.dy.phK==='spot'"),{},{timeout:8000});await page.waitForTimeout(400);
   const n1=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.length));assert.equal(n1,1,'the old picture is deleted');
   console.log('Diary picture: taken close to the new thing, only in the day, the most important one stays');

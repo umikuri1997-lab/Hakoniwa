@@ -107,13 +107,13 @@ function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z*IQL/LIFT/
 const WPLIFT=78;/* 見張り台の上に立つ高さ（段の高さ LIFT で。3Dの見張り台の床の高さ 2.45だん＝watch.py の DZ） */const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
 function uLift(o){if(o&&o.act&&o.act.type==='watchpost'&&o.act.stage==='do'){const k=Math.min(1,o.act.cl||0);if(k<1)CLIMB.add(o);else CLIMB.delete(o);return (S.hi?liftOf(o.act.obj+W):0)+WPLIFT*k}/* 見張り台の上に立つ（ハシゴを少しずつのぼる） */if(o&&o.elem){CLIMB.delete(o);if(S&&LADDERS.has(S.obj[(o.y|0)*W+(o.x|0)])&&o.path&&o.path.length)CLIMB.add(o)}/* ハシゴの上を動いている子も、よじのぼる動き *//* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
   if(!S.hi||!o)return 0;const cj=(o.y|0)*W+(o.x|0),n=o.path&&o.path.length?o.path[0]:-1;
-  if(o.elem){const C=CLB.get(o);if(C&&C.n===n){const ha=Math.max(0,hiAt(C.a)),hn=Math.max(0,hiAt(C.n)),k=Math.max(0,C.k);if(k>0&&k<1)CLIMB.add(o);return LIFT*(ha+(hn-ha)*k)+(k>0&&k<1?Math.abs(Math.sin(k*Math.PI*4))*1.5:0)}return zAt(o.x,o.y)}/* せいれい：ふちで、まっすぐ上・下へよじのぼる（CLB。もとのマスの高さから、つぎのマスの高さへ。1歩ごとに小さくゆれる） */
+  if(o.elem){const C=CLB.get(o);if(C&&C.n===n){const ha=Math.max(0,hiAt(C.a)),hn=Math.max(0,hiAt(C.n)),k=Math.max(0,C.k);if(k>0&&k<1)CLIMB.add(o);if(C.hop)return hopAt(C).z;return LIFT*(ha+(hn-ha)*k)+(k>0&&k<1?Math.abs(Math.sin(k*Math.PI*4))*1.5:0)}return zAt(o.x,o.y)}/* せいれい：ふちで、まっすぐ上・下へよじのぼる（CLB。もとのマスの高さから、つぎのマスの高さへ。1歩ごとに小さくゆれる） */
   if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=Math.max(0,hiAt(a)),hn=Math.max(0,hiAt(n));if(jumpEdge(a,n)){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
   return zAt(o.x,o.y)}
-function climbFace(r){/* がけ・ハシゴをよじのぼる・おりるときの向き：がけのほうを向く。正面（手前に見える面）はうしろ向き（true）、おくの面は正面（false）。横・ふちまで歩いているあいだ・よじのぼっていないときは null（歩く向き） */
+function climbFace(r){/* がけ・ハシゴをよじのぼる・おりるときの向き：がけのほうを向く。手前に見える面（左下・右下）は、のぼるときもおりるときもうしろ向き（true）。おくのがけ（clbHop）は、上がるときは正面（false・がけのほう）、おりるときはうしろ向き（とぶほう）。ふちまで歩いているあいだ・よじのぼっていないときは null（歩く向き） */
   if(!S||!S.hi||!r.path||!r.path.length)return null;const cj=(r.y|0)*W+(r.x|0),n=r.path[0];
   if(n===cj-W&&ladderLink(n,cj)||LADDERS.has(S.obj[cj])&&ladderDir(cj)===0)return true;/* 正面のハシゴ */
-  const C=CLB.get(r);if(!C||C.n!==n||C.k<0||Math.abs(C.n-C.a)!==W)return null;return hiAt(Math.min(C.a,C.n))>hiAt(Math.max(C.a,C.n))}/* ふちで、まっすぐ上・下へよじのぼっているあいだ（CLB）。のぼるときも、おりるときも同じ向き（ハシゴと同じ） */
+  const C=CLB.get(r);if(!C||C.n!==n||C.k<0)return null;if(C.hop)return hiAt(C.n)<hiAt(C.a);return true}/* ふちで、まっすぐ上・下へよじのぼっているあいだ（CLB）。のぼるときも、おりるときも同じ向き（ハシゴと同じ） */
 const STPAL={slope_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_brick:['#dba48c','#b8735c','#935a47'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
 function drawStair(c,id,px,py,d,top,bot){/* 階段のアイコン（仮の絵）：手前へ下りる5だん */
   const P=STPAL[id]||STPAL.slope_earth,br=id.endsWith('_brick'),n=5,h=(bot-top)/n,x0=px+3,w=TS-6;
@@ -126,7 +126,7 @@ function tmpFree(){for(const c of TMPF)c.width=c.height=0;TMPF.length=0}
 let GLOD=false;
 function drawPits(x0,y0,x1,y1){/* ほった穴（地面より下）：マスの中に、おくのかべ（石）と、暗くなった底。底は、そのマスの地面の絵をずらさずに使う（穴の中の物も、地面の高さで描く liftOf） */if(S.hi)isoPits(ctx,x0,y0,x1,y1)}/* クォータービュー（iso-fx.js） */
 const CUBET={};/* つんだブロックの絵：1マス64ドットのドット絵（石・板はもらったテクスチャを切りとる、レンガはコードのドット）。まわり1ドットはブロックのさかいの線 */
-const BLKIMG={};function blkImg(id){/* ほって落ちたブロックのアイコン（もちものと同じ絵） */let m=BLKIMG[id];if(!m){const u=iconURL(id);if(!u)return null;m=BLKIMG[id]=new Image();m.src=u}return m}
+const BLKIMG={};function blkImg(id){/* ほって落ちたブロックのアイコン（もちものと同じ絵） */let m=BLKIMG[id];if(!m){const u=iconURL(id);if(!u||ICWAIT[id]===u)return null;/* 読みこみ中のかりの絵は、とっておかない */m=BLKIMG[id]=new Image();m.src=u}return m}
 function cubeTex(id){let c=CUBET[id];if(c)return c.ok?c:null;c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
   const tk=id==='blk_stone'?'tex:granite':id==='blk_wood'?'tex:planks':'',ch=tk&&(window.CHIPS||{})[tk];
   if(id===SOIL){/* 土のブロック：コードのドット（2ドットずつ）。土の色にこい点・明るい点・小石・うすい地層 */const P=['#a47b52','#9a7149','#ad845a','#a07650'];for(let y=0;y<64;y+=2)for(let x=0;x<64;x+=2){g.fillStyle=P[(hash(x*7+y*131+5)*4)|0];g.fillRect(x,y,2,2)}
@@ -164,7 +164,7 @@ function drawDrop(d,now){const dz=liftOf(d.y*W+d.x)/* クォータービュー�
       ctx.fillStyle='rgba(255,240,170,'+(.18+tw*.2)+')';ctx.beginPath();ctx.arc(cx,fy,13+tw*3,0,7);ctx.fill();
       ctx.fillStyle='#ffe58a';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+7,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-7,fy-1);ctx.closePath();ctx.fill();
       ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+3,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-2,fy-1);ctx.closePath();ctx.fill();return}
-    if(d.lt){const mk=d.id.slice(4),im=PICKB.includes(d.id)?blkImg(d.id):mk==='bamboo'&&ICI.bamboo&&ICI.bamboo.ok?ICI.bamboo:emoImg(mk==='stone'?'🪨':mk==='bamboo'?'🎋':'🪵')||hudIc('matN'),ih=20;/* 落ちた物のアイコン：木材・石材・竹（箱のアイコンにしない） */let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=Math.max(0,(now-fx0.t0)/700);if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
+    if(d.lt){const mk=d.id.slice(4),im=PICKB.includes(d.id)?blkImg(d.id):mk==='bamboo'&&ICI.bamboo&&ICI.bamboo.ok?ICI.bamboo:emoImg(mk==='stone'?'🪨':mk==='bamboo'?'🎋':'🪵')||null,ih=20;/* 落ちた物のアイコン：木材・石材・竹（箱のアイコンにしない） */let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=Math.max(0,(now-fx0.t0)/700);if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
       ctx.fillStyle='rgba(40,25,10,'+(.18*sh)+')';ctx.beginPath();ctx.ellipse(ix,cy+6,9*sh,2.7*sh,0,0,7);ctx.fill();if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;if(rot){ctx.save();ctx.translate(ix,iy-1);ctx.rotate(rot);ctx.drawImage(im,Math.round(-iw/2),Math.round(-ih/2),iw,ih);ctx.restore()}else ctx.drawImage(im,Math.round(ix-iw/2),Math.round(iy-ih/2-1),iw,ih)}return}/* 守りの光で落とした木材・石材：上の木材・石材と同じアイコン */
     if(d.cr){const im=ICI[d.id.slice(d.id.indexOf(':')+1)],ih=18;let ix=cx,iy=cy,sh=1;const fx0=DROPFX.get(d);if(fx0){const e=(now-fx0.t0)/700;if(e>=1)DROPFX.delete(d);else{const f=Math.min(1,e/.7),hop=e<.7?0:Math.sin((e-.7)/.3*Math.PI)*4;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f*f-hop;sh=.5+.5*f}}/* 小鳥・りす・うさぎが落とした物：上から落ちて、小さくはねる */
       ctx.fillStyle='rgba(40,25,10,'+(.18*sh)+')';ctx.beginPath();ctx.ellipse(cx,cy+6,8*sh,2.4*sh,0,0,7);ctx.fill();if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(ix-iw/2),Math.round(iy-ih/2-1),iw,ih)}return}
@@ -220,13 +220,13 @@ function render(now){RFN++;hdFrame();
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=godOnAltar(),gk=onA?((STATUE/W)|0)+2.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 台座の上：神殿・台座より手前 */[px-36,py-64,px+36,py+24],()=>liftDraw(onA?GODALTARZ:0,()=>drawGod(now)),(GY|0)*W+(GX|0),ptFoot(px,py));}
   if(festOn())for(const st of festStalls()){const px=(st.x+.5)*TS,py=(st.y+.5)*TS-4;if(!vis({x:st.x+.5,y:st.y+.5}))continue;add(st.y+.3,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,0,now,st),-1,ptFoot(px,py));add(st.y+.75,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,1,now,st),-1,ptFoot(px,py))}/* せいれいの屋台（屋根は店番のうしろ、台は前） */
   if(typeof TFALL!=='undefined'&&TFALL.length){treeFallTick(now);for(const f of TFALL)add(f.dep,1,null,()=>drawTreeFall(f,now),f.j!=null?f.j:-1)}/* たおれていく木（juice.js） */
-  if(RMFX.length){for(let i=RMFX.length-1;i>=0;i--)if(now-RMFX[i].t0>=RMFXMS||RMFX[i].S!==S)RMFX.splice(i,1);for(const f of RMFX)add(typeof objectDepth==='function'?objectDepth(f.o,f.j):(f.j/W|0)+.5,1,null,()=>drawRmFx(f,now),-1,objFoot(f.j%W,(f.j/W)|0,1,1,f.j))}/* こわした物が、うきあがって消える（spirit-act.js） */
+  if(RMFX.length){for(let i=RMFX.length-1;i>=0;i--)if(now-RMFX[i].t0>=rmFxMs(RMFX[i])||RMFX[i].S!==S)RMFX.splice(i,1);for(const f of RMFX)add(typeof objectDepth==='function'?objectDepth(f.o,f.j):(f.j/W|0)+.5,1,null,()=>drawRmFx(f,now),-1,objFoot(f.j%W,(f.j/W)|0,1,1,f.j))}/* こわした物が、うきあがって消える（spirit-act.js） */
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1,ptFoot(px,py))}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'&&o!=='yudekago'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     {if(!isoCellVis(x,y,TS*4))continue;if(iqGrp(o)){add(objectDepth(o,i),1,null,()=>iqConnDraw(ctx,i,o,now),i,false,x+y+1.3);continue}/* 壁・ドア・窓・塀・柵・生垣（iso-conn.js） */if(STAIRS.has(o)||LADDERS.has(o)){add(objectDepth(o,i),0,null,()=>icScreen(ctx,()=>LADDERS.has(o)?icLadder(ctx,i,o):icStair(ctx,i,o)),i,false,icStairDD(i,o));continue}/* 階段・坂・ハシゴ（iso-cliff.js） */}
     if(o==='sprout'){add(objectDepth(o,i),1,null,()=>sproutBox(ctx,x*TS,y*TS-liftOf(i)),i,false,x+y+.01);add(objectDepth(o,i),1,null,()=>drawObj(ctx,o,x*TS,y*TS-liftOf(i),i,0,now),i);continue}/* 植える場所：点線のわくは地面にはりつけて、種（と輪・土のもりあがり）は、前と同じ向きで立てて描く */
     const isoFlat=FLAT.has(o)||BL[o].floor;/* クォータービュー：畑など平らな物は、地面といっしょにひし形で */
-    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>isoCastAt(ctx,i,()=>hdCastStretch(x*TS+TS/2,y*TS+TS*.8,()=>{drawChip(ctx,sh,o,x*TS,y*TS,0,i);komorebi(sh,o,x*TS,y*TS,i,now)})),-1,false,x+y+.5)}/* 落ち影：地面の上に（iso-fx.js）。その物より先。葉のある木は、落ち影の中に木もれ日（feel.js） */
+    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>isoCastAt(ctx,i,()=>hdCastStretch(x*TS+TS/2,y*TS+TS*.8,()=>{drawChip(ctx,sh,o,x*TS,y*TS,0,i);komorebi(sh,o,x*TS,y*TS,i,now)})),-1,false,hiAt(i)>0?x+y+1.005:x+y+.5)}/* 落ち影：地面の上に（iso-fx.js）。その物より先。葉のある木は、落ち影の中に木もれ日（feel.js） */
     if(o==='wbench'){const c=wbCells(i),far=(c.b%W+(c.b/W|0))<(c.y%W+(c.y/W|0))?c.b:c.y;for(const [k,yd] of [[c.b,0],[c.y,1]]){const kx=k%W,ky=(k/W)|0;add(objectDepth(o,k)-(k===far?WBFAR:0),1,null,()=>dropIn(ctx,i,kx*TS,ky*TS-liftOf(k),now,()=>yd?drawWbYard(ctx,i,kx*TS,ky*TS-liftOf(k),now,k):drawObj(ctx,o,kx*TS,ky*TS-liftOf(k),i,0,now),o),k)}continue}/* 作業台：作業台と材料置き場を、それぞれのマスの順に（同じ深さになるので、うしろのマスを WBFAR だけ先に。台のむこうで作るせいれいは、そのあいだ wbDepth） */
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>dropIn(ctx,i,x*TS,y*TS-liftOf(i),now,()=>{const g=S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0;drawObj(ctx,o,x*TS,y*TS-liftOf(i),i,g,now);feelCap(ctx,o,i,x*TS,y*TS-liftOf(i),g)/* 冬：木・岩の上の雪 */},o),i,isoFlat?false:undefined,isoFlat?x+y+.01:undefined)}
   drawWebs(add,vis);/* クモの巣 */
@@ -235,14 +235,15 @@ function render(now){RFN++;hdFrame();
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!isoCellVis(x,y,TS*4))continue;add(y+2.06,3,null,()=>drawRoofItem(ctx,id,x*TS,y*TS-liftOf(j)),j,objFoot(x,y,2,2,j),x+y+3.35)}/* ガゼボ・東屋：2×2の足もとに立てて、下に置いた物・下にいる子より上（その2×2のいちばん手前のマスの物のすぐあと） */
   iqRoofsAdd(add,x0,y0,x1,y1);/* クォータービュー：家の屋根は、列ごとの切妻（iso-conn.js） */
-  if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,x+y-.99)}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
+  if(S.hi){for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if((S.hi[j]>0||icHasFil(x,y))&&isoCellVis(x,y,TS*2))add(y,-1,null,()=>isoTile(ctx,x,y,now),j,false,icBlkDD(j))}}/* クォータービュー（仮）：高い段のマス・入隅のまるいかべをかさねるひくいマス */
   if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
   if(typeof pickTick==='function'){pickTick(now);const P=PICKH;if(P&&P.dig&&!P.done)add(P.y,-1,null,()=>drawPickCrack(now),P.j,false,P.x+P.y-.97)}/* こわす：ブロック・地面の長おし（build.js）。ひびは、そのマスのブロック・雪のすぐあと（手前のブロックや物が上にかさなる） */
   {/* 足もとをきめて、x+y の小さい順（うしろから） */
     if(S.sacredRoot!=null&&WD===KUSA&&!S.free&&!S.obj.includes('tower')){const j=S.sacredRoot,x=j%W,y=(j/W)|0;if(S.obj[j]!=='site')add(y+4,1,null,()=>drawSacredRoot(now),j,objFoot(x,y,4,4,j),x+y+4.3)}/* 御神木の切り株：まわりの4×4のまん中の順 */
     for(const it of D){if(it.A===undefined)it.A=it.box?ptFoot((it.box[0]+it.box[2])/2,it.k*TS):it.own>=0?objFootJ(it.own):false;
-      if(it.dd==null)it.dd=it.A&&it.A.w!=null?it.A.x+it.A.y+(it.A.w+it.A.h)/2+.3+(it.k-(it.A.y+it.A.h)):it.A?it.k+it.A.fx/TS:it.own>=0?it.k+it.own%W+.5:it.k*2}
+      if(it.dd==null)it.dd=it.A&&it.A.w!=null?it.A.x+it.A.y+(it.A.w+it.A.h)/2+.3+(it.k-(it.A.y+it.A.h)):it.A?it.k+it.A.fx/TS:it.own>=0?it.k+it.own%W+.5:it.k*2;
+      if(it.t>=0&&it.own>=0&&S.hi&&S.hi[it.own]>0){const m=it.own%W+((it.own/W)|0)+1;if(it.dd<m)it.dd=m}/* 高い段のマスの上の物・せいれいは、そのマスのブロック（icBlkDD）より後 */}
     D.sort((a,b)=>a.dd-b.dd||a.t-b.t);
     for(const it of D){if(it.A)standTf(ctx,k,it.A.fx,it.A.fy,it.A.px,it.A.py);else groundTf(ctx,k);it.draw()}groundTf(ctx,k)}
   drawSacredCare(now);drawStoryStage(now);drawKite(now);

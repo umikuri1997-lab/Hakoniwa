@@ -55,7 +55,7 @@ function omoiScene(j){
     SCENEHOLD=performance.now()+9500;/* 2人の光が、あかりになるまで、村の時間を止める */
     one(A,500);one(B,1300,()=>{if(!alive())return stop();const idx=Math.min(2,omoiN());/* 2人の想いが、ひとつの光になって、枝のあかりになる */
       omoiLight(j,A,B,idx,cols=>{if(OMOI_RUN===run)run.lamp=cols});
-      villageTimeout(()=>{if(!alive())return stop();for(const r of pr)SACRED_POSES.delete(r);A.face=B.x>=A.x?1:-1;B.face=-A.face;const now=performance.now();for(const r of pr){JUMP.set(r,now);JOYU.set(r,now+1300)}sfx('good')},3700);/* 向かい合って、はねる */
+      villageTimeout(()=>{if(!alive())return stop();for(const r of pr)SACRED_POSES.delete(r);A.face=B.x>=A.x?1:-1;B.face=-A.face;const now=performance.now();faceEach(A,B,1300);for(const r of pr){JUMP.set(r,now);JOYU.set(r,now+1300)}sfx('good')},3700);/* 向かい合って、はねる */
       villageTimeout(()=>{if(!alive())return stop();SCENEHOLD=0;storyShot(view,{limit:2.4,seconds:.9});for(const r of pr){r.face=r.x<tx?1:-1;sacredScenePose(r,'storyListen',600000,{side:true,target:j,face:r.face})}
         dialog([omoiLine(A,B),omoiLine(B,A)],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;stop();const L=S.flags.omoiP||(S.flags.omoiP=[]);S.flags.omoiW=(S.flags.omoiW||[]).filter(k=>k!==pk);if(!omoiOn()||L.includes(pk))return;L.push(pk);toast('ふたりの想いが、御神木のあかりになった（'+L.length+'/3）','good');logEv(A.name+'と'+B.name+'の想いが、御神木にとどいた');renderQuest();checkQuest();dirty=true})},5200)})};
   const near=r=>Math.hypot(r.x-tx,r.y-by-1)<3;/* 根もとのそば */
@@ -276,7 +276,7 @@ function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i
   const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;if(!back&&(S.qMem||{})[k])back='#joy|もう、けんかしても、すぐ仲なおりしようね。';
   if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
   L.push(T(q,back,3),T(m,'#joy big|……うん！ おかえり、$！',4));return L}
-function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS);addFloatG(r.x,r.y,-1.3,'おかえり！','#ffd6e6')}
+function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;faceEach(q,m,3000);for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS,null,0,r.y*TS);addFloatG(r.x,r.y,-1.3,'おかえり！','#ffd6e6')}
   sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');if(typeof letterQ==='function')letterQ(q,'back',{m:m.name});memo('leaf',m.name+'と'+q.name+'が、また会えた')}
 function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
   const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
@@ -382,7 +382,7 @@ function comboNote(r,en){if(!S||!en||en.dead||IS_STORY_REPLAY)return;const H=en.
   for(const q of S.res){if(q===r||q.hidden||H[q.id]==null||S.t-H[q.id]>COMBOWIN||bondOf(r,q)<BOND_TALK||Math.hypot(q.x-r.x,q.y-r.y)>COMBORNG)continue;
     const ks=[r.elem,q.elem].sort(),nm=COMBON[ks.join(',')];if(!nm)continue;
     S.comboT=S.t+COMBOCD;delete en.cmb;comboFire(r,q,en,nm,ks);return}}
-function comboFire(r,q,en,nm,ks){const cx=en.x,cy=en.y,col=ELEM[r.elem].col;
+function comboFire(r,q,en,nm,ks){if(S.flags&&!S.flags.tacCombo)S.flags.tacCombo=1;/* 作戦「いっしょに」を思いつく（night-prep.js） */const cx=en.x,cy=en.y,col=ELEM[r.elem].col;
   fxSpr('hanabi',cx*TS,cy*TS,col);fxSpr('twinkle',cx*TS,(cy-.5)*TS,ELEM[q.elem].col);sfxAt('glight',cx,cy);if(typeof shakeScreen==='function')try{shakeScreen('m')}catch(_){}
   addFloatG(cx,cy,-1.8,nm+'！',col);toast(r.name+'と'+q.name+'の合わせわざ「'+nm+'」！','good');
   for(const o of S.enemies.slice()){if(o.dead||!o.spawned||Math.hypot(o.x-cx,o.y-cy)>COMBOAREA+.5)continue;hurtEn(o,COMBOHIT,{flash:8,k:'combo',sx:cx,sy:cy});if(o.hp<=0)defeat(o,r.name+'と'+q.name+'が「'+nm+'」で'+EN[o.type].name+'を追いはらった！',r)}}

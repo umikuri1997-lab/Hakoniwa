@@ -24,29 +24,29 @@ const BL={
   misugaki:{name:'御簾垣',fix:2,fixm:{bamboo:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,w:1,solid:1,brk:1,hp:20,hpS:30,attr:{},mat:{bamboo:5},desc:'竹をあんだ垣。「コワイノ」の足止め。じょうぶさ20'},
   ashifence:{name:'あしの垣',fix:2,fixm:{ashi:1},kind:'block',cost:2,pc:4,time:60,maker:'water',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{ashi:5},desc:'あしをならべた垣。「コワイノ」の足止め。じょうぶさ20'},
   ishigaki:{name:'石ころの垣',fix:2,fixm:{sagan:1},kind:'block',cost:2,pc:4,time:60,maker:'earth',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{sagan:4},desc:'砂岩の石ころをつんだ垣。「コワイノ」の足止め。じょうぶさ20'},
-  sagafence:{name:'砂岩の塀',fix:3,fixm:{sagan:1},kind:'block',cost:3,pc:6,time:70,maker:'earth',qty:10,lv:6,solid:1,brk:1,hp:55,hpS:83,attr:{},mat:{sagan:12},desc:'砂岩のブロックをつんだ塀。じょうぶさ55'},/* 土の柵・塀 */
+  sagafence:{name:'砂岩の塀',fix:3,fixm:{sagan:1},kind:'block',cost:3,pc:6,time:70,maker:'earth',qty:10,lv:6,solid:1,brk:1,hp:55,hpS:83,attr:{},mat:{sagan:6},desc:'砂岩のブロックをつんだ塀。じょうぶさ55'},/* 土の柵・塀 */
   rankan:{name:'運河の石の欄干',fix:3,fixm:{maruishi:1},kind:'block',cost:3,pc:6,time:70,maker:'water',qty:10,lv:6,solid:1,brk:1,hp:55,hpS:83,attr:{},mat:{maruishi:12},desc:'丸石の手すり。じょうぶさ55'},/* 水の柵・塀 */
   ibara:{name:'いばらの生垣',fix:2,fixm:{kagekusa:1},kind:'block',cost:2,pc:4,time:60,maker:'fire',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{kagekusa:4,kogi:1},desc:'いばらをからめた生垣。「コワイノ」の足止め。じょうぶさ20'},
   kuzure:{name:'くずれた石の欄干',fix:3,fixm:{stone:2},kind:'block',cost:3,pc:6,time:70,maker:'fire',qty:10,lv:6,solid:1,brk:1,hp:55,hpS:83,attr:{},mat:{stone:12},desc:'古い庭の石の手すり。じょうぶさ55'},/* 闇の柵・塀 */
   ropefence:{name:'ロープの手すり',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wind',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{wood:3,nabiki:3},desc:'なびき草をよったロープの手すり。「コワイノ」の足止め。じょうぶさ20'},
   fence:{name:'柵',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{wood:5},desc:'木の板の柵。「コワイノ」の足止め。じょうぶさ20'},
-  logfence:{name:'丸太の塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:7},desc:'太い丸太をすきまなくならべた塀。じょうぶさ36'},
+  logfence:{name:'丸太の塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:4},desc:'太い丸太をすきまなくならべた塀。じょうぶさ36'},
   bedge:{name:'花壇のふち',kind:'block',cost:1,pc:2,time:20,maker:'wood',qty:10,lv:8,attr:{},mat:{wood:1},desc:'花壇をかこむ、低い丸太のふち'},
   bamboofence:{name:'竹の柵',fix:3,fixm:{bamboo:1},kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:4,offerOnly:1,solid:1,brk:1,hp:32,hpS:48.8,attr:{},mat:{bamboo:8},desc:'竹を組んだ柵。じょうぶさ32'},
-  bamboowall:{name:'竹の壁',fix:3,fixm:{bamboo:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,w:1,solid:1,hp:30,hpS:45.5,attr:{},mat:{bamboo:3},desc:'かこってドアをつけると家になる。じょうぶさ30'},
-  canvaswall:{name:'帆布の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wind',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:3,nuno:2},desc:'かこってドアをつけると家になる。じょうぶさ30'},
-  timberwall:{name:'木組みの壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'water',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:4,nendo:2},desc:'木の柱としっくいの家の壁。じょうぶさ30'},
-  adobewall:{name:'日干しれんがの壁',fix:3,fixm:{sagan:1},kind:'block',cost:2,pc:6,time:60,maker:'earth',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:2,sagan:3},desc:'砂岩の土をかためて日にほした、れんがの家の壁。じょうぶさ30'},
-  rockwall:{name:'岩をくりぬいた壁',fix:4,fixm:{sagan:1},kind:'block',cost:3,pc:12,time:90,maker:'earth',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{sagan:10,stone:2},desc:'大きな岩をくりぬいたような、あつい家の壁。じょうぶさ55'},/* 土の家の壁 */
-  canalwall:{name:'運河の石積みの壁',fix:4,fixm:{maruishi:1},kind:'block',cost:3,pc:12,time:90,maker:'water',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{maruishi:10,nendo:4},desc:'丸石をつんだ家の壁。じょうぶさ55'},/* 水の家の壁 */
-  mosswall:{name:'こけむした石の壁',fix:3,fixm:{stone:1},kind:'block',cost:2,pc:6,time:70,maker:'fire',qty:10,lv:3,solid:1,hp:32,hpS:48.5,attr:{},mat:{stone:4,kogi:2},desc:'コケのはえた石の家の壁。じょうぶさ32'},
-  moonwall:{name:'月光石の壁',fix:4,fixm:{stone:1,gekko:1},kind:'block',cost:3,pc:12,time:90,maker:'fire',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{stone:8,gekko:3},desc:'月光石をつんだ家の壁。じょうぶさ55'},/* 闇の家の壁 */
-  acaciawall:{name:'アカシアの板壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:12,time:90,maker:'wind',qty:10,lv:6,solid:1,hp:52,hpS:78.5,brk:1,attr:{},mat:{wood:10,stone:2},desc:'板をかさねた家の壁。じょうぶさ52'},
-  hwall:{name:'木の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:6},desc:'かこってドアをつけると家になる。じょうぶさ30'},
-  logwall:{name:'丸太の壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:50,hpS:75.5,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁。じょうぶさ50'},
-  plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
-  brickwall:{name:'レンガの壁',fix:6,fixm:{stone:1},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:6,w:1,solid:1,hp:55,hpS:82.25,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁。じょうぶさ55'},
-  wall:{name:'石の塀',fix:6,fixm:{stone:1},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:8,w:1,solid:1,hp:60,hpS:90,attr:{},mat:{stone:14},desc:'石を積んだ塀。じょうぶさ60'},
+  bamboowall:{name:'竹の壁',fix:3,fixm:{bamboo:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,w:1,solid:1,hp:30,hpS:45.5,attr:{},mat:{bamboo:2},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  canvaswall:{name:'帆布の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wind',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:2,nuno:1},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  timberwall:{name:'木組みの壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'water',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:2,nendo:1},desc:'木の柱としっくいの家の壁。じょうぶさ30'},
+  adobewall:{name:'日干しれんがの壁',fix:3,fixm:{sagan:1},kind:'block',cost:2,pc:6,time:60,maker:'earth',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:1,sagan:2},desc:'砂岩の土をかためて日にほした、れんがの家の壁。じょうぶさ30'},
+  rockwall:{name:'岩をくりぬいた壁',fix:4,fixm:{sagan:1},kind:'block',cost:3,pc:12,time:90,maker:'earth',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{sagan:5,stone:1},desc:'大きな岩をくりぬいたような、あつい家の壁。じょうぶさ55'},/* 土の家の壁 */
+  canalwall:{name:'運河の石積みの壁',fix:4,fixm:{maruishi:1},kind:'block',cost:3,pc:12,time:90,maker:'water',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{maruishi:5,nendo:2},desc:'丸石をつんだ家の壁。じょうぶさ55'},/* 水の家の壁 */
+  mosswall:{name:'こけむした石の壁',fix:3,fixm:{stone:1},kind:'block',cost:2,pc:6,time:70,maker:'fire',qty:10,lv:3,solid:1,hp:32,hpS:48.5,attr:{},mat:{stone:2,kogi:1},desc:'コケのはえた石の家の壁。じょうぶさ32'},
+  moonwall:{name:'月光石の壁',fix:4,fixm:{stone:1,gekko:1},kind:'block',cost:3,pc:12,time:90,maker:'fire',qty:10,lv:6,solid:1,hp:55,hpS:83,brk:1,attr:{},mat:{stone:4,gekko:2},desc:'月光石をつんだ家の壁。じょうぶさ55'},/* 闇の家の壁 */
+  acaciawall:{name:'アカシアの板壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:12,time:90,maker:'wind',qty:10,lv:6,solid:1,hp:52,hpS:78.5,brk:1,attr:{},mat:{wood:5,stone:1},desc:'板をかさねた家の壁。じょうぶさ52'},
+  hwall:{name:'木の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:3},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  logwall:{name:'丸太の壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:50,hpS:75.5,brk:1,attr:{},mat:{wood:5},desc:'丸太を組んだ家の壁。じょうぶさ50'},
+  plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:3,stone:2},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
+  brickwall:{name:'レンガの壁',fix:6,fixm:{stone:1},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:6,w:1,solid:1,hp:55,hpS:82.25,brk:1,attr:{},mat:{stone:7},desc:'レンガを積んだ家の壁。じょうぶさ55'},
+  wall:{name:'石の塀',fix:6,fixm:{stone:1},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:8,w:1,solid:1,hp:60,hpS:90,attr:{},mat:{stone:7},desc:'石を積んだ塀。じょうぶさ60'},
   clover:{sp:9,name:'シロツメクサ',item:'シロツメクサのたね',kind:'plant',cost:3,attr:{wood:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   bellf:{sp:9,name:'ききょう',item:'ききょうのたね',kind:'plant',cost:3,attr:{earth:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   salvia:{sp:9,name:'サルビア',item:'サルビアのたね',kind:'plant',cost:3,attr:{fire:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
@@ -126,7 +126,7 @@ const BL={
   sandbox:{name:'砂場',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:11,stone:11},play:{pt:3,pw:1.35,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ+40（26.7分）。遊ぶと10%の確率で、スタミナ+2'},
   seesaw:{hp:5,brk:1,fix:6,fixm:{wood:13},name:'シーソー',kind:'furn',cat:'toy',f2:1,anim:1,dsc:2,lv:7,pc:11,time:160,maker:'wind',attr:{wind:1},mat:{wood:25},play:{pt:4,pw:1.8,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ+40（26.7分）。遊ぶと10%の確率で、はたらく速さ+2'},
   window:{name:'窓',kind:'block',cat:'other',lv:4,pc:3,time:50,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'家の壁にはめる窓。住み心地+5'},
-  sdoor:{name:'石の塀のドア',fix:4,fixm:{stone:3},kind:'block',anim:1,hp:60,hpS:90,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:8,w:1,attr:{},mat:{stone:8},desc:'石の塀の出入り口。せいれいだけ通れる。じょうぶさ60'},
+  sdoor:{name:'石の塀のドア',fix:4,fixm:{stone:3},kind:'block',anim:1,hp:60,hpS:90,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:8,w:1,attr:{},mat:{stone:4},desc:'石の塀の出入り口。せいれいだけ通れる。じょうぶさ60'},
   table:{hp:5,brk:1,fix:4,fixm:{wood:4},name:'食卓',kind:'furn',pc:7,time:90,maker:'wood',solid:1,eat:{cap:2,pt:2,pw:.9},attr:{wood:2},mat:{wood:8},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
   dtable:{hp:5,brk:1,fix:8,fixm:{wood:8},name:'大きな食卓',kind:'furn',sz:[2,2],lv:5,pc:14,time:150,maker:'wood',solid:1,eat:{cap:4,pt:2,pw:.9},attr:{wood:4},mat:{wood:16},desc:'4人まで食べられる。食べるたびにパワー+0.9。住み心地+12'},
   stor:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'食料箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:5},desc:'食料を50までしまえる。ここから食べる。住み心地+3'},
@@ -136,11 +136,11 @@ const BL={
   oven:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:4},name:'かまど',kind:'furn',w:1,anim:1,pc:5,time:160,maker:'fire',solid:1,attr:{fire:2,earth:1},mat:{wood:3,stone:8},desc:'せいれいが材料から料理を作る。住み心地+6'},
   grave:{name:'お墓',kind:'deco',attr:{},desc:''},
   gate:{name:'柵のドア',fix:2,fixm:{wood:1,funba:1},kind:'block',anim:1,hp:20,hpS:30.95,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:3},desc:'柵の出入り口。せいれいだけ通れる。じょうぶさ20'},
-  logdoor:{name:'丸太の塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wood',qty:1,lv:6,attr:{},mat:{wood:6},desc:'丸太の塀の出入り口。せいれいだけ通れる。じょうぶさ36'},
-  parkfence:{name:'遊園地の白い塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wind',qty:10,lv:6,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:7},desc:'白い板をならべた塀。じょうぶさ36'},
-  parkdoor:{name:'白い塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wind',qty:1,lv:6,attr:{},mat:{wood:6},desc:'白い塀の出入り口。せいれいだけ通れる。じょうぶさ36'},
+  logdoor:{name:'丸太の塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wood',qty:1,lv:6,attr:{},mat:{wood:3},desc:'丸太の塀の出入り口。せいれいだけ通れる。じょうぶさ36'},
+  parkfence:{name:'遊園地の白い塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wind',qty:10,lv:6,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:4},desc:'白い板をならべた塀。じょうぶさ36'},
+  parkdoor:{name:'白い塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wind',qty:1,lv:6,attr:{},mat:{wood:3},desc:'白い塀の出入り口。せいれいだけ通れる。じょうぶさ36'},
   ishidoor:{name:'石ころの垣の戸',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:4,time:40,maker:'earth',qty:1,lv:2,attr:{},mat:{wood:2},desc:'石ころの垣の出入り口。せいれいだけ通れる。じょうぶさ20'},
-  sagadoor:{name:'砂岩の塀のドア',fix:3,fixm:{sagan:2},kind:'block',anim:1,brk:1,hp:55,hpS:83,cost:3,pc:6,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{sagan:7},desc:'砂岩の塀の出入り口。せいれいだけ通れる。じょうぶさ55'},
+  sagadoor:{name:'砂岩の塀のドア',fix:3,fixm:{sagan:2},kind:'block',anim:1,brk:1,hp:55,hpS:83,cost:3,pc:6,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{sagan:4},desc:'砂岩の塀の出入り口。せいれいだけ通れる。じょうぶさ55'},
   rockgate:{sz:[2,1],name:'岩のアーチの門',fix:4,fixm:{sagan:3},kind:'block',anim:1,brk:1,hp:55,hpS:83,cost:4,pc:12,time:90,maker:'earth',qty:1,lv:9,attr:{},mat:{sagan:10,wood:4},desc:'岩をアーチの形にくりぬいた、大きな出入り口。せいれいだけ通れる。じょうぶさ55'},/* 土の戸・塀のドア・大門 */
   canalgate:{sz:[2,1],name:'運河の町の門',fix:4,fixm:{maruishi:3},kind:'block',anim:1,brk:1,hp:55,hpS:83,cost:4,pc:12,time:90,maker:'water',qty:1,lv:9,attr:{},mat:{maruishi:10,wood:4},desc:'ランプをのせた石の柱の、大きな出入り口。せいれいだけ通れる。じょうぶさ55'},
   irongate:{sz:[2,1],name:'古い庭の鉄の門',fix:4,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:60,hpS:90,cost:4,pc:12,time:90,maker:'fire',qty:1,lv:9,attr:{},mat:{stone:10,gekko:2},desc:'月光石をのせた石の柱の、大きな鉄の門。せいれいだけ通れる。じょうぶさ60'},/* 水・闇の大門 */
@@ -164,7 +164,7 @@ const BL={
   loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる。布1こ40分。風の強い日は27分'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ－9／1時間'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ－9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
-  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
+  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:3,stone:2},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
   lamp:{hp:5,brk:1,fix:3,fixm:{eda:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{eda:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ+25（26.7分）。まわり3.5マスを照らす'},
   swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},mat4:{wood:12,nabiki:4},mat2:{wood:12,iwakusa:4},mat3:{wood:12,ashi:4},mat5:{wood:12,yotsuyu:4},desc:'1人で遊べる。たのしさ+40（33.3分）。遊ぶと10%の確率で、移動速度+2'},
