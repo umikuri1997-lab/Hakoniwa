@@ -25,7 +25,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  /* こわれたら、入れた鉱石は返す */
  const rf=await run(`(()=>{S.mat.iron=0;S.mat.gold=4;boxSync();S.smIn={[${sj}]:{iron:2}};S.smQ={[${sj}]:{gold:4}};boxSync();const g0=S.mat.gold;clearObj(${sj});smTick();boxSync();return [S.mat.iron,S.mat.gold+g0,Object.keys(S.smIn).length+Object.keys(S.smQ).length]})()`);assert.deepEqual(rf,[2,4,0],'炉がなくなったら、入れた鉱石はもどり、とっておいた鉱石は使える数にもどる');
  /* そうびは延べ棒で作る・鉱石で思いつく */
- const gr=await run(`(()=>{const b=BL.gw03;S.recipes={};S.mat={};S.gotMat={copper:1};gearIdea();return [JSON.stringify(b.mat),!!S.recipes.gw03,!!S.recipes.gw05,MATN.icopper]})()`);
+ const gr=await run(`(()=>{const b=BL.gw03;S.recipes={};S.mat={};S.gotMat={copper:1};S.ideaQ={};gearIdea();return [JSON.stringify(b.mat),ideaPend('gw03'),ideaPend('gw05'),MATN.icopper]})()`);
  assert.deepEqual(gr,['{"icopper":2,"bamboo":1}',true,false,'銅の延べ棒']);
  assert.equal(await run(`Object.values(GEARBL).filter(b=>b.mat&&['copper','iron','silver','gold'].some(k=>b.mat[k])).length`),0,'鉱石のままのそうび');
  assert.deepEqual(errors,[]);console.log('smelter: ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
