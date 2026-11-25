@@ -100,9 +100,11 @@ function bpCheck(k,x,y,r){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k,
   if(BPS[k].story&&typeof fieldBpNear==='function'&&!fieldBpNear(k,x,y,r))return[false,'切り株のそばに置こう'];
   for(const[dx,dy,,id]of bpPieces(k,r))if(id==='watch'&&watchNear(x+dx,y+dy))return[false,'見張り台は、5マスはなさないと置けません'];
   return[true,'']}
+function bpLack(k,r){/* 足りない物の知らせ（足りていれば ''） */const pc=BPS[k].pc,m=bpCost(k,r);if(S.pt<pc)return lackPt(pc);for(const q in m){const t=lackMat(q,m[q]);if(t)return t}return''}
+function bpMatRows(m){/* 素材を「持っている数/いる数」で1行ずつ（足りない物は赤）。建物の強化と同じ作り */const d=document.createElement('div');d.className='mt upmt';d.innerHTML=Object.keys(m).map(k=>{const h=S.mat[k]||0;return '<span class="mic'+(h>=m[k]?'':' ng')+'"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+MATN[k]+' '+h+'/'+m[k]+'</span>'}).join('');return d}
 function askBp(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,r=bpRotSel,[ok,why]=bpCheck(k,x,y,r),pc=BPS[k].pc,m=bpCost(k,r);
   pending={kind:'bp',i,k,x,y,ok,r};$('#confirmTxt').textContent=ok?BPS[k].name+'をここに建てる？（'+SP(pc)+'・'+matTxt(m)+'）':why;
-  lackOn($('#cYes'),ok?(S.pt<pc?lackPt(pc):!matOK(m)?lackMat(m):''):'').disabled=!ok;yesLbl('おく');($('#cRot').hidden=false,$('#confirm').hidden=false);dirty=true}
+  lackOn($('#cYes'),ok?bpLack(k,r):'').disabled=!ok;yesLbl('おく');($('#cRot').hidden=false,$('#confirm').hidden=false);dirty=true}
 function bpRotate(){/* 向きのボタン：右へ90度まわす */const p=pending;if(!p||p.kind!=='bp')return;bpRotSel=(bpRotSel+1)%4;sfx('tap');askBp(p.i,p.x,p.y)}
 function bpPlace(i,x,y,r){const it=(S.bpInv||[])[i];if(!it)return;r=r||0;const k=it.k,[ok,why]=bpCheck(k,x,y,r);if(!ok)return toast(why);const pc=BPS[k].pc,m=bpCost(k,r);
   if(S.pt<pc)return toast('パワーが足りません（'+SP(pc)+'）');if(!matOK(m))return toast('素材が足りません（'+matTxt(m)+'）');
@@ -203,6 +205,6 @@ function bpPreview(k,cv){const b=BPS[k],{w,h}=bpSize(k),cs=Math.max(12,Math.min(
   for(const q of L)if(!img[q.id]){const u=iconURL(q.id);if(!u)continue;const im=new Image();im.onload=draw;im.src=u;img[q.id]=im}draw()}
 function bpPop(i){const it=(S.bpInv||[])[i];if(!it)return;document.querySelectorAll('.bpgot').forEach(q=>q.remove());/* もらったときのカードは、しまう */const k=it.k,b=BPS[k],m=bpCost(k);
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:86vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div style="display:flex;justify-content:center;margin-bottom:8px"><canvas class="pv" style="image-rendering:pixelated"></canvas></div><p class="note c" style="margin:0 0 10px"></p><div class="bt" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go">置く場所をえらぶ</button></div></div></div>');
-  o.querySelector('.t').textContent=b.name;o.querySelector('.n').textContent=BPCAT[b.cat]+'の設計図・むずかしさ：'+BPDIFF[b.rw];o.querySelector('.c').textContent='パワー'+b.pc+'・'+matTxt(m);bpPreview(k,o.querySelector('.pv'));
+  o.querySelector('.t').textContent=b.name;o.querySelector('.n').textContent=BPCAT[b.cat]+'の設計図・むずかしさ：'+BPDIFF[b.rw];{const c=o.querySelector('.c');c.innerHTML='<span class="mic'+(S.pt>=b.pc?'':' ng')+'">'+SP(Math.floor(S.pt))+'/'+b.pc+'</span>';c.style.margin='0';c.classList.add('upmt');c.after(bpMatRows(m))}lackOn(o.querySelector('.go'),bpLack(k));bpPreview(k,o.querySelector('.pv'));
   const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
   o.querySelector('.go').onclick=()=>{sfx('tap');close();if(sheet)closeSheet();BULKT='bp';if(mode!=='bulk')setMode('bulk');selStamp='bp:'+i;palOpen=false;renderPalette();toast('建てたい場所の左上をタップ')};document.body.appendChild(o)}/* もちもの・もらったときのカードからも、置く場所をえらべる */
