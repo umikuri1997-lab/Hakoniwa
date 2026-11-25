@@ -8,7 +8,7 @@ const SKIP=/^(diary|letter|talk|ev-text|chat|gift-talk|dialog|story|mizube-story
 const OK=[/* [ファイル, 文の一部]：くらべでない・セリフの文 */
  ['build.js','これより高くは、つめません'],['build.js','それより多く置くと'],['build.js','ほかのせいれいは、消えると自然にかえり'],
  ['build.js','ふつうの「コワイノ」が'],['build.js','3マス以内のはたらく速さ+5%'],['ui.js','ふつうの日'],['nick.js','ほかのせいれいと同じ名前です'],
- ['cave.js','手のひらより大きな'],['happen.js','ふつうの大きさにもどった'],['houses.js','ふつうのせいれいは'],
+ ['cave.js','手のひらより大きな'],['tsuchi.js','いつもより大きいの'],['happen.js','ふつうの大きさにもどった'],['houses.js','ふつうのせいれいは'],
  ['event-open.js','くらべ'],['free.js','くらべっこ'],['mizube.js','くらべ']];
 const hit=[];
 for(const f of fs.readdirSync(JS).filter(f=>f.endsWith('.js')&&!SKIP.test(f))){

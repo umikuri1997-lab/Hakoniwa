@@ -67,12 +67,12 @@ const BPFM={floor:{wood:1},stonefloor:{stone:1},brickfloor:{stone:1},path:{stone
 const bpWall=()=>stg().wall,bpWallOf=b=>b.wl||bpWall(),bpFence=()=>stg().fence;
 function bpPieceMat(t,id){/* 1つずつの部品の素材 */if(t==='farm'||t==='plant')return{};if(t==='wall')return Object.assign({},BPWM[id]||{wood:1});if(t==='win')return Object.assign({},BPWINM[id]||{wood:3});if(BPFM[id])return Object.assign({},BPFM[id]);return Object.assign({},BL[id].mat||{})}
 const bpTime=(t,id)=>t==='build'?BL[id].time:BPT[t];
-function bpPieces(k,r){/* 設計図の部品：[dx,dy,t,id,rot,phase]。r：置く向き（右へ90度ずつ。bpTurn）。段：1 床・道・畑・ふち（1行ずつ）→ 2 家具・建物・花・木 → 3 壁・窓・柵 → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出られる） */const b=BPS[k],L=[],wl=bpWallOf(b);
+function bpPieces(k,r){/* 設計図の部品：[dx,dy,t,id,rot,phase]。r：置く向き（右へ90度ずつ。bpTurn）。段：1 床・道・畑・ふち（1行ずつ）→ 2 壁・窓・柵 → 3 家具・建物・花・木（壁のあと：先に家具を作ると、外に物がある壁へ、中からも外からも行けなくなる） → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出入りできる） */const b=BPS[k],L=[],wl=bpWallOf(b);
   b.rows.forEach((row,dy)=>{for(let dx=0;dx<row.length;dx++){const c=row[dx];
     if(c==='.')L.push([dx,dy,'floor',b.fl||'floor',0,1]);else if(c==='p')L.push([dx,dy,'path',b.pa||'path',0,1]);else if(c==='f')L.push([dx,dy,'farm','farm',0,1]);else if(c==='e')L.push([dx,dy,'edge','bedge',0,1]);
-    else if(c==='W')L.push([dx,dy,'wall',wl,0,3]);else if(c==='O')L.push([dx,dy,'win',wl,0,3]);else if(c==='F')L.push([dx,dy,'fence',bpFence(),0,3]);
+    else if(c==='W')L.push([dx,dy,'wall',wl,0,2]);else if(c==='O')L.push([dx,dy,'win',wl,0,2]);else if(c==='F')L.push([dx,dy,'fence',bpFence(),0,2]);
     else if(c==='D')L.push([dx,dy,'door',b.dr||'door',0,4]);else if(c==='G')L.push([dx,dy,'gate','gate',0,4])}});
-  for(const[dx,dy,id,rot]of b.furn){const t=BL[id].kind==='plant'?'plant':BL[id].kind==='build'?'build':'furn';L.push([dx,dy,t,id,rot||0,2])}return r?bpTurn(L,k,r):L}
+  for(const[dx,dy,id,rot]of b.furn){const t=BL[id].kind==='plant'?'plant':BL[id].kind==='build'?'build':'furn';L.push([dx,dy,t,id,rot||0,3])}return r?bpTurn(L,k,r):L}
 const BPD3=[0,1,3],BP3D={0:0,1:1,3:2,2:1};/* 前・右・左だけの家具（ROTS 3）の向き↔向きの矢（WORKD：0下・1右・2上・3左）。うしろ向きがないので、上は右に */
 function bpTurnRot(id,rot,i){/* 家具の向きを、右へ90度まわす（i：何回めか） */const n=ROTS[id];if(n===4)return(rot+3)%4;if(n===3)return BP3D[(BPD3[rot]+3)%4];if(n===2)return rot^1;if(n===1)return i===1?rot^1:rot;return rot}
 function bpTurn(L,k,r){/* 部品のならびを、右へ90度ずつ r 回まわす（2マスより大きい物は、まわしたあとの左上） */let h=bpSize(k).h;L=L.map(p=>p.slice());
@@ -117,6 +117,7 @@ function bpAdvance(e){/* つぎの段の部品を「建てる所」にする */i
   for(const p of left){if(p.ph!==ph||p.s!==0||row!=null&&((p.j/W)|0)!==row)continue;const j=p.j,big=p.t==='furn'||p.t==='build',cs=big?bpCellsOf(p.id,j%W,(j/W)|0,p.rot):[j];
     for(const c of cs)if(bpSoft(S.obj[c])){S.obj[c]='';delete S.dyn[c]}if(cs.some(c=>S.obj[c]))continue;/* だれかが置いた物があれば、どけるまで待つ */
     if(S.res.some(r=>!r.hidden&&cs.includes((r.y|0)*W+(r.x|0))))continue;/* せいれいが立っているマスには、まだ作らない（とじこめない） */
+    if(ph===4&&S.res.some(r=>!r.hidden&&e.cells.includes((r.y|0)*W+(r.x|0))))continue;/* ドアは、中にせいれいがいるあいだは作らない（出入り口が建てる所でふさがると、中の子が材料をとりに出られない） */
     S.obj[j]='site';S.dyn[j]={build:p.id,p:0,need:bpTime(p.t,p.id),mat:bpPieceMat(p.t,p.id),got:{},bp:e.id};for(const c of cs)if(c!==j){S.obj[c]='site2';S.ref[c]=j}p.s=1}}
 function bpFinish(j,r){/* finishBuild から：設計図の部品ができた */const d=S.dyn[j],e=(S.bp||[]).find(q=>q.id===d.bp),p=e&&e.ps.find(q=>q.j===j&&q.s===1);delete S.dyn[j];S.obj[j]='';
   if(!e||!p){recount();return}
