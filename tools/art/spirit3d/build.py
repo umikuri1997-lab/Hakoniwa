@@ -4,10 +4,11 @@
   --dbg <フォルダ>                                     → たしかめ用に、動きごとの絵（大きくした物）も出す
   --els wood                                           → その属性だけ（たしかめ用。js は書かない）
   --add light,dark                                     → その属性だけ作って、いまの js/spirit-motions.js に足す（ほかの属性の絵はそのまま）
+  --trim（--iso もつけられる）                          → 絵は作らず、いまの js の、ゲームが読まない向きの目のデータだけはずして書きなおす
 5つの属性は、持ち主のモデル（model/<属性>.fbx）の骨をそのまま動かして写す（fbx_build.py。前の、チップの形から作る3Dは SPIRIT_OLD=1）。光・闇（トモリ・ツキミ）は light_dark.py の LightDark で組む（GPT の H-4）。
 絵のならび：動きと属性ごとに1まい（ゲームは、使う動き・属性の絵だけ読みこむ）。3行（正面・横・うしろ）× コマ数。目の上にかさねる絵（ずきん・顔の上で手前にある、うで・手・道具）があれば、正面・横・うしろの3行を、かさねる所の高さに切りつめて下に。わくは、そのぜんぶのコマの絵が入る大きさ。
 js/spirit-motions.js：SPM = {動きの名前: {s（属性ごとの絵）, n（コマ数）, r（速さ。'ph' は o.ph）, g（属性ごとの [わくのはば, 高さ, わくの左上 x, y]、目の上にかさねる絵があれば [.., わくの上からのずれ, 高さ]）,
-  e（属性ごと・向きごと・コマごとの [目のずれ x, y]）, h（向きごと・コマごとの [手前の手 x, y, 奥の手 x, y]、道具の先があれば [.., 先 x, y]）}}"""
+  e（属性ごと・向きごと・コマごとの [目のずれ x, y]。ゲームが読まない向きの行は空：EYEROWS・EYEROWS_ISO）, h（向きごと・コマごとの [手前の手 x, y, 奥の手 x, y]、道具の先があれば [.., 先 x, y]）}}"""
 import sys, os, io, json, hashlib, re
 from multiprocessing import Pool
 import numpy as np
@@ -19,6 +20,8 @@ import rig
 
 _SP = {}
 LDELS = ('light', 'dark')   # 光・闇は、light_dark.py の形
+EYEROWS = (0,)        # 正面の絵（SPM）：ゲームは正面の行だけ描く（会話の立ち絵・守り神と話すとき・図）
+EYEROWS_ISO = (0, 2)  # クォータービュー（SPMQ）：前ななめ（0）とうしろななめ（2）。横の行（1）は描かない（js/iso-face.js の isoFace）
 def job(a, *, factory=None):
     """1つの動き・属性：絵（PNG のまま）と、わく・目・手の場所"""
     name, el = a
@@ -68,7 +71,9 @@ def main():
     if iso:   # クォータービューの絵：js/spirit-motions-iso.js の SPMQ（正面の行が前ななめ・うしろの行がうしろななめ）
         import core; core.ISOY = 3.141592653589793/4; rig.ISOEYE[0] = True; args.remove('--iso')
     if '--add' in args: i = args.index('--add'); add = args[i+1].split(','); els = add; del args[i:i+2]
-    names = args or list(MOTIONS)
+    trim = '--trim' in args   # 絵は作らず、いまの js の、読まれない向きの目のデータだけはずして書きなおす
+    if trim: args.remove('--trim')
+    names = [] if trim else (args or list(MOTIONS))
     jsf = os.path.join(ROOT, 'js', 'spirit-motions-iso.js' if iso else 'spirit-motions.js'); VAR = 'SPMQ' if iso else 'SPM'; old = {}
     if os.path.exists(jsf):
         m = re.search(r'const '+VAR+r'=(\{.*\});', open(jsf, encoding='utf8').read(), re.S)
@@ -111,6 +116,9 @@ def main():
     used = {v for d in new.values() for v in list(d['s'].values())+list(d.get('x', {}).values())+list(d.get('k', {}).values())}
     for f in used0-used:   # どの動きも使わなくなった絵だけ消す
         if os.path.exists(os.path.join(ROOT, f)): os.remove(os.path.join(ROOT, f))
+    keep = EYEROWS_ISO if iso else EYEROWS   # ゲームが読む向きの行だけ、目のデータを書く（ほかの行は空）
+    for d in new.values():
+        for el, rows in d['e'].items(): d['e'][el] = [r if f in keep else [] for f, r in enumerate(rows)]
     body = json.dumps({k: new[k] for k in sorted(new)}, separators=(',', ':'), ensure_ascii=False)
     open(jsf, 'w', encoding='utf8').write(('/* せいれいの動き（クォータービュー、3Dから写した絵）。tools/art/spirit3d/build.py --iso が書く。手で書きかえない */\nconst SPMQ=' if iso else '/* せいれいの動き（3Dから写した絵）。tools/art/spirit3d/build.py が書く。手で書きかえない */\nconst SPM=')+body+';\n')
 
