@@ -103,6 +103,18 @@ def fountain(w, face):
     return breathe(p, w)
 M('play_fountain', 8, 0.7, fountain)
 
+def bathe(w, face):
+    """水浴び：こしまで水に入って、すこしひざをまげ、前かがみで両手を水の中へ入れてすくい、上へばしゃっとはねあげて、もどす
+    （水面は足もとから、ゲームの BATHEH。水につかる所は、ゲームが切ってかくす）"""
+    u = (w/(2*PI)) % 1
+    if u < 0.4: k = 0.5-0.5*C(PI*u/0.4); lean, sN, hp = 0.05+0.2*k, 0.9-0.6*k, 0.05+0.13*k         # かがんで、両手を水へ
+    elif u < 0.58: k = (u-0.4)/0.18; k = k*k*(3-2*k); lean, sN, hp = 0.25-0.33*k, 0.3+1.4*k, 0.18-0.3*k   # ばしゃっ：前へいっきにはねあげる（手を頭より上にすると、ずきんにかくれる）
+    else: k = 0.5-0.5*C(PI*(u-0.58)/0.42); lean, sN, hp = -0.08+0.13*k, 1.7-0.8*k, -0.12+0.17*k    # とんだ しずくを見て、もどす
+    p = dict(z=-2.0, legz=-1.0, legM=0.35, legP=0.35, lean=lean, sN=sN, sF=sN, bN=-0.45, bF=-0.45, hp=hp,
+             top=0.15*S(w), tail=0.2*S(w+0.8), wing=0.15*S(w*2))
+    return p
+M('bathe', 8, 0.8, bathe)
+
 def campfire(w, face):
     """たき火：すわって、両手を火にかざし、ときどき手をこする"""
     p = sit({}, 6.0); r = 0.12*S(w*3)
