@@ -13,7 +13,7 @@ BL.anagura={name:'あなぐまの巣穴',solid:1,natural:1};
 /* 地われの列（y ごと）：まん中の列からのずれ。はば3（ところどころ2） */
 const tsRiftAt=y=>TSRIFTX+Math.round(3*Math.sin(y/9)+2*Math.sin(y/4.3+1));
 function tsRift(s,R){const w2=new Set();for(let k=0;k<6;k++)w2.add((R()*H)|0);
-  for(let y=0;y<H;y++){const br=y>=TSBRY-1&&y<=TSBRY+2,x0=tsRiftAt(br?TSBRY:y),wd=!br&&(w2.has(y)||w2.has(y-1))?2:3;/* 橋のまわり4行は、同じ列（橋が地われにぴったりかかる） */for(let a=0;a<wd;a++){const x=x0+a;if(x>=0&&x<W)s.ground[y*W+x]=1}}
+  for(let y=0;y<H;y++){const br=y>=TSBRY-1&&y<=TSBRY+6,x0=tsRiftAt(br?TSBRY:y),wd=!br&&(w2.has(y)||w2.has(y-1))?2:3;/* 橋のまわり（岩の橋と、石の大橋）は、同じ列（橋が地われにぴったりかかる） */for(let a=0;a<wd;a++){const x=x0+a;if(x>=0&&x<W)s.ground[y*W+x]=1}}
   for(let y=TSBRY;y<TSBRY+2;y++)for(let x=TSRIFTX-6;x<=TSRIFTX+8;x++)s.ground[y*W+x]=0}/* 自然の岩の橋 */
 /* 谷のまわりのがけ：まん中から東西に24マス・北はまん中から20マスより外ほど、段差のノイズを高くする */
 function tsWallK(x,y){const dx=Math.abs(x+.5-CX),f1=Math.min(1,Math.max(0,(dx-24)/14)),f2=Math.min(1,Math.max(0,(CY-20-y)/12));return .5*Math.max(f1,f2)}
@@ -44,7 +44,7 @@ function tsDrawObj(c,id,x,y,i,now){const P=(col,a,b,w,h)=>tsPx(c,col,x+a,y+b,w,h
    iso:rift:<北><西><北西><東><南>[-<西の橋の数><東の橋の数>]（北が橋のとき）・iso:riftb:<西の橋の数><東の橋の数><北><南>（橋の上の面） */
 let TSRC=null;
 function tsKind(x,y){if(x<0||x>=W)return 'l';y=Math.max(0,Math.min(H-1,y));/* マップの上・下のはしの外は、地われがつづく */const j=y*W+x;if(riftJ(j))return 'p';
-  return y>=TSBRY&&y<TSBRY+2&&tsBrX().has(x)?'b':'l'}
+  return y>=TSBRY&&y<TSBRY+2&&tsBrX().has(x)||S.ts&&S.ts.brd&&S.ts.brd.includes(j)?'b':'l'}
 function tsBrX(){/* 岩の橋のマスの列：橋の上の行の、もとの地われの列（はば3）。2行とも同じ列 */const x0=tsRiftAt(TSBRY);return new Set([x0,x0+1,x0+2])}
 function tsRiftKey(x,y){const g=tsKind,t=g(x,y),lb=c=>c==='p'?'p':'l',bn=(a,b)=>{let iw=0,ie=0;while(iw<2&&g(a-iw-1,b)==='b')iw++;while(ie<2&&g(a+ie+1,b)==='b')ie++;return ''+iw+ie};
   if(t==='b'){const N=g(x,y-1),S2=g(x,y+1);return 'iso:riftb:'+bn(x,y)+(N==='b'?'b'+lb(S2):lb(N)+'b')}
@@ -54,7 +54,7 @@ function tsRiftKey(x,y){const g=tsKind,t=g(x,y),lb=c=>c==='p'?'p':'l',bn=(a,b)=>
 function tsRiftCells(){/* 地われと橋のマスと、そのタイルの名前（ステージをひらいたときに1回） */if(TSRC&&TSRC.s===S&&TSRC.L)return TSRC.L;TSRC={s:S};const L=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=tsRiftKey(x,y);if(k)L.push([x,y,k])}return TSRC.L=L}
 function tsRiftDraw(x0,y0,x1,y1){/* 地面の区画のあと・物より先（draw-world.js）。画面に見えるマスだけ */if(WD!==TSUCHI||!S||!riftM())return;const L=tsRiftCells();
-  icScreen(ctx,()=>{for(const[x,y,k]of L){if(x<x0||x>x1||y<y0||y>y1)continue;const t=icBlkImg(k);if(!t)continue;const[ch,im]=t,ix=(x-y)*IQW/2,iy=(x+y)*IQH/2;ctx.drawImage(im,ix-ch.ax/2,iy+IQH/2-ch.ay/2,ch.w/2,ch.h/2)}})}
+  icScreen(ctx,()=>{for(const[x,y,k]of L){if(x<x0||x>x1||y<y0||y>y1)continue;const t=icBlkImg(k);if(!t)continue;const[ch,im]=t,ix=(x-y)*IQW/2,iy=(x+y)*IQH/2;ctx.drawImage(im,ix-ch.ax/2,iy+IQH/2-ch.ay/2,ch.w/2,ch.h/2)}tsBrFlowerDraw()})}
 /* ---- 巣穴をタップ ---- */
 function tsTap(j){if(!tsOn())return false;const o=S.obj[j];if(o==='tsrubble'){toast('くずれた岩の山。おくの土地が、ふさがっている');return true}if(o!=='anagura')return false;
   if(!qAt('tscave1')){toast('あなぐまの巣穴。おくから、つめたい風がふいてくる');return true}
@@ -143,7 +143,16 @@ QL[TSUCHI]=[
   {id:'tscave2',text:'巣穴の、もっとおくへ行こう',check:()=>(S.ts.carve||[]).includes(1)&&S.res.some(r=>r.name===IBUKI)&&!S.ts.ibNew&&NEWRES==null&&!NEWQ.length,how:'「しらべる」で巣穴をタップして、洞窟の2階へ。下へおりる坂まで行こう',
    talk:{who:TOTO,when:()=>true,lines:[[TOTO,'#think|ねえ、かみさま。洞窟の2階にも、下へおりる坂があったよね。'],[HANI,'……もっと、おくへ行くの？'],[TOTO,'#proud|うん。へっちゃらだもん。'],[HANI,'#think|……気をつけて。']]}},
   {id:'tsookage',text:'夜の谷を守ろう',check:()=>!!S.flags.tsOokDown,how:'夜、大きな影が来たら、まもりの光を当てよう',
-   story:[[HANI,'……ゆうべ、大きな影が来たって。'],[TOTO,'#think|あの声……どこかで、きいたことがある気がするの。'],[IBUKI,'#proud|また来たら、おれが追いはらってやる。まかせとけ。'],[GOD,'ふむ。巣穴の、もっとおくに、なにかありそうじゃな。']]},
+   story:[[HANI,'……ゆうべ、大きな影が来たって。'],[TOTO,'#think|あの声……どこかで、きいたことがある気がするの。'],[IBUKI,'#proud|また来たら、おれが追いはらってやる。まかせとけ。'],[GOD,'ふむ。巣穴の、もっとおくに、なにかありそうじゃな。']]},  {id:'tscave3',text:'巣穴の、もっとおくへ行こう',check:()=>!!S.ts.totoGone,how:'「しらべる」で巣穴をタップして、洞窟の6階へ。下へおりる坂まで行こう',
+   story:[[HANI,'#droop|……トトが、いなくなった。'],[HANI,'……ぼくが、ひどいことを、言ったから。'],[IBUKI,'#think|……おれも、追いかけたかった。']]},
+  {id:'tsbridge',text:'谷をつなぐ石の大橋をかけよう',check:()=>!!S.flags.tsBridge,prog:()=>'石の大橋 '+tsBrDoneN()+'/'+tsBrCells().length,how:'地われの、岩の橋のすぐ南のマスをタップして、石の大橋をかける。せいれいが、砂岩と石材をはこぶ',
+   talk:{who:HANI,when:()=>true,done:()=>{S.flags.tsBrOpen=1},lines:[[HANI,'#think|……あの、地われ。'],[HANI,'あの夜から、ずっと、谷を、ふたつにわっている。'],[HANI,'トトは、ひとりで、おくへ行った。……ぼくらは、わたれない。'],[HANI,'#nod|……あのきず、みんなで、ふさごう。'],[IBUKI,'#proud|おう、まかせとけ！ 石なら、いくらでもはこぶぜ。']]},
+   story:[[HANI,'……できた。'],[IBUKI,'#joy|やったな！ これなら、おくまで行けるぜ。'],
+    ['@choice',{key:'tsBrFlower',who:HANI,q:'#think|……らんかんに、花をかざろう。どれがいい？',pick:v=>{S.ts.brFlower=v},opts:[
+     {t:'いわかがみ',v:'iwakagami',lines:[[HANI,'……この谷の、花。']]},
+     {t:'サルビア',v:'salvia',lines:[[HANI,'……あかい花。トトが、すきそう。']]},
+     {t:'ユリ',v:'lily',lines:[[HANI,'……しろい花。']]}]}],
+    [GOD,'ほっほ。谷が、ひとつにつながったのう。']]},
 ];
 /* ---- くずれた岩の山（S.ts.rub）：谷のはしの土地を、地ゆれでくずれた岩がふさいでいる。洞窟の階をはじめてクリアするたびに、1つずつくずれて、土地がひらく ----
    1つめ（ひらく順の0）は地われの西がわ。そこに、たおれたオリーブ（tskonoki）と、土のせいれいハニがいる。
