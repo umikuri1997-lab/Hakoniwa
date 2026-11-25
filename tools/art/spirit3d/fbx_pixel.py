@@ -60,18 +60,18 @@ def shade(cb, nb, mb, light):
         hsv[:, 1] = np.minimum(1, hsv[:, 1]+np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0))
         out[m] = np.array([colorsys.hsv_to_rgb(*v) for v in hsv])*255
     view = np.array([0, 0, 1.0]); hv = light+view; hv /= np.linalg.norm(hv)
-    sp0 = (mb == 1) & (nb@hv > 0.975); sp = (mb == 1) & (nb@hv > 0.93) & ~sp0; out[sp0] = 255; out[sp] = out[sp]*0.3+255*0.7
-    sp2 = (mb == 1) & (nb@hv > 0.86) & ~sp; out[sp2] = out[sp2]*0.65+255*0.35
+    sp0 = (mb == 1) & (nb@hv > 0.996); out[sp0] = 255   # 水：つやつや（小さな点の白い光。広がるつやにしない）
     g = mb == 2
-    if g.any():
-        t = np.clip(nb[g]@view, 0, 1)[:, None]; core = np.array([255, 214, 120.0])
-        out[g] = cb[g]*(1-t*0.75)+core*(t*0.75)
+    if g.any():   # 火：光っている色（かげはつけず、外がわは明るい朱色・こちらを向く所ほど 白っぽい黄色）
+        t = np.clip(nb[g]@view, 0, 1)[:, None]**0.7; edge = np.array([255, 120, 70.0]); core = np.array([255, 246, 190.0])
+        out[g] = (cb[g]*0.35+edge*0.65)*(1-t*0.85)+core*(t*0.85)
     return out
 
 def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
     Ws, Hs = W*ss, H*ss
-    zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）
+    zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）・3 すける（風のはね）
+    zt = np.full(Ws*Hs, -1e9); ct = np.zeros((Ws*Hs, 3)); nt = np.zeros((Ws*Hs, 3))   # すける物（いちばん手前）
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
     cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])
     cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
@@ -94,6 +94,8 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
         z = l0*Z[0]+l1*Z[1]+l2*Z[2]
         j = (ys[m]-.5).astype(int)*Ws+(xs[m]-.5).astype(int); z = z[m]
         nn = l0[m, None]*N[0]+l1[m, None]*N[1]+l2[m, None]*N[2]
+        if mat == 3:
+            bt = z > zt[j]; j = j[bt]; zt[j] = z[bt]; ct[j] = col; nt[j] = nn[bt]; continue
         bt = z > zb[j]; j = j[bt]
         zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k; mb[j] = mat
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
@@ -103,7 +105,13 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
         bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2
     # 左上の光で3だん
     nb /= np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-9)
-    img = shade(cb, nb, mb, light).reshape(Hs, Ws, 3); a = (zb > -1e8).reshape(Hs, Ws)
+    nt /= np.maximum(np.linalg.norm(nt, axis=1, keepdims=True), 1e-9)
+    img = shade(cb, nb, mb, light); has = zb > -1e8
+    wt = (zt > -1e8) & (zt > zb)   # すける物が手前：うしろの色と 45:55 でまぜる（うしろが何もなければ、うすく）
+    tw = shade(ct, nt, np.zeros(len(ct), int), light)
+    img[wt & has] = img[wt & has]*0.45+tw[wt & has]*0.55; img[wt & ~has] = tw[wt & ~has]
+    thin = (wt & ~has).reshape(Hs, Ws)
+    img = img.reshape(Hs, Ws, 3); a = (has | wt).reshape(Hs, Ws)
     # ss×ss をいちばん多い色で1ドットに
     out = np.zeros((H, W, 4), np.uint8)
     for r in range(H):
@@ -112,12 +120,12 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
             if blk.sum()*2 < ss*ss: continue
             px = img[r*ss:(r+1)*ss, c*ss:(c+1)*ss][blk]
             u, n = np.unique(np.round(px).astype(int), axis=0, return_counts=True)
-            out[r, c, :3] = u[n.argmax()]; out[r, c, 3] = 255
+            out[r, c, :3] = u[n.argmax()]; out[r, c, 3] = 150 if thin[r*ss:(r+1)*ss, c*ss:(c+1)*ss].sum()*2 >= ss*ss else 255
     # まわりに1ドットの輪郭（となりの色を少し暗く）
     al = out[..., 3] > 0; line = np.zeros_like(out)
     for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         sh = np.roll(np.roll(out, dy, 0), dx, 1); m = ~al & (sh[..., 3] > 0) & (line[..., 3] == 0)
-        line[m, :3] = (sh[m, :3]*0.72).astype(np.uint8); line[m, 3] = 255
+        line[m, :3] = (sh[m, :3]*0.72).astype(np.uint8); line[m, 3] = sh[m, 3]
     out[~al] = line[~al]
     return out
 

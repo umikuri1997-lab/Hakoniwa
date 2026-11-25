@@ -13,6 +13,7 @@ import rig
 import fbx_pixel as FP
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+FACE_DOWN = 2.0   # 顔を下げる量（ドット）
 F = np.diag([1.0, -1.0, 1.0])   # キャラの座標（前 +y）⇔ Blender（前 −Y）
 
 def blend(R): return F@R@F
@@ -25,6 +26,9 @@ def scene(el):
     bpy.ops.import_scene.fbx(filepath=os.path.join(HERE, 'model', el+'.fbx'))
     arm = [o for o in bpy.data.objects if o.type == 'ARMATURE'][0]
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
+    for o in meshes:   # 顔（Head・目・ほっぺ）を少し下げる（持ち主のたのみ）
+        if o.name.lower().startswith(('head', 'eye', 'cheek')) and not o.name.lower().startswith('headacc'):
+            mw = o.matrix_world.copy(); mw.translation.z -= FACE_DOWN*0.01; o.matrix_world = mw
     dom = {}
     for o in meshes:
         names = {g.index: g.name for g in o.vertex_groups}
@@ -106,7 +110,7 @@ def triangles(el):
         N = np.array([(R @ v.normal).normalized()[:] for v in me.vertices])
         dom = S['dom'][o.name]; base = FP.hx(FP.color_of(o.name, el, ''))
         hood = o.name.lower().startswith('hood'); cp = S['comp'].get(o.name)
-        mat = (1 if el == 'water' else 2 if el == 'fire' else 0) if hood else 0   # 水のずきんは つや・火のずきんは 光る
+        mat = (1 if el == 'water' else 2 if el == 'fire' else 0) if hood else 3 if o.name.lower().startswith('hane') else 0   # 水のずきんは つや・火のずきんは 光る・風のはねは すける
         for t in me.loop_triangles:
             i = list(t.vertices); col = FP.hx(FP.color_of(o.name, el, dom[i[0]]))
             if el == 'wood' and cp is not None and cp[0][i[0]] != cp[1]: col = FP.hx('#c9ef9b')   # 木の葉脈：明るい黄緑
