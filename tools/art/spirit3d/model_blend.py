@@ -142,7 +142,7 @@ def build_body():
         R = []
         for z in (5.5, 3, 1.2):
             l, r = fl(z); bl, br = sf(z); a = (r-l)/2; b = (br-bl)/2
-            R.append((B(side*8, (bl+br)/2, z), a*S, b*S, (0, 0, -1), (side, 0, 0)))
+            R.append((B(side*8.6, (bl+br)/2, z), a*0.82*S, b*S, (0, 0, -1), (side, 0, 0)))
         extrude_limb(bm, blk, R)
     # うで：かたの輪（22.6）のすぐ上・下の、横の 2×2 の面を押し出す
     bm.faces.ensure_lookup_table()
@@ -269,7 +269,7 @@ def build_armature(coll):
             b = ad.edit_bones.new(nm); b.head = B(*h); b.tail = B(*t)
             if parent: b.parent = ad.edit_bones[parent]; b.use_connect = conn
             return b
-        bone('root', (0, 0, 0), (0, -10, 0))
+        bone('root', (0, 0, 0), (0, -10, 0)).use_deform = False   # 動かす土台（重みはつけない）
         bone('hips', (0, 0, 11), (0, 0, 18), 'root')
         bone('spine', (0, 0, 18), (0, 0, 26), 'hips', True)
         bone('neck', (0, 0, 26), (0, 0, 31), 'spine', True)
@@ -343,6 +343,12 @@ def build(out):
         body.vertex_groups.remove(tg)
     for g in list(body.vertex_groups):   # ミラーが右がわへ重みをうつすには、.R の グループが（からでも）いる
         if g.name.endswith('.L'): body.vertex_groups.new(name=g.name[:-2]+'.R')
+    # ゲーム用のふつうの重み：1つの点につくボーンは4本まで・合計1
+    for v in body.data.vertices:
+        gs = sorted(v.groups, key=lambda g: -g.weight); keep = gs[:4]; tot = sum(g.weight for g in keep) or 1.0
+        drop = [g.group for g in gs[4:]]; ws = {g.group: g.weight/tot for g in keep}
+        for gi in drop: body.vertex_groups[gi].remove([v.index])
+        for gi, w in ws.items(): body.vertex_groups[gi].add([v.index], w, 'REPLACE')
     am = body.modifiers.get('Armature');
     sd = body.modifiers.new('Subdivision', 'SUBSURF'); sd.levels = 2; sd.render_levels = 2
     # 属性ごと
