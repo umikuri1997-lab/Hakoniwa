@@ -1,4 +1,8 @@
 'use strict';
+const WCHK=3,WCHKNG=10;/* あそんでいるせいれいが、仕事があるかたしかめる間（ゲームの分）。仕事をとれなかったあとは WCHKNG */
+function dropWant(r,q,noF){/* その落とし物を、いまひろいに行くか（hasWork と、しごとの drop で同じ決まり。noF：フタバがいない） */
+  return dropNear(r,q)&&(q.id!=='shard'||r.name===POKO||noF)&&dropFits(q)&&/* その物が入る箱がなければ、ひろわない（ひろっても、しまえずに持ったまま、ひとやすみをくり返す） */(q.id==='shard'||q.id==='recipe'||roomN(r)>0);
+}
 function dropNear(r,q){
   return q.id==='shard'||q.made||q.tap||q.lt||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=seekR(r)+gearStat(r).prng;
 }
@@ -38,9 +42,7 @@ function tryJob(r,G,k){
   case'drop':{
     if(!(S.drops&&S.drops.length)||isNight())return false;
     const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);
-    const targets=S.drops.filter(q=>dropNear(r,q)&&(q.id!=='shard'||r.name===POKO||noF)&&
-      dropFits(q)&&/* その物が入る箱がなければ、ひろわない（ひろっても、しまえずに持ったまま、ひとやすみをくり返す） */
-      (q.id==='shard'||q.id==='recipe'||roomN(r)>0));
+    const targets=S.drops.filter(q=>dropWant(r,q,noF));
     const tiles=new Set(),priority=new Set();
     for(const q of targets){
       const tile=q.y*W+q.x;
@@ -98,7 +100,7 @@ function hasWork(r){
   if(typeof bpJob==='function'&&bpJob(r,null,1))return true;/* 家の設計図 */
   if(typeof aniJob==='function'&&aniJob(r,null,1))return true;/* 飼う生き物の世話 */
   if(!isNight()&&r.elem==='wood'&&COMPS.some(c=>(S.dyn[c]||{}).c>0||r.fert>0)&&S.obj.some((o,q)=>o==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()))return true;
-  if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>dropNear(r,q)&&(q.id!=='shard'||r.name===POKO||!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
+  if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>dropWant(r,q,!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q)))return true;
   const room=foodCap()>0&&S.food<foodCap();
@@ -290,7 +292,7 @@ function moveR(r,dt){
   if(r.greetStop>S.t)return;/* すれちがって手をふるあいだは、立ちどまる */
   if(rainSlip(r))return;/* 雨の日の水たまりで、すべって止まる（feel.js） */
   {const cj=(r.y|0)*W+(r.x|0),L=SEATLAST.get(r);let n0=r.path.length?r.path[0]:-1;if(n0>=0&&n0!==cj&&seatCell(cj)&&L&&performance.now()-L.t<1500&&Math.abs(n0%W-cj%W)+Math.abs((n0/W|0)-(cj/W|0))===1&&walk(n0)){if(n0===seatBack(cj)){/* 背もたれのがわへはおりない：前か横へおりて、そこから歩く */const g=r.path[r.path.length-1],gx=g%W,gy=g/W|0,M=seatSides(cj).sort((a,b)=>Math.abs(a%W-gx)+Math.abs((a/W|0)-gy)-Math.abs(b%W-gx)-Math.abs((b/W|0)-gy));for(const m of M){const p=m===g?[]:avoidPath(r,roadSearch(m%W,m/W|0),g);if(m!==g&&!p.length)continue;r.path=[m].concat(p);n0=m;break}}SEATMV.set(r,{k:'out',x:L.x,y:L.y,t0:performance.now()});SEATLAST.delete(r);r.x=n0%W+.5;r.y=(n0/W|0)+.5;r.path.shift();if(!r.path.length){if(r.act)beginDo(r);return}}}/* すわる位置から、となりのマスへおりる */
-  let step=.36*dt*rMul(r,'move')*(r.act&&r.act.type==='flee'?gearStat(r).flee:1)/* そうび：にげる速さ */*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<100&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1)*windTail(r)/* 追い風（wind.js） */*escStep(r)/* 助けてにげる：にげる子のとなりをあるく（support.js） */;r.walkT=(r.walkT||0)+dt;if(r.path.length&&!isNight()&&!preBedCalm())r.energy=Math.max(0,r.energy-WALKTIRE*dt*STD/staNow(r)*(typeof seaTired==='function'?seaTired():1));/* 昼に歩くと、少しつかれる（遠い配置ほど、休む回数がふえる。夜の見回り・見張りはかえない） */
+  let step=.36*dt*rMul(r,'move')*(r.act&&r.act.type==='flee'?gearStat(r).flee:1)/* そうび：にげる速さ */*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<100&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*((FWALK[S.floor[(r.y|0)*W+(r.x|0)]]||{}).spd||1)*windTail(r)/* 追い風（wind.js） */*escStep(r)/* 助けてにげる：にげる子のとなりをあるく（support.js） */;r.walkT=(r.walkT||0)+dt;if(r.path.length&&!isNight()&&!preBedCalm())r.energy=Math.max(0,r.energy-WALKTIRE*dt*STD/staNow(r)*(typeof seaTired==='function'?seaTired():1));/* 昼に歩くと、少しつかれる（遠い配置ほど、休む回数がふえる。夜の見回り・見張りはかえない） */
   if(r.path.length>1&&r.path[0]!==r.reroute){const n0=r.path[0];if(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===n0&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))){r.reroute=n0;const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0),np=avoidPath(r,G0,g);if(np.length&&np.length<=r.path.length+4)r.path=np}}/* 遠まわりになるなら、よけずにそのまま進む（進んでは戻るのを防ぐ。進めなければ下の「つまり」で処理） */
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
@@ -345,8 +347,8 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(fighter(r)&&r.act&&!['step','patrol','eat','fetch','eatwait','flee','faint','forage','bury','escort'].includes(r.act.type)&&r.hunger>=250&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
   if(typeof shopCut==='function'&&shopCut(r)){const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!shopJob(r,bfs(r.x|0,r.y|0))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}/* 水のステージの食堂：お客さんが待っていたら、水あび・休み・ぶらぶらをやめて運ぶ */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn)){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
-  if(r.act&&IDLE_ACTS.includes(r.act.type)&&r.act.type!=='splay'/* 季節の遊びは、みんなでさいごまで */&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=275&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle'&&r.act.type!=='quirk'&&r.act.type!=='critwatch'&&r.act.type!=='sunset'&&r.act.type!=='rainjoy'&&r.act.type!=='admire'&&r.act.type!=='ownseat')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
-    const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
+  if(r.act&&IDLE_ACTS.includes(r.act.type)&&r.act.type!=='splay'/* 季節の遊びは、みんなでさいごまで */&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=275&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle'&&r.act.type!=='quirk'&&r.act.type!=='critwatch'&&r.act.type!=='sunset'&&r.act.type!=='rainjoy'&&r.act.type!=='admire'&&r.act.type!=='ownseat')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=(r.wchkW||WCHK)){r.wchk=0;r.wchkW=WCHK;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
+    const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key);r.wchkW=WCHKNG/* 仕事をとれなかったら、つぎは長く待つ（道さがしをくりかえさない） */}}}}
   else if(r.act&&ROUTINE.includes(r.act.type)&&!isNight()&&!r.cing&&!(r.noInt>S.t)){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasHighWork(r)){const was=r.act.type;endAct(r);r.highFirst=true;decide(r);r.highFirst=false;if(r.act&&r.act.type===was)r.noInt=S.t+60}}}
   if(r.hurt>0)r.hurt-=dt;
   if(!S.enemyOn&&r.hunger<200)r.hunger=200;/* チュートリアル中は、おなかで消えない */
@@ -404,7 +406,7 @@ function die(r){if(r.sasa&&typeof sasaBack==='function')sasaBack(r);/* ささげ
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)talkOnce('dt'+Math.round(S.t*60),DT);/* とちゅうでとじたら、つづきからでもう一度 */else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     talkOnce(fk,(key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,sp.name===POKO&&WD===KUSA&&!(S.bossKills>0||qDone('ookage')||qAt('ookage')&&S.qTalked)?t.replace('オオカゲが落とす「めぶきのしずく」','「めぶきのしずく」という、いのちの力'):t]))/* フタバは、名前を聞く前は「オオカゲ」と言わない */}}}/* 話す子の性格で説明する */
   if(!S.res.length&&!(S.cvAway||[]).length){/* 洞窟に出かけている子がいれば、まだ全滅ではない */S.wipe=true;S.wipeGift=lvOK(stg().fence2)?stg().fence2:stg().fence;giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
-  if(!S.res.length&&!(S.cvAway||[]).length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'#cry|みんな、消えてしもうた……。おヌシ、ひとりでよう耐えたのう。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、また会えるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'と、まよけのハーブじゃ。']],()=>{toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good');toast('まよけのハーブを1つもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
+  if(!S.res.length&&!(S.cvAway||[]).length)later(()=>STATUE<0?gameOver():dialog([[GOD,'#cry|みんな、消えてしもうた……。おヌシ、ひとりでよう耐えたのう。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、また会えるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'と、まよけのハーブじゃ。']],()=>{toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good');toast('まよけのハーブを1つもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 /* 建てる場所・依頼ボードへ行けないとき：5秒ごとにBFS1回でしらべ、行けなくなったときだけ知らせる。道があいたら消す */
 let JOBBLK={S:null,set:new Set(),t:0};

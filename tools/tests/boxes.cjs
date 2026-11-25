@@ -8,11 +8,11 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   /* しまう：じかにふえた分は、あいた箱へ。入らなければ神殿のまえ。食べ物だけの箱には素材を入れない */
   const a=JSON.parse(await run(`(()=>{${setup}S.mat={wood:0,stone:0};S.fs={};syncFood();boxSync();S.boxF={[A]:{mat:1},[B]:{food:1}};
     S.mat.wood=100;S.fs.berry=10;syncFood();boxSync();return JSON.stringify({A:S.box[A],B:S.box[B]||{},pile:S.pile,wood:S.mat.wood,food:S.food,cap:boxSlotTot()})})()`));
-  assert.deepEqual(a.A,{wood:100});assert.deepEqual(a.B,{'f:berry':10});assert.deepEqual(a.pile,{});assert.equal(a.wood,100);assert.equal(a.food,10);assert.equal(a.cap,12);
-  /* スタック制：ひとわく99こ・1しゅるい。木箱はわく6。入りきらない物は神殿のまえへ */
-  const st=JSON.parse(await run(`(()=>{const A=window.BA,C=A+W*5;S.obj[C]='crate';recount();const o={},P=(k,n)=>{bput(C,k,n);availAdd(k,n)};P('wood',99);o.u1=slotUsed(C);o.r1=boxRoom(C,'wood');P('wood',1);o.u2=slotUsed(C);o.r2=boxRoom(C,'wood');for(const k of['stone','eda','can','tsuchi'])P(k,1);o.u3=slotUsed(C);o.rw=boxRoom(C,'wood');o.rs=boxRoom(C,'stone');o.rn=boxRoom(C,'nuno');
+  assert.deepEqual(a.A,{wood:100});assert.deepEqual(a.B,{'f:berry':10});assert.deepEqual(a.pile,{});assert.equal(a.wood,100);assert.equal(a.food,10);assert.equal(a.cap,20);
+  /* スタック制：ひとわく99こ・1しゅるい。木箱はわく10。入りきらない物は神殿のまえへ */
+  const st=JSON.parse(await run(`(()=>{const A=window.BA,C=A+W*5;S.obj[C]='crate';recount();const o={},P=(k,n)=>{bput(C,k,n);availAdd(k,n)};P('wood',99);o.u1=slotUsed(C);o.r1=boxRoom(C,'wood');P('wood',1);o.u2=slotUsed(C);o.r2=boxRoom(C,'wood');for(const k of['stone','eda','can','tsuchi','bamboo','shina','kasa','kuru'])P(k,1);o.u3=slotUsed(C);o.rw=boxRoom(C,'wood');o.rs=boxRoom(C,'stone');o.rn=boxRoom(C,'nuno');
     P('nuno',1);boxSync();o.over=slotUsed(C);o.kinds=Object.keys(S.box[C]).length;o.fill=crateFill(C);for(const k in S.box[C]){const n=S.box[C][k];btake(C,k,n);availAdd(k,-n)}S.obj[C]='';recount();boxSync();return JSON.stringify(o)})()`));
-  assert.deepEqual(st,{u1:1,r1:495,u2:2,r2:494,u3:6,rw:98,rs:98,rn:0,over:6,kinds:5,fill:3},'stack: '+JSON.stringify(st));
+  assert.deepEqual(st,{u1:1,r1:891,u2:2,r2:890,u3:10,rw:98,rs:98,rn:0,over:10,kinds:9,fill:3},'stack: '+JSON.stringify(st));
   /* 神殿のまえの物は、せいれいがあいた箱へ運ぶ。食べ物だけの箱には入れない */
   const b=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;S.boxF={};${step(2400)}return JSON.stringify({A:S.box[A],B:S.box[B],pile:S.pile,wood:S.mat.wood})})()`));
   assert.equal(b.wood,100);assert.equal(b.pile.wood||0,0,'pile hauled: '+JSON.stringify(b));assert.equal((b.A.wood||0)+(b.B.wood||0),100);
@@ -41,9 +41,9 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
     removeAt(p%W,(p/W)|0);boxSync();const mid={drops:(S.drops||[]).length-d0,stone:S.mat.stone,pile:PIL().stone||0,inv:S.inv.crate||0};
     S.lv=Math.max(S.lv||1,5);place('crate',p%W,(p/W)|0);boxSync();return JSON.stringify({n,st,mid,box:(S.box[p]||{}).stone||0,pile:PIL().stone||0,stone:S.mat.stone,keep:!!S.boxKeep})})()`));
   console.log(JSON.stringify(sv));assert.ok(sv.n>0);assert.deepEqual(sv.mid,{drops:0,stone:sv.st,pile:sv.n,inv:sv.mid.inv},'こわしても散らさない');assert.equal(sv.box,sv.n,'置いた箱へもどる');assert.equal(sv.pile,0);assert.equal(sv.stone,sv.st);assert.equal(sv.keep,false);
-  /* まき棚：木材と枝だけ、わく2 */
+  /* まき棚：木材と枝だけ、わく3 */
   const mk=JSON.parse(await run(`(()=>{const A=window.BA,j=A+W*3;S.obj[j]='makidana';recount();return JSON.stringify({cap:boxCap(j),wood:boxRoom(j,'wood'),eda:boxRoom(j,'eda'),stone:boxRoom(j,'stone'),food:boxRoom(j,'f:berry'),catMat:boxCat(j,false)})})()`));
-  assert.deepEqual(mk,{cap:198,wood:198,eda:198,stone:0,food:0,catMat:false});
+  assert.deepEqual(mk,{cap:297,wood:297,eda:297,stone:0,food:0,catMat:false});
   /* 箱の画面：中身と、入れる物 */
   const h=await run(`(()=>{const A=window.BA,B=window.BB;openSheet('furn',B);const t=document.querySelector('#sheetBody').innerText;closeSheet();return t})()`);
   assert.match(h,/中身/);assert.match(h,/入れる物/);assert.match(h,/なんでも/);

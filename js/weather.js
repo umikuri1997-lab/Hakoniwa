@@ -20,7 +20,7 @@ function wxFill(d){/* d から2日先まで、まだきめていない日をき�
 function wxMorning(){/* morning() の天気：前もってきめた日を使う */const d=dayNo();const Q=wxQ();if(!Q[d])wxFill(d);const e=Q[d];
   const wr=S.rain;if(wr)S.wetD=d;/* 雨のつぎの日：水たまりがのこる（feel.js） */
   S.rain=!!e.r;if(e.s)S.stormNext=d;
-  if(e.b&&!IS_STORY_REPLAY){S.rain=false;S.rbDay=d;setTimeout(()=>toast('雨あがりの空に、虹が出ている','good'),900)}
+  if(e.b&&!IS_STORY_REPLAY){S.rain=false;S.rbDay=d;later(()=>toast('雨あがりの空に、虹が出ている','good'),900)}
   if(typeof stormMorning==='function')stormMorning();/* あらしの日（S.stormNext===d） */
   wxFill(d);
   return e}

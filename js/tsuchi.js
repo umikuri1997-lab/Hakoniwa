@@ -13,7 +13,7 @@ BL.anagura={name:'あなぐまの巣穴',solid:1,natural:1};
 /* 地われの列（y ごと）：まん中の列からのずれ。はば3（ところどころ2） */
 const tsRiftAt=y=>TSRIFTX+Math.round(3*Math.sin(y/9)+2*Math.sin(y/4.3+1));
 function tsRift(s,R){const w2=new Set();for(let k=0;k<6;k++)w2.add((R()*H)|0);
-  for(let y=0;y<H;y++){const br=y>=TSBRY-1&&y<=TSBRY+2,x0=tsRiftAt(br?TSBRY:y),wd=!br&&(w2.has(y)||w2.has(y-1))?2:3;/* 橋のまわり4行は、同じ列（橋が地われにぴったりかかる） */for(let a=0;a<wd;a++){const x=x0+a;if(x>=0&&x<W)s.ground[y*W+x]=1}}
+  for(let y=0;y<H;y++){const br=y>=TSBRY-1&&y<=TSBRY+6,x0=tsRiftAt(br?TSBRY:y),wd=!br&&(w2.has(y)||w2.has(y-1))?2:3;/* 橋のまわり（岩の橋と、石の大橋）は、同じ列（橋が地われにぴったりかかる） */for(let a=0;a<wd;a++){const x=x0+a;if(x>=0&&x<W)s.ground[y*W+x]=1}}
   for(let y=TSBRY;y<TSBRY+2;y++)for(let x=TSRIFTX-6;x<=TSRIFTX+8;x++)s.ground[y*W+x]=0}/* 自然の岩の橋 */
 /* 谷のまわりのがけ：まん中から東西に24マス・北はまん中から20マスより外ほど、段差のノイズを高くする */
 function tsWallK(x,y){const dx=Math.abs(x+.5-CX),f1=Math.min(1,Math.max(0,(dx-24)/14)),f2=Math.min(1,Math.max(0,(CY-20-y)/12));return .5*Math.max(f1,f2)}
@@ -44,7 +44,7 @@ function tsDrawObj(c,id,x,y,i,now){const P=(col,a,b,w,h)=>tsPx(c,col,x+a,y+b,w,h
    iso:rift:<北><西><北西><東><南>[-<西の橋の数><東の橋の数>]（北が橋のとき）・iso:riftb:<西の橋の数><東の橋の数><北><南>（橋の上の面） */
 let TSRC=null;
 function tsKind(x,y){if(x<0||x>=W)return 'l';y=Math.max(0,Math.min(H-1,y));/* マップの上・下のはしの外は、地われがつづく */const j=y*W+x;if(riftJ(j))return 'p';
-  return y>=TSBRY&&y<TSBRY+2&&tsBrX().has(x)?'b':'l'}
+  return y>=TSBRY&&y<TSBRY+2&&tsBrX().has(x)||S.ts&&S.ts.brd&&S.ts.brd.includes(j)?'b':'l'}
 function tsBrX(){/* 岩の橋のマスの列：橋の上の行の、もとの地われの列（はば3）。2行とも同じ列 */const x0=tsRiftAt(TSBRY);return new Set([x0,x0+1,x0+2])}
 function tsRiftKey(x,y){const g=tsKind,t=g(x,y),lb=c=>c==='p'?'p':'l',bn=(a,b)=>{let iw=0,ie=0;while(iw<2&&g(a-iw-1,b)==='b')iw++;while(ie<2&&g(a+ie+1,b)==='b')ie++;return ''+iw+ie};
   if(t==='b'){const N=g(x,y-1),S2=g(x,y+1);return 'iso:riftb:'+bn(x,y)+(N==='b'?'b'+lb(S2):lb(N)+'b')}
@@ -54,7 +54,7 @@ function tsRiftKey(x,y){const g=tsKind,t=g(x,y),lb=c=>c==='p'?'p':'l',bn=(a,b)=>
 function tsRiftCells(){/* 地われと橋のマスと、そのタイルの名前（ステージをひらいたときに1回） */if(TSRC&&TSRC.s===S&&TSRC.L)return TSRC.L;TSRC={s:S};const L=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=tsRiftKey(x,y);if(k)L.push([x,y,k])}return TSRC.L=L}
 function tsRiftDraw(x0,y0,x1,y1){/* 地面の区画のあと・物より先（draw-world.js）。画面に見えるマスだけ */if(WD!==TSUCHI||!S||!riftM())return;const L=tsRiftCells();
-  icScreen(ctx,()=>{for(const[x,y,k]of L){if(x<x0||x>x1||y<y0||y>y1)continue;const t=icBlkImg(k);if(!t)continue;const[ch,im]=t,ix=(x-y)*IQW/2,iy=(x+y)*IQH/2;ctx.drawImage(im,ix-ch.ax/2,iy+IQH/2-ch.ay/2,ch.w/2,ch.h/2)}})}
+  icScreen(ctx,()=>{for(const[x,y,k]of L){if(x<x0||x>x1||y<y0||y>y1)continue;const t=icBlkImg(k);if(!t)continue;const[ch,im]=t,ix=(x-y)*IQW/2,iy=(x+y)*IQH/2;ctx.drawImage(im,ix-ch.ax/2,iy+IQH/2-ch.ay/2,ch.w/2,ch.h/2)}tsBrFlowerDraw()})}
 /* ---- 巣穴をタップ ---- */
 function tsTap(j){if(!tsOn())return false;const o=S.obj[j];if(o==='tsrubble'){toast('くずれた岩の山。おくの土地が、ふさがっている');return true}if(o!=='anagura')return false;
   if(!qAt('tscave1')){toast('あなぐまの巣穴。おくから、つめたい風がふいてくる');return true}
@@ -68,6 +68,9 @@ const TSCARVE=[
   {fl:0,name:'あなぐまと子たち',lines:[[TOTO,'#surprise|……かべに、なにか彫ってある。'],[TOTO,'大きなあなぐまが、ちいさな子たちを、だっこしてる。'],[TOTO,'#joy|……かっこいいなあ。'],[TOTO,'#think|ヌシ様かな。ぼくも、こんなふうに大きくなれたらいいのに。']]},
   {fl:1,name:'天井をささえるあなぐま',ok:()=>tsQDone('tsolive'),lines:ib=>[[TOTO,'#surprise|……また、彫り絵だ。'],[TOTO,'大きなあなぐまが、くずれる天井を、体でささえてる。'],[TOTO,'その下を、子たちが、にげていく……。'],
     ...(ib?[[IBUKI,'#surprise|おい、トト。……ふるえてるぞ。']]:[]),[TOTO,'#scared|……わかんない。なんでだろ。足が、とまらないの。'],...(ib?[[IBUKI,'#think|……つめたい風のせいだな。村へもどろうぜ。']]:[])]},/* 2まいめ：ハニのオリーブのあと（ok）。見た日の夜にツチノオオカゲが来る（tsOok） */
+  {fl:5,name:'あなぐまの足あと',ok:()=>!!S.flags.tsOokDown,lines:ib=>[[TOTO,'#surprise|……あなぐまの、足あとだ。'],[TOTO,'大きな足あとのよこに、ちいさい足あとが、ついてる。'],[TOTO,'#scared|……ぼくの足と、おんなじかたちだ。'],
+    ...(ib?[[IBUKI,'#surprise|おい、トト。何を言ってんだ。']]:[]),[TOTO,'#droop|……わかっちゃった。あの大きなあなぐまは、ぼくなんだ。'],[TOTO,'#scared|ずっと、だましてたんだ。みんなも、ぼくも。ごめん……！'],
+    ...(ib?[[IBUKI,'#alarm|おい、まて、トト！']]:[])]},/* 3まいめ：ツチノオオカゲを追いはらったあと（ok）。見たあと、トトはひとりで洞窟のおくへにげる（tsTotoFlee） */
 ];
 const tsCarveOf=fl=>WD===TSUCHI?TSCARVE.findIndex(c=>c.fl===fl&&(!c.ok||c.ok())):-1;
 function tsCaveCarve(C){/* 洞窟に入ったとき：坂にいちばん近い、正面の見える岩のマスに、彫り絵を置く（caveEnter） */C.carve=null;const n=tsCarveOf(C.fl);if(n<0)return;let R=-1;for(const[j,o]of C.ob)if(o.k==='R'){R=j;break}if(R<0)return;
@@ -77,13 +80,20 @@ function tsCarveDraw(c,x,y,ox,oy){/* 岩の正面に（iso-cave2.js の cvqRockD
   const F=(col,a,b,w,h)=>{c.fillStyle=col;c.fillRect(ox+a,oy+b,w,h)};F('#8c7a66',3,4,26,24);F('#a8957e',4,5,24,22);F('#7a6957',9,9,14,12);F('#8c7a66',11,11,10,8);F('#7a6957',7,20,4,4);F('#7a6957',21,20,4,4);F('#7a6957',14,22,4,3);return true}
 function tsCarveImg(n){/* 大きな1まいの絵（チップがないときは、コードの仮の絵） */const cv=document.createElement('canvas');cv.width=160;cv.height=120;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;const ch=window.CHIPS&&CHIPS['carve:big#'+n];
   if(ch){const im=chipImgs(ch,'carve:big#'+n)[0];if(im&&im.ok){cv.width=im.width;cv.height=im.height;g.drawImage(im,0,0);return cv}}
+  if(n===2){/* あなぐまの足あと：大きな足あとと、よこの、ちいさな足あと（同じかたち） */const F=(col,a,b,w,h)=>{g.fillStyle=col;g.fillRect(a,b,w,h)},foot=(x,y,k,c1,c2)=>{F(c1,x,y+9*k,10*k,7*k);F(c1,x-1*k,y+4*k,3*k,5*k);F(c1,x+2*k,y,3*k,6*k);F(c1,x+5*k,y,3*k,6*k);F(c1,x+8*k,y+4*k,3*k,5*k);F(c2,x+1*k,y+10*k,8*k,2*k)};
+    F('#a8957e',0,0,160,120);F('#8c7a66',4,4,152,112);F('#b5a28a',8,8,144,104);for(let i=0;i<10;i++){F('#a08a74',14+i*14,12+((i*37)%9),6,2);F('#9a8570',20+i*14,100-((i*29)%9),5,2)}
+    foot(36,34,4,'#6b5b4b','#5a4b3d');foot(104,54,2,'#6b5b4b','#5a4b3d');F('#7a6957',96,50,2,2);F('#7a6957',134,50,2,2);return cv}
   const F=(col,a,b,w,h)=>{g.fillStyle=col;g.fillRect(a,b,w,h)};F('#a8957e',0,0,160,120);F('#8c7a66',4,4,152,112);F('#b5a28a',8,8,144,104);
   F('#8c7a66',50,22,60,56);F('#7a6957',58,14,14,12);F('#7a6957',88,14,14,12);F('#6b5b4b',62,40,6,4);F('#6b5b4b',92,40,6,4);
   for(let i=0;i<3;i++){F('#7a6957',40+i*30,74,20,20);F('#6b5b4b',46+i*30,80,3,3);F('#6b5b4b',53+i*30,80,3,3)}return cv}
 function tsCarveView(n,done){const D=TSCARVE[n];if(!D){if(done)done();return}const P=pxPop(D.name),im=tsCarveImg(n);im.style.cssText='display:block;width:100%;image-rendering:pixelated;margin:4px 0';P.body.appendChild(im);
   if(done){const b=el('<button class="btn pri" style="width:100%;margin-top:8px">つぎへ</button>');b.onclick=()=>{sfx('tap');P.close();done()};P.body.appendChild(b);const x=P.o.querySelector('.x');if(x)x.onclick=b.onclick;P.o.onclick=null}}
 function tsCarveAt(C,next){/* 坂まで来たとき（cave.js の cvClearCheck）：まだ見ていない彫り絵なら、見せて話してから next。トトがいないときは、つぎに来たとき */const n=tsCarveOf(C.fl);if(n<0||(S.ts&&S.ts.carve||[]).includes(n)||!C.party.some(a=>a.r.name===TOTO))return false;
-  setTimeout(()=>{if(CV!==C)return;sfx('good');tsCarveView(n,()=>{if(CV!==C)return;const L=TSCARVE[n].lines;dialog(typeof L==='function'?L(C.party.some(a=>a.r.name===IBUKI)):L,()=>{if(CV!==C)return;(S.ts.carve||(S.ts.carve=[])).push(n);if(n===1)tsOokSet();memo('star','洞窟のかべで、彫り絵「'+TSCARVE[n].name+'」を見つけた');next()})})},1300);return true}
+  later(()=>{if(CV!==C)return;sfx('good');tsCarveView(n,()=>{if(CV!==C)return;const L=TSCARVE[n].lines;dialog(typeof L==='function'?L(C.party.some(a=>a.r.name===IBUKI)):L,()=>{if(CV!==C)return;(S.ts.carve||(S.ts.carve=[])).push(n);if(n===1)tsOokSet();if(n===2)tsTotoFlee(C);memo('star','洞窟のかべで、彫り絵「'+TSCARVE[n].name+'」を見つけた');next()})})},1300);return true}
+function tsTotoFlee(C){/* 彫り絵3のあと：トトは、ひとりで洞窟のおくへにげる。パーティからも村からもいなくなる（S.ts.totoGone に、とっておく。お話の後半でもどる） */
+  const a=C.party.find(q=>q.r.name===TOTO);if(!a)return;const t=a.r;cvSpark(a.x,a.y-CVOY,'#c8b890',12);sfx('crack');
+  C.party=C.party.filter(q=>q!==a);C.all=(C.all||[]).filter(r=>r!==t);S.cvAway=(S.cvAway||[]).filter(r=>r!==t);if(C.focus&&C.focus.tg===a)C.focus.tg=null;
+  t.act=null;t.path=[];S.ts.totoGone=t;toast('トトは、洞窟のおくへ、走っていった','warn');cvHudUpd()}
 const tsCaveMust=()=>{/* まだ見ていない彫り絵の階があるうちは、トトもいっしょ（cave.js の cavePrep。出かける階は、そのあとでえらぶ） */if(!tsOn())return null;const top=Math.min(S.cvClr||0,cvFlOpen()-1);for(let fl=0;fl<=top;fl++){const n=tsCarveOf(fl);if(n>=0&&!(S.ts.carve||[]).includes(n))return S.res.find(r=>r.name===TOTO&&!r.hidden)||null}return null};
 /* ---- はじまりの地ゆれ：カメラが巣穴へ → 地面がゆれる → トトがころがり出る → 会話 ---- */
 let TSINTRO=null;
@@ -93,10 +103,10 @@ function tsIntro(next){const h=S.ts&&S.ts.hole,t=S.res.find(r=>r.name===TOTO);if
   const fin=()=>{TSINTRO=null;GIFT_ACTIVE=false;showUI(true);if(ok())next()};
   camAnim=TSINTRO={fz:cam.z,tz:Math.max(cam.z,1.2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:hx*TS,ty:(hy+1.5)*TS,t:0,dur:1.6,done:()=>{if(!ok())return fin();
     sfx('crack');shakeScreen('l');musicDuck(2400);
-    setTimeout(()=>{if(!ok())return fin();shakeScreen('m');sfxAt('dust',hx,hy);spawnFX(hx-.5,hy-.2,'#b8946e');
+    later(()=>{if(!ok())return fin();shakeScreen('m');sfxAt('dust',hx,hy);spawnFX(hx-.5,hy-.2,'#b8946e');
       const t0=performance.now(),dur=1300,roll=()=>{if(!ok())return fin();const q=Math.min(1,(performance.now()-t0)/dur),e=1-(1-q)*(1-q);t.x=hx+(ex-hx)*e;t.y=hy+.6+(ey-hy-.6)*e;dirty=true;
         if(q<1){if(((q*6)|0)!==((q*6-.02)|0))JUMP.set(t,performance.now());requestAnimationFrame(roll);return}
-        sfxAt('bonk',t.x,t.y);JUMP.set(t,performance.now());spawnFX(t.x-.5,t.y-.4,'#c4a07a');setTimeout(fin,500)};
+        sfxAt('bonk',t.x,t.y);JUMP.set(t,performance.now());spawnFX(t.x-.5,t.y-.4,'#c4a07a');later(fin,500)};
       requestAnimationFrame(roll)},900)}}}
 function tsIntroReset(){if(TSINTRO){if(camAnim===TSINTRO)camAnim=null;TSINTRO=null;GIFT_ACTIVE=false}}/* 村を切りかえたとき */
 /* ---- 会話と目標 ---- */
@@ -133,7 +143,16 @@ QL[TSUCHI]=[
   {id:'tscave2',text:'巣穴の、もっとおくへ行こう',check:()=>(S.ts.carve||[]).includes(1)&&S.res.some(r=>r.name===IBUKI)&&!S.ts.ibNew&&NEWRES==null&&!NEWQ.length,how:'「しらべる」で巣穴をタップして、洞窟の2階へ。下へおりる坂まで行こう',
    talk:{who:TOTO,when:()=>true,lines:[[TOTO,'#think|ねえ、かみさま。洞窟の2階にも、下へおりる坂があったよね。'],[HANI,'……もっと、おくへ行くの？'],[TOTO,'#proud|うん。へっちゃらだもん。'],[HANI,'#think|……気をつけて。']]}},
   {id:'tsookage',text:'夜の谷を守ろう',check:()=>!!S.flags.tsOokDown,how:'夜、大きな影が来たら、まもりの光を当てよう',
-   story:[[HANI,'……ゆうべ、大きな影が来たって。'],[TOTO,'#think|あの声……どこかで、きいたことがある気がするの。'],[IBUKI,'#proud|また来たら、おれが追いはらってやる。まかせとけ。'],[GOD,'ふむ。巣穴の、もっとおくに、なにかありそうじゃな。']]},
+   story:[[HANI,'……ゆうべ、大きな影が来たって。'],[TOTO,'#think|あの声……どこかで、きいたことがある気がするの。'],[IBUKI,'#proud|また来たら、おれが追いはらってやる。まかせとけ。'],[GOD,'ふむ。巣穴の、もっとおくに、なにかありそうじゃな。']]},  {id:'tscave3',text:'巣穴の、もっとおくへ行こう',check:()=>!!S.ts.totoGone,how:'「しらべる」で巣穴をタップして、洞窟の6階へ。下へおりる坂まで行こう',
+   story:[[HANI,'#droop|……トトが、いなくなった。'],[HANI,'……ぼくが、ひどいことを、言ったから。'],[IBUKI,'#think|……おれも、追いかけたかった。']]},
+  {id:'tsbridge',text:'谷をつなぐ石の大橋をかけよう',check:()=>!!S.flags.tsBridge,prog:()=>'石の大橋 '+tsBrDoneN()+'/'+tsBrCells().length,how:'地われの、岩の橋のすぐ南のマスをタップして、石の大橋をかける。せいれいが、砂岩と石材をはこぶ',
+   talk:{who:HANI,when:()=>true,done:()=>{S.flags.tsBrOpen=1},lines:[[HANI,'#think|……あの、地われ。'],[HANI,'あの夜から、ずっと、谷を、ふたつにわっている。'],[HANI,'トトは、ひとりで、おくへ行った。……ぼくらは、わたれない。'],[HANI,'#nod|……あのきず、みんなで、ふさごう。'],[IBUKI,'#proud|おう、まかせとけ！ 石なら、いくらでもはこぶぜ。']]},
+   story:[[HANI,'……できた。'],[IBUKI,'#joy|やったな！ これなら、おくまで行けるぜ。'],
+    ['@choice',{key:'tsBrFlower',who:HANI,q:'#think|……らんかんに、花をかざろう。どれがいい？',pick:v=>{S.ts.brFlower=v},opts:[
+     {t:'いわかがみ',v:'iwakagami',lines:[[HANI,'……この谷の、花。']]},
+     {t:'サルビア',v:'salvia',lines:[[HANI,'……あかい花。トトが、すきそう。']]},
+     {t:'ユリ',v:'lily',lines:[[HANI,'……しろい花。']]}]}],
+    [GOD,'ほっほ。谷が、ひとつにつながったのう。']]},
 ];
 /* ---- くずれた岩の山（S.ts.rub）：谷のはしの土地を、地ゆれでくずれた岩がふさいでいる。洞窟の階をはじめてクリアするたびに、1つずつくずれて、土地がひらく ----
    1つめ（ひらく順の0）は地われの西がわ。そこに、たおれたオリーブ（tskonoki）と、土のせいれいハニがいる。
@@ -163,10 +182,10 @@ function tsRubOpen(i){const P=S.ts.rub[i];if(!P||P.open)return;const owner=S,ses
   GIFT_ACTIVE=true;showUI(false);const fin=()=>{TSOPEN=null;GIFT_ACTIVE=false;showUI(true);if(ok()){recount();checkQuest()}};
   camAnim=TSOPEN={fz:cam.z,tz:Math.max(cam.z,1.1),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cx*TS,ty:cy*TS,t:0,dur:1.6,done:()=>{if(!ok())return fin();
     sfx('crack');shakeScreen('m');musicDuck(2400);
-    setTimeout(()=>{if(!ok())return fin();shakeScreen('l');sfxAt('dust',cx,cy);
+    later(()=>{if(!ok())return fin();shakeScreen('l');sfxAt('dust',cx,cy);
       P.open=1;for(const k of P.cells){S.obj[k]=P.keep[k]||'';delete S.dyn[k];delete S.hp[k];if(hash(k*7+3)<.35)spawnFX(k%W,(k/W)|0,'#c4a07a')}
       if(i===0)tsKonohaCome(P);
-      toast('くずれた岩の山がくずれて、土地がひらいた','good');memo('leaf','くずれた岩の山がくずれて、谷のはしの土地がひらいた');dirty=true;setTimeout(fin,900)},900)}}}
+      toast('くずれた岩の山がくずれて、土地がひらいた','good');memo('leaf','くずれた岩の山がくずれて、谷のはしの土地がひらいた');dirty=true;later(fin,900)},900)}}}
 function tsOpenReset(){if(TSOPEN){if(camAnim===TSOPEN)camAnim=null;TSOPEN=null;GIFT_ACTIVE=false}}
 /* 洞窟からもどったら：はじめてクリアした階の数だけ、岩の山がくずれる（main.js：画面があいているとき） */
 function tsTick(){if(!tsOn()||!S.ts.rub||typeof CV!=='undefined'&&CV||TSINTRO||TSOPEN||GIFT_ACTIVE||camAnim||document.querySelector('.pxpopw,.idea-reveal'))return;
@@ -195,10 +214,10 @@ function tsCaveIbuki(C){C.ib=null;if(!tsOn()||C.fl!==TSIBFL||S.ts.ib||!tsQDone('
   C.ib={a,ids,st:0,sw:0,k:0}}
 const cvActorsL=C=>C.ib&&C.ib.st===0&&C.seen[cvCell(C.ib.a)]?C.party.concat([C.ib.a]):C.party;/* 洞窟で描くせいれい：なかまと、まだ会っていないイブキ（iso-cave.js） */
 function tsCaveTick(C,now){/* caveFrame から */const I=C.ib;if(!I||I.st>=3)return;const a=I.a,fs=C.en.filter(e=>I.ids.includes(e.id)&&!e.dead);
-  if(I.st===0){if(fs.length&&now>=I.sw){I.sw=now+1100;const e=fs[(I.k++)%fs.length];a.face=e.x>=a.x?1:-1;a.turn=Math.abs(e.x-a.x)>Math.abs(e.y-a.y)*.6?1:0;a.back=a.fback=e.y<a.y-.3&&!a.turn;a.swing=now;setTimeout(()=>{if(CV===C&&!e.dead){atkFX(a,e);cvSpark(e.x,e.y-CVOY,'#ffb070',6)}},HIT_LAG)}/* 火をふる（絵だけ） */
+  if(I.st===0){if(fs.length&&now>=I.sw){I.sw=now+1100;const e=fs[(I.k++)%fs.length];a.face=e.x>=a.x?1:-1;a.turn=Math.abs(e.x-a.x)>Math.abs(e.y-a.y)*.6?1:0;a.back=a.fback=e.y<a.y-.3&&!a.turn;a.swing=now;later(()=>{if(CV===C&&!e.dead){atkFX(a,e);cvSpark(e.x,e.y-CVOY,'#ffb070',6)}},HIT_LAG)}/* 火をふる（絵だけ） */
     if(!C.party.some(q=>Math.hypot(q.x-a.x,q.y-a.y)<=TSIBNEAR))return;I.st=1;C.focus=null;for(const q of C.party){q.path=[];q.mv=false}
     dialog([[IBUKI,'#alarm|へっ、まだまだ！ ……ん？ だれだ、おまえら。'],[TOTO,'#surprise|わっ、火のせいれいだ！'],[IBUKI,'おれは、イブキ。こいつら、なかなか、しつこくてよ。'],[TOTO,'#proud|ぼ、ぼくも、たたかえるもん！'],[IBUKI,'#joy|ははっ、ちびすけ、ふるえてるじゃねえか。……まあいい。まかせとけ！']],()=>{if(CV!==C)return;tsIbJoin(C)});return}
-  if(I.st===2&&!fs.length){I.st=3;setTimeout(()=>{if(CV!==C)return;dialog([[IBUKI,'#joy|やるじゃねえか、ちびすけ。'],[TOTO,'#jolt|ちびすけじゃないもん。トトだもん。'],[IBUKI,'おう、トト。おまえら、上の村から来たのか？ ……おれも、いっしょに行っていいか。'],[TOTO,'#joy|うん！']])},600)}}
+  if(I.st===2&&!fs.length){I.st=3;later(()=>{if(CV!==C)return;dialog([[IBUKI,'#joy|やるじゃねえか、ちびすけ。'],[TOTO,'#jolt|ちびすけじゃないもん。トトだもん。'],[IBUKI,'おう、トト。おまえら、上の村から来たのか？ ……おれも、いっしょに行っていいか。'],[TOTO,'#joy|うん！']])},600)}}
 function tsIbJoin(C){/* 会話のあと：なかまになって、コワイノが起きる */const I=C.ib,a=I.a,r=a.r;I.st=2;(S.cvAway||(S.cvAway=[])).push(r);/* 洞窟にいるあいだは、村のせいれいの外（cave.js の cvAwayBack で村へ） */r.hunger=375;r.came=dayNo();S.lastCame=dayNo();(S.keyN||(S.keyN={})).fire=IBUKI;S.ts.ib=1;S.ts.ibNew=1;
   C.party.push(a);C.all.push(r);for(const e of C.en)if(I.ids.includes(e.id)){e.tsHold=0;e.asleep=false;e.wakeT=performance.now()}sfx('arrive');toast(IBUKI+'がなかまになった','good');cvHudUpd()}
 function tsIbWelcome(){/* 洞窟からもどったら：村のなかまの紹介（tsTick） */const r=S.res.find(q=>q.name===IBUKI);S.ts.ibNew=0;if(!r)return;

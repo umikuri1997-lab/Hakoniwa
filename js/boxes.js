@@ -5,7 +5,7 @@
    S.rsv：建てる・作る・炉・コンポスター・おたきあげのために、とっておいた数（まだ箱の中にある）。
    S.mat・S.fs は「使える数」＝箱と神殿のまえの合計 － とっておいた数。
    S.mat などを、じかにふやした・へらした分は、boxSync があわせる（ふえた分はあいた箱へ、入らなければ神殿のまえへ。へった分は神殿のまえ → 箱からへらす）。 */
-const BOXCAP={crate:6,taru:4,kabebukuro:3,asabukuro:4,makidana:2,shelf1:8,shelf2:10,wshelf:10,cabinet:6,g_k_chest:4},STACK=99;/* わくの数（スタック制：ひとつのわくに1しゅるい、STACK こまで） */
+const BOXCAP={crate:10,taru:7,kabebukuro:5,asabukuro:7,makidana:3,shelf1:13,shelf2:17,wshelf:17,cabinet:10,g_k_chest:7},STACK=99;/* わくの数（スタック制：ひとつのわくに1しゅるい、STACK こまで） */
 const BOXONLY={makidana:{wood:1,eda:1}};/* その物しか入らない家具 */
 const PILE=-1,fkey=k=>'f:'+k,isFK=k=>k.charCodeAt(0)===102&&k.charCodeAt(1)===58,itemKeyName=k=>isFK(k)?(FOODS[k.slice(2)]||{}).name||k:MATN[k]||k;
 let BOXL=[];const RSV=()=>S.rsv||(S.rsv={}),BOX=()=>S.box||(S.box={}),PIL=()=>S.pile||(S.pile={});/* 箱のマス（recount で作る） */

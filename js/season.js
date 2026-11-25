@@ -9,7 +9,7 @@ const ANNIV=[10,30,50,100,200,365];
 function seasonOf(d){return Math.floor(Math.max(0,d-1)/SEASONDAYS)%4}
 function seasonNow(){return S?seasonOf(dayNo()):0}
 const snowNow=()=>seasonNow()===3&&!!S.rain;
-function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;if(typeof splaySeason==='function')splaySeason();if(seasonOf(d)===3)S.flags.winter1=1;const n=SEASONS[seasonOf(d)];memo('',n+'になった');if(seasonOf(d)!==3)S.snowm=[];/* 雪だるまは、冬がおわるととける */setTimeout(()=>toast(n+'になった　'+SEAFXT[seasonOf(d)],'good'),900)}
+function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;if(typeof splaySeason==='function')splaySeason();if(seasonOf(d)===3)S.flags.winter1=1;const n=SEASONS[seasonOf(d)];memo('',n+'になった');if(seasonOf(d)!==3)S.snowm=[];/* 雪だるまは、冬がおわるととける */later(()=>toast(n+'になった　'+SEAFXT[seasonOf(d)],'good'),900)}
 /* 粒：画面の中の場所（0〜1）。p：ゆれ、s：速さ、c：色 */
 const SEAP=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.5,1),c:Math.random()}));
 const SEACOL=[['#f7c4d6','#f3aec5','#fbe0ea'],null,['#f6a650','#ec6f45','#f5d25a','#e2884a'],['#ffffff','#f1f6ff','#e4eefb']];
@@ -30,13 +30,13 @@ function annivMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN)return;for(const 
   villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'が村に来て'+n+'日！','good');addFloatG(r.x,r.y,-1.4,n+'日！','#ffe7a8');JUMP.set(r,performance.now());
     if(m&&!m.hidden&&S.res.includes(m)){addFloatG(m.x,m.y,-1.4,'おめでとう！','#ffd2e4');JUMP.set(m,performance.now()+250)}},1600)}}
 function annivTopic(r){const n=annivOf(r);if(!n)return null;const m=bestMate(r);
-  return{u:1,L:pick([['#joy|きょうでね、この村に来て'+n+'日なんだ！','あっというまだったなあ。'],['この村に来てから、'+n+'日たったんだって。','#joy|これからも、ずっとここにいたいな。'],m?['この村に来て、'+n+'日。',m.name+'に会えて、ほんとうによかったよ。']:['#joy|'+n+'日も、この村ですごしたんだね。','守り神さまのおかげだよ。']])}}
+  return{u:1,L:pick([['#joy|きょうでね、この村に来て'+n+'日なんだ！ あっというまだったなあ。'],['#joy|この村に来てから、'+n+'日たったんだって。これからも、ずっとここにいたいな。'],m?['この村に来て、'+n+'日。'+m.name+'に会えて、ほんとうによかったよ。']:['#joy|'+n+'日も、この村ですごしたんだね。守り神さまのおかげだよ。']])}}
 /* 季節のお話（smallTalk に入る） */
 const TALKSEA=[
-  [['春の風って、あまいにおいがするね。','花が、あちこちで目をさましてるよ。'],['#joy|あったかくなってきたね！','おひさまの下で、ねころびたいな。']],
-  [['あついねえ……。','水べにいると、ほっとするよ。'],['夏の夜は、ひかる虫がとんでるね。','#joy|ずっと見ていられるよ。']],
-  [['葉っぱの色が、かわってきたね。','赤に黄色に、きれいだなあ。'],['秋って、なんだかおなかがすくんだ。','#joy|おいしい物が、いっぱいだもんね。']],
-  [['#sigh|さむいね……。','みんなで、くっついていたいな。'],['冬の朝は、空気がきらきらしてるんだ。','息が、白くなるよ。']]];
+  [['春の風って、あまいにおいがするね。花が、あちこちで目をさましてるよ。'],['#joy|あったかくなってきたね！ おひさまの下で、ねころびたいな。']],
+  [['あついねえ……。水べにいると、ほっとするよ。'],['#joy|夏の夜は、ひかる虫がとんでるね。ずっと見ていられるよ。']],
+  [['葉っぱの色が、かわってきたね。赤に黄色に、きれいだなあ。'],['#joy|秋って、なんだかおなかがすくんだ。おいしい物が、いっぱいだもんね。']],
+  [['#sigh|さむいね……。みんなで、くっついていたいな。'],['冬の朝は、空気がきらきらしてるんだ。息が、白くなるよ。']]];
 /* ---------- 季節の効き目（SEAFX）：いつもの数（能力・へり方）は実数のまま、季節の分は、あとからかける倍（掛け算）。
    能力＝はたらく速さ・移動速度・スタミナ。春：木のせいれい1.2倍。夏：火・水のせいれい1.2倍、みんなのつかれのへり1.2倍。秋：土のせいれい1.2倍。
    冬：移動速度0.8倍・おなかのへり1.2倍（火のせいれいと、あたたかい物 WARMOBJ・温泉の水・火のせいれいのまわり3マスにいる子はかわらない seaWarm）、風のせいれい1.2倍、

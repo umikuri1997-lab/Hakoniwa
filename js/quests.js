@@ -83,7 +83,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'oldhouse',w:1,how:'「おく」→「竹の壁」をえらんで、南西の古い家のこわれた壁に置く',g:'fire',L:[['K','南西の古い家、壁がくずれてるだろ？'],['K','あそこ、直してやりたいんだ。手を貸しておくれよ。']],X:[['K','#joy|よし、これで家になった！'],['K','ありがとよ、守り神。']],t:'古い家の壁を直そう',ln:'古い家を直せば、夜も安心なんだけどね',at:()=>!!S.enemyOn&&!HOUSES.length,ok:()=>HOUSES.length>0,n:1,now:()=>HOUSES.length?1:0,rw:10},
   {k:'yogan1',w:1,how:'「おく」→「ようがん台」を置く。せいれいが建てるのを待とう',g:'fire',L:[['K','ゆうべは、あぶなかったね。'],['K','#alarm|火山の石で「ようがん台」を作れば、火の玉で「コワイノ」を追いはらえるんだ。'],['K','石をあつめて、建ててみないかい？']],X:[['K','#joy|ようがん台ができた！ これで夜も、こっちから戦えるね。'],['K','ありがとよ、守り神。']],t:'ようがん台を置こう',ln:'ようがん台があれば、夜も戦えるんだけどね',learn:['yogan'],at:()=>(S.nights||0)>=1&&cnt('yogan')<1,/* ようがん台は、この会話でおぼえる */ok:()=>cnt('yogan')>=1,n:1,now:()=>cnt('yogan'),rw:15},
   {k:'bossfood',w:0,how:'せいれいが木の実や畑でとってきた食べ物が、箱にたまる',g:'earth',L:[['K','オオカゲが来る夜は、きっと長くなるよぉ。'],['K','おなかがすいても困らないように、食べ物をたっぷりためておこうねぇ。']],X:[['K','これだけあれば、長い夜でも安心だねぇ。'],['K','#joy|守り神さま、ありがとうねぇ。']],t:'食べ物を30こためよう',ln:'長い夜にそなえて、食べ物をためておきたいねぇ',at:()=>qAt('ookage'),ok:()=>FOODN()>=30,n:30,now:()=>FOODN(),rw:10},
-  {k:'twbox0',w:0,how:'神殿の依頼ボードをタップ →「収納」から、しまう家具をはる',g:'earth',L:[['K','村の木と石を、ぜんぶしまっておけるかなぁ。'],['K','しまう箱を、もう少しふやしておこうねぇ。']],X:[['K','これで、集めた素材もぜんぶしまえるねぇ。'],['K','#joy|守り神さま、ありがとうねぇ。']],t:'しまう家具のわくを15にしよう',ln:'村の素材を、しまっておく場所がほしいねぇ',at:()=>false,ok:()=>boxSlotTot()>=15,n:15,now:()=>boxSlotTot(),rw:10},
+  {k:'twbox0',w:0,how:'神殿の依頼ボードをタップ →「収納」から、しまう家具をはる',g:'earth',L:[['K','村の木と石を、ぜんぶしまっておけるかなぁ。'],['K','しまう箱を、もう少しふやしておこうねぇ。']],X:[['K','これで、集めた素材もぜんぶしまえるねぇ。'],['K','#joy|守り神さま、ありがとうねぇ。']],t:'しまう家具のわくを25にしよう',ln:'村の素材を、しまっておく場所がほしいねぇ',at:()=>false,ok:()=>boxSlotTot()>=25,n:25,now:()=>boxSlotTot(),rw:10},
   {k:'twwood0',w:0,how:'せいれいが木をきって、木材をあつめる',g:'wood',L:[['K','村が、ずいぶんにぎやかになったね！'],['K','木材が100こいるんだ。みんなで、いっぱいあつめよう！']],X:[['K','木材が100こたまった！ 村で、だいじに使おうね。'],['K','#joy|守り神さま、ありがとう！']],t:'木材を100こためよう',ln:'村で使う木材を、いっぱいあつめたいな',at:()=>false,/* 台座のときは、伐採場・採石場のおねがいを出す（前のセーブで受けたぶんだけ残す） */ok:()=>(S.mat.wood||0)>=100,n:100,now:()=>S.mat.wood||0,rw:10},
   {k:'twstone0',w:0,how:'せいれいが岩をほって、石材をあつめる',g:'earth',L:[['K','村で使う石材を、ためておきたいねぇ。'],['K','岩をほって、少しずつためていこうねぇ。']],X:[['K','石材が50こ、そろったねぇ。'],['K','#joy|守り神さま、ありがとうねぇ。']],t:'石材を50こためよう',ln:'村で使う石材を、ためておきたいねぇ',at:()=>false,ok:()=>(S.mat.stone||0)>=50,n:50,now:()=>S.mat.stone||0,rw:10},
   {k:'festdeco',w:0,how:'神殿の依頼ボードをタップ →「庭」→好きなかざりをはる。できたら「おく」で置く',g:'wood',L:[['K','ヌシ様をむかえる日まで、あと少しだね！'],['K','ヌシ様をむかえる村を、にぎやかにかざりたいな！ かざりを、あと5つ置けないかな？']],X:[['K','村が、ぱっとはなやかになった！ ヌシ様、よろこんでくれるかな。'],['K','#joy|守り神さま、ありがとう！']],t:'かざりをあと5つ置こう',ln:'ヌシ様をむかえる前に、村をかざりたいな',at:()=>!!S.finalDay&&!S.cleared,ok:()=>CN(DECOQ)-((S.subB||{}).festdeco||0)>=5,n:5,now:()=>Math.max(0,CN(DECOQ)-((S.subB||{}).festdeco||0)),base:()=>CN(DECOQ),rw:20},
@@ -268,7 +268,7 @@ function guardInherit(e,L,f,owner,session,after){/* フタバの力（こもれ�
   const kd=Math.max(1,L.findIndex(l=>/guarddemo/.test(l[typeof l[2]==='string'?2:3]||''))),first=L.slice(0,kd),rest=L.slice(kd).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
   const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();if(after)after();};
-  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  const at=(ms,fn)=>later(()=>{if(alive())fn()},ms);
   dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+6200;
     camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.4)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.9};
     f.face=1;sacredScenePose(f,'pray',5600);
@@ -283,12 +283,12 @@ function guardPowerUp(e,L,f,owner,session){/* ヨルノオオカゲが来た夜�
   const first=L.slice(0,k+1).map((l,i)=>{if(i!==k)return l;const c=cueOf(l),m=l.slice();m[c]=(l[c]||'').split('+').filter(x=>x!=='guarddemo').join('+')||0;return m}),rest=L.slice(k+1);
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
   const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
-  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  const at=(ms,fn)=>later(()=>{if(alive())fn()},ms);
   dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+5600;
     camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.3)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.8};
     sacredScenePose(f,'pray',5000);
     at(500,()=>{leafFX(f);sfx('bush')});
-    at(1300,()=>{const cx=f.x*TS,cy=f.y*TS-10;for(let i=0;i<3;i++)setTimeout(()=>{if(alive())fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(150,230,120,.9)'})},i*420);for(let i=0;i<36;i++){const a=i/36*Math.PI*2;fx.push({k:'p',x:cx+Math.cos(a)*8,y:cy+Math.sin(a)*4,vx:Math.cos(a)*90,vy:Math.sin(a)*45-60,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:3})}sfx('shard')});
+    at(1300,()=>{const cx=f.x*TS,cy=f.y*TS-10;for(let i=0;i<3;i++)later(()=>{if(alive())fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(150,230,120,.9)'})},i*420);for(let i=0;i<36;i++){const a=i/36*Math.PI*2;fx.push({k:'p',x:cx+Math.cos(a)*8,y:cy+Math.sin(a)*4,vx:Math.cos(a)*90,vy:Math.sin(a)*45-60,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:3})}sfx('shard')});
     at(3000,()=>{const t=performance.now()+3000;f.shDemo=t;leafFX(f);for(const r of S.res)if(r!==f&&!r.hidden&&Math.hypot(r.x-f.x,r.y-f.y)<=3.6){leafFX(r);r.shDemo=t}addFloatG(f.x,f.y,-1.2,'こもれびのまもりが、強くなった！','#5fbf3f');dlgCue('flash');sfx('level')});
     at(5600,()=>{SCENEHOLD=0;if(rest.length)dialog(rest,()=>{if(alive())finish()});else finish()});
   });
@@ -402,7 +402,7 @@ function departDone(){return !!(S&&S.flags&&S.flags.ret1)}/* お見送りを見�
 function departDue(){if(WD!==KUSA||!S||S.free||!S.cleared||isNight()||departDone())return false;if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return false;
   return S.res.some(r=>r.name===POKO&&!r.hidden)}
 function departTick(){if(!departDue())return false;if(DEPART_RUN||NUSHI_RUN||performance.now()<DEPART_RETRY||!$('#dialog').hidden)return true;departScene();return true}/* 出発の場面がのこっているあいだは、クリア後のクエストを出さない */
-function departToVolcano(){const ov=document.getElementById('deptLd');const L=loadStage(1);if(L&&L.introSeen){continueGame(L);if(ov){ov.style.opacity='0';setTimeout(()=>ov.remove(),900)}}else newGame(1)}
+function departToVolcano(){const ov=document.getElementById('deptLd');const L=loadStage(1);if(!L&&LOADBAD[1]){if(ov)ov.remove();saveBadAsk(1);return}/* 火山のセーブが読めないときは、上書きしないで聞く */if(L&&L.introSeen){continueGame(L);if(ov){ov.style.opacity='0';setTimeout(()=>ov.remove(),900)}}else newGame(1)}
 function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session,f=S.res.find(r=>r.name===POKO&&!r.hidden);if(!f)return;
   const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
@@ -438,10 +438,10 @@ const JOYU=new WeakMap(),STRAINU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set(
 const onHold=r=>(RHOLD.get(r)||0)>performance.now()||DLGN.has(r.name)&&!document.getElementById('dialog').hidden;/* 画面だけの時間（セーブしない） */
 
 /* 会話はせいれいの願い、図案はプレイヤーである守り神のひらめき。 */
-const QUEST_INSPIRATIONS={"wbench": ["wbench"], "compost": ["composter"], "stor2": ["taru"], "mbox2": ["makidana"], "stor": ["crate"], "table1": ["table"], "bed": ["loom", "bed"], "watch1": ["watch", "spike"], "wind": ["swing"], "wood6": ["campfire"], "flower50": ["campfire"], "ep1": ["loom", "bed"], "ep2": ["table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"], "chair2": ["chair"], "bed3": ["bed"], "light3": ["torch"], "houselight": ["lantern"], "board": ["board"], "watch2": ["watch"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge"], "room": ["shelf1", "rug1", "curtain1"], "paint": ["paint2"], "trap4": ["spike", "puddle", "sticky"], "parasol": ["parasol"]};
+const QUEST_INSPIRATIONS={"wbench": ["wbench"], "compost": ["composter"], "stor2": ["taru"], "mbox2": ["makidana"], "stor": ["crate"], "table1": ["table"], "bed": ["bed", "loom"], "watch1": ["watch", "spike"], "wind": ["swing"], "wood6": ["campfire"], "flower50": ["campfire"], "ep1": ["loom", "bed"], "ep2": ["table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"], "chair2": ["chair"], "bed3": ["bed"], "light3": ["torch"], "houselight": ["lantern"], "board": ["board"], "watch2": ["watch"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge"], "room": ["shelf1", "rug1", "curtain1"], "paint": ["paint2"], "trap4": ["spike", "puddle", "sticky"], "parasol": ["parasol"]};
 const QUEST_INSPIRATIONS_CLEAR={"mbox": ["crate"], "stor2": ["kabebukuro"], "mbox2": ["niguruma"], "chair2": ["stool"], "wood6": [], "flower50": [], "shizukuRest": ["sink"], "ep1": ["crate", "rug1"], "ep2": [], "ep4": ["parasol"], "ep5": [], "bed3": ["rug1"], "light3": [], "houselight": [], "board": ["shelf1"], "watch2": ["signpost"], "toy2": [], "deco3": ["hedge"], "house2": [], "room": [], "paint": [], "waterFilm": ["tub"], "fish5": ["bench"], "parasol": []};
 function questRecipeIds(q,phase='accept'){return [...new Set(phase==='clear'?(QUEST_INSPIRATIONS_CLEAR[q.k||q.id]||[]):[...(QUEST_INSPIRATIONS[q.k||q.id]||[]),...(q.learn||[]),...(q.talk&&q.talk.learn||[])])].filter(id=>!!BL[id]&&!(BL[id].offerOnly&&BL[id].kind==='furn'))}
-function ideaDialogue(q,lines,phase='accept'){const ids=questRecipeIds(q,phase).filter(id=>!(S.guardianIdeas||{})[id]&&(!S.free||BL[id].kind!=='furn')),out=[];let put=false;for(const x of lines){if(x[0]===KAGARI&&!S.res.some(r=>r.name===KAGARI&&!r.hidden))continue;if(WD===YAMI&&x[0]===HIIRO&&!S.res.some(r=>r.name===HIIRO&&!r.hidden))continue;/* 闇のステージ：ヒイロがいないときは、ヒイロの行だけはぶく *//* カガリ（帰ってくる火のせいれい）がいない村では、カガリの行だけはぶく */if(x[0]==='@idea'){if(ids.length)out.push(['@idea',ids]);put=true}else out.push(x.slice())}if(!put&&ids.length)out.push(['@idea',ids]);return out}/* セリフの表の ['@idea'] の場所で、思いついた形を見せる（印がなければ、さいごに） */
+function ideaDialogue(q,lines,phase='accept'){const ids=questRecipeIds(q,phase).filter(id=>!(S.guardianIdeas||{})[id]&&(!S.free||BL[id].kind!=='furn')),out=[],used=new Set();let put=false;for(const x of lines){if(x[0]===KAGARI&&!S.res.some(r=>r.name===KAGARI&&!r.hidden))continue;if(WD===YAMI&&x[0]===HIIRO&&!S.res.some(r=>r.name===HIIRO&&!r.hidden))continue;/* 闇のステージ：ヒイロがいないときは、ヒイロの行だけはぶく *//* カガリ（帰ってくる火のせいれい）がいない村では、カガリの行だけはぶく */if(x[0]==='@idea'){if(x[1]){const L=ids.filter(id=>x[1].includes(id)&&!used.has(id));L.forEach(id=>used.add(id));if(L.length)out.push(['@idea',L])}else{out.push(['@idea',null]);put=true}}else out.push(x.slice())}const rest=ids.filter(id=>!used.has(id));if(!put){if(rest.length)out.push(['@idea',rest]);return out}return out.flatMap(x=>x[0]==='@idea'&&!x[1]?(rest.length?[['@idea',rest]]:[]):[x])}/* セリフの表の ['@idea'] の場所で、思いついた形を見せる（['@idea',['bed']] はその形だけ、['@idea'] はのこり。印がなければ、さいごに） */
 function showGuardianIdea(ids,done){voiceStop();const overlay=document.createElement('div');overlay.className='idea-reveal';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','あたらしいかたち');const rays=document.createElement('div');rays.className='idea-rays';overlay.appendChild(rays);for(let k=0;k<18;k++){const star=document.createElement('span');star.className='idea-spark';star.textContent=k%3?'✦':'✧';const a=k*Math.PI*2/18;star.style.setProperty('--sx',Math.cos(a)*(120+k%4*45)+'px');star.style.setProperty('--sy',Math.sin(a)*(150+k%4*50)+'px');star.style.animationDelay=k%4*.08+'s';overlay.appendChild(star)}const card=document.createElement('div');card.className='idea-card';const symbol=document.createElement('div');symbol.className='idea-symbol';symbol.innerHTML=pxi('bulb');/* 絵文字ではなく、ドットのアイコン */const heading=document.createElement('h2');heading.textContent='あたらしいかたち';const list=document.createElement('div');list.className='idea-items';for(const id of ids){const item=document.createElement('div');item.className='idea-item';const img=document.createElement('img');img.src=iconURL(id);img.alt='';const name=document.createElement('span');name.textContent=BL[id].name;item.append(img,name);list.appendChild(item)}const button=document.createElement('button');button.type='button';button.className='btn pri';button.textContent='つづける';button.disabled=true;card.append(symbol,heading,list,button);overlay.appendChild(card);document.body.appendChild(overlay);sfx('level');let ended=false;const prior=document.activeElement;setTimeout(()=>{if(!overlay.isConnected)return;button.disabled=false;button.focus({preventScroll:true})},1300);button.onclick=()=>{if(ended||button.disabled)return;ended=true;overlay.remove();if(prior&&prior.isConnected)prior.focus({preventScroll:true});done()}}
 function inspireQuest(q,phase='accept'){const ids=questRecipeIds(q,phase);if(!ids.length)return;
   const known=S.guardianIdeas||(S.guardianIdeas={});S.recipes||(S.recipes={});const fresh=ids.filter(id=>!known[id]);recipeNotice(fresh);ids.forEach(id=>{known[id]=true;S.recipes[id]=true});
@@ -478,13 +478,17 @@ function checkQuestParts(q){const parts=QUEST_PARTS[q.id];if(!parts)return;for(l
 function questReplyWho(q){if(!q.k)return storyWho(q);const who=subWho(q);return firstSpk((q.X||[]).map(line=>[line[0]==='K'?who:line[0],line[1]]),who)}
 function noteQuestPlacement(id,j){admireNote(id,j);let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function qvHas(j,id){return S.obj[j]===id||S.floor[j]===id}/* 見にくる物が、置いた物か、しいた床（あぜ道など）か */
+const QUEST_VISIT_IN=j=>HOUSES.some(h=>h.inside.has(j));/* 家の中の物だけ */
+const QUEST_VISIT_OK={/* 見にくる所の、そのクエストだけの決まり（メインは id、サブは k）。(マス, 物) → 見にくるか */
+  imoseed:j=>{const P=imoSeedQuestPlots();return P.length?P.includes(j):true},/* いものたねをまいた畑 */
+  bed:(j,o)=>o!=='bed'||QUEST_VISIT_IN(j),bed3:QUEST_VISIT_IN,houselight:QUEST_VISIT_IN,room:QUEST_VISIT_IN,
+  chair2:j=>[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&TABLES.has(typeAt(k))})/* 食卓のとなりのいす */
+};
 function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
   if(PLANTS.includes(o)&&isBud(j))return false;/* 花も木も、育ってから見にいく */
-  if(q.id==='imoseed'&&imoSeedQuestPlots().length)return imoSeedQuestPlots().includes(j);
-  if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.id==='bed'&&o==='bed')return HOUSES.some(h=>h.inside.has(j));
+  const ok=QUEST_VISIT_OK[q.k||q.id];if(ok)return ok(j,o);
 
-  if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&TABLES.has(typeAt(k))});
   return true;
 }
 function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.id]);if(!ids)return null;
@@ -527,9 +531,9 @@ const UPSPK=['00100','01110','11111','01110','00100'],UPSPKC=['#ffe27a','#fff6d8
 function upSparkSvg(c){let d='';UPSPK.forEach((row,y)=>{for(let x=0;x<5;x++)if(row[x]==='1')d+='M'+x+' '+y+'h1v1h-1z'});return '<svg viewBox="0 0 5 5" width="15" height="15" shape-rendering="crispEdges" aria-hidden="true"><path fill="'+c+'" d="'+d+'"/></svg>'}
 function upSpark(o,n){if(typeof uiReduced==='function'&&uiReduced())return;const L=[];for(let k=0;k<n;k++){const e=document.createElement('i'),a=k/n*6.283,dist=110+Math.random()*60;e.innerHTML=upSparkSvg(UPSPKC[k%UPSPKC.length]);o.appendChild(e);L.push({e,dx:Math.cos(a)*dist,dy:Math.sin(a)*dist,w:Math.round(Math.random()*15)*1000/60})}/* はじめのおくれは1/60秒の倍数 */
   const t0=performance.now(),q=v=>Math.round(v/UPSPKP)*UPSPKP,step=now=>{let live=0;for(const p of L){if(!p.e.isConnected)continue;const u=Math.max(0,Math.min(1,(now-t0-p.w)/UPSPKMS)),k=1-Math.pow(1-u,2);p.e.style.transform='translate('+(q(p.dx*k)-7.5)+'px,'+(q(p.dy*k)-7.5)+'px)';p.e.style.opacity=u<.6?1:Math.round((1-(u-.6)/.4)*4)/4;if(u<1)live++}if(live&&!o.hidden)requestAnimationFrame(step)};requestAnimationFrame(step)}
-function upFx(r,nm,txt,big){const now=performance.now();r.shine=now;if(!inBattle(r)){JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';JUMP.set(r,now);setTimeout(()=>{if(S.res.includes(r)&&!inBattle(r))JUMP.set(r,performance.now())},900)}/* たたかっている子は、よろこばずに、そのままたたかう */
+function upFx(r,nm,txt,big){const now=performance.now();r.shine=now;if(!inBattle(r)){JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';JUMP.set(r,now);later(()=>{if(S.res.includes(r)&&!inBattle(r))JUMP.set(r,performance.now())},900)}/* たたかっている子は、よろこばずに、そのままたたかう */
   fxSpr('levelup',r.x*TS,(r.y-.5)*TS,null,0,r.y*TS);
-  sfx('level');if(big)setTimeout(()=>sfx('good'),350);
+  sfx('level');if(big)later(()=>sfx('good'),350);
   const o=$('#upfx');o.querySelector('.upt').style.backgroundImage='url('+spiritPort(r.elem,120,r.vr)+')';o.querySelector('.utt').textContent=r.name+'の'+nm;const u=o.querySelector('.unn');u.textContent=txt+(big?'！！':'！');u.classList.toggle('big',!!big);
   o.querySelectorAll('i').forEach(e=>e.remove());upSpark(o,big?18:12);
   o.hidden=false;const rays=o.querySelector('.rays');rays.style.animation='none';void rays.offsetWidth;rays.style.animation='';clearTimeout(upFx.t);const end=()=>{o.hidden=true};upFx.t=setTimeout(end,1800);o.onclick=()=>{clearTimeout(upFx.t);end()}}
@@ -565,7 +569,7 @@ function migrateKagariIns(s){/* 火山：おまつりのあとに「かえり道
   if(was===at&&!s.qTalked&&s.qStory==null)s.quest=at;/* あし湯の話をまだ聞いていなかった：かえり道のあかりから */}
 const freeHere=()=>FREEG.filter(g=>S.free?!FREEGNO.has(g.k)&&(g.w==null||g.w===0):g.w==null||g.w===WD),FREEGNO=new Set(['g900','b5','k300','tr3']);/* フリーモード：みどりのマスは、はじめからぜんぶ・コワイノは来ない *//* その土地のやりこみ */
 function checkFree(){if(!S.cleared)return;const D=S.freeDone||(S.freeDone={});for(const g of freeHere())if(!D[g.k]&&g.ok()){D[g.k]=1;S.pt+=g.rw;S.totalPt+=g.rw;if(typeof STATUE!=='undefined'&&STATUE>=0&&typeof juiceFly==='function'&&1)juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',g.rw);toast('目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good');memo('target',g.t)}}
-const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が3〜6こ落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる'],hoshi:['✨','星空の夜','3時に寝ているせいれいのたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある']};
+const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が3〜6こ落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる',()=>{S.godVisit=true;S.godNextVisitDay=dayNo()+2}],hoshi:['✨','星空の夜','3時に寝ているせいれいのたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある',()=>monoDrops(4)]};/* [印, 名前, 説明, その朝にすること（あれば）] */
 function killsSince(){/* 「夜をこえて、つよくなろう」：クエストが出てから追いはらったコワイノの数 */if(S.flags.kb==null)S.flags.kb=S.kills||0;return (S.kills||0)-S.flags.kb}
 function kgOpen(j){/* かげのあとが見えるか：そのマスと、左右・手前の5マスに物がない（草・茂み・木の下にかくれない） */const x=j%W,y=(j/W)|0;if(x<1||x>=W-1||y>=H-1)return false;for(const k of[j,j-1,j+1,j+W-1,j+W,j+W+1])if(S.obj[k])return false;return !(S.floor&&S.floor[j])&&S.ground[j]===0&&walk(j)}
 function kgPlace(){/* 大きなかげのあと：村の南のはしの、まわりの空いた地面（なるべく草地）に出す */for(const g of[2,1,0]){let best=-1,by=-1,bx=1e9;for(let j=0;j<W*H;j++){if(!VILL[j]||(g>=1?!kgOpen(j):S.obj[j]||(S.floor&&S.floor[j])||S.ground[j]!==0||!walk(j))||g===2&&!REV.has(j))continue;const y=(j/W)|0,dx=Math.abs(j%W-CX);if(y>by||y===by&&dx<bx){by=y;bx=dx;best=j}}if(best>=0){S.flags.kgMark=best;return}}}
@@ -577,9 +581,8 @@ function morning(){if(typeof mzMorning==='function')mzMorning();if(typeof windMa
   if(cnt('bell')>0){BELLRING=performance.now();{const j=S.obj.indexOf('bell');if(j>=0)bellRing(j%W+1,((j/W)|0)+1)}for(const r of S.res)if(!r.hidden)funAdd(r,15,'bell')}/* 村の鐘：朝に鳴って、たのしさ+15（いくつあっても1回） */
   const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */if(typeof hapMorning==='function')hapMorning();/* ときどき起きるできごと（happen.js。雨のつぎの朝を見るので、天気のあと） */
   S.today=null;if(S.enemyOn&&dayNo()>=3&&wxE&&wxE.t&&DAYEV[wxE.t]){const k=wxE.t,E=DAYEV[k];S.today=k;/* 日替わりのできごと（前もってきめた日 wxE.t） */
-    setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
-    if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
-    if(k==='mono')monoDrops(4)}
+    later(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
+    if(E[3])E[3]()}
   if(S.rain&&!(typeof stormNow==='function'&&stormNow()))toast(snowNow()?'きょうは雪':'きょうは雨');
   {const d=dayNo(),EV={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
 };

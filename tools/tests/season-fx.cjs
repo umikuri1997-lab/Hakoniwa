@@ -16,7 +16,7 @@ const assert=require('node:assert/strict');
     /* 火のせいれいのそばも */f.x=w.x+1;f.y=w.y;SEAWC.delete(w);out.fireNear=seaHun(w);f.x=CX+11.5;f.y=CY+6.5;SEAWC.delete(w);
     /* 冬のコワイノ */const en={type:'basic',hp:100,max:100};seaFoeInit(en);seaFoeInit(en);out.foe=[en.hp,en.max,seaFoeK(en)];
     at(0);const en2={type:'basic',hp:100,max:100};seaFoeInit(en2);out.foe2=[en2.hp,seaFoeK(en2)];
-    /* 知らせ */at(3);S.memo=[];const T=toast;let msg='';toast=(t)=>{msg+=t};const st=setTimeout;setTimeout=(fn)=>fn();seasonMorning();setTimeout=st;toast=T;out.toast=msg;
+    /* 知らせ */at(3);S.memo=[];const T=toast;let msg='';toast=(t)=>{msg+=t};const st=later;later=(fn)=>fn();seasonMorning();later=st;toast=T;out.toast=msg;
     /* 雪だるま */at(3);S.snowm=[];const R=Math.random;Math.random=()=>0;const G=bfs(w.x|0,w.y|0);w.act=null;w.snowT=0;out.go=goSnowman(w,G);Math.random=R;
     out.type=w.act&&w.act.type;if(w.act){const A=w.act;if(A.stage!=='do'){w.x=A.stand%W+.5;w.y=((A.stand/W)|0)+.5;w.path=[];beginDo(w)}const fun0=w.fun=50;for(let i=0;i<40&&w.act;i++){A.t+=1;ACT.snowman.tick(w,A);if(ACT.snowman.done(w,A)){ACT.snowman.end(w,A);endAct(w)}}out.fun=w.fun-fun0}
     out.snow=JSON.stringify(S.snowm);

@@ -95,7 +95,7 @@ function setBlock(id,j){
 }
 function swingWide(){/* ブランコが2マスはばになった：前のセーブのブランコは、右か左のあいたマスへひろげる。どちらもふさがっていたら、おそなえ箱にもどす */let back=0;const ok=k=>k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1;
   for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='swing')continue;const x=j%W;if(x<W-1&&ok(j+1)){S.obj[j+1]='part';S.ref[j+1]=j}else if(x>0&&ok(j-1)){S.obj[j-1]='swing';S.obj[j]='part';S.ref[j]=j-1;if(S.rot&&S.rot[j]!=null){S.rot[j-1]=S.rot[j];delete S.rot[j]}}else{clearObj(j);giveItem('swing',1,1);back++}}
-  if(back)setTimeout(()=>toast('ブランコが2マスはばになったので、ひろげられないブランコを'+back+'つ、もちものにもどした'),1500)}
+  if(back)later(()=>toast('ブランコが2マスはばになったので、ひろげられないブランコを'+back+'つ、もちものにもどした'),1500)}
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 /* 植える芽は、せいれいが歩いて行ける所だけ。池・川の上は、行ける岸から水の中をおよいでとどく所ならどこでも（plantWet：岸につながる水。せいれいの道 spirit-work.js の plant の wade と同じ決まり）。行けない所に置くと、植える予定の10この枠がうまったままになる */
 function plantDist(){const r=S.res.find(q=>!q.hidden)||S.res[0];return r?bfs(r.x|0,r.y|0).dist:null}
@@ -148,7 +148,7 @@ function place(id,x,y){
   if(undoStack.length>30)undoStack.shift();
   if(typeof fieldBuildNote==='function')fieldBuildNote(id,j);/* 御神木の調べのために作った物 */
   S.placed[id]=(S.placed[id]||0)+1;if(S.placed[id]===1&&typeof juiceFirst==='function')juiceFirst(j,id);/* はじめて置いた家具：シール（juice3.js） */recount();if(BOXCAP[id]&&S.obj[j]===id)boxUnstash(j,id);/* 前にこわした同じ家具の中身を、この箱へ */if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloatG(j%W+.5,(j/W|0)+.5,-.8,'つりスポット！');renderPalette();checkQuest();
-  if(HDOORS.has(id)){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j))){omo('house');setTimeout(()=>toast('家ができた！','good'),400)}}/* ドアを置いたら、家になったかを知らせる */
+  if(HDOORS.has(id)){const w=houseWhy(j);if(w)later(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j))){omo('house');later(()=>toast('家ができた！','good'),400)}}/* ドアを置いたら、家になったかを知らせる */
 }
 function undo(){
   const u=undoStack.pop();if(!u)return toast('もどせるものがありません');
@@ -186,7 +186,7 @@ function rugsBig(){/* ラグがたて2・よこ2マスになった：前のラ�
   const old=[];for(let j=0;j<W*H;j++)if(RUGS.has(S.obj[j])){old.push([j,S.obj[j],(S.rot||{})[j]||0]);S.obj[j]='';if(S.rot)delete S.rot[j]}
   for(const k in S.rug||{})old.push([+k,S.rug[k],(S.rugRot||{})[k]||0]);S.rug={};S.rugRot={};RUGC=new Map();let back=0;
   for(const[j,id,rt]of old){const x=j%W,y=(j/W)|0,a=[[x,y],[x-1,y],[x,y-1],[x-1,y-1]].find(([ax,ay])=>canRug(ax,ay,true));if(!a){giveItem(id,1,1);back++;continue}const k=a[1]*W+a[0];S.rug[k]=id;if(rt)S.rugRot[k]=rt;for(const c of rugCells(k))RUGC.set(c,k)}
-  if(back)setTimeout(()=>toast('ラグが大きくなったので、しけないラグを'+back+'つ、もちものにもどした'),1500)}
+  if(back)later(()=>toast('ラグが大きくなったので、しけないラグを'+back+'つ、もちものにもどした'),1500)}
 function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */if(S.wpOwn)delete S.wpOwn[j];/* 見張り台も */if(S.useOwn)delete S.useOwn[j];/* いす・遊び家具なども */if(S.jobOwn)delete S.jobOwn[j];/* しごと場の担当も */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){const p=S.win[j],wid='window';giveItem(p===1?wid:p,1,1);if(p==='curtain1'||p==='curtain2')giveItem(wid,1,1);delete S.win[j]}/* カーテンの下の窓ももどす */if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
 const CELLSTATE=['prQ','prIn','prOut','prW','smQ','smIn','cmpQ','ovenSet'];/* マスごとにしまう、家具の予定・中身 */
@@ -242,11 +242,12 @@ function removeAt0(x,y){const tx0=x,ty0=y;
 function finishBuild(j,r){
   if(S.dyn[j]&&S.dyn[j].bp!=null&&typeof bpFinish==='function')return bpFinish(j,r);/* 家の設計図の部品 */
   if(S.dyn[j]&&S.dyn[j].build==='canal')return mzCanalDone(j,r);/* 水路をほりおえた */
+  if(S.dyn[j]&&S.dyn[j].build==='tsbridge')return tsBridgeCell(j,r);/* 土：石の大橋の1マス（tsuchi-bridge.js） */
   if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound',cube=S.dyn[j].cube;delete S.dyn[j];S.obj[j]='';let got='';if(up){if((S.hi[j]|0)<HMAX)terraUp(j,cube);else if(cube)S.inv[cube]=(S.inv[cube]||0)+1}else if((S.hi[j]|0)>HMIN){got=terraTop(j);terraDown(j)}if(got){if(!(r&&addItem(r,got,1)>0))S.inv[got]=(S.inv[got]||0)+1}/* ほった物は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(d.hole){delete S.dyn[j];S.obj[j]='kazaana';recount();burst(j,'furn');sfx('level');if(r)addSpiritXp(4,r);toast('風穴がひらいた！ 風がふき出した','good');memo('leaf','風穴がひらいて、風がふき出した');checkQuest();return}/* 風穴の石をどけた（wind.js） */if(d.wfix){windFixDone(j,d,r);return}/* こわれた遊具を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
-  if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';for(const k of templeBack(j)){S.obj[k]='part';S.ref[k]=j}/* うしろの列も神殿のマス */S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
-  if(id==='tower'&&!S.cleared){if(WD===KAZAN){memo('rock','守護の台座が建った');setTimeout(()=>toast('守護の台座が建った','good'),900)}/* 火山：火だねをはめて火を入れるのは、台座をタップしてから（story-stage.js の towerLightTap） */else{memo('grass','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
+  if(id==='statue'){const bk=j-W+2,b=boardBackOK(j)&&boardFree(bk,j)&&boardFree(bk+1,j)?bk:boardFree(j+3,j)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右の、うしろの列（持ち主がきめた）。あかないときは前の列、それもだめなら1つ右から */S.obj[j-1]='obox';if(b!==j+1){S.obj[j+1]='part';S.ref[j+1]=j}if(b===bk)for(const k of[j+2,j+3])if((S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';for(const k of templeBack(j)){S.obj[k]='part';S.ref[k]=j}/* うしろの列も神殿のマス */S.flags.board3=1;S.flags.board4=1;recount();burst(j-1,'furn');burst(b,'furn')}
+  if(id==='tower'&&!S.cleared){if(WD===KAZAN){memo('rock','守護の台座が建った');later(()=>toast('守護の台座が建った','good'),900)}/* 火山：火だねをはめて火を入れるのは、台座をタップしてから（story-stage.js の towerLightTap） */else{memo('grass','御神木が育った');later(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
   S.orders=S.orders.filter(q=>q!==o);wbenchDel(o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;craftCarry(o,r);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');

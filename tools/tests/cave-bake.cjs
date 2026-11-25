@@ -16,19 +16,23 @@ const assert=require('node:assert/strict');
     {let C=enter(1,['earth','fire','water']);C.en=[];const[x,y]=open(C);for(const a of C.party)put(a,x,y);out.lr0=cvLR();C.en.push(mk('bk_sui',x+2,y));C.sc=[];cvBakeTick(0,0,performance.now());out.lr1=cvLR();out.me=!!sc('me')||true;C.seen.fill(1);caveRender(performance.now());caveAbort()}
     /* 夜の水のかたまり：はじめてたたかれると、2つにわかれる（わかれた子は、もうわかれない） */
     {let C=enter(2,['earth','fire','water']);C.en=[];C.sc=[];const[x,y]=open(C);for(const a of C.party)put(a,x,y+1);const e=mk('bk_yoru',x+3,y);C.en.push(e);hurtEn(e,20,{});cvBakeTick(0,0,performance.now());out.split=[C.en.length,e.hp];const k=C.en[1];hurtEn(k,10,{});cvBakeTick(0,0,performance.now());out.split2=C.en.length;caveAbort()}
-    /* ためしのからだ：火のせいれいが近づくまで目をさまさない */
-    {let C=enter(7,['earth','fire','water']);C.en=[];C.sc=[];const[x,y]=open(C);const e=mk('bk_tame',x+3,y,{asleep:true});C.en.push(e);C.seen.fill(1);
-      put(act('earth'),x+2,y);put(act('fire'),x,y+1);put(act('water'),x,y+1);cvFoe(e,1,.1,performance.now());out.thaw0=e.asleep;put(act('fire'),x+1,y);cvFoe(e,1,.1,performance.now());out.thaw1=!e.asleep;caveRender(performance.now());caveAbort()}
+    /* ためしのからだ：ガラスの入れ物の中でねむる。Q は火のせいれいが近づくとわれる・U は火では、われない（まもりの光でわれる） */
+    {let C=enter(7,['earth','fire','water']);C.sc=[];C.seen.fill(1);const Q=[...C.ob].find(([,o])=>o.k==='Q')[0],U=[...C.ob].find(([,o])=>o.k==='U')[0],eq=C.en.find(e=>e.gj===Q),eu=C.en.find(e=>e.gj===U),np=j=>[[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]].map(([dx,dy])=>cvJ(cvX(j)+dx,cvY(j)+dy)).find(q=>cvWalk(q));
+      out.gl=[!!eq,!!eu,eq.asleep,eu.asleep,cvGlassOn(eq),eq.type];const qa=cvJ(cvX(Q),cvY(Q)),pj=np(Q);for(const a of C.party)put(a,cvX(pj)+(a.elem==='fire'?0:0),cvY(pj));
+      put(act('earth'),cvX(pj),cvY(pj));put(act('water'),cvX(pj),cvY(pj));put(act('fire'),cvX(pj)+20<CVW?cvX(pj):0,0);const f0=cvWalk(cvJ(cvX(pj),cvY(pj)));cvFoe(eq,1,.1,performance.now());out.thaw0=eq.asleep&&C.ob.has(Q);
+      put(act('fire'),cvX(pj),cvY(pj));cvFoe(eq,1,.1,performance.now());out.thaw1=!eq.asleep&&!C.ob.has(Q)&&!cvGlassOn(eq);out.qWalk=cvWalk(Q);
+      const pu=np(U);put(act('fire'),cvX(pu),cvY(pu));put(act('earth'),cvX(pu),cvY(pu));cvFoe(eu,1,.1,performance.now());out.uFire=eu.asleep&&C.ob.has(U)&&!cvWalk(U);
+      cvLightHit(cvX(U),cvY(U),2);out.uLight=!eu.asleep&&!C.ob.has(U)&&cvWalk(U);C.seen.fill(1);caveRender(performance.now());caveAbort()}
     /* 組みかけのほね：たおしても組みなおす。まもりの光でとどめ */
     {let C=enter(7,['earth','fire','water']);C.en=[];C.sc=[];const[x,y]=open(C);for(const a of C.party)put(a,x,y+1);const e=mk('bk_hone',x+3,y);C.en.push(e);e.hp=0;cvDefeat(e,act('earth'));out.down=[!e.dead,e.down>0];C.t=e.down+1;cvBakeTick(0,0,performance.now());out.up=[e.down===0,e.hp===e.max];
       e.hp=0;cvDefeat(e,act('earth'));LIGHTCD=0;cvLightHit(x+3,y,1);out.final=e.dead;caveAbort()}
     /* 炉にくべられたもの：通った所が、あつい床になる */
     {let C=enter(7,['earth','fire','water']);C.en=[];C.sc=[];const[x,y]=open(C);const e=mk('bk_ro',x+3,y);e.asleep=false;C.en.push(e);for(const a of C.party)put(a,x,y+1);cvBakeTick(0,0,performance.now());out.hot=C.hotT.has(cvJ(x+3,y));const ea=act('earth');put(ea,x+3,y);const h=ea.r.hunger;cvBakeTick(10,0,performance.now());out.hotHun=h-ea.r.hunger>0;C.seen.fill(1);caveRender(performance.now());caveAbort()}
     /* ゆりかごのみはり：ゆりかごのそばに来た子をねらう */
-    {let C=enter(7,['earth','fire','water']);C.en=[];C.sc=[];out.noTe=!CV.sc||true;const Y=[...C.ob].find(([,o])=>o.k==='Y')[0],yx=cvX(Y),yy=cvY(Y);const near=cvBfsRing(Y,1)[0]||Y;
+    {let C=enter(6,['earth','fire','water']);C.en=[];C.sc=[];out.noTe=!CV.sc||true;const Y=[...C.ob].find(([,o])=>o.k==='n')[0],yx=cvX(Y),yy=cvY(Y);const near=cvBfsRing(Y,1)[0]||Y;
       const e=mk('bk_mi',yx,yy+3);C.en.push(e);for(const a of C.party)put(a,cvX(near)+10<CVW?cvX(near):0,0);for(const a of C.party){const f=[...Array(CVW*CVH).keys()].filter(j=>cvWalk(j)&&Math.hypot(cvX(j)-yx,cvY(j)-yy)>12)[0];put(a,cvX(f),cvY(f))}
       out.mi0=cvPatrol(e,.1);const a=act('earth');const nj=[[1,0],[-1,0],[0,1],[0,-1],[0,2],[2,0]].map(([dx,dy])=>cvJ(yx+dx,yy+dy)).find(j=>cvWalk(j));put(a,cvX(nj),cvY(nj));out.mi1=cvPatrol(e,.1)&&e.tg===a;C.seen.fill(1);caveRender(performance.now());caveAbort()}
-    {let C=enter(7,['earth']);out.noTe=!C.sc.some(s=>s.k==='te');caveAbort()}
+    {let C=enter(2,['earth']);out.noTe=!C.sc.some(s=>s.k==='te');caveAbort()}
     /* ===== こわい物 ===== */
     /* 声のこだま：そばまで来ると、みんながすくむ。まもりの光で、すがたが見えて消える */
     {let C=enter(0,['earth','fire','water']);C.en=[];const s=sc('koe');s.cd=0;tick(.1);out.koeOn=s.on;const a=act('earth');s.x=Math.floor(a.x);s.y=Math.floor(a.y-CVOY);s.path=[];tick(.1);out.frz=C.party.every(q=>q.frzU>performance.now())&&!s.on;
@@ -48,9 +52,9 @@ const assert=require('node:assert/strict');
       LIGHTCD=0;cvLightHit(s.x,s.y,1);out.teStun=s.stun>0;C.seen.fill(1);caveRender(performance.now());caveAbort()}
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.deepEqual(r.types,['bk_kui','bk_yoru','bk_sui','bk_kuzu',null,null,null,'bk_tame',null,null],'地図のある階のバケモノ');assert.deepEqual(r.bkfl,['bk_kui','bk_yoru','bk_sui','bk_kuzu',null,null,'bk_mi','bk_tame','bk_hone','bk_ro'],'階ごとのバケモノ（STORY.md）');assert.equal(r.kui,true);assert.equal(r.chips,true,'バケモノのチップ（3Dから写した絵）');
+  assert.deepEqual(r.types,['bk_kui','bk_yoru','bk_sui','bk_kuzu','bk_nezu','bk_seki','bk_mi','bk_tame','bk_hone','bk_ro'],'地図のある階のバケモノ');assert.deepEqual(r.bkfl,['bk_kui','bk_yoru','bk_sui','bk_kuzu','bk_nezu','bk_seki','bk_mi','bk_tame','bk_hone','bk_ro'],'階ごとのバケモノ（STORY.md）');assert.equal(r.kui,true);assert.equal(r.chips,true,'バケモノのチップ（3Dから写した絵）');
   assert.ok(r.lr1<r.lr0,'光すいのそばで、光の広さが小さくなる');assert.deepEqual(r.split,[2,90],'わかれる（のこりを半分ずつ）');assert.equal(r.split2,2,'わかれた子は、もうわかれない');
-  assert.equal(r.thaw0,true,'火のせいれいでなければ、目をさまさない');assert.equal(r.thaw1,true,'火のせいれいが近づくと、とける');
+  assert.deepEqual(r.gl,[true,true,true,true,true,'bk_tame'],'ガラスの入れ物の中に、ためしのからだ');assert.equal(r.thaw0,true,'火のせいれいでなければ、Q は、われない');assert.equal(r.thaw1,true,'火のせいれいが近づくと、Q がわれて出てくる');assert.equal(r.qWalk,true,'われたあとは歩ける');assert.equal(r.uFire,true,'U は、火のせいれいでは、われない');assert.equal(r.uLight,true,'U は、まもりの光でわれる');
   assert.deepEqual(r.down,[true,true],'くずれる');assert.deepEqual(r.up,[true,true],'組みなおす');assert.equal(r.final,true,'まもりの光でとどめ');
   assert.equal(r.hot,true);assert.equal(r.hotHun,true,'あつい床');assert.equal(r.mi0,false,'遠くの子はねらわない');assert.equal(r.mi1,true,'ゆりかごのそばに来た子をねらう');assert.equal(r.noTe,true,'大穴のない階に、手は出ない');
   assert.deepEqual([r.koe,r.koeOn,r.frz,r.koeVis],[true,true,true,true],'声のこだま');

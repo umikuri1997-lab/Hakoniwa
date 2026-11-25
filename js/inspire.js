@@ -13,5 +13,5 @@ function inspPrevMin(r){const d=callDay()-1;if(r.fd&&r.fd.d===d)return r.fd.min?
 function inspMorning(){if(!S||IS_STORY_REPLAY)return;const d=callDay();if(S.insp&&S.insp.d===d)return;
   const L=S.res.filter(r=>!r.hidden&&!r.coffin&&INSPT[r.elem]&&(inspPrevMin(r)??-1)>=INSPFUN);if(!L.length||Math.random()>=INSPP)return;
   const r=pick(L);S.insp={id:r.id,d};r.bubble='✨';if(!r.hidden)addFloatG(r.x,r.y,-1.6,chatTone(INSPL[r.elem],r),'#fff3d6');if(typeof JOYU!=='undefined')JOYU.set(r,performance.now()+2000);
-  setTimeout(()=>{if(S&&inspOn(r))toast(r.name+'は、きょう、はりきっている','good')},1800);memo('bulb',r.name+'が、はりきっていた')}
-function inspTick(){/* はりきっている子は、ひまなとき、ときどき「✨」のふきだし */const I=S&&S.insp;if(!I||I.d!==callDay())return;const r=S.res.find(q=>q.id===I.id);if(!r||r.hidden||r.bubble||r.act&&r.act.type==='sleep')return;if(Math.random()<.04){r.bubble='✨';setTimeout(()=>{if(r.bubble==='✨')r.bubble=''},2500)}}
+  later(()=>{if(S&&inspOn(r))toast(r.name+'は、きょう、はりきっている','good')},1800);memo('bulb',r.name+'が、はりきっていた')}
+function inspTick(){/* はりきっている子は、ひまなとき、ときどき「✨」のふきだし */const I=S&&S.insp;if(!I||I.d!==callDay())return;const r=S.res.find(q=>q.id===I.id);if(!r||r.hidden||r.bubble||r.act&&r.act.type==='sleep')return;if(Math.random()<.04){r.bubble='✨';later(()=>{if(r.bubble==='✨')r.bubble=''},2500)}}

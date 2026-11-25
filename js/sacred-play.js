@@ -102,7 +102,7 @@ function sacredPlayMsg(t){const P=SPLAY;if(!P)return;P.msg=t;P.msgT=performance.
 function sacredPlayNear(w,p,r){return Math.hypot(w.x-p.x,w.y-p.y)<=r}
 /* 風：指がはじめて入った葉を、順番とくらべる（同じ葉にいるあいだは1回） */
 function sacredPlayWind(P,w,now){let hit=-1;P.leaves.forEach((l,i)=>{if(sacredPlayNear(w,l,9))hit=i});if(hit<0||hit===P.last)return;P.last=hit;if(now<P.showEnd()){sacredPlayMsg('よく聞いて……');return}P.sw[hit]=now;
-  if(hit===P.order[P.got]){P.got++;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},600);return}
+  if(hit===P.order[P.got]){P.got++;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)later(()=>{if(SPLAY===P)sacredPlayWin()},600);return}
   P.got=0;P.show=now+1000;sacredPlayMiss('そっちじゃない')}
 /* 指の動き（世界の座標） */
 function sacredPlayDown(w,now){const P=SPLAY;P.down={x:w.x,y:w.y,t:now,last:{x:w.x,y:w.y,t:now}};
@@ -122,7 +122,7 @@ function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.las
   if(P.type==='brush'){const a=P.area;if(w.x<a.x||w.x>a.x+a.w||w.y<a.y-6||w.y>a.y+a.h)return;if(v>260){if(P.prog>0)sacredPlayMsg('つよすぎる。そっと');P.prog=Math.max(0,P.prog-.25);return}P.prog=Math.min(1,P.prog+dist/360);if(Math.random()<.3)fx.push({k:'p',x:w.x,y:w.y,vx:(Math.random()-.5)*30,vy:-30,life:.6,col:'#b4925e',r:2});if(P.prog>=1)sacredPlayWin()}
   else if(P.type==='cover'&&P.carry){P.carry.x=w.x;P.carry.y=w.y}
   else if(P.type==='rhythm'){P.trail.push({x:w.x,y:w.y,t:now});if(P.trail.length>12)P.trail.shift();sacredPlayWind(P,w,now)}
-  else if(P.type==='drip'&&P.hold){let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(P.path.length-1,P.reach+4);i++){const p=P.path[i],dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}}if(bd>8){const p=P.path[P.reach];P.hold=false;P.fall={x:p.x,y:p.y,t:now};P.reach=0;sacredPlayMiss('しずくが、おちちゃった');return}if(best>P.reach)P.reach=best;if(P.reach>=P.path.length-1){P.hold=false;P.open=now;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900)}}
+  else if(P.type==='drip'&&P.hold){let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(P.path.length-1,P.reach+4);i++){const p=P.path[i],dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}}if(bd>8){const p=P.path[P.reach];P.hold=false;P.fall={x:p.x,y:p.y,t:now};P.reach=0;sacredPlayMiss('しずくが、おちちゃった');return}if(best>P.reach)P.reach=best;if(P.reach>=P.path.length-1){P.hold=false;P.open=now;sfx('sacred');later(()=>{if(SPLAY===P)sacredPlayWin()},900)}}
   else if(P.type==='dig')digRub(P,w,now,dist);
   else if(P.type==='crank')crankMove(P,w,now);
   else if(P.type==='yumomi')yumomiMove(P,w,now);
@@ -130,11 +130,11 @@ function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.las
 }
 function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
   if(P.type==='hold'&&P.holding){P.holding=false;if(P.heat>=.58&&P.heat<=.84){sfx('sacred');sacredPlayWin()}else if(P.heat<.6)sacredPlayMsg('まだ、つめたい');else sacredPlayMiss('こげちゃった')}
-  else if(P.type==='swipe'&&d){const len=Math.hypot(w.x-d.x,w.y-d.y),ms=now-d.t;if(len<18)return;if(len>110||ms<140){sacredPlayMsg('つよすぎる。やさしく');P.gust=now;return}P.got++;P.sway=now;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,600)}
+  else if(P.type==='swipe'&&d){const len=Math.hypot(w.x-d.x,w.y-d.y),ms=now-d.t;if(len<18)return;if(len>110||ms<140){sacredPlayMsg('つよすぎる。やさしく');P.gust=now;return}P.got++;P.sway=now;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)later(sacredPlayWin,600)}
   else if(P.type==='dig'){P.lock=false;P.trail=null}
   else if(P.type==='drip')P.hold=false;
   else if(P.type==='rhythm')P.last=-1;
-  else if(P.type==='cover'&&P.carry){const c=P.carry;P.carry=null;let hit=-1;P.spots.forEach((p,i)=>{if(!P.covered.has(i)&&sacredPlayNear(c,p,10))hit=i});if(hit>=0&&P.cold.has(hit)){P.covered.add(hit);P.got=P.covered.size;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},500);return}if(hit>=0)sacredPlayMsg('ここは、あたたかい');P.back={x:c.x,y:c.y,t:now}}/* のせなかった草は、山へもどる */
+  else if(P.type==='cover'&&P.carry){const c=P.carry;P.carry=null;let hit=-1;P.spots.forEach((p,i)=>{if(!P.covered.has(i)&&sacredPlayNear(c,p,10))hit=i});if(hit>=0&&P.cold.has(hit)){P.covered.add(hit);P.got=P.covered.size;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)later(()=>{if(SPLAY===P)sacredPlayWin()},500);return}if(hit>=0)sacredPlayMsg('ここは、あたたかい');P.back={x:c.x,y:c.y,t:now}}/* のせなかった草は、山へもどる */
   else if(P.type==='gather'&&P.holding){P.holding=false;if(P.got<P.need)sacredPlayMsg('はなさずに……')}
   else if(P.type==='bellows')P.holding=false;
   else if(P.type==='trace')P.tr=false;
@@ -189,7 +189,7 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
     if(!P.open){const d=pa[P.reach];glow(d.x,d.y-1,7,P.hold?.25:.4+.2*Math.sin(t*5),'150,210,255');if(!mgs('drop',d.x,d.y-3)){PXG.fillStyle='#4f93c0';pxDisk(d.x,d.y-1,2);PXG.fillStyle='#7fc4ec';pxDisk(d.x,d.y-2,1);PXG.fillStyle='#ffffff';PXG.fillRect(PXR(d.x)-1,PXR(d.y)-3,1,1)}}/* しずく */
     if(P.fall&&now-P.fall.t<600){const u=(now-P.fall.t)/600;if(!mgs('drop',P.fall.x,P.fall.y+u*u*30)){PXG.fillStyle='#7fc4ec';pxDisk(P.fall.x,P.fall.y+u*u*30,1)}}}
   if(P.type==='swipe'){const sw=P.sway&&now-P.sway<900?Math.sin((now-P.sway)/90)*(1-(now-P.sway)/900)*4:0,gu=P.gust&&now-P.gust<600?Math.sin((now-P.gust)/30)*3:0;pxLeaf(P.cx,P.cy-24,(sw+gu)*.08,'#8fdc6a','#5f9e3f');const d=P.down;if(d){PXG.fillStyle='rgba(255,255,255,.6)';pxLine(d.x,d.y,d.last.x,d.last.y,2)}}
-  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14,null,0,r.y*TS)}sfx('chime');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
+  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14,null,0,r.y*TS)}sfx('chime');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;later(sacredPlayWin,700)}}}
     PXG.fillStyle='rgba(255,246,200,.75)';for(let i=0;i<P.got;i++){const r=P.order[i];if(!r)continue;pxLine(r.x*TS,r.y*TS-12,P.cx,P.cy-6,2);glow(r.x*TS,r.y*TS-12,10,.45);mgs('spark'+((mgFrame(4,140)+i)%4),r.x*TS,r.y*TS-14)}/* 力をおくった子から、切り株へ光の線 */
     glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){PXG.fillStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';pxRing(P.cx,P.cy-6,PXR(20+2*Math.sin(t*4)),2)}/* 長おしする所に、光の輪 */
     if(P.got)mgs('spark'+mgFrame(4,120),P.cx,P.cy-10);if(P.holding){const f=P.prog-P.got;PXG.fillStyle='#fff6c8';pxRing(P.cx,P.cy-6,20,3,f)}}
@@ -205,7 +205,7 @@ function bellowsStep(P,now){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=no
   else if(P.fire>b.c+b.hw){P.over+=dt;if(P.over>=BELLOWS.over){P.over=0;P.holding=false;P.fire=Math.max(0,b.c-b.hw-.12);P.splash=now;sfx('water');sacredPlayMiss('あつすぎる');return}}
   else P.over=0;
   const g=Math.min(P.need,Math.floor(P.keep));if(g!==P.got){P.got=g;sacredPlayHint(P.hint+sacredPlayCount())}
-  if(P.keep>=BELLOWS.need){P.won=now;P.holding=false;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
+  if(P.keep>=BELLOWS.need){P.won=now;P.holding=false;sfx('sacred');later(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
 function bellowsPaint(P,now,t){bellowsStep(P,now);if(SPLAY!==P)return;const cx=PXR(P.cx),cy=PXR(P.cy),f=P.won?1:P.fire,R=(x,y,w,h,c)=>{PXG.fillStyle=c;PXG.fillRect(x,y,w,h)};
   /* 台座：土台・柱・火ざら（石。左上から光） */
   PXG.fillStyle='rgba(40,34,30,.25)';pxDisk(cx,cy+13,26,4);
@@ -234,7 +234,7 @@ function crankMove(P,w,now){if(P.won)return;const cx=P.cx,cy=P.cy-14,r=Math.hypo
   let d=a-P.pa;if(d>Math.PI)d-=Math.PI*2;if(d<-Math.PI)d+=Math.PI*2;const ms=Math.max(1,now-P.pt),sp=Math.abs(d)/(Math.PI*2)/(ms/1000);P.pa=a;P.pt=now;
   if(sp>CRANK.fast){P.fastT+=ms;if(P.fastT>=CRANK.fastMs){P.fastT=0;P.ang=0;P.pa=null;P.down=null;P.leak=now;P.got=0;sfx('cookfire');sacredPlayMiss('熱が、もれた');return}}else P.fastT=0;
   P.ang+=d;const g=Math.min(P.need,Math.floor(Math.abs(P.ang)/(Math.PI*2)));if(g!==P.got){P.got=g;sfx('twood');sacredPlayHint(P.hint+sacredPlayCount())}
-  if(Math.abs(P.ang)>=P.need*Math.PI*2){P.won=now;P.down=null;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
+  if(Math.abs(P.ang)>=P.need*Math.PI*2){P.won=now;P.down=null;sfx('sacred');later(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
 function crankPaint(P,now,t){const cx=PXR(P.cx),cy=PXR(P.cy)-14,R=(x,y,w,h,c)=>{PXG.fillStyle=c;PXG.fillRect(x,y,w,h)},k=Math.min(1,Math.abs(P.ang)/(P.need*Math.PI*2));
   PXG.fillStyle='rgba(40,34,30,.25)';pxDisk(cx,cy+34,26,4);R(cx-20,cy+18,40,14,'#8f8a83');R(cx-20,cy+18,40,2,'#b7b1a8');R(cx-20,cy+30,40,2,'#6d6a66');R(cx-3,cy+6,6,12,'#7a756f');/* 装置の台と、じく */
   PXG.fillStyle='#6b4a33';pxRing(cx,cy,CRANK.r,3);PXG.fillStyle='#8a6444';pxRing(cx,cy,CRANK.r,1);for(let i=0;i<4;i++){const a=P.ang+i*Math.PI/2;PXG.fillStyle='#6b4a33';pxLine(cx,cy,cx+Math.cos(a)*CRANK.r,cy+Math.sin(a)*CRANK.r,2)}/* 輪と、うで */
@@ -251,7 +251,7 @@ function yumomiMove(P,w,now){if(P.won)return;P.bx=Math.max(26,Math.min(102,w.x))
   if(dx*P.dir>0){P.ex=w.x;return}/* 同じ向きにすすんでいる：はしをおぼえる */
   if(Math.abs(dx)<YUMOMI.min)return;const gap=now-P.lastRev;P.dir=-P.dir;P.ex=w.x;P.lastRev=now;
   if(gap<YUMOMI.fastMs){if(++P.quick>=2){P.quick=0;P.dir=0;P.down=null;P.spill=now;sfx('water');sacredPlayMiss('湯が、こぼれた');return}}else P.quick=0;
-  P.got++;P.wave=now;sfx('wave');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.won=now;P.down=null;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},800)}}
+  P.got++;P.wave=now;sfx('wave');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.won=now;P.down=null;sfx('sacred');later(()=>{if(SPLAY===P)sacredPlayWin()},800)}}
 function yumomiPaint(P,now,t){const cx=PXR(P.cx),cy=PXR(P.cy)-6,R=(x,y,w,h,c)=>{PXG.fillStyle=c;PXG.fillRect(x,y,w,h)},k=Math.min(1,P.got/P.need);
   PXG.fillStyle='#7a756f';pxDisk(cx,cy,50,20);PXG.fillStyle='#9b958d';pxDisk(cx,cy-1,48,18);PXG.fillStyle='#8fd0f0';pxDisk(cx,cy,43,15);PXG.fillStyle='#b9e4f6';pxDisk(cx,cy-2,36,10);/* 石のふちと湯 */
   const wv=P.wave&&now-P.wave<500?1-(now-P.wave)/500:0;for(let i=0;i<5;i++){const x=cx-30+i*15+PXR(Math.sin(t*2+i)*2+wv*4*(i%2?1:-1));R(x,cy-4+(i%2)*6,7,1,'#e8f8ff')}
@@ -274,7 +274,7 @@ function digRub(P,w,now,dist){if(P.lock||P.won||!P.trail)return;P.trail.push({x:
   const nearRoot=P.path.some(p=>Math.hypot(p.x-w.x,p.y-w.y)<5&&(()=>{const i=digCell(P,p.x,p.y);return i<0||P.dirt[i]<.6})());/* 見えてきた根の上 */
   if(v>DIGFAST){if(nearRoot){P.lock=true;P.scar={x:w.x,y:w.y,t:now};sfx('hit');sacredPlayMiss('根にきずがついちゃった');return}sacredPlayMsg('そっと……');return}
   digClear(P,w.x,w.y,DIGR,Math.min(.5,dist*.16));if(Math.random()<.25)fx.push({k:'p',x:w.x,y:w.y,vx:(Math.random()-.5)*30,vy:-30,life:.6,col:'#b4925e',r:2});
-  if(digOpen(P)>=DIGWIN){P.won=now;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
+  if(digOpen(P)>=DIGWIN){P.won=now;sfx('sacred');later(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
 function digPaint(P,now,t){const g=P.dg;PXG.fillStyle='#5e4630';PXG.fillRect(0,g.y0,PLAYW,PLAYH-g.y0);/* ほったあとの、しめった土 */
   const pa=P.path,glw=P.won?Math.min(1,(now-P.won)/600):0;PXG.fillStyle='#9c7a52';pxPath(pa.map(p=>({x:p.x,y:p.y+1})),pa.length-1,4);PXG.fillStyle=glw?'#f0d6a2':'#d9b98a';pxPath(pa,pa.length-1,3);PXG.fillStyle='#c4a274';for(let i=2;i<pa.length;i+=5)PXG.fillRect(PXR(pa[i].x),PXR(pa[i].y)+1,2,1);/* 根 */
   for(let r=0;r<g.ch;r++)for(let c=0;c<g.cw;c++){const d=P.dirt[r*g.cw+c];if(d<.25)continue;PXG.fillStyle=d<.6?'#a08259':((c*7+r*13)%11===0?'#7d6340':'#8b6f47');PXG.fillRect(g.x0+c*DIGC,g.y0+r*DIGC,DIGC,DIGC)}/* 上の土：うすくなると明るく */
@@ -293,7 +293,7 @@ function pipeAt(P,w){const c=Math.floor((w.x-P.gx)/PIPET),r=Math.floor((w.y-P.gy
 function pipeTap(P,w,now){if(P.won)return;const k=pipeAt(P,w);if(k<0)return;if(P.flow.some(f=>f.k===k))return sacredPlayMsg('水が入った石は、回せない');const T=P.tiles[k];T.m=pipeRot(T.m);T.spin=now;sfx('chime')}
 /* 水を1つ進める：いまの石の出口から、となりの石へ。つながっていなければ、こぼれる */
 function pipeStep(P,now){if(P.won)return;const last=P.flow[P.flow.length-1];let k,from;
-  if(!last){k=0;from=0}else{const T=P.tiles[last.k],out=[0,1,2,3].find(d=>(T.m>>d&1)&&d!==last.from);if(last.k===P.goal&&out===0){P.won=now;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900);return}
+  if(!last){k=0;from=0}else{const T=P.tiles[last.k],out=[0,1,2,3].find(d=>(T.m>>d&1)&&d!==last.from);if(last.k===P.goal&&out===0){P.won=now;sfx('sacred');later(()=>{if(SPLAY===P)sacredPlayWin()},900);return}
     const[dx,dy]=PDIR[out],c=T.c+dx,r=T.r+dy;if(c<0||r<0||c>=PIPEC||r>=PIPER)return pipeSpill(P,now,T.c+dx*.5,T.r+dy*.5);k=r*PIPEC+c;from=(out+2)%4}
   const N=P.tiles[k];if(!(N.m>>from&1)||P.flow.some(f=>f.k===k))return pipeSpill(P,now,N.c+PDIR[from][0]*.5,N.r+PDIR[from][1]*.5);
   P.flow.push({k,from,t:now});P.next=now+PIPESTEP}
@@ -339,7 +339,7 @@ function traceDown(P,w,now){if(P.k>=P.need)return;const L=P.paths[P.k],p=L[P.rea
 function traceMove(P,w,now){if(!P.tr||P.k>=P.need)return;const L=P.paths[P.k];let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(L.length-1,P.reach+4);i++){const d=Math.hypot(w.x-L[i].x,w.y-L[i].y);if(d<bd){bd=d;best=i}}
   if(bd>TRACE.off){P.tr=false;P.scatter={x:L[P.reach].x,y:L[P.reach].y,t:now};P.reach=0;sacredPlayMiss('風が、ちっちゃった');return}
   if(best>P.reach){P.reach=best;if(Math.random()<.4)sfx('chime')}
-  if(P.reach>=L.length-1){P.tr=false;P.k++;P.got=P.k;P.reach=0;P.flow=now;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.k>=P.need){P.won=now;setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900)}}}
+  if(P.reach>=L.length-1){P.tr=false;P.k++;P.got=P.k;P.reach=0;P.flow=now;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.k>=P.need){P.won=now;later(()=>{if(SPLAY===P)sacredPlayWin()},900)}}}
 function tracePaint(P,now,t){const R=(x,y,w,h,c)=>{PXG.fillStyle=c;PXG.fillRect(PXR(x),PXR(y),w,h)};
   for(let i=0;i<5;i++){const x=((t*6+i*31)%150)-12;R(x,10+i*14,14,2,'#eef8fd')}/* 雲の海 */
   const k=P.won?P.need:P.k,lift=P.won?Math.min(1,(now-P.won)/900)*6:0;

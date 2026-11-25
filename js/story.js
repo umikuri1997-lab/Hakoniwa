@@ -168,7 +168,7 @@ const QUESTS2=[
     [HOMURA,'#think|宿のすぐそばに、岩でかこんだ湯船もほしいね。空を見ながら、のんびりつかれるやつさ。'],
     [SHIZUKU,'守り神さま、なにか、よい形はありませんか。'],['@idea']],gives:{flags:['lv_onsen']}},
    story:[[HOMURA,'温泉宿のできあがりだ！ 宿を出たら、すぐ露天ぶろさ。','vol:innFront'],[SHIZUKU,'露天ぶろは、岩のかげのほうが少しぬるいです。'],[HOMURA,'あたいは、わき口のそばだね。','vol:soakBoth'],[SHIZUKU,'#joy|……同じお湯に、ちがう場所で入れますね。'],[HOMURA,'#joy|今夜は、あたいも泊まってみようかな。']]},
-  {id:'guest',text:'草原からのお客さんを、露天ぶろでもてなそう',check:()=>!!S.flags.guestDone,how:'温泉宿の露天ぶろで、お客さんをもてなす',
+  {id:'guest',text:'草原からのお客さんを、露天ぶろでもてなそう',check:()=>!!S.flags.guestDone,tick:()=>{if(S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene()}/* 話したあと、昼に、お客さんの場面 */,how:'温泉宿の露天ぶろで、お客さんをもてなす',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'温泉宿も、露天ぶろもできて、村じゅうに湯けむりがただようようになりましたね。'],
     [HOMURA,'こうなったら、だれかに入ってもらいたいねえ。'],
@@ -226,7 +226,7 @@ const QUESTSF=[
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、この谷、まえよりずっと、すてきになったよね。'],[FB(),'もっとすてきになったら、おいわいしたいねぇ。'],[FA(),'#joy|うん！ 谷のおまつりだ！']]}},
    get story(){return [[FA(),'#joy|見て見て！ 谷じゅうが、きらきらしてる！'],[FB(),'#cry hush|ふたりだけだったころは、しずかで、ちょっとさみしかったねぇ。'],[FA(),'いまは、こんなににぎやか！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなのふるさとだねぇ。']]},gives:{fest:true}},
 ];
-function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
+function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();later(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};
   const a=nm(),b=nm();s.res=[mkRes(s,a,'wood',CX+.5,CY-1.5,'swing'),mkRes(s,b,'earth',CX+1.5,CY-1.5,'chat')];s.fk=[a,b];s.keyN={wood:a,earth:b};
   s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;for(const id of['wbench','crate','loom','bed','table','chair','stool','bench','torch'])s.recipes[id]=true;/* はじめから作れる物 */

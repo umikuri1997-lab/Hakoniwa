@@ -14,10 +14,10 @@ function kiriReady(){if(WD!==KUSA||S.free||S.flags.kiriSeen||S.flags.kiriD==null
 function kiriTry(){if(!kiriReady())return;const j=kiriSpot();if(j<0)return;kiriScene(j)}
 function kiriScene(j){const owner=S,session=VILLAGE_SESSION,f=S.res.find(r=>r.name===POKO),n=S.res.find(r=>r.name===MINA);
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.res.includes(n);
-  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  const at=(ms,fn)=>later(()=>{if(alive())fn()},ms);
   const px=j%W+.5,py=((j/W)|0)+.5;KIRI={x:px,y:py,a:0,foe:null};
-  const tween=(r,tx,ty,ms)=>{const x0=r.x,y0=r.y,t0=performance.now(),id=setInterval(()=>{if(!alive()){clearInterval(id);return}const k=Math.min(1,(performance.now()-t0)/ms);r.x=x0+(tx-x0)*k;r.y=y0+(ty-y0)*k;if(k>=1)clearInterval(id)},16)};
-  const fade=(to,ms)=>{const a0=KIRI.a,t0=performance.now(),id=setInterval(()=>{if(!alive()||!KIRI){clearInterval(id);return}const k=Math.min(1,(performance.now()-t0)/ms);KIRI.a=a0+(to-a0)*k;if(k>=1)clearInterval(id)},16)};
+  const tween=(r,tx,ty,ms)=>{const x0=r.x,y0=r.y,t0=clockNow(),tick=()=>{if(!alive())return;const k=Math.min(1,(GCLK-t0)/ms);r.x=x0+(tx-x0)*k;r.y=y0+(ty-y0)*k;if(k<1)later(tick,16)};later(tick,16)};
+  const fade=(to,ms)=>{const a0=KIRI.a,t0=clockNow(),tick=()=>{if(!alive()||!KIRI)return;const k=Math.min(1,(GCLK-t0)/ms);KIRI.a=a0+(to-a0)*k;if(k<1)later(tick,16)};later(tick,16)};
   const L1=KS([['N','#surprise|あれぇ……村のはしが、まっしろだよぉ。'],['F','#worry|霧……？ あらしは、もうおわったのに。'],['N','ちょっと、見てくるねぇ。']]);
   dialog(L1,()=>{if(!alive()){KIRI=null;return}
     for(const r of[f,n]){endAct(r);r.path=null;r.bubble=null}

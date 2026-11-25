@@ -13,7 +13,7 @@ function checkQuest(){
   if(S.cleared){if(WD!==FREE&&!(typeof KGRIV!=='undefined'&&KGRIV)&&!(typeof KGRRUN!=='undefined'&&KGRRUN))afterTick();/* 火山のさいごのうずみ火（kagari.js）のあいだは、クリアのあとの依頼を出さない */else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
   if(S.quest>=QUESTS.length){if(S.qStory!=null&&$('#dialog').hidden){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest()}return}/* さいごの目標のお礼の会話も出す（一覧のおわりで止めない） */
   const q=QUESTS[S.quest];
-  if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
+  if(q.tick)q.tick();/* そのクエストのあいだ、毎回たしかめること（クエストのデータの tick） */
   if(S.flags.qPassed&&S.flags.qPassed[q.id]&&S.qStory==null){delete S.flags.qPassed[q.id];S.quest++;S.qTalked=false;return checkQuest()}/* 古いセーブで、ならびをかえる前にもうした目標は、とばす（migrateFarmFirst） */
   if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id])S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
   if(!$('#dialog').hidden)return;
@@ -52,7 +52,7 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   const items=new Map(),g0=ITEM_GIFTS[0],ttl=g0.title||'うけとった！',rec=!!g0.rec;while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S&&(ITEM_GIFTS[0].title||'うけとった！')===ttl&&!!ITEM_GIFTS[0].rec===rec)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);/* 見出しがおなじものだけ、1まいにまとめる */
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi(rec?'paper':'box')+'</div><h2></h2><div class="idea-items"></div></div>');
   card.querySelector('h2').textContent=ttl;for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=rec?BL[id].name:iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
-  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
+  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx(rec?'good':'gift');/* うけとった：鉄琴の「ちん・ちーん」 */const prior=document.activeElement;
   if(rec)recRevealFx(card,overlay);/* あたらしいレシピ：ひらめきの演出（ためて → はじける → 1つずつぺたっ） */
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},rec?650+items.size*240+500:650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
@@ -278,22 +278,22 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
   if(!walk(j)&&d>1.2||d>.9&&HOUSES.some(h=>h.inside.has(j)||h.set.has(j))&&!HOUSES.some(h=>h.inside.has((n.y|0)*W+(n.x|0)))){n.path=[];return}/* とちゅうで家ができたら、入らずに止まる */
   if(d<=s){n.x=tx;n.y=ty;n.path.shift()}else{n.x+=dx/d*s;n.y+=dy/d*s}
   if(Math.abs(dx)>Math.abs(dy)*1.1){n.face=dx<0?-1:1;n.dir=0}else n.dir=dy<0?-1:1;n.mv=1}
-function tapOr(ms,fn){/* ms ミリ秒まつ。そのあいだに画面をタップしたら、すぐつぎへ（夢の場面の前の待ち） */let done=false;const go=()=>{if(done)return;done=true;clearTimeout(t);removeEventListener('pointerdown',go,true);fn()},t=setTimeout(go,ms);addEventListener('pointerdown',go,true)}
+function tapOr(ms,fn){/* ms ミリ秒まつ。そのあいだに画面をタップしたら、すぐつぎへ（夢の場面の前の待ち） */let done=false;const go=()=>{if(done)return;done=true;laterClear(t);removeEventListener('pointerdown',go,true);fn()},t=later(go,ms);addEventListener('pointerdown',go,true)}
 const SHIFTMS=400;/* 場面転換の白・黒のフェードの長さ（ミリ秒） */
 function sceneShift(kind,body,after){/* 場面転換：画面が白く（夢・光）か暗く（むかし）なって、色をかえた世界で動きを見せ、もとにもどる。そのあいだはセーブしない */
   const S0=S,cv=$('#cv'),d=document.createElement('div'),ns=NOSAVE;d.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:25;opacity:0;transition:opacity .35s ease;background:'+(kind==='mem'?'#0b0f0a':'#fffbe8');$('#app').appendChild(d);
-  const fade=(o,f)=>{requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=o}));setTimeout(f,SHIFTMS)};
+  const fade=(o,f)=>{requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=o}));later(f,SHIFTMS)};
   fade('1',()=>{if(S!==S0){d.remove();return}NOSAVE=true;cv.style.filter=kind==='mem'?'sepia(.85) brightness(.8)':'saturate(1.5) brightness(1.1)';fade('0',()=>body(()=>fade('1',()=>{cv.style.filter='';NOSAVE=ns;fade('0',()=>{d.remove();after&&after()})})))})}
 let DREAMC=null;/* 夢の場面の、花かんむりの動き（dream:walk・put・clap・joy） */
-function dreamLook(g,F,anim,dur,at){/* 夢の場面：みんな、まん中（フタバ）のほうを横向きで見る。みじかい動きのあとも、正面にもどさない */const fc=g===F?(DREAMC&&DREAMC.Wv?(DREAMC.Wv.x<F.x?-1:1):-1):(g.x<F.x?1:-1);g.face=fc;sacredSetPose(g,{anim:anim||'storyListen',at:at||performance.now(),duration:dur||60000,side:true,face:fc});if(dur)setTimeout(()=>{if(!EXTRA.length||!EXTRA.includes(g))return;const p=SACRED_POSES.get(g);if(p&&p.anim===anim)dreamLook(g,F)},dur)}
+function dreamLook(g,F,anim,dur,at){/* 夢の場面：みんな、まん中（フタバ）のほうを横向きで見る。みじかい動きのあとも、正面にもどさない */const fc=g===F?(DREAMC&&DREAMC.Wv?(DREAMC.Wv.x<F.x?-1:1):-1):(g.x<F.x?1:-1);g.face=fc;sacredSetPose(g,{anim:anim||'storyListen',at:at||performance.now(),duration:dur||60000,side:true,face:fc});if(dur)later(()=>{if(!EXTRA.length||!EXTRA.includes(g))return;const p=SACRED_POSES.get(g);if(p&&p.anim===anim)dreamLook(g,F)},dur)}
 function dreamCue(c){const D=DREAMC;if(!D||D.S!==S||!EXTRA.length)return;const{F,Wv}=D,now=performance.now();
   if(c==='walk'){/* 花かんむりを持って、フタバのそばへ歩いていく（実時間） */const sx=Wv.x,sy=Wv.y,tx=F.x-1.15,ty=F.y,t0=now;sacredSetPose(Wv,{anim:'offer2',at:now,duration:60000,side:true,face:1,crownHand:true});
     const st=n=>{if(!EXTRA.length)return;const p=Math.min(1,(n-t0)/900),k=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;Wv.x=sx+(tx-sx)*k;Wv.y=sy+(ty-sy)*k;if(p<1)requestAnimationFrame(st)};requestAnimationFrame(st);
     F.face=-1;dreamLook(F,F,'talkshock',1600,now+700);STAGEWAIT=Math.max(STAGEWAIT,now+1000);return}
   if(c==='put'){/* そっと頭にのせる：フタバは頭をさげ、のったら、はなが舞う */sacredSetPose(Wv,{anim:'crownput',at:now,duration:60000,side:true,face:1,crownHand:true});dreamLook(F,F,'crownbow',1500,now);
-    setTimeout(()=>{if(!EXTRA.length)return;F.crownT=1;sacredSetPose(Wv,{anim:'storyListen',at:performance.now(),duration:60000,side:true,face:1});dreamLook(F,F,'talkchest');sfx('bush');
+    later(()=>{if(!EXTRA.length)return;F.crownT=1;sacredSetPose(Wv,{anim:'storyListen',at:performance.now(),duration:60000,side:true,face:1});dreamLook(F,F,'talkchest');sfx('bush');
       for(let k=0;k<14;k++)fx.push({k:'p',x:F.x*TS+(Math.random()-.5)*20,y:F.y*TS-34,gy:F.y*TS,vx:(Math.random()-.5)*28,vy:-18-Math.random()*14,life:1.1,col:CROWNF[k%4],r:2})},1200);STAGEWAIT=Math.max(STAGEWAIT,now+1700);return}
-  if(c==='clap'){EXTRA.slice(2).forEach((g,i)=>setTimeout(()=>{if(!EXTRA.length)return;dreamLook(g,F,'clap',1600)},i*150));return}
+  if(c==='clap'){EXTRA.slice(2).forEach((g,i)=>later(()=>{if(!EXTRA.length)return;dreamLook(g,F,'clap',1600)},i*150));return}
   if(c==='joy'){dreamLook(F,F,'talkjoy');JUMP.set(F,now);return}}
 let EXTRA=[],MEMRUN=false;/* 場面だけに出る子（むかしのきょうだいなど。セーブしない） */
 function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタバと、だれかわからないきょうだいたち（草のせいれい）が、たのしそうに話す（セピアの思い出）。おわったら、いまの荒れた草原にもどす */
@@ -311,19 +311,19 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   const F=mk(POKO,0,.4);EXTRA=[F,mk('？',-1.3,-.2),mk('？',1.3,-.2),mk('？',-1.6,1.2),mk('？',1.6,1.2)];EXTRA.forEach(g=>{g.face=g.x<cx?1:-1});F.face=1;EXTRA.forEach(g=>dreamLook(g,F));
   tapOr(600,()=>{if(!EXTRA.length)return;const Wv=EXTRA[1],now0=performance.now();F.face=-1;DREAMC={F,Wv,all:EXTRA.slice(),S:S};/* 花をあむ子（左のきょうだい）。ほかの子は、のぞきこんで待つ */
   sacredSetPose(Wv,{anim:'weave',at:now0,duration:60000,side:true,face:1,crownHand:true,crownN:2});EXTRA.slice(2).forEach(g=>dreamLook(g,F,'lnod',2800,now0));sacredSetPose(F,{anim:'storyListen',at:now0,duration:60000,side:true,face:-1});
-  for(let k=1;k<=6;k++)setTimeout(()=>{const p=SACRED_POSES.get(Wv);if(!EXTRA.length||!p||p.anim!=='weave')return;p.crownN=2+k;fx.push({k:'p',x:Wv.x*TS+6,y:Wv.y*TS-16,gy:Wv.y*TS,vx:(Math.random()-.5)*10,vy:-12,life:.8,col:CROWNF[k%4],r:2})},k*400);/* 花を1つずつ、あんでいく */
+  for(let k=1;k<=6;k++)later(()=>{const p=SACRED_POSES.get(Wv);if(!EXTRA.length||!p||p.anim!=='weave')return;p.crownN=2+k;fx.push({k:'p',x:Wv.x*TS+6,y:Wv.y*TS-16,gy:Wv.y*TS,vx:(Math.random()-.5)*10,vy:-12,life:.8,col:CROWNF[k%4],r:2})},k*400);/* 花を1つずつ、あんでいく */
   tapOr(2900,()=>{if(!EXTRA.length)return;sacredSetPose(Wv,{anim:'crownup',at:performance.now(),duration:60000,side:true,face:1,crownHand:true});JUMP.set(Wv,performance.now());sfx('bush');
    dialog(Object.assign([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！',0,'dream:walk'],[POKO,'#heart|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。',0,'dream:put'],['？','その花かんむり、フタバによく似合ってるね。',0,'dream:clap'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[POKO,'#joy|うんっ！ ずっと、ずーっとね！',0,'dream:joy']],{skip:1}),()=>{DREAMC=null;
-    EXTRA.forEach((g,i)=>setTimeout(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
-    setTimeout(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}for(const g of EXTRA)SACRED_POSES.delete(g);EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,'')})});
-  const tk=setInterval(()=>{if(!EXTRA.length){clearInterval(tk);return}const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w&&(!SACRED_POSES.has(q)||SACRED_POSES.get(q).anim==='storyListen'));if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now())},1300)}
+    EXTRA.forEach((g,i)=>later(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
+    later(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}for(const g of EXTRA)SACRED_POSES.delete(g);EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,'')})});
+  const tk=()=>{if(!EXTRA.length)return;const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w&&(!SACRED_POSES.has(q)||SACRED_POSES.get(q).anim==='storyListen'));if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now());later(tk,1300)};later(tk,1300)}
 function memScene(done){/* むかしを思い出す：夜、影がせまり、フタバがふるえ、ほかの子が前に立つ。光がはじける */
   const f=S.res.find(r=>r.name===POKO)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
-  for(let n=0;n<26;n++)setTimeout(()=>{const a=Math.random()*Math.PI,R=5*TS;fx.push({k:'p',x:f.x*TS+Math.cos(a)*R*(Math.random()<.5?-1:1),y:f.y*TS+Math.sin(a)*R*.6+TS*2,vx:0,vy:-25,life:1.6,col:'#1a1420',r:5})},n*120);
-  S.res.filter(r=>r!==f).forEach((r,i)=>setTimeout(()=>{r.face=f.x>=r.x?-1:1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col)},1600+i*300));
-  [400,1400,2400].forEach(t=>setTimeout(()=>JUMP.set(f,performance.now()),t));
-  setTimeout(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);setTimeout(done,5600)}
-function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)setTimeout(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)setTimeout(()=>leafFX(r),1500+Math.random()*800)}
+  for(let n=0;n<26;n++)later(()=>{const a=Math.random()*Math.PI,R=5*TS;fx.push({k:'p',x:f.x*TS+Math.cos(a)*R*(Math.random()<.5?-1:1),y:f.y*TS+Math.sin(a)*R*.6+TS*2,vx:0,vy:-25,life:1.6,col:'#1a1420',r:5})},n*120);
+  S.res.filter(r=>r!==f).forEach((r,i)=>later(()=>{r.face=f.x>=r.x?-1:1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col)},1600+i*300));
+  [400,1400,2400].forEach(t=>later(()=>JUMP.set(f,performance.now()),t));
+  later(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);later(done,5600)}
+function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)later(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)later(()=>leafFX(r),1500+Math.random()*800)}
 let GUEST=null,GUESTRUN=false;
 /* ---------- 温泉宿のお客さん（火山）：草原のなかまが3日に1回とまりに来て、草原の花のたね・苗を売る。朝に来て、つぎの朝に帰る（夜は宿の中） ---------- */
 const VISITORS=[[POKO,'wood','#joy|温泉に入りに来たよ！ 草原の花のたねと苗、もってきたんだ。ほしいのある？'],[MINA,'earth','のんびりしに来たよぉ。草原の苗、いるかねぇ？']],VISIT_EVERY=3;

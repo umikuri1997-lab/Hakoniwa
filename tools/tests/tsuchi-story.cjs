@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   const talk=async()=>{for(let k=0;k<200;k++){const st=await run(`(()=>{if(!document.querySelector('#dialog').hidden||DLGQ.length){DLGGAP=0;DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;const c=!document.querySelector('#dialog').hidden&&document.querySelector('#dialog button');if(c){c.disabled=false;c.click()}else dlgNext();return 'dlg'}return 'none'})()`);if(st==='none')return;await page.waitForTimeout(150)}throw new Error('会話がおわらない '+await run(`JSON.stringify({h:document.querySelector('#dialog').hidden,q:DLGQ.length,t:(document.querySelector('#dialog')||{}).textContent.slice(0,120),btn:[...document.querySelectorAll('#dialog button')].map(b=>b.textContent+(b.disabled?'x':''))})`))};
   const r0=await J(`(()=>{const R=S.ts.rub,j=R[1].cells[0];removeAt(j%W,(j/W)|0);return{n:R.length,cells:R.map(p=>p.cells.length),west:R[0].c%W<tsRiftAt((R[0].c/W)|0),obj:R.every(p=>p.cells.every(k=>S.obj[k]==='tsrubble')),noRm:S.obj[j]==='tsrubble',noWalk:!walk(j),quests:QUESTS.map(q=>q.id)}})()`);
   console.log(JSON.stringify(r0));assert.equal(r0.n,10,'岩の山は10（洞窟の階の数）');assert.ok(r0.cells.every(n=>n>=26));assert.ok(r0.west,'1つめは地われの西がわ');assert.ok(r0.obj&&r0.noRm&&r0.noWalk,'岩の山はこわせない・歩けない');
-  assert.deepEqual(r0.quests,['statue','tscave1','tskonoha','tsolive','tscave2','tsookage']);
+  assert.deepEqual(r0.quests,['statue','tscave1','tskonoha','tsolive','tscave2','tsookage','tscave3','tsbridge']);
   /* 神殿のあと：トトの「巣穴のおくへ」 */
   await run(`(()=>{S.quest=1;S.qTalked=false;S.qStory=null;S.t=Math.floor(S.t/1440)*1440+1440+9*60;checkQuest();if(TALKW!==TOTO)throw new Error('TALKW '+TALKW);startTalk()})()`);await talk();
   const c0=await J(`(()=>{tsTap(S.ts.hole);const pop=document.querySelector('.pxpopw');const sel=pop&&[...pop.querySelectorAll('.slot.sel .nm')].map(e=>e.textContent);pop&&pop.remove();return{acc:qAt('tscave1'),sel}})()`);
@@ -79,7 +79,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(n4));assert.ok(n4.down);assert.equal(n4.en,0);assert.equal(n4.g,0);
   /* 朝：目標のお話 */
   await run(`(()=>{S.t=(S.hold||0)+dayNo()*1440+7*60;checkQuest();startTalk()})()`);await talk();
-  const n5=await J(`(()=>({q:S.quest,len:QUESTS.length,qs:S.qStory}))()`);console.log(JSON.stringify(n5));assert.equal(n5.q,n5.len);assert.equal(n5.qs,null);
+  const n5=await J(`(()=>({q:S.quest,len:QUESTS.length,qs:S.qStory}))()`);console.log(JSON.stringify(n5));assert.equal(n5.q,6,'つぎの目標は、巣穴のもっとおく（tscave3）');assert.equal(n5.qs,null);
   /* 古いセーブ（岩の山のない土のセーブ）：読みかえで岩の山ができる */
   const m1=await J(`(()=>{const s=JSON.parse(JSON.stringify({ts:{hole:S.ts.hole},ground:S.ground,hi:S.hi,obj:S.obj.map(o=>o==='tsrubble'||o==='tskonoki'?'':o),floor:S.floor,dyn:{},hp:{},mig:10}));runMigrations(s);return{n:s.ts.rub&&s.ts.rub.length,mig:s.mig,ver:SAVE_VER}})()`);
   console.log(JSON.stringify(m1));assert.equal(m1.n,10);assert.equal(m1.mig,m1.ver);

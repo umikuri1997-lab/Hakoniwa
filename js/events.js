@@ -236,7 +236,7 @@ function titleNote(r,a){const k=TJOB[a&&a.type];if(!k||!r||IS_STORY_REPLAY||a.st
   memo('',r.name+'の「'+TOKUI[k].n+'」の得意が'+l1+'になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'：「'+TOKUI[k].n+'」の得意 '+l1,'good');JOYU.set(r,performance.now()+3000);addFloatG(r.x,r.y,-2.1,TOKUI[k].n,'#ffe7a8');tokuiStarFx(r,l1);sfx('level')},400)}
 /* 得意の★が上がった：頭の上に★のならび（TKMAX こ）。前からの★がならんでから、あたらしい★がはねて光る（見た目と音だけ。実時間） */
 const TKFXMS=3000,TKPATH={};
-function tokuiStarFx(r,n){if(!r||r.hidden||typeof scnAdd!=='function')return;scnAdd('tkstar',TKFXMS,{r,n});const x=r.x*TS+(n-1-(TKMAX-1)/2)*14,y=r.y*TS-uLift(r)-52;scnAdd('ring',700,{x,y,r0:4,r1:20,col:'#ffe7a8'},700);scnAdd('glow',1200,{x,y,r:14,col:'#fff6c8'},700);setTimeout(()=>{if(S&&S.res.includes(r))sfx('good')},700)}
+function tokuiStarFx(r,n){if(!r||r.hidden||typeof scnAdd!=='function')return;scnAdd('tkstar',TKFXMS,{r,n});const x=r.x*TS+(n-1-(TKMAX-1)/2)*14,y=r.y*TS-uLift(r)-52;scnAdd('ring',700,{x,y,r0:4,r1:20,col:'#ffe7a8'},700);scnAdd('glow',1200,{x,y,r:14,col:'#fff6c8'},700);later(()=>{if(S&&S.res.includes(r))sfx('good')},700)}
 SCN_DRAW.tkstar=(e,t,now)=>{const r=e.r;if(!r||r.hidden)return;const env=scnEnv(t,.06,.15);if(env<=0)return;const el0=t*TKFXMS,K=.5,sz=32*K;/* 32のマス目の星を半分（16点）で */
   for(let i=0;i<TKMAX;i++){const on=i<e.n,nw=i===e.n-1,k=on?'star':'stare',p=TKPATH[k]||(TKPATH[k]=new Path2D(PXI[k]||''));if(nw&&el0<700)continue;/* あたらしい★は、すこしあとで */
     const hop=nw?Math.max(0,1-(el0-700)/360):0,dy=Math.round(Math.sin(Math.min(1,hop)*Math.PI)*8/2)*2,x=Math.round((r.x*TS+(i-(TKMAX-1)/2)*14-sz/2)/2)*2,y=Math.round((r.y*TS-uLift(r)-52-sz/2-dy)/2)*2;
@@ -264,12 +264,17 @@ Object.assign(EVNEED,{flower30:{n:'花30本',list:()=>{const L=[];for(let j=0;j<
   hanabi:{n:'たき火',list:()=>evObjs('campfire').filter(j=>!campOut(j)).slice(0,1),cap:()=>99},
   utage:{n:'よみがえった温泉3つ・食卓2つ',list:()=>['a','b','c'].every(springOn)&&evTables().length>=2?evTables():[],cap:()=>99}});
 const SETN={eda:'枝',can:'空き缶',food:'食料',wood:'木材',bamboo:'竹',grass:'草',flower:'花のたね',crop:'作物'},EVCROP=['mugi','imo','tomato'];
-function setHave(k){if(k==='food')return S.food;if(k==='grass')return S.mat[EVGRASS()]||0;if(k==='flower')return[...FLOWERS].reduce((a,id)=>a+inv(id),0);if(k==='crop')return EVCROP.reduce((a,c)=>a+(S.fs[c]||0),0);return S.mat[k]||0}
-function setName(k){return k==='grass'?MATN[EVGRASS()]:k==='flower'?'花のたね':SETN[k]}
+function setTake(L,n,have,take){const out={};for(const id of L){const t=Math.min(have(id),n);if(t<=0)continue;take(id,t);out[id]=t;n-=t;if(n<=0)break}return out}/* 一覧の前から、n こまでとる */
+const SETK={/* はらう物の種類ごとの、数える（have）・とる（pay：P に書く）・もどす（back）・名前（name）。ここにない物は素材（S.mat） */
+  food:{have:()=>S.food,pay:(n,P)=>{P.food=takeFood(n)},back:v=>{for(const f of v)addFood(f,1)}},
+  grass:{have:()=>S.mat[EVGRASS()]||0,name:()=>MATN[EVGRASS()],pay:(n,P)=>{const g=EVGRASS();S.mat[g]-=n;P[g]=n}},/* もどすときは素材 */
+  flower:{have:()=>[...FLOWERS].reduce((a,id)=>a+inv(id),0),pay:(n,P)=>{P.flower=setTake([...FLOWERS],n,id=>inv(id),(id,t)=>{S.inv[id]-=t})},back:v=>{for(const id in v)S.inv[id]=(S.inv[id]||0)+v[id]}},
+  crop:{have:()=>EVCROP.reduce((a,c)=>a+(S.fs[c]||0),0),pay:(n,P)=>{P.crop=setTake(EVCROP,n,id=>S.fs[id]||0,(id,t)=>{S.fs[id]-=t});syncFood()},back:v=>{for(const id in v)addFood(id,v[id])}}};
+function setHave(k){const K=SETK[k];return K?K.have():S.mat[k]||0}
+function setName(k){const K=SETK[k];return K&&K.name?K.name():SETN[k]}
 function setLack(D){for(const k in D.set||{})if(setHave(k)<D.set[k])return setName(k)+'が足りません';return ''}
-function setPay(D){const P={};for(const k in D.set||{}){let n=D.set[k];if(k==='food'){P.food=takeFood(n);continue}if(k==='grass'){const g=EVGRASS();S.mat[g]-=n;P[g]=n;continue}
-  if(k==='flower'||k==='crop'){const L=k==='flower'?[...FLOWERS]:EVCROP,out={};for(const id of L){const have=k==='flower'?inv(id):(S.fs[id]||0),t=Math.min(have,n);if(t<=0)continue;if(k==='flower')S.inv[id]-=t;else S.fs[id]-=t;out[id]=t;n-=t;if(n<=0)break}if(k==='crop')syncFood();P[k]=out;continue}S.mat[k]-=n;P[k]=n}return P}
-function setRefund(P){for(const k in P||{}){if(k==='food'){for(const f of P.food)addFood(f,1);continue}if(k==='flower'){for(const id in P.flower)S.inv[id]=(S.inv[id]||0)+P.flower[id];continue}if(k==='crop'){for(const id in P.crop)addFood(id,P.crop[id]);continue}S.mat[k]=(S.mat[k]||0)+P[k]}}
+function setPay(D){const P={};for(const k in D.set||{}){const n=D.set[k],K=SETK[k];if(K)K.pay(n,P);else{S.mat[k]-=n;P[k]=n}}return P}
+function setRefund(P){for(const k in P||{}){const K=SETK[k];if(K&&K.back)K.back(P[k]);else S.mat[k]=(S.mat[k]||0)+P[k]}}
 function setTxt(D){return Object.keys(D.set||{}).map(k=>setName(k)+D.set[k]).join('・')}
 /* 運動会：3つの競技（かけっこ → つなひき → 玉入れ）。組ごとに勝ち数。かけっこは cup0 と同じコース */
 const UNDOSEG=['race','tug','ball'],UNDON={race:'かけっこ',tug:'つなひき',ball:'玉入れ'};
