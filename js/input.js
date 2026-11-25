@@ -41,7 +41,7 @@ cv.addEventListener('pointermove',e=>{
     const k=BL[sel]&&BL[sel].kind;
     if(gest.grab)gest.type='grab';/* 置く前の家具の絵をつまんで、ずらす */
     else if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=tapW(gest.sx,gest.sy);leafAdd(Math.floor(w0.y/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
-    else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=tapW(gest.sx,gest.sy);gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
+    else if(mode==='bulk'&&BULKT==='hake'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=tapW(gest.sx,gest.sy);gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
     else{gest.type='pan';pickCancel();glRingOff()}}
   if(gest.type==='grab'){grabMove(cX(e),cY(e));return}
   if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */camPan(gest.cx,gest.cy,dx,dy);clampCam(1);const t=performance.now(),V=gest.vs||(gest.vs=[]);V.push({t,x:cX(e),y:cY(e)});while(V.length>2&&t-V[0].t>FLINGWIN)V.shift()}/* 指の速さ（はなしたときの慣性） */
