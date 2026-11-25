@@ -234,7 +234,7 @@ function evTag(c,x,y,L,a){c.font='10px PixelMplus10, sans-serif';const w=Math.ce
   c.textAlign='center';c.textBaseline='top';L.forEach((t,i)=>{c.fillStyle='#ecd2a4';c.fillText(t,Math.round(x),y0+4+i*12);c.fillStyle='#4a2a14';c.fillText(t,Math.round(x),y0+3+i*12)});return{x0,y0,w,h}}
 function evStamp(c,x,y,a){const s=a<1?1+(1-a)*.8:1,r=Math.round(6*s);c.save();c.globalAlpha=Math.min(1,a*2);pR(c,'#d04030',x-r,y-r+1,r*2,r*2-2);pR(c,'#d04030',x-r+1,y-r,r*2-2,r*2);pR(c,'#f4e9d2',x-r+2,y-r+2,r*2-4,r*2-4);pR(c,'#d04030',x-r+3,y-r+3,r*2-6,r*2-6);pR(c,'#f4e9d2',x-1,y-1,2,2);c.restore()}
 function evShowDraw(now){const E=S&&S.ev,c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const live=E&&E.ph&&evShowOn(E)&&EVV.id===E.id,A=EVV.end;
-  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box&&!EVNODECO.has(EVV.id))isoGarland(c,(EVV.box.x0-1)*TS+8,(EVV.box.x1+2)*TS-8,EVV.box.y0*TS,EVDECO[EVV.id]||'flag',now-EVV.t0,now);/* かざりは、会場のおくの列にそって（iso-fx.js） */
+  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box&&!EVNODECO.has(EVV.id))isoGarland(c,EVV.box.x0-1,EVV.box.x1+1,EVV.box.y0,EVDECO[EVV.id]||'flag',now);/* かざりは、会場のおくの行の北のふちにそって（3Dのチップ・iso-fx.js） */
   if(live){const cc=E.c||evTemple(),e=now-EVV.t0;if(e>1300&&e<2700){const u=Math.min(1,(e-1300)/180);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.4)*TS);cupText(c,'せーの！',cc[0]*TS,(EVV.box.y0-2.4)*TS,2.2+(1-u)*1.4,Math.max(0,Math.min(1,(2700-e)/400)))}
     {const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evProps(c,E,evPeople(E),now);
     if(EVV.clx&&EVV.cid===E.id){const ce=now-EVV.clx,tx=EVCLXTX[E.id];if(tx&&ce<2600){const u=Math.min(1,ce/160);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.6)*TS);cupText(c,tx,cc[0]*TS,(EVV.box.y0-2.6)*TS,2.4+(1-u)*1.2,Math.max(0,Math.min(1,(2600-ce)/500)))}{const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evClimaxDraw(c,E,cc,ce,now)}}
@@ -273,7 +273,7 @@ function evScreenDraw(now){if(!EVV.shine&&!EVV.met.length&&!EVV.pet.length&&!EVV
   if(EVV.flash){const a=(now-EVV.flash)/350;if(a>1)EVV.flash=0;else{c.globalAlpha=(1-a)*.55;c.fillStyle='#ffffff';c.fillRect(0,0,VW,VH);c.globalAlpha=1}}
   c.setTransform(T)}
 /* 地面の層：体そうのお立ち台 */
-function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS),dr=()=>{pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)};isoStand(ctx,{fx:x,fy:y,px:isoX(x,y),py:isoY(x,y)-isoLv((r.y|0)*W+(r.x|0))*IQL},dr)}/* クォータービュー：その子の足もとに立てて */
+function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;isoChipTile(ctx,'evdai',Math.floor(r.x),Math.floor(r.y),0)}/* 体そうのお立ち台：その子のいるマスに、3Dのチップ（tools/art/furn3d/items/evdai.py）を立てる */
 /* ---------- 文をつなぐ（読みこむときに1回）：手紙・雑談・日記 ---------- */
 LETTERK.ev='イベントのこと';/* イベントの手紙の文は letter-data.js の LETTERD.ev（イベント→属性→5通、1通まるごと） */
 if(typeof EVCHAT!=='undefined')for(const id of Object.keys(EVCHAT).sort())for(const ch of EVCHAT[id])CHATS.push(Object.assign(ch,{evc:1,ok:(r,p)=>evMemBoth(r,p,id)}));/* CHATS の番号はセーブに入るので、うしろに足すだけ（id の名前の順） */

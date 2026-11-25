@@ -99,6 +99,8 @@ const bedOwner=j=>{const id=(S.bedOwn||{})[j];return id!=null&&BEDSET.has(S.obj[
 const houseCap=h=>Math.max(1,Math.floor(h.inside.size/4))/* 床のマス数の1/4（壁はふくめない）。はじめの家で3人 */,roomOf=j=>HOUSES.find(h=>h.set.has(j)),roomSleepN=h=>S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&x.act.stand>=0&&h.set.has(x.act.obj!=null?x.act.obj:x.act.stand)).length;
 // 屋根がすけて中をのぞいているときは、家の中のせいれいも外と同じに見せる
 const peekH=r=>HOUSES.some(h=>h.set.has((r.y|0)*W+(r.x|0))&&roofAOf(h)<.5);
+// 屋根を外していない家の中のせいれいは、タップできない（ふきだしも。屋根を外してから）
+const roofOver=r=>HOUSES.some(h=>h.set.has((r.y|0)*W+(r.x|0))&&!OPENH.has(hKey(h)));
 // 木の壁・石垣・ドアだけで囲まれ、ドアがついた場所を家とみなす
 let HOUSES=[];
 function houseWhy(j0){const isB=j=>{const t=typeAt(j);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))};if(!isB(j0))return null;/* 石の塀・石の塀のドアは、家の壁ではない */findHouses();if(HOUSES.some(h=>h.set.has(j0)))return null;
