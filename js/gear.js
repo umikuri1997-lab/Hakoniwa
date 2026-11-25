@@ -128,7 +128,7 @@ function veinMorning(){if(!S||!VOLK())return;if(IS_STORY_REPLAY||typeof MEMRUN!=
   const tot=kinds.reduce((a,v)=>a+VEIN_W[v],0);let put=0;while(n-->0&&C.length){const i=(Math.random()*C.length)|0,j=C[i];C.splice(i,1);let q=Math.random()*tot,v=kinds[0];for(const o of kinds){q-=VEIN_W[o];if(q<0){v=o;break}}S.obj[j]=v;S.dyn[j]={vg:1};delete S.hp['n'+j];put++}if(put){recount();dirty=true}}
 /* 「しらべる」でタップした鉱脈（のこっている物だけ） */
 function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
-/* はじめての鉱石で、そうびのレシピを思いつく（火山だけ）。idea のある物は、はじめてその素材を手に入れたとき */
+/* はじめての鉱石で、そうびのレシピを思いつく（火山だけ）。idea のある物は、はじめてその素材を手に入れたとき。思いついたら、せいれいのサブクエスト（受けたらおぼえる。idea-sub.js） */
 function gearIdea(material,crafted,carried=0){
   if(!S||IS_STORY_REPLAY)return;
   const known=S.recipes||(S.recipes={});
@@ -143,7 +143,7 @@ function gearIdea(material,crafted,carried=0){
     const gear=g.s==='w'||g.s==='a';
     const key=primary+':'+g.s;
     const rank=gear?(tier[key]=(tier[key]||0)+1):0;
-    if(known[id])continue;
+    if(known[id]||ideaPend(id))continue;
     if(crafted&&crafted!=='nuno'&&source(gearMain(crafted))!==primary)continue;
     if(material&&source(material)!==primary&&!Object.keys(b.mat).some(k=>source(k)===source(material)))continue;
     if(b.idea?acquired(b.idea)<1:!g.gr&&!g.wd&&!ore&&primary!=='bamboo')continue;
@@ -152,9 +152,7 @@ function gearIdea(material,crafted,carried=0){
     const threshold=g.ia||(rank<=1?1:(rank-1)*(related?1:3)+1);/* 草原の物は、きめた数（ia） */
     if(acquired(primary)<threshold)continue;
     if(!Object.keys(b.mat).every(k=>!GEAR_ORES.includes(source(k))||acquired(source(k))>=1))continue;
-    known[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true;
-    sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);
-    memo('bulb','そうびのレシピ：'+b.name);
+    ideaOffer('idea_g_'+id);/* すぐにおぼえず、サブクエスト（idea-sub.js） */
     return;
   }
 }
