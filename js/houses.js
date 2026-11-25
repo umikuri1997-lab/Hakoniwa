@@ -138,9 +138,10 @@ const DRYT={i:null,v:[]};function dryTex(px,py){/* 草原のあれ地（224×224
   const im=chipImgs(window.CHIPS['tex:dry'],'ground')[0];if(!im.ok)return im;if(DRYT.i!==im){DRYT.i=im;DRYT.v=[im];for(let f=1;f<4;f++){const c=document.createElement('canvas');c.width=c.height=DRTEX;const g=c.getContext('2d');g.translate(f&1?DRTEX:0,f&2?DRTEX:0);g.scale(f&1?-1:1,f&2?-1:1);g.drawImage(im,0,0,DRTEX,DRTEX);DRYT.v.push(c)}}
   const bx=Math.floor(px/DRTEX),by=Math.floor(py/DRTEX);return DRYT.v[(hash(bx*131+17)<.5?1:0)|(hash(by*137+29)<.5?2:0)]}
 const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),...Array.from({length:8},(_,i)=>'groundr#'+i),...['U','D','L','R','c0','c1','c2','c3'].map(k=>'fringeg:'+k)];
-const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water','cliff:block');/* 岸の岩（iso-ground.js） */
+const WCH=['tex:water','cliff:block'];/* 水の面・岸の岩（iso-ground.js） */
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
-function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
+let GCHW=-1,GCHL=GCH;function gchNeed(){/* そのステージで使う地面の絵だけ（igBaseDraw：草原はあれ地のテクスチャ、火山は groundr#、ほかは ground#） */if(GCHW!==WD){GCHW=WD;const skip=WD===KUSA?/^ground/:WD===KAZAN?/^ground#/:/^groundr#/;GCHL=GCH.filter(k=>!skip.test(k));const C=window.CHIPS;for(const k of GCHL){const c=C&&C[k];if(c)for(const r of c.f)chipPage(r[0],true)}}return GCHL}/* はじめて使うときに、高い優先度で読みはじめる */
+function groundChipsOK(){const C=window.CHIPS;return !!C&&gchNeed().every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
 const GRT=.5/* 草地のさかいのしきい */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;isoGroundLv(ctx,isoLv(j));/* クォータービュー：その段の高さの地面に */drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}groundTf(ctx,dpr*cam.z)}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
@@ -162,6 +163,8 @@ let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたと
 }
 const iconCache={};
 let ICONTMP=null;
+const ICWAIT={};/* チップのページを読みこみ中に作ったアイコン：id → かりの空の絵の URL */
+function icWaitDone(){for(const id in ICWAIT){const w=ICWAIT[id],u=iconURL(id);if(u===w)continue;delete ICWAIT[id];for(const im of document.querySelectorAll('img'))if(im.getAttribute('src')===w)im.src=u}}/* チップのページを読みおわったら、メニューに出ているかりの絵を、ほんとうのアイコンに */
 function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細かさで描いてから、絵のある範囲だけを切り出して、144×144にきちんと入れる（全体がうつる） */
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
@@ -171,6 +174,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0&&Object.values(CHA).some(a=>!a.ok&&!a.bad)){const u=ICWAIT[id]||(ICWAIT[id]="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='144'><!--"+encodeURIComponent(id)+"--></svg>");return u}/* チップのページを読みこみ中：とっておかず、id ごとのかりの空の絵。読みおわったら icWaitDone が、出ている絵を入れかえる */
   const c=document.createElement('canvas');c.width=144;c.height=144;
   if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
   const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;

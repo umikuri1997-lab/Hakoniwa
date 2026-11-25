@@ -226,6 +226,7 @@ function removeAt0(x,y){const tx0=x,ty0=y;
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');if(d.bp!=null&&typeof bpOfSite==='function'){const e=bpOfSite(j);if(e)return bpCancel(e)}siteRefund(d,j);clearObj(j);toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1,1);toast('植えるのをやめた')}
     else{if(BOXCAP[o])boxStash(j,o);/* しまう家具：中身は散らさず、つぎに置いた同じ家具へ */clearObj(j);
+      if(LIGHTNAT[o]&&typeof juiceBreak==='function'){if(RMGH)RMGH.hit=1;fxSpr(o==='rock'||VEINS[o]?'rockbreak':'treefall',x*TS+16,y*TS+26);const wd=LIGHTNAT[o]==='wood'||LIGHTNAT[o]==='bamboo';juiceBreak(j,wd?'wood':'stone',null,1);if(wd&&cam.z>=homeZ()*.7&&typeof juiceShake==='function')juiceShake()}/* 木・岩をこわした：白く光ってふるえ、一瞬とまってから、かけらがとびちり、画面が小さくゆれる */
       if(b.natural){toast(b.name+'をかたづけた')}
       else if(FLOWERS.has(o)||o==='tree'||o==='fruit'){giveItem(o,1,1);toast(iname(o)+'をもらった')}/* 花・木をこわすと、種・苗がもどる */
       else if(o==='plot'||o==='farm'){giveItem('farm',1,1);toast('畑をもちものにもどした')}
@@ -365,12 +366,12 @@ function askSwap(id,x,y){const gi=SWAPG.findIndex(g=>g.includes(id)),G=SWAPG[gi]
   if(inv(id)<cells.length)return toast(BL[id].name+'が足りません（'+inv(id)+'/'+cells.length+'）','warn');
   pending={kind:'swap',id,cells};$('#confirmTxt').textContent='つながっている'+cells.length+'マスを'+BL[id].name+'にかえる';lackOn($('#cYes'),'');yesLbl('かえる');($('#cRot').hidden=true,$('#confirm').hidden=false)}
 function confirmOne(){const p=pending;if(!p||p.kind!=='one')return;const rb=$('#cRot'),rt=ROTS[p.id];rb.hidden=!rt;const lb=rt?'（'+ROTL[rt][rt===5?stairRot(p.id,p.y*W+p.x):PLROTS[p.id]||0]+'）':'';$('#confirmTxt').textContent=p.ok?BL[p.id].name+lb+'をここに置く？':rt===5?ROTL[5][stairRot(p.id,p.y*W+p.x)]+'おりる向きには置けません':'ここには置けません';lackOn($('#cYes'),'').disabled=!p.ok;yesLbl(BL[p.id]&&BL[p.id].kind==='plant'?'うえる':'おく')}
-function rotPending(){const p=pending;if(!p||p.kind!=='one'||!ROTS[p.id])return;PLROTS[p.id]=ROTS[p.id]===5?stairRot(p.id,p.y*W+p.x)%4+1:((PLROTS[p.id]||0)+1)%ROTN(p.id);p.ok=canPlace(p.id,p.x,p.y,true);sfx('tap');confirmOne();dirty=true}/* ↻：置く前に向きをかえる */
+function rotPending(){const p=pending;if(p&&p.kind==='bp')return bpRotate();/* 設計図は、ぜんぶを右へ90度 */if(!p||p.kind!=='one'||!ROTS[p.id])return;PLROTS[p.id]=ROTS[p.id]===5?stairRot(p.id,p.y*W+p.x)%4+1:((PLROTS[p.id]||0)+1)%ROTN(p.id);p.ok=canPlace(p.id,p.x,p.y,true);sfx('tap');confirmOne();dirty=true}/* ↻：置く前に向きをかえる */
 function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
   if(!pending)return;const p=pending;pending=null;$('#confirm').hidden=true;selRect=null;
   if(p.kind==='one'){place(p.id,p.x,p.y);return}
-  if(p.kind==='bp'){bpPlace(p.i,p.x,p.y);return}/* 家の設計図 */
+  if(p.kind==='bp'){bpPlace(p.i,p.x,p.y,p.r);return}/* 家の設計図 */
   if(p.kind==='plant'){{const D=plantDist();p.cells=p.cells.filter(([x,y])=>plantReach(D,y*W+x));if(!p.cells.length)return toast('せいれいが行けない場所です','warn')}if(inv(p.id)<p.cells.length)return toast(iname(p.id)+'が足りません');S.inv[p.id]-=p.cells.length;for(const[x,y]of p.cells){const j=y*W+x;S.obj[j]='sprout';S.dyn[j]={plant:p.id,p:0,userMound:true}}
     p.cells.forEach(([x,y],i)=>{if(i<12)burstAt(x,y,'plant')});recount();toast('せいれいたちが植えにきてくれる','good');return}
   if(p.kind==='swap'){const G=SWAPG.find(g=>g.includes(p.id)),fl=!!BL[p.id].floor,L=p.cells.filter(j=>G.includes(swapT(p.id,j))&&swapT(p.id,j)!==p.id);if(inv(p.id)<L.length)return toast(BL[p.id].name+'が足りません');

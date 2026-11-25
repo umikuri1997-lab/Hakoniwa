@@ -18,7 +18,7 @@ B.ensure=(id,n,nx,ny,ok)=>{if(B.have(id)>=n)return true;const b=BL[id];if(!b)ret
   if(b.kind==='furn'||b.kind==='block'&&!S.unlocked[id]){if(inv(id)>0){B.put(id,nx,ny,ok)}else if(!B.ordered(id)&&recipeKnown(id)){orderFurn(id)}return false}
   B.put(id,nx,ny,ok);return B.have(id)>=n};
 B.ui=()=>{
-  for(const P of[typeof ROUTEPOP!=='undefined'&&ROUTEPOP,typeof LVPOP!=='undefined'&&LVPOP]){const b=P&&P.querySelector('.btn');if(b){b.click();return true}}/* お話の道・レシピをえらぶ：はじめの物 */
+  for(const P of[typeof LVPOP!=='undefined'&&LVPOP]){const b=P&&P.querySelector('.btn');if(b){b.click();return true}}/* レシピをえらぶ：はじめの物 */
   const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b){b.click();return true}if(document.querySelector('.idea-reveal'))return true;
   {const e=document.querySelector('#rlv');if(e&&!e.hidden){const b=[...e.querySelectorAll('.rpick button')].find(b=>!b.disabled&&!b.classList.contains('pri'));if(b){b.click();return true}}}/* せいれいのレベルアップ：ごほうびを1つえらぶ（「とじる」だと、えらばずにとじて、すぐまた開く） */
   for(const id of ['#lvup','#rlv']){const e=document.querySelector(id);if(e&&!e.hidden){const bs=[...e.querySelectorAll('button')].filter(b=>!b.classList.contains('lvic')&&!b.hidden&&b.offsetParent!==null);/* 隠れた「とじる」ではなく、見えているボタン（ごほうびのえらびがのこっているとき、「とじる」は隠れている。押すと、すぐ開きなおして止まる） */if(bs.length){bs[bs.length-1].click();return true}}}

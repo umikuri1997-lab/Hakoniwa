@@ -132,6 +132,7 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
   // 食料がゼロなら、まず食べ物を集める
   if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が人数×2より少なくなったら、ほかの仕事より先に食べ物をあつめる */
+  if(typeof hapJob==='function'&&hapJob(r,G))return true;/* ときどき起きるできごと：タップしてたのんだ大きな作物・ヒナ・きんいろの実（happen.js）。建てる・作るより先（後ろにあると、ほかの仕事がおわらず、とりに行かなかった） */
   for(const k of['build','craft'])if(tryJob(r,G,k))return true;
   if(typeof bpJob==='function'&&bpJob(r,G))return true;/* 家の設計図：置く所の木・岩をかたづける *//* 建てる・依頼のものづくりは、遠くても、ふだんの仕事（植える・ひろう・畑・木・石・草）より先 */
   // おつげがあれば、それを先にする
@@ -150,7 +151,7 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;
-  if(typeof hapJob==='function'&&hapJob(r,G))return true;/* ときどき起きるできごと：タップした大きな作物・ヒナ・きんいろの実（happen.js） *//* 「しらべる」でタップしたかげの巣（defense.js） */
+  /* 「しらべる」でタップしたかげの巣（defense.js） */
   if(wreqList().length&&tryJob(r,G,'weed'))return true;/* 「しらべる」でタップした草・きのこは、畑の世話より先（畑の多い村では、畑の世話がおわらず、いつまでもとりに行かなかった） */
   if((S.drops||[]).some(q=>q.lt||q.tap)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(r.elem==='earth'&&tryJob(r,G,'till'))return true;/* 土のせいれいは、おつげがあっても、畑づくりを先にする */
@@ -301,8 +302,8 @@ function moveR(r,dt){
     const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=MZLANE&&MZLANE[j]?1/3:(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* 舟の道（水のステージ）は、舟にのって歩く3倍の速さ *//* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる時間は、下の CLB（ふちでまっすぐ上・下）。歩く1マスとあわせて5倍 *//* 浅瀬は2倍倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(r.path.length===1&&r.act&&j===r.act.stand&&seatCell(j)&&j!==(r.y|0)*W+(r.x|0)){{const cj=(r.y|0)*W+(r.x|0);if(cj===seatBack(j)){/* 背もたれのがわからは乗らない：前か横へまわってから乗る */const G=roadSearch(r.x|0,r.y|0);let best=null;for(const n of seatSides(j)){if(G.dist[n]<0)continue;const p=avoidPath(r,G,n);if(p.length&&(!best||p.length<best.length))best=p}if(best){r.path=best.concat([j]);continue}}}SEATMV.set(r,{k:'in',x:r.x*TS,y:r.y*TS,t0:performance.now()});r.x=tx;r.y=ty;r.path.shift();break}/* となりのマスから、すわる位置へ、ぴょんと乗る */
-    {const cj=(r.y|0)*W+(r.x|0);let C=CLB.get(r);if(C&&C.n!==j){CLB.delete(r);C=null}if(!C&&jumpEdge(cj,j)&&Math.abs(j%W-cj%W)+Math.abs(((j/W)|0)-((cj/W)|0))===1){C=Object.assign({a:cj,n:j,k:-1},clbPt(cj,j));CLB.set(r,C)}/* 段差：ふちまで歩いて、そこでまっすぐ上・下へよじのぼる（clbPt） */
-      if(C&&C.k<1){if(C.k<0){const ex=C.px-r.x,ey=C.py-r.y,e=Math.hypot(ex,ey);if(e<=step){r.x=C.px;r.y=C.py;step-=e;C.k=0}else{r.x+=ex/e*step;r.y+=ey/e*step;step=0;continue}}const q=Math.min(step,(1-C.k)*CLBD);C.k+=q/CLBD;step-=q;if(C.k<1)continue;C.k=1;continue}}
+    {const cj=(r.y|0)*W+(r.x|0);let C=CLB.get(r);if(C&&C.n!==j){CLB.delete(r);C=null}if(!C&&jumpEdge(cj,j)&&Math.abs(j%W-cj%W)+Math.abs(((j/W)|0)-((cj/W)|0))===1){C=Object.assign({a:cj,n:j,k:-1},clbPt(cj,j));CLB.set(r,C)}/* 段差：ふちまで歩いて、そこでまっすぐ上・下へよじのぼる（clbPt）。壁が見えないおくのがけは、ぴょんと上がる・おりる（clbHop） */
+      if(C&&C.k<1){if(C.k<0){const ex=C.px-r.x,ey=C.py-r.y,e=Math.hypot(ex,ey);if(e<=step){r.x=C.px;r.y=C.py;step-=e;C.k=0}else{r.x+=ex/e*step;r.y+=ey/e*step;step=0;continue}}const q=Math.min(step,(1-C.k)*CLBD);C.k+=q/CLBD;step-=q;if(C.k>=1)C.k=1;if(C.hop){const P=hopAt(C);r.x=P.x;r.y=P.y}/* おくのがけ：ふちでがけを見上げて、かがんで、ぴょんととぶ（hopAt） */continue}}
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();CLB.delete(r);step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
   if(r.path.length){const g=r.path[r.path.length-1],n0=r.path[0],dd=Math.hypot(n0%W+.5-r.x,((n0/W)|0)+.5-r.y);
