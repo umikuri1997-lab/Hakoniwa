@@ -23,12 +23,14 @@ function craftP(r){const o=craftOrder(r);return o?Math.min(1,o.prog/Math.max(1,o
 function workAnim(r){const a=r.act;if(!a)return'';
   if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */const t=cookTool(r);return t==='board'?'cookcut':t==='pot'?'cook':CKSTIR.has(t)?(typeof SPM!=='undefined'&&SPM.cookstir?'cookstir':'cookmix'):'cookfan'}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。フライパン・天板・網・くしは、うちわであおぐ） */
   if(a.type==='craft'){if(a.sh!=null)return'raise';const p=craftP(r),nm=p<.1?'craftprep':p<.45?'saw':p<.85?'craft':'polish',o=craftOrder(r),wb=WBMO[nm];return o&&o.cs!=null&&S.obj[o.cs]==='wbench'&&typeof SPM!=='undefined'&&SPM[wb]?wb:nm}/* 作業台では、天板の高さで手を動かす（wb*）。作業台がないときは、地面の動き */
+  if(a.type==='fish')return a.sh!=null?'raise':a.stage==='do'&&a.t<FISHCAST&&typeof SPM!=='undefined'&&SPM.fishcast?'fishcast':'fish';/* つり：投げる・かかげる */
   if(a.type==='proc'){const o=S.obj[a.obj];return o==='loom'?'loomweave':o==='mill'?'millgrind':'proc'}/* はたおり・粉ひき */
   if(a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))){const h=boxReach(a);if(h&&typeof SPM!=='undefined'&&SPM[h])return h}/* 箱の高さに合わせて、とる・しまう */
   return a.type}
 /* 手に持つ物の絵（材料・できた料理・作った物） */
 function workFood(r){const a=r.act;if(!a||a.stage!=='do')return'';
   if(a.type==='cook'&&r.cing){const ph=cookPh(r),R=recOf(r.cing.rec);if(!R)return'';if(ph==='prep')return foodEmo(Object.keys(R.need)[0]);if(ph==='raise')return FOODS[R.out]?foodEmo(R.out):'';return''}/* もりつけた料理は台の上。かかげるときに持ち上げる */
+  if(a.type==='fish'&&a.sh!=null&&a.fk)return a.sh>=FISHJUMP||typeof juiceFish!=='function'||!j4OK()?foodEmo(a.fk):'';/* つった魚：水からとびだした魚（juice4.js）が手にとどいてから */
   if(a.type==='craft'&&a.sh!=null){const o=craftOrder(r)||a.made;return o?itemIc(o.type||o):''}
   return''}
 /* 料理の家具の上の物（絵は tools/art/furn3d/cooktop.py、場所は cook-top-data.js の CKTOP）

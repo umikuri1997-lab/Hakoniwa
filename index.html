@@ -1107,11 +1107,11 @@ var RP=/[?&]replayToken=/.test(location.search)&&/[?&]storyReplay=/.test(locatio
 function show(){if(rd&&!window.__ldDone)rd.textContent='ゲームのデータを読みこみ中… '+pct()+'%';if(window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中… '+pct()+'%'}/* 読みこみ中は、いつも出す。「はじめから」「つづきから」は、読みこみがおわるまで出さない（#tBtns） */
 var cb=document.getElementById('tCont');if(!RP&&cb)try{var SK=['hakoniwa-w1-v8','hakoniwa-w2-v1','hakoniwa-free-v2'];for(var q=0;q<SK.length;q++){var sv=localStorage.getItem(SK[q]);if(sv&&/"introSeen"\s*:\s*true/.test(sv)){cb.hidden=false;b.classList.remove('pri');break}}}catch(e){}/* 「つづきから」は、セーブがあれば、ゲームのデータを待たずに「はじめる」と同時に出す（main.js の titleCont と同じ見分け方） */
 b.onclick=function(){if(want)return;want=1;show()};if(cb)cb.onclick=function(){if(want)return;want=2;show()};show();window.__ldT=setInterval(show,300)
-window.__ldWant=function(){return RP?0:want};/* 1：はじめる、2：つづきから */
+window.__ldWant=function(){return RP?0:want};
+if(!/v=dev/.test(U[0])&&'serviceWorker' in navigator)try{navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}/* 公開したページだけ：プログラムと絵をスマホに保存して、2回めからネットを待たない（sw.js） *//* 1：はじめる、2：つづきから */
 function go(){/* ぜんぶ読みこめたら、書いてある順に、あいだをあけずに動かす（ファイルのあいだで、絵の読みこみなどの知らせが先に動かないように） */for(let i=0;i<N;i++)if(X[i]==null)return;if(ran)return;ran=1;
   if(X.every(function(t){return t!==false})){for(let i=0;i<N;i++){const s=document.createElement('script');s.text=X[i]+'\n//# sourceURL='+U[i].split('?')[0];document.body.appendChild(s)}return}
   for(let i=0;i<N;i++){const s=document.createElement('script');s.src=U[i];s.async=false;document.body.appendChild(s)}}/* 読めなかった物があれば、ふつうに読みこむ（async=false で、書いてある順に、なるべく続けて動かす） */
-window.JSV="v=dev";/* 地面のワーカーのファイルを読むときの番号（公開のとき tools/jsver.cjs が、ワーカーのファイルの中身から作る） */
 U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
   x.onprogress=function(e){L[i]=e.loaded;if(e.lengthComputable)T[i]=e.total;show()};
   x.onload=function(){if(x.status>=200&&x.status<300){L[i]=T[i]||E[i];X[i]=x.responseText}else X[i]=false;show();go()};
