@@ -66,8 +66,8 @@ function ongNowTopics(r,P){const o=ongNow(r);if(!o)return;const m=ongName(o);if(
 function ongGot(r,t,k){const o=ongNow(r);if(!o||o.t!==t||o.k!==k||IS_STORY_REPLAY)return null;delete r.ong;const m=ongName(o),T=s=>chatTone(s.split('{m}').join(m),r);
   funAdd(r,ONGFUN,'care');addFloatG(r.x,r.y,-1.6,'たのしさ+'+ONGFUN,'#ffd7e8');dirty=true;const L=ONGTHX[t].map(T);
   if(t==='mat'){const S2=ONGSTAT.filter(s=>onbSum(r)<ONBMAX);if(S2.length){const[sk,sn]=pick(S2);(r.onb||(r.onb={}))[sk]=onbOf(r,sk)+1;L.push(T('#proud|なんだか、からだが、かるくなった気がする！'));toast(r.name+'の'+sn+'+1','good')}}
-  else if(t==='food'){const q=['lk','lf','ng'].filter(x=>!prefKnown(r,x)&&prefName(r,x)&&prefName(r,x)!=='とくにない');if(q.length){const x=pick(q),n=prefName(r,x);
-    L.push(T(x==='ng'?'#shy|じつはね、ぼく、'+n+'が、ちょっとにがてなんだ。みんなには、ないしょだよ。':x==='lk'?'#shy|じつはね、ぼく、'+n+'が、いちばん好きな遊びなんだ。':'#shy|じつはね、ぼく、'+n+'が、すごく好きなんだ。家にあったら、うれしいな。'));r.ongPk=x}
+  else if(t==='food'){const q=['lf','ng'].filter(/* 好きな遊びは、遊んでわかるまで言わない */x=>!prefKnown(r,x)&&prefName(r,x)&&prefName(r,x)!=='とくにない');if(q.length){const x=pick(q),n=prefName(r,x);
+    L.push(T(x==='ng'?'#shy|じつはね、ぼく、'+n+'が、ちょっとにがてなんだ。みんなには、ないしょだよ。':'#shy|じつはね、ぼく、'+n+'が、すごく好きなんだ。家にあったら、うれしいな。'));r.ongPk=x}
    else L.push(T('……って思ったけど、ぼくのこと、守り神さまは、もうぜんぶ知ってるね。'))}
   else if(typeof letterQ==='function')letterQ(r,'ask',{f:m});
   return L}
