@@ -30,7 +30,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.equal(end.find,false);assert.equal(end.gifts,1);
   /* 交換：カミサマが話す */
   const t=JSON.parse(await run(`(()=>{S.godGone=false;S.godShown=true;S.feat.shop=false;S.quest=questIndexOf('imoseed')+1;S.qTalked=false;S.qStory=null;S.subSt={};S.subDone={};for(const q of SUBQ)if(q.k!=='trade')S.subDone[q.k]=1;S.subTalkAt=null;S.flags.traded=0;S.flags.tradedSeen=0;
-    TALKW=null;checkSub();const T=SUBQ.find(q=>q.k==='trade');return JSON.stringify({st:S.subSt.trade,w:SUBW[GOD],futaba:T.L.some(l=>l[0]==='K'||l[0]===POKO),who:subWho(T)===GOD})})()`));
+    TALKW=null;checkSub();const T=SUBQ.find(q=>q.k==='trade');return JSON.stringify({st:S.subSt.trade,w:SUBW[GOD],futaba:T.L.some(l=>l[0]==='K'||l[0]===FUTABA),who:subWho(T)===GOD})})()`));
   assert.deepEqual(t,{st:1,w:'trade',futaba:false,who:true});
   await run(`(()=>{panTo(godX()*TS,godY()*TS);setMode&&setMode('look')})()`).catch(()=>{});await page.waitForTimeout(800);
   if(SHOT)await page.screenshot({path:SHOT+'/god-trade-marker.png'});

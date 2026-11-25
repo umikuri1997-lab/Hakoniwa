@@ -92,7 +92,7 @@ function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（�
 }
 function sacredGrowLines(st){/* 木が大きく育ったときの、みんなの会話（いる子の行だけ） */
   const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');if(st<4)return [];
-  return sacredCastLines([[POKO,'#surprise|わあ……！ 木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。']]);
+  return sacredCastLines([[FUTABA,'#surprise|わあ……！ 木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。']]);
 }
 function drawStoryTree(c,x,y,j,now,full=false){
   if(!full)sacredGrowWatch(j);

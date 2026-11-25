@@ -8,7 +8,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  // 2階を使っていた古いセーブ
  const r=await run(`(()=>{NOSAVE=true;const s=newState(0);delete s.flags.no2f1;const j=CY*W+CX;s.obj[j]='stairs2f';s.obj[j+5]='site';s.dyn[j+5]={build:'stairs2f'};s.pt=100;s.mat.wood=10;s.inv={};s.placed={stairs2f:2};
   s.fl2={obj:{[j+1]:'chair',[j+2]:'hwall'},floor:{[j+1]:'floor'},ref:{},dyn:{},hp:{},rot:{},win:{[j+2]:'curtain1'}};
-  s.res=[mkRes(s,POKO,'wood',CX+.5,CY+.5)];s.res[0].fl=1;s.res[0].fl2s=j;s.res[0].x=CX+3.5;s.res[0].act={type:'sleep',up:1};
+  s.res=[mkRes(s,FUTABA,'wood',CX+.5,CY+.5)];s.res[0].fl=1;s.res[0].fl2s=j;s.res[0].x=CX+3.5;s.res[0].act={type:'sleep',up:1};
   continueGame(JSON.parse(JSON.stringify(s)));const q=S.res[0];
   return {o:S.obj[j],o2:S.obj[j+5],pt:S.pt,wood:S.mat.wood,inv:S.inv,fl2:'fl2' in S,flag:S.flags.no2f1,fl:q.fl,x:q.x,act:q.act&&q.act.up,placed:S.placed.stairs2f}})()`);
  console.log(r);

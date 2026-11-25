@@ -10,11 +10,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await run(`(()=>{newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;})()`);
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
   /* 1. ピンクの会話 */
-  const pink=JSON.parse(await run(`(()=>{const ev=k=>SEV1.find(e=>e.k===k);const N=S.res.find(r=>r.name===MINA);const hasN=!!N;
+  const pink=JSON.parse(await run(`(()=>{const ev=k=>SEV1.find(e=>e.k===k);const N=S.res.find(r=>r.name===NODOKA);const hasN=!!N;
     S.qStory=null;const sav=S.res.slice();const free=[];for(let j=(CY+6)*W+CX-10;free.length<7;j++)if(!S.obj[j]&&!S.floor[j]&&S.ground[j]!==1)free.push(j);free.slice(0,6).forEach(j=>S.obj[j]='clover');S.obj[free[6]]='swing';S.bud={};recount();
     const pre={fl:flowerN()>=5,sw:cnt('swing')>=1};
-    S.res=S.res.filter(r=>r.name!==MINA);const noN={e21:!!ev('e21').at(),e22:!!ev('e22').at()};
-    const sp=S.res.find(r=>r.name===POKO);const fake=Object.assign({},sp,{name:MINA,id:99999});S.res.push(fake);
+    S.res=S.res.filter(r=>r.name!==NODOKA);const noN={e21:!!ev('e21').at(),e22:!!ev('e22').at()};
+    const sp=S.res.find(r=>r.name===FUTABA);const fake=Object.assign({},sp,{name:NODOKA,id:99999});S.res.push(fake);
     const withN={e21:!!ev('e21').at()&&!!sevLines(ev('e21').L),e21len:(sevLines(ev('e21').L)||[]).length};S.res=sav;
     S.finalNight=1;const noH={e16:!!ev('e16').at(),e15:sevLines(ev('e15').L).some(l=>/となりにいるよ/.test(l[1]))};
     S.res.push(Object.assign({},sp,{name:keyName('fire'),elem:'fire',id:99998}));const withH={e16:!!ev('e16').at(),e15:sevLines(ev('e15').L).some(l=>/となりにいるよ/.test(l[1]))};S.finalNight=0;
@@ -34,7 +34,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.ok(rec.st.includes('sticky'));assert.ok(rec.pu.includes('puddle'));
   assert.deepEqual(rec.mig,{sticky:false,puddle:true,puDone:true},'old save forgets unused trap recipes, keeps used ones');
   /* 3. ききょうが咲いたら、朝を待たずに昼のうちに呼べる。1日1回はそのまま */
-  const sm=JSON.parse(await run(`(()=>{S.flags.minaCame=false;S.res=S.res.filter(r=>r.name!==MINA);S.summon=null;S.summonNext=null;S.summonDay=-1;S.mebukiDay=-1;S.feat.summon=true;
+  const sm=JSON.parse(await run(`(()=>{S.flags.nodokaCame=false;S.res=S.res.filter(r=>r.name!==NODOKA);S.summon=null;S.summonNext=null;S.summonDay=-1;S.mebukiDay=-1;S.feat.summon=true;
     S.quest=questIndexOf('summon');S.qTalked=true;S.qStory=null;const bf=[];for(let j=(CY+7)*W+CX-10;bf.length<2;j++)if(!S.obj[j]&&!S.floor[j]&&S.ground[j]!==1)bf.push(j);bf.forEach(j=>S.obj[j]='bellf');S.bud={};S.t=1440*4+13*60;
     const a=storySummonNow(),day=!!(S.summon&&S.summon.elem==='earth');S.summon=null;S.summonDay=dayNo();const b=storySummonNow();S.summonDay=-1;S.t=1440*4+23*60+30;const c=storySummonNow();
     return JSON.stringify({a,day,b,c})})()`));

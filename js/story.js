@@ -57,7 +57,7 @@ const QUESTS2=[
     [GOD,'#nod|ほう、ヌシの火だねか。だいじに持っておくんじゃぞ。きっと、この村の力になってくれるはずじゃ。'],
     [GOD,'#joy|ほっほ、ホムラにも、やっと笑顔がもどったのう。わしもうれしいわい。'],[GOD,'では、わしはほかの土地を見まわってくるぞい。ときどき遊びに来るからの。ではな〜！']],
    gives:{flag:'onsen',feat:['summon','shop'],shard:'land',godLeave:true}},
-  {id:'summon',text:'なかまをむかえよう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「しらべる」で神殿をタップ',
+  {id:'summon',text:'なかまをむかえよう',check:()=>!!S.flags.nodokaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「しらべる」で神殿をタップ',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'お湯から、水の力が満ちてきたね。だれか来てくれるかもしれないよ。'],
     [HOMURA,'なかまか…。にぎやかになるのは、悪くないね。']],gives:{flag:'sumTold'}},
@@ -229,7 +229,7 @@ const QUESTSF=[
 function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();later(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};
   const a=nm(),b=nm();s.res=[mkRes(s,a,'wood',CX+.5,CY-1.5,'swing'),mkRes(s,b,'earth',CX+1.5,CY-1.5,'chat')];s.fk=[a,b];s.keyN={wood:a,earth:b};
-  s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;for(const id of['wbench','crate','loom','bed','table','chair','stool','bench','torch'])s.recipes[id]=true;/* はじめから作れる物 */
+  s.flags.nodokaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;for(const id of['wbench','crate','loom','bed','table','chair','stool','bench','torch'])s.recipes[id]=true;/* はじめから作れる物 */
   {const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k],y=CY-9;let ox=-1;for(let d=1;d<12&&ox<0;d++)if([0,1,3,4].every(c=>fr(y*W+CX-d-2+c)))ox=CX-d-2;if(ox<0)ox=CX-4;const o=y*W+ox,b=o+3;s.obj[o]='obox';s.obj[b]='board';s.obj[b+1]='part';s.ref[b+1]=b;s.flags.board2x1=1;s.flags.board3=1}/* 神殿はない。おそなえ箱と依頼ボードは、べつべつに置いてある */
   Object.assign(s.feat,{inv:true,craft:true,remove:true,plant:true,people:true});/* カミサマのお店・なかまを呼ぶ、はない */
   s.fs={berry:12};s.food=12;s.mat={wood:20,stone:20};s.pt=40;

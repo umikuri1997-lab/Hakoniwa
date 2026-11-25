@@ -47,7 +47,7 @@ function mzGenWorld(s){const R=mulberry(20261120),N=W*H,h=new Array(N).fill(0),P
   const clr=new Array(N).fill(0);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(Math.max(Math.abs(x-CX),Math.abs(y-CY))<=MZBASE||Math.abs(x-CX)<=3&&y<CY&&y>=PY1-1)clr[y*W+x]=1;/* まん中のまわりと、まん中の水門への道 */
   s.mz={gates,chests,pond:[PX0,PY0,PX1,PY1],cn:{},clr,req:[],send:{},trade:[],td:{},boats:{},v:0}}
 function mzSetup(s){/* 試作：お話がないので、くらしの道具は、はじめからある */
-  s.keyN={water:MIO};s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;
+  s.keyN={water:MIO};s.flags.nodokaCame=true;s.flags.sumTold=true;s.flags.tapped=true;
   Object.assign(s.feat,{inv:true,craft:true,remove:true,plant:true,people:true,shop:true,summon:true});
   s.fs={berry:12};s.food=12;s.mat={wood:30,stone:30};s.pt=150;s.unlocked.dock=true;s.unlocked.raft=true;s.recipes=s.recipes||{};for(const id of ['shopsign','counter','menuboard','stage','table','chair','cooktable','oven'])s.recipes[id]=1;/* 食堂の試作：食堂の家具は、はじめからおぼえている */
   {const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if([0,1,2,3].every(c=>fr(k+c))){p=k;break}}if(p>=0){s.obj[p]='crate';wbenchAt(s,p+1,0);s.obj[p+3]='crate'}}

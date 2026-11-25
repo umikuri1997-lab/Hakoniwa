@@ -3,30 +3,30 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:900,height:700}});
   await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+720;S.enemyOn=false;sevBegin=()=>false;/* ピンクの会話は出さない（身ぶりだけを見る） */
     for(let y=CY+2;y<CY+10;y++)for(let x=CX-4;x<CX+6;x++){const j=y*W+x;S.obj[j]='';S.floor[j]='';S.hi[j]=0}
-    S.res=[mkRes(S,POKO,'wood',CX+.5,CY+5.5),mkRes(S,MINA,'earth',CX+1.5,CY+5.5),mkRes(S,FIXK0.water,'water',CX+.5,CY+6.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act={type:'idle',stage:'do',t:0,dur:9999}}for(const k in S.dyn)if(S.dyn[k]&&S.dyn[k].g!=null)S.dyn[k].g=0;/* 実った物をなくす：会話のあいだに、食べ物をあつめに歩き出さないように（foodLow） */recount();})()`);
+    S.res=[mkRes(S,FUTABA,'wood',CX+.5,CY+5.5),mkRes(S,NODOKA,'earth',CX+1.5,CY+5.5),mkRes(S,FIXK0.water,'water',CX+.5,CY+6.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act={type:'idle',stage:'do',t:0,dur:9999}}for(const k in S.dyn)if(S.dyn[k]&&S.dyn[k].g!=null)S.dyn[k].g=0;/* 実った物をなくす：会話のあいだに、食べ物をあつめに歩き出さないように（foodLow） */recount();})()`);
   const next=async()=>{await page.waitForFunction(()=>sacredEval(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');return !!b&&!b.disabled&&performance.now()>=DLGA.holdUntil&&!sacredMotionPending()})()`),{},{timeout:8000});
     const t0=await run('DLGA.lineT');for(let k=0;k<12;k++){await run(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');if(b)b.click()})()`);await page.waitForTimeout(260);if(await run(`DLGA.lineT!==${t0}||document.querySelector('#dialog').hidden`))break}};/* 文字が出おわっていなければ、1回めは文字をぜんぶ出すだけ */
-  const POKO=await run('POKO'),MINA=await run('MINA');
+  const FUTABA=await run('FUTABA'),NODOKA=await run('NODOKA');
   const pose=n=>run(`(()=>{const r=S.res.find(q=>q.name===${JSON.stringify(n)});const p=sacredPose(r);return p?p.anim:''})()`);
   /* 1. 話す子の身ぶり */
-  await run(`dialog([[POKO,'#tilt|ねえ、あれ、なんだろう。'],[MINA,'#giggle|ふふ、なんだろうねぇ。'],[POKO,'#give crown|はい、これ。'],[MINA,'#joy|ありがとうねぇ。']])`);
-  await page.waitForTimeout(200);assert.equal(await pose(POKO),'talktilt','speaker tilts the head');
+  await run(`dialog([[FUTABA,'#tilt|ねえ、あれ、なんだろう。'],[NODOKA,'#giggle|ふふ、なんだろうねぇ。'],[FUTABA,'#give crown|はい、これ。'],[NODOKA,'#joy|ありがとうねぇ。']])`);
+  await page.waitForTimeout(200);assert.equal(await pose(FUTABA),'talktilt','speaker tilts the head');
   assert.equal(await run('SPM.talktilt&&SPM.talkmouth&&SPM.weave&&SPM.dance?1:0'),1,'the new 3D motions exist');
-  await next();await page.waitForTimeout(200);assert.equal(await pose(MINA),'talkmouth','second speaker giggles');
-  await page.waitForTimeout(1200);const lis=await pose(POKO);assert.ok(['talkmouth','storyListen','talkjoy'].includes(lis),'listener reacts or listens: '+lis);
+  await next();await page.waitForTimeout(200);assert.equal(await pose(NODOKA),'talkmouth','second speaker giggles');
+  await page.waitForTimeout(1200);const lis=await pose(FUTABA);assert.ok(['talkmouth','storyListen','talkjoy'].includes(lis),'listener reacts or listens: '+lis);
   /* 2. わたす：花かんむりが頭にのる。うけとるまで送れない */
-  await next();await page.waitForTimeout(150);assert.equal(await pose(POKO),'crownput','giver puts the crown on');
+  await next();await page.waitForTimeout(150);assert.equal(await pose(FUTABA),'crownput','giver puts the crown on');
   assert.equal(await run('sacredMotionPending()'),true,'next line waits for the hand-over');
   await page.waitForFunction(()=>sacredEval(`S.res[1].crown===callDay()`),{},{timeout:4000});
   assert.equal(await run('spCrownOn(S.res[1])'),true,'receiver wears the crown');
   await next();await next().catch(()=>{});await page.waitForTimeout(300);
   assert.equal(await run('DLGPOSE.size'),0,'gestures are cleared when the talk ends');
   /* 2b. 2人でふれあう・物をわたす・あくびがうつる・指さす・ヌシ様をなでる */
-  await run('S.t=1440+720;DLGGAP=0;DLGQ.length=0');await run(`dialog([[POKO,'#pinky|小指だけ。'],[MINA,'#give stone|これ、あげる。'],[POKO,'#yawn|……ふあぁ。'],[POKO,'#point tree|見て見て！']])`);await page.waitForTimeout(200);
-  assert.equal(await pose(POKO),'pinky','pinky pair (speaker)');assert.equal(await pose(MINA),'pinky','pinky pair (partner)');
+  await run('S.t=1440+720;DLGGAP=0;DLGQ.length=0');await run(`dialog([[FUTABA,'#pinky|小指だけ。'],[NODOKA,'#give stone|これ、あげる。'],[FUTABA,'#yawn|……ふあぁ。'],[FUTABA,'#point tree|見て見て！']])`);await page.waitForTimeout(200);
+  assert.equal(await pose(FUTABA),'pinky','pinky pair (speaker)');assert.equal(await pose(NODOKA),'pinky','pinky pair (partner)');
   await next();await page.waitForTimeout(1500);assert.equal(await run(`(sacredPose(S.res[0])||{}).handItem`),'stone','the receiver holds the stone');
-  await next();await page.waitForTimeout(1500);assert.equal(await pose(MINA),'yawn','the yawn is catching');
-  await run(`S.obj[(CY+5)*W+CX-3]='tree'`);await next();await page.waitForTimeout(200);assert.equal(await pose(POKO),'point','point at the tree');assert.equal(await run('S.res[0].face'),-1,'faces the tree');
+  await next();await page.waitForTimeout(1500);assert.equal(await pose(NODOKA),'yawn','the yawn is catching');
+  await run(`S.obj[(CY+5)*W+CX-3]='tree'`);await next();await page.waitForTimeout(200);assert.equal(await pose(FUTABA),'point','point at the tree');assert.equal(await run('S.res[0].face'),-1,'faces the tree');
   await next();await run(`S.obj[(CY+5)*W+CX-3]=''`);
   assert.equal(await run(`(()=>{const r=S.res[2],n0=S.nushi;r.act={type:'npl',stage:'do',t:0};S.nushi={x:r.x+1.5,y:r.y,pl:{id:r.id}};nushiPet();const a=(sacredPose(r)||{}).anim;S.nushi=n0;dlgGestEnd();r.act={type:'idle',stage:'do',t:0,dur:9999};return a})()`),'headpat','pet Nushi');
   /* 3. つぎの朝6時で、はずれる */

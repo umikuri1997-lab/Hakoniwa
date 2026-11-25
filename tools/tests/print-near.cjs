@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
   await run(`S.qTalked=true;QUESTS[S.quest].talk.done()`);assert.equal(await run('S.flags.printFuu'),1);
   const r=JSON.parse(await run(`(()=>{const fog0=printList().every(f=>fogAt(f.j));QUESTS[S.quest].check();
     const L=printList(),open=L.filter(f=>!fogAt(f.j)),k=open.length?open[0].j:-1,t=mainStoryFocusTarget();
-    const p=S.res.find(r=>r.name===POKO),G=bfs(p.x|0,p.y|0);QUESTS[S.quest].check();
+    const p=S.res.find(r=>r.name===FUTABA),G=bfs(p.x|0,p.y|0);QUESTS[S.quest].check();
     return JSON.stringify({fog0,n:L.length,open:open.length,vill:k>=0&&!!VILL[k],reach:k>=0&&G.dist[k]>=0,focus:!!t&&Math.abs(t.x-(k%W+.5))<.01,flag:S.flags.printNear,open2:printList().filter(f=>!fogAt(f.j)).length,k})})()`));
   console.log(r);
   assert.equal(r.n,3);assert.equal(r.open,1,'one moved out of the fog');assert(!r.vill,'outside the village');assert(r.reach,'Futaba can walk there');

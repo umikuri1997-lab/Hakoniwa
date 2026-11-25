@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:390,height:780}});
   const wait=ms=>page.waitForTimeout(ms);
   await run(`document.querySelector('#dialog').hidden=true;DLGQ.length=0;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();S.enemyOn=false;S.enemies=[];NOSAVE=true;S.t=12*60;
-    if(!S.res.some(r=>r.name===MINA))S.res.push(mkRes(S,MINA,'earth',CX+.5,CY+4.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=60;r.nap=false;endAct(r)}recount();`);
+    if(!S.res.some(r=>r.name===NODOKA))S.res.push(mkRes(S,NODOKA,'earth',CX+.5,CY+4.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=60;r.nap=false;endAct(r)}recount();`);
   for(const c of ['echo','still','sunny']){
     assert.equal(await run(`SACRED_AWAY.has('${c}')&&SACRED_BEAT_MS['${c}']>0`),true,c+' hides the dialog box');
     const w=await run(`(()=>{sacredBeat('${c}');const d=sacredDirection();return d&&d.waitUntil>performance.now()+1000})()`);

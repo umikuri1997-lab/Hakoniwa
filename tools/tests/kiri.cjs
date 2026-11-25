@@ -7,8 +7,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.kiriEval=s=>eval(s);'});});
  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.kiriEval);const run=s=>page.evaluate(s=>kiriEval(s),s);
  await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showItemGift=()=>{};showSpotPop=()=>{};`);
- await run(`(()=>{resetVillageTransient();setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;window.__noIdle=true;S.introSeen=true;S.flags.minaCame=true;S.flags.nushiAlive=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;S.feat={summon:true,build:true,plant:true,craft:true,people:true};
-   sacredRootEnsure();const x=S.sacredRoot%W,y=S.sacredRoot/W|0;S.res=[mkRes(S,POKO,'wood',x-2.5,y+5.5),mkRes(S,MINA,'earth',x+4.5,y+5.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,x+i+.5,y+6.5))];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;}
+ await run(`(()=>{resetVillageTransient();setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;window.__noIdle=true;S.introSeen=true;S.flags.nodokaCame=true;S.flags.nushiAlive=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;S.feat={summon:true,build:true,plant:true,craft:true,people:true};
+   sacredRootEnsure();const x=S.sacredRoot%W,y=S.sacredRoot/W|0;S.res=[mkRes(S,FUTABA,'wood',x-2.5,y+5.5),mkRes(S,NODOKA,'earth',x+4.5,y+5.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,x+i+.5,y+6.5))];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;}
    S.fieldStories=Object.fromEntries(Object.entries(FIELD_STORIES).map(([id,L])=>[id,{step:L.length}]));S.spotSeen=Object.fromEntries(SPOTS.map(v=>[v.k,1]));S.sev=Object.fromEntries(SEV1.map(v=>[v.k,1]));growStoryTree();
    S.quest=questIndexOf('kiri');S.qStory=null;S.qTalked=false;S.shards=2;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;recount();showUI(true);})()`);
  await page.waitForFunction(()=>kiriEval('stageReady()'),{},{timeout:60000});
@@ -26,7 +26,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await run('kiriTry()');await talkOut();
  await page.waitForFunction(()=>kiriEval('!!KIRI&&KIRI.a>.5'),{},{timeout:5000});
  await page.waitForFunction(()=>kiriEval('!KIRI'),{},{timeout:15000});await talkOut();
- const o=JSON.parse(await run(`(()=>{const f=S.res.find(r=>r.name===POKO),n=S.res.find(r=>r.name===MINA);const o={seen:!!S.flags.kiriSeen,sit:!!S.flags.kiriSit,kare:Object.keys(S.kare||{}).length,g:GRASSN,done:QUESTS[S.quest].check(),alive:S.res.includes(f),sitting:kiriSitting(f),fight:fighter(f),hold:SCENEHOLD};
+ const o=JSON.parse(await run(`(()=>{const f=S.res.find(r=>r.name===FUTABA),n=S.res.find(r=>r.name===NODOKA);const o={seen:!!S.flags.kiriSeen,sit:!!S.flags.kiriSit,kare:Object.keys(S.kare||{}).length,g:GRASSN,done:QUESTS[S.quest].check(),alive:S.res.includes(f),sitting:kiriSitting(f),fight:fighter(f),hold:SCENEHOLD};
    endAct(f);f.x=40.5;f.y=40.5;S.t=S.flags.kiriD*1440+10*60;o.goes=tryKiriSit(f)&&f.act.type==='kirisit';
    S.flags.flTend=wflWho().filter(q=>q!==f).map(q=>q.id);o.wflOn=wflOn();o.after=kiriSitting(f);return JSON.stringify(o)})()`));
  assert.ok(o.seen&&o.sit,'場面を見たら、フタバがすわる');assert.equal(o.kare,40,'みどりが40マスかれる');assert.ok(o.g<pre.g);assert.ok(o.done,'クエストがおわる');assert.ok(o.alive);assert.equal(o.hold,0);

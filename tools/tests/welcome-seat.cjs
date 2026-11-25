@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
   await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;S.enemyOn=false;S.t=720;
     for(let y=CY-12;y<CY+12;y++)for(let x=CX-12;x<CX+12;x++){const j=y*W+x;S.obj[j]='';S.ground[j]=0;S.floor[j]='';S.hi[j]=0;delete S.dyn[j];if(S.rot)delete S.rot[j]}
-    S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,MINA,'earth',CX+3.5,CY+.5),mkRes(S,'テスト','water',CX+11.5,CY+.5)];for(const r of S.res){r.act=null;r.nap=false;r.path=[]}S.sacredRoot=null;/* まん中の切り株の根もと（STUMPB）は歩けない */recount()})()`);
+    S.res=[mkRes(S,FUTABA,'wood',CX+.5,CY+.5),mkRes(S,NODOKA,'earth',CX+3.5,CY+.5),mkRes(S,'テスト','water',CX+11.5,CY+.5)];for(const r of S.res){r.act=null;r.nap=false;r.path=[]}S.sacredRoot=null;/* まん中の切り株の根もと（STUMPB）は歩けない */recount()})()`);
   const w=JSON.parse(await run(`(()=>{const[n,a,f]=S.res;window.__w={id:n.id,t:Infinity};const acts=S.res.map(r=>r.act);welcomeNear(n,__w);return JSON.stringify({acts:acts.map(a=>a&&a.type)})})()`));
   await new Promise(r=>setTimeout(r,2200));
   const w2=JSON.parse(await run(`(()=>{const[n,a,f]=S.res,now=performance.now();return JSON.stringify({near:(JOYU.get(a)||0)>now-1000,far:(JOYU.get(f)||0)>0,face:a.face,t:__w.t<Infinity,acts:S.res.map(r=>r.act&&r.act.type),pos:Math.hypot(a.x-(CX+3.5),a.y-(CY+.5))<.01&&Math.hypot(f.x-(CX+11.5),f.y-(CY+.5))<.01})})()`));
