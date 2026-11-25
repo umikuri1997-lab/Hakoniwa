@@ -1,5 +1,5 @@
 /* UIの手ざわり：上の数がふえたら、はねて光る（uiNumWatch）・地図をタップしたら、葉（火山は火の粉）が舞う（tapFx）・
-   知らせにせいれいの顔（toastFace）・なにもない一覧のせいれい（nodataSpirit）・読みこみ中に歩くせいれい（ldWalk）。
+   知らせにせいれいの顔（toastFace）・なにもない一覧のせいれい（nodataSpirit）。
    どれも見た目だけ。セーブ・ゲームの進みにはさわらない。うごきをへらす設定では、うごかさない */
 const UIFX={prev:{},spk:{},parts:[],raf:0};
 function uiReduced(){return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}
@@ -40,25 +40,6 @@ function toastFace(msg,kind){if(!S||!S.res||!msg)return null;let r=null;for(cons
 /* なにもない一覧：村のせいれいが1人、そばに立つ（文ごとに同じせいれい） */
 function nodataSpirit(t){if(!S||!S.res)return null;const L=S.res.filter(q=>!q.hidden);if(!L.length)return null;let h=0;for(const ch of String(t))h=(h*31+ch.charCodeAt(0))|0;
   const c=spiritCanvas(L[Math.abs(h)%L.length],80,112,108,'smile');if(c)c.className='nspr';return c}
-/* 「マップを読みこみ中…」：せいれいが歩く（stageLoading が、読みこみ中は毎コマよぶ）。ひとめぐりごとに、パターンをかえる：
-   ぶらぶら行ったり来たり（walk）・頭に物をのせて運ぶ（carry）・ちょうを追いかける（chase）。キャンバスは、ゲームの2倍の細かさ（世界の1ドット＝2） */
-const LDW={pat:'',t0:0,item:''},LDPAT=['carry','chase','walk'],LDITEM=['ic:wood','ic:stone','chip:drop:eda'];
-function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);const r=S&&S.res&&S.res.find(q=>!q.hidden),el=r?r.elem:'wood';if(typeof spDotReady!=='function'||!spDotReady(el))return;
-  const now=performance.now(),Wd=c.width/2,FY=70,P=4.6;/* 1めぐり4.6秒 */
-  if(!LDW.pat||now-LDW.t0>P*1000){const k=LDW.pat?(LDPAT.indexOf(LDW.pat)+1)%LDPAT.length:Math.floor(Math.random()*LDPAT.length);LDW.pat=LDPAT[k];LDW.t0=now;LDW.item=LDITEM[Math.floor(Math.random()*LDITEM.length)]}
-  const u=(now-LDW.t0)/(P*1000),t=now/1000;g.setTransform(2,0,0,2,0,0);g.imageSmoothingEnabled=false;
-  let x,f=1;
-  if(LDW.pat==='walk'){x=u<.5?-24+u*2*(Wd+4):Wd-20-(u-.5)*2*(Wd+4);f=u<.5?1:-1}/* 左の外から来て、もどって左の外へ（どのならびも、画面の外で切りかわる） */
-  else if(LDW.pat==='chase')x=-50+u*(Wd+74);/* 前を飛ぶちょう（x+22）も、画面の外から出て外へ消える */
-  else x=-24+u*(Wd+48);/* 左から右へ通りぬける（はしは、運ぶ物も見えない所） */
-  x=Math.round(x);
-  if(LDW.pat==='chase'){/* ちょうは、せいれいの少し前を、ふわふわ上下しながら飛ぶ */const C=window.CHIPS,op=Math.floor(now/120)%2===0,ch=C&&C['critfly:'+(Math.floor(LDW.t0)%4)+'#'+(op?0:1)];
-    if(ch){const im=chipImgs(ch,'critfly')[0];if(im.ok){const bx=Math.round(x+22+Math.sin(t*2.3)*5),by=Math.round(FY-40+Math.sin(t*4.1)*7);g.drawImage(im,bx+ch.ax/2,by+ch.ay/2,ch.w/2,ch.h/2)}}}
-  g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x-8,FY,16,2);
-  const hop=LDW.pat==='chase'?Math.round(Math.abs(Math.sin(t*5))*3):0;/* 追いかけるときは、ぴょんぴょん */
-  drawSpirit(g,el,x,FY-hop,.435,f,{dot:1,t,vr:r?r.vr:KEYVR['フタバ'],walk:true,turn:1,mood:'joy'});
-  if(LDW.pat==='carry'){const ei=typeof emoImg==='function'?emoImg(LDW.item):null;if(ei){const k=22/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k,cb=Math.round(Math.abs(Math.sin(t*9))*1);g.drawImage(ei,Math.round(x-iw/2),Math.round(FY-54-cb-ih/2),Math.round(iw),Math.round(ih))}}/* 頭の上に、運ぶ物（村で運ぶときと同じ絵） */
-  g.setTransform(1,0,0,1,0,0)}
 /* ステージごとのUIの見た目：草原（WD 0）は木のわく（body.wd0）。毎コマよばれるが、かわったときだけさわる */
 let UIWD=null,UIRAIN=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1,rn=!!(started&&S&&S.rain);if(rn!==UIRAIN){UIRAIN=rn;document.body.classList.toggle('wrain',rn)}/* 雨の日は、木札が少し大きくゆれる */if(w===UIWD)return;UIWD=w;document.body.classList.toggle('wd0',w===0)}
 /* つるした木札（草原の下のバー・目標）：タップすると、ぶらんとゆれる */
