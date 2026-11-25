@@ -212,8 +212,8 @@ def decal(inf, chipimg, fit):
     m = (inf['tgs'] == 4) & ~inf['w1']; idx = np.nonzero(m)[0]
     lay = np.zeros((H*ss*W*ss, 4), np.uint8)
     if len(idx):
-        u, v = fit(inf['rb'][idx]); c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int)
-        ok = (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
+        u, v, front = fit(inf['rb'][idx]); c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int)
+        ok = front & (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
         lay[idx[ok]] = a[r[ok], c[ok]]
     lay = lay.reshape(H, ss, W, ss, 4).transpose(0, 2, 1, 3, 4).reshape(H, W, ss*ss, 4)
     out = np.zeros((H, W, 4), np.uint8); on = lay[..., 3] > 0; n = on.sum(2)

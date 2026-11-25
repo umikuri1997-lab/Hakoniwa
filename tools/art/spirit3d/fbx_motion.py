@@ -157,4 +157,5 @@ def face_pt(el, x, z):
 def face_fit(el):
     """休みの顔の点（Blender・ドット）→ 表情の目のチップの場所 (u, v)。モデルの両目のまん中・あいだを、チップの目（±9.5, −40.5）に合わせる"""
     F4 = scene(el)['feat']; L, R = F4[0], F4[1]; mx, mz = (L[0]+R[0])/2, (L[2]+R[2])/2; s = 19.0/max(1e-6, abs(R[0]-L[0]))
-    return lambda P: ((P[:, 0]-mx)*s, -40.5-(P[:, 2]-mz)*s)
+    yc = scene(el)['HV'][:, 1].mean()   # 頭のまん中（前うしろ）。それより前（Blender の −Y）の面にだけはる（うしろの面に目を出さない）
+    return lambda P: ((P[:, 0]-mx)*s, -40.5-(P[:, 2]-mz)*s, P[:, 1] < yc)
