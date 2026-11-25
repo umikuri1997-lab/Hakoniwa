@@ -392,7 +392,7 @@ def ground(w, face):
     return breathe(p, w, 0.4)
 for nm in ('plant', 'sow', 'harvest', 'gather', 'pickseed', 'pickdrop', 'forage'): M(nm, 8, 3/(2*PI), ground)
 def sweep(w, face):
-    return breathe(dict(sN=2.4, bN=0.35*S(w), tN=0.0, prop='duster', sF=0.2, lean=-0.05, hp=-0.25, hy=0.1*S(w)), w)
+    return breathe(dict(sN=2.4, bN=0.35*S(w), tN=0.0, prop='duster', kN=1.2, sF=0.2, lean=-0.05, hp=-0.25, hy=0.1*S(w)), w)
 M('sweep', 8, 7/(2*PI), sweep)
 def fish(w, face):
     """つり：すわって、さおを前へ出し、ときどき小さくひく"""
@@ -662,7 +662,7 @@ HCOOK, HWB, HLOOM, HMILL = 16.4, 16.4, 20.5, 14.0   # 調理台（天板0.32）�
 def sx(face, a): return a*(1 if face == 0 else -1)
 def ikcook(w, face):
     """おたまで、なべをかきまぜる：調理台は作業台と同じ高さなので、少し前にかがむ"""
-    return dict(ikN=(sx(face, 4)+2.5*C(w), 12+2.0*S(w), HCOOK+2), ikF=(sx(face, -6), 11, HCOOK+0.5), prop='ladle', lean=0.06, hp=0.12, yaw=0.04*S(w), top=0.06*S(w))
+    return dict(ikN=(sx(face, 4)+2.5*C(w), 12+2.0*S(w), HCOOK+2), ikF=(sx(face, -6), 11, HCOOK+0.5), prop='ladle', kN=2.3, lean=0.06, hp=0.12, yaw=0.04*S(w), top=0.06*S(w))
 M('cook', 8, 5/(2*PI), ikcook)
 def ikcookcut(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*u)

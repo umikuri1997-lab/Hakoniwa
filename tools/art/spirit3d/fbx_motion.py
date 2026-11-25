@@ -92,7 +92,7 @@ def pose(el, p, face):
             Rd = ry(side*math.pi/2)   # 横へのびたうで（side·x）→ まっすぐたらしたうで（−z）
             sh = F@rest['upper_arm'+nm[nm.index('.'):]][:3, 3]*100
             if 'ik'+k in p:   # 家具の高さに合わせる作業：手のまん中を ik の所に置く（2本の骨の IK）
-                T[nm] = ikarm(S, Tb, p['ik'+k], side, nm)
+                T[nm] = ikarm(S, Tb, p['ik'+k], side, nm, p.get('t'+k, 0.0))
                 continue
             # 頭にめりこむときは、めりこまなくなるまで、うでを外へ開く（b を足す）
             Thi = np.linalg.inv(Th); lift = 0.0
@@ -120,6 +120,15 @@ def align(a, b):
     K = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])/sn; t = math.atan2(sn, c)
     return np.eye(3)+math.sin(t)*K+(1-math.cos(t))*K@K
 
+def armswing(side, d, t=0.0):
+    """横へのびた休みのうでを、まっすぐたらして（ねじらず）、前へふり（rx）・横へひらく（ry）回転で、向き d へ（ゲームのうでの動かし方と同じ。
+    手の向き＝道具の柄の向きが、たらしたときは前・前へあげたときは上になる。いちばん小さい回転だと、手がねじれて柄が横を向く）"""
+    d = np.asarray(d, float); d = d/np.linalg.norm(d); a0 = np.array([0, 0, -1.0])
+    s = math.asin(max(-1.0, min(1.0, d[1]/(rx(math.pi/2)@a0)[1])))
+    if d[2] > 0: s = math.copysign(math.pi, s)-s   # 前へ 90度より上
+    v = rx(s)@a0; b = math.atan2(v[2]*d[0]-v[0]*d[2], v[0]*d[0]+v[2]*d[2])   # ry(b)：(x, z) の面で v を d へ
+    return ry(b)@rx(s)@rz(t)@ry(side*math.pi/2)   # rz(t)：たらしたうでの軸のまわりのねじり（ゲームの t と同じ）
+
 def armpts(S, side):
     """休みのうでの点（キャラの座標・ドット）：かた・ひじ・手のまん中"""
     sfx = '.L' if side > 0 else '.R'; R = S['rest']; A = S['arm'].data.bones
@@ -127,7 +136,7 @@ def armpts(S, side):
     hm = F@((R['hand'+sfx][:3, 3]+np.array(A['hand'+sfx].tail_local[:]))/2)*100
     return sh, el, hm
 
-def ikarm(S, Tb, P, side, nm):
+def ikarm(S, Tb, P, side, nm, tw=0.0):
     """2本の骨の IK：かた（体といっしょに動いた所）から、手のまん中を P に。ひじは 下・うしろ・外 へまげる"""
     sh, el0, hm0 = armpts(S, side); L1 = np.linalg.norm(el0-sh); L2 = np.linalg.norm(hm0-el0)
     Sc = F@(Tb@np.r_[F@sh*0.01, 1])[:3]*100; P = np.asarray(P, float)
@@ -135,7 +144,7 @@ def ikarm(S, Tb, P, side, nm):
     q = np.array([side*0.6, -0.5, -0.6]); qp = q-t*(q@t); qp = qp/max(1e-6, np.linalg.norm(qp))
     ca = (L1*L1+d*d-L2*L2)/(2*L1*d); a = math.acos(max(-1, min(1, ca)))
     E = Sc+L1*(math.cos(a)*t+math.sin(a)*qp); Pc = Sc+t*d
-    R1 = align(el0-sh, E-Sc)
+    R1 = armswing(side, E-Sc, tw)
     if nm.startswith('upper_arm'): return rigid(R1, sh, Sc-sh)
     R2 = align(R1@(hm0-el0), Pc-E)@R1
     return rigid(R2, el0, E-el0)
