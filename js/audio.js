@@ -336,7 +336,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'tpuni':playU('tpuni',.38,1.2);break;/* きのこ：ぷにっ（やわらかい物をおす録音を、高く） */
   case'bowdraw':playU('bowdraw',.3);break;/* 弓をひきしぼる（持ち主の音） */
   case'uknock':playU('knockw',.12,.85);break;/* ボタンでない所のタップ：木をそっとたたく */
-  case'starkira':playU('starkira',.3);break;/* 流れ星をタップ：キラッ（持ち主の音） */
+  case'starkira':playU('starkira',.15);break;/* 流れ星をタップ：キラッ（持ち主の音） */
   case'slip':if(playU('slip',.4))break;noise(t,.07,.1,o,600);break;/* 水たまりですべる（読みこむ前だけ作った音） */
   case'dscoop':playU('dscoop',.42);break;/* 水くみ：バケツが水に入る */
   case'dlift':playU('dlift',.32);break;/* 水くみ：ひき上げる */
