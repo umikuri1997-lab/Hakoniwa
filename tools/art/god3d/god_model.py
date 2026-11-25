@@ -70,14 +70,51 @@ def lathe(name, prof, depth, m, seg=32, gold=None, cap_top=True, yoff=0.0):
             if gold[0] <= zc <= gold[1]: f.material_index = 1
     return obj(name, bm, [m, 'gold'] if gold else [m], 2)
 
-def tube(name, pts, rads, m, seg=12, gold_last=0, caps=True, zsc=None, subsurf=1):
+def cloth(ob, th=0.04):
+    """布のあつみ（ソリディファイ）。サブディビジョンでなめらかにしたあとに、あつみをつける"""
+    md = ob.modifiers.new('solidify', 'SOLIDIFY'); md.thickness = th; md.offset = 0.0; md.use_even_offset = True
+    return ob
+
+def sheet(name, prof, depth, m, seg=40, yoff=0.0):
+    """たての軸のまわりの、上もそこもあいた1まいの布（prof：[(z, 半径)]）"""
+    bm = bmesh.new(); rings = [[bm.verts.new((r*math.cos(2*math.pi*i/seg), yoff+r*depth*math.sin(2*math.pi*i/seg), z)) for i in range(seg)] for z, r in prof]
+    for a, b in zip(rings, rings[1:]):
+        for i in range(seg): bm.faces.new((a[i], a[(i+1) % seg], b[(i+1) % seg], b[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return cloth(obj(name, bm, [m], 2))
+
+def loft(name, rings_spec, m, seg=24, rim=None):
+    """輪をつないだ布（rings_spec：[(まん中, よこの向き U, たての向き V, よこの半径, たての半径)]）。rim：さいごの輪にそうふちの部品の色"""
+    bm = bmesh.new(); rings = []
+    pU = None; spec = []
+    for c, U, V, a, b in rings_spec:
+        c, U, V = Vector(c), Vector(U).normalized(), Vector(V).normalized()
+        if pU is not None and U.dot(pU) < 0: U = -U   # 輪の向きをそろえる（ねじれると面がつぶれる）
+        pU = U; spec.append((c, U, V, a, b))
+        rings.append([bm.verts.new(c+U*a*math.cos(2*math.pi*k/seg)+V*b*math.sin(2*math.pi*k/seg)) for k in range(seg)])
+    for A, B in zip(rings, rings[1:]):
+        for k in range(seg): bm.faces.new((A[k], A[(k+1) % seg], B[(k+1) % seg], B[k]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    ob = cloth(obj(name, bm, [m], 2))
+    if rim:
+        c, U, V, a, b = spec[-1]
+        tube(name+'_rim', [tuple(c+U*a*1.0*math.cos(2*math.pi*k/40)+V*b*1.0*math.sin(2*math.pi*k/40)) for k in range(41)], [0.055]*41, rim, seg=6, caps=False)
+    return ob
+
+def tube(name, pts, rads, m, seg=12, gold_last=0, caps=True, zsc=None, subsurf=1, droop=None):
     """点の列にそったつつ（rads：点ごとの半径）。gold_last：はしの何だんを金色に（そで口のふち）"""
     bm = bmesh.new(); rings = []; P = [Vector(p) for p in pts]
     for i, (p, r) in enumerate(zip(P, rads)):
         t = (P[min(i+1, len(P)-1)]-P[max(i-1, 0)]).normalized()
         u = t.cross(Vector((0, 0, 1))); u = u.normalized() if u.length > 1e-6 else Vector((1, 0, 0)); v = t.cross(u)
-        zk = zsc[i] if zsc else 1.0   # その輪を、たてにのばす（たれたそで）
-        rings.append([bm.verts.new(p+Matrix.Diagonal((1, 1, zk))@((u*math.cos(2*math.pi*k/seg)+v*math.sin(2*math.pi*k/seg))*r)) for k in range(seg)])
+        zk = zsc[i] if zsc else 1.0   # その輪を、たてにのばす
+        dk = droop[i] if droop else 0.0   # 布の重さで、うでより下の所だけ、下へたれる（ベルスリーブ）
+        ring = []
+        for k in range(seg):
+            o = Matrix.Diagonal((1, 1, zk))@((u*math.cos(2*math.pi*k/seg)+v*math.sin(2*math.pi*k/seg))*r)
+            if o.z < 0: o.z *= 1+dk
+            ring.append(bm.verts.new(p+o))
+        rings.append(ring)
     for j, (a, b) in enumerate(zip(rings, rings[1:])):
         for k in range(seg):
             f = bm.faces.new((a[k], a[(k+1) % seg], b[(k+1) % seg], b[k]))
@@ -100,11 +137,11 @@ def torus(name, c, R, r, m, rot=None, seg=(32, 12)):
     bmesh.ops.transform(bm, matrix=Matrix.Translation(c) @ (rot or Matrix.Identity(3)).to_4x4(), verts=bm.verts)
     return obj(name, bm, [m], 1)
 
-def arc(name, c, rad, thick, m):
-    """とじた目（∩）：顔の面にそった、細い弧のつつ"""
-    pts = []; n = 9
+def arc(name, c, rad, thick, m, face=None):
+    """とじた目（∩）：顔の面にそった、細い弧のつつ（face(x, z)：その所の顔の面の y）"""
+    pts = []; n = 11
     for i in range(n):
-        a = math.pi*(0.1+0.8*i/(n-1)); pts.append((c[0]+rad*math.cos(a), c[1], c[2]+rad*math.sin(a)))
+        a = math.pi*(0.1+0.8*i/(n-1)); x, z = c[0]+rad*math.cos(a), c[2]+rad*math.sin(a); pts.append((x, face(x, z) if face else c[1], z))
     return tube(name, pts, [thick]*n, m, seg=8)
 
 def join(name, obs, voxel=0.03):
@@ -119,43 +156,46 @@ def join(name, obs, voxel=0.03):
 
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    # 服：上がせまく、すそが広がる台形（正面の絵のはば。そでが体のよこにかさなる）。すそに金色の帯（z 0.30〜0.42）
-    # 服：三面図からはかった、すそのはば（正面±1.25・うしろ±1.53 の絵のちがいの、まん中）・前は−0.85／うしろは＋1.12（まん中がうしろへ0.13）。すそは z 0.12（その下はつえだけ）
-    lathe('robe', [(0.12, 1.36), (0.30, 1.37), (0.32, 1.37), (0.60, 1.35), (0.62, 1.35), (1.00, 1.26), (1.50, 1.30), (1.90, 1.20),
-                   (2.20, 1.00), (2.50, 0.92), (2.80, 0.78), (3.00, 0.55), (3.12, 0.30)], 0.78, 'robe', gold=(0.31, 0.61), yoff=0.13)
-    lathe('collar', [(2.42, 0.82), (2.55, 0.90), (2.75, 0.94), (2.92, 0.98), (3.04, 0.92), (3.12, 0.60)], 0.95, 'robe', cap_top=False, yoff=0.08)
-    # うしろのフード：せなかの上にたれるV字の形と、そのふちの金色の線
-    ball('hood', (0, 0.84, 2.58), (1.22, 0.30, 0.56), 'robe', taper=0.85)   # かたはばいっぱいの、せなかにたれるV字のフード
+    # 服（ほんとうの服の作り。どの布もあつみ0.04、体から少しはなしてかさねる）
+    # 1 長い服（ローブ）：えりぐり（首のまわり z 3.0）から足もとまでの1まいの布。三面図のはば：すそ±1.36・前−0.85／うしろ＋1.12（まん中がうしろへ）。すそは z 0.12
+    RP = [(0.12, 1.36), (0.60, 1.35), (1.00, 1.26), (1.50, 1.22), (1.90, 1.10), (2.20, 0.98), (2.50, 0.88), (2.75, 0.72), (2.92, 0.56), (3.00, 0.47)]
+    sheet('robe', RP, 0.78, 'robe', yoff=0.10)
+    for z0, z1 in ((0.12, 0.20), (0.34, 0.42)):   # すその金色の細い帯2本（すそのふちと、その少し上）。ローブの外がわにぬいつける
+        sheet('hem_band_%d' % int(z0*100), [(z0, 1.375), (z1, 1.372)], 0.78, 'gold', yoff=0.10)
+    # 2 フードつきのケープ（肩かけ）：肩をおおう短いケープと、首のまわりにもり上がるまるいえり（首の前でとめる）、せなかにたれたフード
+    sheet('cape', [(2.30, 0.97), (2.48, 1.00), (2.66, 0.98), (2.84, 0.88), (2.98, 0.72), (3.06, 0.60)], 0.95, 'robe', yoff=0.08)
+    torus('collar', (0, 0.04, 3.06), 0.62, 0.20, 'robe', seg=(36, 12))   # えり：フードのつけねの、まるくもり上がった所
+    ball('hood', (0, 0.86, 2.55), (1.25, 0.28, 0.60), 'robe', taper=0.85)   # かぶらずに、せなかにたれたフード（下がとがったV字。かたはばいっぱい）
     hp = []
-    for z in [3.04-0.07*i for i in range(14)]:   # V字の金色のふち（フードのふちの少し内がわ、フードの面の上）
-        q = (z-2.58)/0.56; w = math.sqrt(max(0.0, 1-q*q))*(1+min(q, 0)*0.85); hp.append((-1.04*w, 1.01, z))
+    for z in [3.05-0.07*i for i in range(15)]:   # フードの口のふち（金色）：うしろから、V字に見える。フードの面の上
+        q = (z-2.55)/0.60; w = math.sqrt(max(0.0, 1-q*q))*(1+min(q, 0)*0.85); hp.append((-1.08*w, 1.01, z))
     hp = hp+[(-x, y, z) for x, y, z in reversed(hp[:-1])]
     tube('hood_trim', hp, [0.035]*len(hp), 'gold', seg=6, caps=False)
-    # そで：かたから前へ下りる、大きくたれたそで。そで口はたてのだ円で、内がわに金色のふち
+    # 3 そで：ローブのそでぐり（かた）から、前でたてにひらくそで口へ、布がふくらんでつながるベルスリーブ。うではひじで曲げて、そで口から出た手を前であわせる。
+    #   そで口は、手の高さから下へ、たてに長くひらく（布の重さでたれる）。そで口のふちが金色で、正面からは、たての線に見える
     for sx, nm in ((-1, 'sleeve_r'), (1, 'sleeve_l')):
-        SP = [(sx*0.70, 0.05, 2.62), (sx*0.76, -0.22, 2.20), (sx*0.66, -0.48, 1.70), (sx*0.46, -0.64, 1.48), (sx*0.43, -0.66, 1.46)]
-        tube(nm, SP, [0.30, 0.36, 0.48, 0.55, 0.55], 'robe', seg=16, zsc=[1, 1, 1.45, 1.8, 1.8])
-        # そで口のふち（金色）：そでのさいごの輪にそった輪。正面からは、たてにのびた線に見える
-        P = [Vector(p) for p in SP]; t = (P[-1]-P[-2]).normalized(); u = t.cross(Vector((0, 0, 1))).normalized(); v = t.cross(u)
-        rim = [P[-1]+Matrix.Diagonal((1, 1, 1.8))@((u*math.cos(2*math.pi*k/24)+v*math.sin(2*math.pi*k/24))*0.55) for k in range(25)]
-        tube(nm+'_rim', [tuple(q) for q in rim], [0.05]*25, 'gold', seg=6, caps=False)
+        inward = Vector((-sx, -0.55, 0)).normalized(); side = inward.cross(Vector((0, 0, 1))).normalized()
+        loft(nm, [((sx*0.70, 0.02, 2.58), (0, 1, 0), (0, 0, 1), 0.28, 0.28),            # そでぐり（かた）
+                  ((sx*0.92, -0.30, 2.15), (0, 1, 0.3), (0, -0.3, 1), 0.42, 0.50),       # 上うで（ふくらむ）
+                  ((sx*0.80, -0.62, 1.80), side*0.6+Vector((0, -0.4, 0)), (0, 0, 1), 0.36, 0.62),   # ひじから先（下へたれる）
+                  ((sx*0.36, -0.86, 1.62), side, (0, 0, 1), 0.24, 0.58)], 'robe', rim='gold')   # そで口（たてにひらく）
     # つえ：体の前の地面から立つ柄（下は平ら）と、くびれのある、スプーンの形の頭
     tube('staff', [(0, -1.02, 0.0), (0, -1.02, 0.04), (0, -1.0, 1.2), (0, -1.04, 2.20), (0, -1.05, 2.26)], [0.10]*5, 'wood', seg=12, subsurf=0)
-    ball('staff_top', (0, -1.05, 2.60), (0.34, 0.32, 0.40), 'wood')
+    ball('staff_top', (0, -1.05, 2.62), (0.40, 0.36, 0.46), 'wood')
     # 体（ベースの体）：頭・首・どう体・あし・うで・手・耳をかさねて、ボクセルリメッシュで1つの体にする。首で頭と体がつながり、うではそでの中をとおって手につながる
     B = [ball('head', (0, 0.04, 4.10), (1.20, 1.19, 1.12), 'skin', seg=6),                       # 頭（あご z 2.98・てっぺん z 5.22・はば2.48）
          tube('neck', [(0, 0, 2.70), (0, 0, 3.55)], [0.42, 0.42], 'skin'),                       # 首
          ball('torso', (0, 0, 1.75), (0.80, 0.62, 1.15), 'skin'),                                # どう体（服の中）
          tube('leg_r', [(-0.34, 0, 0.05), (-0.34, 0, 1.0)], [0.28, 0.28], 'skin'), tube('leg_l', [(0.34, 0, 0.05), (0.34, 0, 1.0)], [0.28, 0.28], 'skin'),
-         ball('hands', (0, -0.98, 1.86), (0.24, 0.20, 0.22), 'skin')]                            # 前であわせた手
+         ball('hands', (0, -0.98, 1.94), (0.24, 0.20, 0.22), 'skin')]                            # 前であわせた手
     for sx, s_ in ((-1, 'r'), (1, 'l')):
-        B.append(tube('arm_'+s_, [(sx*0.72, 0, 2.62), (sx*0.80, -0.35, 2.10), (sx*0.40, -0.78, 1.76), (sx*0.12, -0.94, 1.84)], [0.24, 0.21, 0.17, 0.16], 'skin'))   # かた→ひじ→手くび→手
+        B.append(tube('arm_'+s_, [(sx*0.70, 0, 2.58), (sx*0.88, -0.32, 2.12), (sx*0.60, -0.70, 1.92), (sx*0.12, -0.97, 1.94)], [0.20, 0.17, 0.15, 0.14], 'skin'))   # かた→ひじ→手くび→手
         B.append(ball('ear_'+s_, (sx*1.25, 0.08, 3.78), (0.23, 0.14, 0.26), 'skin'))            # 耳
     join('body', B)
     # 顔：まゆ・目・口ひげは、顔の面にはりつける（面の高さに合わせて、半分うめる）
     for sx, s_ in ((-1, 'r'), (1, 'l')):
-        ball('brow_'+s_, (sx*0.58, -0.95, 4.14), (0.34, 0.13, 0.18), 'white', rot=Matrix.Rotation(math.radians(sx*-12), 3, 'Y'))
-        arc('eye_'+s_, (sx*0.46, -1.0, 3.88), 0.12, 0.035, 'eye')
+        ball('brow_'+s_, (sx*0.58, -0.95, 4.14), (0.32, 0.14, 0.20), 'white', rot=Matrix.Rotation(math.radians(sx*-6), 3, 'Y'))
+        arc('eye_'+s_, (sx*0.46, 0, 3.86), 0.17, 0.075, 'eye', face=lambda x, z: 0.04-1.19*math.sqrt(max(0.0, 1-(x/1.20)**2-((z-4.10)/1.12)**2))+0.02)   # 目（参考の絵の大きさ）
         ball('mus_'+s_, (sx*0.76, -0.95, 3.42), (0.55, 0.38, 0.30), 'white', rot=Matrix.Rotation(math.radians(sx*10), 3, 'Y'))   # 口ひげ（左右のふくらみ）
     ball('mus_c', (0, -1.08, 3.46), (0.42, 0.30, 0.25), 'white')
     torus('halo', (0, 0.18, 5.63), 0.90, 0.08, 'halo', seg=(40, 8))   # 天使の輪（頭の上に、うく）
