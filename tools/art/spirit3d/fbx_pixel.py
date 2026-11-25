@@ -205,6 +205,20 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     cnt = np.stack([(T == q).sum(2) for q in range(len(TAGS))], 2); tagd = cnt.argmax(2)   # ドットごとの いちばん多い種類
     return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs, 'rb': rb, 'tgs': tg, 'w1': (zt > -1e8) & (zt > zb), 'ss': ss, 'W': W, 'H': H}
 
+def decals(inf, chipimgs, fit):
+    """decal を いくつもの絵で（顔の点と、チップの場所は1回だけ計算する）"""
+    ss, W, H = inf['ss'], inf['W'], inf['H']; m = (inf['tgs'] == 4) & ~inf['w1']; idx = np.nonzero(m)[0]; outs = []
+    if len(idx): u, v, front = fit(inf['rb'][idx])
+    for a, ax, ay in chipimgs:
+        out = np.zeros((H, W, 4), np.uint8)
+        if len(idx):
+            c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int); ok = front & (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
+            if ok.any():
+                lay = np.zeros((H*ss*W*ss, 4), np.uint8); lay[idx[ok]] = a[r[ok], c[ok]]; lay = lay.reshape(H*ss, W*ss, 4)
+                _down(lay[..., :3].astype(np.float64), lay[..., 3] > 0, np.zeros((H*ss, W*ss), np.bool_), H, W, ss, out)
+        outs.append(out)
+    return outs
+
 def decal(inf, chipimg, fit):
     """表情の目・ほっぺの絵を、顔の3Dの面にはって写した層（RGBA・ドット）。
     inf：render(info=True)・chipimg：(絵, ax, ay)・fit(休みの点 [n,3]) → チップの場所 (u, v)。顔がいちばん手前の所だけ（ずきん・うで・すける はねの下はかくれる）"""
@@ -215,10 +229,8 @@ def decal(inf, chipimg, fit):
         u, v, front = fit(inf['rb'][idx]); c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int)
         ok = front & (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
         lay[idx[ok]] = a[r[ok], c[ok]]
-    lay = lay.reshape(H, ss, W, ss, 4).transpose(0, 2, 1, 3, 4).reshape(H, W, ss*ss, 4)
-    out = np.zeros((H, W, 4), np.uint8); on = lay[..., 3] > 0; n = on.sum(2)
-    for r, c in zip(*np.nonzero(n*2 >= ss*ss)):   # 半分より多く絵がある所：いちばん多い色
-        px = lay[r, c][on[r, c]][:, :3]; u_, k = np.unique(px, axis=0, return_counts=True); out[r, c, :3] = u_[k.argmax()]; out[r, c, 3] = 255
+    lay = lay.reshape(H*ss, W*ss, 4); out = np.zeros((H, W, 4), np.uint8)
+    _down(lay[..., :3].astype(np.float64), lay[..., 3] > 0, np.zeros((H*ss, W*ss), np.bool_), H, W, ss, out)   # 半分より多く絵がある所：いちばん多い色（体と同じまとめ方）
     return out
 
 def main():

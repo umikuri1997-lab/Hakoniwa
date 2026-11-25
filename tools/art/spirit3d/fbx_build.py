@@ -91,7 +91,7 @@ def job(a):
                     P = np.asarray(anc[k])@FM.F; X, Y, _ = scr3(P); A[k] = [round(float(X[0]), 2), round(float(Y[0]), 2)]
             fr[(face, i)] = img; fo[(face, i)] = ov; meta[(face, i)] = A
             fit = FM.face_fit(el)   # 表情の目・ほっぺ：顔の3Dの面にはって写した層（表情ごと）
-            xl[(face, i)] = [FP.decal(inf, xchip(xkey(l), el), fit) for l in XL]
+            xl[(face, i)] = FP.decals(inf, [xchip(xkey(l), el) for l in XL], fit)
     if not iso:
         import copy
         for face in (1, 2):
@@ -105,7 +105,7 @@ def job(a):
     if oh:
         for face in (0, 1, 2):
             for i in range(n): sheet[ch*3+face*oh:ch*3+(face+1)*oh, i*cw:(i+1)*cw] = fo[(face, i)][y0+oy:y0+oy+oh, x0:x1]
-    b = io.BytesIO(); Image.fromarray(sheet).save(b, 'WEBP', lossless=True, exact=True, quality=100, method=6)
+    b = io.BytesIO(); Image.fromarray(sheet).save(b, 'WEBP', lossless=True, exact=True, quality=100, method=2)
     def hands(a):
         v = a['handN']+a['handF']
         for k in ('tipN', 'tipF'):
@@ -124,7 +124,7 @@ def job(a):
         xs = np.zeros((xh*3*len(XL), xw*n, 4), np.uint8)
         for (face, i), v in xl.items():
             for li, L in enumerate(v): xs[(face*len(XL)+li)*xh:(face*len(XL)+li+1)*xh, i*xw:(i+1)*xw] = L[b0:b1, a0:a1]
-        xb = io.BytesIO(); Image.fromarray(xs).save(xb, 'WEBP', lossless=True, exact=True, quality=100, method=6)
+        xb = io.BytesIO(); Image.fromarray(xs).save(xb, 'WEBP', lossless=True, exact=True, quality=100, method=2)
         xr = (xb.getvalue(), [xw, xh, int(EXT[0]+a0), int(EXT[2]+b0)])
     else: xr = None
     return name, el, b.getvalue(), [cw, ch, int(EXT[0]+x0), int(EXT[2]+y0)]+([oy, oh] if oh else []), [[meta[(f, i)]['eye'] for i in range(n)] for f in range(3)], [[hands(meta[(f, i)]) for i in range(n)] for f in range(3)], xr
