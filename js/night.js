@@ -36,6 +36,7 @@ const calledToday=()=>S.summonDay===callDay()||S.mebukiDay===callDay();/* きょ
 function doSummon(){
   const sm=S.summon;if(!sm)return;
   if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===callDay()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
+  if(!sm.rev&&!sm.mebuki&&!S.flags.minaCame&&SECOND[WD].ok())sm.elem=SECOND[WD].elem;/* 2人目のキーキャラが来られるときは、前からほかの属性で出ていた「！」でも、そのキーキャラが来る（ほかの属性の力は、つかわずにのこる） */
   if(!sm.rev&&!sm.pick&&!(!S.flags.minaCame&&sm.elem===SECOND[WD].elem&&SECOND[WD].ok())&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
   const sx0=sm.at?sm.at[0]:STATUE>=0?STATUE%W:CX,sy0=sm.at?sm.at[1]:STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;/* at：やってくる所（フリーモード） */
