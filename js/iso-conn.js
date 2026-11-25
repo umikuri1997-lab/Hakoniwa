@@ -42,6 +42,7 @@ function iqIconKey(id){return'iso:'+id+':'+(HOME_DOORS.has(id)||GATE_IDS.has(id)
 function iqIconDraw(c,id,x,y){const L=id==='window'?['iso:hwall:3','iso:win:window:h']:[iqIconKey(id)];/* 窓は、木の壁にかけた形 */if(!L.every(k=>window.CHIPS&&CHIPS[k]))return false;
   for(const key of L){const src=CHIPS[key].src||CHIPS[key],im=chipImgs(src,'iso')[0];if(!im.ok){const a=CHA[src.f[0][0]];if(a&&!a.ok&&!a.bad)a.q.push(()=>{if(typeof iconCache!=='undefined')for(const k in iconCache)if(k===id||k.startsWith('st_'))delete iconCache[k]});return true}}
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;for(const key of L){const src=CHIPS[key].src||CHIPS[key],k=src.g===64?.5:1;c.drawImage(chipImgs(src,'iso')[0],x-src.ax*k,y-src.ay*k,src.w*k,src.h*k)}c.imageSmoothingEnabled=sm;return true}
+function iqSiteKey(id,i){const g=iqGrp(id),door=HOME_DOORS.has(id)||GATE_IDS.has(id),m=iqMask(i,g);return'iso:'+id+':'+(door?(iqDoorHz(i,id,g)?'h':'v'):m)}/* 工事中の足場の上のうすい形：そのマスのつなぎ方で */
 /* 設計図の、建てる前のうすい形：設計図の中のおなじなかまとつないだ形で、そのマスに */
 function iqGhostDraw(c,id,j,cells){const g=iqGrp(id);if(!g)return false;const q=k=>iqGrp(cells.get(k))===g,x=j%W,m=(x>0&&q(j-1)?1:0)|(x<W-1&&q(j+1)?2:0)|(q(j-W)?4:0)|(q(j+W)?8:0),door=HOME_DOORS.has(id)||GATE_IDS.has(id),hz=!!(m&3)||!(m&12);
   return iqChip(c,'iso:'+id+':'+(door?(hz?'h':'v'):m),j,Math.max(0,hiAt(j)))}
