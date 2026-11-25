@@ -16,14 +16,21 @@ const sn=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS
   return {f1,face1,f2,fk:r.fk,ng,lk,left:S.fs,txt:[foodKnownText(r,0),foodKnownText(r,2)],nm:[FOODS[ng].name,FOODS[lk].name]}})()`);
 assert.ok(typeof sn==='object','おやつ '+sn);assert.equal(sn.f1,50+10-5,'にがて：おやつ+10、にがて－5');assert.ok(sn.face1,'にがての顔');assert.equal(sn.f2,50+10+3,'すき：+3');
 assert.equal(sn.fk[sn.ng],0);assert.equal(sn.fk[sn.lk],2);assert.deepEqual(sn.txt,sn.nm,'プロフィールに出る');assert.equal((sn.left[sn.ng]||0)+(sn.left[sn.lk]||0),0,'えらんだ物がへる');
+/* 遊ぶ・食べるまで、好きな遊び・すきな食べ物を言わない（ひとこと・お話・手紙・おねがいのお礼・「〇〇が食べたい」） */
+const hid=await run(`(()=>{const r=S.res[1];r.kn={};r.fk={};const lk=LIKES[r.like],says=[];for(let i=0;i<40;i++){S.t+=30;says.push(sayLine(r))}const P=smallTalk(r).map(x=>JSON.stringify(x)).join();
+  S.seenIt=S.seenIt||{};const K=Object.keys(FOODS).filter(k=>!FOODS[k].bad);for(const k of K)S.seenIt['f:'+k]=1;const w0=wantPick(r);const lk2=K.find(k=>foodLike(r,k)===2);r.fk[lk2]=2;const w1=wantPick(r);
+  r.ong={t:'food',k:K[0],d:dayNo()};r.ongD=null;const L=ongGot(r,'food',K[0])||[];const pk=r.ongPk;
+  return {say:says.some(x=>x.indexOf(lk)>=0),talk:P.indexOf(lk)>=0,w0,w1,lk2,ong:L.join().indexOf(lk)>=0,pk}})()`);
+assert.equal(hid.say,false,'ひとことで好きな遊びを言わない');assert.equal(hid.talk,false,'お話で好きな遊びを言わない');assert.equal(hid.w0,null,'食べていない物を食べたいと言わない');assert.equal(hid.w1,hid.lk2,'食べてすきとわかった物は言う');
+assert.equal(hid.ong,false,'おねがいのお礼で好きな遊びを言わない');assert.notEqual(hid.pk,'lk');
 /* 箱からとるとき：にがては、ふつうよりあと */
 const ord=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&!FOODS[k].dish);const ng=K.find(k=>foodLike(r,k)===0),nm=K.find(k=>foodLike(r,k)===1&&FOODS[k].v===(FOODS[ng]||{}).v);return ng&&nm?[ng,nm].sort((a,b)=>foodLike(r,b)-foodLike(r,a))[0]===nm:'skip'})()`);
 assert.ok(ord===true||ord==='skip','にがてはあと');
 /* 「〇〇が食べたい」のこまりごと：すきな物（この村で持ったことのある物）。おやつでその物をあげると、なおる */
-const wt=await run(`(()=>{const r=S.res[2],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&foodLike(r,k)>=2),nm=Object.keys(FOODS).find(k=>!FOODS[k].bad&&foodLike(r,k)===1);S.seenIt={};const none=wantPick(r);S.seenIt['f:'+K[0]]=1;const f=wantPick(r);S.trouble={id:r.id,k:'want',d:dayNo(),f};const txt=troubleText(r),ok0=TROUBLE.want.ok(r);
+const wt=await run(`(()=>{const r=S.res[2],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&foodLike(r,k)>=2),nm=Object.keys(FOODS).find(k=>!FOODS[k].bad&&foodLike(r,k)===1);S.seenIt={};const none=wantPick(r);S.seenIt['f:'+K[0]]=1;r.kn={};r.fk={};const none2=wantPick(r);/* 食べてわかるまで言わない */if(K[0]===favDish(r))r.kn.fd=1;else r.fk[K[0]]=2;const f=wantPick(r);S.trouble={id:r.id,k:'want',d:dayNo(),f};const txt=troubleText(r),ok0=TROUBLE.want.ok(r);
   S.fs={};S.fs[f]=1;S.fs[nm]=1;syncFood();const give=k=>{snackPop(r);const c=[...document.querySelectorAll('.pxcard .slot')].find(x=>{const t=x.querySelector('.nm').textContent;return t===FOODS[k].name||t.startsWith(FOODS[k].name+'（')});c.click();ACT.eat.tick(r,r.act,999);ACT.eat.end(r,r.act);r.act=null;for(let i=0;i<6;i++)troubleTick()};
-  give(nm);const still=!!S.trouble;S.letterQ=[];r.fun=50;NOSAVE=false;give(f);NOSAVE=true;return {none,f,K0:K[0],txt,ok0,still,solved:S.trouble===null,fun:r.fun,letter:(S.letterQ||[]).some(q=>q.k==='thx'&&q.tx.join('').indexOf(FOODS[f].name)>=0)}})()`);
-assert.equal(wt.none,null,'持ったことがなければ出ない');assert.equal(wt.f,wt.K0);assert.ok(wt.ok0&&wt.txt.endsWith('が食べたい'),'こまりごと '+JSON.stringify(wt));assert.ok(wt.still,'ちがう物ではなおらない');assert.ok(wt.solved,'その物をあげるとなおる');assert.ok(wt.fun>=50+10+15,'たのしさ '+wt.fun);assert.ok(wt.letter,'お礼の手紙');
+  give(nm);const still=!!S.trouble;S.letterQ=[];r.fun=50;NOSAVE=false;give(f);NOSAVE=true;return {none,none2,f,K0:K[0],txt,ok0,still,solved:S.trouble===null,fun:r.fun,letter:(S.letterQ||[]).some(q=>q.k==='thx'&&q.tx.join('').indexOf(FOODS[f].name)>=0)}})()`);
+assert.equal(wt.none,null,'持ったことがなければ出ない');assert.equal(wt.none2,null,'食べてわかるまで出ない');assert.equal(wt.f,wt.K0);assert.ok(wt.ok0&&wt.txt.endsWith('が食べたい'),'こまりごと '+JSON.stringify(wt));assert.ok(wt.still,'ちがう物ではなおらない');assert.ok(wt.solved,'その物をあげるとなおる');assert.ok(wt.fun>=50+10+15,'たのしさ '+wt.fun);assert.ok(wt.letter,'お礼の手紙');
 /* レベルアップ：上がった数だけ、えらんで +1（20がふつう） */
 const lv=await run(`(()=>{const r=S.res[1],w0=rStat(r,rLv(r)).work,s0=staOf(r);addSpiritXp(LVXP[3]/.8+1,r);const n=r.lvPend;RLVQ.length=0;rlvShow({id:r.id,from:1,to:rLv(r)});const B=()=>[...document.querySelectorAll('#rlv .rpick button')];const okH=document.querySelector('#rlvOk').hidden,b0=B().length;B()[0].click();const mid=r.lvPend;B()[2]&&B()[2].click();return {n,lv:rLv(r),okH,b0,mid,pend:r.lvPend||0,lvb:r.lvb,dw:rStat(r,rLv(r)).work-w0-lvGain(r,'work',rLv(r))+lvGain(r,'work',1),ds:staOf(r)-s0,closed:document.querySelector('#rlv').hidden}})()`);
 assert.ok(lv.n>=2,'2レベル以上 '+JSON.stringify(lv));assert.ok(lv.okH&&lv.b0===3,'えらぶまでOKはない');assert.equal(lv.lvb.work,1);assert.ok(lv.ds>=1,'スタミナ+1 '+JSON.stringify(lv));assert.equal(lv.dw,1,'はたらく速さ+1');
