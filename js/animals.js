@@ -1,5 +1,5 @@
 /* ---------- 飼う生き物（ハネマリ・モコダマ・ツノクサ） ----------
-   朝に STRAYP（のらの小道 +STRAYSP）で、村の外に野良の生き物が1ぴき来る（strayMorning、a.stray）。柵・塀でかこんだ所の、とり小屋（coop）・家畜小屋（barn）に空きがあれば、そこにすめる生き物。小屋がなければ、まだひらめいていない小屋の生き物で、はじめてタップすると、その小屋をひらめく（strayIdea）。
+   朝に STRAYP（のらの小道 +STRAYSP）で、村の外に野良の生き物が1ぴき来る（strayMorning、a.stray）。柵・塀でかこんだ所の、とり小屋（coop）・家畜小屋（barn）に空きがあれば、そこにすめる生き物。小屋がなければ、まだひらめいていない小屋の生き物で、はじめてタップすると、その小屋のサブクエストが出る（strayIdea・idea-sub.js）。
    STRAYH 時に帰る。「しらべる」でタップ →「むかえる」で、近いせいれいが歩いて行き（astray）、つれて小屋の前まで歩く（alead。生き物は、せいれいの通った所をついていく a.tr）。着いたら、その小屋にすむ。
    木のせいれい（いなければ、だれでも）が箱の草を小屋へ運び（えさ：1頭に1日1こ）、水のせいれい（いなければ、だれでも）が水をくんで小屋の水入れへ。
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
@@ -51,14 +51,14 @@ function aniGraze(j){return ANIGRASS.has(S.obj[j])}
 function aniEat(a,day){a.fd=day;a.eat=3;a.path=null;a.wt=3;a.fun=Math.min(100,aniFun(a)+4)}
 
 function hutRoom(h,k){/* かこいの中で、空きがあって、その生き物がすめる小屋か */return isHut(S.obj[h])&&!!PENS.get(h)&&aniOf(h).length+S.ani.filter(a=>(a.stray||a.mvh)&&a.lead!=null&&a.lh===h).length<hutCap(h)&&(k==null||HUTK[S.obj[h]].includes(k))}
-function strayMorning(){/* 野良の生き物：朝に STRAYP で、村の外に1ぴき。空きのある小屋があれば、そこにすめる生き物。小屋をまだひらめいていなければ、その小屋の生き物（はじめてタップするとひらめく strayIdea） */if(typeof MEMRUN!=='undefined'&&MEMRUN||WD===YAMI||S.ani.some(a=>a.stray))return;
+function strayMorning(){/* 野良の生き物：朝に STRAYP で、村の外に1ぴき。空きのある小屋があれば、そこにすめる生き物。小屋をまだひらめいていなければ、その小屋の生き物（はじめてタップすると、その小屋のサブクエスト strayIdea） */if(typeof MEMRUN!=='undefined'&&MEMRUN||WD===YAMI||S.ani.some(a=>a.stray))return;
   const hs=HUTS.filter(h=>hutRoom(h)),kn=Object.keys(ANI).filter(k=>!recipeKnown(ANI[k].hut));if(!hs.length&&!kn.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
   let k,f;if(hs.length){const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]];k=K[Math.floor(Math.random()*K.length)];f=hutFront(h).find(c=>walk(c))}
   else{k=kn[Math.floor(Math.random()*kn.length)];const r=STATUE<0&&S.res.find(q=>!q.hidden);f=STATUE>=0?hutFront(STATUE).find(c=>walk(c)):r?(r.y|0)*W+(r.x|0):null}if(f==null)return;
   const G=bfs(f%W,(f/W)|0),C=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=8&&d<=50&&!VILL[j]&&!S.obj[j]&&aniPass(j)&&S.ground[j]!==1&&!(fogAt(j)))C.push(j)}if(!C.length)return;
   const c=C[Math.floor(Math.random()*C.length)];S.ani.push({id:(S.aniId=(S.aniId||0)+1),k,h:-1,stray:1,x:c%W+.5,y:((c/W)|0)+.6,face:1,wt:0});toast('村の外に、野良の'+ANI[k].name+'が来ている','good')}
-function strayIdea(a){/* はじめて野良をタップしたら、その生き物の小屋をひらめく。ひらめいたら true */const id=ANI[a.k].hut;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||recipeKnown(id))return false;
-  S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes[id]=true;S.guardianIdeas[id]=true;sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('bulb','あたらしいかたち：'+BL[id].name);return true}
+function strayIdea(a){/* はじめて野良をタップしたら、その生き物の小屋のサブクエスト（受けたらひらめく。idea-sub.js）。ようすの画面は、そのまま出す */const id=ANI[a.k].hut;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||recipeKnown(id)||ideaPend(id))return false;
+  ideaOffer('idea_'+id,null,a.k);return false}
 function strayLeave(a,why){S.ani.splice(S.ani.indexOf(a),1);toast(why||'野良の'+ANI[a.k].name+'は、どこかへ行ってしまった')}
 function strayFollow(a,dt){/* つれているせいれいの、通った所をついていく */const r=S.res.find(q=>q.id===a.lead);
   const ok=r&&!r.hidden&&(r.alead&&r.alead.aid===a.id||r.act&&r.act.type==='astray'&&r.act.aid===a.id);if(!ok){a.lead=null;a.lh=null;a.tr=null;a.wt=2;return}

@@ -154,6 +154,7 @@ function bpJob(r,G,dry){/* 置く所の木・岩を、切る・ほる */if(isNig
   for(const e of S.bp)for(const q of bpNatLeft(e)){const o=S.obj[q],k=o==='rock'||o==='boulder'||VEINS[o]?'mine':'chop';if(!free('o'+q,1))continue;if(dry)return true;
     const j=nearest(G,s=>adjOf(s,c=>c===q)>=0,200);if(j>=0){startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
 const bpHouseName=h=>{if(!S.hname)return null;for(const k in S.hname)if(h.inside.has(+k))return S.hname[k];return null};
+function bpList(){const o=[],m={};(S.bpInv||[]).forEach((it,i)=>{if(m[it.k])m[it.k].n++;else o.push(m[it.k]={i,k:it.k,n:1})});return o}/* 持っている設計図を、しゅるいごとに1つ（i：さいしょの場所、n：持っている数） */
 function bpGive(k,g){(S.bpInv||(S.bpInv=[])).push({k,g:g==null?null:g});toast('設計図「'+BPS[k].name+'」をもらった','good');bpGotPop(S.bpInv.length-1)}
 /* もらったときのカード：「見る」で、そのままプレビューへ（設計図のありかを知らせる） */
 function bpGotPop(i,it,s0,v0){if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;it=it||(S.bpInv||[])[i];s0=s0||S;v0=v0==null?VILLAGE_SESSION:v0;if(!it||S!==s0||VILLAGE_SESSION!==v0||!(S.bpInv||[]).includes(it))return;
@@ -208,13 +209,22 @@ SUBQ.push({k:'bpreq',
   onAccept(){const q=S.bpReq;if(!q||(S.bpInv||[]).some(z=>z.k===q.k&&z.req))return;const r=S.res.find(x=>x.name===q.who);(S.bpGot||(S.bpGot={}))[q.k]=1;(S.bpInv||(S.bpInv=[])).push({k:q.k,g:r?r.id:null,req:1});toast('設計図「'+BPS[q.k].name+'」をもらった','good')}});
 /* ---------- 設計図のプレビュー：「どうぐ」で設計図をえらぶと、できあがりの絵・むずかしさ・パワー・素材を出す ---------- */
 const BPDIFF={15:'かんたん',30:'ふつう',50:'むずかしい'};
+const BPPLAN={wall:'#5b3d24',fence:'#7a5634',glass:'#cfe6ee'};/* 設計図を見る画面の、平面図の壁・柵の色 */
+function bpPlanLine(c,px,py,cs,nb,th,col){/* マスのまん中から、つながるとなり（nb：左・右・上・下）へ、太さ th の帯 */const m=cs/2,h=th/2;c.fillStyle=col;c.fillRect(px+m-h,py+m-h,th,th);
+  if(nb[0])c.fillRect(px,py+m-h,m,th);if(nb[1])c.fillRect(px+m,py+m-h,m,th);if(nb[2])c.fillRect(px+m-h,py,th,m);if(nb[3])c.fillRect(px+m-h,py+m,th,m)}
 function bpPreview(k,cv){const b=BPS[k],{w,h}=bpSize(k),cs=Math.max(12,Math.min(32,Math.floor(264/Math.max(w,h)))),c=cv.getContext('2d');cv.width=w*cs;cv.height=h*cs;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
   const L=[],ps=bpPieces(k),dd=bpDoorDirs(ps);for(const p of ps){const[dx,dy,t,id,rot]=p;let a=1,bh=1;if(t==='furn'||t==='build'){const z=szR(id,rot||0)||[1,1];a=z[0];bh=z[1]}L.push({x:dx,y:dy,w:a,h:bh,id:t==='win'?'window':t==='farm'?'farm':id,t})}
-  const ord={floor:0,path:0,farm:0,edge:1,wall:2,win:2,fence:2,door:3,gate:3,plant:4,furn:5,build:5},img={};
+  const ord={floor:0,path:0,farm:0,edge:1,wall:2,win:2,fence:2,door:3,gate:3,plant:4,furn:5,build:5},img={},PLAN=new Set(['wall','win','fence','door','gate']);
+  const WAL=new Set(L.filter(q=>q.t==='wall'||q.t==='win'||q.t==='door').map(q=>q.x+','+q.y)),FEN=new Set(L.filter(q=>q.t==='fence'||q.t==='gate').map(q=>q.x+','+q.y));/* つながる相手 */
   const draw=()=>{c.imageSmoothingEnabled=true;c.fillStyle='#a9cf86';c.fillRect(0,0,cv.width,cv.height);c.fillStyle='rgba(60,90,40,.18)';for(let y=0;y<h;y++)for(let x=0;x<w;x++)if((x+y)&1)c.fillRect(x*cs,y*cs,cs,cs);
-    for(const q of L.slice().sort((a,b)=>ord[a.t]-ord[b.t])){const im=img[q.id];if(q.t==='floor'||q.t==='path'||q.t==='wall'||q.t==='win'||q.t==='door'){c.fillStyle=q.t==='floor'||q.t==='door'?'#e3c79a':q.t==='path'?'#d9c39a':'#9c7650';c.fillRect(q.x*cs,q.y*cs,cs,cs)}
+    for(const q of L.slice().sort((a,b)=>ord[a.t]-ord[b.t])){const im=img[q.id];if(q.t==='floor'||q.t==='path'||q.t==='wall'||q.t==='win'||q.t==='door'){c.fillStyle=q.t==='path'?'#d9c39a':'#e3c79a';c.fillRect(q.x*cs,q.y*cs,cs,cs)}
+      if(q.t==='wall'||q.t==='win'||q.t==='fence'){/* 壁・窓・柵は、平面図の線で、となりとつなぐ */const fe=q.t==='fence',G=fe?FEN:WAL,nb=[G.has((q.x-1)+','+q.y),G.has((q.x+1)+','+q.y),G.has(q.x+','+(q.y-1)),G.has(q.x+','+(q.y+1))],px=q.x*cs,py=q.y*cs;
+        if(fe){bpPlanLine(c,px,py,cs,nb,Math.max(2,Math.round(cs/10)),BPPLAN.fence);const r=Math.max(3,Math.round(cs/5));c.fillRect(px+(cs-r)/2,py+(cs-r)/2,r,r);continue}
+        const th=Math.round(cs*.45);if(q.t==='wall'){bpPlanLine(c,px,py,cs,nb,th,BPPLAN.wall);continue}
+        const hz=nb[0]||nb[1]||!(nb[2]||nb[3]),lw=Math.max(1,Math.round(cs/16)),o=(cs-th)/2;c.fillStyle=BPPLAN.glass;if(hz)c.fillRect(px,py+o,cs,th);else c.fillRect(px+o,py,th,cs);
+        c.fillStyle=BPPLAN.wall;if(hz){c.fillRect(px,py+o,cs,lw);c.fillRect(px,py+o+th-lw,cs,lw);c.fillRect(px,py+(cs-lw)/2,cs,lw)}else{c.fillRect(px+o,py,lw,cs);c.fillRect(px+o+th-lw,py,lw,cs);c.fillRect(px+(cs-lw)/2,py,lw,cs)}continue}/* 窓は、平面図の窓（ガラスと細い線） */
       if(q.t==='door'||q.t==='gate'){const m=dd.get(q.x+','+q.y);if(m)bpDoorMark(c,q.x*cs,q.y*cs,cs,m[0],m[1],'#5a3518');continue}/* ドアは、壁の切れめに平面図の形 */if(im&&im.complete&&im.naturalWidth)c.drawImage(im,q.x*cs,q.y*cs,q.w*cs,q.h*cs)}};
-  for(const q of L)if(!img[q.id]&&q.t!=='door'&&q.t!=='gate'){const u=iconURL(q.id);if(!u)continue;const im=new Image();im.onload=draw;im.src=u;img[q.id]=im}draw()}
+  for(const q of L)if(!img[q.id]&&!PLAN.has(q.t)){const u=iconURL(q.id);if(!u)continue;const im=new Image();im.onload=draw;im.src=u;img[q.id]=im}draw()}
 function bpPop(i){const it=(S.bpInv||[])[i];if(!it)return;document.querySelectorAll('.bpgot').forEach(q=>q.remove());/* もらったときのカードは、しまう */const k=it.k,b=BPS[k],m=bpCost(k);
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:86vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div style="display:flex;justify-content:center;margin-bottom:8px"><canvas class="pv" style="image-rendering:pixelated"></canvas></div><p class="note c" style="margin:0 0 10px"></p><div class="bt" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go">置く場所をえらぶ</button></div></div></div>');
   o.querySelector('.t').textContent=b.name;o.querySelector('.n').textContent=BPCAT[b.cat]+'の設計図・むずかしさ：'+BPDIFF[b.rw];{const c=o.querySelector('.c');c.innerHTML='<span class="mic'+(S.pt>=b.pc?'':' ng')+'">'+SP(Math.floor(S.pt))+'/'+b.pc+'</span>';c.style.margin='0';c.classList.add('upmt');c.after(bpMatRows(m))}lackOn(o.querySelector('.go'),bpLack(k));bpPreview(k,o.querySelector('.pv'));

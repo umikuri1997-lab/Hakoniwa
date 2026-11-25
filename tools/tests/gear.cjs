@@ -8,7 +8,7 @@ o.veins={};for(const v of VEIN_IDS)o.veins[v]=S.obj.filter(x=>x===v).length;
 const R=S.res,fire=R.find(r=>r.elem==='fire')||R[0];const mk=el=>{const r=mkRes(S,'t'+el,el,CX+.5,CY+.5,'chat');S.res.push(r);return r};const earth=mk('earth');
 /* 鉱脈をほる */const vj=S.obj.findIndex(x=>x==='vcopper');fire.cmat=null;ACT.mine.end(fire,{obj:vj,tgt:'vcopper'});o.oreMined=(fire.cmat||{}).copper||0;o.stoneFromVein=(fire.cmat||{}).stone||0;fire.cmat=null;
 const rj=S.obj.findIndex((x,j)=>x==='rock'&&oreNear(j));const rnd=Math.random;Math.random=()=>.05;ACT.mine.end(fire,{obj:rj,tgt:'rock'});Math.random=rnd;o.sulfur=(fire.cmat||{}).sulfur||0;fire.cmat=null;
-/* レシピ */S.gotMat={copper:1,iron:1};gearIdea('copper');o.learnCopper=!!S.recipes.gw03;o.noSilver=!S.recipes.gw14;o.noSpecial=!S.recipes.gw11;
+/* レシピ */S.gotMat={copper:1,iron:1};gearIdea('copper');/* 思いつくと、サブクエスト（受けたらおぼえる。idea-sub.js） */o.learnCopper=ideaPend('gw03')&&!S.recipes.gw03;o.noSilver=!ideaPend('gw14');o.noSpecial=!ideaPend('gw11');
 /* 作る */for(const k of['copper','iron','icopper','iiron','bamboo','wood','eda','kuru'])S.mat[k]=60;S.pt=500;S.orders=[];BOARD=1;
 const made=id=>{S.orders=[];orderFurn(id);const od=S.orders[0];if(!od)throw new Error('order '+id+' known='+recipeKnown(id)+' lv='+lvOK(id)+' lock='+orderLock()+' max='+boardMax()+' board='+BOARD);finishCraft(od,fire);for(const k in fire.citem||{})stowItem(k,fire.citem[k],fire);fire.citem=null;fire.cmade=null;S.drops=(S.drops||[]).filter(d=>!(d.made&&(giveItem(d.id,d.n,1),1)))};/* 作った物は頭の上 → 箱へ。ここでは、すぐしまう */for(const id of['gw03','gw02','ga03','gar02','gc01','gt04','gt07']){S.recipes[id]=true;made(id)}
 o.gearInv=gearList().map(q=>q.id);o.arrows=S.inv.gar02;
@@ -43,12 +43,12 @@ assert.deepEqual(out.up,[true,true,true,false]);assert.equal(out.upLv,3);assert.
 assert(out.saveGear>0);assert.equal(out.saveWorn,3);assert(out.returned>=2);
 assert.equal(out.grassVeins,0);assert.equal(out.grassGear,0);
 /* 草原：布をはじめて手に入れたら、持てる数+1の防具を思いつく（ほかのそうびは思いつかない）。作って、つけると持てる数+1。そうびのタブは最初から */
-const gr=await page.evaluate(()=>gearEval(`(()=>{const o={};DMGVAR=0;S=newState(0);setWorld(0);USERPAUSE=true;S.introSeen=true;gearIdea();o.before=!!S.recipes.ga27;S.mat.nuno=1;gearIdea('nuno');o.learn=GEAR_IDS.filter(id=>S.recipes[id]);
+const gr=await page.evaluate(()=>gearEval(`(()=>{const o={};DMGVAR=0;S=newState(0);setWorld(0);USERPAUSE=true;S.introSeen=true;gearIdea();o.before=ideaPend('ga27');S.mat.nuno=1;gearIdea('nuno');o.learn=GEAR_IDS.filter(id=>ideaPend(id));for(const k in S.ideaQ)inspireQuest(SUBQ.find(q=>q.k===k));/* サブクエストを受けた */
   for(const k of['nuno','wood'])S.mat[k]=60;S.pt=500;S.orders=[];BOARD=1;const r=S.res[0];resTab=0;openSheet('res',r.id);o.tabBefore=[...document.querySelectorAll('#sheetBody .ctab')].some(t=>t.textContent==='そうび');closeSheet();orderFurn('ga27');const od=S.orders[0];o.order=!!od;if(od){finishCraft(od,r);for(const k in r.citem||{})stowItem(k,r.citem[k],r);r.citem=null;r.cmade=null;S.drops=(S.drops||[]).filter(d=>!(d.made&&(giveItem(d.id,d.n,1),1)))}
   o.tabAfter=gearList().length>0;const c0=capOf(r);o.equip=gearEquip(r,gearList().findIndex(q=>q.id==='ga27'));o.cap=capOf(r)-c0;o.caps=['ga27','ga28','ga29'].map(id=>BL[id].g.cap);return o})()`));
 console.log('grass',JSON.stringify(gr));assert.equal(gr.before,false);assert.deepEqual(gr.learn,['ga27']);assert.equal(gr.order,true);assert.equal(gr.tabBefore,true);assert.equal(gr.tabAfter,true);assert.equal(gr.equip,true);assert.equal(gr.cap,1);assert.deepEqual(gr.caps,[1,2,3]);
 /* 火山：鉄を手に入れたときに思いつくレシピは一つずつ */
-const vo=await page.evaluate(()=>gearEval(`(()=>{DMGVAR=0;S=newState(1);setWorld(1);S.gotMat={iron:1};gearIdea('iron');return GEAR_IDS.filter(id=>S.recipes[id])})()`));assert.equal(vo.length,1);
+const vo=await page.evaluate(()=>gearEval(`(()=>{DMGVAR=0;S=newState(1);setWorld(1);S.gotMat={iron:1};gearIdea('iron');return GEAR_IDS.filter(id=>ideaPend(id))})()`));assert.equal(vo.length,1);
 /* 画面：そうびタブ・依頼ボード */
 await page.evaluate(()=>gearEval(`(()=>{document.getElementById('title').hidden=true;document.getElementById('title').style.display='none';const r=S.res.find(r=>r.elem==='fire');resTab=3;openSheet('res',r.id)})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-tab.png':'/tmp/gear-tab.png'});
 const rad=await page.evaluate(()=>[...document.querySelectorAll('#sheetBody *')].filter(n=>parseFloat(getComputedStyle(n).borderRadius)>0&&n.offsetParent).map(n=>n.className).slice(0,5));
