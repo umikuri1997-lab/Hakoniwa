@@ -26,9 +26,9 @@ function evBoxOf(E){const P=Object.values(E.slot||{});let x0=1e9,x1=-1e9,y0=1e9,
 function evShowBegin(E,P){if(!evShowOn(E)||E.shw)return;E.shw=1;const now=performance.now(),D=EVENTS[E.id];EVV.id=E.id;EVV.t0=now;EVV.clx=0;EVV.cid=null;EVV.end=null;EVV.rip=[];EVV.met=[];EVV.lan=[];EVV.pet=[];EVV.shine=0;EVV.flash=0;E.cx=0;E.ek=0;
   EVV.song=EVSONGMOVE.has(E.id)?'cupmove':'cupcalm';EVV.box=evBoxOf(E);if(typeof MEMRUN!=='undefined'&&MEMRUN)return;
   if(!EVV.back)EVV.back=evCamCenter();if(E.c)evCamTo(E.c[0]*TS,E.c[1]*TS,1.4);
-  const n=evDecoN();for(let i=0;i<Math.min(n,8);i++)setTimeout(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);
-  setTimeout(()=>{if(S.ev!==E)return;sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of evPeople(E))JUMP.set(r,performance.now()+Math.random()*200)},1500);
-  if(EVMG[E.id]&&started)setTimeout(()=>{if(S.ev===E&&E.ph)evAsk(E)},2300)}
+  const n=evDecoN();for(let i=0;i<Math.min(n,8);i++)later(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);
+  later(()=>{if(S.ev!==E)return;sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of evPeople(E))JUMP.set(r,performance.now()+Math.random()*200)},1500);
+  if(EVMG[E.id]&&started)later(()=>{if(S.ev===E&&E.ph)evAsk(E)},2300)}
 function evDecoN(){const B=EVV.box;return B?Math.max(3,Math.floor(((B.x1-B.x0+3)*TS-16)/10)):6}
 /* ---------- 指あそびをえらぶ（下のカード。えらばなければ、みてる） ---------- */
 function evAsk(E){if(document.getElementById('evAsk')||document.getElementById('cupMG'))return;const M=EVMG[E.id];
@@ -174,29 +174,29 @@ function evShowClimax(E,P){if(E.cx)return;E.cx=1;E.cxS=S.t;const now=performance
   for(const r of P){JUMP.set(r,now+Math.random()*250);r.reactT=Math.max(r.reactT||0,S.t)}
   const at=(n,x,y,col)=>fxSpr(n,x*TS,y*TS,col),id=E.id;
   if(id==='soji'){EVV.shine=now;sfx('chime');for(const r of P)at('twinkle',r.x,r.y-.6)}
-  else if(id==='ensoku'){setTimeout(()=>{if(S.ev!==E)return;EVV.flash=performance.now();sfx('stamp');evPhoto(E,'遠足')},1400);j3Ding(7,0,.5)}
-  else if(id==='hoshi'){for(let i=0;i<8;i++)setTimeout(()=>EVV.met.push({t:performance.now(),x:.4+Math.random()*.55,y:.03+Math.random()*.15}),i*320);sfx('starkira')}
-  else if(id==='hanabi'){for(let i=0;i<6;i++)setTimeout(()=>{if(S.ev===E){at('hanabi',c[0]+(i-2.5)*1.6,c[1]-3-Math.random()*1.5,HANABIC[i%HANABIC.length]);sfx('hanabi')}},i*180);setTimeout(()=>{EVV.flash=performance.now()},700)}
+  else if(id==='ensoku'){later(()=>{if(S.ev!==E)return;EVV.flash=performance.now();sfx('stamp');evPhoto(E,'遠足')},1400);j3Ding(7,0,.5)}
+  else if(id==='hoshi'){for(let i=0;i<8;i++)later(()=>EVV.met.push({t:performance.now(),x:.4+Math.random()*.55,y:.03+Math.random()*.15}),i*320);sfx('starkira')}
+  else if(id==='hanabi'){for(let i=0;i<6;i++)later(()=>{if(S.ev===E){at('hanabi',c[0]+(i-2.5)*1.6,c[1]-3-Math.random()*1.5,HANABIC[i%HANABIC.length]);sfx('hanabi')}},i*180);later(()=>{EVV.flash=performance.now()},700)}
   else if(id==='lantern'){for(const r of P)for(let k=0;k<2;k++)EVV.lan.push({x:r.x+(k-.5)*.6,y:r.y-1,t:now+k*300,s:Math.random()*6});sfx('chime')}
   else if(id==='hana'){for(let i=0;i<60;i++)EVV.pet.push({x:Math.random(),y:-Math.random()*.6,v:.04+Math.random()*.05,s:Math.random()*6,c:Math.random()<.6?'#ff9fb8':'#fff0a0'});for(const r of P)at('petals',r.x,r.y-.5)}
-  else if(id==='camp'||id==='himatsuri'){for(let i=0;i<4;i++)setTimeout(()=>at('embers',c[0]+(Math.random()-.5),c[1]-.3-i*.4),i*150);sfx('crackle')}
-  else if(id==='taikokai'){for(let i=0;i<3;i++)setTimeout(()=>{EVV.rip.push({x:c[0],y:c[1],t:performance.now(),big:1});sfx('bonk')},i*260)}
+  else if(id==='camp'||id==='himatsuri'){for(let i=0;i<4;i++)later(()=>at('embers',c[0]+(Math.random()-.5),c[1]-.3-i*.4),i*150);sfx('crackle')}
+  else if(id==='taikokai'){for(let i=0;i<3;i++)later(()=>{EVV.rip.push({x:c[0],y:c[1],t:performance.now(),big:1});sfx('bonk')},i*260)}
   else if(id==='hokomairi'||id==='matoate'||id==='takara'){at(id==='matoate'?'arrowhit':'glspark',c[0],c[1]-.4);if(typeof juiceGlowAt==='function')juiceGlowAt(c[0]-.5,c[1]-.5,2,false);sfx(id==='matoate'?'stamp':'chime')}
   else if(id==='mizu'){for(const r of P)at('splash',r.x,r.y-.3);sfx('water')}
   else if(id==='gochi'||id==='utage'||id==='cha'||id==='ocha'){for(let i=0;i<3;i++)j3Ding(12+i*4,i*.1,.45);for(const r of P)at(id==='gochi'?'twinkle':'steam',r.x,r.y-.8)}
   else{for(const r of P)at(id==='pikunikku'?'hearts':'twinkle',r.x,r.y-.8);sfx('clap')}
   if(id==='yomi'||id==='taiso'||id==='shukaku')sfx('clap');
-  if(id!=='ensoku')setTimeout(()=>{if(S.ev===E)evPhoto(E)},900)}
+  if(id!=='ensoku')later(()=>{if(S.ev===E)evPhoto(E)},900)}
 function evShowPose(r){const E=S&&S.ev;if(!E||!EVV.clx||EVV.cid!==E.id||performance.now()-EVV.clx>EVCLXMS||!(E.who||[]).includes(r.id))return null;return EVCLXPOSE[E.id]||null}
 function evPhoto(E,nm){if(typeof phWant!=='function'||!E)return;if(PHPR.ev==null)PHPR.ev=2.5;const B=EVV.box||evBoxOf(E);phWant('ev',{x0:B.x0-1,y0:B.y0-2,x1:B.x1+1,y1:B.y1+1},nm||EVENTS[E.id].n)}
 /* ---------- おわり ---------- */
 function evShowEnd(E,tags){const now=performance.now(),D=EVENTS[E.id];if(typeof MEMRUN!=='undefined'&&MEMRUN)return;if(E.id==='undo'||!E.cx){EVV.clx=now;EVV.cid=E.id}
   const gap=450,t1=500+tags.length*gap;EVV.end={t0:now,tags,id:E.id,c:E.c||evTemple(),t1,n:D.n};
   for(const T of tags){T.r.reactT=Math.max(T.r.reactT||0,S.t+12);JOYU.set(T.r,now+t1+2400)}
-  tags.forEach((T,i)=>setTimeout(()=>{if(EVV.end&&EVV.end.tags===tags){sfx('ostamp');if(S.res.includes(T.r))JUMP.set(T.r,performance.now())}},500+i*gap+220));
-  setTimeout(()=>{if(!EVV.end||EVV.end.tags!==tags)return;if(typeof juiceCheer==='function')juiceCheer();sfx('clap');sfx('level')},t1);
-  setTimeout(()=>{if(!EVV.end||EVV.end.tags!==tags)return;const b=EVV.back;EVV.back=null;if(b)evCamTo(b[0],b[1],1.6)},t1+3400);
-  setTimeout(()=>{if(EVV.end&&EVV.end.tags===tags){EVV.end=null;EVV.id=null}},t1+4400)}
+  tags.forEach((T,i)=>later(()=>{if(EVV.end&&EVV.end.tags===tags){sfx('ostamp');if(S.res.includes(T.r))JUMP.set(T.r,performance.now())}},500+i*gap+220));
+  later(()=>{if(!EVV.end||EVV.end.tags!==tags)return;if(typeof juiceCheer==='function')juiceCheer();sfx('clap');sfx('level')},t1);
+  later(()=>{if(!EVV.end||EVV.end.tags!==tags)return;const b=EVV.back;EVV.back=null;if(b)evCamTo(b[0],b[1],1.6)},t1+3400);
+  later(()=>{if(EVV.end&&EVV.end.tags===tags){EVV.end=null;EVV.id=null}},t1+4400)}
 function evShowReset(){const q=document.getElementById('evAsk');if(q)q.remove();EVV.end=null;EVV.id=null;EVV.clx=0;EVV.back=null;EVV.rip=[];EVV.met=[];EVV.lan=[];EVV.pet=[]}
 /* ---------- ごほうび（能力のほかに足す物）。かえす：せいれいごとの札の文 ---------- */
 function evDayBuff(r,k,v){const d=callDay();if(!r.evb||r.evb.d!==d)r.evb={d};r.evb[k]=(r.evb[k]||0)+v}

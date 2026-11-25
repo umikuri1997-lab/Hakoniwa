@@ -83,7 +83,7 @@ function tsCarveImg(n){/* 大きな1まいの絵（チップがないときは�
 function tsCarveView(n,done){const D=TSCARVE[n];if(!D){if(done)done();return}const P=pxPop(D.name),im=tsCarveImg(n);im.style.cssText='display:block;width:100%;image-rendering:pixelated;margin:4px 0';P.body.appendChild(im);
   if(done){const b=el('<button class="btn pri" style="width:100%;margin-top:8px">つぎへ</button>');b.onclick=()=>{sfx('tap');P.close();done()};P.body.appendChild(b);const x=P.o.querySelector('.x');if(x)x.onclick=b.onclick;P.o.onclick=null}}
 function tsCarveAt(C,next){/* 坂まで来たとき（cave.js の cvClearCheck）：まだ見ていない彫り絵なら、見せて話してから next。トトがいないときは、つぎに来たとき */const n=tsCarveOf(C.fl);if(n<0||(S.ts&&S.ts.carve||[]).includes(n)||!C.party.some(a=>a.r.name===TOTO))return false;
-  setTimeout(()=>{if(CV!==C)return;sfx('good');tsCarveView(n,()=>{if(CV!==C)return;const L=TSCARVE[n].lines;dialog(typeof L==='function'?L(C.party.some(a=>a.r.name===IBUKI)):L,()=>{if(CV!==C)return;(S.ts.carve||(S.ts.carve=[])).push(n);if(n===1)tsOokSet();memo('star','洞窟のかべで、彫り絵「'+TSCARVE[n].name+'」を見つけた');next()})})},1300);return true}
+  later(()=>{if(CV!==C)return;sfx('good');tsCarveView(n,()=>{if(CV!==C)return;const L=TSCARVE[n].lines;dialog(typeof L==='function'?L(C.party.some(a=>a.r.name===IBUKI)):L,()=>{if(CV!==C)return;(S.ts.carve||(S.ts.carve=[])).push(n);if(n===1)tsOokSet();memo('star','洞窟のかべで、彫り絵「'+TSCARVE[n].name+'」を見つけた');next()})})},1300);return true}
 const tsCaveMust=()=>{/* まだ見ていない彫り絵の階があるうちは、トトもいっしょ（cave.js の cavePrep。出かける階は、そのあとでえらぶ） */if(!tsOn())return null;const top=Math.min(S.cvClr||0,cvFlOpen()-1);for(let fl=0;fl<=top;fl++){const n=tsCarveOf(fl);if(n>=0&&!(S.ts.carve||[]).includes(n))return S.res.find(r=>r.name===TOTO&&!r.hidden)||null}return null};
 /* ---- はじまりの地ゆれ：カメラが巣穴へ → 地面がゆれる → トトがころがり出る → 会話 ---- */
 let TSINTRO=null;
@@ -93,10 +93,10 @@ function tsIntro(next){const h=S.ts&&S.ts.hole,t=S.res.find(r=>r.name===TOTO);if
   const fin=()=>{TSINTRO=null;GIFT_ACTIVE=false;showUI(true);if(ok())next()};
   camAnim=TSINTRO={fz:cam.z,tz:Math.max(cam.z,1.2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:hx*TS,ty:(hy+1.5)*TS,t:0,dur:1.6,done:()=>{if(!ok())return fin();
     sfx('crack');shakeScreen('l');musicDuck(2400);
-    setTimeout(()=>{if(!ok())return fin();shakeScreen('m');sfxAt('dust',hx,hy);spawnFX(hx-.5,hy-.2,'#b8946e');
+    later(()=>{if(!ok())return fin();shakeScreen('m');sfxAt('dust',hx,hy);spawnFX(hx-.5,hy-.2,'#b8946e');
       const t0=performance.now(),dur=1300,roll=()=>{if(!ok())return fin();const q=Math.min(1,(performance.now()-t0)/dur),e=1-(1-q)*(1-q);t.x=hx+(ex-hx)*e;t.y=hy+.6+(ey-hy-.6)*e;dirty=true;
         if(q<1){if(((q*6)|0)!==((q*6-.02)|0))JUMP.set(t,performance.now());requestAnimationFrame(roll);return}
-        sfxAt('bonk',t.x,t.y);JUMP.set(t,performance.now());spawnFX(t.x-.5,t.y-.4,'#c4a07a');setTimeout(fin,500)};
+        sfxAt('bonk',t.x,t.y);JUMP.set(t,performance.now());spawnFX(t.x-.5,t.y-.4,'#c4a07a');later(fin,500)};
       requestAnimationFrame(roll)},900)}}}
 function tsIntroReset(){if(TSINTRO){if(camAnim===TSINTRO)camAnim=null;TSINTRO=null;GIFT_ACTIVE=false}}/* 村を切りかえたとき */
 /* ---- 会話と目標 ---- */
@@ -163,10 +163,10 @@ function tsRubOpen(i){const P=S.ts.rub[i];if(!P||P.open)return;const owner=S,ses
   GIFT_ACTIVE=true;showUI(false);const fin=()=>{TSOPEN=null;GIFT_ACTIVE=false;showUI(true);if(ok()){recount();checkQuest()}};
   camAnim=TSOPEN={fz:cam.z,tz:Math.max(cam.z,1.1),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cx*TS,ty:cy*TS,t:0,dur:1.6,done:()=>{if(!ok())return fin();
     sfx('crack');shakeScreen('m');musicDuck(2400);
-    setTimeout(()=>{if(!ok())return fin();shakeScreen('l');sfxAt('dust',cx,cy);
+    later(()=>{if(!ok())return fin();shakeScreen('l');sfxAt('dust',cx,cy);
       P.open=1;for(const k of P.cells){S.obj[k]=P.keep[k]||'';delete S.dyn[k];delete S.hp[k];if(hash(k*7+3)<.35)spawnFX(k%W,(k/W)|0,'#c4a07a')}
       if(i===0)tsKonohaCome(P);
-      toast('くずれた岩の山がくずれて、土地がひらいた','good');memo('leaf','くずれた岩の山がくずれて、谷のはしの土地がひらいた');dirty=true;setTimeout(fin,900)},900)}}}
+      toast('くずれた岩の山がくずれて、土地がひらいた','good');memo('leaf','くずれた岩の山がくずれて、谷のはしの土地がひらいた');dirty=true;later(fin,900)},900)}}}
 function tsOpenReset(){if(TSOPEN){if(camAnim===TSOPEN)camAnim=null;TSOPEN=null;GIFT_ACTIVE=false}}
 /* 洞窟からもどったら：はじめてクリアした階の数だけ、岩の山がくずれる（main.js：画面があいているとき） */
 function tsTick(){if(!tsOn()||!S.ts.rub||typeof CV!=='undefined'&&CV||TSINTRO||TSOPEN||GIFT_ACTIVE||camAnim||document.querySelector('.pxpopw,.idea-reveal'))return;
@@ -195,10 +195,10 @@ function tsCaveIbuki(C){C.ib=null;if(!tsOn()||C.fl!==TSIBFL||S.ts.ib||!tsQDone('
   C.ib={a,ids,st:0,sw:0,k:0}}
 const cvActorsL=C=>C.ib&&C.ib.st===0&&C.seen[cvCell(C.ib.a)]?C.party.concat([C.ib.a]):C.party;/* 洞窟で描くせいれい：なかまと、まだ会っていないイブキ（iso-cave.js） */
 function tsCaveTick(C,now){/* caveFrame から */const I=C.ib;if(!I||I.st>=3)return;const a=I.a,fs=C.en.filter(e=>I.ids.includes(e.id)&&!e.dead);
-  if(I.st===0){if(fs.length&&now>=I.sw){I.sw=now+1100;const e=fs[(I.k++)%fs.length];a.face=e.x>=a.x?1:-1;a.turn=Math.abs(e.x-a.x)>Math.abs(e.y-a.y)*.6?1:0;a.back=a.fback=e.y<a.y-.3&&!a.turn;a.swing=now;setTimeout(()=>{if(CV===C&&!e.dead){atkFX(a,e);cvSpark(e.x,e.y-CVOY,'#ffb070',6)}},HIT_LAG)}/* 火をふる（絵だけ） */
+  if(I.st===0){if(fs.length&&now>=I.sw){I.sw=now+1100;const e=fs[(I.k++)%fs.length];a.face=e.x>=a.x?1:-1;a.turn=Math.abs(e.x-a.x)>Math.abs(e.y-a.y)*.6?1:0;a.back=a.fback=e.y<a.y-.3&&!a.turn;a.swing=now;later(()=>{if(CV===C&&!e.dead){atkFX(a,e);cvSpark(e.x,e.y-CVOY,'#ffb070',6)}},HIT_LAG)}/* 火をふる（絵だけ） */
     if(!C.party.some(q=>Math.hypot(q.x-a.x,q.y-a.y)<=TSIBNEAR))return;I.st=1;C.focus=null;for(const q of C.party){q.path=[];q.mv=false}
     dialog([[IBUKI,'#alarm|へっ、まだまだ！ ……ん？ だれだ、おまえら。'],[TOTO,'#surprise|わっ、火のせいれいだ！'],[IBUKI,'おれは、イブキ。こいつら、なかなか、しつこくてよ。'],[TOTO,'#proud|ぼ、ぼくも、たたかえるもん！'],[IBUKI,'#joy|ははっ、ちびすけ、ふるえてるじゃねえか。……まあいい。まかせとけ！']],()=>{if(CV!==C)return;tsIbJoin(C)});return}
-  if(I.st===2&&!fs.length){I.st=3;setTimeout(()=>{if(CV!==C)return;dialog([[IBUKI,'#joy|やるじゃねえか、ちびすけ。'],[TOTO,'#jolt|ちびすけじゃないもん。トトだもん。'],[IBUKI,'おう、トト。おまえら、上の村から来たのか？ ……おれも、いっしょに行っていいか。'],[TOTO,'#joy|うん！']])},600)}}
+  if(I.st===2&&!fs.length){I.st=3;later(()=>{if(CV!==C)return;dialog([[IBUKI,'#joy|やるじゃねえか、ちびすけ。'],[TOTO,'#jolt|ちびすけじゃないもん。トトだもん。'],[IBUKI,'おう、トト。おまえら、上の村から来たのか？ ……おれも、いっしょに行っていいか。'],[TOTO,'#joy|うん！']])},600)}}
 function tsIbJoin(C){/* 会話のあと：なかまになって、コワイノが起きる */const I=C.ib,a=I.a,r=a.r;I.st=2;(S.cvAway||(S.cvAway=[])).push(r);/* 洞窟にいるあいだは、村のせいれいの外（cave.js の cvAwayBack で村へ） */r.hunger=375;r.came=dayNo();S.lastCame=dayNo();(S.keyN||(S.keyN={})).fire=IBUKI;S.ts.ib=1;S.ts.ibNew=1;
   C.party.push(a);C.all.push(r);for(const e of C.en)if(I.ids.includes(e.id)){e.tsHold=0;e.asleep=false;e.wakeT=performance.now()}sfx('arrive');toast(IBUKI+'がなかまになった','good');cvHudUpd()}
 function tsIbWelcome(){/* 洞窟からもどったら：村のなかまの紹介（tsTick） */const r=S.res.find(q=>q.name===IBUKI);S.ts.ibNew=0;if(!r)return;
