@@ -406,6 +406,10 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'poison':if(playS('poison',.1125))break;noise(t,.2,.0125,o,500);break;/* どくの罠：ふんだとき・ダメージ */
   case'bonk':if(playS('punch',.45))break;noise(t,.07,.1,o,600);tone(140,t,.1,'square',.05,o,90);break;
   case'fishbite':playU('twater',.36,.8+Math.random()*.3);break;/* 魚がかかって、水がバシャバシャ（水の録音） */
+  case'fishplop':playU('twater',.22,1.5);break;/* うきが水に落ちる */
+  case'fishnib':playU('twater',.14,2.1+Math.random()*.2);break;/* 魚がつつく：ちょん */
+  case'fishbig':playU('twater',.42,.7);break;/* うきが、ずぼっとしずむ */
+  case'fishesc':playU('twater',.3,1.1);break;/* にげられた */
   case'owrite':break;/* 書く音は writeLoop で、書いているあいだだけ鳴らす */
   case'ostamp':if(playU('ostamp',.55))break;/* ハンコ：持ち主の「ぽんっ」 */
   case'stamp':if(!playU('stamp',.5,.95))knock(150,t,.12,o,.14);rustle(t+.005,.05,.012,o,1800,900,.7);break;/* ハンコ：紙ごしの、ぽむっ */
