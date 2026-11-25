@@ -5,7 +5,7 @@
    置ける所がなければ、なにもしない。思い出帳の再生ではしない */
 const VGIFT=[];/* なかまが物を置くしくみはなくした（持ち主の指示）。古いセーブの待ちは villageGiftTick でけす */
 const vgOn=()=>!!S&&WD===KUSA&&!S.free&&!MEMRUN&&!STORY_REPLAY_RUN&&!STORY_REPLAY_SHELL&&!S.cleared;
-const vgWho=g=>g.el==='wood'?POKO:keyName(g.el);
+const vgWho=g=>g.el==='wood'?FUTABA:keyName(g.el);
 function vgScan(){/* 会話までおわったできごとを、やることにためる（何もないときは、セーブの中身をかえない） */const add=VGIFT.filter(g=>!(S.vgSeen||{})[g.k]&&qDone(g.k));if(!add.length&&S.flags.vgift1)return;const seen=S.vgSeen||(S.vgSeen={}),P=S.vgift||(S.vgift=[]);
   if(!S.flags.vgift1){S.flags.vgift1=1;for(const g of add)seen[g.k]=1;return}/* 前のセーブで、もうおわっていたできごとは、置かない */
   for(const g of VGIFT)if(!seen[g.k]&&qDone(g.k)){seen[g.k]=1;P.push(g.k)}}

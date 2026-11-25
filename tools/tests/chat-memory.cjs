@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')();
   const o=JSON.parse(await run(`(()=>{const T=['おぼえてないのに、知ってる感じ','もっと花がいっぱいだった','むかしはにぎやかだった','ここに来るまえ、どこにいたか'];
     const ix=T.map(t=>CHATS.findIndex(c=>c.some(l=>String(l[1]).includes(t))));
-    const F=mkRes(S,POKO,'wood',CX+.5,CY+.5),N=mkRes(S,MINA,'earth',CX+1.5,CY+.5),X=mkRes(S,'テスト','water',CX+2.5,CY+.5),H=mkRes(S,HOMURA,'fire',CX+3.5,CY+.5);S.res=[F,N,X,H];
+    const F=mkRes(S,FUTABA,'wood',CX+.5,CY+.5),N=mkRes(S,NODOKA,'earth',CX+1.5,CY+.5),X=mkRes(S,'テスト','water',CX+2.5,CY+.5),H=mkRes(S,HOMURA,'fire',CX+3.5,CY+.5);S.res=[F,N,X,H];
     const out={ix,st:ix.map(i=>CHATS[i]&&CHATS[i].st),key:ix.map(i=>CHATS[i]&&!!CHATS[i].key)};
     out.withF=ix.map(i=>CHATS[i].ok(F,N)||CHATS[i].ok(N,F));out.withH=ix.map(i=>CHATS[i].ok(H,X)||CHATS[i].ok(X,H));
     out.free=ix.map(i=>CHATS[i].ok(N,X)&&CHATS[i].ok(X,N));out.noArg=ix.map(i=>CHATS[i].ok());

@@ -1044,7 +1044,7 @@ var ART=[
  {o:'lily',g:100,t:1,L:[.6,.99],V:[.9,.98]},{o:'lily',g:100,t:1,L:[.88,.36],V:[.95,.36]},{o:'clover',g:100,t:1,L:[.4,.96],V:[.5,1]},{o:'clover',g:100,t:1,L:[.9,.99],V:[.18,.95]},{o:'clover',g:100,t:1,L:[.03,.6],V:[.04,.2]},{o:'clover',g:100,t:1,L:[.36,.62],V:[.78,1]},{o:'bellf',g:100,t:1,L:[.03,.86],V:[.92,.85]},{o:'clover',g:100,t:1,L:[.5,.99],V:[.36,.82]},{o:'clover',g:100,t:1,V:[.88,.55]},{o:'bellf',g:100,t:1,V:[.4,.64]},{o:'lily',g:100,t:1,V:[.14,.4]},{o:'salvia',g:100,t:1,V:[.86,.78]},{o:'rock',t:0,V:[.45,.3]},{o:'clover',g:100,t:1,V:[.66,.3]},
  {o:'volcano',t:2,bg:1,s:.5,L:[.92,0],V:[.84,0]},{o:'bamboo',t:2,L:[.68,.2],V:[.9,.14]},{o:'bamboo',t:2,L:[.71,.24],V:[.96,.18]},{o:'takeakari',t:2,L:[.64,.36],V:[.05,.42]},{o:'campfire',k:1,t:2,L:[.5,.8],V:[.4,.5]},
  {c:'onsen',k:1,t:3,L:[.8,.5],V:[.76,.47],ons:1},{o:'toro',t:3,L:[.97,.64],V:[.9,.66]},{c:'andon#on',t:3,L:[.21,.8],V:[.55,.64],lit:1},{c:'andon#on',t:3,L:[.71,.86],V:[.66,.7],lit:1},{st:1,t:3,L:[.64,.66],V:[.48,.74]}];
-var CAST=[{n:'POKO',L:[.21,.42],V:[.22,.24],sleep:1},{n:'MINA',L:[.43,.72],V:[.28,.43],pose:'wave'},{n:'HOMURA',L:[.57,.72],V:[.52,.41],pose:'up'},{n:'SHIZUKU',L:[.8,.44],V:[.76,.55],bath:1}];
+var CAST=[{n:'FUTABA',L:[.21,.42],V:[.22,.24],sleep:1},{n:'NODOKA',L:[.43,.72],V:[.28,.43],pose:'wave'},{n:'HOMURA',L:[.57,.72],V:[.52,.41],pose:'up'},{n:'SHIZUKU',L:[.8,.44],V:[.76,.55],bath:1}];
 function prog(){var L=[];for(var w=0;w<KEYS.length;w++){if(w===FREE||!KEYS[w])continue;var d=null;try{var raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(d&&d.free)d=null;
   L[w]={reach:w===0||!!d,clear:!!(d&&d.cleared),names:d&&d.res?d.res.map(function(r){return r.name}):[]}}return L}
 function parts(it){return it.p||[[it.c?'c':'o',it.c||it.o,0,0,it.g||0]]}
@@ -1062,7 +1062,7 @@ function build(){var tb=T.querySelector('.tbox'),tr=T.getBoundingClientRect(),f=
  function place(it,pos,b,sc){sc=sc||1;var bx={x0:b.x0*sc,x1:b.x1*sc,y0:b.y0*sc,y1:b.y1*sc},base=it.bg?gy+8+pos[1]*20:Y(pos[1]),ay=Math.round(base-bx.y1),w=bx.x1-bx.x0,best=null;
   for(var s=0;s<=SW*.4&&!best;s+=6)for(var sg=-1;sg<=1&&!best;sg+=2){var X=pos[0]*SW+s*sg,ax=Math.round((X-(bx.x0+bx.x1)/2)/2)*2,r={x0:ax+bx.x0,y0:ay+bx.y0,x1:ax+bx.x1,y1:ay+bx.y1};if(it.sp){ax=Math.round(Math.max(-bx.x0,Math.min(SW-bx.x1,ax))/2)*2;r={x0:ax+bx.x0,y0:ay+bx.y0,x1:ax+bx.x1,y1:ay+bx.y1}}/* せいれい（it.sp）は、画面のはしで切らないよう、内がわへよせる */if(r.x0<-w*(it.bg?.45:.25)||r.x1>SW+w*(it.bg?.45:.25))continue;if(BX.some(function(o){return (!it.bg||o.txt)&&hit(r,o)}))continue;if(!it.bg&&held.some(function(h){return hit(r,h)}))continue;best={ax:ax,ay:ay,r:r,B:base}}
   return best}
- /* 1. せいれい（会えた子だけ） */var who={POKO:1,MINA:tier>=1||names.indexOf(MINA)>=0,HOMURA:tier>=2,SHIZUKU:tier>=3||names.indexOf(SHIZUKU)>=0},NM={POKO:POKO,MINA:MINA,HOMURA:HOMURA,SHIZUKU:SHIZUKU};var cb={x0:-30,y0:-100,x1:30,y1:4},SPS=[];
+ /* 1. せいれい（会えた子だけ） */var who={FUTABA:1,NODOKA:tier>=1||names.indexOf(NODOKA)>=0,HOMURA:tier>=2,SHIZUKU:tier>=3||names.indexOf(SHIZUKU)>=0},NM={FUTABA:FUTABA,NODOKA:NODOKA,HOMURA:HOMURA,SHIZUKU:SHIZUKU};var cb={x0:-30,y0:-100,x1:30,y1:4},SPS=[];
  var onsen=tier>=3;CAST.forEach(function(c0,i){if(!who[c0.n]||(c0.bath&&!onsen))return;var pos=pt?c0.V:c0.L;var p=c0.bath?{ax:Math.round(pos[0]*SW),ay:Y(pos[1]),r:null,B:Y(pos[1])}:null;if(!c0.bath)for(var dy=0;!p&&dy<=.3;dy+=.02)p=place({sp:1},[pos[0],pos[1]+dy],cb);/* 画面の中に入りきる所がなければ、少しずつ手前（下）へ */if(!p)return;var s={n:NM[c0.n],sleep:c0.sleep,pose:c0.pose,bath:c0.bath,i:i,x:(p.ax)/2,y:(p.r?p.r.y1-4:p.B)/2,B:p.r?p.r.y1:p.B};if(p.r)held.push(p.r);SPS.push(s)});
  /* 2. 物（大事な物 k を先に） */ART.slice().sort(function(a,b){return (b.k||0)-(a.k||0)}).forEach(function(it){if(it.t>tier||(it.m&&tier>=it.m))return;if(it.ons&&!onsen)return;var pos=pt?it.V:it.L;if(!pos)return;if(it.st){D.push({st:1,x:Math.round(pos[0]*SW),y:Math.round(Y(pos[1])),B:Y(pos[1])-30});return}var b=bbox(it),p=place(it,pos,b,it.s);if(!p&&it.bg){p=place(it,pos,b,(it.s||1)/2);if(p)it=Object.assign({},it,{s:(it.s||1)/2})}if(!p)return;if(!it.bg&&!it.ons)held.push({x0:p.r.x0+6,x1:p.r.x1-6,y0:p.r.y1-Math.max(14,(p.r.y1-p.r.y0)*.5),y1:p.r.y1});D.push({it:it,ax:p.ax,ay:p.ay,B:it.bg?-1e9+p.B:p.r.y1,r:p.r,s:it.s||1})});
  SPS.forEach(function(s){var B=s.B;if(s.bath){var o=D.filter(function(d){return d.it&&d.it.ons})[0];if(!o)return;s.x=(o.r.x0+o.r.x1)/2/2;s.y=(o.r.y0+(o.r.y1-o.r.y0)*.62)/2;s.clip=s.y*2-2;B=o.r.y1+.5}D.push({sp:s,B:B})});
@@ -1107,11 +1107,11 @@ var RP=/[?&]replayToken=/.test(location.search)&&/[?&]storyReplay=/.test(locatio
 function show(){if(rd&&!window.__ldDone)rd.textContent='ゲームのデータを読みこみ中… '+pct()+'%';if(window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中… '+pct()+'%'}/* 読みこみ中は、いつも出す。「はじめから」「つづきから」は、読みこみがおわるまで出さない（#tBtns） */
 var cb=document.getElementById('tCont');if(!RP&&cb)try{var SK=['hakoniwa-w1-v8','hakoniwa-w2-v1','hakoniwa-free-v2'];for(var q=0;q<SK.length;q++){var sv=localStorage.getItem(SK[q]);if(sv&&/"introSeen"\s*:\s*true/.test(sv)){cb.hidden=false;b.classList.remove('pri');break}}}catch(e){}/* 「つづきから」は、セーブがあれば、ゲームのデータを待たずに「はじめる」と同時に出す（main.js の titleCont と同じ見分け方） */
 b.onclick=function(){if(want)return;want=1;show()};if(cb)cb.onclick=function(){if(want)return;want=2;show()};show();window.__ldT=setInterval(show,300)
-window.__ldWant=function(){return RP?0:want};/* 1：はじめる、2：つづきから */
+window.__ldWant=function(){return RP?0:want};
+if(!/v=dev/.test(U[0])&&'serviceWorker' in navigator)try{navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}/* 公開したページだけ：プログラムと絵をスマホに保存して、2回めからネットを待たない（sw.js） *//* 1：はじめる、2：つづきから */
 function go(){/* ぜんぶ読みこめたら、書いてある順に、あいだをあけずに動かす（ファイルのあいだで、絵の読みこみなどの知らせが先に動かないように） */for(let i=0;i<N;i++)if(X[i]==null)return;if(ran)return;ran=1;
   if(X.every(function(t){return t!==false})){for(let i=0;i<N;i++){const s=document.createElement('script');s.text=X[i]+'\n//# sourceURL='+U[i].split('?')[0];document.body.appendChild(s)}return}
   for(let i=0;i<N;i++){const s=document.createElement('script');s.src=U[i];s.async=false;document.body.appendChild(s)}}/* 読めなかった物があれば、ふつうに読みこむ（async=false で、書いてある順に、なるべく続けて動かす） */
-window.JSV="v=dev";/* 地面のワーカーのファイルを読むときの番号（公開のとき tools/jsver.cjs が、ワーカーのファイルの中身から作る） */
 U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
   x.onprogress=function(e){L[i]=e.loaded;if(e.lengthComputable)T[i]=e.total;show()};
   x.onload=function(){if(x.status>=200&&x.status<300){L[i]=T[i]||E[i];X[i]=x.responseText}else X[i]=false;show();go()};
@@ -1130,7 +1130,6 @@ U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
 ・火山の村も最初はホムラひとり。各エリアで仲間が加わる前の会話に、まだいない子を含めない。
 ・説明の復唱ではなく、感覚や気持ちを中心に話す。前後の会話・人数・知識も確認する。
 ・フタバは木／ぼく、ノドカは土／ぼく・〜だねぇ、ホムラは火／あたい、シズクは水／わたし・丁寧。
-・コードの POKO はフタバ、MINA はノドカ。別キャラを指す古い名前と取り違えない。
 ・木火水土風の5属性。暮らしを育て、土地のヌシを迎える。未解決の謎の答えを勝手に確定しない。
 
 【進行と操作の約束】

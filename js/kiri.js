@@ -10,9 +10,9 @@ function kiriStormSet(){/* あしたを、あらしの日にする（天気の�
 function kiriSpot(){/* 村の南のはしの、空いた地面 */let best=-1,by=-1,bx=1e9;for(let j=0;j<W*H;j++){if(!VILL[j]||S.obj[j]||S.floor&&S.floor[j]||S.ground[j]!==0||!walk(j)||fogAt(j))continue;const y=(j/W)|0,dx=Math.abs(j%W-CX);if(y>by||y===by&&dx<bx){by=y;bx=dx;best=j}}return best}
 function kiriReady(){if(WD!==KUSA||S.free||S.flags.kiriSeen||S.flags.kiriD==null||KIRI)return false;if(dayNo()<=S.flags.kiriD||isNight()||hour()<7||hour()>=16)return false;
   if(SCENEHOLD||camAnim||GIFT_ACTIVE||!$('#dialog').hidden||typeof sevBusy==='function'&&sevBusy())return false;
-  const f=S.res.find(r=>r.name===POKO),n=S.res.find(r=>r.name===MINA);return !!(f&&n&&!f.hidden&&!n.hidden&&!f.coffin&&!n.coffin)}
+  const f=S.res.find(r=>r.name===FUTABA),n=S.res.find(r=>r.name===NODOKA);return !!(f&&n&&!f.hidden&&!n.hidden&&!f.coffin&&!n.coffin)}
 function kiriTry(){if(!kiriReady())return;const j=kiriSpot();if(j<0)return;kiriScene(j)}
-function kiriScene(j){const owner=S,session=VILLAGE_SESSION,f=S.res.find(r=>r.name===POKO),n=S.res.find(r=>r.name===MINA);
+function kiriScene(j){const owner=S,session=VILLAGE_SESSION,f=S.res.find(r=>r.name===FUTABA),n=S.res.find(r=>r.name===NODOKA);
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.res.includes(n);
   const at=(ms,fn)=>later(()=>{if(alive())fn()},ms);
   const px=j%W+.5,py=((j/W)|0)+.5;KIRI={x:px,y:py,a:0,foe:null};
@@ -42,7 +42,7 @@ function kiriDrawAdd(add,now){/* 霧の中の影（演出だけ。夜のしく�
 function drawKiriFog(){/* その日だけの霧：村のはしに、白いもや（画面の上にかさねる） */if(!KIRI||KIRI.a<=0)return;const p=w2s(KIRI.x,KIRI.y),R=TS*cam.z*4.2;ctx.save();
   for(let i=0;i<7;i++){const a=i*0.9,ox=Math.cos(a)*R*.45,oy=Math.sin(a)*R*.22;ctx.globalAlpha=KIRI.a*.22;ctx.fillStyle='#f4f6f8';ctx.beginPath();ctx.ellipse(p.x+ox,p.y+oy+R*.1,R*(.8+i%3*.15),R*(.38+i%2*.08),0,0,7);ctx.fill()}
   ctx.restore()}
-function kiriSitting(r){/* フタバが、御神木の根もとでじっとしているか */if(!r||r.name!==POKO||WD!==KUSA||!S.flags.kiriSit)return false;if(typeof wflOn==='function'&&wflOn()){const T=wflT(),rest=wflWho().filter(q=>q!==r);if(rest.every(q=>T.includes(q.id)))return false}/* ほかの4人が花の世話をおえたら、さいごにフタバが自分の1本 */return true}
+function kiriSitting(r){/* フタバが、御神木の根もとでじっとしているか */if(!r||r.name!==FUTABA||WD!==KUSA||!S.flags.kiriSit)return false;if(typeof wflOn==='function'&&wflOn()){const T=wflT(),rest=wflWho().filter(q=>q!==r);if(rest.every(q=>T.includes(q.id)))return false}/* ほかの4人が花の世話をおえたら、さいごにフタバが自分の1本 */return true}
 function kiriRoot(r){const t=S.obj.indexOf('tower');if(t<0)return -1;const G=bfs(r.x|0,r.y|0),tx=storyTreeX(t),ty=storyTreeY(t);return nearest(G,j=>walk(j)&&!S.obj[j]&&Math.hypot(j%W+.5-tx,(j/W|0)+.5-ty)<=2.6,200)}
 function tryKiriSit(r){/* 昼：ごはん・ねむるとき・にげるとき いがいは、御神木の根もとへ */if(!kiriSitting(r)||isNight()||hungry(r)||r.energy<20||r.hunger<250)return false;const a=r.act;if(a&&(a.type==='kirisit'||['eat','fetch','eatwait','flee','faint','sleep','store','smat','sitem','step','storywait','reunion'].includes(a.type)))return false;
   const k=kiriRoot(r);if(k<0)return false;endAct(r);startAct(r,bfs(r.x|0,r.y|0),'kirisit',k,{});return true}

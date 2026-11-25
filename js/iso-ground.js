@@ -83,11 +83,12 @@ function igDirty(R){if(IG.s!==S)return;for(const r of R){const a=Math.max(0,r[0]
   for(let cy=Math.max(0,Math.floor((ys[0]-IGP)/IGH));cy<=Math.min(IGNY-1,Math.floor((ys[1]+IGP+IGM)/IGH));cy++)for(let cx=Math.max(0,Math.floor((xs[0]-IGP-IGX0)/IGW));cx<=Math.min(IGNX-1,Math.floor((xs[1]+IGP-IGX0)/IGW));cx++){const q=IG.c.get(cy*64+cx);if(q)q.st=true}}}
 /* ステージを開くときに作る仕事の一覧 */
 function igJobs(L){L.push(()=>{if(IG.s!==S)igClear();IGWK.sk++});for(let cy=0;cy<IGNY;cy++)for(let cx=0;cx<IGNX;cx++)L.push(()=>{if(!igNear(cx,cy,0))return;const q=igq(cx,cy);if(igOK()&&(!q.f&&!q.e||q.st))return igJob(q)})}/* 読みこみで作るのは、画面に見えている区画だけ（まわりの IGRING 区画は、遊びはじめてから igDraw が、時間があまったときに作る） */
-/* マップの読みこみ中は、区画のドットごとの計算を、ワーカー（iso-ground-worker.js）にまかせて、いくつも同時に作る。
+/* マップの読みこみ中は、区画のドットごとの計算を、ワーカーにまかせて、いくつも同時に作る。ワーカーのプログラムは、もう読んである igPixels（iso-ground-px.js）から作る（ネットから読みなおすと、スマホでは、同じときに読むアトラスのうしろで20秒ほど待たされた）。
    ws：ワーカー（読みこみがおわったら、igWorkEnd で手ばなす）・sk：ステージの番号（かわったら init をおくりなおす）・q：計算中の区画（番号 → 区画） */
 const IGWK={ws:null,sk:0,id:0,q:new Map()},IGWKS=['TG','TW','GT','WT','ST','SM','SG','BK','IGBDRIP','IGBSUB','ICLF','IQL','W','H','TS','IQA','IQB','IQW','IQH','IGM','WBAND','WBANDA','WBANK','WBSH','WBANKC','WBSHA','IGSKYH','SKYFACE'];/* init でおくる物 */
-function igWorkers(){if(IGWK.ws)return IGWK.ws;IGWK.ws=[];if(typeof Worker!=='function')return IGWK.ws;const v=window.JSV,n=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1));/* 画面のスレッドのぶんを1つのこす */
-  try{for(let i=0;i<n;i++){const wk=new Worker('js/iso-ground-worker.js'+(v?'?'+v:''));wk.jobs=0;wk.sk=-1;wk.last={};wk.onmessage=e=>igWorkDone(wk,e.data);wk.onerror=()=>igWorkFail();IGWK.ws.push(wk)}}catch(e){igWorkFail()}return IGWK.ws}
+function igWorkers(){if(IGWK.ws)return IGWK.ws;IGWK.ws=[];if(typeof Worker!=='function')return IGWK.ws;const n=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1));/* 画面のスレッドのぶんを1つのこす */
+  try{const url=URL.createObjectURL(new Blob(["'use strict';"+igPixels+"\nlet IGW0=null;onmessage=e=>{const d=e.data;if(d.init){IGW0=d.init;return}const R=igPixels(Object.assign({},IGW0,d.P));postMessage({id:d.id,R},[R.O.buffer,R.K.buffer])};"],{type:'text/javascript'}));/* init：ステージのあいだかわらない物。そのあとは、区画ごとの物だけがとどく */
+    for(let i=0;i<n;i++){const wk=new Worker(url);wk.jobs=0;wk.sk=-1;wk.last={};wk.onmessage=e=>igWorkDone(wk,e.data);wk.onerror=()=>igWorkFail();IGWK.ws.push(wk)}URL.revokeObjectURL(url)}catch(e){igWorkFail()}return IGWK.ws}
 function igJob(q){/* 区画 q を、ワーカーで作る（ワーカーがないときは、その場で）。ワーカーがどれも2つずつかかえていたら false（読みこみの仕事を、つぎのコマにまわす） */const ws=igWorkers();if(!ws.length){igBuild(q);return}
   let wk=ws[0];for(const x of ws)if(x.jobs<wk.jobs)wk=x;if(wk.jobs>=2)return false;
   const t0=performance.now(),P=igPrep(q);if(P){if(wk.sk!==IGWK.sk||IGWKS.some(k=>wk.last[k]!==P[k])){const I={};for(const k of IGWKS){I[k]=P[k];wk.last[k]=P[k]}if(Array.isArray(I.SG))I.SG=Float32Array.from(I.SG);wk.postMessage({init:I});wk.sk=IGWK.sk}/* ステージがかわった・とちゅうで絵がとどいた（岸の絵など）ときは、おくりなおす */

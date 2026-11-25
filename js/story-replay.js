@@ -57,10 +57,10 @@ function prepareStoryReplay(run,payload){
   if(run.episode.kind==='vol')return prepareVolReplay(run,payload);
   if(run.episode.kind==='gintro')return prepareGrassIntroReplay(run,payload);
   const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:[2,3,4,5,5][at];
-  setWorld(0);S=newState(0);LIVE[0]=S;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=false;
+  setWorld(0);S=newState(0);LIVE[0]=S;S.introSeen=true;S.flags.nodokaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=false;
   S.feat={build:true,plant:true,craft:true,summon:true,people:true};S.sacredRoot=(CY-3)*W+CX-2;S.fieldSites={root:S.sacredRoot};const x=S.sacredRoot%W,y=S.sacredRoot/W|0;
   for(let yy=y-9;yy<=y+10;yy++)for(let xx=x-9;xx<=x+10;xx++){const j=yy*W+xx;S.obj[j]='';S.floor[j]='';S.ground[j]=0;S.hi[j]=0;delete S.ref[j];delete S.dyn[j];}
-  const names=[POKO,MINA,FIXK0.fire,FIXK0.water,FIXK0.wind],elems=['wood','earth','fire','water','wind'],spots=[[-2.5,3.5],[4.5,3.5],[-2.5,5.5],[.5,6.5],[3.5,5.5]];
+  const names=[FUTABA,NODOKA,FIXK0.fire,FIXK0.water,FIXK0.wind],elems=['wood','earth','fire','water','wind'],spots=[[-2.5,3.5],[4.5,3.5],[-2.5,5.5],[.5,6.5],[3.5,5.5]];
   S.res=names.slice(0,count).map((name,i)=>{const r=mkRes(S,name,elems[i],x+spots[i][0],y+spots[i][1]);const original=payload.actors?.find(a=>a.name===name&&a.elem===r.elem);if(original?.vr)r.vr=JSON.parse(JSON.stringify(original.vr));r.energy=100;r.hunger=hMax(r);r.fun=90;return r;});
   S.fieldStories={};for(const id of STORY_REPLAY_QUESTS.slice(0,e.kind==='quest'?at:STORY_REPLAY_QUESTS.length).flatMap(replayParts))S.fieldStories[id]={step:FIELD_STORIES[id].length};
   S.quest=QUESTS1.findIndex(q=>q.id===(e.kind==='quest'?e.id:'nushi'));S.qStory=null;S.qTalked=e.kind!=='quest';S.flags.nushiAlive=e.kind!=='quest'||at>=STORY_REPLAY_QUESTS.indexOf('tower');
@@ -111,7 +111,7 @@ if(id==='fire3')put('yogan',D1%W+3,(D1/W|0)+3);
 }
 async function playGrassIntroReplay(run){
   const say=lines=>new Promise(ok=>{DLGTAP=performance.now();DLGGAP=0;dialog(lines,ok);});
-  const f=S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}
+  const f=S.res.find(r=>r.name===FUTABA);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}
   await new Promise(ok=>sceneShift('mem',dreamScene,ok));if(STORY_REPLAY_RUN!==run||run.cancelled)throw Error('replay cancelled');
   await say(INTRO);for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}
 }
@@ -142,7 +142,7 @@ async function playStoryReplay(run){
     else if(e.kind==='quiet'){DLGTAP=performance.now();nushiTalk();await waitStoryReplay(run,()=>S.flags.sacredQuietSeen);}
     else{
       const event=SEV1.find(v=>v.k===e.id);S.sev[e.id]=0;S.t=e.id==='e15'?1440:e.id==='e16'?1320:480;
-      if(e.id==='e09'&&grassEndingTalk()){checkQuest();await waitStoryReplay(run,()=>TALKW===POKO&&mainStoryBubbleReady(S.res.find(r=>r.name===POKO)));DLGTAP=performance.now();startTalk();}
+      if(e.id==='e09'&&grassEndingTalk()){checkQuest();await waitStoryReplay(run,()=>TALKW===FUTABA&&mainStoryBubbleReady(S.res.find(r=>r.name===FUTABA)));DLGTAP=performance.now();startTalk();}
       else if(['e16','e09'].includes(e.id)){S.sevP=[e.id];if(!sevBegin(event,sevLines(event.L)))throw Error('みんなが集まれなかった');await waitStoryReplay(run,()=>!!SEV_ENCOUNTERS.get(S)?.ready);const enc=SEV_ENCOUNTERS.get(S);SEVW[enc.speaker.name]=e.id;DLGTAP=performance.now();sevTalk(e.id);}
       else{DLGTAP=performance.now();playDirectStoryEvent(event,sevLines(event.L));}
       await waitStoryReplay(run,()=>S.sev[e.id]===1);

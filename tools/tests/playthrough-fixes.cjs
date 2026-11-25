@@ -10,7 +10,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await run(`(()=>{newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;})()`);
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
   const base=`resetVillageTransient();S.quest=questIndexOf('water');S.qTalked=true;S.qStory=null;S.t=1440*10+600;S.hold=0;S.subDone={};S.subSeen={};S.subTalkAt=null;
-    if(S.res.length<3){const r=S.res[0];for(const [el,n] of [['earth',MINA],['fire',FIXK0.fire]])S.res.push(mkRes(S,n,el,r.x+1,r.y))}`;
+    if(S.res.length<3){const r=S.res[0];for(const [el,n] of [['earth',NODOKA],['fire',FIXK0.fire]])S.res.push(mkRes(S,n,el,r.x+1,r.y))}`;
   /* 1. サブクエストの物を見にいく予定は、そのサブクエストを受けているあいだだけ残す */
   const vis=JSON.parse(await run(`(()=>{${base}S.subSt={compost:2};const k='0:sub:compost:placed';const a=partVisitStale({partKey:k});S.subSt.compost=4;const b=partVisitStale({partKey:k});return JSON.stringify({a,b})})()`));
   assert.equal(vis.a,false,'the visit is kept while the sub quest is accepted');assert.equal(vis.b,true,'dropped after the sub quest ends');
@@ -30,15 +30,15 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.deepEqual(boss.five,['オオカゲが来るまで：今夜',true]);assert.deepEqual(boss.normal,['オオカゲが来るまで：今夜',true]);
   console.log('Boss after a wipe: goal text and the evening talk wait for 5 spirits');
   /* 4. もどったときのひとことは、ぜんぶ出しおわるまで同じ物を出さない */
-  const back=JSON.parse(await run(`(()=>{const r=S.res.find(r=>r.name===POKO);r.back=true;const n=BACKL[elemKey(r)].length,L=[];for(let i=0;i<n;i++)L.push(helloLine(r));r.back=false;return JSON.stringify({n,u:new Set(L).size})})()`));
+  const back=JSON.parse(await run(`(()=>{const r=S.res.find(r=>r.name===FUTABA);r.back=true;const n=BACKL[elemKey(r)].length,L=[];for(let i=0;i<n;i++)L.push(helloLine(r));r.back=false;return JSON.stringify({n,u:new Set(L).size})})()`));
   assert.equal(back.u,back.n,'all return lines before repeating');
   console.log('Return lines: no repeat until all are used');
   /* 6. 先に消えた子が待っているときは「次の朝」と言わない */
-  const morn=JSON.parse(await run(`(()=>{S.buried=[{name:FIXK0.fire,elem:'fire',unb:false}];const a=backWhen(FIXK0.fire);S.buried.push({name:MINA,elem:'earth',unb:true});const b=backWhen(MINA),c=HOWK(MINA)[0][1],d=DEATHL.earth(MINA)[2];S.buried=[];return JSON.stringify({a,b,c,d})})()`));
+  const morn=JSON.parse(await run(`(()=>{S.buried=[{name:FIXK0.fire,elem:'fire',unb:false}];const a=backWhen(FIXK0.fire);S.buried.push({name:NODOKA,elem:'earth',unb:true});const b=backWhen(NODOKA),c=HOWK(NODOKA)[0][1],d=DEATHL.earth(NODOKA)[2];S.buried=[];return JSON.stringify({a,b,c,d})})()`));
   assert.equal(morn.a,'つぎの朝、');assert.equal(morn.b,'何日かしたら、');assert.match(morn.c,/何日かしたら、ノドカは/);assert.match(morn.d,/何日かしたら、ノドカは/);
   console.log('Second key spirit lost: not promised for the next morning');
   /* 8. 名前を使いきっても、キーキャラの名前（フタバ2など）は使わない */
-  const names=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.nameIdx=NAMES.length-3;S.summon={elem:'wood'};S.summonDay=null;S.mebukiDay=null;const got=[];for(let i=0;i<4;i++){S.summon={elem:'wood',pick:1};S.summonDay=null;S.mebukiDay=null;S.flags.minaCame=true;doSummon();got.push(S.res[S.res.length-1].name)}S.res=keep;NEWQ.length=0;NEWRES=null;if(sheet)closeSheet();return JSON.stringify(got)})()`));
+  const names=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.nameIdx=NAMES.length-3;S.summon={elem:'wood'};S.summonDay=null;S.mebukiDay=null;const got=[];for(let i=0;i<4;i++){S.summon={elem:'wood',pick:1};S.summonDay=null;S.mebukiDay=null;S.flags.nodokaCame=true;doSummon();got.push(S.res[S.res.length-1].name)}S.res=keep;NEWQ.length=0;NEWRES=null;if(sheet)closeSheet();return JSON.stringify(got)})()`));
   const keyNames=JSON.parse(await run(`JSON.stringify([...KEYS.flat(),...Object.values(FIXK0)])`));
   assert(names.every(n=>!keyNames.some(k=>n.startsWith(k))),'no key-character names: '+names.join(','));
   console.log('Names after the list wraps:',names.join(' '));

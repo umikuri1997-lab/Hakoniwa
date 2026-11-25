@@ -47,7 +47,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await place(sp[0][0]-3|0,(sp[0][1]+3|0)+.5);await begin('meet');await run('resetVillageTransient()');assert.equal(await run('sacredDirection()'),null);await page.waitForTimeout(500);assert.equal(await run('sacredDirection()'),null,'no stale callback');
   /* お客さん：歩いて露天ぶろへ、着いてから会話 */
   await run(`(()=>{S.res.forEach((r,i)=>{endAct(r);r.x=HSPC.a[0]-3+i;r.y=HSPC.a[1]+3});S.flags.onsen=1;})()`);await run('guestScene()');
-  await page.waitForFunction(()=>sacredEval(`!document.querySelector('#dialog').hidden&&document.querySelector('#dlgWho').textContent===POKO`),{},{timeout:20000});
+  await page.waitForFunction(()=>sacredEval(`!document.querySelector('#dialog').hidden&&document.querySelector('#dlgWho').textContent===FUTABA`),{},{timeout:20000});
   const gx0=await run('GUEST&&[GUEST.x,GUEST.y]');
   for(let i=0;i<60&&!await run(`document.querySelector('#dialog').hidden`);i++){await click();await page.waitForTimeout(300);}
   await page.waitForFunction(()=>sacredEval(`!document.querySelector('#dialog').hidden&&GUEST&&sacredPose(GUEST)?.anim==='soak'`),{},{timeout:30000}).catch(async e=>{console.log(await run(`JSON.stringify({dlg:!document.querySelector('#dialog').hidden,who:document.querySelector('#dlgWho').textContent,g:GUEST&&[GUEST.x,GUEST.y,GUEST.act?.type,GUEST.act?.stage,sacredPose(GUEST)?.anim],q:DLGQ.length,gap:DLGGAP-performance.now()})`));throw e});await shot('guest-soak');

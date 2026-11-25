@@ -18,7 +18,7 @@ function checkQuest(){
   if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id])S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
   if(!$('#dialog').hidden)return;
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
-  {const e=grassEndingTalk();if(e){if(grassEndingTalkLines(e))TALKW=POKO;renderQuest();return}}/* 最後のかけらの話：フタバの吹き出しから */
+  {const e=grassEndingTalk();if(e){if(grassEndingTalkLines(e))TALKW=FUTABA;renderQuest();return}}/* 最後のかけらの話：フタバの吹き出しから */
   if(qMissing(q).length){renderQuest();return}
   if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight()&&!tourPair())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ。村のあんない（S.tour）のあいだは、おわってから */
 
@@ -26,7 +26,7 @@ function checkQuest(){
   const complete=q.check();if(!complete)checkQuestParts(q);
   if(complete){
     if(isNight()){renderQuest();return}/* クリアの話・お礼は、昼だけ */
-    if(q.pay&&!PAYOK){if(!ASKING&&sheet==null&&(S.payNo==null||S.t-S.payNo>60)){ASKING=true;const who=(q.talk&&q.talk.who)||POKO;
+    if(q.pay&&!PAYOK){if(!ASKING&&sheet==null&&(S.payNo==null||S.t-S.payNo>60)){ASKING=true;const who=(q.talk&&q.talk.who)||FUTABA;
       askYesNo(who,matTxt(q.pay)+'、もらってもいい？',()=>{ASKING=false;PAYOK=true;checkQuest()},()=>{ASKING=false;S.payNo=S.t;renderQuest()},'わたす')}renderQuest();return}/* 材料を使うクエストは、きいてから */
     let wait=QUEST_CLEAR_WAIT;
     if(wait&&wait.quest!==S.quest){QUEST_CLEAR_WAIT=wait=null}
@@ -123,7 +123,7 @@ function mainTalkWaitText(q){/* メインの会話・お礼を待っていると
   if(S.qStory==null&&S.tour){const g=S.res.find(r=>r.id===S.tour.g),w=S.res.find(r=>r.id===S.tour.w);if(g&&w)return g.name+'が、'+w.name+'に村をあんないしている'}/* あんないがおわってから、つぎのお話 */
   return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
 function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==KUSA||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
-  const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「しらべる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
+  const f=S.res.some(r=>r.name===FUTABA&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「しらべる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
   if(S.cleared&&WD===FREE){const g=freeGoal(),dd=S.daily;if(g){t=g.t;pr=g.pr}else if(dd)t='きょうの目標 '+dd.k.filter(k=>dd.done[k]).length+'/'+dd.k.length}/* フリーモード：季節の話か、きょうの目標（free.js） */
@@ -217,8 +217,8 @@ function drawKite(now){const k=KITE;if(!k)return;if(k.state!==S||k.session!==VIL
   ctx.globalAlpha=1;ctx.restore()}
 function stageGive(from,to){/* 会話の「わたす」：from が to のほうを向いて、両手でさしだす */if(!S)return;const f=S.res.find(q=>q.name===from&&!q.hidden),n=S.res.find(q=>q.name===to&&!q.hidden);if(!f||!n)return;const now=performance.now();
   f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,gy:n.y*TS,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
-function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
-  if(c==='give')stageGive(POKO,MINA);
+function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===FUTABA&&!q.hidden),n=S.res.find(q=>q.name===NODOKA&&!q.hidden);if(!f||!n)return;const now=performance.now();
+  if(c==='give')stageGive(FUTABA,NODOKA);
   else{n.face=f.x>=n.x?1:-1;f.face=n.face;sacredScenePose(n,'storyTouch',1300,{side:true,face:n.face});villageTimeout(()=>{JUMP.set(f,performance.now());JOYU.set(f,performance.now()+1500);sfx('wave')},450);STAGEWAIT=now+1300}}
 function visionFX(lines,after){dialog(lines,()=>{after&&after()},null,'')}/* かけらにふれたとき、記憶がうかぶ（画面は暗くしない） */
 function flashScreen(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#fff;opacity:.85;pointer-events:none;z-index:60;transition:opacity 1.4s ease-out';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='0'}));setTimeout(()=>d.remove(),1600)}/* 白くひかる */
@@ -310,18 +310,18 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   if(WD===KUSA)for(const k of starterGapCells(S)){if(S.obj[k]==='')put0(k,'hwall')}/* 思い出の中では、いまの家のこわれた壁は、なおっている（家の下がわのかべのあな） */
   MEMRUN=true;const ss=Object.assign({},S.spotSeen||{});recount();dirty=true;const z0=cam.z;cam.z=1.5;centerOn(cx*TS,(cy-.8)*TS);
   const real=S.res.filter(r=>!r.hidden),keep=real.map(r=>[r,r.hidden]);real.forEach(r=>r.hidden=true);/* いまの子は、思い出のあいだ見せない */
-  const mk=(name,dx,dy)=>{const g=mkRes({nid:-910},name,'wood',cx+dx,cy+dy);g.vr=mkVar(POKO,'wood');g.id=-910-EXTRA.length;return g};
-  const F=mk(POKO,0,.4);EXTRA=[F,mk('？',-1.3,-.2),mk('？',1.3,-.2),mk('？',-1.6,1.2),mk('？',1.6,1.2)];EXTRA.forEach(g=>{g.face=g.x<cx?1:-1});F.face=1;EXTRA.forEach(g=>dreamLook(g,F));
+  const mk=(name,dx,dy)=>{const g=mkRes({nid:-910},name,'wood',cx+dx,cy+dy);g.vr=mkVar(FUTABA,'wood');g.id=-910-EXTRA.length;return g};
+  const F=mk(FUTABA,0,.4);EXTRA=[F,mk('？',-1.3,-.2),mk('？',1.3,-.2),mk('？',-1.6,1.2),mk('？',1.6,1.2)];EXTRA.forEach(g=>{g.face=g.x<cx?1:-1});F.face=1;EXTRA.forEach(g=>dreamLook(g,F));
   tapOr(600,()=>{if(!EXTRA.length)return;const Wv=EXTRA[1],now0=performance.now();F.face=-1;DREAMC={F,Wv,all:EXTRA.slice(),S:S};/* 花をあむ子（左のきょうだい）。ほかの子は、のぞきこんで待つ */
   sacredSetPose(Wv,{anim:'weave',at:now0,duration:60000,side:true,face:1,crownHand:true,crownN:2});EXTRA.slice(2).forEach(g=>dreamLook(g,F,'lnod',2800,now0));sacredSetPose(F,{anim:'storyListen',at:now0,duration:60000,side:true,face:-1});
   for(let k=1;k<=6;k++)later(()=>{const p=SACRED_POSES.get(Wv);if(!EXTRA.length||!p||p.anim!=='weave')return;p.crownN=2+k;fx.push({k:'p',x:Wv.x*TS+6,y:Wv.y*TS-16,gy:Wv.y*TS,vx:(Math.random()-.5)*10,vy:-12,life:.8,col:CROWNF[k%4],r:2})},k*400);/* 花を1つずつ、あんでいく */
   tapOr(2900,()=>{if(!EXTRA.length)return;sacredSetPose(Wv,{anim:'crownup',at:performance.now(),duration:60000,side:true,face:1,crownHand:true});JUMP.set(Wv,performance.now());sfx('bush');
-   dialog(Object.assign([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！',0,'dream:walk'],[POKO,'#heart|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。',0,'dream:put'],['？','その花かんむり、フタバによく似合ってるね。',0,'dream:clap'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[POKO,'#joy|うんっ！ ずっと、ずーっとね！',0,'dream:joy']],{skip:1}),()=>{DREAMC=null;
+   dialog(Object.assign([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！',0,'dream:walk'],[FUTABA,'#heart|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。',0,'dream:put'],['？','その花かんむり、フタバによく似合ってるね。',0,'dream:clap'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[FUTABA,'#joy|うんっ！ ずっと、ずーっとね！',0,'dream:joy']],{skip:1}),()=>{DREAMC=null;
     EXTRA.forEach((g,i)=>later(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
     later(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}for(const g of EXTRA)SACRED_POSES.delete(g);EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,'')})});
   const tk=()=>{if(!EXTRA.length)return;const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w&&(!SACRED_POSES.has(q)||SACRED_POSES.get(q).anim==='storyListen'));if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now());later(tk,1300)};later(tk,1300)}
 function memScene(done){/* むかしを思い出す：夜、影がせまり、フタバがふるえ、ほかの子が前に立つ。光がはじける */
-  const f=S.res.find(r=>r.name===POKO)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
+  const f=S.res.find(r=>r.name===FUTABA)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
   for(let n=0;n<26;n++)later(()=>{const a=Math.random()*Math.PI,R=5*TS;fx.push({k:'p',x:f.x*TS+Math.cos(a)*R*(Math.random()<.5?-1:1),y:f.y*TS+Math.sin(a)*R*.6+TS*2,vx:0,vy:-25,life:1.6,col:'#1a1420',r:5})},n*120);
   S.res.filter(r=>r!==f).forEach((r,i)=>later(()=>{r.face=f.x>=r.x?-1:1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col)},1600+i*300));
   [400,1400,2400].forEach(t=>later(()=>JUMP.set(f,performance.now()),t));
@@ -329,7 +329,7 @@ function memScene(done){/* むかしを思い出す：夜、影がせまり、�
 function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)later(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)later(()=>leafFX(r),1500+Math.random()*800)}
 let GUEST=null,GUESTRUN=false;
 /* ---------- 温泉宿のお客さん（火山）：草原のなかまが3日に1回とまりに来て、草原の花のたね・苗を売る。朝に来て、つぎの朝に帰る（夜は宿の中） ---------- */
-const VISITORS=[[POKO,'wood','#joy|温泉に入りに来たよ！ 草原の花のたねと苗、もってきたんだ。ほしいのある？'],[MINA,'earth','のんびりしに来たよぉ。草原の苗、いるかねぇ？']],VISIT_EVERY=3;
+const VISITORS=[[FUTABA,'wood','#joy|温泉に入りに来たよ！ 草原の花のたねと苗、もってきたんだ。ほしいのある？'],[NODOKA,'earth','のんびりしに来たよぉ。草原の苗、いるかねぇ？']],VISIT_EVERY=3;
 let VISITOR=null;
 const visVol=()=>WD===KAZAN&&!S.free,visList=()=>S.free?freeVisitors():VISITORS;/* フリーモードは、旅のお客さん（free.js） */
 const visitOn=()=>(visVol()||!!S.free)&&!!S.st2&&S.st2.visit!=null&&S.st2.visit.day===dayNo();
@@ -342,15 +342,15 @@ function guestScene(){/* 火山：草原のフタバが、温泉にあそびに�
   const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const inn=innHouse();/* 温泉宿の露天ぶろに入る（なければ、温泉） */
   const tgt=inn?inn.onsen+W+1:hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
   if(st<0)return;GUESTRUN=true;const S0=S,session=VILLAGE_SESSION,ok=()=>S===S0&&VILLAGE_SESSION===session;let door=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null&&walk(dj+W))door=dj+W;}const from=door>=0?door:st;
-  const g=mkRes({nid:-900},POKO,'wood',from%W+.5,(from/W|0)+.6);g.id=-900;g.hidden=false;
+  const g=mkRes({nid:-900},FUTABA,'wood',from%W+.5,(from/W|0)+.6);g.id=-900;g.hidden=false;
   centerOn(g.x*TS,g.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+60000);
   const finish=()=>{GUEST=null;GUESTRUN=false;for(const r of S.res)RHOLD.set(r,0);};
   const [ex,ey]=[tgt%W+.5,(tgt/W|0)+.5];
   const leave=()=>{if(!ok())return finish();SACRED_POSES.delete(g);volHop(g,st%W+.5,(st/W|0)+.6,420,()=>{if(!ok())return finish();g.face=1;sacredScenePose(g,'wave',1400,{keep:true});/* 手をふって */
     villageTimeout(()=>{spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');villageTimeout(()=>{finish();sacredEndDirection(true);S.flags.guestDone=1;checkQuest()},500)},1400)});};
   const soak=()=>{if(!ok())return finish();volHop(g,ex,ey,420,()=>{if(!ok())return finish();sacredScenePose(g,inn||S.ground[tgt]===1?'soak':'storyListen',600000,inn||S.ground[tgt]===1?{}:{sit:true,side:true,face:1});/* 湯船がないときは、そばにすわる */sfx('wave');JOYU.set(g,performance.now()+4000);JUMP.set(g,performance.now());volFx('steam',600000,{x:ex,y:ey-.2});volFx('ripple',2400,{x:ex,y:ey+.3});volShot([[ex,ey]],[g],2.4,1);/* 着いてつかってから、つぎの会話 */
-    dialog([[POKO,'#joy|はぁぁ……あったかい……。からだが、とろけちゃいそう……。'],[POKO,'こんどは、ノドカも連れてきていい？ みんなに、教えてあげたいな！','hop'],[HOMURA,'#joy|もちろんさ。いつでもおいで！','cheer']],leave)});};
+    dialog([[FUTABA,'#joy|はぁぁ……あったかい……。からだが、とろけちゃいそう……。'],[FUTABA,'こんどは、ノドカも連れてきていい？ みんなに、教えてあげたいな！','hop'],[HOMURA,'#joy|もちろんさ。いつでもおいで！','cheer']],leave)});};
   sceneShift('light',fin=>{GUEST=g;g.spawnT=performance.now();spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');villageTimeout(fin,1200)},()=>{if(!ok())return finish();
-    dialog([[POKO,'#joy|わぁ……！ ここが、火山のふもとの村？ ゆげが、もくもくしてる！','hop'],[HOMURA,'ようこそ、草原のお客さん。あたいはホムラさ。'],[SHIZUKU,'シズクです。どうぞ、ゆっくりしていってくださいね。'],[POKO,'ぼく、フタバ！ 温泉って、はじめてなんだ！']],()=>{
+    dialog([[FUTABA,'#joy|わぁ……！ ここが、火山のふもとの村？ ゆげが、もくもくしてる！','hop'],[HOMURA,'ようこそ、草原のお客さん。あたいはホムラさ。'],[SHIZUKU,'シズクです。どうぞ、ゆっくりしていってくださいね。'],[FUTABA,'ぼく、フタバ！ 温泉って、はじめてなんだ！']],()=>{
       if(!ok())return finish();g.bubble='♨️';sacredDirection(true);volShot([[ex,ey]],[g],2.2,1.4);let gone=false;const go=()=>{if(gone)return;gone=true;g.bubble='';soak();};
       if(!sacredSceneWalk(g,ex,ey,{},go))go();else villageTimeout(go,12000);/* 歩いて行く。じゃまされても止まらない */})})}

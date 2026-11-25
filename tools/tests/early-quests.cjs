@@ -15,7 +15,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* はじめの目標を、1つずつじゅんに */
   const seq=JSON.parse(await run(`(()=>{updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};queueQuestVisit=()=>null;scheduleGrassReunion=()=>{};S.t=720;S.hold=0;S.introSeen=true;S.flags.tapped=1;
     const realDialog=dialog;dialog=(L,after)=>{if(after)after()};const ids=[],inv=[];
-    for(let k=0;k<40&&QUESTS[S.quest]&&QUESTS[S.quest].id!=='fire';k++){const i=S.quest,q=QUESTS[i];ids.push(q.id);if(q.talk&&!S.qTalked){if(q.field)S.qTalked=true;else{TALKW=POKO;startTalk()}}
+    for(let k=0;k<40&&QUESTS[S.quest]&&QUESTS[S.quest].id!=='fire';k++){const i=S.quest,q=QUESTS[i];ids.push(q.id);if(q.talk&&!S.qTalked){if(q.field)S.qTalked=true;else{TALKW=FUTABA;startTalk()}}
       if(q.field){for(const p of q.fieldParts)S.fieldStories[p]={step:FIELD_STORIES[p].length}}const c=q.check;q.check=()=>true;try{checkQuest()}finally{q.check=c}
       if(S.qStory===i)startTalk();if(S.quest===i)throw Error('stuck at '+q.id);inv.push(q.id+':'+(S.inv.bed||0)+'/'+(S.inv.path||0))}
     dialog=realDialog;return JSON.stringify({ids,inv,godGone:!!S.godGone,mat:S.mat})})()`));

@@ -2,8 +2,8 @@
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   const J=async s=>JSON.parse(await run(s));
-  await run(`(()=>{document.querySelector('#dialog').hidden=true;USERPAUSE=true;S.introSeen=true;S.flags.tapped=1;S.flags.minaCame=true;S.hold=0;resetVillageTransient();dialog=()=>{};talkOnce=()=>{};
-    S.enemyOn=true;S.t=1440*20+10*60;for(const [el,n] of [['earth',MINA],['fire',FIXK0.fire],['water','アオ']])S.res.push(mkRes(S,n,el,44,58));recount()})()`);
+  await run(`(()=>{document.querySelector('#dialog').hidden=true;USERPAUSE=true;S.introSeen=true;S.flags.tapped=1;S.flags.nodokaCame=true;S.hold=0;resetVillageTransient();dialog=()=>{};talkOnce=()=>{};
+    S.enemyOn=true;S.t=1440*20+10*60;for(const [el,n] of [['earth',NODOKA],['fire',FIXK0.fire],['water','アオ']])S.res.push(mkRes(S,n,el,44,58));recount()})()`);
   /* 1. オオカゲ：目標の欄の「あと〇日」と同じ日に出る */
   const a=await J(`(()=>{S.bossKills=0;S.bossWarn=dayNo();S.res4Since=dayNo()-5;const t=dayNo(),txt=bossDays(),n=+(txt.match(/あと(\\d+)日/)||[0,txt.includes('今夜')?0:-1])[1];
     const days=[];for(let i=0;i<10;i++)if(calEvents(t+i).some(e=>e[1]==='オオカゲが来る夜'))days.push(i);

@@ -16,8 +16,8 @@ function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   if(!S||WD!==KUSA||S.sacredRoot==null)return;
   sacredDirection(true);const j=S.sacredRoot,x=storyTreeX(j)*TS,y=storyTreeY(j)*TS-liftOf(j);
   let points=[[x-38,y-55],[x+38,y+20]],limit=mode==='detail'?3:2.5;
-  if(mode==='face'){const f=S.res.find(r=>r.name===POKO);if(f)points=[[f.x*TS-24,f.y*TS-55-uLift(f)],[f.x*TS+24,f.y*TS+8-uLift(f)]];limit=3;}
-  else if(mode==='reunion'&&S.nushi){const f=S.res.find(r=>r.name===POKO),n=S.nushi;points=[[n.x*TS-110,n.y*TS-160],[n.x*TS+100,n.y*TS+12]];if(f)points.push([f.x*TS-25,f.y*TS-48],[f.x*TS+25,f.y*TS+8]);limit=2.4;}
+  if(mode==='face'){const f=S.res.find(r=>r.name===FUTABA);if(f)points=[[f.x*TS-24,f.y*TS-55-uLift(f)],[f.x*TS+24,f.y*TS+8-uLift(f)]];limit=3;}
+  else if(mode==='reunion'&&S.nushi){const f=S.res.find(r=>r.name===FUTABA),n=S.nushi;points=[[n.x*TS-110,n.y*TS-160],[n.x*TS+100,n.y*TS+12]];if(f)points.push([f.x*TS-25,f.y*TS-48],[f.x*TS+25,f.y*TS+8]);limit=2.4;}
   else if(mode!=='detail'){
     for(const r of cast)points.push([r.x*TS-23,r.y*TS-55-uLift(r)],[r.x*TS+23,r.y*TS+10-uLift(r)]);
     if(S.obj.includes('tower'))points.push([x-80,y-170],[x+80,y+10]);
@@ -62,7 +62,7 @@ function sacredDirectedLines(step,a){
 function sacredBeat(c){
   const ms=SACRED_BEAT_MS[c];if(!ms||!S||WD!==KUSA||S.sacredRoot==null)return;
   const d=sacredDirection(true),cast=sacredCast(),j=S.sacredRoot;
-  const f=S.res.find(r=>r.name===POKO),n=S.res.find(r=>r.name===MINA),h=cast.find(r=>r.elem==='fire'),m=cast.find(r=>r.elem==='water'),k=cast.find(r=>r.elem==='wind');
+  const f=S.res.find(r=>r.name===FUTABA),n=S.res.find(r=>r.name===NODOKA),h=cast.find(r=>r.elem==='fire'),m=cast.find(r=>r.elem==='water'),k=cast.find(r=>r.elem==='wind');
   const lead=cast.find(r=>r.act?.type==='fieldstory')||f;
   if(['soil','touch','cover','stone','water','runoff','wind'].includes(c)){
     const actor=c==='soil'?n:c==='stone'?h:c==='water'||c==='runoff'?m:c==='wind'?k:lead;

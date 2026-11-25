@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const lines=async(run,page)=>{for(let i=0;i<120;i++){const st=await run(`(()=>{DLGGAP=0;const b=document.querySelector('.idea-reveal button');if(b){b.disabled=false;b.click();return 'idea'}const d=document.querySelector('#dialog');if(!d.hidden){if(STAGEWAIT>performance.now())return 'wait';DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;const c=document.querySelector('#dialog button');if(c){c.disabled=false;c.click()}else dlgNext();return 'dlg'}return 'none'})()`);if(st==='none')return i;await page.waitForTimeout(150)}return -1};
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440*3+600;S.enemyOn=false;
-    const f=S.res[0];S.res.push(mkRes(S,MINA,'earth',f.x+1,f.y),mkRes(S,'ホノ','fire',f.x+2,f.y),mkRes(S,'アオ','water',f.x+1,f.y+1),mkRes(S,'フウ','wind',f.x+2,f.y+1));for(const r of S.res){r.nap=false;r.hunger=hMax(r)}recount();`);
+    const f=S.res[0];S.res.push(mkRes(S,NODOKA,'earth',f.x+1,f.y),mkRes(S,'ホノ','fire',f.x+2,f.y),mkRes(S,'アオ','water',f.x+1,f.y+1),mkRes(S,'フウ','wind',f.x+2,f.y+1));for(const r of S.res){r.nap=false;r.hunger=hMax(r)}recount();`);
   /* 1. ならび */
   const ids=JSON.parse(await run(`JSON.stringify(QUESTS1.map(q=>q.id))`)),at=id=>ids.indexOf(id);
   assert.equal(ids[at('guardLearn')-1],'ookage');assert.equal(ids[at('aoFish')-1],'waterFilm');assert.equal(ids[at('kite')-1],'windEcho');
@@ -13,7 +13,7 @@ const lines=async(run,page)=>{for(let i=0;i<120;i++){const st=await run(`(()=>{D
   assert(g.n>5&&g.n2>5);assert.equal(g.house,false,'no "trembling at home"');assert.equal(g.old,false,'pink talk off before the main quest');
   await run(`S.quest=qsIx('guardLearn');S.qTalked=false;S.qStory=null;startTalk()`);await lines(run,page);
   const g2=JSON.parse(await run(`JSON.stringify({talked:S.qTalked,guard:!!S.flags.guard})`));assert.deepEqual(g2,{talked:true,guard:true});
-  await run(`(()=>{const f=S.res.find(r=>r.name===POKO),h=S.res.find(r=>r.elem==='fire');f.gw={t:S.t,tg:h};h.shU=0;S.enemies=[{type:'basic',x:h.x+1,y:h.y,spawned:true,hp:5,path:[]}];guardTick();S.enemies=[]})()`);
+  await run(`(()=>{const f=S.res.find(r=>r.name===FUTABA),h=S.res.find(r=>r.elem==='fire');f.gw={t:S.t,tg:h};h.shU=0;S.enemies=[{type:'basic',x:h.x+1,y:h.y,spawned:true,hp:5,path:[]}];guardTick();S.enemies=[]})()`);
   assert.equal(await run(`!!S.flags.guardUsed&&QUESTS1[qsIx('guardLearn')].check()`),true);console.log('guardLearn: learn by talk, clear by guarding');
   /* 3. 水あび：受けてから、ハスのそばの水べで水あびした3人 */
   const a=JSON.parse(await run(`(()=>{S.quest=qsIx('aoFish');S.qTalked=true;S.qStory=null;delete S.flags.aoBath;const L=S.res.filter(r=>r.elem!=='fire');

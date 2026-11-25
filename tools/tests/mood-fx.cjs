@@ -5,7 +5,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 await p.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);'});});
 await p.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await p.waitForFunction(()=>window.sacredEval);const run=s=>p.evaluate(s=>sacredEval(s),s);
 const o=await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;S.enemyOn=false;S.enemies=[];S.t=1440*2+600;
- const a=mkRes(S,POKO,'wood',CX+.5,CY+.5),b=mkRes(S,'ノドカ','earth',CX+8.5,CY+.5);S.res=[a,b];const o={};
+ const a=mkRes(S,FUTABA,'wood',CX+.5,CY+.5),b=mkRes(S,'ノドカ','earth',CX+8.5,CY+.5);S.res=[a,b];const o={};
  const c=document.createElement('canvas');c.width=c.height=200;const x=c.getContext('2d');
  /* もやもや：時間をかえても、ずっと出る。うずまきの大きさが、まざる */
  const cnt=t=>{x.clearRect(0,0,200,200);drawMoya(x,100,100,t,a.id);const d=x.getImageData(0,0,200,200).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i])n++;return n};
