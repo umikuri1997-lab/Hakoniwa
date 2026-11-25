@@ -121,13 +121,12 @@ def align(a, b):
     return np.eye(3)+math.sin(t)*K+(1-math.cos(t))*K@K
 
 def armswing(side, d, t=0.0):
-    """横へのびた休みのうでを、まっすぐたらして（ねじらず）、前へふり（rx）・横へひらく（ry）回転で、向き d へ（ゲームのうでの動かし方と同じ。
-    手の向き＝道具の柄の向きが、たらしたときは前・前へあげたときは上になる。いちばん小さい回転だと、手がねじれて柄が横を向く）"""
-    d = np.asarray(d, float); d = d/np.linalg.norm(d); a0 = np.array([0, 0, -1.0])
-    s = math.asin(max(-1.0, min(1.0, d[1]/(rx(math.pi/2)@a0)[1])))
-    if d[2] > 0: s = math.copysign(math.pi, s)-s   # 前へ 90度より上
-    v = rx(s)@a0; b = math.atan2(v[2]*d[0]-v[0]*d[2], v[0]*d[0]+v[2]*d[2])   # ry(b)：(x, z) の面で v を d へ
-    return ry(b)@rx(s)@rz(t)@ry(side*math.pi/2)   # rz(t)：たらしたうでの軸のまわりのねじり（ゲームの t と同じ）
+    """横へのびた休みのうでを、まっすぐたらして（ねじらず）、横へひらき（ry）・前へふる（rx）回転で、向き d へ。
+    手の向き＝道具の柄の向きが、たらしたときは前・前へあげたときは上になる（いちばん小さい回転だと、手がねじれて柄が横を向く）。
+    前へふるのをあとにすると、前にのばすうで（家具の上の作業）では、水平をまたいでもねじれがとばない（まうしろ・まよこだけ、きまらない）"""
+    d = np.asarray(d, float); d = d/np.linalg.norm(d)
+    b = math.asin(max(-1.0, min(1.0, -d[0]))); s = math.atan2(d[1], -d[2])
+    return rx(s)@ry(b)@rz(t)@ry(side*math.pi/2)   # rz(t)：たらしたうでの軸のまわりのねじり（ゲームの t と同じ）
 
 def armpts(S, side):
     """休みのうでの点（キャラの座標・ドット）：かた・ひじ・手のまん中"""
