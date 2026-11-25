@@ -34,11 +34,10 @@ function juiceGrowWave(){/* morning のおわり：育った物を、神殿か�
   for(const k in P.sn.dyn){const o=S.obj[k],d=S.dyn[k];if(!d)continue;const v=o==='farm'?j4CropSt(d):(o==='berry'||o==='fruit')?(d.g>=100?1:0):-1;if(v>P.sn.dyn[k])got.push(+k)}
   for(const j of P.sn.bud)if(S.obj[j]&&!isBud(j))got.push(j);if(!got.length)return;
   const c=typeof evTemple==='function'?evTemple():[CX+.5,CY+.5],now=performance.now(),L=got.map(j=>({j,d:Math.hypot(j%W+.5-c[0],((j/W)|0)+.5-c[1])})).sort((a,b)=>a.d-b.d).slice(0,J4GROWMAX);
-  L.forEach((q,i)=>J4GROW.push({j:q.j,t:now+300+Math.min(1,q.d/J4GROWR)*J4GROWMS,n:i}))}
+  L.forEach(q=>J4GROW.push({j:q.j,t:now+300+Math.min(1,q.d/J4GROWR)*J4GROWMS}))}
 function juiceGrowStep(now){for(let i=J4GROW.length-1;i>=0;i--){const g=J4GROW[i];if(now<g.t)continue;J4GROW.splice(i,1);if(!S.obj[g.j])continue;const x=(g.j%W+.5)*TS,y=(((g.j/W)|0)+.6)*TS-j4Lift(g.j%W,(g.j/W)|0);
     if(!uiReduced())LANDFX.set(g.j,now);/* 上から少し落ちて、つぶれて、もどる（置いたときと同じ動き） */
-    for(let k=0;k<4;k++){const a=-Math.PI*(.2+.6*k/3),sp=40+Math.random()*30;fx.push({k:'p',x,y:y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:.6+Math.random()*.2,col:['#8fd06a','#ffe58a','#d8f5c0','#fffbe6'][k],r:2})}
-    if(g.n<24&&g.n%2===0)j3U('tink',.14,JUICE_SCALE[Math.min(g.n/2,JUICE_SCALE.length-1)])}}/* はじめの方だけ、鈴の音がだんだん高く */
+    for(let k=0;k<4;k++){const a=-Math.PI*(.2+.6*k/3),sp=40+Math.random()*30;fx.push({k:'p',x,y:y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:.6+Math.random()*.2,col:['#8fd06a','#ffe58a','#d8f5c0','#fffbe6'][k],r:2})}}}/* 音は鳴らさない（持ち主がきめた） */
 
 /* ---------- 2. つりのヒット ---------- */
 function juiceFish(r,fk,w){if(!j4OK()||!r||J4FISH.length>3)return;const ic=typeof emoImg==='function'&&typeof foodEmo==='function'?emoImg(foodEmo(fk)):null;if(!ic)return;
