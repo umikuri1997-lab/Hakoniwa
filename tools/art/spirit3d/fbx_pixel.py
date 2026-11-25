@@ -2,7 +2,7 @@
   python3 tools/art/spirit3d/fbx_pixel.py <出す .png>
 1ドット＝1cm（モデルの 0.01）。カメラはまっすぐ（遠近なし）、正面・横（右向き）・うしろ。
 色はモデルにないので、オブジェクトの名前ごとに、ゲームの色をのせる。かげは左上の光で3だん、まわりに1ドットの輪郭（となりの色より少し暗く）。"""
-import os, sys
+import math, os, sys
 import numpy as np
 from PIL import Image
 
@@ -49,15 +49,17 @@ def load(el):
         o.evaluated_get(dg).to_mesh_clear()
     return out
 
-def render(tris, view, W=144, H=136, ss=4):
+def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
     Ws, Hs = W*ss, H*ss
     zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1)
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
-    for k, (P, N, col) in enumerate(tris):
-        cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
+    cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])
+    cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
+    for k, (P, N, col) in enumerate(tris):
+        if spin: P = P@Rs.T; N = N@Rs.T
         X, Y, Z = cam(P).T; N = cam(N)
         sx = (X+W/2)*ss; sy = (H-12-Y)*ss
         x0, x1 = int(np.floor(sx.min())), int(np.ceil(sx.max())); y0, y1 = int(np.floor(sy.min())), int(np.ceil(sy.max()))
@@ -74,6 +76,11 @@ def render(tris, view, W=144, H=136, ss=4):
         nn = l0[m, None]*N[0]+l1[m, None]*N[1]+l2[m, None]*N[2]
         bt = z > zb[j]; j = j[bt]
         zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k
+    for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
+        if spin: P = P@Rs.T
+        Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
+        ok = (sx >= 0) & (sx < Ws) & (sy >= 0) & (sy < Hs); j = sy[ok]*Ws+sx[ok]; z = Q[ok, 2]; cc = np.asarray(C)[ok]
+        bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2
     # 左上の光で3だん
     nb /= np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-9)
     dl = nb@light; f = np.where(dl > 0.35, 1.0, np.where(dl > -0.1, 0.9, 0.8))
