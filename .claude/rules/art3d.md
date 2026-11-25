@@ -53,6 +53,7 @@ paths:
 - タップの案内の指（`#tutHand`）は、前のドットの絵（`tools/art/finger/old-*.webp`）から、白いつや（光）をなくした絵（持ち主がきめた。`finger3d.py` は使わない）。
 
 ## 御神木・カミサマ・せいれいの動きの絵
+- 持ち主がわたしたモデルは、そのまま使う（持ち主：似たように作りなおさない）。せいれいは `tools/art/spirit3d/model/<属性>.fbx` の骨を、動きの数でそのまま3Dで動かし、そのメッシュをドット絵に写す（`fbx_motion.py`・`fbx_pixel.py`）。部品に切り分けて組みなおしたり、色をチップの絵から写したりしない。
 - カミサマのマップの絵（チップ `god`）は、持ち主のモデル（`tools/art/models/god/saint_monk.glb`、トリポ。色なし）に、部品ごとの色をぬった `god_monk.glb`（`tools/art/god3d/monk_paint.py`。すその金色の帯は、服を高さで切ってわける）を、家具と同じ道具（`iso3d.py god`、設計図 `furn3d/items/god.py`）で写す。色は前のカミサマの絵の濃さ（モデルの色を白にまぜない `p.vivid`）・あみかけなし（`DITHER=0`）。会話の立ち絵は正面のまま。参考の絵は `god3d/ref.jpg`。
 - 御神木の切り株・芽・若葉・若木・御神木（`story:stump`〜`story:tree`）は、トリポのモデル（`sacred_stump.glb`）から3Dのまま写す（`sacred_tripo.py`、`--chips`）。幹のまん中は4×4マスのまん中。光のつぶは絵に入れず、ゲームで動かす。温石だけは、もらったPNGから `tools/sacred-tree-art.py`。
   - 葉は、モデルの葉のかたまりの表面に小さな葉の部品をならべ（かたまりの中は線を引かない）、写したあと、葉の中の3ドットまでの点はまわりの色にする。
