@@ -13,6 +13,7 @@ const assert=require('node:assert/strict');
     out.catch2=go([0,.4,.99,.99,.99]);/* つつく1回・2回めの魚 */
     out.esc=go([.99,.4,.1]);/* つつく3回・★0〜1 で 0.1 は 20%・15% より下：にげる */
     a.jc={tsuri:400};out.lv=tokuiLv(a,'tsuri');out.noEsc=go([.99,.4,.1,.99,.99,.99]).esc;/* ★3 は 5%：0.1 ではにげない */
+    out.smp=['fishplop','fishnib','fishbig','fishesc'].filter(k=>!SAMPLES[k]);/* 4つの音は録音（持ち主がえらんだ） */
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
   const c=r.catch1;assert.equal(c.nb.length,2);assert.equal(c.nibN,2);assert.equal(c.esc,false);
@@ -23,6 +24,6 @@ const assert=require('node:assert/strict');
   assert.equal(r.catch2.first,r.catch2.fk!==c.fk);
   const e=r.esc;assert.equal(e.esc,true);assert.equal(e.nb.length,3);assert.deepEqual(e.carry,[]);assert.equal(e.fk,'');assert.ok(e.snd.includes('fishesc')&&!e.snd.includes('fishbig')&&!e.snd.includes('catch'),e.snd);
   assert.ok(!e.anim.includes('raise'));assert.ok(e.t<46,e.t);assert.ok(Math.abs(e.fun-c.fun)<=1,'たのしさは同じ '+e.fun+' '+c.fun);
-  assert.equal(r.lv,3);assert.equal(r.noEsc,false);
+  assert.deepEqual(r.smp,[]);assert.equal(r.lv,3);assert.equal(r.noEsc,false);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
