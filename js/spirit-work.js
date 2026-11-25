@@ -117,7 +117,7 @@ function jobWork(r,G,dry){if(isNight())return false;const j=jobOf(r);if(j<0)retu
   const k=o==='lumber'?'chop':'mine';if(!canJob(r,k)||roomN(r)<1||matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))||!free('o'+j,2))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,k,q,{key:'o'+j,obj:j,camp:true});return true}
 function grassNeed(){/* いまの目標で作る物（御神木の調べの準備）に足りない草：素材のキー→足りない数。なければ null */
   const q=QUESTS[S.quest];if(!q||!S.qTalked||typeof FIELD_PREP==='undefined')return null;const p=FIELD_PREP[q.id];if(!p||!p.build||fieldBuildOK(q.id))return null;
-  const id=p.build.ids[0],m=(BL[id]||{}).mat;if(!m||inv(id)>0||S.orders.some(o=>o.type===id))return null;const out={};let n=0;for(const k in m)if(GRASSK.includes(k)&&(S.mat[k]||0)<m[k]){out[k]=m[k]-(S.mat[k]||0);n++}return n?out:null}
+  const id=p.build.ids[0],m=(BL[id]||{}).mat;if(!m||inv(id)>0||madeAway(id)>0||S.orders.some(o=>o.type===id))return null;const out={};let n=0;for(const k in m)if(GRASSK.includes(k)&&(S.mat[k]||0)<m[k]){out[k]=m[k]-(S.mat[k]||0);n++}return n?out:null}
 const GRASSFAR=60;const SEEKR=10,SEEKRW=15;function seekR(r){return r.elem==='wind'?SEEKRW:SEEKR}/* 雑草・きのこ・落とし物を見つける広さ（まわりのマス） *//* 目標に足りない草は、この歩数までとりに行く */
 const WOODLOW=10;/* 木材がこれより少ないときは、雑草・枝ひろいより先に木を切る */
 let BOXFULL=0;/* 箱がいっぱいを知らせたときの、しまえる数（セーブしない） */
