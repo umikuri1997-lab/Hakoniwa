@@ -27,6 +27,8 @@ const assert=require('node:assert/strict');
   await run(`S.recipes.bed=true;openSheet('craft')`);{const t=await lbl();assert.ok(/ベッドの「はる」|待とう|タップ|けそう/.test(t),t);console.log('craft sheet: '+t)}
   await run(`closeSheet()`);
   await run(`S.orders.push({type:'bed',p:0})`);assert.equal(await lbl(),'');
+  await run(`S.orders=[];S.mat.nuno=0;S.res[0].cmat={};S.res[0].citem={bed:1}`);assert.equal(await lbl(),'');{const t=await page.evaluate(()=>bedStep());assert.ok(/3\/4 ベッドができた/.test(t),t);console.log('carrying: '+t)}
+  await run(`S.res[0].citem=null;S.drops=(S.drops||[]).filter(d=>d.id!=='mat:nuno')`);
   await run(`S.orders=[];S.inv.bed=1;setMode('look')`);assert.equal(await lbl(),'「おく」をタップ');
   console.log('Bed guide: loom → weave → board → place');
   assert.deepEqual(errors,[]);await browser.close();
