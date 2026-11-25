@@ -317,7 +317,7 @@ let PICKH=null;/* こわすの長おし */
 function pickMs(j){const t=terraTop(j);return hiAt(j)<=0?4000:t===SOIL?2000:t==='blk_brick'||t==='blk_wood'?3000:4000}/* こわすのにかかる時間（ミリ秒）：土2秒・石と地面より下4秒 */
 const PICKTAP=250;/* これより長くおしたら、こわしはじめる（短ければ、ふつうのタップ） */
 function pickCell(sx,sy){const w=tapW(sx,sy),x=Math.floor(w.x/TS),y=Math.floor(w.y/TS);return x>=0&&y>=0&&x<W&&y<H?{x,y,j:y*W+x}:null}
-function pickDown(sx,sy){const c=pickCell(sx,sy);PICKH=c?{...c,t0:performance.now(),dig:false,n:0}:null}
+function pickDown(sx,sy){const c=pickCell(sx,sy);PICKH=c?{...c,sx,sy,t0:performance.now(),dig:false,n:0}:null}/* sx・sy：おした指の場所（キャンバスの上の点。指のまわりの輪） */
 function pickFree(j){const o=S.obj[j];return !o&&!S.floor[j]&&!(S.edge&&S.edge[j])&&!(S.win&&S.win[j])&&!RUGC.has(j)&&!RFC.has(j)}/* 長おしでこわせるのは、物・床・ラグ・屋根のないマスだけ（ある所は、タップでふつうにこわす） */
 function pickTick(now){const P=PICKH;if(!P||P.done)return;const a=now-P.t0;if(a<PICKTAP)return;if(!P.dig){if(nightLock()||!pickFree(P.j)||!canPlace('dig',P.x,P.y)){PICKH=null;return}/* こわせないマスは、はなしたときのタップにまかせる（知らせはそこで） */P.dig=true;P.need=pickMs(P.j)}
   const k=Math.floor((a-PICKTAP)/250);if(k>=P.n){P.n=k+1;const t=terraTop(P.j);sfxAt('fudedig:'+(CUBEMAT[t]||'tsoil'),P.x+.5,P.y+.5);blkChips(P.j,t,2+(hash(P.j+k)<.5?1:0),false)}/* マイクラのように：たたくたびに、そのブロックの音と、ブロックのかけら */
@@ -339,6 +339,13 @@ function drawPickCrack(now){const P=PICKH;if(!(P&&P.dig&&!P.done))return;const r
   if(h>0){const hv=(a,b)=>a<0||b<0||a>=W||b>=H?0:Math.max(0,hiAt(b*W+a)),ix=(P.x-P.y)*IQW/2,iy=(P.x+P.y)*IQH/2-h*IQL;
     for(const side of[0,1]){if((side?hv(P.x+1,P.y):hv(P.x,P.y+1))>=h)continue;isoScreenTf(ctx);/* 手前が低いときだけ、見えている左右の面にも */
       if(side)ctx.transform(IQW/2/64,-IQH/2/64,0,IQL/64,ix,iy+IQH);else ctx.transform(IQW/2/64,IQH/2/64,0,IQL/64,ix-IQW/2,iy+IQH/2);ctx.drawImage(im,0,0)}}
+  ctx.restore()}
+const PICKRING={r:44,dot:3,line:'#fff3c4',edge:'rgba(58,40,24,.85)',track:'rgba(58,40,24,.45)'};/* 長おしの輪：指のまわり（半径 r の点）に、こわれるまでの進みぐあい。段々のドットの丸（1点 dot の四角をならべる。マイクラのスマホ版と同じ作り） */
+function drawPickUI(){const P=PICKH;if(!(P&&P.dig&&!P.done))return;const r=Math.min(1,(performance.now()-P.t0-PICKTAP)/P.need);
+  ctx.save();groundTf(ctx,dpr*cam.z);ctx.lineJoin='miter';ctx.strokeStyle=PICKRING.edge;ctx.lineWidth=4;qRect(ctx,P.x*TS+1,P.y*TS+1,TS-2,TS-2,P.j,1);ctx.strokeStyle=PICKRING.line;ctx.lineWidth=2;qRect(ctx,P.x*TS+1,P.y*TS+1,TS-2,TS-2,P.j,1);/* こわしているマスの上の面のわく：手前の物・夜の暗さより上（指からはみ出た所で、どのマスかわかる） */
+  ctx.setTransform(dpr,0,0,dpr,0,0);const R=PICKRING.r,d=PICKRING.dot,n=Math.ceil(2*Math.PI*R/d),cx=Math.round(P.sx),cy=Math.round(P.sy),pt=i=>{const a=-Math.PI/2+i/n*2*Math.PI;return[cx+Math.round(Math.cos(a)*R/d)*d-(d>>1),cy+Math.round(Math.sin(a)*R/d)*d-(d>>1)]};
+  ctx.fillStyle=PICKRING.track;for(let i=0;i<n;i++){const[x,y]=pt(i);ctx.fillRect(x,y,d,d)}/* まだの所：うすい輪 */
+  const m=Math.round(r*n);ctx.fillStyle=PICKRING.edge;for(let i=0;i<m;i++){const[x,y]=pt(i);ctx.fillRect(x-1,y-1,d+2,d+2)}ctx.fillStyle=PICKRING.line;for(let i=0;i<m;i++){const[x,y]=pt(i);ctx.fillRect(x,y,d,d)}/* すすんだ所：上から右まわりに、明るい点（まわりにこい色のふち） */
   ctx.restore()}
 function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハケではぬれません');/* 窓・カーテンは、壁に1つずつかける */
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
