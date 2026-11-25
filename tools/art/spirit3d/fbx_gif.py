@@ -46,7 +46,7 @@ def main():
     from motions import MOTIONS
     n = MOTIONS[name]['n']; cols = []
     for el in ELS:
-        _, _, raw, geo, eye, _, xr = fbx_build.job((name, el)); sh = Image.open(io.BytesIO(raw)).convert('RGBA'); cw, ch = geo[0], geo[1]
+        _, _, raw, geo, eye, _, xr = fbx_build.job((name, el))[:7]; sh = Image.open(io.BytesIO(raw)).convert('RGBA'); cw, ch = geo[0], geo[1]
         if xr:   # 3Dの表情の層（ふつうの目 n とほっぺ）を、ゲームと同じにそのままかさねる
             xs = Image.open(io.BytesIO(xr[0])).convert('RGBA'); xw, xh, a0, b0 = xr[1]; NL = len(fbx_build.XL)
             def lay(fr, f, i):

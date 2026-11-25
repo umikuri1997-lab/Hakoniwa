@@ -576,6 +576,24 @@ def sleepcurl(w, face):
     return breathe(dict(legM=1.15, legP=1.0, legz=-1.0, sN=1.3, sF=1.15, bN=-1.05, bF=-0.95, hp=0.28, lean=0.12, z=0.0), w, 0.7)
 M('sleepcurl', 8, 0.25, sleepcurl)
 
+# ---- いす・ベッド・うたたね・ばんざい（前は、パーツのドット絵を組んで描いていた場面） ----
+def chair(w, face):
+    """いす・ベンチにすわる：足を前へ出して、手をひざに。体の高さは立っているときのまま（すわる場所は、ゲームの SEATOFF）"""
+    return breathe(dict(legM=1.3, legP=1.3, sN=0.6, sF=0.6, bN=-0.6, bF=-0.6, hp=0.03*S(w)), w, 0.5)
+M('sit', 8, 0.2, chair)
+def bed(w, face):
+    """ベッドで眠る：うでを体にそわせて、ゆっくり息をする（ゲームが、まくらの所に置いて、ふとんをかさねる。目はゲームがとじる）"""
+    return breathe(dict(bN=-0.15, bF=-0.15, hp=0.04+0.02*S(w)), w, 0.9)
+M('bed', 8, 0.25, bed)
+def doze(w, face):
+    """うたたね（ベッド・床でない所で眠る）：頭をたれて、こっくり。手は体の前"""
+    return breathe(dict(sN=0.35, sF=0.35, bN=-0.3, bF=-0.3, hp=0.2+0.06*S(w), hr=0.07, lean=0.04), w, 0.9)
+M('doze', 8, 0.25, doze)
+def banzai(w, face):
+    """わーい（なかまの紹介で、もち上げられているとき）：両手を、胸の前から外へひろげて上げ（頭より上だと、ずきんにかくれる）、小さくゆらす"""
+    return dict(sN=1.6+0.12*S(w), sF=1.6-0.12*S(w), bN=0.55, bF=0.55, hp=-0.2, hr=0.05*S(w), top=0.12*S(w), tail=0.25*S(w), wing=0.15*S(w*2))
+M('banzai', 8, 4/(2*PI), banzai)
+
 # ---- プレゼント（gift-furn.js の GFMOT）：つつみをあけて、中身によってちがう動き。物の絵はゲームが手にかさねる（WHAND） ----
 def gf_open(w, face):
     """つつみを両手で胸の前にかかえ、ひもを引いて、がさごそ"""
