@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """うけとった・たっせい・はじめて置いた・作業台と料理の「できた」 の音（持ち主がサンプルページの4つの候補からえらんだ）。音は作らない（録音を切って、ならべて、大きさをそろえるだけ）。
 - rwget（うけとった）：おもちゃの鉄琴の ソ→ド（0.13秒あと）。「ちん・ちーん」
-- rwquest（たっせい）：おもちゃの鉄琴の ド・ミ・ソ・ド（0.1秒ずつ）
+- rwlevel（村レベルアップ・たっせい・あたらしいレシピ など、sfx('level') と sfx('quest')）：qubodup の「Level Up」まるごと（1.7秒。持ち主が10の候補からえらんだ。前のたっせいの「ドミソド」はやめた）
 - rwfirst（はじめて置いた）：チャイムの「きらーん」（1.25秒から2.6秒ぶん）
 - wdone（作業台・料理の「できた」）：あわがはじける「ぽん」（0.04秒から0.3秒ぶん。持ち主が9つの候補からえらんだ）
 もとの録音（どれも CC0。freesound のページで CC0 をたしかめる。おとすのは freesound の試聴の mp3）：
 - Toy Glockenspiel / mooncubedesign  https://freesound.org/people/mooncubedesign/sounds/420501/  （ド6〜ド7の8つの音が4秒ずつ）
 - GLEAM-GLOW-SFX-CHIME.wav / newagesoup  https://freesound.org/people/newagesoup/sounds/351408/
+- Level Up / qubodup  https://freesound.org/people/qubodup/sounds/442943/
 - The Best Bubble Pop Sound For Game and UI / el_boss  https://freesound.org/people/el_boss/sounds/669918/
 やること：モノ・60Hzより下をけずる → 切る（出だし4ms・おわり40%をなめらかに）→ ならべる → おわりを消えるように → 約 -20 LUFS（ピークは -1.5 dBFS まで）。
-使いかた：python3 tools/sound/reward_rec.py   さいごに js/audio.js にはる SAMPLES の行を出す。"""
+使いかた：python3 tools/sound/reward_rec.py [名前…]（名前をつけると、その音だけ作る）   さいごに js/audio.js にはる SAMPLES の行を出す。"""
 import os, re, sys, json, hashlib, subprocess, tempfile, urllib.request
 D = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(D, '..', '..', 'assets', 'g')
 URL = {'glock': 'https://cdn.freesound.org/previews/420/420501_5426702-hq.mp3',
        'gleam': 'https://cdn.freesound.org/previews/351/351408_4067257-hq.mp3',
-       'pop': 'https://cdn.freesound.org/previews/669/669918_9129912-hq.mp3'}
+       'pop': 'https://cdn.freesound.org/previews/669/669918_9129912-hq.mp3',
+       'lvup': 'https://cdn.freesound.org/previews/442/442943_71257-hq.mp3'}
 def run(a):
   r = subprocess.run(a, capture_output=True, text=True)
   if r.returncode: print(r.stderr[-1500:]); sys.exit(1)
@@ -22,7 +24,7 @@ def run(a):
 def gl(k, dl, du=1.6): return ('glock', 4 * k, du, dl)  # k：ド6から k ばんめの音（0=ド6, 2=ミ6, 4=ソ6, 7=ド7）
 RECIPE = {
   'rwget': ([gl(4, 0, 1.4), gl(7, .13, 1.8)], 1.9, .4),
-  'rwquest': ([gl(0, 0, 1.0), gl(2, .1, 1.0), gl(4, .2, 1.0), gl(7, .3, 1.8)], 2.1, .4),
+  'rwlevel': ([('lvup', 0, 1.7, 0)], 1.7, .4),
   'rwfirst': ([('gleam', 1.25, 2.6, 0)], 2.6, .6),
   'wdone': ([('pop', .04, .3, 0)], .3, .1),
 }
@@ -31,6 +33,7 @@ with tempfile.TemporaryDirectory() as td:
   for k, u in URL.items():
     urllib.request.urlretrieve(u, os.path.join(td, k + '.mp3'))
   for name, (parts, total, fout) in RECIPE.items():
+    if sys.argv[1:] and name not in sys.argv[1:]: continue
     a = ['ffmpeg', '-v', 'error', '-y']; fc = []
     for i, (f, ss, du, dl) in enumerate(parts):
       a += ['-ss', str(ss), '-t', str(du), '-i', os.path.join(td, f + '.mp3')]
