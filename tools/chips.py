@@ -3,6 +3,7 @@
 
   python3 tools/chips.py unpack chips_src.json   # chips.js とアトラス → id ごとの絵（data URI）の JSON
   python3 tools/chips.py pack chips_src.json     # JSON → アトラスの絵（ロスレス WebP）と chips.js
+  python3 tools/chips.py remove ids.json         # id の一覧のチップをけして、作りなおす（unpack・pack より、ずっと速い）
   python3 tools/chips.py replace replace.json    # マップチップ工房の「さしかえた絵」（絵・位置・大きさ）の JSON を入れて、作りなおす
   python3 tools/chips.py kobo <工房のファイルのフォルダ> [id...]
   python3 tools/chips.py kobo-sync <工房のファイルのフォルダ> [names.json]  # 工房を、いまの chips.js にそろえる（ないチップを足し、なくなったチップをけす）
@@ -127,6 +128,22 @@ def cap_all(C, n=NCOL):
         done.append(g)
     return done
 
+def _page_webp(job):
+    """1ページを WebP（ロスレス・method 2。method 6 は1ページ25秒かかり、小さくもならない）にして、中の絵が元の絵とドットまで同じかたしかめる（ProcessPoolExecutor で同時に）"""
+    size, raw, fr = job
+    pg = Image.frombytes('RGBA', size, raw); b = io.BytesIO(); pg.save(b, 'WEBP', lossless=True, exact=True, quality=100, method=2); data = b.getvalue()
+    chk = Image.open(io.BytesIO(data)).convert('RGBA')
+    for x0, y0, w, h, want in fr:
+        if chk.crop((x0, y0, x0 + w, y0 + h)).tobytes() != want: raise SystemExit('ちがう絵になった: %d,%d' % (x0, y0))
+    return data
+
+def remove(idsf):
+    """チップをけして、アトラスを作りなおす（unpack・pack をしない。絵は PIL の絵のまま）。idsf：けす id の JSON の一覧"""
+    ids = json.load(open(idsf, encoding='utf8')); head, C = load_imgs()
+    miss = [k for k in ids if k not in C]
+    for k in ids: C.pop(k, None)
+    print('けした', len(ids) - len(miss), 'なかった', len(miss)); pack_imgs(head, C)
+
 def pack_imgs(head, C):
     capped = cap_all(C)   # 物ごとに256色まで（新しい絵も、ここでかならずへる）
     if capped: print('256色までにした:', len(capped), ' '.join(capped[:20]) + (' …' if len(capped) > 20 else ''))
@@ -157,16 +174,18 @@ def pack_imgs(head, C):
         x += w + 1; sh = max(sh, h)
     os.makedirs(os.path.join(ROOT, 'assets', 'chips'), exist_ok=True)
     old = set(os.listdir(os.path.join(ROOT, 'assets', 'chips')))
-    names = []
+    # ページを、いくつも同時に WebP にして、元の絵とドットまで同じかたしかめる（1ページずつだと、とてもおそい）
+    from concurrent.futures import ProcessPoolExecutor
+    jobs = []
     for n, pg in enumerate(pages):
         bbox = pg.getbbox(); pg = pg.crop((0, 0, pg.width, bbox[3] if bbox else 1))  # 下のあいた所は切る
-        b = io.BytesIO(); pg.save(b, 'WEBP', lossless=True, exact=True, quality=100, method=2); data = b.getvalue()  # method 6 は1ページ25秒かかり、小さくもならない
+        fr = [(x0, y0, w, h, frames[i].convert('RGBA').tobytes()) for i, (pn, x0, y0, w, h) in pos.items() if pn == n]
+        jobs.append((pg.size, pg.tobytes(), fr))
+    with ProcessPoolExecutor() as ex: datas = list(ex.map(_page_webp, jobs))
+    names = []
+    for data in datas:
         name = 'assets/chips/' + hashlib.sha1(data).hexdigest()[:10] + '.webp'
         open(os.path.join(ROOT, name), 'wb').write(data); names.append(name)
-        chk = Image.open(io.BytesIO(data)).convert('RGBA')
-        for i, (pn, x0, y0, w, h) in pos.items():
-            if pn == n and chk.crop((x0, y0, x0 + w, y0 + h)).tobytes() != frames[i].convert('RGBA').tobytes():
-                raise SystemExit('ちがう絵になった: frame %d' % i)
     for f in old - {os.path.basename(n) for n in names}: os.remove(os.path.join(ROOT, 'assets', 'chips', f))
     for k, c in C.items():
         c['f'] = [list(pos[i]) for i in c['f']]
@@ -318,4 +337,4 @@ def kobo_extra(dirp, extf):
     print('公開しなおすファイル: index.json', ' '.join(changed))
 
 if __name__ == '__main__':
-    {'unpack': unpack, 'pack': pack, 'replace': replace, 'kobo': kobo, 'kobo-sync': kobo_sync, 'kobo-extra': kobo_extra}[sys.argv[1]](*sys.argv[2:])
+    {'unpack': unpack, 'pack': pack, 'remove': remove, 'replace': replace, 'kobo': kobo, 'kobo-sync': kobo_sync, 'kobo-extra': kobo_extra}[sys.argv[1]](*sys.argv[2:])
