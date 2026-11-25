@@ -152,6 +152,7 @@ function bpJob(r,G,dry){/* 置く所の木・岩を、切る・ほる */if(isNig
   for(const e of S.bp)for(const q of bpNatLeft(e)){const o=S.obj[q],k=o==='rock'||o==='boulder'||VEINS[o]?'mine':'chop';if(!free('o'+q,1))continue;if(dry)return true;
     const j=nearest(G,s=>adjOf(s,c=>c===q)>=0,200);if(j>=0){startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
 const bpHouseName=h=>{if(!S.hname)return null;for(const k in S.hname)if(h.inside.has(+k))return S.hname[k];return null};
+function bpList(){const o=[],m={};(S.bpInv||[]).forEach((it,i)=>{if(m[it.k])m[it.k].n++;else o.push(m[it.k]={i,k:it.k,n:1})});return o}/* 持っている設計図を、しゅるいごとに1つ（i：さいしょの場所、n：持っている数） */
 function bpGive(k,g){(S.bpInv||(S.bpInv=[])).push({k,g:g==null?null:g});toast('設計図「'+BPS[k].name+'」をもらった','good');bpGotPop(S.bpInv.length-1)}
 /* もらったときのカード：「見る」で、そのままプレビューへ（設計図のありかを知らせる） */
 function bpGotPop(i,it,s0,v0){if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;it=it||(S.bpInv||[])[i];s0=s0||S;v0=v0==null?VILLAGE_SESSION:v0;if(!it||S!==s0||VILLAGE_SESSION!==v0||!(S.bpInv||[]).includes(it))return;
