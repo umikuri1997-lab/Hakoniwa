@@ -111,9 +111,11 @@ def build(el):
                 sc_ = ln/44; c_, s_ = math.cos(th_), math.sin(th_)
                 def fw(q, sc_=sc_, c_=c_, s_=s_, wx=wx, wy=wy):
                     X, Y = q[0]*sc_, -q[2]*sc_; X, Y = X*c_-Y*s_, X*s_+Y*c_
-                    return (X+wx*K, -(-13+q[1]), -(Y+wy*K))
-                bmW = MB.place(MB.cutout('sp_wind:leaf', 2.0), fw)
+                    return (X+wx*K, -(-24+q[1]), -(Y+wy*K))
+                bmW = MB.place(MB.cutout('sp_wind:leaf', 3.0), fw)
                 for v in bmW.verts: v.co = fit(v.co)
+                dy = wbox(hood)[1][1]+0.005-min(v.co.y for v in bmW.verts)   # ずきんのうしろへ出す（ずきんをつきぬけない）
+                for v in bmW.verts: v.co.y += dy
                 o = MB.bm_to_obj(bmW, 'wing%d_wind' % i, bpy.context.scene.collection, None, smooth=False)
                 g = o.vertex_groups.new(name='spine'); g.add(list(range(len(o.data.vertices))), 1.0, 'REPLACE')
                 o.parent = arm; o.matrix_parent_inverse = arm.matrix_world.inverted()
