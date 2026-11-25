@@ -48,7 +48,9 @@ def job(a):
     for face in faces:
         for i in range(n):
             from motions import WALKEL
-            w = 2*np.pi*i/n; p = (WALKEL[el] if name == 'walk' and el in WALKEL else m['f'])(w, face)   # 歩く：属性ごとの歩き方
+            w = 2*np.pi*i/n; p = m['f'](w, face)
+            if name.startswith('walk') and el in WALKEL:   # 歩く：属性ごとの歩き方（首だけ先に向ける walk_h… も、その向きの分を足す）
+                dh = p.get('hy', 0.0)-MOTIONS['walk']['f'](w, face).get('hy', 0.0); p = WALKEL[el](w, face); p['hy'] = p.get('hy', 0.0)+dh
             T = FM.pose(el, p, face); S = FM.scene(el)
             pts, anc = FM.props(el, p, face)
             yaw = core.ISOY if (iso and face in (0, 2)) else 0.0
