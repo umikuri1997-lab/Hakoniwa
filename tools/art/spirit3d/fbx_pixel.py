@@ -64,7 +64,7 @@ def hsv2rgb(x):
     r = np.choose(i, [v, q, p, p, t, v]); g = np.choose(i, [t, v, v, q, p, p]); b = np.choose(i, [p, p, t, v, v, q])
     out = np.stack([r, g, b], 1); out[s == 0] = np.stack([v, v, v], 1)[s == 0]; return out
 
-def shade(cb, nb, mb, light):
+def shade(cb, nb, mb, light, soft=None):
     """かげは明度でなく彩度で（持ち主がきめた）：明るさ（HSV の V）はかえず、かげの段ほどあざやかに。
     つや（水のずきん）：光と目のあいだの向きの所に白いつや。光る（火のずきん）：かげをつけず、こちらを向いた所ほど明るい黄色へ。"""
     import colorsys
@@ -72,7 +72,11 @@ def shade(cb, nb, mb, light):
     out = cb.copy(); m = cb.sum(1) > 0
     hsv = rgb2hsv(cb[m]/255) if m.any() else np.zeros((0, 3))
     if len(hsv):
-        hsv[:, 1] = np.minimum(1, hsv[:, 1]+np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0))
+        add = np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0)
+        if soft is not None:   # 体（うで・足も）：かげの だんを ゆるく（色の数は頭と同じ3だんのまま、だんの差を小さく。持ち主がえらんだ）
+            sa = np.array([0.0, 0.06, 0.12])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.02, 0.04])[band[m]], 0)
+            add = np.where(soft[m], sa, add)
+        hsv[:, 1] = np.minimum(1, hsv[:, 1]+add)
         out[m] = hsv2rgb(hsv)*255
     view = np.array([0, 0, 1.0]); hv = light+view; hv /= np.linalg.norm(hv)
     sp0 = (mb == 1) & (nb@hv > 0.996); out[sp0] = 255   # 水：つやつや（小さな点の白い光。広がるつやにしない）
@@ -85,10 +89,11 @@ def shade(cb, nb, mb, light):
     return out
 
 TAGS = ['', 'body', 'arm', 'head', 'face', 'prop']
+ELEV = 25.0   # 見おろす角度（度。持ち主が「少しだけ見おろす」をえらんだ）
 from numba import njit
 
 @njit(cache=True)
-def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt):
+def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2, RP, rb):
     """三角形を1つずつ、ドットの細かさ（ss）でぬる（前の Python のぬり方と同じ式・同じじゅんばん）"""
     for k in range(SX.shape[0]):
         ax, bx, cx = SX[k, 0], SX[k, 1], SX[k, 2]; ay, by, cy = SY[k, 0], SY[k, 1], SY[k, 2]
@@ -104,13 +109,19 @@ def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt,
                 if l0 < -1e-6 or l1 < -1e-6 or l2 < -1e-6: continue
                 z = l0*SZ[k, 0]+l1*SZ[k, 1]+l2*SZ[k, 2]; j = yi*Ws+xi
                 if TAG[k] == 3 or TAG[k] == 4: hcov[j] = True
-                if MAT[k] == 3:
+                if MAT[k] == 3:   # すける物：手前から2まいまで（2まいがかさなる所も、うしろのはねが消えない）
                     if z > zt[j]:
+                        zt2[j] = zt[j]
+                        for q in range(3): ct2[j, q] = ct[j, q]; nt2[j, q] = nt[j, q]
                         zt[j] = z
                         for q in range(3): ct[j, q] = COL[k, q]; nt[j, q] = l0*NN[k, 0, q]+l1*NN[k, 1, q]+l2*NN[k, 2, q]
+                    elif z > zt2[j]:
+                        zt2[j] = z
+                        for q in range(3): ct2[j, q] = COL[k, q]; nt2[j, q] = l0*NN[k, 0, q]+l1*NN[k, 1, q]+l2*NN[k, 2, q]
                     continue
                 if z > zb[j]:
                     zb[j] = z; mb[j] = MAT[k]; tg[j] = TAG[k]
+                    for q in range(3): rb[j, q] = l0*RP[k, 0, q]+l1*RP[k, 1, q]+l2*RP[k, 2, q]   # 休みのポーズの場所（顔に表情の目をはる所）
                     for q in range(3): cb[j, q] = COL[k, q]; nb[j, q] = l0*NN[k, 0, q]+l1*NN[k, 1, q]+l2*NN[k, 2, q]
 
 @njit(cache=True)
@@ -143,12 +154,16 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     Ws, Hs = W*ss, H*ss
     zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）・3 すける（風のはね）
     zt = np.full(Ws*Hs, -1e9); ct = np.zeros((Ws*Hs, 3)); nt = np.zeros((Ws*Hs, 3))   # すける物（いちばん手前）
-    tg = np.zeros(Ws*Hs, int); hcov = np.zeros(Ws*Hs, bool)   # いちばん手前の物の種類（TAGS）・頭（ずきん・顔）がうつる所
+    zt2 = np.full(Ws*Hs, -1e9); ct2 = np.zeros((Ws*Hs, 3)); nt2 = np.zeros((Ws*Hs, 3))   # すける物（2まいめ）
+    tg = np.zeros(Ws*Hs, int); hcov = np.zeros(Ws*Hs, bool); rb = np.zeros((Ws*Hs, 3))   # いちばん手前の物の種類（TAGS）・頭（ずきん・顔）がうつる所
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
     spin = -(spin+yaw); cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])   # ゲームの view（キャラの座標で rz(spin)）＝ Blender の座標で rz(−spin)
-    cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
+    cam0 = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
+    ce, se = math.cos(math.radians(ELEV)), math.sin(math.radians(ELEV))
+    def cam(Q):   # 少し見おろす（ELEV 度）：画面の上 ＝ 上と奥のあいだ・奥行き ＝ 手前と上のあいだ
+        C = cam0(Q); return np.stack([C[:, 0], C[:, 1]*ce-C[:, 2]*se, C[:, 1]*se+C[:, 2]*ce], 1)
     if len(tris):
         P = np.array([t[0] for t in tris], float); N = np.array([t[1] for t in tris], float)
         COL = np.array([t[2] for t in tris], float); MAT = np.array([t[3] if len(t) > 3 else 0 for t in tris], np.int64)
@@ -156,7 +171,8 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
         if spin: P = P@Rs.T; N = N@Rs.T
         Q = cam(P.reshape(-1, 3)).reshape(-1, 3, 3); NN = cam(N.reshape(-1, 3)).reshape(-1, 3, 3)
         SX = (Q[..., 0]+W/2)*ss; SY = (H-12-Q[..., 1])*ss
-        _raster(SX, SY, np.ascontiguousarray(Q[..., 2]), np.ascontiguousarray(NN), COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt)
+        RP = np.array([t[5] if len(t) > 5 else np.zeros((3, 3)) for t in tris], float)
+        _raster(SX, SY, np.ascontiguousarray(Q[..., 2]), np.ascontiguousarray(NN), COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2, RP, rb)
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
         if spin: P = P@Rs.T
         Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
@@ -164,11 +180,15 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
         bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2; tg[j] = 5
     # 左上の光で3だん
     nb /= np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-9)
-    nt /= np.maximum(np.linalg.norm(nt, axis=1, keepdims=True), 1e-9)
-    img = shade(cb, nb, mb, light); has = zb > -1e8
-    wt = (zt > -1e8) & (zt > zb)   # すける物が手前：うしろの色と 45:55 でまぜる（うしろが何もなければ、うすく）
-    tw = shade(ct, nt, np.zeros(len(ct), int), light)
-    img[wt & has] = img[wt & has]*0.45+tw[wt & has]*0.55; img[wt & ~has] = tw[wt & ~has]
+    nt /= np.maximum(np.linalg.norm(nt, axis=1, keepdims=True), 1e-9); nt2 /= np.maximum(np.linalg.norm(nt2, axis=1, keepdims=True), 1e-9)
+    img = shade(cb, nb, mb, light, soft=(tg == 1) | (tg == 2)); has = zb > -1e8
+    # すける物：うしろから順に（2まいめ → 手前）、うしろの色と 45:55 でまぜる。うしろが何もない所は、すける物だけ（うすく）
+    w2 = (zt2 > -1e8) & (zt2 > zb); w1 = (zt > -1e8) & (zt > zb)
+    t2 = shade(ct2, nt2, np.zeros(len(ct2), int), light); t1 = shade(ct, nt, np.zeros(len(ct), int), light)
+    base = has.copy()
+    m = w2 & base; img[m] = img[m]*0.45+t2[m]*0.55; m = w2 & ~base; img[m] = t2[m]; base |= w2
+    m = w1 & base; img[m] = img[m]*0.45+t1[m]*0.55; m = w1 & ~base; img[m] = t1[m]
+    wt = w1 | w2
     thin = (wt & ~has).reshape(Hs, Ws)
     img = img.reshape(Hs, Ws, 3); a = (has | wt).reshape(Hs, Ws)
     # ss×ss をいちばん多い色で1ドットに
@@ -183,7 +203,35 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     if not info: return out
     T = tg.reshape(H, ss, W, ss).transpose(0, 2, 1, 3).reshape(H, W, ss*ss)
     cnt = np.stack([(T == q).sum(2) for q in range(len(TAGS))], 2); tagd = cnt.argmax(2)   # ドットごとの いちばん多い種類
-    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs}
+    return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs, 'rb': rb, 'tgs': tg, 'w1': (zt > -1e8) & (zt > zb), 'ss': ss, 'W': W, 'H': H}
+
+def decals(inf, chipimgs, fit):
+    """decal を いくつもの絵で（顔の点と、チップの場所は1回だけ計算する）"""
+    ss, W, H = inf['ss'], inf['W'], inf['H']; m = (inf['tgs'] == 4) & ~inf['w1']; idx = np.nonzero(m)[0]; outs = []
+    if len(idx): u, v, front = fit(inf['rb'][idx])
+    for a, ax, ay in chipimgs:
+        out = np.zeros((H, W, 4), np.uint8)
+        if len(idx):
+            c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int); ok = front & (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
+            if ok.any():
+                lay = np.zeros((H*ss*W*ss, 4), np.uint8); lay[idx[ok]] = a[r[ok], c[ok]]; lay = lay.reshape(H*ss, W*ss, 4)
+                _down(lay[..., :3].astype(np.float64), lay[..., 3] > 0, np.zeros((H*ss, W*ss), np.bool_), H, W, ss, out)
+        outs.append(out)
+    return outs
+
+def decal(inf, chipimg, fit):
+    """表情の目・ほっぺの絵を、顔の3Dの面にはって写した層（RGBA・ドット）。
+    inf：render(info=True)・chipimg：(絵, ax, ay)・fit(休みの点 [n,3]) → チップの場所 (u, v)。顔がいちばん手前の所だけ（ずきん・うで・すける はねの下はかくれる）"""
+    ss, W, H = inf['ss'], inf['W'], inf['H']; a, ax, ay = chipimg
+    m = (inf['tgs'] == 4) & ~inf['w1']; idx = np.nonzero(m)[0]
+    lay = np.zeros((H*ss*W*ss, 4), np.uint8)
+    if len(idx):
+        u, v, front = fit(inf['rb'][idx]); c = np.floor(u-ax).astype(int); r = np.floor(v-ay).astype(int)
+        ok = front & (c >= 0) & (c < a.shape[1]) & (r >= 0) & (r < a.shape[0])
+        lay[idx[ok]] = a[r[ok], c[ok]]
+    lay = lay.reshape(H*ss, W*ss, 4); out = np.zeros((H, W, 4), np.uint8)
+    _down(lay[..., :3].astype(np.float64), lay[..., 3] > 0, np.zeros((H*ss, W*ss), np.bool_), H, W, ss, out)   # 半分より多く絵がある所：いちばん多い色（体と同じまとめ方）
+    return out
 
 def main():
     dst = sys.argv[1]; Z = 4; tiles = []
