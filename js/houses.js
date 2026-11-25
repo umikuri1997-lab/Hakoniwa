@@ -179,6 +179,12 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
   const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;
 }
+const INVMOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc',kinoko:'kinoko'};/* 持ち物の素材のうち、絵のファイルがない物は、その草の絵（ui.js の持ち物） */
+const ICWARM={ms:4,gap:1000,t:0,q:[]};/* 持ち物のアイコンを、ゲームの手があいているときに先に作っておく（持ち物を開いたときにその場で作らない）。1コマに ms ミリ秒まで・持っている物の一覧は gap ミリ秒ごとに見なおす */
+function iconWarmIds(){/* 持ち物の画面に出る、iconURL で作るアイコン */const L=[...BLOCKS,...PLANTS,...FURN,...AMMO].filter(id=>inv(id)>0);for(const k in INVMOBJ)if((S.mat[k]||0)>0&&!ICONS[k]&&BL[INVMOBJ[k]])L.push(INVMOBJ[k]);return L}
+function iconWarm(now){if(!S||!stageReady())return;/* マップを読みこみ中は作らない。ページを読みこみ中の物（ICWAIT）は、とどいたら icWaitDone が作る */
+  if(!ICWARM.q.length){if(now-ICWARM.t<ICWARM.gap)return;ICWARM.t=now;ICWARM.q=iconWarmIds().filter(id=>!iconCache[id]&&!ICWAIT[id])}
+  const t0=performance.now();while(ICWARM.q.length&&performance.now()-t0<ICWARM.ms){const id=ICWARM.q.shift();if(!iconCache[id]&&!ICWAIT[id])try{iconURL(id)}catch(e){}}}
 function cubeIcon(id){/* ブロックのアイコン：上の面と左右の面が見える立方体（48ドットのドット絵を3倍で144に）。面の色は、つんだブロックと同じ絵（cubeTex）を、ドットごとにひろう。左の面は少し暗く・右の面はもっと暗く、まわり1ドットは、となりの色を少し暗く */
   const T=cubeTex(id);if(!T)return '';const sd=T.getContext('2d').getImageData(0,0,64,64).data,N=48,cx=24,ty=2,hw=21,hh=10.5,sh=24,px=new Array(N*N).fill(null);
   const at=(u,v,k)=>{const o=((Math.min(63,v*64|0))*64+Math.min(63,u*64|0))*4;return[sd[o]*k,sd[o+1]*k,sd[o+2]*k]};

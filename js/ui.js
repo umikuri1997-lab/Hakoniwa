@@ -420,7 +420,7 @@ function renderSheet(){
       }/* 終盤のパワーの使い道 */
   }else if(sheet==='inv'){
     T.textContent='もちもの';
-    {/* 素材と食べ物も、ここで見られる */const MOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc',kinoko:'kinoko'},mic=k=>ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):null);
+    {/* 素材と食べ物も、ここで見られる */const MOBJ=INVMOBJ,mic=k=>ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):null);
       const sec=(title,items,empty)=>{const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:4px;font-size:15px"></b>');hd.textContent=title;g.appendChild(hd);if(!items.length){const p=nodata('box',empty);p.style.gridColumn='1/-1';g.appendChild(p)}for(const[img,emo,nm,ct,tap]of items){const b=el(tap?'<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>':'<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');if(tap)b.onclick=()=>{sfx('tap');tap()};if(img)b.querySelector('img').src=img;else b.querySelector('img').replaceWith(Object.assign(document.createElement('span'),{className:'stockEmo',innerHTML:pxi('box')}));b.querySelector('.nm').textContent=nm;b.querySelector('.ct').textContent=ct;g.appendChild(b)}body.appendChild(g)};
       sec('素材',Object.keys(MATN).filter(k=>(S.mat[k]||0)>0).map(k=>[mic(k),'',MATN[k],S.mat[k],()=>otakiPop(k)]),'素材は、まだないよ');/* 素材をタップすると、おたきあげのメニュー */
       {const q=S.otakiQ||{},L=[];const add=o=>{for(const k in o)if(o[k])L.push(MATN[k]+o[k])};add(q);for(const a in S.otakiB||{})add(S.otakiB[a]);S.res.forEach(r=>r.otaki&&add(r.otaki));if(L.length){const p=el('<p class="note"></p>');p.textContent='おたきあげまち：'+L.join('・');body.appendChild(p)}}
