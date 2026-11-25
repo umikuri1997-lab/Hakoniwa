@@ -29,7 +29,7 @@ function glRingOff(){if(GLRING){GLRING.remove();GLRING=null}}
 cv.addEventListener('pointerdown',e=>{
   if(!started)return;if(!(camAnim&&camAnim.done))camAnim=null;/* 演出のカメラ（おわりの処理つき）は、さわっても止めない（止めると、おわりの処理がよばれず、ゲームが止まったままになる） */
   cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});
-  if(ptrs.size===1){gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};if(FLING&&Math.hypot(FLING.vx,FLING.vy)>FLINGSTOP)gest.stopTap=1;/* すべっている地図をおさえて止めたタップは、タップにしない */gest.grab=grabAt(cX(e),cY(e));FLING=null;if(LIGHTARM&&!(typeof caveOn==='function'&&caveOn())){gest.glT=performance.now();glRing(e.clientX,e.clientY)}/* 守りの光をえらんでいるとき：おしつづけて、ためる */}
+  if(ptrs.size===1){gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};if(FLING&&Math.hypot(FLING.vx,FLING.vy)>FLINGSTOP)gest.stopTap=1;/* すべっている地図をおさえて止めたタップは、タップにしない */gest.grab=grabAt(cX(e),cY(e));FLING=null;if(LIGHTARM){gest.glT=performance.now();glRing(e.clientX,e.clientY)}/* 守りの光をえらんでいるとき：おしつづけて、ためる（村でも洞窟でも） */}
   else if(ptrs.size===2){const[p,q]=[...ptrs.values()];gest={type:'pinch',d:Math.hypot(p.x-q.x,p.y-q.y),z:cam.z,mid:toWorld((p.x+q.x)/2,(p.y+q.y)/2)};if(selRect&&!pending)selRect=null}
   if(ptrs.size===1&&mode==='remove'&&!LIGHTARM&&!LEAFARM&&!AREAARM)pickDown(cX(e),cY(e));else pickCancel();/* こわす：ブロック・地面は長おしでこわす（build.js） */
 });
@@ -117,7 +117,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
   const w0=toWorld(sx,sy),w=tapW(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);TAPS={sx,sy,w};/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */if(mode==='look'&&yamiTap(w0.x/TS,w0.y/TS,tx,ty))return;if(mode==='look'&&typeof ngTap==='function'&&ngTap(tx,ty))return;if(mode==='look'&&typeof hapTap==='function'&&hapTap(tx,ty))return;/* ときどき起きるできごと（happen.js） *//* 夜のたからさがし：光るつぶ（nightglow.js） *//* 闇のステージ：ヨリ・夜の仕事のあと（yami.js） */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){LEAFDRAG=[];leafAdd(ty*W+tx);const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
-  if(LIGHTARM){const ch=GLHOLD>=GLCHARGEMS&&GLHOLD<GLCHARGEMS+GLJUSTMS/* ぴったりにはなしたときだけ、ためた光 */,en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en,ch);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty,null,ch);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
+  if(LIGHTARM){const ch=glCh(),en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en,ch);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty,null,ch);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
