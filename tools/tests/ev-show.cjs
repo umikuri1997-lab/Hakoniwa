@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
   const day=await run(`S.ev.day`);await to(day,5.9);
   const est0=JSON.parse(await run(`JSON.stringify(S.res.map(r=>(r.est||{}).sta||0))`));
   await sim(120,"S.ev&&S.ev.ph==='do'");
-  assert.equal(await run(`S.ev&&S.ev.ph`),'do','gathered');assert.equal(await run(`EVV.id`),'taiso','show begun');assert.ok(await run(`!!EVV.box`),'deco box');
+  assert.equal(await run(`S.ev&&S.ev.ph`),'do','gathered');assert.equal(await run(`EVV.id`),'taiso','show begun');assert.ok(await run(`!!EVV.box`),'deco box');assert.equal(await run(`EVV.song`),'','taiso: no bgm');assert.ok(await run(`EVNODECO.has('taiso')`),'taiso: no garland');assert.equal(await run(`(()=>{try{for(const k of['flag','rw','lamp','flower'])isoGarland(ctx,50*TS,56*TS,50*TS,k,1e9,performance.now());const A=gFoot(50*TS,50*TS),B=gFoot(56*TS,50*TS);return B.px>A.px&&B.py>A.py?'ok':'flat'}catch(e){return String(e)}})()`),'ok','garland follows the grid row');
   await page.waitForTimeout(2600);assert.ok(await run(`!!document.getElementById('evAsk')`),'ask card shown');
   await run(`document.querySelector('#evAsk .a').click()`);assert.ok(await run(`!!document.getElementById('cupMG')`),'minigame open');
   await run(`S.ev.ek=1`);/* うまくいったことにする */

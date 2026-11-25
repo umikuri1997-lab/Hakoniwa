@@ -435,7 +435,6 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'eat':if(playS('munch',.45))break;[0,.14,.28].forEach(d=>{noise(t+d,.06,.03,o,1800);tone(240+Math.random()*60,t+d,.06,'triangle',.05,o,150)});tone(84,t+.42,.12,'sine',.05,o);tone(88,t+.5,.16,'sine',.05,o);break;
   case'poof':noise(t,.3,.08,o,2500);seq([84,91],.08,'sine',.05);break;
   case'night':seq([57,53,50],.25,'sine',.08,.5);break;
-  case'morning':seq([72,79,84],.12,'triangle',.06,.3);break;
   }
 }
 /* ひろった物・図鑑でタップした物の音：その物の材質ごとの録音（「みる」でタップしたときと同じ録音。大きさは同じ）。

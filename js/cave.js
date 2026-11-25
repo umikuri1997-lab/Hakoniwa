@@ -674,11 +674,11 @@ function cvDie(a){const C=CV,r=a.r;C.party=C.party.filter(q=>q!==a);S.cvAway=(S.
   if(!C.party.length)later(()=>{if(CV===C)caveExit(false)},600)}
 function cvTarget(a){const C=CV;let b=null,bd=CVAGGRO;const f=C.focus;if(f&&!f.dead&&!f.down&&!cvGlassOn(f)&&Math.hypot(f.x-a.x,f.y-a.y)<CVAGGRO+4)return f;/* タップしたコワイノは、ねていてもねらう */
   for(const e of C.en){if(e.dead||e.asleep||e.down||EN[e.type].tsOok)continue;const d=Math.hypot(e.x-a.x,e.y-a.y)+(a.elem==='water'&&e.stun>1?3:0);if(d<bd){bd=d;b=e}}return b}
-/* まもりの光：村と同じ（パワー1・チャージ・威力・とめる時間・範囲は GUP）。光の落ちた所のまわりは見えるようになり、うすい壁はくずれる */
-function caveLight(tx,ty){const C=CV;PTW.q=true;if(LIGHTCD>0)return toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒'),false;if(S.pt<1)return toast('パワーが足りません'),false;if(tx<0||ty<0||tx>=CVW||ty>=CVH)return false;
-  S.pt-=1;LIGHTCD=lightCdMax();const R=gupOf('rng').v[gupLv('rng')],wy=ty+CVOY;fxSpr('godlight',tx*TS+16,wy*TS+26);
-  later(()=>{if(CV===C)sfxAt('glight',tx,wy)},GLHIT);later(()=>{if(CV===C){skillFx('light');cvLightHit(tx,ty,R)}},GLFX);return true}
-function cvLightHit(tx,ty,R){const C=CV,G=gupOf('stun'),gs=gupLv('stun'),pw=gupOf('pow').v[gupLv('pow')],now=performance.now();let broke=false,gl=false;
+/* まもりの光：村と同じ（パワー1・チャージ・威力・とめる時間・範囲は GUP。ため ch も：まわり+GLCHR・威力 vc・音 glightc・GLMULTI ひき以上でチャージ vm）。光の落ちた所のまわりは見えるようになり、うすい壁はくずれる */
+function caveLight(tx,ty,ch){const C=CV;PTW.q=true;if(LIGHTCD>0)return toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒'),false;if(S.pt<1)return toast('パワーが足りません'),false;if(tx<0||ty<0||tx>=CVW||ty>=CVH)return false;
+  S.pt-=1;LIGHTCD=lightCdMax();const R=gupOf('rng').v[gupLv('rng')]+(ch?GLCHR:0),wy=ty+CVOY;fxSpr('godlight',tx*TS+16,wy*TS+26);
+  later(()=>{if(CV===C)sfxAt(ch?'glightc':'glight',tx,wy)},GLHIT);later(()=>{if(CV===C){skillFx('light');cvLightHit(tx,ty,R,ch)}},GLFX);return true}
+function cvLightHit(tx,ty,R,ch){const C=CV,G=gupOf('stun'),gs=gupLv('stun'),pw=ch?gupOf('pow').vc[gupLv('pow')]:gupOf('pow').v[gupLv('pow')],now=performance.now();let broke=false,gl=false,kn=0;
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=CVW||y>=CVH)continue;const j=cvJ(x,y),o=C.ob.get(j);
     if(o&&o.k==='W'){C.ob.delete(j);C.g[j]=1;broke=true;cvSpark(x+.5,y+.5,'#d9c7a8',18)}/* うすい壁 */
     if(o&&(o.k==='U'||o.k==='Q')&&cvGlassBreak(j,now))gl=true;/* ガラスの入れ物（cave-baiyou.js） */
@@ -686,7 +686,8 @@ function cvLightHit(tx,ty,R){const C=CV,G=gupOf('stun'),gs=gupLv('stun'),pw=gupO
     if(!dx&&!dy||!C.g[j])continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;later(()=>{if(CV===C)fxSpr('glspark',x*TS+16,(y+CVOY)*TS+16+GLSPY)},d*GLSTEP)}
   if(gl){sfx('crack');toast('ガラスの入れ物が、われた。中から、なにかが出てきた','warn')}
   if(broke){sfx('crack');toast(broke===2?'岩がくずれた':'うすい壁がくずれた','good')}
-  for(const e of C.en){if(e.dead||Math.max(Math.abs((e.x|0)-tx),Math.abs((e.y|0)-CVOY-ty))>R)continue;if(e.down){e.down=0;e.byLight=1;cvDefeat(e,null);continue}if(EN[e.type].tsOok){tsOkuLight(C,e);continue}/* かげのゆりかご（tsuchi-oku.js） *//* くずれたほねに、とどめ */hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+CVOY+.5});e.stun=G.v[gs];e.asleep=false;e.path=[];if(e.hp<=0){e.byLight=1;cvDefeat(e,null)}}
+  for(const e of C.en){if(e.dead||Math.max(Math.abs((e.x|0)-tx),Math.abs((e.y|0)-CVOY-ty))>R)continue;if(e.down){e.down=0;e.byLight=1;cvDefeat(e,null);if(e.dead)kn++;continue}if(EN[e.type].tsOok){tsOkuLight(C,e);continue}/* かげのゆりかご（tsuchi-oku.js） *//* くずれたほねに、とどめ */hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+CVOY+.5});e.stun=G.v[gs];e.asleep=false;e.path=[];if(e.hp<=0){e.byLight=1;cvDefeat(e,null);if(e.dead)kn++}}
+  if(kn>=GLMULTI){const vm=gupOf('cd').vm[gupLv('cd')];if(LIGHTCD>vm)LIGHTCD=vm}/* 1回でまとめてたおすと、つぎの光が早くたまる（村と同じ） */
   cvBakeLight(tx,ty,R);C.flash={x:tx+.5,y:ty+.5,t0:now};if(C.g[cvJ(tx,ty)])cvReveal(tx+.5,ty+.5,R+2.5);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=tx+dx,y=ty+dy;if(x>=0&&y>=0&&x<CVW&&y<CVH)C.seen[cvJ(x,y)]=1}
   for(const a of C.party)if(Math.max(Math.abs(a.x-tx-.5),Math.abs(a.y-CVOY-ty-.5))-R<=GLSHOCKR){a.shockU=now+GLSHOCKT;a.jumpT=now}}
 
@@ -727,7 +728,7 @@ function cvUse(j,o){const C=CV;C.focus=null;C.askHome=-1;C.sel=null;
   let ba=null,bp=null;for(const a of C.party){const p=cvBfs(cvCell(a),q=>cvAdj(q,j));if(p&&(!bp||p.length<bp.length)){bp=p;ba=a}}if(!ba)return toast('そこへ行けません');
   ba.job={k:o.k==='o'?'pick':o.k==='K'||o.k==='Y'?'relic':'chest',j,t:0};ba.jq=[];ba.path=bp;ba.mv=false;ba.chase=false;cvGo(bp.length?bp[bp.length-1]:cvCell(ba),ba);sfx('tap')}
 function caveTap(sx,sy){const C=CV;if(!C||cvHold())return;const w=cvqTapW(sx,sy),wx=w.x/TS,wy=w.y/TS,x=Math.floor(wx),y=Math.floor(wy)-CVOY,in0=x>=0&&y>=0&&x<CVW&&y<CVH;
-  if(LIGHTARM){caveLight(x,y);return}
+  if(LIGHTARM){caveLight(x,y,glCh());return}
   C.lookU=0;/* タップしたら、カメラはパーティへもどる */
   if(C.sel&&in0){const sel=C.sel,tj=cvJ(x,y);C.sel=null;
     if(sel.k==='b'){const d=cvPushDirs(sel.j).find(q=>q.t===tj),a=d&&cvPusher(sel.j,d.s);if(d&&a){const p=cvBfs(cvCell(a),q=>q===d.s);if(p){a.job={k:'push',j:sel.j,to:d.t,s:d.s,t:0};a.jq=[];a.path=p;a.mv=false;a.chase=false;C.sel=sel;sfx('tap')}return}if(tj===sel.j){cvHudUpd();return}}

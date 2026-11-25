@@ -377,8 +377,8 @@ def hammer(w, face):
     return breathe(dict(sN=s, bN=-0.35, tN=0.0, kN=k, prop='hammer', sF=0.9, bF=-0.6, lean=0.2-0.12*up, hp=0.15-0.08*up), w, 0.5)
 for nm in ('build', 'repair', 'craft'): M(nm, 8, 2.6/2, hammer)
 def watering(w, face):
-    """じょうろをかたむけて、水をやる（水のつぶは、ゲームでじょうろの先から）"""
-    return breathe(dict(sN=1.0+0.08*S(w), bN=-0.35, tN=0.0, prop='can', sF=0.2, bF=0.0, lean=0.1, hp=0.18), w)
+    """じょうろを、となりの畑のマスの上へさし出して、かたむけて水をやる：手前のうでを前へほぼ水平にのばし、からだも前へかがむ（水のつぶは、ゲームでじょうろの先から）"""
+    return breathe(dict(sN=1.55+0.08*S(w), bN=-0.2, tN=0.0, prop='can', sF=0.3, bF=-0.1, lean=0.24, legM=0.15, legP=-0.15, hp=0.2), w)
 M('water', 8, 2/(2*PI), watering); M('tend', 8, 2/(2*PI), watering)
 def drawwater(w, face):
     """水くみ（1回だけ）：かがんでバケツを水へおろし（〜.4）、水に入れて少しまつ（〜.5）、両手でひき上げ（〜.75）、胸の前でかかえてひと息（〜1）。
