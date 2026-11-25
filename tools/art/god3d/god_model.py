@@ -222,7 +222,7 @@ def check(od):
     os.makedirs(od, exist_ok=True); sc = bpy.context.scene
     sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = 16; sc.render.film_transparent = True   # GPU がない所でも写せる
     sun = bpy.data.objects.new('sun', bpy.data.lights.new('sun', 'SUN')); sun.data.energy = 2.0; sun.rotation_euler = (math.radians(40), 0, math.radians(-30)); sc.collection.objects.link(sun)
-    w = bpy.data.worlds.new('w'); sc.world = w; bg = next(n for n in w.node_tree.nodes if n.type == 'BACKGROUND'); bg.inputs['Strength'].default_value = 1.6
+    w = bpy.data.worlds.new('w'); sc.world = w; bg = next(n for n in w.node_tree.nodes if n.type == 'BACKGROUND'); bg.inputs['Strength'].default_value = 3.0
     sc.render.resolution_x, sc.render.resolution_y = 310, 637   # 1ドット＝0.01（参考の絵と同じ）
     cam = bpy.data.cameras.new('cam'); cam.type = 'ORTHO'; cam.ortho_scale = 6.37*1.0   # 参考の絵の1つの絵のたて（y 0〜637）
     co = bpy.data.objects.new('cam', cam); sc.collection.objects.link(co); sc.camera = co
