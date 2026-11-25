@@ -126,7 +126,7 @@ function tmpFree(){for(const c of TMPF)c.width=c.height=0;TMPF.length=0}
 let GLOD=false;
 function drawPits(x0,y0,x1,y1){/* ほった穴（地面より下）：マスの中に、おくのかべ（石）と、暗くなった底。底は、そのマスの地面の絵をずらさずに使う（穴の中の物も、地面の高さで描く liftOf） */if(S.hi)isoPits(ctx,x0,y0,x1,y1)}/* クォータービュー（iso-fx.js） */
 const CUBET={};/* つんだブロックの絵：1マス64ドットのドット絵（石・板はもらったテクスチャを切りとる、レンガはコードのドット）。まわり1ドットはブロックのさかいの線 */
-const BLKIMG={};function blkImg(id){/* ほって落ちたブロックのアイコン（もちものと同じ絵） */let m=BLKIMG[id];if(!m){const u=iconURL(id);if(!u)return null;m=BLKIMG[id]=new Image();m.src=u}return m}
+const BLKIMG={};function blkImg(id){/* ほって落ちたブロックのアイコン（もちものと同じ絵） */let m=BLKIMG[id];if(!m){const u=iconURL(id);if(!u||ICWAIT[id]===u)return null;/* 読みこみ中のかりの絵は、とっておかない */m=BLKIMG[id]=new Image();m.src=u}return m}
 function cubeTex(id){let c=CUBET[id];if(c)return c.ok?c:null;c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
   const tk=id==='blk_stone'?'tex:granite':id==='blk_wood'?'tex:planks':'',ch=tk&&(window.CHIPS||{})[tk];
   if(id===SOIL){/* 土のブロック：コードのドット（2ドットずつ）。土の色にこい点・明るい点・小石・うすい地層 */const P=['#a47b52','#9a7149','#ad845a','#a07650'];for(let y=0;y<64;y+=2)for(let x=0;x<64;x+=2){g.fillStyle=P[(hash(x*7+y*131+5)*4)|0];g.fillRect(x,y,2,2)}
