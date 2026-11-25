@@ -29,7 +29,7 @@ function tsPost(s){const hiS=j=>s.hi?s.hi[j]|0:0;
 const tsOn=()=>!!S&&WD===TSUCHI&&!!S.ts;
 /* ---- 絵（チップがないときは、コードのドットの仮の絵） ---- */
 function tsPx(c,col,x,y,w,h){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
-function tsDrawObj(c,id,x,y,i,now){const P=(col,a,b,w,h)=>tsPx(c,col,x+a,y+b,w,h);
+function tsDrawObj(c,id,x,y,i,now){if(tsNushiDraw(c,id,x,y,i,now))return;/* トトの根・子どものあなぐま（tsuchi-nushi.js） */const P=(col,a,b,w,h)=>tsPx(c,col,x+a,y+b,w,h);
   if(id==='tsrubble'){const ch=window.CHIPS&&CHIPS['tsrubble:'+tsRubTier(i)+'#'+((hash((i|0)*13+7)*TSRUBV)|0)];if(ch&&drawChip(c,ch,id,x,y,now||performance.now(),i))return;
     /* 仮の絵：かさなった砂岩の大きな石 */const h=n=>hash(((i|0)*7+n)>>>0);P('#8a6a4e',2,14,28,16);P('#a98a68',3+((h(1)*4)|0),6,16,12);P('#c4a07a',5+((h(1)*4)|0),7,10,3);P('#9c7a5a',14+((h(2)*4)|0),10,14,12);P('#b8946e',16+((h(2)*4)|0),11,8,2);P('#6f553f',4,26,24,3);return}
   if(id==='tskonoki'){const ch=window.CHIPS&&CHIPS.tskonoki;if(ch&&drawChip(c,ch,id,x,y,now||performance.now(),i))return;
@@ -56,7 +56,7 @@ function tsRiftCells(){/* 地われと橋のマスと、そのタイルの名前
 function tsRiftDraw(x0,y0,x1,y1){/* 地面の区画のあと・物より先（draw-world.js）。画面に見えるマスだけ */if(WD!==TSUCHI||!S||!riftM())return;const L=tsRiftCells();
   icScreen(ctx,()=>{for(const[x,y,k]of L){if(x<x0||x>x1||y<y0||y>y1)continue;const t=icBlkImg(k);if(!t)continue;const[ch,im]=t,ix=(x-y)*IQW/2,iy=(x+y)*IQH/2;ctx.drawImage(im,ix-ch.ax/2,iy+IQH/2-ch.ay/2,ch.w/2,ch.h/2)}tsBrFlowerDraw()})}
 /* ---- 巣穴をタップ ---- */
-function tsTap(j){if(!tsOn())return false;const o=S.obj[j];if(o==='tsrubble'){toast('くずれた岩の山。おくの土地が、ふさがっている');return true}if(o!=='anagura')return false;
+function tsTap(j){if(!tsOn())return false;const o=S.obj[j];if(tsNushiTap(o))return true;if(o==='tsrubble'){toast('くずれた岩の山。おくの土地が、ふさがっている');return true}if(o!=='anagura')return false;
   if(!qAt('tscave1')){toast('あなぐまの巣穴。おくから、つめたい風がふいてくる');return true}
   const seen=(S.ts.carve||[]).slice().sort();if(!seen.length){sfx('tap');cavePrep();return true}
   sfx('tap');const P=pxPop('あなぐまの巣穴'),go=el('<button class="btn pri" style="width:100%">洞窟へ出かける</button>'),h=el('<small style="display:block;margin:12px 0 6px">見つけた彫り絵</small>'),g=el('<div style="display:flex;gap:6px;flex-wrap:wrap"></div>');
@@ -154,6 +154,7 @@ QL[TSUCHI]=[
      {t:'ユリ',v:'lily',lines:[[HANI,'……しろい花。']]}]}],
     [GOD,'ほっほ。谷が、ひとつにつながったのう。']]},
   {id:'tsoku',text:'洞窟のいちばんおくへ行こう',check:()=>!!S.ts.totoRoot,prog:()=>(S.cvClr|0)<TSOKFL?'洞窟の10階は、まだひらいていない':!tsHaniOf()&&!(S.cvAway||[]).some(r=>r.name===HANI)?HANI+'が、村にいない':'ハニといっしょに、10階のまん中の島へ',how:'「しらべる」で巣穴をタップして、洞窟の10階へ。ハニといっしょに、まん中の島へ行こう'},/* トトの場面は tsuchi-oku.js */
+  {id:'tsnushi',text:'トトの根のそばへ行こう',check:()=>!!S.ts.haniNushi,prog:()=>tsNushiProg(),how:'昼、みんなが、巣穴の前のトトの根のそばに集まる'},/* ハニがあたらしいヌシ様になる（tsuchi-nushi.js）。このあとクリア */
 ];
 /* ---- くずれた岩の山（S.ts.rub）：谷のはしの土地を、地ゆれでくずれた岩がふさいでいる。洞窟の階をはじめてクリアするたびに、1つずつくずれて、土地がひらく ----
    1つめ（ひらく順の0）は地われの西がわ。そこに、たおれたオリーブ（tskonoki）と、土のせいれいハニがいる。
@@ -191,7 +192,7 @@ function tsOpenReset(){if(TSOPEN){if(camAnim===TSOPEN)camAnim=null;TSOPEN=null;G
 /* 洞窟からもどったら：はじめてクリアした階の数だけ、岩の山がくずれる（main.js：画面があいているとき） */
 function tsTick(){if(!tsOn()||!S.ts.rub||typeof CV!=='undefined'&&CV||TSINTRO||TSOPEN||GIFT_ACTIVE||camAnim||document.querySelector('.pxpopw,.idea-reveal'))return;
   const n=Math.min(S.cvClr||0,S.ts.rub.length);for(let i=0;i<n;i++)if(!S.ts.rub[i].open){tsRubOpen(i);return}
-  if(S.ts.ibNew&&NEWRES==null&&!NEWQ.length){tsIbWelcome();return}tsOokTick()}
+  if(S.ts.ibNew&&NEWRES==null&&!NEWQ.length){tsIbWelcome();return}if(tsNushiTick())return;/* トトの根・あたらしいヌシ様（tsuchi-nushi.js） */tsOokTick()}
 /* ---- ハニ：ひらいた土地の、たおれたオリーブのそばで、すわっている（話しかけるまで、そこから動かない） ---- */
 function tsKonohaCome(P){if(S.res.some(r=>r.name===HANI))return;const c=P.c;S.obj[c]='tskonoki';delete P.keep[c];
   const k=[c+W,c-1,c+1,c-W].find(q=>P.cells.includes(q)&&!S.obj[q])||c+W;S.obj[k]='';S.ts.kon=k;
