@@ -119,7 +119,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes lvrays{0%{opacity:0;transform:rotate(0) scale(.4)}15%{opacity:1}80%{opacity:1}100%{opacity:0;transform:rotate(60deg) scale(1)}}
 @keyframes lvcard{0%{opacity:0;transform:scale(.3) translateY(30px)}100%{opacity:1;transform:none}}
 @keyframes lvnum{0%{transform:scale(1)}30%{transform:scale(1.35)}100%{transform:scale(1)}}
-#toasts{position:absolute;z-index:26;/* 下のシート（25）より上・会話（26、あとにある）より下 */left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 120px);/* 知らせは下（「おく」の帯の上）に出す。上は目標の札・赤い札があって、かさなる */display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;padding-left:var(--gut-l);padding-right:var(--gut-r)}
+#toasts{position:absolute;z-index:26;/* 下のシート（25）より上・会話（26、あとにある）より下 */left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 140px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;padding-left:var(--gut-l);padding-right:var(--gut-r)}
 #idle{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(40,70,64,.55)}#idle .card{display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 16px}#idle b{font-size:20px}#idle small{color:var(--muted);font-size:10px}#idle span{margin-top:6px;background:#f1e4cc;color:#2a2010;font-weight:800;border-radius:999px;padding:6px 16px}
 .toast{border-radius:12px;padding:7px 14px;font-size:15px;max-width:100%;animation:tin .25s ease-out;text-align:center}
 @keyframes tin{from{transform:translateY(-6px);opacity:0}}
