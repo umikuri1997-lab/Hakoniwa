@@ -83,6 +83,13 @@ function greetVoice(r,dl){if(!AC||!SND.sfx||AC.state!=='running'||VOICE)return;c
   cp.threshold.value=-38;cp.ratio.value=12;cp.knee.value=4;cp.attack.value=.003;cp.release.value=.1;g.gain.value=.5*CHATK*q.v*(SND.vv??1);
   src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}if(lowG&&!lowOK(q.v))return;if(lowG)lowAdd(src,g,q.v);h.connect(lowG||sfxG);
   src.start(t,Math.random()*Math.max(0,b.duration-d-.1));src.stop(t+d+.05)}
+/* なでたあと、ぴょんとはねるときの「ふふっ」（patJoy）：会話の声（SAMPLES.voice）を、その子の声の高さで2つ、みじかく（2つめは少し下がる）。高い所をけずって、こもった笑いに。
+   マップの場所の音と同じく、左右・遠いほど小さく。持ち主が聞きくらべてえらんだ。JOYFS は [はじまり秒, 録音の読みはじめ秒, 長さ秒, はじめの高さ, おわりの高さ, 消える秒]。大きさ JOYFV は、ほかのキラリン系と同じ -35 LUFS */
+const JOYFV=.27,JOYFS=[[0,.12,.08,1.25,1.22,.03],[.15,.55,.12,1.2,1.1,.06]];
+function joyFufu(r){if(!AC||!SND.sfx||AC.state!=='running'||VOICE||VBG)return;const b=(SBUF.voice||[])[0];if(!b)return;const q=sfxPos(r.x,r.y);if(!q)return;const vo=voVo(r),dest=voiceDest(q,1800,JOYFV),t0=AC.currentTime+.02;
+  for(const[st,off,d,a,z,rel]of JOYFS){const t=t0+st,src=AC.createBufferSource(),e=AC.createGain();src.buffer=b;src.playbackRate.setValueAtTime(vo*a,t);src.playbackRate.linearRampToValueAtTime(vo*z,t+d);
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(1,t+.025);e.gain.setValueAtTime(1,t+d-rel);e.gain.linearRampToValueAtTime(0,t+d);src.connect(e);e.connect(dest);src.start(t,off);src.stop(t+d+.02)}
+  lastSfx.fufu=AC.currentTime}
 /* 鼻歌・もやもやの音（work-fx.js の drawHum・drawMoya）：音符・もやもやが出ているあいだ、画面のまん中にいちばん近い1人（見守っている子がいれば、その子）だけ、
    その子の声の高さで小さく、つぎつぎ鳴らす。会話の画面の声が出ているあいだは鳴らさない。
    鼻歌は、会話の声の母音をのばした音（SAMPLES.vowel）1本を1つの音にし（vNote）、高い音をけずって口をとじた「ん〜」にした、スキップのリズムの「るんるん」のフレーズ（humPhrase）。もやもやは録音（SAMPLES.moya） */
