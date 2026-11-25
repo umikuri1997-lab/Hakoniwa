@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """せいれいの足音（footTick・footMat）：持ち主がくれた、歩いている録音（tools/sound/src/foot/*.mp3。出どころは持ち主の録音）から、1歩ずつ切る。
-  wet.mp3 雨の日（ぬれた地面）→ fwet・stone.mp3 石 → fstone・grass.mp3 草 → fgrass・soil.mp3 土・道 → fsoil・snow.mp3 雪 → fsnow・wood.mp3 木の床・橋 → fwood
+  wet.mp3 雨の日（ぬれた地面）→ fwet・stone.mp3 石 → fstone・grass.mp3 草 → fgrass・soil.mp3 土・道 → fsoil・snow.mp3 雪 → fsnow・wood_child.mp3 木の床・橋 → fwood（Yuval「footsteps child parquet」freesound 207638、CC0。持ち主が聞きくらべてえらんだ。前は持ち主の録音 wood.mp3）
 やること（音は作らない。切る・大きさをそろえるだけ）：
   1. 録音の中の1歩ずつの場所を見つける（足がついて大きくなる所。歩く間かくは 0.5〜0.7 秒）。
   2. 1歩ごとに、足がつく所（2ms ごとの大きさが、その歩の山の ONSET になった所）の 5ms 前から LEN 秒を切り、出だし 2ms・おわり（あとの 40%）をなめらかに。
@@ -21,7 +21,7 @@ SET = {
   'fgrass': ('grass.mp3', 200, 12000, (1000, 10000), .26, 7),
   'fsoil':  ('soil.mp3',  120, 12000, (300, 6000), .24, 8),
   'fsnow':  ('snow.mp3',  150, 12000, (200, 3000), .28, 7),
-  'fwood':  ('wood.mp3',  100, 9000,  (150, 4000), .20, 7),
+  'fwood':  ('wood_child.mp3',  100, 9000,  (150, 4000), .20, 7),
 }
 VOICE, RISE, LOW, ONSET = .6, 6, 8, .2
 # 大きさ：前の足音（Kenney の録音、ui_asmr.py）の、はじめ 0.15 秒の RMS（dB）。ぬれた地面は、前の草・土のまん中
@@ -87,7 +87,9 @@ for k in SET:
     x[:fi] *= np.linspace(0, 1, fi); x[-fo:] *= np.linspace(1, 0, fo) ** 2
     g = 10 ** (TGT[k] / 20) / (np.sqrt((x[:int(.15 * SR)] ** 2).mean()) + 1e-9)   # はじめ 0.15 秒の大きさを、前の足音にそろえる
     x = x * min(g, .891 / (np.abs(x).max() + 1e-9))                        # いちばん大きい所は -1dB まで
-    bts = subprocess.run(['ffmpeg', '-v', 'quiet', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-', '-codec:a', 'libmp3lame', '-b:a', '128k', '-f', 'mp3', '-'],
-                         input=x.astype(np.float32).tobytes(), capture_output=True, check=True).stdout
+    tmp = os.path.join(OUT, '_foot_tmp.mp3')   # パイプに書くと長さがかわるので、ファイルに書く
+    subprocess.run(['ffmpeg', '-v', 'quiet', '-y', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-', '-codec:a', 'libmp3lame', '-b:a', '128k', tmp],
+                   input=x.astype(np.float32).tobytes(), check=True)
+    bts = open(tmp, 'rb').read(); os.remove(tmp)
     nm = hashlib.sha1(bts).hexdigest()[:10] + '.mp3'; open(os.path.join(OUT, nm), 'wb').write(bts); res[k].append('assets/g/' + nm)
 if not LIST: print('Object.assign(SAMPLES,' + json.dumps(res, separators=(',', ':')) + ');')
