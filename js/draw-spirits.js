@@ -524,7 +524,7 @@ const NOFACE={'😊':'🎵','😌':'🎵','😆':'✨','😋':'🍴','😣':'�
 let BUBQ=null;
 const FACEP=new Map();/* 向かい合う子 → {p:あいて, u:いつまで}（faceEach） */
 function faceEach(a,b,ms){const u=performance.now()+ms;FACEP.set(a,{p:b,u});FACEP.set(b,{p:a,u})}
-function facePeer(r,now){const a=r.act;if(a&&a.stage==='do'&&(a.type==='chat'||a.type==='chatwait')){const p=S.res.find(q=>q.id===a.partner);if(p&&!p.hidden)return p}const f=FACEP.get(r);if(!f)return null;if(now>f.u||!S.res.includes(f.p)){FACEP.delete(r);return null}return f.p}
+function facePeer(r,now){const a=r.act;if(a&&a.stage==='do'&&(a.type==='chat'||a.type==='chatwait')){const p=S.res.find(q=>q.id===a.partner);if(p&&!p.hidden)return p}if(r.greetStop>S.t&&r.greetP!=null){const p=S.res.find(q=>q.id===r.greetP);if(p&&!p.hidden)return p}/* すれちがいのあいさつ：手をふるあいだ、あいてのほうを向く（passGreet） */const f=FACEP.get(r);if(!f)return null;if(now>f.u||!S.res.includes(f.p)){FACEP.delete(r);return null}return f.p}
 function objAbove(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5<r.y-.3&&Math.abs(j%W+.5-r.x)<.6}
 function objSide(r){const j=r.faceObj;if(j==null||j<0)return false;return Math.abs(((j/W)|0)+.5-r.y)<.6&&Math.abs(j%W+.5-r.x)>.4}/* よこ（左右）の物 */
 function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5>r.y+.3&&Math.abs(j%W+.5-r.x)<.6}/* 下にある木・岩は正面のまま */
