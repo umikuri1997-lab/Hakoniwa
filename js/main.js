@@ -74,7 +74,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
 const APP_VER=2412;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
-function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
+function showMaps(){PROLD=0;$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
   const list=$('#mList');list.innerHTML='';freeCard(list);
@@ -119,7 +119,7 @@ window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;$('#tBtns'
 /* ---------- ループ ---------- */
 const STEPDT=1/30;let STEPACC=0;/* ゲームの時間を進める1ステップの実時間（秒）と、たまった時間（main.js の frame） */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
-let STLD=false;let USERPAUSE=false;/* 「とめる」ボタン：ゲームの時間を止めて、ゆっくり配置を考える */
+let STLD=false,LDEND=0;let USERPAUSE=false;/* 「とめる」ボタン：ゲームの時間を止めて、ゆっくり配置を考える */
 const paused=()=>(typeof sacredPlayActive==='function'&&sacredPlayActive())||sacredQuietActive()||USERPAUSE||!stageReady()||performance.now()<BOSSHOLD||performance.now()<SCENEHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
@@ -221,7 +221,7 @@ function frame(now){
   if(!S||STORY_REPLAY_SHELL){last=now;GCLKON=false;return}
   if(now-frameT<(menuOpen?125:31))return;frameT=now;
   if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S){GRD.job=null;tmpFree()}if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000)GRD.job=stageJob()}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
-  if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
+  if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}if(!stageReady()||!$('#pro').hidden)LDEND=now;/* 読みこみ・プロローグのあいだ（プロローグの「読みこみ中…%」もふくむ）の時刻。上の数の音を止める *//* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   if(started&&!IS_STORY_REPLAY&&!document.hidden&&$('#idle').hidden&&!menuOpen)playAdd(rdt);/* あそんだ時間（クリアまでの記録）。S には、セーブのときに入れる */
@@ -286,7 +286,7 @@ function rlvPick(r){const o=$('#rlv'),ok=$('#rlvOk');let w=o.querySelector('.rpi
   const h=document.createElement('small');h.textContent='ごほうびを1つえらぶ'+(n>1?'（のこり'+n+'）':'');h.style.textAlign='center';w.appendChild(h);
   for(const[k,t]of LVBK){const b=document.createElement('button');b.className='btn';b.textContent=t+' +'+LVB;b.onclick=e=>{e.stopPropagation();if(!(r.lvPend>0))return;sfx('tap');r.lvb=r.lvb||{};r.lvb[k]=(r.lvb[k]||0)+LVB;r.lvPend--;if(!r.lvPend)delete r.lvPend;dirty=true;toast(r.name+'の'+t+'が+'+LVB,'good');if(r.lvPend>0)rlvPick(r);else{w.replaceChildren();ok.hidden=false;ok.click()}};w.appendChild(b)}}
 $('#rlvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#rlv').hidden=true;const r=RLVR;RLVR=null;if(r&&S.res.includes(r)&&!inBattle(r)){const t=performance.now();JOYU.set(r,t+2600);RHOLD.set(r,t+2600);JUMP.set(r,t);r.bubble='😆'}});/* レベルアップしたら、手をとめて喜ぶ（たたかっている子は、そのままたたかう） */
-for(const id of['#foodStk','#matStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('inv')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料・素材の数をタップすると、そうこが見られる */
+for(const id of['#foodStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('inv')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料の数をタップすると、そうこが見られる */
 $('#lvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#lvup').hidden=true;endClap()});
 
 document.querySelector('.hud').addEventListener('click',()=>{if(!S)return;sfx('tap');openSheet('vill')});/* HUD をタップすると村のようす */

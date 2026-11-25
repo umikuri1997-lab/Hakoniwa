@@ -163,6 +163,8 @@ let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたと
 }
 const iconCache={};
 let ICONTMP=null;
+const ICWAIT={};/* チップのページを読みこみ中に作ったアイコン：id → かりの空の絵の URL */
+function icWaitDone(){for(const id in ICWAIT){const w=ICWAIT[id],u=iconURL(id);if(u===w)continue;delete ICWAIT[id];for(const im of document.querySelectorAll('img'))if(im.getAttribute('src')===w)im.src=u}}/* チップのページを読みおわったら、メニューに出ているかりの絵を、ほんとうのアイコンに */
 function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細かさで描いてから、絵のある範囲だけを切り出して、144×144にきちんと入れる（全体がうつる） */
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
@@ -172,6 +174,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0&&Object.values(CHA).some(a=>!a.ok&&!a.bad)){const u=ICWAIT[id]||(ICWAIT[id]="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='144' height='144'><!--"+encodeURIComponent(id)+"--></svg>");return u}/* チップのページを読みこみ中：とっておかず、id ごとのかりの空の絵。読みおわったら icWaitDone が、出ている絵を入れかえる */
   const c=document.createElement('canvas');c.width=144;c.height=144;
   if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
   const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;
