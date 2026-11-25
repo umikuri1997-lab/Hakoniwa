@@ -74,7 +74,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
 const APP_VER=2474;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
-function showMaps(){PROLD=0;$('#mVer').textContent='バージョン '+APP_VER;
+function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
   const list=$('#mList');list.innerHTML='';freeCard(list);
