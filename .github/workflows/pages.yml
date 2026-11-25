@@ -30,7 +30,7 @@ jobs:
           mkdir -p _site/assets
           cp index.html chips.js .nojekyll _site/
           cp -R js _site/js
-          sed -i "s/\.js?v=[^\"]*/.js?v=${GITHUB_SHA::8}/g" _site/index.html
+          node tools/jsver.cjs _site
           node tools/sizes.cjs _site
           cp -R assets/. _site/assets/
       - uses: actions/upload-pages-artifact@v3
