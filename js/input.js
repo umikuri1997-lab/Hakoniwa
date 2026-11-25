@@ -148,7 +148,6 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(RUINT>=0&&S.obj[RUINT]==='statueb'){const q=tapObj(RUINT),px=q.x/TS-RUINT%W,py=q.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
     if(typeof mzTap==='function'&&mzTap(tx,ty))return;/* 水のステージ：霧・水門・宝箱・船着き場・水路 */
     if(typeof fogTap==='function'&&fogTap(tx,ty))return;/* 霧の所・霧の中で見つけた物 */
-    if(typeof kdTap==='function'&&kdTap(tx,ty))return;/* もりのこだまの見つかる所 */
     {const hw=HOUSES.find(h=>h.set.has(ty*W+tx));if((!hw||OPENH.has(hKey(hw)))&&webTap(tx,ty))return}/* クモの巣：せいれいがそうじする（屋根のある家は、屋根を外してから） */
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const kg=WD===KUSA&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1/* かげのあとは、家の中にあっても調べられる */,hi=kg?-1:HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
