@@ -2,7 +2,7 @@
    動きの絵は spirit3d（cookprep・cookcut・cookmix・cook・cookfry・cookfan・cookgrill・cookplate・raise・craftprep・saw・craft・polish、作業台の上では wbprep・wbsaw・wbham・wbpolish）。
    音と粒は、描くときの時刻（drawSpiritDot の t）と同じ時刻で、動きの決まった所（WBEAT）をこえたときに出す（手の動きとずれない）。 */
 const WORKSHOW=4;
-const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBTOP={edge:.06,mid:-.22},WBDEPTH={0:6,1:6,2:10,3:10},WBLIFT=5,WBHIT={0:2,1:1,2:0,3:1},WBFACE={0:1,1:-1,2:1,3:1};/* 作業台で作るせいれいの立つ所（wbFoot）。天板（tools/art/furn3d/items/wbench.py）は台のマスの奥0.56：手前のふちは、マスのまん中から台の前へ0.06マス、天板のまん中は0.22マス奥（WBTOP）。WBDEPTH：天板の手前のふちから、足もとまで（せかいの点。台の前に立つ向き0・1は6、台のうしろに立つ向き2・3は、からだが台にかくれるので10）。よこは、打つときのトンカチの先（SPMQ.wbham の h、コマ0）が、画面で天板のまん中にくる所。WBHIT：向きごとの、せいれいの絵の向き（0 前ななめ・1 横・2 うしろななめ）。WBFACE：絵の左右（r.face）。ななめの絵は、反転すると、ちがうななめを向く（前ななめは反転なしで左下＝南、うしろななめは右上＝北）ので、台のほうを向く左右にそろえる。作業台の絵は、画面で5点（g64 の10ドット。iso3d.py の WBUP）上に置くので、せいれいも同じだけ上に（WBLIFT） *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
+const WBWORKZ=12.5,WBISOG=53;/* WBISOG：クォータービューの wbwork の絵を、作業台の置く所のまん中から、このマスのまん中（g64 で 24 下）・地面（天板の高さ0.32＝19 と、作業台の絵を上げた10）へ下げる *//* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBSLOT={0:[17,-16.5],1:[-17,-16.5],2:[-14,7],3:[14,7]},WBFACE={0:1,1:-1,2:1,3:1};/* 作業台で作るせいれいの、絵のずれ（向きごと。作業する所のマスのまん中に立てて描く点からの、drawRes0 の px・py。SEATOFF と同じ）。持ち主が「作業台の立つ位置」のページ（tools/wbslot/）できめる数。はじめの数は、天板の手前のふちから、台の前に立つ向き0・1は6点・台のうしろに立つ向き2・3は10点に足もと、よこは台のまん中。WBFACE：絵の左右（r.face）。ななめの絵は、反転すると、ちがうななめを向く（前ななめは反転なしで左下＝南、うしろななめは右上＝北）ので、台のほうを向く左右にそろえる *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
@@ -14,12 +14,6 @@ const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],c
   chop:[[.8,'chop','chips']],mine:[[.59,'mine1','pebbles']],draw:[[.4,'dscoop','splash'],[.56,'dlift']],/* 水くみは1回だけ：バケツが水に入る所・ひき上げる所（draw の動きは、くむ行動の進みぐあい 'ph'） */
   eat_drink:[[.32,'@eat']],eat_bread:[[.3,'@eat']],eat_fruit:[[.3,'@eat']],eat_meal:[[.3,'@eat']],/* 食べる・のむ：かじる・のむ所で、食べている物の音（@eat → eatSnd） */wbpolish:[[0,'cloth'],[.5,'cloth']],
   till:[[.85,'wtill']],sow:[[.12,'wsoil'],[.62,'wsoil']],plant:[[.12,'wsoil'],[.62,'wsoil']],harvest:[[.12,'wleaf'],[.62,'wleaf']],gather:[[.12,'wleaf'],[.62,'wleaf']],weed:[[.6,'wweed']],sweep:[[.25,'wsweep'],[.75,'wsweep']]};/* 水やり（water・tend）は、とぎれない音（pourKeep） */
-function wbFoot(j,k,f){/* 作業台（左上 j・向き k）で作るせいれいの、作業する所のまん中からの絵のずれ（立てて描く点。drawRes0 の px・py）。f：絵の左右（r.face） */
-  const[dx,dy]=WORKD[k&3],b=wbCells(j).b,cx=(b%W+.5)*TS,cy=((b/W|0)+.5)*TS,sx=cx+dx*TS,sy=cy+dy*TS;/* 台のマスのまん中・作業する所のまん中 */
-  const e=(WBTOP.edge*TS+WBDEPTH[k&3]),px0=cx+dx*e,py0=cy+dy*e,tx=cx+dx*WBTOP.mid*TS,ty=cy+dy*WBTOP.mid*TS;/* 立つ所（よこはまだ）・天板のまん中 */
-  const m=typeof SPMQ!=='undefined'&&SPMQ.wbham,h=m?m.h[WBHIT[k&3]][0][4]*(f<0?-1:1)*.435*IQSX:0,lx=k%2?0:1,ly=k%2?1:0,il=lx-ly;/* トンカチの先の、足もとからの画面のよこ／よこの向き（台の長い辺） */
-  const sl=(isoX(tx,ty)-isoX(px0,py0)-h)/il,px=px0+lx*sl,py=py0+ly*sl;
-  return[isoX(px-sx,py-sy)/IQSX,(isoY(px-sx,py-sy)-WBLIFT)/IQSY]}
 const WBMO={craftprep:'wbprep',saw:'wbsaw',craft:'wbham',polish:'wbpolish'};/* 作業台の上でする、もの作りの動き */
 function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mix';const R=typeof recOf==='function'?recOf(r.cing.rec):null,out=R?R.out:r.cing.rec;if(KSTYLE[out])return KSTYLE[out];const D=typeof COOKDI!=='undefined'&&COOKDI[out],t=D&&D.ic&&D.ic[0];let st=KSTYIC[t]||'pot';if(st==='bake'&&S.obj[a.obj]==='campfire')st='pan';return st}/* ふしぎな料理は、なべ */
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}
