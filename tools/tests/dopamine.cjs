@@ -32,7 +32,7 @@ function klotski(P){const W=4,H=5,key=s=>{const g=Array(20).fill('.');s.forEach(
     /* 宝箱だけの家具 */
     out.chestRec=['orgel','telescope','hdokei','mizubachi'].map(id=>recipeKnown(id));out.chestPool=['orgel','telescope','hdokei','mizubachi'].some(id=>giftPoolOK(id));
     const mj=(CY+6)*W+CX+6,fj=mj+2;S.obj[mj]='mizubachi';S.obj[fj]='clover';(S.bud||(S.bud={}))[fj]=callDay()+1;recount();out.bud=isBud(fj);S.obj[mj]='';recount();out.budFar=isBud(fj);S.obj[fj]='';
-    out.star=STARPT>STARP;
+    out.star=STARGAPT<STARGAP;
     /* 家ができた・光のなみ・ヒットストップ */
     juiceHouse({set:new Set([(CY+4)*W+CX,(CY+4)*W+CX+1,(CY+5)*W+CX])},performance.now());juiceWave();const a=S.res[0];fx.push({k:'spr',n:'treefall',x:0,y:0,life:1,dur:1});juiceStop(a,fx.length-1);out.stopOff=juiceStopOff(a,performance.now()+10)!==0;out.wave=waveR(performance.now()+500)>0;
     return JSON.stringify(out)})()`));

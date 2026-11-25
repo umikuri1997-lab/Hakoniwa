@@ -132,6 +132,7 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
   // 食料がゼロなら、まず食べ物を集める
   if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が人数×2より少なくなったら、ほかの仕事より先に食べ物をあつめる */
+  if(typeof hapJob==='function'&&hapJob(r,G))return true;/* ときどき起きるできごと：タップしてたのんだ大きな作物・ヒナ・きんいろの実（happen.js）。建てる・作るより先（後ろにあると、ほかの仕事がおわらず、とりに行かなかった） */
   for(const k of['build','craft'])if(tryJob(r,G,k))return true;
   if(typeof bpJob==='function'&&bpJob(r,G))return true;/* 家の設計図：置く所の木・岩をかたづける *//* 建てる・依頼のものづくりは、遠くても、ふだんの仕事（植える・ひろう・畑・木・石・草）より先 */
   // おつげがあれば、それを先にする
@@ -150,7 +151,7 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;
-  if(typeof hapJob==='function'&&hapJob(r,G))return true;/* ときどき起きるできごと：タップした大きな作物・ヒナ・きんいろの実（happen.js） *//* 「しらべる」でタップしたかげの巣（defense.js） */
+  /* 「しらべる」でタップしたかげの巣（defense.js） */
   if(wreqList().length&&tryJob(r,G,'weed'))return true;/* 「しらべる」でタップした草・きのこは、畑の世話より先（畑の多い村では、畑の世話がおわらず、いつまでもとりに行かなかった） */
   if((S.drops||[]).some(q=>q.lt||q.tap)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(r.elem==='earth'&&tryJob(r,G,'till'))return true;/* 土のせいれいは、おつげがあっても、畑づくりを先にする */
