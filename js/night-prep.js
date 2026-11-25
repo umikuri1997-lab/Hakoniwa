@@ -1,16 +1,81 @@
 'use strict';
-/* 今夜のそなえ：夕方 NPFROM 時から夜（20時）まで、ポップアップを1日1回出す（持ち主がえらんだ。上の札・知らせはやめた）。会話・ほかのカードのあいだは、まつ。
-   出す物：今夜のコワイノのよていの数（20時にきまる前は、いまの人数でかぞえた見こみ。見るだけで、もとにもどす）・おなかがすいたせいれい（赤い札と同じ、おなか100より下）の数・箱の食料。草原だけ・コワイノが来る村だけ。 */
+/* 今夜のそなえ：夕方 NPFROM 時から夜（20時）まで、ポップアップを1日1回出す（持ち主がえらんだ。上の札・知らせはやめた）。会話・ほかのカード・洞窟のあいだは、まつ。コワイノが来るどのステージも（フリーモードはのぞく）。
+   出す物：今夜のコワイノのよていの数（20時にきまる前は、いまの人数でかぞえた見こみ。見るだけで、もとにもどす）・おなかがすいたせいれい（赤い札と同じ、おなか100より下）の数・箱の食料。
+   かえられる物（持ち主がえらんだ）：作戦・たたかう／たたかわない・見張り台に立つせいれい・まよけのハーブ・角笛。 */
 const NPFROM=17,NPHUN=100;
-function nightPrepData(){if(!S||WD!==KUSA||S.free||!S.enemyOn||IS_STORY_REPLAY||S.finalNight||S.trial||S.rushOn)return null;const h=hour();if(h<NPFROM||h>=20)return null;
-  let w=[];const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay};try{w=waveFor(dayNo()+1)}finally{Object.assign(S,keep)}/* 見るだけで、もとにもどす */
+/* 作戦（持ち主がえらんだ5つ）：村ぜんたいの、今夜のたたかい方。えらんだ作戦は、かえるまでつづく。夜（23時〜6時）はかえられない。とくべつな夜（さいごの夜・試練・群れ）は「ふつう」。
+   だんだん思いつく（TACWHEN）。思いついた朝、なかまが会話でおしえる。 */
+const TAC={
+  futsu:{n:'ふつう',t:'たたかうせいれいは、近くの「コワイノ」とたたかう'},
+  mamoru:{n:'まもる',t:'たたかうせいれいは、せいれいと家のまわり3マスより遠くの「コワイノ」は追わない'},
+  oikaesu:{n:'おいかえす',t:'たたかうせいれいは、まわり10マスの「コワイノ」まで追い、むれにもとびこむ'},
+  watch:{n:'見張り台まかせ',t:'たたかうせいれいも家に入り、見張り台だけで守る'},
+  issho:{n:'いっしょに',t:'たたかうせいれいは、いちばん近いなかまと同じ「コワイノ」をねらう'}};
+const TACORD=['futsu','mamoru','oikaesu','watch','issho'];
+const TACCHASE={futsu:60,mamoru:20,oikaesu:120,issho:60};/* 追いかける歩数（huntSpot の maxD） */
+const TACNEAR=3,TACWIDE=10;/* まもる：せいれい・家からのマス／おいかえす：まわりのマス */
+const TACWHEN={/* 思いつく条件 */
+  mamoru:()=>!!S.flags.tacHit,/* せいれいが、はじめて「コワイノ」にたたかれた（night.js の hitRes） */
+  oikaesu:()=>(S.bossKills||0)>0,/* 大きな影を、はじめて追いはらった */
+  watch:()=>cnt('watch')>=2,/* 見張り台が2つ */
+  issho:()=>!!S.flags.tacCombo};/* 合わせわざを、はじめて出した（bond.js） */
+const TACTALK={
+  mamoru:['#worry|きのうの夜、なかまがたたかれちゃった……。','#think|こんどは、遠くまで追わないで、みんなのそばで守ろうよ。','#nod|作戦「まもる」を思いついたよ。'],
+  oikaesu:['#joy|大きな影も、追いはらえたね！','#think|いまなら、遠くの「コワイノ」も、こっちから追いかえせるよ。','#nod|作戦「おいかえす」を思いついたよ。'],
+  watch:['#joy|見張り台が、2つになったね。','#think|見張り台にまかせて、みんなで家にいる夜があってもいいかも。','#nod|作戦「見張り台まかせ」を思いついたよ。'],
+  issho:['#joy|合わせわざ、すごかったね！','#think|なかまと同じ「コワイノ」をねらえば、また出せるかも。','#nod|作戦「いっしょに」を思いついたよ。']};
+const tacOn=()=>!!(S&&S.enemyOn&&!S.free&&!IS_STORY_REPLAY);
+const tacOK=k=>k==='futsu'||!!(S.tacOK&&S.tacOK[k]);
+const tacAny=()=>!!(S&&S.tacOK&&TACORD.some(k=>k!=='futsu'&&S.tacOK[k]));/* ひでんのしょに出す */
+function tacNow(){if(!S||!tacOn()||S.finalOn||S.rushOn||S.trialOn||S.ns&&S.ns.final)return 'futsu';const k=S.tac;return TAC[k]&&tacOK(k)?k:'futsu'}
+const tacChase=()=>TACCHASE[tacNow()]||60;
+function tacHome(r){/* 見張り台まかせ：たたかうせいれいは、見張り台にも立たずに家へ */return isNight()&&tacNow()==='watch'&&fighter0(r)}
+function tacHouseNear(e,d){for(const h of HOUSES||[])for(const q of h.set){if(Math.max(Math.abs(q%W+.5-e.x),Math.abs(((q/W)|0)+.5-e.y))<=d)return true}return false}
+function tacClose(e,r){/* まもる：もう攻撃がとどく・こわしている・ぬすんでいる・なかまをたたいている・たたかわないせいれいか家の3マス以内 */if(Math.hypot(e.x-r.x,e.y-r.y)<=1.5||foeBreaking(e)||foeStealing(e)||foeHitting(e,r))return true;
+  if(S.res.some(q=>q!==r&&!q.hidden&&!fighter(q)&&Math.max(Math.abs(e.x-q.x),Math.abs(e.y-q.y))<=TACNEAR))return true;return tacHouseNear(e,TACNEAR)}
+function tacWide(r,L){/* おいかえす：まわり10マスの「コワイノ」も。むれにもとびこむ。にげるコワイノは追わない（村の外へひっぱられない） */const o=new Set(L);for(const e of S.enemies)if(e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<=TACWIDE)o.add(e);return [...o].filter(e=>!e.flee)}
+function tacMate(r){/* いっしょに：いちばん近い、たたかうなかまがねらっているコワイノ（自分のまわり10マスまで。にげるコワイノはのぞく） */let best=null,bd=1e9;for(const q of S.res){if(q===r||q.hidden||q.foeId==null||!fighter(q))continue;const e=S.enemies.find(x=>x.id===q.foeId&&x.spawned&&!x.dead&&!x.flee&&Math.hypot(x.x-r.x,x.y-r.y)<=TACWIDE);if(!e)continue;const d=Math.hypot(q.x-r.x,q.y-r.y);if(d<bd){bd=d;best=e}}return best}
+function tacWho(){return S.res.find(r=>!r.hidden&&fighter0(r))||S.res.find(r=>!r.hidden)||null}
+function tacLearn(){/* 昼（6時〜20時）に、思いついた作戦を1つずつ、会話でおしえる */if(!tacOn())return false;const h=hour();if(h<6||h>=20)return false;
+  for(const k of TACORD){if(k==='futsu'||tacOK(k)||!TACWHEN[k]())continue;const r=tacWho();if(!r)return false;const first=!tacAny();(S.tacOK||(S.tacOK={}))[k]=1;
+    const L=TACTALK[k].map(t=>{const i=t.indexOf('|');return [r.name,t.slice(0,i+1)+chatTone(t.slice(i+1),r,0)]});if(first)L.push([r.name,chatTone('作戦は、夕方の「今夜のそなえ」で、えらべるよ。',r,0)]);
+    dialog(L);return true}return false}
+function nightPrepData(){if(!S||!tacOn()||S.finalNight||S.trial||S.rushOn)return null;const h=hour();if(h<NPFROM||h>=20)return null;
+  const w=wavePeek(dayNo()+1);/* 見るだけで、もとにもどす（night.js） */
   const boss=w.some(t=>EN[t]&&EN[t].boss),hungry=S.res.filter(r=>!r.hidden&&r.hunger<NPHUN).length;
   return{n:w.length,boss,hungry,food:Math.floor(S.food||0)}}
-function nightPrepPop(D){const o=el('<div id="prepPop" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b style="display:block;font-size:15px;margin-bottom:8px">今夜のそなえ</b><div class="rows" style="line-height:1.8"></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>');
-  const row=(k,v,warn)=>{const d=document.createElement('div');d.style.cssText='display:flex;justify-content:space-between;gap:12px'+(warn?';color:#a54152':'');d.innerHTML='<span></span><b></b>';d.children[0].textContent=k;d.children[1].textContent=v;o.querySelector('.rows').appendChild(d)};
-  row('今夜の「コワイノ」',D.n?D.n+'ひき'+(D.boss?'（大きな影つき）':''):'来ない見こみ');row('おなかがすいたせいれい',D.hungry+'人',D.hungry>0);row('箱の食料',String(D.food),D.food<=0);
-  o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};document.body.appendChild(o);sfx('tap')}
-function nightPrepTick(){const now=performance.now();if(now-(nightPrepTick.t||0)<1000)return;nightPrepTick.t=now;
-  if(S&&S.npDay===dayNo())return;const D=nightPrepData();if(!D)return;
-  if(!$('#dialog').hidden||DLGQ.length||document.querySelector('.pxcard')||!$('#lvup').hidden||typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE)return;/* 会話・ほかのカード・場面のあいだは、まつ */
+function wpOwnSet(j,id){/* 見張り台 j に立つせいれいをきめる（null：だれでも）。ほかの見張り台にきまっていたら、はずす */const B=S.wpOwn||(S.wpOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id}
+const wpWhoOK=r=>r.elem!=='fire'||sortieOn();/* 見張り台に立てるせいれい（火のせいれいは、出撃をえらべるようになってから） */
+function npCard(id,w){return el('<div id="'+id+'" style="position:fixed;inset:0;z-index:'+(id==='prepPop'?45:46)+';display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:'+w+'px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"></div></div>')}
+function npWpPick(j,done){/* 見張り台に立つせいれいを、ポップアップでえらぶ */const o=npCard('prepWp',320),c=o.firstChild,own=S.wpOwn||{},oid=own[j];
+  c.innerHTML='<b style="display:block;font-size:15px;margin-bottom:8px">見張り台に立つせいれい</b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn x">もどる</button></div>';
+  const rows=c.querySelector('.rows'),add=(t,s,id,r)=>{const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');const dot=row.querySelector('.dot');dot.style.cssText=r?'background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col:'background:#f6f1e6';
+    ckSet(row.querySelector('b'),t);row.querySelector('small').textContent=s;row.onclick=()=>{wpOwnSet(j,id);sfx('next');o.remove();done()};rows.appendChild(row)};
+  const ow=oid!=null?S.res.find(q=>q.id===oid&&wpWhoOK(q)):null;add((ow?'':'✓ ')+'だれでも','あいていれば、だれでも立つ',null,null);
+  for(const r of S.res){if(r.hidden||!wpWhoOK(r))continue;let mine=-1;for(const k in own)if(own[k]===r.id&&S.obj[k]==='watch')mine=+k;add((ow===r?'✓ ':'')+r.name+'  Lv'+rLv(r),ELEM[r.elem].name+'のせいれい・'+(WPTXT[r.elem]||'')+(mine>=0&&mine!==j?'・ほかの見張り台':''),r.id,r)}
+  c.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
+function nightPrepPop(D){const o=npCard('prepPop',360),c=o.firstChild;document.body.appendChild(o);sfx('tap');
+  const render=()=>{if(!o.isConnected)return;const night=isNight();c.innerHTML='<b style="display:block;font-size:15px;margin-bottom:8px">今夜のそなえ</b><div class="rows" style="line-height:1.8"></div><div class="np"></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div>';
+    const rows=c.querySelector('.rows'),np=c.querySelector('.np'),row=(k,v,warn)=>{const d=document.createElement('div');d.style.cssText='display:flex;justify-content:space-between;gap:12px'+(warn?';color:#a54152':'');d.innerHTML='<span></span><b></b>';d.children[0].textContent=k;d.children[1].textContent=v;rows.appendChild(d)};
+    row('今夜の「コワイノ」',D.n?D.n+'ひき'+(D.boss?'（大きな影つき）':''):'来ない見こみ');row('おなかがすいたせいれい',D.hungry+'人',D.hungry>0);row('箱の食料',String(D.food),D.food<=0);
+    const sec=(h)=>{const s=el('<div class="sec" style="margin-top:10px"><h3></h3></div>');s.querySelector('h3').textContent=h;np.appendChild(s);return s};
+    const btns=s=>{const b=el('<div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0"></div>');s.appendChild(b);return b};
+    {/* 作戦 */const s=sec('作戦'),bw=btns(s),cur=S.tac&&tacOK(S.tac)?S.tac:'futsu';
+      for(const k of TACORD){if(!tacOK(k))continue;const b=el('<button class="btn"></button>');b.textContent=TAC[k].n;if(k===cur)b.classList.add('pri');lackOn(b,night?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||k===cur)return;S.tac=k;dirty=true;sfx('tap');render()};bw.appendChild(b)}
+      const p=el('<p class="note" style="margin:4px 0 0"></p>');p.textContent=TAC[cur].t;s.appendChild(p)}
+    {/* たたかう・たたかわない（せいれいの画面と同じ） */const L=S.res.filter(r=>!r.hidden&&sortieOK(r));if(L.length){const s=sec('たたかう');
+      for(const r of L){const on=fighter0(r),line=el('<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0"><span></span><div class="btns" style="display:flex;gap:8px"></div></div>');line.firstChild.textContent=r.name;const bw=line.lastChild;
+        const mk=(v,t)=>{const b=el('<button class="btn"></button>');b.textContent=t;if(on===v)b.classList.add('pri');lackOn(b,night?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||on===v)return;r.sortie=v;if(v===sortieDef(r))delete r.sortie;dirty=true;sfx('tap');render()};bw.appendChild(b)};
+        mk(true,'たたかう');mk(false,'たたかわない');s.appendChild(line)}}}
+    {/* 見張り台に立つせいれい */const T=[];for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='watch')T.push(j);if(T.length){const s=sec('見張り台'),own=S.wpOwn||{};
+      T.forEach((j,i)=>{const oid=own[j],ow=oid!=null?S.res.find(q=>q.id===oid&&wpWhoOK(q)):null,b=el('<button class="btn" style="width:100%;margin:4px 0;text-align:left"></button>');b.textContent='見張り台'+(i+1)+'：'+(ow?ow.name:'だれでも');b.onclick=()=>{sfx('tap');npWpPick(j,render)};s.appendChild(b)})}}
+    {/* まよけのハーブ・角笛 */const hv=(S.herb||0)>0,hn=WD===KUSA&&(S.horn||0)>0;if(hv||hn){const s=sec('どうぐ'),bw=btns(s);
+      if(hv){const b=el('<button class="btn"></button>');b.textContent='まよけのハーブをつかう（'+S.herb+'）';lackOn(b,herbOK()?'':herbNow()?'今夜は、もうつかった':'いまは、つかえない');b.onclick=()=>{if(!herbOK())return;herbUse();render()};bw.appendChild(b)}
+      if(hn){const b=el('<button class="btn"></button>');b.textContent='よびごえの角笛をふく（'+S.horn+'）';lackOn(b,hornOK()?'':'いまは、ふけない');b.onclick=()=>{if(!hornOK())return;hornBlow();render()};bw.appendChild(b)}}}
+    c.querySelector('.x').onclick=()=>{sfx('tap');o.remove()}};
+  render()}
+function nightPrepTick(){const now=performance.now();if(now-(nightPrepTick.t||0)<1000)return;nightPrepTick.t=now;if(!S)return;
+  if(!$('#dialog').hidden||DLGQ.length||document.querySelector('.pxcard')||!$('#lvup').hidden||typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE||typeof VBG!=='undefined'&&VBG)return;/* 会話・ほかのカード・場面・洞窟のあいだは、まつ */
+  if(tacLearn())return;/* 思いついた作戦（会話のあとで、ポップアップ） */
+  if(S.npDay===dayNo())return;const D=nightPrepData();if(!D)return;
   S.npDay=dayNo();nightPrepPop(D)}
