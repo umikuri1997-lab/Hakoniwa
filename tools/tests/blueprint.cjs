@@ -77,5 +77,15 @@ const assert=require('node:assert/strict');
     bpPop(i);const cv=document.querySelector('.pxcard canvas.pv');out.pv=!!cv&&cv.width>0&&cv.height>0;out.txt=document.querySelector('.pxcard .n').textContent;document.querySelector('.pxcard .x').click();out.closed=!document.querySelector('.pxcard canvas.pv');
     bpComplete({k:S.bpReq.k,g:null,req:1,ps:[]});out.ok=q.ok();S.subDone.bpreq=1;bpMorning();out.cleared=S.bpReq===null&&!S.subDone.bpreq;return JSON.stringify(out)})()`));
   console.log(rq);for(const k of['req','at','rw','inv','pv','closed','ok','cleared'])assert.equal(rq[k],true,'bpreq '+k);assert.ok(/むずかしさ/.test(rq.txt));
+  /* 向き：右へ90度ずつまわせる。どの設計図も、まわしたあと、はみ出さず・かさならず・4回でもとにもどり、いすは右へまわる */
+  const rt=JSON.parse(await run(`(()=>{const bad=[];for(const k in BPS){const s0=JSON.stringify(bpPieces(k));for(let r=1;r<4;r++){const {w,h}=bpSize(k,r),L=bpPieces(k,r),occ=new Set();if(L.length!==bpPieces(k).length)bad.push(k+r+'n');
+      for(const[dx,dy,t,id,rot]of L){const c=t==='furn'||t==='build'?fp(id,dx,dy,rot):[[dx,dy]];for(const[a,b]of c){if(a<0||b<0||a>=w||b>=h)bad.push(k+r+'out:'+id);const q=a+','+b+(t==='floor'||t==='path'||t==='farm'||t==='edge'?'f':'o');if(occ.has(q))bad.push(k+r+'dup:'+id);occ.add(q)}}}
+      if(JSON.stringify(bpPieces(k,4).map(p=>p.join()).sort())!==JSON.stringify(bpPieces(k).map(p=>p.join()).sort())&&BPS[k].furn.every(f=>!ROTS[f[2]]||ROTS[f[2]]===2||ROTS[f[2]]===4))bad.push(k+'loop')}
+    const wv=[1,2,3].every(r=>{const L=bpPieces('hana',r),wl=new Set(L.filter(p=>p[2]==='wall'||p[2]==='win'||p[2]==='door').map(p=>p[0]+','+p[1]));return L.filter(p=>p[2]==='win').every(p=>!wl.has(p[0]+','+(p[1]-1))&&!wl.has(p[0]+','+(p[1]+1)))})&&bpPieces('hana',2).filter(p=>p[2]==='win').length===2&&bpPieces('hana',1).filter(p=>p[2]==='win').length===0;/* 窓は横向きの壁だけ */
+    const ch=bpPieces('futari',1).filter(p=>p[3]==='chair').map(p=>p[4]).sort();/* 右向き(1)と左向き(3)のいす → 下向き(0)と上向き(2) */
+    const f=S.res[0];let x0=-1,y0=-1;for(let k=0;k<W*H&&x0<0;k++){const x=k%W,y=(k/W)|0;if(Math.abs(x-f.x)<30&&Math.abs(y-f.y)<30&&bpCheck('hana',x,y,1)[0]){x0=x;y0=y}}S.pt+=100;S.mat.wood=(S.mat.wood||0)+80;boxSync();
+    bpRotSel=0;bpGive('hana',f.id);const i=S.bpInv.findIndex(q=>q.k==='hana');askBp(i,x0,y0);const rb=!document.querySelector('#cRot').hidden;rotPending();const r1=pending&&pending.r;S.mat.shina=(S.mat.shina||0)+20;S.mat.stone=(S.mat.stone||0)+20;S.mat.nuno=(S.mat.nuno||0)+5;S.mat.can=(S.mat.can||0)+5;boxSync();confirmYes();const e=S.bp.find(q=>q.k==='hana');bpRotSel=0;
+    return JSON.stringify({x0,wv,bad,ch,rb,r1,er:e&&e.r,w:e&&Math.max(...e.cells.map(j=>j%W))-x0+1,h:e&&Math.max(...e.cells.map(j=>(j/W)|0))-y0+1})})()`));
+  console.log(rt);assert.deepEqual(rt.bad,[]);assert.equal(rt.wv,true,'窓は横向きの壁だけ');assert.deepEqual(rt.ch,[0,2]);assert.equal(rt.rb,true,'向きのボタンが出る');assert.equal(rt.r1,1);assert.equal(rt.er,1);assert.equal(rt.w,5,'まわすと、たてよこが入れかわる');assert.equal(rt.h,6);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
