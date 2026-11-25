@@ -9,7 +9,7 @@ const KV=(()=>{
     getItem(k){if(Object.prototype.hasOwnProperty.call(memory,k))return memory[k];/* Object.hasOwn は、古い iPhone（iOS 15.3 まで）・古い Android にない */if(IS_STORY_REPLAY)return null;try{return localStorage.getItem(k)}catch(e){return null}},
     setItem(k,v){v=String(v);memory[k]=v;if(IS_STORY_REPLAY)return true;try{localStorage.setItem(k,v);available=true;if(/^hakoniwa-(w\d|free-v)/.test(k))lastSaved=Date.now();return true}catch(e){available=false;return false}},
     removeItem(k){delete memory[k];if(IS_STORY_REPLAY)return;try{localStorage.removeItem(k);return true}catch(e){available=false;return false}},
-    push(){},onCloud(){},ready:()=>true,status:()=>({available,lastSaved})
+    ready:()=>true,status:()=>({available,lastSaved})
   };
 })();
 const W=108,H=108,TS=32,CX=54,CY=54,OW=72,OFF=18;/* マップは108×108マス。まん中の72×72（OFF=18マス内がわ）が、前からの土地。コワイノ・種などは、この中から来る */
