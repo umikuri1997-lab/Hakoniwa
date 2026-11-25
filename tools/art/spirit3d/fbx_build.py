@@ -23,7 +23,8 @@ def tr(M, P):
 def job(a):
     name, el = a; m = MOTIONS[name]; n = m['n']; iso = bool(core.ISOY)
     fr, fo, meta = {}, {}, {}
-    for face in (0, 1, 2):
+    faces = (0, 1, 2) if iso else (0,)   # 正面の絵（守り神と話すとき：正面の行だけ使う）は、正面だけ写して、横・うしろの行にも同じ絵を入れる
+    for face in faces:
         for i in range(n):
             w = 2*np.pi*i/n; p = m['f'](w, face)
             T = FM.pose(el, p, face); S = FM.scene(el)
@@ -62,6 +63,10 @@ def job(a):
                 if k in anc:
                     P = np.asarray(anc[k])@FM.F; X, Y, _ = scr3(P); A[k] = [round(float(X[0]), 2), round(float(Y[0]), 2)]
             fr[(face, i)] = img; fo[(face, i)] = ov; meta[(face, i)] = A
+    if not iso:
+        import copy
+        for face in (1, 2):
+            for i in range(n): fr[(face, i)] = fr[(0, i)]; fo[(face, i)] = fo[(0, i)]; meta[(face, i)] = copy.deepcopy(meta[(0, i)])
     al = np.stack([f[..., 3] > 0 for f in fr.values()]).any(0); ys, xs = np.nonzero(al)
     x0, x1, y0, y1 = int(xs.min()), int(xs.max())+1, int(ys.min()), int(ys.max())+1; cw, ch = x1-x0, y1-y0
     oa = np.stack([fo[(face, i)][y0:y1, x0:x1, 3] > 0 for face in (0, 1, 2) for i in range(n)]).any(0).any(1); oys = np.nonzero(oa)[0]
