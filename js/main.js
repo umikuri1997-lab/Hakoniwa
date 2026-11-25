@@ -73,8 +73,8 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2429;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
-function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
+const APP_VER=2430;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+function showMaps(){PROLD=0;$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
   const list=$('#mList');list.innerHTML='';freeCard(list);
@@ -119,7 +119,7 @@ window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;$('#tBtns'
 /* ---------- ループ ---------- */
 const STEPDT=1/30;let STEPACC=0;/* ゲームの時間を進める1ステップの実時間（秒）と、たまった時間（main.js の frame） */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
-let STLD=false;let USERPAUSE=false;/* 「とめる」ボタン：ゲームの時間を止めて、ゆっくり配置を考える */
+let STLD=false,LDEND=0;let USERPAUSE=false;/* 「とめる」ボタン：ゲームの時間を止めて、ゆっくり配置を考える */
 const paused=()=>(typeof sacredPlayActive==='function'&&sacredPlayActive())||sacredQuietActive()||USERPAUSE||!stageReady()||performance.now()<BOSSHOLD||performance.now()<SCENEHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
@@ -221,7 +221,7 @@ function frame(now){
   if(!S||STORY_REPLAY_SHELL){last=now;GCLKON=false;return}
   if(now-frameT<(menuOpen?125:31))return;frameT=now;
   if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S){GRD.job=null;tmpFree()}if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000)GRD.job=stageJob()}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
-  if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
+  if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}if(!stageReady()||!$('#pro').hidden)LDEND=now;/* 読みこみ・プロローグのあいだ（プロローグの「読みこみ中…%」もふくむ）の時刻。上の数の音を止める *//* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   if(started&&!IS_STORY_REPLAY&&!document.hidden&&$('#idle').hidden&&!menuOpen)playAdd(rdt);/* あそんだ時間（クリアまでの記録）。S には、セーブのときに入れる */

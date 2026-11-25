@@ -10,7 +10,7 @@ function spiritCanvas(r,w,h,foot,mood){const el=r?r.elem:'wood';if(typeof spDotR
 function uiNumWatch(){for(const id of['pt','resN','food','matN']){const e=document.getElementById(id);if(!e)continue;UIFX.prev[id]=parseInt(e.textContent,10);new MutationObserver(()=>uiNumChanged(id,e)).observe(e,{childList:true,characterData:true,subtree:true})}}
 function uiNumChanged(id,e){const v=parseInt(e.textContent,10),p=UIFX.prev[id],pt=UIFX.prevT&&UIFX.prevT[id];(UIFX.prevT=UIFX.prevT||{})[id]=e.textContent;UIFX.prev[id]=v;
   if(document.body.classList.contains('wd0')&&started&&!uiReduced()&&isFinite(p)&&isFinite(v)&&v!==p&&pt!=null)uiRoll(e,pt,v>p);/* 草原は、数がかわるたびに、木のめくり数字のように、くるっとまわる */
-  if(!(v>p)||!started||uiReduced())return;const ld=typeof STLD!=='undefined'&&STLD;/* マップの読みこみ中は鳴らさない（持ち主がきめた） */
+  if(!(v>p)||!started||uiReduced())return;const ld=typeof STLD!=='undefined'&&STLD||typeof stageReady==='function'&&!stageReady()||!$('#pro').hidden||typeof LDEND!=='undefined'&&performance.now()-LDEND<1500;/* マップの読みこみ中（プロローグのあとの「読みこみ中…%」も）と、読みこみがおわって村が出てから1.5秒（はじめに数が入るとき）は鳴らさない（持ち主がきめた） */
   const now=performance.now();if(now-(UIFX.spk[id]||0)<350)return;UIFX.spk[id]=now;/* 続けてふえるときは、0.35秒に1回だけ */
   if(!document.body.classList.contains('wd0')){e.classList.remove('nbump');void e.offsetWidth;e.classList.add('nbump')}if(!ld)sfx('count');
   const tag=e.closest('.htag');if(tag){const s=document.createElement('i');s.className='nspk';tag.appendChild(s);setTimeout(()=>s.remove(),520)}}
