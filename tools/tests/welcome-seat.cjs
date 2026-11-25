@@ -1,14 +1,14 @@
-/* なかまのお迎え：だれも集まらず、そばの子だけがその場でよろこぶ（welcomeNear）。いす：背もたれのがわのマスから乗らない・おりない（seatBack） */
+/* なかまのお迎え：だれも集まらず、よろこぶ動きも、はくしゅの音もない（welcomeNear）。いす：背もたれのがわのマスから乗らない・おりない（seatBack） */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
   await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;S.enemyOn=false;S.t=720;
     for(let y=CY-12;y<CY+12;y++)for(let x=CX-12;x<CX+12;x++){const j=y*W+x;S.obj[j]='';S.ground[j]=0;S.floor[j]='';S.hi[j]=0;delete S.dyn[j];if(S.rot)delete S.rot[j]}
     S.res=[mkRes(S,FUTABA,'wood',CX+.5,CY+.5),mkRes(S,NODOKA,'earth',CX+3.5,CY+.5),mkRes(S,'テスト','water',CX+11.5,CY+.5)];for(const r of S.res){r.act=null;r.nap=false;r.path=[]}S.sacredRoot=null;/* まん中の切り株の根もと（STUMPB）は歩けない */recount()})()`);
-  const w=JSON.parse(await run(`(()=>{const[n,a,f]=S.res;window.__w={id:n.id,t:Infinity};const acts=S.res.map(r=>r.act);welcomeNear(n,__w);return JSON.stringify({acts:acts.map(a=>a&&a.type)})})()`));
+  const w=JSON.parse(await run(`(()=>{const[n,a,f]=S.res;window.__w={id:n.id,t:Infinity};const acts=S.res.map(r=>r.act);delete lastSfx.clap;welcomeNear(n,__w);return JSON.stringify({acts:acts.map(a=>a&&a.type)})})()`));
   await new Promise(r=>setTimeout(r,2200));
-  const w2=JSON.parse(await run(`(()=>{const[n,a,f]=S.res,now=performance.now();return JSON.stringify({near:(JOYU.get(a)||0)>now-1000,far:(JOYU.get(f)||0)>0,face:a.face,t:__w.t<Infinity,acts:S.res.map(r=>r.act&&r.act.type),pos:Math.hypot(a.x-(CX+3.5),a.y-(CY+.5))<.01&&Math.hypot(f.x-(CX+11.5),f.y-(CY+.5))<.01})})()`));
+  const w2=JSON.parse(await run(`(()=>{const[n,a,f]=S.res,now=performance.now();return JSON.stringify({near:(JOYU.get(a)||0)>0,far:(JOYU.get(f)||0)>0,clap:lastSfx.clap!=null,bub:a.bubble,t:__w.t<Infinity,acts:S.res.map(r=>r.act&&r.act.type),pos:Math.hypot(a.x-(CX+3.5),a.y-(CY+.5))<.01&&Math.hypot(f.x-(CX+11.5),f.y-(CY+.5))<.01})})()`));
   console.log(JSON.stringify(w),JSON.stringify(w2));
-  assert.equal(w2.near,true,'そばの子はよろこぶ');assert.equal(w2.far,false,'遠い子はよろこばない');assert.equal(w2.face,-1,'新しい子のほうを向く');assert.equal(w2.t,true,'紹介の画面へすすむ');assert.equal(w2.pos,true,'だれも歩いて集まらない');assert.deepEqual(w2.acts,[null,null,null]);
+  assert.equal(w2.near,false,'そばの子もよろこばない');assert.equal(w2.far,false,'遠い子もよろこばない');assert.equal(w2.clap,false,'はくしゅの音は鳴らない');assert.notEqual(w2.bub,'👏');assert.equal(w2.t,true,'紹介の画面へすすむ');assert.equal(w2.pos,true,'だれも歩いて集まらない');assert.deepEqual(w2.acts,[null,null,null]);
   /* いす：前向き（背もたれは北）。北のマスからすわりにいく → 横か前へまわってから乗る。おりるときも北へはおりない */
   const s=JSON.parse(await run(`(()=>{const out={};for(const rot of[0,1,2,3]){const j=CY*W+CX;S.obj[j]='chair';(S.rot||(S.rot={}))[j]=rot;recount();const r=S.res[1],b=seatBack(j);r.x=b%W+.5;r.y=(b/W|0)+.5;r.act={type:'rest',stage:'walk',stand:j,t:0};r.path=[j];let prev=b,inFrom=-1;
       for(let i=0;i<600;i++){const c=(r.y|0)*W+(r.x|0);if(c===j){inFrom=prev;break}prev=c;moveR(r,.05);if(!r.path.length&&(r.y|0)*W+(r.x|0)!==j)break}
