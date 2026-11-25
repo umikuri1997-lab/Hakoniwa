@@ -1,7 +1,7 @@
 /* ---------- せいれいの好み：はじめは「？？？」。出会ったとき・本人が話したときにわかる ----------
    r.kn：わかった好み（lk 好きな遊び・lf 好きな家具・fd 好きな料理・ng にがてな遊び）。
    出会う（はじめて遊ぶ・食べる・見にくる・じぶんの家にある）と、とくべつによろこぶ（prefMeet）。
-   お話・ひとことで本人が言ったら、会話のあとにわかる（prefKnow）。好きな料理だけは、食べるまでわからない（わかるまで、お話・ひとこと・こまりごとで言わない）。 */
+   お話・ひとことで本人が言ったら、会話のあとにわかる（prefKnow）。好きな遊び・料理だけは、遊ぶ・食べるまでわからない（わかるまで、お話・ひとこと・手紙・おねがいのお礼・こまりごとで言わない）。 */
 const PREFNM={lk:'遊び',lf:'家具',fd:'料理',ng:'にがてな遊び'};
 const prefKnown=(r,k)=>!!(r&&r.kn&&r.kn[k]);
 function prefName(r,k){if(k==='lk')return LIKES[r.like]||'';if(k==='lf'){const f=likeF(r);return f&&BL[f]?BL[f].name:''}if(k==='fd'){const d=FOODS[favDish(r)];return d?d.name:''}if(k==='ng')return (NIGATE[r.elem]||[]).map(o=>BL[o]&&BL[o].name).filter(Boolean).join('・')||'とくにない';return ''}

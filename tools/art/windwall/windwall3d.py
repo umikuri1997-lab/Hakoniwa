@@ -103,6 +103,24 @@ def adobe_wall(piece):
     else:
         P.append((Part('はり', 'box', (X0, -1, 0, X1, 2, ZT), ADW), TW, None, (0, 1, 0)))   # 上から見ると、はり（横の壁のてっぺんと同じ）
     return P
+YKB = (190, 96, 64); YKBD = (170, 80, 54); YKM = (226, 200, 170); YKBASE = (150, 70, 48); YKGLZ = (84, 128, 124)   # やきれんが・こい色・目地・土台・つやのあるわり（青緑のうわぐすり）
+def yaki(u, z):   # やきれんが：だんの高さ0.125、はば0.25、1だんごとに半分ずらす。目地はあわい色
+    zz = z - 0.10; r = int(zz / 0.125); uu = u + (0.125 if r % 2 else 0)
+    if (zz % 0.125) < 0.016 or (uu % 0.25) < 0.02: return YKM
+    return YKB if (int(uu / 0.25) * 5 + r * 3) % 7 else YKBD
+def yaki_wall(piece):
+    P = []
+    if piece == 'h':
+        P.append((Part('やきれんが', 'box', (-1, YB+0.02, 0.10, 2, YF, ZT-0.08), YKB), TR, lambda x, y, z: yaki(x, z), (1, 0, 0)))
+        P.append((Part('土台', 'box', (-1, YB+0.01, 0, 2, YF+0.01, 0.10), YKBASE), TR, None, (1, 0, 0)))
+        P.append((Part('かわらのわり', 'box', (-1, YB, ZT-0.08, 2, YF+0.012, ZT), YKGLZ), TR, None, (1, 0, 0)))
+    elif piece == 'p':
+        P.append((Part('れんがの柱', 'box', (X0, YB, 0.10, X1, YF, ZT-0.08), YKB), TR, lambda x, y, z: yaki(x+y, z), (0, 0, 1)))
+        P.append((Part('土台', 'box', (X0-0.01, YB-0.01, 0, X1+0.01, YF+0.01, 0.10), YKBASE), TR, None, (1, 0, 0)))
+        P.append((Part('かわらのわり', 'box', (X0-0.01, YB-0.01, ZT-0.08, X1+0.01, YF+0.012, ZT), YKGLZ), TR, None, (1, 0, 0)))
+    else:
+        P.append((Part('かわらのわり', 'box', (X0, -1, 0, X1, 2, ZT), YKGLZ), TR, None, (0, 1, 0)))
+    return P
 STRATA = [(0.0, (226, 188, 146)), (0.09, (238, 210, 172)), (0.14, (230, 196, 154)), (0.24, (240, 216, 180))]   # 地層のしま（0.3125 の中の、下のはしの高さ・色）。0.3125 は iso の壁の16行で、くりかえす32行にそろう
 RCAP = (238, 224, 200)   # かさ石（石材。砂岩になじむ、あわいクリーム色）
 def strata(z):
@@ -127,6 +145,7 @@ def parts(wall, piece):
     if wall == 'canalwall': return canal_parts(piece)
     if wall == 'adobewall': return adobe_wall(piece)
     if wall == 'rockwall': return rock_wall(piece)
+    if wall == 'yakiwall': return yaki_wall(piece)
     if wall == 'mosswall': return stone_wall(piece, MSTN, MSTND, MMORT, True)   # こけむした石の壁（闇）：灰色の石に、コケ
     if wall == 'moonwall': return stone_wall(piece, MOON, MOOND, MOONM, False)   # 月光石の壁（闇）：うすい青白の石
     P = []
@@ -185,6 +204,7 @@ WOODPAL = {'canvaswall': [(196, 192, 182), (218, 214, 204), (234, 231, 222), (24
            'canalwall': [(150, 156, 164), (170, 176, 184), (186, 192, 200), (198, 204, 210), (212, 216, 222), (226, 230, 234)],  # 石の灰色
            'mosswall': [(132, 130, 124), (150, 148, 142), (166, 164, 158), (178, 176, 170), (192, 190, 184), (206, 204, 198)],
            'adobewall': [(150, 108, 66), (176, 130, 84), (198, 150, 100), (212, 164, 112), (226, 180, 128), (240, 200, 150)],  # はりの木
+           'yakiwall': [(150, 108, 66), (176, 130, 84), (198, 150, 100), (212, 164, 112), (226, 180, 128), (240, 200, 150)],  # はりの木（日干しれんがと同じ）
            'rockwall': [(176, 150, 118), (196, 170, 136), (212, 186, 150), (224, 198, 162), (234, 210, 176), (244, 224, 194)],  # 砂岩
            'moonwall': [(160, 174, 200), (180, 194, 218), (196, 210, 234), (210, 222, 242), (222, 232, 248), (236, 242, 252)]}
 def wood_map(rgb, pal):

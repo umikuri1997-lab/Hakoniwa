@@ -8,7 +8,7 @@ const assert=require('node:assert/strict');
     return JSON.stringify({stage:STAGES.includes(TSUCHI),top,bot,riftWalk:[...M.keys()].filter(j=>M[j]).some(j=>walk(j)),bridgeNo:!canPlace('bridge',(CY+5)*W+tsRiftAt(CY+5)+1,true),
       water:[...M.keys()].filter(j=>M[j]).some(j=>waterJ(j)),east:eastL.some(j=>G.dist[j]>=0),hole:S.obj[h],holeCliff:hiAt(h-W)>hiAt(h),holeReach:[h+W,h-1,h+1].some(j=>G.dist[j]>=0),
       walls:[...new Set(nWall)].sort(),un:['adobewall','ishigaki','iwakagami'].every(k=>S.unlocked[k]),stg:[bpWall(),bpFence(),weedSt(),stg().sx,DYWRITER()],
-      ok:['adobewall','rockwall','itado','ishigaki','sagafence','ishidoor','sagadoor','rockgate'].every(id=>stageItemOK(id)),house:HOUSES.length,
+      ok:['adobewall','yakiwall','rockwall','itado','ishigaki','sagafence','ishidoor','sagadoor','rockgate'].every(id=>stageItemOK(id)),house:HOUSES.length,
       rec:QUESTS[0]&&QUESTS[0].id,time:Math.floor(hour()),calm:!!S.flags.calmNight,swing:BL.swing.mat,tree:iname('deadtree'),tiles:(()=>{const L=tsRiftCells();return{n:L.length,b:L.filter(a=>a[2].startsWith('iso:riftb:')).length,miss:[...new Set(L.filter(a=>!CHIPS[a[2]]).map(a=>a[2]))]}})(),cover:!!CHIPS['cover:tsuchi'],nat:['tree~t','deadtree~t','weed2g','weed2k','iwakagami','rock~t'].filter(k=>!(CHIPS[k]&&CHIPS[k].iso)),rockT:(()=>{const c=chipOf('rock',null);return c===CHIPS['rock~t']})(),ana:!!(CHIPS.anagura&&CHIPS.anagura.iso),noRm:(()=>{const x=h%W,y=(h/W)|0;removeAt(x,y);return S.obj[h]==='anagura'})()})})()`));
   console.log(JSON.stringify(o));
   assert.ok(o.stage,'STAGES');assert.ok(o.top&&o.bot,'地われは北のはしから南のはしへ');assert.ok(!o.riftWalk,'地われは歩けない');assert.ok(o.bridgeNo,'地われに橋はかけられない');assert.ok(!o.water,'地われは水ではない');
