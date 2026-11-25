@@ -632,13 +632,13 @@ function renderSheet(){
     qmarkify(body);
   }else if(sheet==='box'){const j=sheetArg,t=boxTypeAt(j);if(!t)return closeSheet();T.textContent=BL[t].name;body.appendChild(rowEl(BL[t].name,withAttr(t,BL[t].desc||''),iconURL(t)));boxSec(body,j);
   }else if(sheet==='furn'){const j=sheetArg,o=(typeof kdFl==='function'&&kdFl(j))||S.obj[j]||(S.rug||{})[j];/* 花の輪の花は、その花として */if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}if(WORKF.has(o)&&S.obj[j]===o&&o!=='sink'&&!workOK(j)){const p=el('<p class="note" style="color:#c0392b"></p>');p.textContent='前がふさがっています';body.appendChild(p)}/* 作業するマス（その向きの前）に物がある */
-    body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
+    body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));boxSec(body,j);/* しまう家具の中身（マスの枠）は、名前のすぐ下に */
     if(o==='jar'&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('水',Math.max(0,Math.floor((S.dyn[j]||{}).w||0))+' / '+JARW+'マスぶん'));/* みずがめにいまある水 */
     if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
     {const rc=RFC.get(j);if(rc!=null&&S.roof&&S.roof[rc]){const b=el('<button class="btn"></button>');b.textContent=BL[S.roof[rc]].name+'を見る';b.onclick=()=>{sfx('tap');openSheet('roof',rc)};body.appendChild(b)}}/* 屋根の下の物：屋根の説明へ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&!BENCHES.has(o))body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス'))}
 
-    useOwnSec(body,j,o);jobOwnSec(body,j,o);if(typeof aniSec==='function')aniSec(body,j,o);boxSec(body,j);
+    useOwnSec(body,j,o);jobOwnSec(body,j,o);if(typeof aniSec==='function')aniSec(body,j,o);
     {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff,spotIcon(sp)))}}/* スポット */
     if(TABLES.has(o)){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('いまの、ここで食べたときのパワー',h?'+'+bon+'　家の中の食卓+1・ダイニング家具+'+(DINEPT[Math.min(6,n)]-1):'家の外なので、ふえない'))}/* 食卓：いまのパワーのボーナス */
