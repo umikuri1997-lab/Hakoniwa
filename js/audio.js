@@ -307,12 +307,12 @@ function sfx(k){
   case'atk_wind':playU('atkK',0.5);break;/* 持ち主がえらんだ本物の録音 */
   case'atk_water':playU('atkS',0.45);break;/* 持ち主がえらんだ本物の録音 */
   case'next':tone(88,t,.04,'triangle',.05,o);break;
-  case'good':if(!playS('joyc',.2))seq([84,88],.07,'sine',.03);break;/* よろこぶ音：オルゴールのちりりん（読みこむ前だけ、前の作った音） */
+  case'good':if(!playS('joyc',.14))seq([84,88],.07,'sine',.03);break;/* よろこぶ音：オルゴールのちりりん（読みこむ前だけ、前の作った音） */
   case'warn':seq([62,57],.14,'square',.035,.22);break;
-  case'quest':if(playS('rwquest',.25))break;seq([72,76,79,84,79,84],.09,'triangle',.08,.16);break;/* たっせい：おもちゃの鉄琴の「ドミソド」（読みこむ前だけ、前の作った音） */
-  case'gift':if(playS('rwget',.45))break;if(!playS('joyc',.2))seq([84,88],.07,'sine',.03);break;/* うけとった：おもちゃの鉄琴の「ちん・ちーん」 */
-  case'firstput':if(playS('rwfirst',.5))break;tone(2093,t,.5,'sine',.03,o);break;/* はじめて置いた家具：チャイムの「きらーん」 */
-  case'level':seq([67,72,76,79],.09,'triangle',.08,.16);[72,76,79,84].forEach(m=>tone(m,t+.4,1.1,'sine',.035,o));[96,100,103,108].forEach((m,i)=>tone(m,t+.7+i*.05,.25,'triangle',.025,o));break;
+  case'quest':if(playS('rwquest',.117))break;seq([72,76,79,84,79,84],.09,'triangle',.08,.16);break;/* たっせい：おもちゃの鉄琴の「ドミソド」（読みこむ前だけ、前の作った音） */
+  case'gift':if(playS('rwget',.098))break;if(!playS('joyc',.14))seq([84,88],.07,'sine',.03);break;/* うけとった：おもちゃの鉄琴の「ちん・ちーん」 */
+  case'firstput':if(playS('rwfirst',.136))break;tone(2093,t,.5,'sine',.03,o);break;/* はじめて置いた家具：チャイムの「きらーん」 */
+  case'level':seq([67,72,76,79],.09,'triangle',.058,.16);[72,76,79,84].forEach(m=>tone(m,t+.4,1.1,'sine',.025,o));[96,100,103,108].forEach((m,i)=>tone(m,t+.7+i*.05,.25,'triangle',.018,o));break;
   case'bossIn':noise(t,1.6,.16,o,60);tone(110,t,1.6,'sawtooth',.06,o,40);tone(55,t,2.2,'sine',.12,o,35);[45,46,51].forEach((m,i)=>tone(m,t+.25+i*.02,2.4,'triangle',.05,o));break;/* オオカゲの登場：ひくい地ひびきと、にごった和音 */
   case'shard':if(playS('shard',.8))break;seq([67,72,76,79],.09,'triangle',.08,.16);break;/* かけらをはめる */
 case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'square',.05,o,120);noise(t+.12,.9,.08,o,3000);[72,79,84,88,91,96].forEach((m,i)=>tone(m,t+.35+i*.08,1.4,'triangle',.06,o));[96,103,108].forEach((m,i)=>tone(m,t+.9+i*.06,1.2,'sine',.04,o));break;/* オオカゲへのさいごの一撃：ドーンとひびいて、光の音がかけあがる */
@@ -321,7 +321,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'defeat':if(playS('kill',.5))break;tone(400,t,.18,'triangle',.08,o,1300);noise(t+.05,.12,.04,o,4000);break;
   case'offer':seq([88,91,96],.05,'sine',.05);break;
   case'hanabi':noise(t,.5,.1,o,400);tone(62,t,.35,'sine',.18,o);break;/* 花火の音 */
-  case'arrive':seq([79,84,88,91,96],.08,'sine',.06,.2);break;
+  case'arrive':seq([79,84,88,91,96],.08,'sine',.046,.2);break;
   case'zap':if(playS('shoot',.45))break;tone(1500,t,.07,'sawtooth',.015,o,500);break;
   case'seed':seq([84,91,96,100],.05,'triangle',.05);break;
   case'pat':if(playS('pat',.8))break;noise(t,.08,.05,o,2500);break;
@@ -336,7 +336,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'tpuni':playU('tpuni',.38,1.2);break;/* きのこ：ぷにっ（やわらかい物をおす録音を、高く） */
   case'bowdraw':playU('bowdraw',.3);break;/* 弓をひきしぼる（持ち主の音） */
   case'uknock':playU('knockw',.12,.85);break;/* ボタンでない所のタップ：木をそっとたたく */
-  case'starkira':playU('starkira',.3);break;/* 流れ星をタップ：キラッ（持ち主の音） */
+  case'starkira':playU('starkira',.078);break;/* 流れ星をタップ：キラッ（持ち主の音） */
   case'slip':if(playU('slip',.4))break;noise(t,.07,.1,o,600);break;/* 水たまりですべる（読みこむ前だけ作った音） */
   case'dscoop':playU('dscoop',.42);break;/* 水くみ：バケツが水に入る */
   case'dlift':playU('dlift',.32);break;/* 水くみ：ひき上げる */
