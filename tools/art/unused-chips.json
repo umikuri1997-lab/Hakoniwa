@@ -2976,6 +2976,13 @@
         "yozorawall:m9~in",
         "yozorawall:post"
       ]
+    },
+    {
+      "reason": "もりのこだまの、ふしぎな切り株とゆれる草むらをけした（持ち主がきめた）。こだまは、目標のたっせいと花の輪で見つける（kodama.js）。",
+      "ids": [
+        "kdkusa",
+        "kdkabu"
+      ]
     }
   ]
 }
