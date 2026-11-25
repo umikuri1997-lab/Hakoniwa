@@ -200,6 +200,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
     if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
     if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
+    if(S.ground[j]===1&&typeof tsBridgeTap==='function'&&tsBridgeTap(j))return;/* 土：地われに石の大橋をかける（tsuchi-bridge.js） */
     if(S.ground[j]===1)return toast(skyJ(j)?'雲の海。橋をかけると、わたれる':riftJ(j)?'地われ。ふかくて、底が見えない':'池。そばでつりができる');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }
