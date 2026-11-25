@@ -49,16 +49,31 @@ def load(el):
         o.evaluated_get(dg).to_mesh_clear()
     return out
 
+def rgb2hsv(c):
+    """colorsys.rgb_to_hsv を、まとめて（同じ式）"""
+    r, g, b = c[:, 0], c[:, 1], c[:, 2]; mx = c.max(1); mn = c.min(1); v = mx; d = mx-mn
+    s = np.where(mx > 0, d/np.where(mx > 0, mx, 1), 0.0); dd = np.where(d > 0, d, 1)
+    rc, gc, bc = (mx-r)/dd, (mx-g)/dd, (mx-b)/dd
+    h = np.where(r == mx, bc-gc, np.where(g == mx, 2.0+rc-bc, 4.0+gc-rc)); h = (h/6.0) % 1.0; h = np.where(d > 0, h, 0.0)
+    return np.stack([h, s, v], 1)
+
+def hsv2rgb(x):
+    """colorsys.hsv_to_rgb を、まとめて（同じ式）"""
+    h, s, v = x[:, 0], x[:, 1], x[:, 2]; i = np.floor(h*6.0).astype(int); f = h*6.0-i
+    p, q, t = v*(1-s), v*(1-s*f), v*(1-s*(1-f)); i = i % 6
+    r = np.choose(i, [v, q, p, p, t, v]); g = np.choose(i, [t, v, v, q, p, p]); b = np.choose(i, [p, p, t, v, v, q])
+    out = np.stack([r, g, b], 1); out[s == 0] = np.stack([v, v, v], 1)[s == 0]; return out
+
 def shade(cb, nb, mb, light):
     """かげは明度でなく彩度で（持ち主がきめた）：明るさ（HSV の V）はかえず、かげの段ほどあざやかに。
     つや（水のずきん）：光と目のあいだの向きの所に白いつや。光る（火のずきん）：かげをつけず、こちらを向いた所ほど明るい黄色へ。"""
     import colorsys
     dl = nb@light; band = np.where(dl > 0.35, 0, np.where(dl > -0.1, 1, 2))
     out = cb.copy(); m = cb.sum(1) > 0
-    hsv = np.array([colorsys.rgb_to_hsv(*(c/255)) for c in cb[m]]) if m.any() else np.zeros((0, 3))
+    hsv = rgb2hsv(cb[m]/255) if m.any() else np.zeros((0, 3))
     if len(hsv):
         hsv[:, 1] = np.minimum(1, hsv[:, 1]+np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0))
-        out[m] = np.array([colorsys.hsv_to_rgb(*v) for v in hsv])*255
+        out[m] = hsv2rgb(hsv)*255
     view = np.array([0, 0, 1.0]); hv = light+view; hv /= np.linalg.norm(hv)
     sp0 = (mb == 1) & (nb@hv > 0.996); out[sp0] = 255   # 水：つやつや（小さな点の白い光。広がるつやにしない）
     g = mb == 2
@@ -70,6 +85,59 @@ def shade(cb, nb, mb, light):
     return out
 
 TAGS = ['', 'body', 'arm', 'head', 'face', 'prop']
+from numba import njit
+
+@njit(cache=True)
+def _raster(SX, SY, SZ, NN, COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt):
+    """三角形を1つずつ、ドットの細かさ（ss）でぬる（前の Python のぬり方と同じ式・同じじゅんばん）"""
+    for k in range(SX.shape[0]):
+        ax, bx, cx = SX[k, 0], SX[k, 1], SX[k, 2]; ay, by, cy = SY[k, 0], SY[k, 1], SY[k, 2]
+        x0 = int(np.floor(min(ax, bx, cx))); x1 = int(np.ceil(max(ax, bx, cx))); y0 = int(np.floor(min(ay, by, cy))); y1 = int(np.ceil(max(ay, by, cy)))
+        if x1 < 0 or y1 < 0 or x0 >= Ws or y0 >= Hs: continue
+        d = (by-cy)*(ax-cx)+(cx-bx)*(ay-cy)
+        if abs(d) < 1e-9: continue
+        for yi in range(max(0, y0), min(Hs, y1+1)):
+            ys = yi+.5
+            for xi in range(max(0, x0), min(Ws, x1+1)):
+                xs = xi+.5
+                l0 = ((by-cy)*(xs-cx)+(cx-bx)*(ys-cy))/d; l1 = ((cy-ay)*(xs-cx)+(ax-cx)*(ys-cy))/d; l2 = 1-l0-l1
+                if l0 < -1e-6 or l1 < -1e-6 or l2 < -1e-6: continue
+                z = l0*SZ[k, 0]+l1*SZ[k, 1]+l2*SZ[k, 2]; j = yi*Ws+xi
+                if TAG[k] == 3 or TAG[k] == 4: hcov[j] = True
+                if MAT[k] == 3:
+                    if z > zt[j]:
+                        zt[j] = z
+                        for q in range(3): ct[j, q] = COL[k, q]; nt[j, q] = l0*NN[k, 0, q]+l1*NN[k, 1, q]+l2*NN[k, 2, q]
+                    continue
+                if z > zb[j]:
+                    zb[j] = z; mb[j] = MAT[k]; tg[j] = TAG[k]
+                    for q in range(3): cb[j, q] = COL[k, q]; nb[j, q] = l0*NN[k, 0, q]+l1*NN[k, 1, q]+l2*NN[k, 2, q]
+
+@njit(cache=True)
+def _down(img, a, thin, H, W, ss, out):
+    """ss×ss を、いちばん多い色で1ドットに（同じ数なら、色の小さいほう。np.unique と同じ）"""
+    cols = np.zeros((ss*ss, 3), np.int64); cnt = np.zeros(ss*ss, np.int64)
+    for r in range(H):
+        for c in range(W):
+            nc = 0; na = 0; nth = 0
+            for dy in range(ss):
+                for dx in range(ss):
+                    yy = r*ss+dy; xx = c*ss+dx
+                    if thin[yy, xx]: nth += 1
+                    if not a[yy, xx]: continue
+                    na += 1
+                    R = int(np.round(img[yy, xx, 0])); G = int(np.round(img[yy, xx, 1])); B = int(np.round(img[yy, xx, 2]))
+                    f = -1
+                    for t in range(nc):
+                        if cols[t, 0] == R and cols[t, 1] == G and cols[t, 2] == B: f = t; break
+                    if f < 0: cols[nc, 0] = R; cols[nc, 1] = G; cols[nc, 2] = B; cnt[nc] = 1; nc += 1
+                    else: cnt[f] += 1
+            if na*2 < ss*ss: continue
+            bi = 0
+            for t in range(1, nc):
+                if cnt[t] > cnt[bi] or (cnt[t] == cnt[bi] and (cols[t, 0] < cols[bi, 0] or (cols[t, 0] == cols[bi, 0] and (cols[t, 1] < cols[bi, 1] or (cols[t, 1] == cols[bi, 1] and cols[t, 2] < cols[bi, 2]))))): bi = t
+            out[r, c, 0] = cols[bi, 0]; out[r, c, 1] = cols[bi, 1]; out[r, c, 2] = cols[bi, 2]
+            out[r, c, 3] = 150 if nth*2 >= ss*ss else 255
 def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=0.0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
     Ws, Hs = W*ss, H*ss
@@ -81,28 +149,14 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
-    for k, tri in enumerate(tris):
-        P, N, col = tri[:3]; mat = tri[3] if len(tri) > 3 else 0; tag = TAGS.index(tri[4]) if len(tri) > 4 else 0
+    if len(tris):
+        P = np.array([t[0] for t in tris], float); N = np.array([t[1] for t in tris], float)
+        COL = np.array([t[2] for t in tris], float); MAT = np.array([t[3] if len(t) > 3 else 0 for t in tris], np.int64)
+        TAG = np.array([TAGS.index(t[4]) if len(t) > 4 else 0 for t in tris], np.int64)
         if spin: P = P@Rs.T; N = N@Rs.T
-        X, Y, Z = cam(P).T; N = cam(N)
-        sx = (X+W/2)*ss; sy = (H-12-Y)*ss
-        x0, x1 = int(np.floor(sx.min())), int(np.ceil(sx.max())); y0, y1 = int(np.floor(sy.min())), int(np.ceil(sy.max()))
-        if x1 < 0 or y1 < 0 or x0 >= Ws or y0 >= Hs: continue
-        xs, ys = np.meshgrid(np.arange(max(0, x0), min(Ws, x1+1))+.5, np.arange(max(0, y0), min(Hs, y1+1))+.5)
-        (ax, ay), (bx, by), (cx, cy) = zip(sx, sy)
-        d = (by-cy)*(ax-cx)+(cx-bx)*(ay-cy)
-        if abs(d) < 1e-9: continue
-        l0 = ((by-cy)*(xs-cx)+(cx-bx)*(ys-cy))/d; l1 = ((cy-ay)*(xs-cx)+(ax-cx)*(ys-cy))/d; l2 = 1-l0-l1
-        m = (l0 >= -1e-6) & (l1 >= -1e-6) & (l2 >= -1e-6)
-        if not m.any(): continue
-        z = l0*Z[0]+l1*Z[1]+l2*Z[2]
-        j = (ys[m]-.5).astype(int)*Ws+(xs[m]-.5).astype(int); z = z[m]
-        if tag in (3, 4): hcov[j] = True
-        nn = l0[m, None]*N[0]+l1[m, None]*N[1]+l2[m, None]*N[2]
-        if mat == 3:
-            bt = z > zt[j]; j = j[bt]; zt[j] = z[bt]; ct[j] = col; nt[j] = nn[bt]; continue
-        bt = z > zb[j]; j = j[bt]
-        zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k; mb[j] = mat; tg[j] = tag
+        Q = cam(P.reshape(-1, 3)).reshape(-1, 3, 3); NN = cam(N.reshape(-1, 3)).reshape(-1, 3, 3)
+        SX = (Q[..., 0]+W/2)*ss; SY = (H-12-Q[..., 1])*ss
+        _raster(SX, SY, np.ascontiguousarray(Q[..., 2]), np.ascontiguousarray(NN), COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt)
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
         if spin: P = P@Rs.T
         Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
@@ -119,13 +173,7 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     img = img.reshape(Hs, Ws, 3); a = (has | wt).reshape(Hs, Ws)
     # ss×ss をいちばん多い色で1ドットに
     out = np.zeros((H, W, 4), np.uint8)
-    for r in range(H):
-        for c in range(W):
-            blk = a[r*ss:(r+1)*ss, c*ss:(c+1)*ss]
-            if blk.sum()*2 < ss*ss: continue
-            px = img[r*ss:(r+1)*ss, c*ss:(c+1)*ss][blk]
-            u, n = np.unique(np.round(px).astype(int), axis=0, return_counts=True)
-            out[r, c, :3] = u[n.argmax()]; out[r, c, 3] = 150 if thin[r*ss:(r+1)*ss, c*ss:(c+1)*ss].sum()*2 >= ss*ss else 255
+    _down(img, a, thin, H, W, ss, out)
     # まわりに1ドットの輪郭（となりの色を少し暗く）
     al = out[..., 3] > 0; line = np.zeros_like(out)
     for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
@@ -134,7 +182,7 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     out[~al] = line[~al]
     if not info: return out
     T = tg.reshape(H, ss, W, ss).transpose(0, 2, 1, 3).reshape(H, W, ss*ss)
-    tagd = np.array([[np.bincount(t, minlength=len(TAGS)).argmax() for t in row] for row in T])   # ドットごとの いちばん多い種類
+    cnt = np.stack([(T == q).sum(2) for q in range(len(TAGS))], 2); tagd = cnt.argmax(2)   # ドットごとの いちばん多い種類
     return out, {'tag': tagd, 'hcov': hcov.reshape(H, ss, W, ss).any(axis=(1, 3)), 'cam': cam, 'Rs': Rs}
 
 def main():
