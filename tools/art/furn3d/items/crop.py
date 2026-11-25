@@ -10,7 +10,7 @@ from blueprint import Part as P
 from natcommon import nat,flat,SUN
 import farm
 ID='crop';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=25;BOTTOM=64;LIGHT=SUN
-MR=0.17;MH=0.12;SINK=0.01;K=2.2   # もりあがりの半径・高さ、作物を土にうめる深さ（マス）、モデルの大きさ→マス
+MR=0.34;MH=0.24;SINK=0.01;K=2.2   # もりあがりの半径・高さ、作物を土にうめる深さ（マス）、モデルの大きさ→マス
 H={'mugi1':0.229,'mugi2':0.331,'mugi3':0.335,'imo1':0.223,'imo2':0.277,'imo3':0.318,'cab1':0.171,'cab2':0.174,'cab3':0.248}   # モデルの高さ（crop_prep.py が出す）
 COL={'mugi':{'leaf':(150,200,92),'stem':(232,192,100),'cap':(226,162,56)},   # 麦：若い葉はうすい緑、実ると茎も穂も金色
      'imo':{'leaf':(122,172,64),'dot':(246,242,232),'under':(242,212,96)},   # いも：葉・白い花びら・花のまん中の黄色
