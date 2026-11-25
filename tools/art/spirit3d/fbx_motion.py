@@ -29,6 +29,17 @@ def scene(el):
     for o in meshes:
         names = {g.index: g.name for g in o.vertex_groups}
         dom[o.name] = [names.get(max(v.groups, key=lambda g: g.weight).group, '') if v.groups else '' for v in o.data.vertices]
+    comp = {}   # 木のずきん：はなれた かたまり（いちばん大きい物のほかは 葉脈）
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    for o in meshes:
+        if o.name.lower().startswith('hood'):
+            E = np.array([e.vertices[:] for e in o.data.edges]); n = len(o.data.vertices)
+            _, lab = connected_components(coo_matrix((np.ones(len(E)), (E[:, 0], E[:, 1])), shape=(n, n)), directed=False)
+            comp[o.name] = (lab, np.bincount(lab).argmax())
+    # 頭（ずきん・顔）の大きさ：うでがめりこまないようにする、頭のまわりのだ円（休みのポーズの、キャラの座標・ドット）
+    P = np.concatenate([np.array([(o.matrix_world @ v.co)[:] for v in o.data.vertices]) for o in meshes if o.name.lower().startswith(('hood', 'head'))])*100
+    P = P@F; hc0 = (P.min(0)+P.max(0))/2; hr0 = (P.max(0)-P.min(0))/2
     rest = {b.name: np.array(b.matrix_local) for b in arm.data.bones}   # アーマチュアの空間（m）
     order = []
     def walk(b):
@@ -36,7 +47,7 @@ def scene(el):
         for c in b.children: walk(c)
     for b in arm.data.bones:
         if b.parent is None: walk(b)
-    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order)
+    _CUR.clear(); _CUR.update(el=el, arm=arm, meshes=meshes, dom=dom, rest=rest, order=order, comp=comp, hc0=hc0, hr0=hr0)
     return _CUR
 
 def rigid(R, pivot, t=(0, 0, 0)):
@@ -65,9 +76,19 @@ def pose(el, p, face):
         elif nm.startswith(('upper_arm', 'forearm', 'hand')):
             side = 1 if nm.endswith('.L') else -1   # キャラの +x のうで
             near = side == NEARSIDE[face]; k = 'N' if near else 'F'
-            R = ry(-side*(ABD[face]+g('b'+k)))@rx(g('s'+k))@rz(g('t'+k))
             Rd = ry(side*math.pi/2)   # 横へのびたうで（side·x）→ まっすぐたらしたうで（−z）
             sh = F@rest['upper_arm'+nm[nm.index('.'):]][:3, 3]*100
+            # 頭にめりこむときは、めりこまなくなるまで、うでを外へ開く（b を足す）
+            Thi = np.linalg.inv(Th); lift = 0.0
+            for _ in range(16):
+                R = ry(-side*(ABD[face]+g('b'+k)+lift))@rx(g('s'+k))@rz(g('t'+k))
+                M = Tb@rigid(R, sh)
+                U = np.array([[0, 0, -u] for u in np.linspace(5, 17, 7)])+sh   # たらしたうでの軸の上の点（かたから手の先）
+                W = (M@np.c_[(U@F)*0.01, np.ones(len(U))].T).T[:, :3]            # Blender（m）
+                Hh = ((Thi@np.c_[W, np.ones(len(W))].T).T[:, :3]/0.01)@F          # 頭の休みの座標へ（キャラの座標）
+                q = (Hh-S['hc0'])/(S['hr0']+np.array([4.0, 4.0, 0.0]))   # 横・前うしろは うでの太さぶん広く。たては頭のはんいだけ
+                if not (((q**2).sum(1) < 1) & (Hh[:, 2] > S['hc0'][2]-S['hr0'][2]-4.0)).any(): break   # ずきんのすそより少し下まで
+                lift += 0.08
             T[nm] = Tb@rigid(R@Rd, sh)
         else: T[nm] = Tb
     for nm in S['order']:
@@ -83,9 +104,13 @@ def triangles(el):
         M = ev.matrix_world; R = M.to_3x3()
         V = np.array([(M @ v.co)[:] for v in me.vertices])*100.0
         N = np.array([(R @ v.normal).normalized()[:] for v in me.vertices])
-        dom = S['dom'][o.name]
+        dom = S['dom'][o.name]; base = FP.hx(FP.color_of(o.name, el, ''))
+        hood = o.name.lower().startswith('hood'); cp = S['comp'].get(o.name)
+        mat = (1 if el == 'water' else 2 if el == 'fire' else 0) if hood else 0   # 水のずきんは つや・火のずきんは 光る
         for t in me.loop_triangles:
-            i = list(t.vertices); out.append((V[i], N[i], FP.hx(FP.color_of(o.name, el, dom[i[0]]))))
+            i = list(t.vertices); col = FP.hx(FP.color_of(o.name, el, dom[i[0]]))
+            if el == 'wood' and cp is not None and cp[0][i[0]] != cp[1]: col = FP.hx('#c9ef9b')   # 木の葉脈：明るい黄緑
+            out.append((V[i], N[i], col, mat))
         ev.to_mesh_clear()
     return out
 

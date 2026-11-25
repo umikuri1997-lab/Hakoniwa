@@ -49,16 +49,36 @@ def load(el):
         o.evaluated_get(dg).to_mesh_clear()
     return out
 
+def shade(cb, nb, mb, light):
+    """かげは明度でなく彩度で（持ち主がきめた）：明るさ（HSV の V）はかえず、かげの段ほどあざやかに。
+    つや（水のずきん）：光と目のあいだの向きの所に白いつや。光る（火のずきん）：かげをつけず、こちらを向いた所ほど明るい黄色へ。"""
+    import colorsys
+    dl = nb@light; band = np.where(dl > 0.35, 0, np.where(dl > -0.1, 1, 2))
+    out = cb.copy(); m = cb.sum(1) > 0
+    hsv = np.array([colorsys.rgb_to_hsv(*(c/255)) for c in cb[m]]) if m.any() else np.zeros((0, 3))
+    if len(hsv):
+        hsv[:, 1] = np.minimum(1, hsv[:, 1]+np.array([0.0, 0.10, 0.20])[band[m]]+np.where(hsv[:, 1] < 0.08, np.array([0, 0.03, 0.06])[band[m]], 0))
+        out[m] = np.array([colorsys.hsv_to_rgb(*v) for v in hsv])*255
+    view = np.array([0, 0, 1.0]); hv = light+view; hv /= np.linalg.norm(hv)
+    sp0 = (mb == 1) & (nb@hv > 0.975); sp = (mb == 1) & (nb@hv > 0.93) & ~sp0; out[sp0] = 255; out[sp] = out[sp]*0.3+255*0.7
+    sp2 = (mb == 1) & (nb@hv > 0.86) & ~sp; out[sp2] = out[sp2]*0.65+255*0.35
+    g = mb == 2
+    if g.any():
+        t = np.clip(nb[g]@view, 0, 1)[:, None]; core = np.array([255, 214, 120.0])
+        out[g] = cb[g]*(1-t*0.75)+core*(t*0.75)
+    return out
+
 def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
     Ws, Hs = W*ss, H*ss
-    zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1)
+    zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）
     light = np.array([-0.5, 0.6, 0.62]); light /= np.linalg.norm(light)   # カメラから見て 左上・手前
     cs, sn = math.cos(spin), math.sin(spin); Rs = np.array([[cs, -sn, 0], [sn, cs, 0], [0, 0, 1]])
     cam = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
-    for k, (P, N, col) in enumerate(tris):
+    for k, tri in enumerate(tris):
+        P, N, col = tri[:3]; mat = tri[3] if len(tri) > 3 else 0
         if spin: P = P@Rs.T; N = N@Rs.T
         X, Y, Z = cam(P).T; N = cam(N)
         sx = (X+W/2)*ss; sy = (H-12-Y)*ss
@@ -75,7 +95,7 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
         j = (ys[m]-.5).astype(int)*Ws+(xs[m]-.5).astype(int); z = z[m]
         nn = l0[m, None]*N[0]+l1[m, None]*N[1]+l2[m, None]*N[2]
         bt = z > zb[j]; j = j[bt]
-        zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k
+        zb[j] = z[bt]; cb[j] = col; nb[j] = nn[bt]; ib[j] = k; mb[j] = mat
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
         if spin: P = P@Rs.T
         Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
@@ -83,8 +103,7 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0):
         bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2
     # 左上の光で3だん
     nb /= np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-9)
-    dl = nb@light; f = np.where(dl > 0.35, 1.0, np.where(dl > -0.1, 0.9, 0.8))
-    img = (cb*f[:, None]).reshape(Hs, Ws, 3); a = (zb > -1e8).reshape(Hs, Ws)
+    img = shade(cb, nb, mb, light).reshape(Hs, Ws, 3); a = (zb > -1e8).reshape(Hs, Ws)
     # ss×ss をいちばん多い色で1ドットに
     out = np.zeros((H, W, 4), np.uint8)
     for r in range(H):
