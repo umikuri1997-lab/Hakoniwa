@@ -64,7 +64,7 @@ function boxAct(r){const a=r.act;return a&&!r.nap&&!(typeof onHold==='function'&
 /* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
 function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
 /* 取る・置く物の高さ：上から入れる物（ふちが顔の高さ）は背のびして storeh、前から入れる家具は胸の高さへ storem、地面の物（神殿のまえの山・材料置き場など）は、しゃがむ store */
-const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
+const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['tskama','makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
 function boxReach(a){const t=boxTarget(a);if(t<0)return'';const id=boxTypeAt(t)||S.obj[anc(t)];return BOXHI.has(id)?'storeh':BOXMID.has(id)?'storem':''}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
