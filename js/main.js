@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2471;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2472;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){PROLD=0;$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -219,7 +219,7 @@ function frame(now){
   if(!running)return;requestAnimationFrame(frame);
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
   if(!S||STORY_REPLAY_SHELL){last=now;GCLKON=false;return}
-  if(now-frameT<(menuOpen?125:31))return;frameT=now;
+  if(now-frameT<(menuOpen?125:31))return;frameT=now;chaFree(now);/* 切り出しおわったアトラスを手ばなす（draw-objects.js） */
   if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S){GRD.job=null;tmpFree()}if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now;ldStart()}if(assetsOK()||now-GRD.w0>20000){GRD.job=stageJob();ldMark('a')}}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
   if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}if(!stageReady()||!$('#pro').hidden)LDEND=now;/* 読みこみ・プロローグのあいだ（プロローグの「読みこみ中…%」もふくむ）の時刻。上の数の音を止める *//* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
