@@ -116,6 +116,9 @@ function juiceRec(k,n){/* k：hv（収穫）・kill（追いはらった）・ma
 /* juice3 から */
 let J4T=0;
 function juice4Frame(now){juiceGrowStep(now);juiceFenceCheck(now);if(now-J4T>250){J4T=now;juiceStarTick(now)}}
-function juice4Draw(now){const dt=J4LD?Math.min(.1,(now-J4LD)/1000):0;J4LD=now;if(J4FENCE.length)juiceFenceDraw(now);if(J4MEND.length)juiceMendDraw(now);if(J4THREAD.length)juiceThreadDraw(now,dt);if(J4STAR.length)juiceStarDraw(now);if(J4FISH.length)juiceFishDraw(now);isoBack(ctx)}/* クォータービュー：それぞれの所に立てたあと、もとの描き方に（iso-fx.js） */
+const FISHJUMP=.85;/* つりの、かかげる時間（a.sh）のうち、魚が水からとびだして手にとどくまで */
+function fishTagDraw(){/* つった魚をかかげているあいだ、頭の上に「〇〇がつれた！」の札（はじめての魚は「はじめて！」も） */for(const r of S.res){const a=r.act;if(!a||a.type!=='fish'||a.sh==null||!a.fk||r.hidden||!FOODS[a.fk])continue;const al=(a.sh-FISHJUMP)/.2;if(al<0)continue;
+  const L=a.first?['はじめて！',FOODS[a.fk].name+'がつれた！']:[FOODS[a.fk].name+'がつれた！'];isoUIAt(ctx,r.x*TS,r.y*TS,r.x*TS,(r.y-2.05)*TS);evTag(ctx,r.x*TS,(r.y-2.05)*TS,L,Math.min(1,al))}}
+function juice4Draw(now){if(S&&typeof evTag==='function')fishTagDraw();const dt=J4LD?Math.min(.1,(now-J4LD)/1000):0;J4LD=now;if(J4FENCE.length)juiceFenceDraw(now);if(J4MEND.length)juiceMendDraw(now);if(J4THREAD.length)juiceThreadDraw(now,dt);if(J4STAR.length)juiceStarDraw(now);if(J4FISH.length)juiceFishDraw(now);isoBack(ctx)}/* クォータービュー：それぞれの所に立てたあと、もとの描き方に（iso-fx.js） */
 let J4LD=0;
 function juice4Reset(){J4GROW.length=0;J4FISH.length=0;J4FENCE.length=0;J4MEND.length=0;J4THREAD.length=0;J4STAR.length=0;J4FQ=[];J4SNAP=null;J4ST=null}

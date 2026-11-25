@@ -22,8 +22,8 @@ function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.
    会話を最後まで聞いたら1組に数える（S.flags.omoiP）。夜・コワイノが近い・2人のどちらかが村にいないときは、はじめない。とちゅうでやめたら、待っている組のまま */
 const OMOI_CARE={wood:['storyOffer','touch'],water:['storyPour','water'],fire:['storyStone','stone'],earth:['storySoil','soil'],wind:['storyWind','wind']};
 /* 御神木の前のひとこと：その子の言いかたで、いくつか用意して、ぜんぶ出しおわるまで同じ物を出さない（pickFresh。同じ場面の2人も、べつのセリフ） */
-const OMOI_VOICE={[POKO]:['#joy|{P}と、いっしょに来たかったんだ。','{P}とならんで歩くとね、足が、かってにはずむんだ。','#joy|この木にね、{P}のこと、おしえてあげたかったんだ。','{P}のとなりは、ひなたみたいに、あったかいんだ。'],
- [MINA]:['ふたりで来るとねぇ、なんだか、あったかいねぇ。','{P}といるとねぇ、土まで、にこにこしてる気がするよぉ。','#joy|{P}のこと、この木にも、見せてあげたかったんだぁ。','いそがなくていいよぉ。{P}と、ゆっくり見ていこうねぇ。']};
+const OMOI_VOICE={[FUTABA]:['#joy|{P}と、いっしょに来たかったんだ。','{P}とならんで歩くとね、足が、かってにはずむんだ。','#joy|この木にね、{P}のこと、おしえてあげたかったんだ。','{P}のとなりは、ひなたみたいに、あったかいんだ。'],
+ [NODOKA]:['ふたりで来るとねぇ、なんだか、あったかいねぇ。','{P}といるとねぇ、土まで、にこにこしてる気がするよぉ。','#joy|{P}のこと、この木にも、見せてあげたかったんだぁ。','いそがなくていいよぉ。{P}と、ゆっくり見ていこうねぇ。']};
 const OMOI_KEYV={fire:['#joy|へへっ、{P}となら、どこへだって行けるぜ。','{P}は、おれが守る。……木のまえで言うと、てれるな。','{P}は、いいやつだぜ。おれが言うんだ、まちがいねえ。','#joy|{P}がとなりにいると、火が、いつもよりあったけえんだ。'],
  water:['{P}さんといっしょに来られて、うれしいです。','{P}さんのそばは、しずかな水面みたいに、心がおちつきます。','#joy|この木に、{P}さんのことを、つたえたかったんです。','{P}さんと歩いた道は、ぜんぶ、おぼえています。'],
  wind:['フッ……{P}となら、悪くないね。','フッ……風は気まぐれだけど、{P}のそばには、よく吹くんだ。','{P}と来ると、葉ずれの音まで、やさしく聞こえるよ。','フッ……{P}。きみといると、どこへも行きたくなくなるね。']};
@@ -382,7 +382,7 @@ function comboNote(r,en){if(!S||!en||en.dead||IS_STORY_REPLAY)return;const H=en.
   for(const q of S.res){if(q===r||q.hidden||H[q.id]==null||S.t-H[q.id]>COMBOWIN||bondOf(r,q)<BOND_TALK||Math.hypot(q.x-r.x,q.y-r.y)>COMBORNG)continue;
     const ks=[r.elem,q.elem].sort(),nm=COMBON[ks.join(',')];if(!nm)continue;
     S.comboT=S.t+COMBOCD;delete en.cmb;comboFire(r,q,en,nm,ks);return}}
-function comboFire(r,q,en,nm,ks){if(S.flags&&!S.flags.tacCombo)S.flags.tacCombo=1;/* 作戦「いっしょに」を思いつく（night-prep.js） */const cx=en.x,cy=en.y,col=ELEM[r.elem].col;
+function comboFire(r,q,en,nm,ks){const cx=en.x,cy=en.y,col=ELEM[r.elem].col;
   fxSpr('hanabi',cx*TS,cy*TS,col);fxSpr('twinkle',cx*TS,(cy-.5)*TS,ELEM[q.elem].col);sfxAt('glight',cx,cy);if(typeof shakeScreen==='function')try{shakeScreen('m')}catch(_){}
   addFloatG(cx,cy,-1.8,nm+'！',col);toast(r.name+'と'+q.name+'の合わせわざ「'+nm+'」！','good');
   for(const o of S.enemies.slice()){if(o.dead||!o.spawned||Math.hypot(o.x-cx,o.y-cy)>COMBOAREA+.5)continue;hurtEn(o,COMBOHIT,{flash:8,k:'combo',sx:cx,sy:cy});if(o.hp<=0)defeat(o,r.name+'と'+q.name+'が「'+nm+'」で'+EN[o.type].name+'を追いはらった！',r)}}

@@ -286,7 +286,7 @@ const BL={
   rock:{name:'岩',solid:1,natural:1},kagenest:{name:'かげの巣',solid:1,natural:1},leafwall:{name:'葉のかべ',natural:1,brk:1,hp:30},/* かげの巣・葉のかべ（defense.js） */vcopper:{name:'銅の鉱脈',solid:1,natural:1},viron:{name:'鉄の鉱脈',solid:1,natural:1},vobsid:{name:'黒曜石の鉱脈',solid:1,natural:1},vsilver:{name:'銀の鉱脈',solid:1,natural:1},vgold:{name:'金の鉱脈',solid:1,natural:1},/* 火山の鉱脈：ほると鉱石 */
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'湯のわき岩',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},kaeribi:{name:'かえり道のあかり',solid:1,anim:1},/* ホムラが夕方にともす、村の入り口のあかり（kagari.js）。絵は行燈 */crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
-  kdkusa:{name:'ゆれる草むら',natural:1},kdkabu:{name:'ふしぎな切り株',solid:1,natural:1},kdhana:{name:'花',natural:1},/* もりのこだまの見つかる所（kodama.js） */fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',sz:[2,2],solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
+  kdhana:{name:'花',natural:1},/* もりのこだまの見つかる所（kodama.js） */fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',sz:[2,2],solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
   deadtree:{name:'枯れ木',solid:1,natural:1},
   ntree:{name:'森の木',solid:1,natural:1},
   berry:{name:'ベリーの茂み',solid:1,natural:1,dyn:1},
@@ -357,12 +357,12 @@ const LIKES={swing:'ブランコ',fountain:'噴水',fish:'つり',chat:'おし�
 const LIKE_KEYS=Object.keys(LIKES);
 
 /* ---------- ストーリー ---------- */
-const GOD='カミサマ',POKO='フタバ';
-const MINA='ノドカ';
+const GOD='カミサマ',FUTABA='フタバ';
+const NODOKA='ノドカ';
 const HOMURA='ホムラ',SHIZUKU='シズク',KAZANE='カザネ',HAYATE='ハヤテ',MIO='ミオ',KAGARI='カガリ',TOTO='トト',HANI='ハニ',IBUKI='イブキ';/* 土のステージ：トト（はじめからいる、ちいさな土のせいれい。じつは土のヌシ様）・ハニ（2人めのキーキャラ、土）・イブキ（お話に出る火のせいれい） *//* カガリ：火山からにげた火のせいれい。おまつりのあと、入り口のあかりをたよりに、自分で帰ってくる（kagari.js） *//* ミオ：水のステージの1人目（しずかな歌い手の水のせいれい） *//* ハヤテ：カザネのむかしからのなかまの風のせいれい（はじめにうかんだ島で目をさます） *//* カザネ：風のステージのはじめからいる風のせいれい */
-const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[WIND]=[KAZANE,HAYATE];KEYS[FREE]=[];KEYS[TSUCHI]=[TOTO,HANI];KEYS[MIZU]=[MIO];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
+const KEYS=[[FUTABA,NODOKA],[HOMURA,SHIZUKU]];KEYS[WIND]=[KAZANE,HAYATE];KEYS[FREE]=[];KEYS[TSUCHI]=[TOTO,HANI];KEYS[MIZU]=[MIO];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
 const TOMORI='トモリ',HIIRO='ヒイロ';KEYS[YAMI]=[TOMORI,HIIRO];/* 闇のステージ：光のせいれい（1人だけ） */
-const KEYEL={[TOMORI]:'light',[HIIRO]:'fire',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind',[MIO]:'water',[KAGARI]:'fire',[TOTO]:'earth',[HANI]:'earth',[IBUKI]:'fire'};
+const KEYEL={[TOMORI]:'light',[HIIRO]:'fire',[FUTABA]:'wood',[NODOKA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind',[MIO]:'water',[KAGARI]:'fire',[TOTO]:'earth',[HANI]:'earth',[IBUKI]:'fire'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|……おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],
@@ -373,19 +373,19 @@ const PROLOGUE=[
 const INTRO=[
   [GOD,'ほい到着〜。ここがその草原じゃ。'],
   [GOD,'#worry|……ずいぶん、あれてしもうたのう。むかしは、一面の花畑じゃったのに。'],
-  [POKO,'#think|……また、あのゆめ……。みんなと、花畑で……。'],
-  [POKO,'#surprise|……あれ？ カミサマ！？',0,'wake'],
-  [POKO,'そっちの、ふわふわ光ってるのは……だれ？'],
+  [FUTABA,'#think|……また、あのゆめ……。みんなと、花畑で……。'],
+  [FUTABA,'#surprise|……あれ？ カミサマ！？',0,'wake'],
+  [FUTABA,'そっちの、ふわふわ光ってるのは……だれ？'],
   [GOD,'この土地を守りに来てくれた「守り神」じゃよ。'],
-  [POKO,'まもりがみ……さま？ ぼく、フタバ！ 木のせいれいだよ。ここでずっと暮らしてたんだ！'],
-  [POKO,'#surprise|えへへ、急にお客さんが来るなんて、びっくりしちゃった。'],
-  [POKO,'#joy|守り神さまと会えてうれしいな！'],
+  [FUTABA,'まもりがみ……さま？ ぼく、フタバ！ 木のせいれいだよ。ここでずっと暮らしてたんだ！'],
+  [FUTABA,'#surprise|えへへ、急にお客さんが来るなんて、びっくりしちゃった。'],
+  [FUTABA,'#joy|守り神さまと会えてうれしいな！'],
   [GOD,'#joy|ほっほ、ひとりで、よう待っとったのう。えらいぞ、フタバ。'],
   [GOD,'この土地に守護の力を取りもどすには、おヌシの力を集める場所がいる。'],
   [GOD,'#think|……おや。あそこに、古い神殿がのこっとるのう。'],
-  [POKO,'#think|うん……。ぼくが気づいたときには、もう、くずれてたんだ。'],
+  [FUTABA,'#think|うん……。ぼくが気づいたときには、もう、くずれてたんだ。'],
   [GOD,'#joy|フタバ、あの神殿を直してくれんかのう。直れば、おヌシとわしの居場所になるぞい。'],
-  [POKO,'#joy|うん、やってみる！ 守り神さま、神殿の場所をおしえてね。'],
+  [FUTABA,'#joy|うん、やってみる！ 守り神さま、神殿の場所をおしえてね。'],
 ];
 let TESTSPD=false;try{TESTSPD=KV.getItem('hakoniwa-test')==='1'}catch(e){}
 const GLASS_IC='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="2.5" rx="1" fill="#a0703f"/><rect x="5" y="19.5" width="14" height="2.5" rx="1" fill="#a0703f"/><path d="M7 4.5c0 5 10 5.5 10 7.5s-10 2.5-10 7.5h10c0-5-10-5.5-10-7.5s10-2.5 10-7.5z" fill="#dff1f7" stroke="#7a5233" stroke-width=".8"/><path d="M9 18.5c1-2 5-2 6 0z" fill="#e8c27a"/></svg>');
@@ -402,41 +402,41 @@ const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう……は
 function KS(L){const o=[];let gv=false;for(let[w,t,...rest]of L){if(w[0]==='@'){o.push([w,t,...rest]);continue}let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}if(n===GOD&&!gv&&typeof t==='string'){gv=true;if(!t.includes('聞こえるかの？')){const m=/^(#[^|]*\|)?([\s\S]*)$/.exec(t);t=(m[1]||'')+GVOICE()+m[2]}}/* カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */o.push([n,t,...rest])}}return o}/* キーキャラの名前を入れたセリフ */
 function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
 /* 御神木の調べ。parts：その話でつづけて調べる段階（FIELD_STORIES のキー）。1つの依頼の中で、じゅんに最後まで調べる */
-function companionFieldQuest(id,text,how,elem,intro,outro,parts=[id]){return {id,text,how,field:true,fieldParts:parts,check:()=>parts.every(fieldStoryDone),prog:()=>fieldQuestProgress(parts),talk:{get who(){return elem==='earth'?MINA:keyName(elem)},when:()=>true,get learn(){return typeof FIELD_PREP!=='undefined'?parts.flatMap(p=>FIELD_PREP[p]?.learn||[]):[]},get lines(){return KS(intro)}},get story(){return KS(outro)},...(parts.includes('windEcho')?{gives:{flag:'nushiAlive'}}:{})}}
+function companionFieldQuest(id,text,how,elem,intro,outro,parts=[id]){return {id,text,how,field:true,fieldParts:parts,check:()=>parts.every(fieldStoryDone),prog:()=>fieldQuestProgress(parts),talk:{get who(){return elem==='earth'?NODOKA:keyName(elem)},when:()=>true,get learn(){return typeof FIELD_PREP!=='undefined'?parts.flatMap(p=>FIELD_PREP[p]?.learn||[]):[]},get lines(){return KS(intro)}},get story(){return KS(outro)},...(parts.includes('windEcho')?{gives:{flag:'nushiAlive'}}:{})}}
 /* まとめた目標：steps（小さな目標）がぜんぶできたらクリア。どれからしてもよい。parts：クエストの番号を、もとの小さな目標の名前でもさがせるように（qAt・qDone・qNow） */
 function stepQuest(o){const st=o.steps;o.parts=[...(o.alias||[]),...st.map(s=>s.id)];o.check=()=>st.every(s=>s.check());
   o.prog=()=>{const n=st.filter(s=>s.check()).length,s=st.find(s=>!s.check()),p=s&&s.prog?s.prog():'',t=o.tail?o.tail(s):'';return 'できた '+n+'/'+st.length+(p?'　'+p:'')+(t?'　'+t:'')};/* tail：ほかの目標の進みぐあいといっしょに、いつも出す物（オオカゲが来るまでの日数） */
   Object.defineProperty(o,'how',{get(){const s=S&&S.qTalked&&st.find(s=>!s.check())||st[0];return s.how||''}});return o}
 const questStep=q=>q&&q.steps?(q.steps.find(s=>!s.check())||q.steps[q.steps.length-1]).id:q&&q.id;/* いまの小さな目標（案内の指など） */
 /* えらぶ場面：水のせいれいを村へあんないする子（えらんだ子と、なかよしになる） */
-function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...L,['M','#joy|よろしくおねがいします。']])});return {key:'guide',who:POKO,q:'ねえ、'+W+'に村をあんないするの、だれがいいかな？',
+function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...L,['M','#joy|よろしくおねがいします。']])});return {key:'guide',who:FUTABA,q:'ねえ、'+W+'に村をあんないするの、だれがいいかな？',
   pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;bondSet(g,w,BOND_TALK);tourStart(g,w)},
-  opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),...(elemCount('fire')>0?[opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]:[])]}}/* 火のせいれいがまだいないとき（お話の道）は、えらべない */
+  opts:[opt(FUTABA,FUTABA,[[FUTABA,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(NODOKA,NODOKA,[[NODOKA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),...(elemCount('fire')>0?[opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]:[])]}}/* 火のせいれいがまだいないとき（お話の道）は、えらべない */
 const WARMH=17;/* 芽のそばのごはん：燃やさない火のつぎの日の、この時からお話（朝から晩まで芽のそばにいたのを見てから） */
 function warmMealReady(){const F=S.flags;if(F.warmDay==null){F.warmDay=callDay();dirty=true;return false}/* 燃やさない火がおわって、この目標になった日 */const d=callDay()-F.warmDay;return d>=2||d===1&&hour()>=WARMH}
 const QUESTS1=[
   {id:'statue',text:'神殿を直してもらおう',how:'「しらべる」で、こわれた神殿をタップ',check:()=>cnt('statue')>=1,by:GOD,story:[
-    [POKO,'なおったー！ ぴかぴかの神殿！'],
+    [FUTABA,'なおったー！ ぴかぴかの神殿！'],
     [GOD,'#joy|りっぱに直ったのう。ここが、おヌシとわしの、いばしょじゃ。'],
-    [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
+    [FUTABA,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
     [GOD,'#joy|ありがとうのう。'],[GOD,'#worry|せいれいは、おなかがすききってしまうと、消えてしまうこともある。……ときどき、見てやっておくれ。']],gives:{feat:['inv'],flag:'tapAsk'}},
   {id:'stor',text:'木箱を置こう',how:'「おく」→「木箱」をえらんで置く',check:()=>cnt('crate')>=1,/* id はセーブのため、そのまま */
-   talk:{who:POKO,when:()=>!S.flags.tapAsk||!!S.flags.tapped,wait:'せいれいをタップして、ようすを見てみよう',/* ステータスを見てから、次のお話 */lines:[
-    [POKO,'#joy|守り神さま、見て！ おなかがすいたときのために、ベリーをとっておいたんだ。'],
-    [POKO,'#surprise|……あっ！ 虫さんが食べてる！ こらー！'],
-    [POKO,'#worry|そのへんに置いておくと、だめなんだね。ひろった枝や石も、草にまぎれて、どこに置いたかわからなくなっちゃうし……。'],
-    [POKO,'#think|ふたのついた入れ物があったら、ぜんぶまとめてしまっておけるのになあ。'],
+   talk:{who:FUTABA,when:()=>!S.flags.tapAsk||!!S.flags.tapped,wait:'せいれいをタップして、ようすを見てみよう',/* ステータスを見てから、次のお話 */lines:[
+    [FUTABA,'#joy|守り神さま、見て！ おなかがすいたときのために、ベリーをとっておいたんだ。'],
+    [FUTABA,'#surprise|……あっ！ 虫さんが食べてる！ こらー！'],
+    [FUTABA,'#worry|そのへんに置いておくと、だめなんだね。ひろった枝や石も、草にまぎれて、どこに置いたかわからなくなっちゃうし……。'],
+    [FUTABA,'#think|ふたのついた入れ物があったら、ぜんぶまとめてしまっておけるのになあ。'],
     ['@idea'],[GOD,'#think|ほっほ。ふたのついた、じょうぶな箱じゃな。「木箱」と呼ぼうかの。'],
     [GOD,'その形どおりの木箱をひとつこしらえて、おそなえ箱に入れておいたぞい。']],gives:{items:{crate:1}}},
    story:[
-    [POKO,'#joy|わあ、ふたもぴったり！ ベリーも、枝も石も、ぜんぶ入れておくね！'],
-    [POKO,'これなら虫さんにも食べられないし、おなかがすいたら、すぐ出せるね。'],
+    [FUTABA,'#joy|わあ、ふたもぴったり！ ベリーも、枝も石も、ぜんぶ入れておくね！'],
+    [FUTABA,'これなら虫さんにも食べられないし、おなかがすいたら、すぐ出せるね。'],
     [GOD,'#joy|うむ。これで、たくわえができたのう。'],[GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],pre:{food:{berry:10}},
    get gives(){return S&&S.flags.qmMbox?{feat:['remove','plant']}:{feat:['remove','plant'],mat:{wood:10,stone:10},flag:'qmMbox',msg:'フタバが集めていた木材10・石材10を木箱に入れた'}}},/* qmMbox：もう木材・石材をもらっている */
   {id:'mbox',skip:true,text:'木箱を置こう',how:'',check:()=>true,/* 食料箱と素材箱を木箱にまとめた（box1）。古いセーブの番号のために、とばす目標としてのこす */
    story:[
-    [POKO,'#surprise|わあ、ぴったり！ 集めてた木と石、ぜんぶ入れとくね。'],
-    [POKO,'#nod|……あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
+    [FUTABA,'#surprise|わあ、ぴったり！ 集めてた木と石、ぜんぶ入れとくね。'],
+    [FUTABA,'#nod|……あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
     [GOD,'#joy|ほっほ、たからものは、だいじにせんとのう。'],[GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],
    get gives(){return S&&S.flags.qmMbox?{}:{mat:{wood:10,stone:10},flag:'qmMbox',msg:'フタバが集めていた木材10・石材10を木箱に入れた'}}},
   {id:'table',skip:true,text:'食卓をたのもう',how:'',check:()=>true},/* 食卓はサブクエスト（table1）にした。古いセーブの番号のために、とばす目標としてのこす */
@@ -444,117 +444,117 @@ const QUESTS1=[
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所は、できたのう。……そろそろ、夜のことも話しておかんとな。'],
     [GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
-    [POKO,'#scared|「コワイノ」……。夜は、あの穴のあいた家にかくれてたんだ。'],
+    [FUTABA,'#scared|「コワイノ」……。夜は、あの穴のあいた家にかくれてたんだ。'],
     [GOD,'#worry|あの家、壁がこわれたままなんじゃ。あれでは、夜が心配じゃのう。'],
     [GOD,'じょうぶな木の壁を、おそなえ箱に用意しておいたぞい。すきまをふさいで、フタバが安心して眠れる家にしてやっておくれ。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
-    [POKO,'#scared|前に、夜に壁をこわされたことがあったんだ。'],[POKO,'#joy|でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
+    [FUTABA,'#scared|前に、夜に壁をこわされたことがあったんだ。'],[FUTABA,'#joy|でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
   {id:'wbench',text:'作業台を置こう',how:'「おく」→「作業台」をえらんで置く',check:()=>cnt('wbench')>=1,/* はじめての依頼（ベッド）の前に。古いセーブの番号は wbQuestIn */
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#think|ねえ、守り神さま。家の中にそろえたい物、いっぱいあるんだ。'],
-    [POKO,'#worry|でも、草の上で木をけずると、でこぼこで、うまくいかなくて……。'],
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'#think|ねえ、守り神さま。家の中にそろえたい物、いっぱいあるんだ。'],
+    [FUTABA,'#worry|でも、草の上で木をけずると、でこぼこで、うまくいかなくて……。'],
     ['@idea'],[GOD,'#think|ほっほ。物をこしらえる、たいらでがんじょうな台じゃな。「作業台」と呼ぼうかの。'],
     [GOD,'となりに材料を置ける場所もつけて、ひとつこしらえたぞい。おそなえ箱に入れてある。'],
-    [POKO,'#joy|作業台！ これで、いろんな物が作れるね！']],gives:{items:{wbench:1}}},
+    [FUTABA,'#joy|作業台！ これで、いろんな物が作れるね！']],gives:{items:{wbench:1}}},
    story:[
-    [POKO,'#joy|わあ、たいらで、がたがたしない！ ここなら、きれいに作れそう！'],
+    [FUTABA,'#joy|わあ、たいらで、がたがたしない！ ここなら、きれいに作れそう！'],
     [GOD,'#nod|うむ。これからは、作ってほしい物を、ここで形にしてもらうんじゃ。']]},
   {id:'bed',text:'家にベッドを置こう',how:'「おく」→「はたおり機」を置き、はたおり機をタップして布をたのむ。布ができたら、神殿の依頼ボードをタップ →「家具」→「ベッド」をはり、できたら壁で囲まれた家の中に置く',check:()=>houseBedCount()>=1,prog:()=>bedStep(),
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#think|草の上はごつごつするし、ゆっくり休めなくて……。休める場所があったらいいな。'],
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'#think|草の上はごつごつするし、ゆっくり休めなくて……。休める場所があったらいいな。'],
     ['@idea',['bed']],[GOD,'#think|そうか……。安心して休める寝床もいるのう。ふかふかの寝床を「ベッド」と呼ぼうかの。'],
     [GOD,'#think|じゃが、ふかふかにするには、布がいるのう。草から布をおる物があれば……。'],
     ['@idea',['loom']],[GOD,'布をおる「はたおり機」じゃ。はたおり機と、木と草を、おそなえ箱に入れておいたぞい。'],
     [GOD,'布ができたら、ベッドは、せいれいたちの手で形にしてもらうんじゃ。'],
-    [POKO,'#joy|草が、布になるの？ やってみる！ ふかふかの寝床、作ろうね。']],gives:{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}}},
+    [FUTABA,'#joy|草が、布になるの？ やってみる！ ふかふかの寝床、作ろうね。']],gives:{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}}},
    story:[
-    [POKO,'#surprise|わあ、草の上よりふかふか！ これがベッドなんだね。'],
+    [FUTABA,'#surprise|わあ、草の上よりふかふか！ これがベッドなんだね。'],
     [GOD,'#joy|うむ。これで、夜もゆっくり眠れるのう。'],
     [GOD,'#alarm|……じゃがのう、今夜、さっそく「コワイノ」が来るぞい。'],
     [GOD,'#alarm|いざというときは、おヌシの光で、フタバを守ってやっておくれ。'],
-    [POKO,'#scared|……夜は、やっぱりこわいな。でも、この家のベッドと、守り神さまの光があるなら、少し安心かも。']],gives:{enemy:true}},
+    [FUTABA,'#scared|……夜は、やっぱりこわいな。でも、この家のベッドと、守り神さまの光があるなら、少し安心かも。']],gives:{enemy:true}},
   {id:'path',text:'道をつくろう',how:'「おく」→「あぜ道」をえらんで、5マスしく',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#think|守り神さま、村の中を行ったり来たりすると、地面がでこぼこで、つまずいちゃうんだ。'],
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'#think|守り神さま、村の中を行ったり来たりすると、地面がでこぼこで、つまずいちゃうんだ。'],
     [GOD,'ふむ。道があれば、みなも行き来しやすくなるのう。'],
     [GOD,'ほれ、土をふみかためた道じゃ。よく通る所に、しいてやっておくれ。']],gives:{items:{path:5}}},
    story:[
-    [POKO,'#surprise|わあ、歩きやすい！ 足が、すいすい進むよ。'],
-    [POKO,'#joy|もう、つまずかないね。走っていきたくなっちゃう！']]},
+    [FUTABA,'#surprise|わあ、歩きやすい！ 足が、すいすい進むよ。'],
+    [FUTABA,'#joy|もう、つまずかないね。走っていきたくなっちゃう！']]},
   {id:'lv2',text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。村レベルが上がると、作れる物がふえる',prog:()=>'いま 村レベル'+S.lv,
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'守り神さま、ここで楽しく暮らすと、村も育っていくんだって！'],
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'守り神さま、ここで楽しく暮らすと、村も育っていくんだって！'],
     [GOD,'#nod|うむ。みなが笑って暮らす村は、しぜんと育っていくもんじゃ。'],
     [GOD,'#joy|フタバが楽しそうにしとると、わしもうれしいぞい。']]},
    story:[
-    [POKO,'#joy|やったー！ 村が、ひとまわり育ったみたい！ 最初の一歩、って感じがするね。'],
+    [FUTABA,'#joy|やったー！ 村が、ひとまわり育ったみたい！ 最初の一歩、って感じがするね。'],
     [GOD,'#nod|うむうむ。みなの笑い声が、村を育てたんじゃのう。'],
-    [POKO,'#joy|えへへ。村がもっと育ったら、夜も、こわくなくなるかなあ。']]},
+    [FUTABA,'#joy|えへへ。村がもっと育ったら、夜も、こわくなくなるかなあ。']]},
   {id:'fence4',text:'柵を4つ置こう',how:"「おく」→「柵」をえらんで4つ置く。「コワイノ」は、まっすぐ歩いて近づいてくる。来る道をふさぐように置くと、遠まわりさせられる",check:()=>['fence','misugaki','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0)>=4,prog:()=>'柵 '+Math.min(4,['fence','misugaki','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0))+'/4',
-   talk:{who:POKO,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
-    [POKO,'#sigh alarm|……ねえ、「コワイノ」が来たときの音、まだ耳に残ってるの。'],[POKO,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
-    [POKO,'前なら、音がするたび隠れてた。でも今日は、守り神さまがいる。'],
-    [POKO,'ぼくもがんばる！ でも、どうしたら……。'],[POKO,'#alarm|家の壁で家を守れたみたいに、「コワイノ」の通り道も、ふさげないかな。'],[GOD,'#nod|うむ。小さな柵でも、みなの前に立ってくれれば、心強いもんじゃ。'],[POKO,'#joy|そっか……！ ぼくのかわりに、柵が前に立ってくれるんだね。'],
+   talk:{who:FUTABA,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
+    [FUTABA,'#sigh alarm|……ねえ、「コワイノ」が来たときの音、まだ耳に残ってるの。'],[FUTABA,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
+    [FUTABA,'前なら、音がするたび隠れてた。でも今日は、守り神さまがいる。'],
+    [FUTABA,'ぼくもがんばる！ でも、どうしたら……。'],[FUTABA,'#alarm|家の壁で家を守れたみたいに、「コワイノ」の通り道も、ふさげないかな。'],[GOD,'#nod|うむ。小さな柵でも、みなの前に立ってくれれば、心強いもんじゃ。'],[FUTABA,'#joy|そっか……！ ぼくのかわりに、柵が前に立ってくれるんだね。'],
     [GOD,'#nod|柵を、おそなえ箱に用意しておいたぞい。フタバの「守りたい」って気もち、わしにも手伝わせておくれ。']],gives:{items:{fence:10}}},
    story:[
     [GOD,'よしよし、いい感じじゃ。'],
-    [POKO,'これで、ちょっと安心だね！']]},
+    [FUTABA,'これで、ちょっと安心だね！']]},
   {id:'watch1',text:'見張り台ととげの罠を置こう',how:"「おく」→「見張り台」を1つと「とげの罠」を2つ置く",check:()=>cnt('watch')>=1&&cnt('spike')>=2,prog:()=>'見張り台 '+Math.min(1,cnt('watch'))+'/1・とげの罠 '+Math.min(2,cnt('spike'))+'/2',
     talk:{who:GOD,when:()=>true,lines:[
-    [POKO,'#alarm|守り神さま、柵を置いたけど……「コワイノ」は、柵があってもあきらめないんじゃないかな。'],
-    [POKO,'入れなくて困っても、そのまま帰ってくれる気がしないんだ。'],
+    [FUTABA,'#alarm|守り神さま、柵を置いたけど……「コワイノ」は、柵があってもあきらめないんじゃないかな。'],
+    [FUTABA,'入れなくて困っても、そのまま帰ってくれる気がしないんだ。'],
     [GOD,'#nod|うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。'],
     [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、木の矢で追いはらえる。今回はわしのおごりじゃ。'],
     [GOD,'見張り台は、夜の持ち場じゃ。せいれいが上にのぼって、木の矢を放ってくれるぞい。'],
     [GOD,'#alarm|とげの罠と木の矢も、そろえておいたぞい。これで、フタバがふるえて夜をすごすことも、へるじゃろう。'],
-    [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
+    [FUTABA,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
    story:[
     [GOD,'#nod|うむ。これで夜も、ずいぶん心強くなったのう。'],
     [GOD,'みなで守る村に、なってきたのう。'],
-    [POKO,'これで、少しは安心できるね。'],[POKO,'#joy|守ってくれて、ありがとう、守り神さま！']]},
+    [FUTABA,'これで、少しは安心できるね。'],[FUTABA,'#joy|守ってくれて、ありがとう、守り神さま！']]},
   {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうのたね」を植える。ききょうが咲いて土の力がたまると、なかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#cry|ねえカミサマ……ぼく、ひとりだとちょっとさみしいな。'],
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'#cry|ねえカミサマ……ぼく、ひとりだとちょっとさみしいな。'],
     [GOD,'#worry|……そうじゃのう。ずっとひとりで、よう待っとったものな。'],
     [GOD,'#think|つぎに来てもらうなら、土のせいれいがよかろう。土をなでるのが好きな子らでな。フタバの、よい相棒になってくれそうじゃ。'],
     [GOD,'ほれ、ききょうのたねじゃ。青い花がきれいに咲いたら、土のせいれいも、きっと気づいてくれるじゃろう。']],gives:{feat:['summon'],items:{bellf:5}}},
    story:[
-    [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
-    [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
-  {id:'summon',text:'神殿の「！」でなかまを呼ぼう',how:"神殿の上に「！」が出たら、「しらべる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
+    [FUTABA,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
+    [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[FUTABA,'なかま、どんな子かなあ。どきどきする！']]},
+  {id:'summon',text:'神殿の「！」でなかまを呼ぼう',how:"神殿の上に「！」が出たら、「しらべる」で神殿をタップ",check:()=>!!S.flags.nodokaCame&&NEWRES==null&&!NEWQ.length,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'#nod|力は満ちたのう……。朝になれば、呼ぶしるしが出るはずじゃ。'],
-    [POKO,'#joy|ぼく、はじめに、なんて言おうかな。']],gives:{flag:'sumTold'}},
-   by:MINA,story:[
-    [MINA,'#surprise wave|ふわぁ……。はじめまして、ノドカだよぉ。よろしくねぇ。'],
-    [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
-    [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
+    [FUTABA,'#joy|ぼく、はじめに、なんて言おうかな。']],gives:{flag:'sumTold'}},
+   by:NODOKA,story:[
+    [NODOKA,'#surprise wave|ふわぁ……。はじめまして、ノドカだよぉ。よろしくねぇ。'],
+    [FUTABA,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
+    [NODOKA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[NODOKA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
   {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする",check:()=>cnt('farm')>=6,prog:()=>'畑 '+Math.min(6,cnt('farm'))+'/6',
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'ノドカが来てくれて、にぎやかになったのう。畑を、おそなえ箱に用意しておいたぞい。ノドカの手で、ふかふかの土にしてもらうとよい。']],gives:{items:{farm:2}}},
    story:[
-    [POKO,'ふかふかの畑だ！'],
-    [MINA,'耕すのは、ぼくにまかせてねぇ。'],
+    [FUTABA,'ふかふかの畑だ！'],
+    [NODOKA,'耕すのは、ぼくにまかせてねぇ。'],
     [GOD,'いい畑になったのう〜。']]},
   {id:'imoseed',text:'畑にたねをまこう',how:"「おく」でいものたねをえらび、まだたねをまいていない畑2つに、1こずつまく",check:()=>imoSeedQuestPlots().length>=2,prog:()=>'いものたね '+Math.min(2,imoSeedQuestPlots().length)+'/2',
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'ノドカが耕してくれた畑、まだなにも植わってないね。'],
-    [MINA,'畑はねぇ、耕しただけじゃ、なにも育たないんだよぉ。'],
-    [MINA,'おいものたね、持ってきたよぉ。まいてみようかぁ。'],
-    [POKO,'いもは、いっぺんにたくさんとれるんだよ！']],gives:{items:{'seed:imo':2}}},
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'ノドカが耕してくれた畑、まだなにも植わってないね。'],
+    [NODOKA,'畑はねぇ、耕しただけじゃ、なにも育たないんだよぉ。'],
+    [NODOKA,'おいものたね、持ってきたよぉ。まいてみようかぁ。'],
+    [FUTABA,'いもは、いっぺんにたくさんとれるんだよ！']],gives:{items:{'seed:imo':2}}},
    story:[
-    [POKO,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
-    [MINA,'大きくなるの、たのしみだねぇ。']]},
+    [FUTABA,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
+    [NODOKA,'大きくなるの、たのしみだねぇ。']]},
   companionFieldQuest("earthListen","切り株の下で","「おく」の「設計図」で「根もとのものおき」をえらび、切り株のそばに置く。できたら、切り株をタップ。ノドカと根もとの土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？ どうしたの？"],["N","毎日、畑の土をさわってたらねぇ……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるのに気づいたんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土は、ふくろに入れて、そばの小屋にしまっておきたいなぁ。あとで、ちゃんともどせるように。"],["N","#joy|小屋の形、えがいてみたよぉ。守り神さま、これ、見てくれるぅ？"]],[["F","#think|……あれ？ この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土をもどしておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>fixHere('fire')&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちたつぎの朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#think|ねえノドカ、あの切り株の根っこ、まだ、あったかいかな。'],
-    [MINA,'土をかぶせても、ぬくもりが、少しずつ小さくなってるんだよぉ。'],
-    [POKO,'#worry|あたためてあげられたらいいのに……。'],
-    [MINA,'火のせいれいなら、ぬくもりを分けてあげられるかもしれないねぇ。夜は、「コワイノ」から村を守ってくれるんだってぇ。'],
-    [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
-   get story(){return KS([['H','#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'],[POKO,'あったかいせいれいが来てくれた！ あのね、あとで見てほしい木があるの。'],['H','木？ ……いいぜ。そんな顔されちゃ、あとで見てやるよ。']])}},
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'#think|ねえノドカ、あの切り株の根っこ、まだ、あったかいかな。'],
+    [NODOKA,'土をかぶせても、ぬくもりが、少しずつ小さくなってるんだよぉ。'],
+    [FUTABA,'#worry|あたためてあげられたらいいのに……。'],
+    [NODOKA,'火のせいれいなら、ぬくもりを分けてあげられるかもしれないねぇ。夜は、「コワイノ」から村を守ってくれるんだってぇ。'],
+    [FUTABA,'火の力をためて、火のせいれいをむかえよう！']]},
+   get story(){return KS([['H','#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'],[FUTABA,'あったかいせいれいが来てくれた！ あのね、あとで見てほしい木があるの。'],['H','木？ ……いいぜ。そんな顔されちゃ、あとで見てやるよ。']])}},
   companionFieldQuest("fireRoot","燃やさない火","「おく」の「設計図」で「たき火のひろば」をえらび、切り株のそばに置く。できたら、切り株をタップ。火のせいれいが温めた石を根のまわりに置く。ノドカと土を整えて、根もとの変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"],["H","火の番をする所も、いるな。まわりに道をしいて、すわる切り株も置こう。"],["H","#proud|ひろばの形、えがいといたぜ。守り神さま、たのむ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
   /* 芽が出たあと（つぎの日の夕方 WARMH 時から。warmMealReady）：芽のそばからはなれないフタバのために、火のせいれいが、切り株のそばに食卓を置こうと言う（warmIns1）。かまどは火山から */
   stepQuest({id:'warmMeal',text:'芽のそばのごはん',
@@ -565,12 +565,12 @@ const QUESTS1=[
   stepQuest({id:'water',text:'水のせいれいをむかえよう',
    steps:[{id:'lv3',t:'村レベルを3にする',check:()=>S.lv>=3,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},
     {id:'water',t:'水のせいれいをむかえる',check:()=>fixHere('water')&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),how:'ハスを植えて水の力をため、朝に神殿の「！」から呼ぶ'}],
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'切り株の芽、毎日見に行って、お水もあげてるんだ。'],
-    [POKO,'#think|でも、ちゃんと飲めてるのか、わからなくて……。'],
-    [MINA,'水のことなら、水のせいれいがくわしいよぉ。畑の水やりも、得意なんだってぇ。'],
-    [MINA,'#nod|みんながここで楽しく暮らして、村が育って、水の力もたまったら、来てくれるかもねぇ。']]},
-   get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！ これで、切り株の芽にも、ちゃんと水がとどくかな。'],['H','へぇ、水のせいれいか。悪くない村になってきたじゃねえか。'],['@choice',choiceGuide()]])},gives:{flag:'wellR'}}),
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'切り株の芽、毎日見に行って、お水もあげてるんだ。'],
+    [FUTABA,'#think|でも、ちゃんと飲めてるのか、わからなくて……。'],
+    [NODOKA,'水のことなら、水のせいれいがくわしいよぉ。畑の水やりも、得意なんだってぇ。'],
+    [NODOKA,'#nod|みんながここで楽しく暮らして、村が育って、水の力もたまったら、来てくれるかもねぇ。']]},
+   get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[FUTABA,'水のせいれいが来てくれた！ 畑がうるおうね！ これで、切り株の芽にも、ちゃんと水がとどくかな。'],['H','へぇ、水のせいれいか。悪くない村になってきたじゃねえか。'],['@choice',choiceGuide()]])},gives:{flag:'wellR'}}),
   companionFieldQuest("waterFilm","根まで届く水","「おく」で井戸をえらび、切り株のそばに建ててもらう。できたら、切り株をタップ。水の流れを確かめる。ノドカと水のせいれいに根まで通してもらい、木のようすを、そばで見守る","water",[["M","フタバさん。その水は、どちらへ？"],["F","あの木に。芽が出たんだよ！"],["M","……根のところまで、届いていないようです。"],["F","こんなに、持ってきたのに？"],["M","ええ。でも、どこで止まっているか、わかりました。"],["M","木のそばに、井戸をほりましょう。地面の下の水を、木のそばでくんで、少しずつ流して確かめたいのです。"]],[["F","じゃあ、いっしょに見ててくれる？"],["M","はい。",0,"stree:sit"],["F","……あ。",0,"stree:leaf"],["F","一枚だけだ。"],["M","一枚目、ですね。"],["F","#teary|うん。一枚目。"]],['waterFilm']),
   /* 根まで届く水のあと：水のせいれいが、つかれたみんなを、ハスのそばの水あびにさそう（aoIns1。id は前のまま） */
   stepQuest({id:'aoFish',text:'ハスのそばの水あび',
@@ -581,49 +581,49 @@ const QUESTS1=[
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],
    steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝、あとが見つかる':'村の南のはしにある',how:'「しらべる」で、村の南に出た、大きなかげのあとをタップする'},
     {id:'tale',t:'夕方、フタバの話を聞く',check:()=>{if(!S.flags.kgLook)return false;if(S.flags.taleDay==null){S.flags.taleDay=dayNo();S.flags.taleLate=hour()>=18}return (dayNo()>S.flags.taleDay||S.flags.taleLate===false)&&hour()>=18&&!isNight()},/* あとを見つけたあとの、さいしょの18時（18時より前に見つけたらその日、あとならあしたの18時） */how:'18時になると、フタバが話しはじめる'}],
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'さいきん、夜になると、村の外のほうで、ずしん……ずしん……って音がするんだ。'],
-    [MINA,'土も、なんだかそわそわしてるよぉ。なにかが、近くを歩きまわってるのかもねぇ。'],
-    [POKO,'#alarm|明るくなったら、村のまわりを見てまわろうね。']]},
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'さいきん、夜になると、村の外のほうで、ずしん……ずしん……って音がするんだ。'],
+    [NODOKA,'土も、なんだかそわそわしてるよぉ。なにかが、近くを歩きまわってるのかもねぇ。'],
+    [FUTABA,'#alarm|明るくなったら、村のまわりを見てまわろうね。']]},
    story:[
-    [MINA,'あのあしあと、大きかったねぇ。「コワイノ」がとおったあとに、にてるけど、あんなに大きいのは、はじめて見たよぉ。'],
-    [POKO,'#sigh|ぼく、あのつめたさ、知ってる気がするんだ。……ずっとむかしの、お話。'],
-    [POKO,'ここには、ぼくのきょうだいたちが、いっしょにいたんだ。'],
-    [POKO,'#sigh|ある夜、あのあしあとみたいな、つめたくて大きなかげが来た。みんなが、ぼくの前に立って……それで、朝になったら、だれもいなかった。'],
-    [POKO,'みんなの顔、もう、はっきり思い出せないんだ。'],
-    [MINA,'#think|……ぼくねぇ、ここの土は、はじめてじゃない気がするよぉ。'],
-    [POKO,'#nod|今度は、ぼくが、みんなを守るばん。'],
-    ['@choice',{key:'futabaBrave',who:POKO,q:'#worry|……ぼく、つよくなれるかな。',opts:[
-     {t:'なれるよ',v:'strong',lines:[[POKO,'#joy|……うん。ありがとう、守り神さま。']]},
-     {t:'いっしょに守ろう',v:'together',lines:[[POKO,'#nod|……うん。いっしょなら、こわくない。']]}]}]]}),
+    [NODOKA,'あのあしあと、大きかったねぇ。「コワイノ」がとおったあとに、にてるけど、あんなに大きいのは、はじめて見たよぉ。'],
+    [FUTABA,'#sigh|ぼく、あのつめたさ、知ってる気がするんだ。……ずっとむかしの、お話。'],
+    [FUTABA,'ここには、ぼくのきょうだいたちが、いっしょにいたんだ。'],
+    [FUTABA,'#sigh|ある夜、あのあしあとみたいな、つめたくて大きなかげが来た。みんなが、ぼくの前に立って……それで、朝になったら、だれもいなかった。'],
+    [FUTABA,'みんなの顔、もう、はっきり思い出せないんだ。'],
+    [NODOKA,'#think|……ぼくねぇ、ここの土は、はじめてじゃない気がするよぉ。'],
+    [FUTABA,'#nod|今度は、ぼくが、みんなを守るばん。'],
+    ['@choice',{key:'futabaBrave',who:FUTABA,q:'#worry|……ぼく、つよくなれるかな。',opts:[
+     {t:'なれるよ',v:'strong',lines:[[FUTABA,'#joy|……うん。ありがとう、守り神さま。']]},
+     {t:'いっしょに守ろう',v:'together',lines:[[FUTABA,'#nod|……うん。いっしょなら、こわくない。']]}]}]]}),
   stepQuest({id:'ookage',text:'オオカゲから村を守ろう',tail:s=>!s||s.id==='ookage'?'':bossDays().replace('オオカゲが来るまで：','オオカゲ：'),
    steps:[{id:'lv4',t:'村レベルを4にする',check:()=>S.lv>=4,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},
     {id:'yoru10',t:'「コワイノ」を10ひき追いはらう',check:()=>killsSince()>=10,prog:()=>'「コワイノ」 '+Math.min(10,killsSince())+'/10',how:'夜に来る「コワイノ」を、あわせて10ひき追いはらう'},
     {id:'ookage',t:'オオカゲを追いはらう',check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),how:'柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう'}],
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#alarm|守り神さま、夜の「コワイノ」を見てたらね……森の奥に、ひときわ大きな黒い影がいたんだ。あのあしあとの、影だよ。きっと。'],
-    [MINA,'#alarm|それは「オオカゲ」だねぇ。「コワイノ」が、たくさんあつまってできた影だって、言われてるよぉ。'],
-    [MINA,'#alarm|土の音を聞くとねぇ……もうすぐ、来そうだよぉ。'],
-    [MINA,'#nod|みんなで、そなえておこうねぇ。']]},
+   talk:{who:FUTABA,when:()=>true,lines:[
+    [FUTABA,'#alarm|守り神さま、夜の「コワイノ」を見てたらね……森の奥に、ひときわ大きな黒い影がいたんだ。あのあしあとの、影だよ。きっと。'],
+    [NODOKA,'#alarm|それは「オオカゲ」だねぇ。「コワイノ」が、たくさんあつまってできた影だって、言われてるよぉ。'],
+    [NODOKA,'#alarm|土の音を聞くとねぇ……もうすぐ、来そうだよぉ。'],
+    [NODOKA,'#nod|みんなで、そなえておこうねぇ。']]},
    get story(){return [
-    [POKO,S.flags.choice?.futabaBrave==='strong'?'#joy|追いはらえた……！ ぼく、ちょっとだけ、つよくなれたかな。':S.flags.choice?.futabaBrave==='together'?'#joy|追いはらえた……！ みんないっしょだったから、こわくなかったよ。':'追いはらえた……！ みんなで、ちゃんと夜をこえられたね！'],
-    [MINA,'おつかれさまだねぇ。オオカゲは、ヌシ様がいなくなったことと、なにか関係があるのかもしれないねぇ。'],
-    [POKO,'#think|ヌシ様、どこへ行っちゃったのかな……。'],
-    [MINA,'土に残ったお話ではねぇ、ヌシ様は力をうばわれて、姿を保てなくなったんだってぇ。'],[MINA,'でも、ヌシ様の力は、まだ土のどこかに残ってる気がするよぉ。'],
-    [POKO,'#think|……その力、どこにあるのかな。'],[MINA,'わからないねぇ。でも、あの切り株の根っこみたいに、どこかで静かに待ってるのかもしれないよぉ。']]}}),
+    [FUTABA,S.flags.choice?.futabaBrave==='strong'?'#joy|追いはらえた……！ ぼく、ちょっとだけ、つよくなれたかな。':S.flags.choice?.futabaBrave==='together'?'#joy|追いはらえた……！ みんないっしょだったから、こわくなかったよ。':'追いはらえた……！ みんなで、ちゃんと夜をこえられたね！'],
+    [NODOKA,'おつかれさまだねぇ。オオカゲは、ヌシ様がいなくなったことと、なにか関係があるのかもしれないねぇ。'],
+    [FUTABA,'#think|ヌシ様、どこへ行っちゃったのかな……。'],
+    [NODOKA,'土に残ったお話ではねぇ、ヌシ様は力をうばわれて、姿を保てなくなったんだってぇ。'],[NODOKA,'でも、ヌシ様の力は、まだ土のどこかに残ってる気がするよぉ。'],
+    [FUTABA,'#think|……その力、どこにあるのかな。'],[NODOKA,'わからないねぇ。でも、あの切り株の根っこみたいに、どこかで静かに待ってるのかもしれないよぉ。']]}}),
   /* オオカゲを追いはらったあと：フタバが「こもれびのまもり」をおぼえて、夜に火のせいれいを守る（前はピンクの会話 e06・e06d） */
   stepQuest({id:'guardLearn',text:'こもれびのまもり',
    steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバがたたかいに出て、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバがたたかうかは、せいれいの画面でえらぶ'}],
-   talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
+   talk:{who:FUTABA,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
     gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');guardLearnPop()}}},
    get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりのたね」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>fixHere('wind')&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
-   talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
-    [POKO,'#think|切り株の葉っぱ、まだ一枚だけなんだ。風がふくと、ちょっとだけゆれるの。'],
-    [MINA,'風のせいれいはねぇ、そよ風みたいな、やさしい風も使えるんだよぉ。遊ぶのが大好きなんだぁ。'],
-    [MINA,'あの葉っぱにも、いい風を運んでくれるかもしれないねぇ。風の力をためれば、来てくれるはずだよぉ。'],
-    [POKO,'#think|じゃあ、ふわっとゆれる遊び道具があったら、よろこんでくれるかな？ 守り神さま、なにか思いつく？'],['@idea']]},
-   get story(){return KS([['K','フッ……風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで、木・土・火・水・風のなかまがそろったね！'],['K','フッ……素朴なのも、悪くない。ぼくの風で、もっと華やかにしてあげよう。'],[POKO,'#think|……そうだ。あの切り株の若葉にも、やさしい風をとどけてくれるかな。']])}},
+   talk:{who:FUTABA,when:()=>true,learn:['swing'],lines:[
+    [FUTABA,'#think|切り株の葉っぱ、まだ一枚だけなんだ。風がふくと、ちょっとだけゆれるの。'],
+    [NODOKA,'風のせいれいはねぇ、そよ風みたいな、やさしい風も使えるんだよぉ。遊ぶのが大好きなんだぁ。'],
+    [NODOKA,'あの葉っぱにも、いい風を運んでくれるかもしれないねぇ。風の力をためれば、来てくれるはずだよぉ。'],
+    [FUTABA,'#think|じゃあ、ふわっとゆれる遊び道具があったら、よろこんでくれるかな？ 守り神さま、なにか思いつく？'],['@idea']]},
+   get story(){return KS([['K','フッ……風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[FUTABA,'風のせいれいが来た！ これで、木・土・火・水・風のなかまがそろったね！'],['K','フッ……素朴なのも、悪くない。ぼくの風で、もっと華やかにしてあげよう。'],[FUTABA,'#think|……そうだ。あの切り株の若葉にも、やさしい風をとどけてくれるかな。']])}},
   companionFieldQuest("windEcho","葉ずれの向こう","切り株のそばに風車を建てたら、切り株をタップ。風のせいれいと木の音を聞く。集まった仲間と世話をして、木のようすを最後まで見届けよう","wind",[["K","ずいぶん大事にされているね。この木は。"],["F","みんなで、お世話してるんだ。"],["K","……根もとへ、風を通してみてもいいかな。"],["F","葉っぱ、飛んでいかない？"],["K","そんな乱暴な風は、使わないさ。"],["K","木のそばに、風車を建ててもいいかな。羽が回れば、風の強さが目で見える。強すぎたら、すぐわかるよ。"]],[["F","#teary|……生きてる。"],["N","聞いてくれたねぇ。",0,"stree:touch"],["F","守り神さま。……ヌシ様を、もとの姿にもどしてあげたい。"],["F","また、この木の下で……みんなで会いたい。"]],['windEcho']),
   /* 葉ずれの向こうのあと：風のせいれいが、たこをあげて、空から村をながめる（kiteIns1）。霧のむこうの足あとに気づき、かけらさがしへつながる */
   stepQuest({id:'kite',text:'空からのながめ',
@@ -636,39 +636,39 @@ const QUESTS1=[
   ],[['F','枝が、伸びた……！'],['N','根の先も、さっきより遠くへ届いてるよぉ。'],['M','水の流れも、木のほうへ向いています。'],['F','大きくなったら、みんなで休もうね。']]),{check:()=>cnt('tower')>=1,gives:{shrine:true}}),
   stepQuest({id:'lv5',text:'ヌシのかけらをさがそう',
    steps:[{id:'green375',/* id はセーブの読みかえのため、前のまま（前は、みどりのマス） */t:'ヌシ様のあしあとを3つたどる',check:()=>{printEnsure();printNear();printLine();return printN()>=PRINT_N},prog:()=>{const w=printWhy();return 'あしあと '+printN()+'/'+PRINT_N+(w?'　'+w:'')},how:'「しらべる」でヌシ様のあしあとをタップして、フタバに見にいってもらう。霧は、となりの晴れた土地を緑にすると晴れる'}],
-   talk:{who:POKO,when:()=>true,done(){S.flags.printFuu=PRINT_FUU},get lines(){const seen=(S.fogF||[]).some(f=>f.t==='print'&&f.done),fuu=S.res.some(r=>r.name===FIXK0.wind&&!r.hidden&&!r.coffin);const kiteSaw=qDone('kite');/* たこの上から、光る足あとを見ていれば、その話につなげる */PRINT_FUU=fuu?1:0;/* フウがいれば、1つめの足あとはフウが見た物 */return [
-    [POKO,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取りもどしたい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
-    [MINA,'あの木も、御神木に育ったねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],
-    [POKO,seen?'#think|……そうだ。霧の中で見つけた、ヌシ様のあしあと。':kiteSaw?'#think|フウが、たこで見つけた光る点。ヌシ様は、毎朝、草原を歩いてまわってたんだ。':'#think|ヌシ様はね、毎朝、草原を歩いてまわってたんだ。あしあとが、まだどこかに残ってるかも。'],
+   talk:{who:FUTABA,when:()=>true,done(){S.flags.printFuu=PRINT_FUU},get lines(){const seen=(S.fogF||[]).some(f=>f.t==='print'&&f.done),fuu=S.res.some(r=>r.name===FIXK0.wind&&!r.hidden&&!r.coffin);const kiteSaw=qDone('kite');/* たこの上から、光る足あとを見ていれば、その話につなげる */PRINT_FUU=fuu?1:0;/* フウがいれば、1つめの足あとはフウが見た物 */return [
+    [FUTABA,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取りもどしたい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
+    [NODOKA,'あの木も、御神木に育ったねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],
+    [FUTABA,seen?'#think|……そうだ。霧の中で見つけた、ヌシ様のあしあと。':kiteSaw?'#think|フウが、たこで見つけた光る点。ヌシ様は、毎朝、草原を歩いてまわってたんだ。':'#think|ヌシ様はね、毎朝、草原を歩いてまわってたんだ。あしあとが、まだどこかに残ってるかも。'],
     ...(fuu?(kiteSaw?[[FIXK0.wind,'フッ……あの光は、霧のむこうに、点々とつづいていたよ。']]:[[FIXK0.wind,'フッ……あしあとなら、見たよ。風にのって、村の外をひとまわりしていたときにね。'],[FIXK0.wind,'大きなあしあとだった。そこだけ、草がまっすぐ起きあがっていたよ。']]):[]),
-    [POKO,'ヌシ様が歩いた道を、たどってみたいな。どこかで、かけらが待ってる気がするんだ。'],
+    [FUTABA,'ヌシ様が歩いた道を、たどってみたいな。どこかで、かけらが待ってる気がするんだ。'],
     [GOD,'#nod|'+GVOICE()+'うむ。ヌシが歩いた道には、ヌシの力が、いまも残っておるはずじゃ。わしも、いっしょに見守るぞい。']]}},
    get story(){return [
-    [POKO,'#surprise|あしあとの光の中に……かけらがあった！'],
-    [MINA,'#surprise|えぇっ……！ ほんとだねぇ。'],
-    [MINA,'「育てる力」のかけらだねぇ。ヌシ様のあしあとを、フタバがたどってくれたから、こたえてくれたんだよぉ。'],
+    [FUTABA,'#surprise|あしあとの光の中に……かけらがあった！'],
+    [NODOKA,'#surprise|えぇっ……！ ほんとだねぇ。'],
+    [NODOKA,'「育てる力」のかけらだねぇ。ヌシ様のあしあとを、フタバがたどってくれたから、こたえてくれたんだよぉ。'],
     ...KS([['H','#joy|かけらだ！ 御神木も、なんだかうれしそうだな。'],['M','あと、ふたつですね。'],['K','フッ……風も、かけらの光にさそわれているようだね。']]).filter(l=>S.res.some(r=>r.name===l[0]))];},gives:{shard:'land'}}),
   stepQuest({id:'omoi',text:'なかよしの想い',
    steps:[{id:'omoi',t:'「なかよし」3組の想いを、御神木へとどける',check:()=>omoiN()>=3,prog:()=>{const q=(S.flags.omoiW||[]).length;return 'とどいた想い '+Math.min(3,omoiN())+'/3'+(q?'　御神木に会いにいきたい2人がいる':'')},how:'せいれいどうしが、いっしょに遊んだり、おしゃべりしたり、同じ食卓で食べたりすると、なかよしになる。なかよしになった2人がいたら、御神木をタップする'}],
-   talk:{who:MINA,when:()=>true,get lines(){return [
-    [MINA,'#think|ねぇ、フタバ。のこりのかけらのことなんだけどねぇ……。'],
-    [MINA,'土がねぇ、「想う力」のかけらも、この草原のどこかで、ねむってるって言ってる気がするんだぁ。'],
-    [POKO,'#think|想う力……？ だれかのことを、想う力？'],
-    [MINA,'うん。ヌシ様はねぇ、草原の子たちがなかよく暮らしてるのを見るのが、いちばん好きだったんだってぇ。'],
-    [POKO,'#joy|そっか！ じゃあ、みんながもっと、なかよしになったら……かけらも、こたえてくれるかな！'],
+   talk:{who:NODOKA,when:()=>true,get lines(){return [
+    [NODOKA,'#think|ねぇ、フタバ。のこりのかけらのことなんだけどねぇ……。'],
+    [NODOKA,'土がねぇ、「想う力」のかけらも、この草原のどこかで、ねむってるって言ってる気がするんだぁ。'],
+    [FUTABA,'#think|想う力……？ だれかのことを、想う力？'],
+    [NODOKA,'うん。ヌシ様はねぇ、草原の子たちがなかよく暮らしてるのを見るのが、いちばん好きだったんだってぇ。'],
+    [FUTABA,'#joy|そっか！ じゃあ、みんながもっと、なかよしになったら……かけらも、こたえてくれるかな！'],
     ...KS([['H','へっ、なかよくなるのは、まかせとけ。'],['M','#joy|いっしょに過ごす時間を、ふやしましょう。'],['K','フッ……ぼくとなかよくなりたい子は、たくさんいるだろうね。']]).filter(l=>S.res.some(r=>r.name===l[0])),
-    [MINA,'#nod|御神木も、きっと見てるよぉ。']]}},
+    [NODOKA,'#nod|御神木も、きっと見てるよぉ。']]}},
    get story(){return [
-    [POKO,'#surprise|見て！ 御神木のあかりが、根もとへ、おりてくる……！',0,'stree:omoishard'],
-    [MINA,'#surprise|かけらだよぉ……！ 「想う力」のかけらだねぇ。'],
-    [MINA,'みんなが、だれかを想う気持ちに、ヌシ様の力がこたえてくれたんだねぇ。'],
-    [POKO,'#joy|ぼくたち、もっとなかよしになれたんだね！'],
+    [FUTABA,'#surprise|見て！ 御神木のあかりが、根もとへ、おりてくる……！',0,'stree:omoishard'],
+    [NODOKA,'#surprise|かけらだよぉ……！ 「想う力」のかけらだねぇ。'],
+    [NODOKA,'みんなが、だれかを想う気持ちに、ヌシ様の力がこたえてくれたんだねぇ。'],
+    [FUTABA,'#joy|ぼくたち、もっとなかよしになれたんだね！'],
     ...KS([['H','#joy|へへっ、なんだか、てれくさいな。'],['M','あと、ひとつですね。'],['K','フッ……想いの光か。悪くないね。']]).filter(l=>S.res.some(r=>r.name===l[0]))];},gives:{shard:'key'}}),
   /* 草原の転：あらしのつぎの朝、霧の影からノドカをかばったフタバのまわりのみどりがかれ、あの夜のことがわかる（kiri.js） */
   stepQuest({id:'kiri',text:'霧のむこうの影',
    steps:[{id:'kiriStorm',t:'あらしの日をこえる',check:()=>S.flags.kiriD!=null&&dayNo()>S.flags.kiriD,prog:()=>S.flags.kiriD==null?'':dayNo()<S.flags.kiriD?'あしたは、あらし':'きょうは、あらし',how:'あらしの日がすぎるのを待つ'},
     {id:'kiriFog',t:'あらしのあとの朝、村の南のはしの霧',check:()=>{kiriTry();return !!S.flags.kiriSeen},how:'あらしのつぎの朝、村の南のはしに霧がおりてくる'}],
-   talk:{who:MINA,when:()=>true,gives:{run(){kiriStormSet()}},get lines(){return KS([
+   talk:{who:NODOKA,when:()=>true,gives:{run(){kiriStormSet()}},get lines(){return KS([
     ['N','#think|ねぇ、フタバ。かけらが2つになってから、土が、ざわざわしてるんだぁ。'],
     ['F','#worry|ざわざわ……？'],
     ['N','風も、しめってきたねぇ。あしたは、あらしになりそうだよぉ。'],
@@ -678,25 +678,25 @@ const QUESTS1=[
    steps:[{id:'wood6',/* id はセーブの読みかえのため、前のまま（前は、木のせいれいを5人） */get t(){return 'きょうだいがかくした、'+wflName()+'のたねを5つ見つける'},check:()=>wseedN()>=WSEED_N||wflN()>=WFL_N||!!S.flags.wSeedOld,prog:()=>'見つけたたね '+Math.min(WSEED_N,wseedN())+'/'+WSEED_N,how:'晴れた土地のどこかで、たねが光っている。「しらべる」でタップすると、せいれいがひろいにいく'},
     {id:'flower50',/* id はセーブの読みかえのため、前のまま（前は、花を50こ） */get t(){return '御神木のそばに、'+wflName()+'を5本咲かせる'},check:()=>wflN()>=WFL_N,prog:()=>wflName()+' '+wflN()+'/'+WFL_N,get how(){return '「おく」で'+wflName()+'のたねを、御神木のそばに置く'}},
     {id:'flTend',t:'フタバとなかまに、花の世話をしてもらう',check:()=>wflTN()>=wflNeed(),prog:()=>'花の世話 '+wflTN()+'/'+wflNeed()+(wflN()<WFL_N?'　'+wflName()+'が咲くのを待っている':''),get how(){return '御神木のそばの'+wflName()+'が咲くのを待とう'}}],
-   talk:{who:MINA,when:()=>true,learn:['campfire'],lines:[
-    [MINA,'#think|守り神さま。フタバ、ずっと御神木の根もとにすわってるねぇ。'],
-    [MINA,'さっき、ぽつりと話してくれたんだぁ。むかし、ここには花が咲いてたんだってぇ。'],
-    [POKO,'#think hush|……ぼくと、きょうだいたちの5人で、ひとり1本ずつ、お世話してたんだ。'],
-    [POKO,'#think|みんな、花のたねを、すきな場所にかくしてた。川のそばとか、大きな木の下とか。春になったら、いっしょに植えようねって。'],
-    [MINA,'#nod|そのたね、さがしてみようよぉ。フタバの1本も、いっしょにねぇ。'],
-    ['@choice',{key:'nushiFlower',who:POKO,q:'#think hush|……みんなでかくしたのは、どの花のたねだったかな。',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */wseedPlace()},opts:[
-     {t:'ききょう',v:'bellf',lines:[[POKO,'#think|……ききょう。ノドカを呼んでくれた花だね。']]},
-     {t:'ゆり',v:'lily',lines:[[POKO,'#think|……ゆり。白くて、ヌシ様の毛なみみたいだった。']]},
-     {t:'シロツメクサ',v:'clover',lines:[[POKO,'#think|……シロツメクサ。ヌシ様のそばで、よく四つ葉をさがしたんだ。']]}]}],
-    [MINA,'#joy|見つけたら、みんなで植えて、お世話しようねぇ。']]},
+   talk:{who:NODOKA,when:()=>true,learn:['campfire'],lines:[
+    [NODOKA,'#think|守り神さま。フタバ、ずっと御神木の根もとにすわってるねぇ。'],
+    [NODOKA,'さっき、ぽつりと話してくれたんだぁ。むかし、ここには花が咲いてたんだってぇ。'],
+    [FUTABA,'#think hush|……ぼくと、きょうだいたちの5人で、ひとり1本ずつ、お世話してたんだ。'],
+    [FUTABA,'#think|みんな、花のたねを、すきな場所にかくしてた。川のそばとか、大きな木の下とか。春になったら、いっしょに植えようねって。'],
+    [NODOKA,'#nod|そのたね、さがしてみようよぉ。フタバの1本も、いっしょにねぇ。'],
+    ['@choice',{key:'nushiFlower',who:FUTABA,q:'#think hush|……みんなでかくしたのは、どの花のたねだったかな。',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */wseedPlace()},opts:[
+     {t:'ききょう',v:'bellf',lines:[[FUTABA,'#think|……ききょう。ノドカを呼んでくれた花だね。']]},
+     {t:'ゆり',v:'lily',lines:[[FUTABA,'#think|……ゆり。白くて、ヌシ様の毛なみみたいだった。']]},
+     {t:'シロツメクサ',v:'clover',lines:[[FUTABA,'#think|……シロツメクサ。ヌシ様のそばで、よく四つ葉をさがしたんだ。']]}]}],
+    [NODOKA,'#joy|見つけたら、みんなで植えて、お世話しようねぇ。']]},
    gives:{run(){S.flags.kiriSit=0}},/* フタバが立ちなおる（kiri.js） */
-   get story(){return [[POKO,'#think|……みんなが、1本ずつお世話してくれた。ぼくの1本も、ちゃんと咲いてる。'],[POKO,'#surprise|御神木のまわりが、'+wflName()+'でいっぱいだ……！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'#think|……ヌシ様は、ぼくをのこしてくれた。だから、こんどは、ぼくがみんなを守る。'],[POKO,'#nod|守り神さま、もう、だいじょうぶ。……ヌシ様に、会いたいな。']]}}),
+   get story(){return [[FUTABA,'#think|……みんなが、1本ずつお世話してくれた。ぼくの1本も、ちゃんと咲いてる。'],[FUTABA,'#surprise|御神木のまわりが、'+wflName()+'でいっぱいだ……！'],[FUTABA,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[NODOKA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[FUTABA,'#think|……ヌシ様は、ぼくをのこしてくれた。だから、こんどは、ぼくがみんなを守る。'],[FUTABA,'#nod|守り神さま、もう、だいじょうぶ。……ヌシ様に、会いたいな。']]}}),
   {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
-   talk:{who:POKO,when:()=>true,get lines(){return [
-    [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
-    [MINA,'#think|御神木にヌシ様の力があつまってくるとねぇ、影たちは、その力にひきよせられて、やってくるんだってぇ。'],
-    [MINA,'さいごまで守りぬいたら……ヌシ様の力が、こたえてくれる気がするよぉ。'],
-    [POKO,'#joy|よーし、みんなで守りぬこう！']]}},
+   talk:{who:FUTABA,when:()=>true,get lines(){return [
+    [FUTABA,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
+    [NODOKA,'#think|御神木にヌシ様の力があつまってくるとねぇ、影たちは、その力にひきよせられて、やってくるんだってぇ。'],
+    [NODOKA,'さいごまで守りぬいたら……ヌシ様の力が、こたえてくれる気がするよぉ。'],
+    [FUTABA,'#joy|よーし、みんなで守りぬこう！']]}},
    story:null},
 ];
 /* まとめる前（PR 1100ごろまで）の草原の目標の名前とならび。古いセーブの番号を読みかえるときだけ使う */
@@ -707,8 +707,8 @@ const QUESTS1_V4=["statue","stor","mbox","table","wall","bed","path","lv2","fenc
 let QV3=null;const QUESTS1_V3=()=>QV3||(QV3=QUESTS1_V4.flatMap(id=>id==='imoseed'?['imoseed','trade','oracle']:[id])),v3Ix=id=>QUESTS1_V3().indexOf(id);
 /* カミサマの旅立ちの会話。交換のサブクエストのお礼か、火のせいれいをむかえたあと（godFarewellTick）の、どちらか1回 */
 const GOD_FAREWELL=()=>[[GOD,'さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。そこにも、こまっとる子らがおるでな。'],
-    [POKO,'#surprise|えっ、もう行っちゃうの？'],[POKO,'#think|……あ、ううん。ぼくたちだけでも、だいじょうぶ……だよね？'],[GOD,'#nod|ほっほ。フタバには、もう守り神も、なかまもおるじゃろ。'],[GOD,'#worry|……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],[MINA,'だいじょうぶだよぉ、フタバ。'],[POKO,'#think|……うん。そうだよね！'],
-    [GOD,'#think|……それにな、この草原には、まだヌシの気配が、かすかに残っとる。この土地を、だいじにしてやっておくれ。'],[GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],[POKO,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']];
+    [FUTABA,'#surprise|えっ、もう行っちゃうの？'],[FUTABA,'#think|……あ、ううん。ぼくたちだけでも、だいじょうぶ……だよね？'],[GOD,'#nod|ほっほ。フタバには、もう守り神も、なかまもおるじゃろ。'],[GOD,'#worry|……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],[NODOKA,'だいじょうぶだよぉ、フタバ。'],[FUTABA,'#think|……うん。そうだよね！'],
+    [GOD,'#think|……それにな、この草原には、まだヌシの気配が、かすかに残っとる。この土地を、だいじにしてやっておくれ。'],[GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],[FUTABA,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']];
 const COMPANION_QUESTS=new Set(['earthListen','earthRoot','fireRoot','fireTrace','waterFilm','waterLeaf','windEcho','windVoices']);
 const COMPANION_REPLACEMENTS={fireSupplies:'fireRoot',fireLights:'fireTrace',waterFields:'waterFilm',waterFlowers:'waterLeaf',windRoad:'windEcho',windGather:'windVoices'};
 const V1_LEARN={wind:['swing'],flower50:['campfire']};

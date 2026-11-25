@@ -404,6 +404,19 @@ def fishpull(w, face):
     p = sit({}, 6.0, 1.3); p.update(sN=1.9+0.25*S(w), kN=0.9+0.15*S(w), bN=-0.5, prop='rod', sF=1.7+0.25*S(w), bF=-0.9, lean=-0.12+0.04*S(w), hp=-0.08+0.04*S(w*2))
     return p
 M('fishpull', 8, 7/(2*PI), fishpull)
+def fishcast(w, face):
+    """つり：投げる（1回だけ）。すわったまま、さおを頭の上・うしろへふりかぶり（〜.4）、前へふりおろし（〜.6）、つりのかまえにもどる（〜1）。
+    ゲームは、投げる時間の進みぐあいでコマをえらぶ（'ph'）。うきが手からはなれるのは .55"""
+    u = (w/(2*PI)) % 1; e = lambda k: k*k*(3-2*k); L = lambda a, b, k: a+(b-a)*k
+    A = dict(sN=1.0, sF=0.9, kN=0.7, bN=-0.3, bF=-0.7, lean=0.05, hp=0.05)     # かまえ（fish と同じ）
+    B = dict(sN=2.0, sF=1.85, kN=1.3, bN=-0.5, bF=-0.9, lean=-0.18, hp=-0.12)  # ふりかぶる（さおを頭の上に立てる）
+    C = dict(sN=0.55, sF=0.5, kN=0.9, bN=-0.4, bF=-0.8, lean=0.16, hp=0.14)    # ふりおろした
+    if u < 0.4: a, b, k = A, B, e(u/0.4)
+    elif u < 0.6: a, b, k = B, C, (u-0.4)/0.2
+    else: a, b, k = C, A, e((u-0.6)/0.4)
+    p = sit({}, 6.0, 1.3); p.update({x: L(a[x], b[x], k) for x in A}); p['prop'] = 'rod'
+    return p
+M('fishcast', 12, 'ph', fishcast)
 def carry(w, face):
     """荷物を頭の上にのせて運ぶ"""
     p = walk(w, face); p.update(sN=2.9, sF=2.9, bN=0.35, bF=0.35, yaw=p['yaw']*0.5, roll=p['roll']*0.5, hy=0.0)

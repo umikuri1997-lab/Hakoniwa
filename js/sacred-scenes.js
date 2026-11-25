@@ -80,15 +80,15 @@ function sacredGrowSparks(j,ms,stage,mode){
    → 1つめ：木のまわりに光の花が咲きひろがる／2つめ：村のせいれいから光があつまる／3つめ：3つの光が幹でひとつになって、木が大きく育つ
    → 1つめ・2つめ：木のよこに、ヌシ様の光のりんかくが少しだけあらわれる → 会話 → done（ささげたことにする）。1つめ・2つめでは、木の姿はかえない */
 function shardLines(n){const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');
-  const L=n===1?[[POKO,'#surprise|……いま、木のよこに……！'],[POKO,'#teary|……ヌシ様の、におい。お日さまと、草のにおいだ。'],[N,'花が、いっぺんに咲いたねぇ。土の下まで、ぽかぽかしてるよぉ。'],[GOD,'#nod|うむ。「育てる力」が、木にやどったんじゃ。……ヌシは、ちゃんと、ここにおるぞい。'],[POKO,'#joy|うん。……まっててね、ヌシ様。']]
-    :[[POKO,'#surprise|みんなの光が、木に……！'],[POKO,'#teary|……こっちを、見てる。ヌシ様、みんな、なかよくしてるよ。'],[H,'……いま、木のよこに、でっけえ光が立ってなかったか？'],[M,'はい。……やさしい目でした。'],[K,'#think|フッ……風が、いっしゅん、やんだね。'],[GOD,'#joy|「想う力」も、とどいたのう。ヌシの姿が、だんだん、こくなってきておる。'],[POKO,'#joy|もうすこしだよ、ヌシ様。']];
+  const L=n===1?[[FUTABA,'#surprise|……いま、木のよこに……！'],[FUTABA,'#teary|……ヌシ様の、におい。お日さまと、草のにおいだ。'],[N,'花が、いっぺんに咲いたねぇ。土の下まで、ぽかぽかしてるよぉ。'],[GOD,'#nod|うむ。「育てる力」が、木にやどったんじゃ。……ヌシは、ちゃんと、ここにおるぞい。'],[FUTABA,'#joy|うん。……まっててね、ヌシ様。']]
+    :[[FUTABA,'#surprise|みんなの光が、木に……！'],[FUTABA,'#teary|……こっちを、見てる。ヌシ様、みんな、なかよくしてるよ。'],[H,'……いま、木のよこに、でっけえ光が立ってなかったか？'],[M,'はい。……やさしい目でした。'],[K,'#think|フッ……風が、いっしゅん、やんだね。'],[GOD,'#joy|「想う力」も、とどいたのう。ヌシの姿が、だんだん、こくなってきておる。'],[FUTABA,'#joy|もうすこしだよ、ヌシ様。']];
   return sacredCastLines(L)}
 function sacredCastLines(L){/* いる子の行だけ。カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */
   let g=0;return L.filter(l=>l[0]&&(l[0]===GOD||spkOK(l[0]))).map(l=>{if(l[0]!==GOD||g++)return l;const m=/^(#[a-z]+\|)?(.*)$/.exec(l[1]);return [GOD,(m[1]||'')+GVOICE()+m[2]]})}
 function sacredOfferShard(j,done){
   if(SHARD_OFFER&&SHARD_OFFER.state===S&&SHARD_OFFER.session===VILLAGE_SESSION)return;
   if(isNight())return toast('かけらをささげるのは、朝になってから');
-  const f=S.res.find(r=>r.name===POKO&&!r.hidden);if(!f)return toast('フタバがいません');
+  const f=S.res.find(r=>r.name===FUTABA&&!r.hidden);if(!f)return toast('フタバがいません');
   const owner=S,session=VILLAGE_SESSION,span=sacredSpan(),by=(j/W|0)+span-1+.5,offer={state:S,session},n=Math.min(3,(S.setSh||0)+1);SHARD_OFFER=offer;
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.obj[j]==='tower';
   const finish=()=>{if(SHARD_OFFER===offer)SHARD_OFFER=null};
@@ -142,7 +142,7 @@ function omoiLight(j,A,B,i,lit){/* 2人の胸から、属性の色の光がう�
   villageTimeout(()=>{sacredRings(mx,my+6,1,26,'#fff6c8');scnAdd('orb',750,{x0:mx,y0:my,x1:lx,y1:ly,arc:10,col:'#fff0a8',n:3});sfx('shard')},2050);
   villageTimeout(()=>{lit([cA,cB]);scnAdd('ring',900,{x:lx,y:ly+4,r0:3,r1:22,col:cA});sacredStartEffect('sway',2200);sacredLeafFall(g,5,g.h*.3);sfx('sacred')},2800)}
 function omoiShardBeat(j,ms,d){/* お礼の会話：3つのあかりが枝から根もとへおりてきて、ひとつになり、かけらになる → フタバの両手へ */
-  const g=sacredGeo(j),f=S.res.find(r=>r.name===POKO&&!r.hidden),P=(S.flags.omoiP||[]).slice(0,3),rx=g.cx,ry=g.base-18,owner=S;
+  const g=sacredGeo(j),f=S.res.find(r=>r.name===FUTABA&&!r.hidden),P=(S.flags.omoiP||[]).slice(0,3),rx=g.cx,ry=g.base-18,owner=S;
   for(let i=0;i<3;i++){const[x,y]=omoiLampPos(j,i),c=omoiCols(P[i]);scnAdd('glow',900+i*350,{x,y,r:8,col:c[0]});scnAdd('orb',1200,{x0:x,y0:y,x1:rx,y1:ry,arc:-12,col:c[0],n:2},i*350)}
   LAMPS_TAKEN.add(S);sfx('sacred');
   const near=f&&Math.hypot(f.x-storyTreeX(j),f.y-storyTreeY(j))<12;if(near){f.face=storyTreeX(j)>=f.x?1:-1;SACRED_POSES.delete(f);sacredScenePose(f,'storyOffer',600000,{side:true,face:f.face})}

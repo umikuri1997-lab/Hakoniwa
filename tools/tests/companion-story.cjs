@@ -135,10 +135,10 @@ const rest=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0};for(le
 for(const n of Object.values(rest))assert(n>5400&&n<6600,JSON.stringify(rest));/* 落ちている物がなければ、木と石は同じ順位 */
 console.log('Nearby weeds first; other gathering jobs share priority:',rest);
 // A finished animation alone must not count as having read the scene.
-run(`let VILLAGE_SESSION=1;let completion;fieldStoryCurrent=()=>({id:'earthListen'});fieldStorySpotOK=()=>true;fieldStoryFocus=()=>{};renderQuest=()=>{};checkQuest=()=>{};dialog=(lines,after)=>{completion=after};S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthListen:{step:0}}};globalThis.action={fieldId:'earthListen',phase:0,obj:7,t:10};ACT.fieldstory.end({},action)`);
+run(`let VILLAGE_SESSION=1;let completion;fieldStoryCurrent=()=>({id:'earthListen'});fieldStorySpotOK=()=>true;fieldStoryFocus=()=>{};renderQuest=()=>{};checkQuest=()=>{};dialog=(lines,after)=>{completion=after};S={flags:{},res:[{name:NODOKA},{name:FUTABA}],fieldSites:{root:7},fieldStories:{earthListen:{step:0}}};globalThis.action={fieldId:'earthListen',phase:0,obj:7,t:10};ACT.fieldstory.end({},action)`);
 assert.equal(run('S.fieldStories.earthListen.step'),0);
 run('completion()');assert.equal(run('S.fieldStories.earthListen.step'),1);
 run('completion()');assert.equal(run('S.fieldStories.earthListen.step'),1);
-run(`S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthListen:{step:0}}};ACT.fieldstory.end({},action);globalThis.origin=S;S={fieldStories:{earthListen:{step:0}}};completion()`);
+run(`S={flags:{},res:[{name:NODOKA},{name:FUTABA}],fieldSites:{root:7},fieldStories:{earthListen:{step:0}}};ACT.fieldstory.end({},action);globalThis.origin=S;S={fieldStories:{earthListen:{step:0}}};completion()`);
 assert.equal(run('S.fieldStories.earthListen.step'),0);assert.equal(run('origin.fieldStories.earthListen.step'),0);
 console.log('Investigation scenes: finish reading before progress; duplicate and wrong-village callbacks cannot advance');

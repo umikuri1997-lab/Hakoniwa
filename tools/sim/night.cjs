@@ -6,9 +6,9 @@ const useLight=+process.argv[2]||0,N=+process.argv[3]||3,VAR=process.argv[4]||''
 (async()=>{const {browser,page,run,errors}=await require('./boot.cjs')();
 const out=[];
 for(let k=0;k<N;k++){
- await run(`(()=>{newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;S.introSeen=true;S.flags.tapped=1;S.flags.minaCame=true;S.hold=0;
+ await run(`(()=>{newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;S.introSeen=true;S.flags.tapped=1;S.flags.nodokaCame=true;S.hold=0;
   resetVillageTransient();S.quest=questIndexOf('ookage');S.qTalked=true;S.qStory=null;S.subDone={};S.enemyOn=true;S.nights=16;S.lv=3;S.totalPt=450;S.pt=300;
-  const r=S.res[0];for(const [el,n] of [['earth',MINA],['fire',FIXK0.fire],['water','アオ']])S.res.push(mkRes(S,n,el,50,54));
+  const r=S.res[0];for(const [el,n] of [['earth',NODOKA],['fire',FIXK0.fire],['water','アオ']])S.res.push(mkRes(S,n,el,50,54));
   for(const [x,y] of [[49,52],[50,52],[51,52]])S.obj[y*W+x]='hwall';
   const put=(id,x,y)=>{S.obj[y*W+x]=id;if(BL[id].dyn)S.dyn[y*W+x]=S.dyn[y*W+x]||{}};
   put('statue',54,57);put('crate',50,55);put('crate',52,55);put('table',49,50);for(const x of [48,49,50,51])put('bed',x,49);

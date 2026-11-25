@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   const o=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.hold=0;S.t=1440*3+600;const f=S.res[0];
-    S.res.push(mkRes(S,MINA,'earth',f.x+1,f.y),mkRes(S,keyName('fire')||'ホノ','fire',f.x+2,f.y),mkRes(S,'テスト','wood',f.x+3,f.y));for(const r of S.res){r.nap=false;r.act=null}
+    S.res.push(mkRes(S,NODOKA,'earth',f.x+1,f.y),mkRes(S,keyName('fire')||'ホノ','fire',f.x+2,f.y),mkRes(S,'テスト','wood',f.x+3,f.y));for(const r of S.res){r.nap=false;r.act=null}
     S.subDone={};S.subSt={};S.subSeen={};S.randomRequestDay=-1;S.dailyDay=null;S.dailyN=0;S.subTalkAt=null;
     const SL=subList(),daily=SL.filter(q=>subDaily(q)&&keyName(q.g)&&q.at()&&subMainOK(q)),gv=new Set(daily.map(q=>subWho(q))).size;
     /* メインのお礼の会話を待っていても、順番の決まったサブがおねがいの途中でも、デイリーは出る */

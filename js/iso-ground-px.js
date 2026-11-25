@@ -1,6 +1,6 @@
 'use strict';
 /* 地面の区画のドットごとの計算（iso-ground.js の igPrep がそろえた物 P から、色 O と、しるし K を作る）。
-   ゲームの画面（iso-ground.js の igBuild）と、マップの読みこみ中のワーカー（iso-ground-worker.js）の両方が使う。P のほかの物（S・ほかのファイルの名前）は使わない */
+   ゲームの画面（iso-ground.js の igBuild）と、マップの読みこみ中のワーカー（iso-ground.js の igWorkers が、この関数の文から作る）の両方が使う。P のほかの物（S・ほかのファイルの名前・この関数の外の物）は使わない */
 function igPixels(P){const{w,ht,X,Yt,IGM,W,H,TS,IQA,IQB,IQW,IQH,sx0,sy0,sw,B,U,GV,WV,gw,gx0,gy0,TG,TW,GT,WT,ST,SM,SPR,SG,WBAND,WBANDA,WBANK,WBSH,WBANKC,WBSHA,IGSKYH,SKYFACE,BK,IGBDRIP,IGBSUB,ICLF,IQL}=P;
   const N=w*ht,O=new Uint8ClampedArray(N*4),K=new Uint8Array(N);/* K：1 水面・2 水の線・3 浅瀬・4 雲の海・5 岸・6 水の中の岩・0 そのほか */
   const AU=new Float64Array(w);for(let u=0;u<w;u++)AU[u]=(X+u+.5)/IQA;/* 列ごとの割り算は1回だけ */

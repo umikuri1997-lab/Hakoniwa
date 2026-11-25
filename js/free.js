@@ -61,7 +61,7 @@ function freeArrive(){if(!S||!S.free)return;if(typeof unbFix==='function')unbFix
   const C=freeElems().filter(el=>elemCount(el)<(el==='wood'?6:3)&&(ATTR[el]||0)>=needFor(el));if(!C.length)return;
   C.sort((a,b)=>(ATTR[b]||0)/needFor(b)-(ATTR[a]||0)/needFor(a));const n0=S.res.length;S.summon={elem:C[0],pick:1,at:freeGate()};doSummon();S.summon=null;if(S.res.length>n0)S.farr=(S.farr||0)+1}
 /* ---------- 旅のお客さん：3日に1回、朝に来て、つぎの朝に帰る。タップで交換 ---------- */
-function freeVisitors(){const L=[[POKO,'wood','#joy|あそびに来たよ！ 花のたねと苗、もってきたんだ。ほしいのある？'],[MINA,'earth','谷の花、きれいだねぇ。草原のたねと苗、いるかねぇ？']];
+function freeVisitors(){const L=[[FUTABA,'wood','#joy|あそびに来たよ！ 花のたねと苗、もってきたんだ。ほしいのある？'],[NODOKA,'earth','谷の花、きれいだねぇ。草原のたねと苗、いるかねぇ？']];
   if(freeTier()>=1)L.push([HOMURA,'fire','#joy|よっ、来たよ！ 火山のみやげも、もってきたからね。'],[SHIZUKU,'water','こんにちは。いい谷ですね。ほしい物があれば、どうぞ。']);return L}
 function freeVisitMorning(){const t=st2();if(dayNo()<2||t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0,L=freeVisitors();t.visitN=n+1;t.visit={day:dayNo(),who:n%L.length};VISITOR=null;toast(L[t.visit.who][0]+'が、谷へあそびに来た','good')}
 /* ---------- 季節のあつまり：谷の場所でひらく、フリーモードだけのイベント ---------- */

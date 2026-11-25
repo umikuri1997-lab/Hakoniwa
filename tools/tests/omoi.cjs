@@ -6,8 +6,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);'});});
  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.sacredEval);globalThis.__errs=errors;const run=s=>page.evaluate(s=>sacredEval(s),s);
  await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showItemGift=()=>{};showSpotPop=()=>{};`);
- await run(`(()=>{resetVillageTransient();setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;window.__noIdle=true;S.introSeen=true;S.flags.minaCame=true;S.flags.nushiAlive=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;S.feat={summon:true,build:true,plant:true,craft:true,people:true};
-   sacredRootEnsure();const x=S.sacredRoot%W,y=S.sacredRoot/W|0;S.res=[mkRes(S,POKO,'wood',x-2.5,y+5.5),mkRes(S,MINA,'earth',x+4.5,y+5.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,x+i+.5,y+6.5))];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;}
+ await run(`(()=>{resetVillageTransient();setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;window.__noIdle=true;S.introSeen=true;S.flags.nodokaCame=true;S.flags.nushiAlive=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;S.feat={summon:true,build:true,plant:true,craft:true,people:true};
+   sacredRootEnsure();const x=S.sacredRoot%W,y=S.sacredRoot/W|0;S.res=[mkRes(S,FUTABA,'wood',x-2.5,y+5.5),mkRes(S,NODOKA,'earth',x+4.5,y+5.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,x+i+.5,y+6.5))];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;}
    S.fieldStories=Object.fromEntries(Object.entries(FIELD_STORIES).map(([id,L])=>[id,{step:L.length}]));S.spotSeen=Object.fromEntries(SPOTS.map(v=>[v.k,1]));S.sev=Object.fromEntries(SEV1.map(v=>[v.k,1]));growStoryTree();
    S.quest=questIndexOf('lv5');S.qStory=null;S.qTalked=false;S.shards=0;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;recount();showUI(true);})()`);
  await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
@@ -22,12 +22,12 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await run('S.lv=1;GRASSN=3600');assert(!await run('QUESTS[S.quest].check()'),'lv5 should not clear with green only');
  assert.equal(await run('printList().length'),3,'three footprints');
  for(let i=0;i<3;i++){
-   await run(`(()=>{const f=printList().find(f=>!printTraced(f.j));fogClear(f.a,true);const r=S.res.find(r=>r.name===POKO);r.x=f.j%W+1.5;r.y=(f.j/W|0)+.5;ACT.foglook.end(r,{obj:f.j})})()`);
+   await run(`(()=>{const f=printList().find(f=>!printTraced(f.j));fogClear(f.a,true);const r=S.res.find(r=>r.name===FUTABA);r.x=f.j%W+1.5;r.y=(f.j/W|0)+.5;ACT.foglook.end(r,{obj:f.j})})()`);
    await talkOut();assert.equal(await run('printN()'),i+1,'trace '+(i+1));
  }
  assert(await run('QUESTS[S.quest].check()'),'lv5 clears after three footprints');
  await clear('lv5');await read();
- await run(`(()=>{const r=S.res.find(r=>r.name===POKO),x=S.sacredRoot%W,y=S.sacredRoot/W|0;endAct(r);r.x=x-2.5;r.y=y+5.5})()`);/* 足あとから、木のそばへもどす */
+ await run(`(()=>{const r=S.res.find(r=>r.name===FUTABA),x=S.sacredRoot%W,y=S.sacredRoot/W|0;endAct(r);r.x=x-2.5;r.y=y+5.5})()`);/* 足あとから、木のそばへもどす */
  assert.equal(await run('S.shards'),1);assert(await run('S.flags.sh_land&&!S.flags.sh_key'),'land shard only');
  assert.equal(await run('QUESTS[S.quest].id'),'omoi');
  /* 受ける前のなかよしは、受けたあとで、御神木へ行く組になる */
@@ -48,7 +48,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await read();assert(await run(`S.qTalked&&QUESTS[S.quest].id==='wood6'`));const fl=await run('wflKind()');assert(await run(`!!S.unlocked['${fl}']`),'chosen flower unlocked');
  assert.deepEqual(JSON.parse(await run(`JSON.stringify((()=>{const L=S.drops.filter(d=>d.ws),j=S.sacredRoot;return [L.length,L.every(d=>d.id===wflKind()&&!fogAt(d.y*W+d.x)&&!VILL[d.y*W+d.x]&&Math.hypot(d.x-j%W,d.y-(j/W|0))>=WSEED_FAR)]})())`)),[5,true],'5 seeds on cleared land, away from the village');
  assert(!await run('QUESTS[S.quest].steps[0].check()'));
- assert.equal(await run(`(()=>{const r=S.res.find(r=>r.name===POKO),d=S.drops.find(d=>d.ws);S.drops.splice(S.drops.indexOf(d),1);takeDrop(d,r);return wseedN()})()`),1,'picking a seed counts');
+ assert.equal(await run(`(()=>{const r=S.res.find(r=>r.name===FUTABA),d=S.drops.find(d=>d.ws);S.drops.splice(S.drops.indexOf(d),1);takeDrop(d,r);return wseedN()})()`),1,'picking a seed counts');
  assert.equal(await run(`(()=>{S.drops=S.drops.filter(d=>!d.ws).concat(S.drops.filter(d=>d.ws).slice(1));wseedTick();return S.drops.filter(d=>d.ws).length})()`),4,'a lost seed is hidden again');
  assert(await run(`(()=>{S.flags.wSeedN=5;return QUESTS[S.quest].steps[0].check()})()`),'5 seeds found');
  assert.equal(await run(`(()=>{const j=S.sacredRoot;for(let a=0;a<5;a++){const k=j+(sacredSpan()+1)*W+a;S.obj[k]='${fl}';S.floor[k]=0}const k=j+(sacredSpan()+2)*W;S.obj[k]='lotus';return wflN()})()`),5);

@@ -3,7 +3,7 @@
 const STORY_WAIT_PLANS=new WeakMap();
 function mainStoryWaitInfo(){
   if(!S||S.free||S.cleared||isNight())return null;
-  {const e=S.qStory==null&&grassEndingTalk();if(e){const key=WD+':end:'+e.k,lines=grassEndingTalkLines(e),lead=S.res.find(r=>r.name===POKO&&!r.hidden);if(!lines||!lead)return null;
+  {const e=S.qStory==null&&grassEndingTalk();if(e){const key=WD+':end:'+e.k,lines=grassEndingTalkLines(e),lead=S.res.find(r=>r.name===FUTABA&&!r.hidden);if(!lines||!lead)return null;
     let p=STORY_WAIT_PLANS.get(S);const cast=[lead,...storyLineCast(lines).filter(r=>r!==lead)];
     if(p?.key===key&&p.session===VILLAGE_SESSION&&p.cast.length===cast.length&&p.cast.every(r=>cast.includes(r)))return p;
     if(cast.length<2)return null;/* ひとりなら、集めずに話しかけられる */

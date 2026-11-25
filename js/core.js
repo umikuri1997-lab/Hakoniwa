@@ -56,10 +56,10 @@ const GNONE={atk:0,rch:0,hit:1,iv:1,hun:0,mv:0,flee:1,rec:1,fun:1,work:0,cap:0,x
    weed 雑草の絵の番号・sx 自然の木の絵の名前のうしろ・wall 設計図の家の壁・fence 設計図の柵
    fence2 全滅したときにもらう塀（おぼえていなければ fence）・mats その土地の素材（落とし物・流れ星・ふくろ）・writer 日記を書くせいれい */
 const STAGE=[];
-STAGE[KUSA]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>POKO};/* 草原 */
+STAGE[KUSA]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>FUTABA};/* 草原 */
 STAGE[KAZAN]={weed:1,sx:'~v',wall:'bamboowall',fence:'misugaki',fence2:'wall',mats:['wood','stone','bamboo','kuru','chiri'],writer:()=>HOMURA};/* 火山 */
 STAGE[TSUCHI]={weed:2,sx:'~t',wall:'adobewall',fence:'ishigaki',fence2:'sagafence',mats:['wood','stone','iwakusa','susuki','sagan'],writer:()=>TOTO};/* 土 */
-STAGE[MIZU]={weed:3,sx:'~m',wall:'timberwall',fence:'ashifence',fence2:'rankan',mats:['wood','stone','ashi','gama','maruishi'],writer:()=>POKO};/* 水 */
+STAGE[MIZU]={weed:3,sx:'~m',wall:'timberwall',fence:'ashifence',fence2:'rankan',mats:['wood','stone','ashi','gama','maruishi'],writer:()=>FUTABA};/* 水 */
 STAGE[WIND]={weed:4,sx:'~k',wall:'canvaswall',fence:'ropefence',fence2:'parkfence',mats:['wood','stone','nabiki','houki','kumowata'],writer:()=>KAZANE};/* 風 */
 STAGE[YAMI]={weed:5,sx:'~y',wall:'mosswall',fence:'ibara',fence2:'kuzure',mats:['wood','stone','yotsuyu','kagekusa','kogi'],writer:()=>TOMORI};/* 闇 */
 STAGE[FREE]={weed:0,sx:'',wall:'hwall',fence:'fence',fence2:'logfence',mats:['wood','stone','shina','kasa','eda'],writer:()=>FA()};/* フリーモード（草原と同じ） */

@@ -1,50 +1,37 @@
 'use strict';
 /* 今夜のそなえ：夕方 NPFROM 時から夜（20時）まで、ポップアップを1日1回出す（持ち主がえらんだ。上の札・知らせはやめた）。会話・ほかのカード・洞窟のあいだは、まつ。コワイノが来るどのステージも（フリーモードはのぞく）。
    出す物：今夜のコワイノのよていの数（20時にきまる前は、いまの人数でかぞえた見こみ。見るだけで、もとにもどす）・おなかがすいたせいれい（赤い札と同じ、おなか100より下）の数・箱の食料。
-   かえられる物（持ち主がえらんだ）：作戦・たたかう／たたかわない・見張り台に立つせいれい・まよけのハーブ・角笛。 */
+   かえられる物（持ち主がえらんだ）：作戦（作戦をたてようを受けてから）・たたかう／たたかわない・見張り台に立つせいれい・まよけのハーブ・角笛。 */
 const NPFROM=17,NPHUN=100;
-/* 作戦（持ち主がえらんだ5つ）：村ぜんたいの、今夜のたたかい方。えらんだ作戦は、かえるまでつづく。夜（23時〜6時）はかえられない。とくべつな夜（さいごの夜・試練・群れ）は「ふつう」。
-   だんだん思いつく（TACWHEN）。思いついた朝、なかまが会話でおしえる。 */
+/* 作戦（持ち主がえらんだ3つ）：村ぜんたいの、今夜のたたかい方。戦いのゲームの「かまえ」（せめる／まもる）にそろえ、ふつういがいには得と損がある。えらんだ作戦は、かえるまでつづく。夜はかえられない。とくべつな夜（さいごの夜・試練・群れ）は「ふつう」。
+   おぼえるのはサブクエスト（quests.js）：村に火のせいれいが来たら「作戦をたてよう」（受けたら、今夜のそなえに作戦の欄・ふつう・まもる）→ 大きな影を追いはらったら「こっちからせめよう」（受けたら、せめる）。 */
 const TAC={
   futsu:{n:'ふつう',t:'たたかうせいれいは、近くの「コワイノ」とたたかう'},
-  mamoru:{n:'まもる',t:'たたかうせいれいは、せいれいと家のまわり3マスより遠くの「コワイノ」は追わない'},
-  oikaesu:{n:'おいかえす',t:'たたかうせいれいは、まわり10マスの「コワイノ」まで追い、むれにもとびこむ'},
-  watch:{n:'見張り台まかせ',t:'たたかうせいれいも家に入り、見張り台だけで守る'},
-  issho:{n:'いっしょに',t:'たたかうせいれいは、いちばん近いなかまと同じ「コワイノ」をねらう'}};
-const TACORD=['futsu','mamoru','oikaesu','watch','issho'];
-const TACCHASE={futsu:60,mamoru:20,oikaesu:120,issho:60};/* 追いかける歩数（huntSpot の maxD） */
-const TACNEAR=3,TACWIDE=10;/* まもる：せいれい・家からのマス／おいかえす：まわりのマス */
-const TACWHEN={/* 思いつく条件 */
-  mamoru:()=>!!S.flags.tacHit,/* せいれいが、はじめて「コワイノ」にたたかれた（night.js の hitRes） */
-  oikaesu:()=>(S.bossKills||0)>0,/* 大きな影を、はじめて追いはらった */
-  watch:()=>cnt('watch')>=2,/* 見張り台が2つ */
-  issho:()=>!!S.flags.tacCombo};/* 合わせわざを、はじめて出した（bond.js） */
-const TACTALK={
-  mamoru:['#worry|きのうの夜、なかまがたたかれちゃった……。','#think|こんどは、遠くまで追わないで、みんなのそばで守ろうよ。','#nod|作戦「まもる」を思いついたよ。'],
-  oikaesu:['#joy|大きな影も、追いはらえたね！','#think|いまなら、遠くの「コワイノ」も、こっちから追いかえせるよ。','#nod|作戦「おいかえす」を思いついたよ。'],
-  watch:['#joy|見張り台が、2つになったね。','#think|見張り台にまかせて、みんなで家にいる夜があってもいいかも。','#nod|作戦「見張り台まかせ」を思いついたよ。'],
-  issho:['#joy|合わせわざ、すごかったね！','#think|なかまと同じ「コワイノ」をねらえば、また出せるかも。','#nod|作戦「いっしょに」を思いついたよ。']};
+  mamoru:{n:'まもる',t:'得：たたかうせいれいが受ける、おなかのへりが0.5倍。損：せいれいと家のまわり3マスより遠くの「コワイノ」は追わない・攻撃力0.8倍'},
+  semeru:{n:'せめる',t:'得：たたかうせいれいの攻撃力1.3倍・「コワイノ」をたおしたときのパワー1.5倍。損：受ける、おなかのへりが1.5倍・まわり10マスの「コワイノ」まで追い、むれにもとびこむ（家のそばが手うすになる）'}};
+const TACORD=['futsu','mamoru','semeru'];
+const TACFX={mamoru:{hurt:.5,atk:.8},semeru:{hurt:1.5,atk:1.3,pw:1.5}};/* 作戦の効き目：その夜だけなので、季節の効き目（SEAFX）と同じく倍。hurt：たたかうせいれいが受けるおなかのへり・atk：たたかうせいれいの攻撃力・pw：たおしたときのパワー */
+const TACCHASE={futsu:60,mamoru:20,semeru:120};/* 追いかける歩数（huntSpot の maxD） */
+const TACNEAR=3,TACWIDE=10;/* まもる：せいれい・家からのマス／せめる：まわりのマス */
+const TACQ={mamoru:'tacStart',semeru:'tacSeme'};/* その作戦をおぼえるサブクエスト（受けたら、えらべる） */
 const tacOn=()=>!!(S&&S.enemyOn&&!S.free&&!IS_STORY_REPLAY);
-const tacOK=k=>k==='futsu'||!!(S.tacOK&&S.tacOK[k]);
-const tacAny=()=>!!(S&&S.tacOK&&TACORD.some(k=>k!=='futsu'&&S.tacOK[k]));/* ひでんのしょに出す */
+const tacGot=k=>!!((S.subSt||{})[k]>=2||(S.subDone||{})[k]);
+const tacUse=()=>!!(S&&tacOn()&&tacGot('tacStart'));/* 作戦の欄を出す（「作戦をたてよう」を受けた） */
+const tacOK=k=>tacUse()&&(k==='futsu'||!!TACQ[k]&&tacGot(TACQ[k]));
+const tacAny=()=>tacUse();/* ひでんのしょに出す */
 function tacNow(){if(!S||!tacOn()||S.finalOn||S.rushOn||S.trialOn||S.ns&&S.ns.final)return 'futsu';const k=S.tac;return TAC[k]&&tacOK(k)?k:'futsu'}
 const tacChase=()=>TACCHASE[tacNow()]||60;
-function tacHome(r){/* 見張り台まかせ：たたかうせいれいは、見張り台にも立たずに家へ */return isNight()&&tacNow()==='watch'&&fighter0(r)}
+const tacFx=k=>isNight()&&(TACFX[tacNow()]||{})[k]||1;/* 夜だけ */
 function tacHouseNear(e,d){for(const h of HOUSES||[])for(const q of h.set){if(Math.max(Math.abs(q%W+.5-e.x),Math.abs(((q/W)|0)+.5-e.y))<=d)return true}return false}
 function tacClose(e,r){/* まもる：もう攻撃がとどく・こわしている・ぬすんでいる・なかまをたたいている・たたかわないせいれいか家の3マス以内 */if(Math.hypot(e.x-r.x,e.y-r.y)<=1.5||foeBreaking(e)||foeStealing(e)||foeHitting(e,r))return true;
   if(S.res.some(q=>q!==r&&!q.hidden&&!fighter(q)&&Math.max(Math.abs(e.x-q.x),Math.abs(e.y-q.y))<=TACNEAR))return true;return tacHouseNear(e,TACNEAR)}
-function tacWide(r,L){/* おいかえす：まわり10マスの「コワイノ」も。むれにもとびこむ。にげるコワイノは追わない（村の外へひっぱられない） */const o=new Set(L);for(const e of S.enemies)if(e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<=TACWIDE)o.add(e);return [...o].filter(e=>!e.flee)}
-function tacMate(r){/* いっしょに：いちばん近い、たたかうなかまがねらっているコワイノ（自分のまわり10マスまで。にげるコワイノはのぞく） */let best=null,bd=1e9;for(const q of S.res){if(q===r||q.hidden||q.foeId==null||!fighter(q))continue;const e=S.enemies.find(x=>x.id===q.foeId&&x.spawned&&!x.dead&&!x.flee&&Math.hypot(x.x-r.x,x.y-r.y)<=TACWIDE);if(!e)continue;const d=Math.hypot(q.x-r.x,q.y-r.y);if(d<bd){bd=d;best=e}}return best}
-function tacWho(){return S.res.find(r=>!r.hidden&&fighter0(r))||S.res.find(r=>!r.hidden)||null}
-function tacLearn(){/* 昼（6時〜20時）に、思いついた作戦を1つずつ、会話でおしえる */if(!tacOn())return false;const h=hour();if(h<6||h>=20)return false;
-  for(const k of TACORD){if(k==='futsu'||tacOK(k)||!TACWHEN[k]())continue;const r=tacWho();if(!r)return false;const first=!tacAny();(S.tacOK||(S.tacOK={}))[k]=1;
-    const L=TACTALK[k].map(t=>{const i=t.indexOf('|');return [r.name,t.slice(0,i+1)+chatTone(t.slice(i+1),r,0)]});if(first)L.push([r.name,chatTone('作戦は、夕方の「今夜のそなえ」で、えらべるよ。',r,0)]);
-    dialog(L);return true}return false}
+function tacWide(r,L){/* せめる：まわり10マスの「コワイノ」も。むれにもとびこむ。にげるコワイノは追わない（村の外へひっぱられない） */const o=new Set(L);for(const e of S.enemies)if(e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<=TACWIDE)o.add(e);return [...o].filter(e=>!e.flee)}
 function nightPrepData(){if(!S||!tacOn()||S.finalNight||S.trial||S.rushOn)return null;const h=hour();if(h<NPFROM||h>=20)return null;
   const w=wavePeek(dayNo()+1);/* 見るだけで、もとにもどす（night.js） */
   const boss=w.some(t=>EN[t]&&EN[t].boss),hungry=S.res.filter(r=>!r.hidden&&r.hunger<NPHUN).length;
   return{n:w.length,boss,hungry,food:Math.floor(S.food||0)}}
 function wpOwnSet(j,id){/* 見張り台 j に立つせいれいをきめる（null：だれでも）。ほかの見張り台にきまっていたら、はずす */const B=S.wpOwn||(S.wpOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id}
+function tacTick(){/* 作戦のクエストのたっせい：まもるで、夜を朝5時までこした（quests.js の tacStart） */if(S&&hour()>=5&&hour()<6&&tacNow()==='mamoru'&&(S.subSt||{}).tacStart===2)S.flags.tacMamoru=1}
 const wpWhoOK=r=>r.elem!=='fire'||sortieOn();/* 見張り台に立てるせいれい（火のせいれいは、出撃をえらべるようになってから） */
 function npCard(id,w){return el('<div id="'+id+'" style="position:fixed;inset:0;z-index:'+(id==='prepPop'?45:46)+';display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:'+w+'px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"></div></div>')}
 function npWpPick(j,done){/* 見張り台に立つせいれいを、ポップアップでえらぶ */const o=npCard('prepWp',320),c=o.firstChild,own=S.wpOwn||{},oid=own[j];
@@ -60,7 +47,7 @@ function nightPrepPop(D){const o=npCard('prepPop',360),c=o.firstChild;document.b
     row('今夜の「コワイノ」',D.n?D.n+'ひき'+(D.boss?'（大きな影つき）':''):'来ない見こみ');row('おなかがすいたせいれい',D.hungry+'人',D.hungry>0);row('箱の食料',String(D.food),D.food<=0);
     const sec=(h)=>{const s=el('<div class="sec" style="margin-top:10px"><h3></h3></div>');s.querySelector('h3').textContent=h;np.appendChild(s);return s};
     const btns=s=>{const b=el('<div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0"></div>');s.appendChild(b);return b};
-    {/* 作戦 */const s=sec('作戦'),bw=btns(s),cur=S.tac&&tacOK(S.tac)?S.tac:'futsu';
+    if(tacUse()){/* 作戦（作戦をたてようを受けるまでは、欄を出さない） */const s=sec('作戦'),bw=btns(s),cur=S.tac&&tacOK(S.tac)?S.tac:'futsu';
       for(const k of TACORD){if(!tacOK(k))continue;const b=el('<button class="btn"></button>');b.textContent=TAC[k].n;if(k===cur)b.classList.add('pri');lackOn(b,night?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||k===cur)return;S.tac=k;dirty=true;sfx('tap');render()};bw.appendChild(b)}
       const p=el('<p class="note" style="margin:4px 0 0"></p>');p.textContent=TAC[cur].t;s.appendChild(p)}
     {/* たたかう・たたかわない（せいれいの画面と同じ） */const L=S.res.filter(r=>!r.hidden&&sortieOK(r));if(L.length){const s=sec('たたかう');
@@ -74,8 +61,7 @@ function nightPrepPop(D){const o=npCard('prepPop',360),c=o.firstChild;document.b
       if(hn){const b=el('<button class="btn"></button>');b.textContent='よびごえの角笛をふく（'+S.horn+'）';lackOn(b,hornOK()?'':'いまは、ふけない');b.onclick=()=>{if(!hornOK())return;hornBlow();render()};bw.appendChild(b)}}}
     c.querySelector('.x').onclick=()=>{sfx('tap');o.remove()}};
   render()}
-function nightPrepTick(){const now=performance.now();if(now-(nightPrepTick.t||0)<1000)return;nightPrepTick.t=now;if(!S)return;
+function nightPrepTick(){const now=performance.now();if(now-(nightPrepTick.t||0)<1000)return;nightPrepTick.t=now;if(!S)return;tacTick();
   if(!$('#dialog').hidden||DLGQ.length||document.querySelector('.pxcard')||!$('#lvup').hidden||typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE||typeof VBG!=='undefined'&&VBG)return;/* 会話・ほかのカード・場面・洞窟のあいだは、まつ */
-  if(tacLearn())return;/* 思いついた作戦（会話のあとで、ポップアップ） */
   if(S.npDay===dayNo())return;const D=nightPrepData();if(!D)return;
   S.npDay=dayNo();nightPrepPop(D)}

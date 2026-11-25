@@ -148,14 +148,13 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     if(RUINT>=0&&S.obj[RUINT]==='statueb'){const q=tapObj(RUINT),px=q.x/TS-RUINT%W,py=q.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
     if(typeof mzTap==='function'&&mzTap(tx,ty))return;/* 水のステージ：霧・水門・宝箱・船着き場・水路 */
     if(typeof fogTap==='function'&&fogTap(tx,ty))return;/* 霧の所・霧の中で見つけた物 */
-    if(typeof kdTap==='function'&&kdTap(tx,ty))return;/* もりのこだまの見つかる所 */
     {const hw=HOUSES.find(h=>h.set.has(ty*W+tx));if((!hw||OPENH.has(hKey(hw)))&&webTap(tx,ty))return}/* クモの巣：せいれいがそうじする（屋根のある家は、屋根を外してから） */
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const kg=WD===KUSA&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1/* かげのあとは、家の中にあっても調べられる */,hi=kg?-1:HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
     if(WD===KUSA&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null&&sacredTapHit(b,w.x/TS,w.y/TS)){sfx('tsacred');return rt>=0?sacredTreeTap(rt):openSheet('clear')}}/* 御神木・切り株：切り株（育った木は根もと）の絵の所だけをタップすると、じょうけんを見る（葉の所・4×4のほかのマスはひろわない） */
     if(BOARD>=0){const q=tapObj(BOARD),bx=(q.x/TS-BOARD%W),by=(q.y/TS-(BOARD/W|0));if(bx>=-.15&&bx<2.15&&by>=-.9&&by<.95){sfx('twood');return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる')}}/* 依頼ボード：絵（2マスはば・上へはみ出す）のどこをタップしても */
     const j=anc(ty*W+tx),o=S.obj[j];
-    if(WD===KUSA&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
+    if(WD===KUSA&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===FUTABA))dialog([[FUTABA,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===KAZAN&&S.st2){const g=ty*W+tx;
       if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k==='a'&&WD===KAZAN&&yumomiTap())return;/* 湯もみ（シズクのおねがい） */if(k){sprLookTap(k);return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
       if(o==='volcano'){if(!S.flags.volLook){S.flags.volLook=true;checkQuest()}return toast('火山：ふもとから、熱の道が村へのびている')}
