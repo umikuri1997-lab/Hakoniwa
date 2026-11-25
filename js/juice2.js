@@ -56,7 +56,7 @@ const JGLOW=[];const JGLOWMS=1800;const JGLOWC=[['#fffbe6','#e8f4ff'],['#ffe58a'
 function juiceGlowAt(x,y,tier,big){/* x,y：マス。tier：0〜2（よい物ほど金色）。big：大きなしぶき（つり） */if(!juice2OK()||JGLOW.length>6)return;const now=performance.now();JGLOW.push({x,y,t:tier|0,t0:now});const cx=x*TS,cy=y*TS;
   for(let k=0;k<(big?18:10);k++){const a=-Math.PI*(.1+.8*k/(big?17:9)),sp=60+Math.random()*80;fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,life:.8+Math.random()*.3,col:big&&k%2?'#cfeaff':JGLOWC[tier|0][k%2],r:3})}
   fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(255,240,180,.95)'});for(let i=0;i<3+tier;i++)jKnock(659*Math.pow(2,[0,4,7,12,16][i]/12),i*.08,.5)}
-function juiceGlowDraw(now){const P=2;for(let i=JGLOW.length-1;i>=0;i--){const g=JGLOW[i],e=now-g.t0;if(e>JGLOWMS){JGLOW.splice(i,1);continue}const u=e/JGLOWMS,a=u<.15?u/.15:1-(u-.15)/.85,cx=g.x*TS,cy=g.y*TS,C=JGLOWC[g.t],w=10+g.t*3,h=TS*(1.6+g.t*.5);isoAt(ctx,cx,cy);/* クォータービュー：その所に立てて */
+function juiceGlowDraw(now){const P=2;for(let i=JGLOW.length-1;i>=0;i--){const g=JGLOW[i],e=now-g.t0;if(e>JGLOWMS){JGLOW.splice(i,1);continue}const u=e/JGLOWMS,a=u<.15?u/.15:1-(u-.15)/.85,cx=g.x*TS,cy=g.y*TS,C=JGLOWC[g.t],w=10+g.t*3,h=TS*(1.6+g.t*.5);isoAtA(ctx,gFoot0(cx,cy));/* クォータービュー：その所の地面に立てて（高い段の上でも） */
     for(let b=0;b<3;b++){ctx.globalAlpha=Math.max(0,a*(.45-b*.13));ctx.fillStyle=b?C[0]:C[1];const ww=Math.round((w+b*8)/P)*P;ctx.fillRect(Math.round((cx-ww/2)/P)*P,Math.round((cy-h)/P)*P,ww,Math.round(h/P)*P)}/* 光の柱（3だんの四角） */
     ctx.fillStyle=C[1];for(let k=0;k<8;k++){const ph=(e/900+k/8)%1;ctx.globalAlpha=Math.max(0,a*(1-ph));ctx.fillRect(Math.round((cx+(hash(k*7+g.x)-.5)*w*2)/P)*P,Math.round((cy-ph*h)/P)*P,P,P)}}/* のぼる光の粒 */
   ctx.globalAlpha=1;isoBack(ctx)}
