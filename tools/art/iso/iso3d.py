@@ -211,11 +211,16 @@ def tone_cave(R):
     for f,k in inv.items():
         if f in R:c=R.pop(f);c['f']=[Image.fromarray(CT.tone(np.asarray(i.convert('RGBA'))).astype(np.uint8),'RGBA') for i in c['f']];R[k]=c
     return R
+RIDEIDS={'merry','cup','skyswing','wheel'}   # 遊園地の遊具：動く絵（rides_iso.py。動かない所 :s と、動く所 :m0〜m15）
+def run_ride(iid,out):
+    import rides_iso as RI;R=RI.run(iid,out,sys.modules[__name__]);full=R.pop('_full');D=os.path.join(out,'_view');os.makedirs(D,exist_ok=True)
+    for n in (0,4,8,12):RI.view(full[n],4,szof(iid)).save(os.path.join(D,'%s_f%d_x4.png'%(iid,n)))
+    return R
 def build(out,ids):
     os.makedirs(out,exist_ok=True);R={}
     bad=[]
     for iid in ids:   # 1つがこわれても、つづける（こわれた物は _bad.txt に）
-        try:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_band(iid,out) if iid in CAVE_BAND else tone_cave(run_item(iid,out)))
+        try:R.update(run_sacred(out) if iid=='sacred' else run_crate(out) if iid=='crate' else run_band(iid,out) if iid in CAVE_BAND else run_ride(iid,out) if iid in RIDEIDS else tone_cave(run_item(iid,out)))
         except Exception as e:
             import traceback;traceback.print_exc();bad.append(iid)
     if bad:open(os.path.join(out,'_bad.txt'),'w').write('\n'.join(bad));print('写せなかった物',bad)
@@ -224,7 +229,8 @@ def build(out,ids):
         for n,im in enumerate(c['f']):im.save(os.path.join(D,safe(k)+'_%d.png'%n))
         for pi,q in enumerate(c.get('parts') or []):
             for n,im in enumerate(q['f']):im.save(os.path.join(D,safe(k)+'_p%d_%d.png'%(pi,n)))
-    for k,c in R.items():   # 見せる絵：ゲームと同じクォータービューのマス（64×48 のひし形）の上に、置く所（ax・ay）で8倍。持ち主に見せるのは、これ（<出力>/_view/）
+    for k,c in R.items():   # 見せる絵：ゲームと同じクォータービューのマス（64×48 のひし形）の上に、置く所（ax・ay）で8倍。持ち主に見せるのは、これ（<出力>/_view/。遊具は run_ride で、置くマスの四角ごと）
+        if base(k) in RIDEIDS:continue
         try:view(out,k,c)
         except Exception as e:print('見せる絵をつくれなかった',k,e)
     json.dump({k:{q:v for q,v in c.items() if q not in('f','parts')}|{'n':len(c['f'])}|({'parts':[{a:b for a,b in q.items() if a!='f'}|{'n':len(q['f'])} for q in c['parts']]} if c.get('parts') else {}) for k,c in R.items()},open(os.path.join(out,'_info.json'),'w'),ensure_ascii=False)

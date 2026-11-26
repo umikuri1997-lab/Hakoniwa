@@ -172,7 +172,8 @@ def canopy_support(m, radius, height, center, broken):
     m.rod((0,0,height),(center,0,height+.25),.048,HONEY,surface="wood")
 
 
-def carousel(m, phase, broken, seats):
+def carousel(m, phase, broken, seats, bob=0):
+    """bob：馬の上下のふれ（マス）。馬ごとに30度ずつずらし、1周に4回（120度でもとの絵にもどる）。"""
     deck(m,1.30,broken)
     lean = .13 if broken else 0
     m.lathe([(0,.29),(.32,.29),(.32,.43),(.265,.52),
@@ -194,7 +195,7 @@ def carousel(m, phase, broken, seats):
         lantern(m,*polar(1.205,a,1.94))
     for i in range(3):
         a=phase+i*tau/3
-        x,y,z=polar(.94,a,.96)
+        x,y,z=polar(.94,a,.96+bob*sin(4*(phase+i*tau/12)))
         def horse(u,v,w=0):
             return x-u*sin(a)+w*cos(a),y+u*cos(a)+w*sin(a),z+v
 
@@ -273,7 +274,8 @@ def cafe_arch(m,broken):
         m.rod((p[0],sy,p[1]),(q[0],sy,q[1]),.010,BRASS)
 
 
-def cups(m, phase, broken, seats):
+def cups(m, phase, broken, seats, spin=0):
+    """spin：カップが自分で回る数（軌道の回転の何倍か。3 なら120度でもとの絵にもどる）。"""
     deck(m,1.34,broken)
     cafe_arch(m,broken)
     for i in range(3):
@@ -285,6 +287,7 @@ def cups(m, phase, broken, seats):
         m.lathe([(.36,z+.036),(.39,z+.036),(.396,z+.062),(.374,z+.073)],
                 BLUE,x,y,surface="enamel")
         low=z+.087
+        h=a+spin*phase   # カップのむき（取っ手の向き）。軌道の向き a に、自分で回るぶんをたす
         profile=[(0,low),(.201,low),(.257,low+.056),(.305,low+.174),
                  (.332,low+.345),(.302,low+.345),(.27,low+.172),
                  (.212,low+.067),(0,low+.067)]
@@ -294,11 +297,11 @@ def cups(m, phase, broken, seats):
         m.lathe([(0,low+.074),(.213,low+.074),(.263,low+.17),
                  (.289,low+.30),(.30,low+.322)],BLUE,x,y,surface="enamel")
         if not (broken and i==0):
-            handle=[(x+cos(a)*(.268+.145*sin(tau*j/32)),
-                     y+sin(a)*(.268+.145*sin(tau*j/32)),
+            handle=[(x+cos(h)*(.268+.145*sin(tau*j/32)),
+                     y+sin(h)*(.268+.145*sin(tau*j/32)),
                      low+.185+.118*cos(tau*j/32)) for j in range(17)]
-            m.bent_tube(handle,.034,LINEN,(-sin(a),cos(a),0),surface="enamel")
-        for t in (a+tau/4,a+3*tau/4):
+            m.bent_tube(handle,.034,LINEN,(-sin(h),cos(h),0),surface="enamel")
+        for t in (h+tau/4,h+3*tau/4):
             dx,dy,_=polar(.293,t,0)
             sprig(m,(x+dx,y+dy,low+.124),(-sin(t),cos(t)),.17)
         if broken and i==0:
