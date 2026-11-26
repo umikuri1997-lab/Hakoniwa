@@ -42,7 +42,7 @@ const FIRE=[[255,84,48],[255,150,40],[255,226,92]]; // 火のずきん：外が�
 const ELS=['earth','water','fire','wind','wood'];
 // 物のかげ（tools/art/furn3d/items/natcommon.py の tone5 と同じ数）：(明るさ, あざやかさ) の足し算（%）
 const TONE={deep:[-28,8],shade:[-15,4],base:[0,0],hi:[10,-4],hi2:[19,-8],line:[-38,10]};
-const CUTS=[.3,.55,.8,.93];   // だんのさかい（太陽との内積。tone5 は明るさの順の 12・35・72・92% で分ける）
+const CUTQ=[.12,.35,.72,.92];   // だんのさかい：見える面の、太陽との内積の順の割合（tone5 の cuts と同じ）。物ごとに、読みこむときに内積の数にする
 // 太陽（natcommon.SUN：高さ30度・正面から左へ8度）。ゲームの x 東 → x・y 南 → z・上 → y
 const SUNEL=30*Math.PI/180,SUNAZ=8*Math.PI/180;
 const AMB=.5,SUN=.6;
@@ -102,17 +102,20 @@ vec3 tnRgb2hsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.w
 vec3 tnHsv2rgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}
 vec3 tnShift(vec3 lin,vec2 dvs){vec3 h=tnRgb2hsv(pow(max(lin,0.),vec3(1./2.2)));h.z=clamp(h.z+dvs.x/100.,0.,1.);h.y=clamp(h.y+dvs.y/100.,0.,1.);return pow(tnHsv2rgb(h),vec3(2.2));}
 `;
-// 物・地面：5色のかげ（flat：地面。ゲームの絵をそのまま出し、ほかの物のかげだけかさねる）
-function toneMat(o={},flat=false){
-  const m=new THREE.MeshLambertMaterial(o);
+// 物・地面：5色のかげ（flat：地面。ゲームの絵をそのまま出し、ほかの物のかげだけかさねる）。
+// cuts：だんのさかい（太陽との内積。objCuts）。点の値 _under：葉の下のかげ（暗くするだんの数。make_plants.py）
+function toneMat(o={},flat=false,cuts=[0,0,0,0]){
+  const m=new THREE.MeshLambertMaterial(o),uCuts={value:new THREE.Vector4(...cuts)};
   m.onBeforeCompile=sh=>{
-    sh.uniforms.uLV=uLV;
-    sh.fragmentShader='uniform vec3 uLV;\n'+GLSL_HSV+sh.fragmentShader
+    sh.uniforms.uLV=uLV;sh.uniforms.uCuts=uCuts;
+    sh.vertexShader='attribute float _under;varying float vUnder;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;');
+    sh.fragmentShader='uniform vec3 uLV;uniform vec4 uCuts;varying float vUnder;\n'+GLSL_HSV+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <opaque_fragment>',`{
   vec3 tnC=diffuseColor.rgb;
   ${flat?'':`float tnD=dot(normalize(normal),normalize(uLV));
-  int tnB=tnD<${CUTS[0]}?0:tnD<${CUTS[1]}?1:tnD<${CUTS[2]}?2:tnD<${CUTS[3]}?3:4;
+  float tnF=tnD<uCuts.x?0.:tnD<uCuts.y?1.:tnD<uCuts.z?2.:tnD<uCuts.w?3.:4.;
+  int tnB=int(clamp(floor(tnF-vUnder+.5),0.,4.));
   vec2 tnS=tnB==0?vec2(${TONE.deep}):tnB==1?vec2(${TONE.shade}):tnB==2?vec2(${TONE.base}):tnB==3?vec2(${TONE.hi}):vec2(${TONE.hi2});
   tnC=tnShift(tnC,tnS);`}
   if(getShadowMask()<.5){vec3 s=pow(tnC,vec3(1./2.2));s=mix(s,vec3(${f3(GSHADOW)}),${GSHADOW[3]});tnC=pow(s,vec3(2.2));}
@@ -183,6 +186,18 @@ function cleanColors(geo){
     const l=Math.max(.38,hsl.l*.5+lm*.5),s=Math.min(1,hsl.s*1.15+.05);c.setHSL(hsl.h,s,l);a.setXYZ(i,c.r,c.g,c.b)}
   a.needsUpdate=true;
 }
+// だんのさかい：見える面（カメラを向いた面。面積×向きの重み。置くときにまわすので、8つの向きをまぜる）の、太陽との内積の順で CUTQ の所
+function objCuts(geo){
+  const P=geo.getAttribute('position'),I=geo.index,n=I?I.count/3:P.count/3,ds=[],ws=[],a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),N=new THREE.Vector3();
+  const vi=k=>I?I.getX(k):k;
+  for(let r=0;r<8;r++){const q=r*Math.PI/4,cs=Math.cos(q),sn=Math.sin(q);
+    for(let t=0;t<n;t++){a.fromBufferAttribute(P,vi(3*t));b.fromBufferAttribute(P,vi(3*t+1));c.fromBufferAttribute(P,vi(3*t+2));
+      N.subVectors(b,a).cross(c.sub(a));const ar=N.length();if(!(ar>0))continue;N.divideScalar(ar);N.set(N.x*cs+N.z*sn,N.y,-N.x*sn+N.z*cs);
+      const v=N.dot(CAMDIR);if(v<=0)continue;ds.push(N.dot(LW));ws.push(v*ar)}}
+  const o=ds.map((_,i)=>i).sort((i,j)=>ds[i]-ds[j]),tot=ws.reduce((x,y)=>x+y,0);let acc=0,k=0;const out=[];
+  for(const i of o){acc+=ws[i];while(k<CUTQ.length&&acc>=CUTQ[k]*tot){out.push(ds[i]);k++}}
+  while(out.length<4)out.push(1);return out;
+}
 let PLANTS=null;
 async function loadProp(p){
   let root;
@@ -195,7 +210,7 @@ async function loadProp(p){
   root.traverse(o=>{if(!o.isMesh)return;let geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
     geo.deleteAttribute('normal');geo=mergeVertices(geo);geo.computeVertexNormals(); // まるい面は、なめらかなかげ
     if(p.src!=='plants')cleanColors(geo); // 植物の色は、make_plants.py でゲームの色をぬってある
-    const src=o.material||{};parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color'),color:geo.getAttribute('color')?0xffffff:(src.color||0xffffff),map:src.map||null})})});
+    const src=o.material||{};parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color'),color:geo.getAttribute('color')?0xffffff:(src.color||0xffffff),map:src.map||null},false,objCuts(geo))})});
   p.parts=parts;
 }
 const SPMODELS={};
