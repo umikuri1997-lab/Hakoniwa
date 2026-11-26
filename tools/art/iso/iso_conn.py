@@ -92,6 +92,11 @@ def crop(im):
     return im.crop(bb),PX0-bb[0],PY0-bb[1]
 # ---- 家の壁のもよう ----
 def chipsrc():
+    # もとの絵（hwall:HLR など、前の正面の部品）は chips.js からけしてある（#2428）。写しなおすときは、けす前のリポジトリ（chips.js・assets/chips・tools/chips.py）を
+    # べつのフォルダに出して（git archive 232ec344^ …）、CHIPSRC=<そのフォルダ> でわたす
+    d=os.environ.get('CHIPSRC')
+    if d:
+        import importlib.util;sp=importlib.util.spec_from_file_location('chips_old',os.path.join(d,'tools','chips.py'));m=importlib.util.module_from_spec(sp);sp.loader.exec_module(m);return m.load_imgs()[1]
     sys.path.insert(0,os.path.join(ROOT,'tools'));import chips;return chips.load_imgs()[1]
 def seamless64(tex):
     """1マス（64ドット）でくりかえす帯を切りとる：左はしと、64ドットさきの列がいちばんにている所"""

@@ -1,6 +1,6 @@
 # クォータービューのドア・門・壁にかける物（H-14 の後半）を3Dで組んで写す。写し方・つなぎ目のけし方は iso_conn.py と同じ。
 # 使い方：python3 tools/art/iso/iso_door.py <出力フォルダ> [id...] [--chips]
-#   家のドア（door・yozoradoor・canvasdoor・archdoor・niwadoor）：iso:<id>:<h|v>（しまる）・#1〜#3（ひらく）・~low（屋根をはずした手前のドア）
+#   家のドア（door・yozoradoor・canvasdoor・archdoor・niwadoor）：iso:<id>:<h|v>（しまる）・#1〜#3（ひらく）・~low（屋根をはずした手前のドアの柱）・~sill（そのしきい）
 #   柵・塀のドア（gate・logdoor・parkdoor・sdoor、となりの柵の戸 ropefence.gate など）：iso:<id>:<h|v>・#1〜#3
 #   2マスの門（stonegate・loggate・parkgate・canalgate・irongate）：iso:<id>:h・#1〜#3（左のマスのチップが2マスぶん）
 #   壁にかける物：iso:win:<id>:<h|v>（壁の面）・iso:win:wreath:d・d#1（ドアの板の面のリース）・iso:win:window:lit:<h|v>（夜の窓のあかり）
@@ -11,7 +11,7 @@
 #     まん中の行をくりかえして98行にした絵（leaf_img。高さ1.4で1マス70ドットの細かさ）。うらの面は左右反対。
 #     ちょうつがいは西（たては北）の柱。よこ置きは北へ、たて置きは西へ（家の中へ）、0・30・60・85度まわす。
 #     ひらいたとびらは、マスの外へ出ても切らない（そのマスの物より先に描かれるおくのマスへ出るので、かさなりはただしい）。
-#     ~low：しきい（高さ0.02）と、ひくい壁と同じ高さ（0.2）の柱。かもいととびらはなし。
+#     ~low：ひくい壁と同じ高さ（0.2）の柱。かもいととびらはなし。~sill：しきい（高さ0.02）だけ（地面にはりつけて、通るせいれいの下に描く）。
 #   柵・塀のドア：doors3d.py の設計図（とびらは、家のドアと同じく、おくへひらく）。よこ置きも、柱をたて置きと同じくマスの中に立てる（INPOST）
 #     （よこ置きの柱がマスのさかいにまたがると、となりの柵の絵に柱がないので、マスのさかいで切れる）。
 #   2マスの門：doors3d.py の設計図の柱を、マスの中（BIGIN）にうつす。
@@ -75,13 +75,14 @@ def frame_deco(top,front,v,h):
             c=front[min(63,max(0,IC.frow(z,h))),math.floor(u*64)%64]*k
         return tuple(np.clip(c,0,255))
     return f
-def hdoor_parts(C,iid,v,n,low,fw=None):
+def hdoor_parts(C,iid,v,n,low,fw=None,sill=False):
     top,front=IC.wall_tex(C,fw or FRAMEW.get(iid,'hwall'));P=[];h=IC.LH if low else IC.WH;t=IC.WT/2;E=IC.EXT
     fd=frame_deco(top,front,v,h)
     def bx(u0,u1,z0,z1,grp='fr',col=(200,200,200),deco=None,w0=0.5-t,w1=0.5+t):
         d=(w0,u0,z0,w1,u1,z1) if v else (u0,w0,z0,u1,w1,z1);P.append((Part('わく','box',d,col,grp=grp),deco or fd,None))
+    if sill:bx(JW,1-JW,0,0.02);return P   # しきいだけ（~sill）：ゲームは地面にはりつけて、通るせいれいの下に描く
     bx(-E,JW,0,h);bx(1-JW,1+E,0,h)
-    if low:bx(JW,1-JW,0,0.02);return P   # ひくいドア：柱はひくい壁と同じ高さ（壁の線がとぎれない）と、しきい
+    if low:return P   # ひくいドア：柱はひくい壁と同じ高さ（壁の線がとぎれない）。しきいは、べつの絵（~sill）
     bx(JW,1-JW,LZ,h)
     L=leaf_img(C,iid);LR,LC=L.shape[:2];edge=np.clip(L.reshape(-1,3).mean(0)*0.78,0,255)
     # ドアの枠（持ち主：「ドアは枠をつけて」）：入り口のまわりの、壁の両がわの面に、たてわく2本とかもい（はば CW・壁の面から CT 出す）。
@@ -126,15 +127,20 @@ def render_parts(P,merge=0,k=0.86,lw=1,k2=0.93,tone=False,hook=None):
     sc.dc={pid:(lambda f:(lambda x,y,z:f(*IC.unrot(x,y),z)))(f) for pid,f in sc.dc.items()}
     O.S=S;im=O.render_px(sc,IC.PROJ,IC.EXTS,IC.DEPTH,k=k,lw=lw,k2=k2,merge=merge)
     return IC.own_mask(im,free)
-def build_hdoor(C,iid):
+def build_hdoor(C,iid,lowonly=False):
     res={};frame(*F1)
+    def low(pre,o,fw=None):   # 屋根をはずした手前のドア：ひくい柱（~low）と、しきい（~sill）は、べつの絵
+        res['iso:%s:%s~low'%(pre,o)]=IC.crop(render_parts(hdoor_parts(C,iid,o=='v',0,True,fw)))
+        res['iso:%s:%s~sill'%(pre,o)]=IC.crop(render_parts(hdoor_parts(C,iid,o=='v',0,True,fw,sill=True)))
     for v in(0,1):
         o='v' if v else 'h'
-        for n in range(4):res['iso:%s:%s%s'%(iid,o,'#%d'%n if n else '')]=IC.crop(render_parts(hdoor_parts(C,iid,v,n,False)))
-        res['iso:%s:%s~low'%(iid,o)]=IC.crop(render_parts(hdoor_parts(C,iid,v,0,True)))
+        if not lowonly:
+            for n in range(4):res['iso:%s:%s%s'%(iid,o,'#%d'%n if n else '')]=IC.crop(render_parts(hdoor_parts(C,iid,v,n,False)))
+        low(iid,o)
         for fw in FRAMEX.get(iid,()):   # となりの壁ごとのわく：iso:<壁>.<id>:…（ゲームは、となりの壁の絵があれば、それ）
-            for n in range(4):res['iso:%s.%s:%s%s'%(fw,iid,o,'#%d'%n if n else '')]=IC.crop(render_parts(hdoor_parts(C,iid,v,n,False,fw)))
-            res['iso:%s.%s:%s~low'%(fw,iid,o)]=IC.crop(render_parts(hdoor_parts(C,iid,v,0,True,fw)))
+            if not lowonly:
+                for n in range(4):res['iso:%s.%s:%s%s'%(fw,iid,o,'#%d'%n if n else '')]=IC.crop(render_parts(hdoor_parts(C,iid,v,n,False,fw)))
+            low(fw+'.'+iid,o,fw)
     return res
 # ---- 柵・塀のドア・門（doors3d の設計図） ----
 def gate_scene(P,dy,stub=()):
@@ -231,10 +237,10 @@ def build_hang(C):
     res['iso:win:wreath:d']=hang_render(C,'wreath',0,plane=0.5+LT/2+0.004)
     for n in(1,2,3):res['iso:win:wreath:d#%d'%n]=hang_render(C,'wreath',0,plane=0.5+LT/2+0.004,ang=ANG[n])
     return res
-def build_all(out,ids):
+def build_all(out,ids,lowonly=False):
     C=IC.chipsrc();res={}
     for iid in ids:
-        if iid in HDOORS:res.update(build_hdoor(C,iid))
+        if iid in HDOORS:res.update(build_hdoor(C,iid,lowonly))
         elif iid in GATES or iid in BIG:res.update(build_gate(iid))
         elif iid=='hang':res.update(build_hang(C))
         print(iid,flush=True)
@@ -244,5 +250,5 @@ def build_all(out,ids):
 ALL=HDOORS+GATES+BIG+['hang']
 if __name__=='__main__':
     a=[q for q in sys.argv[1:] if not q.startswith('--')];out=a[0];ids=a[1:] or ALL;os.makedirs(out,exist_ok=True)
-    res=build_all(out,ids)
+    res=build_all(out,ids,'--low' in sys.argv)   # --low：家のドアの ~low・~sill だけ写す
     if '--chips' in sys.argv:IC.to_chips(res)
