@@ -1,7 +1,7 @@
-"""3Dの試作（proto3d）の地面にはる絵を、ゲームのチップ（chips.js とアトラス）から切り出す。
+"""3Dの試作（proto3d）で立てる木の絵を、ゲームのチップ（chips.js とアトラス）から切り出す。
   python3 proto3d/make_tex.py
-草（tex:grass）・水（tex:water）・がけの土のだん（cliff:block）・道（path#0〜#3 を横にならべた1まい）。
-木（クォータービューのチップ）と、その足もとのかげ（:sh）。ずれ（ax・ay）と大きさは sprites.json に。"""
+木（クォータービューのチップ）と、その足もとのかげ（:sh）。ずれ（ax・ay）と大きさは tex/sprites.json に。
+地面の絵は、ゲームに描かせて写す（bake_ground.cjs）。"""
 import json, os, re
 from PIL import Image
 
@@ -18,13 +18,6 @@ def chip(k):
 
 
 os.makedirs(OUT, exist_ok=True)
-for name, k in (('grass', 'tex:grass'), ('water', 'tex:water'), ('cliff', 'cliff:block')):
-    chip(k).save(os.path.join(OUT, name + '.png'))
-paths = [chip('path#%d' % i) for i in range(4)]
-row = Image.new('RGBA', (sum(p.width for p in paths), paths[0].height))
-for i, p in enumerate(paths):
-    row.paste(p, (i * p.width, 0))
-row.save(os.path.join(OUT, 'path.png'))
 meta = {}
 for k in ('tree', 'tree~m', 'maple~m', 'tree~v'):
     for kk in (k, k + ':sh'):
