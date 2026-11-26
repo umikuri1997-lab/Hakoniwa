@@ -26,9 +26,9 @@ const FOV=28;                  // 画角（度）
 // 「大きさ」（2・3・4）：前の試作と同じ大きさ。ゲームの1ドット（1マス 64/√2 ドット）を、画面の細かい点 2・3・4 こぶんに（細かさは3倍まで）
 const viewW=()=>innerWidth*Math.min(devicePixelRatio||1,3)/OPT.zoom/(64/Math.SQRT2);  // 画面の横に入るマスの数（カメラの見るまん中で）
 const CURVE=.018;              // 丸い地面：カメラの見るまん中から、奥・手前へ d マスはなれた所を d²×CURVE だけ下げる
-const MAXPR=3;                 // 画面の細かさ（スマホの点の何倍まで）。ドット絵の1ドットは、この点の「大きさ」こぶん
+const MAXPR=2;                 // 画面の細かさ（スマホの点の何倍まで）。ドット絵の1ドットは、この点の「大きさ」こぶん
 // ---- 光とかげ ----
-const SKY='#d7ecf0',SKYTOP='#2f86d6',GROUND='#7f9a5a',FOG=[5,30];  // 地平の空の色（霧）・上の空の色・地面からの光・霧のはじまりとおわり（カメラの見るまん中より先、マス）
+const SKY='#d7ecf0',SKYTOP='#2f86d6',GROUND='#7f9a5a',FOG=[14,46];  // 地平の空の色（霧）・上の空の色・地面からの光・霧のはじまりとおわり（カメラの見るまん中より先、マス）
 const HEMI=.8,SUN=2.3,SUNCOL='#ffd9a6',HEMISKY='#a8cdf5';             // 空と地面の光・太陽の光（持ち主の参考の絵：日の光が強く、かげとの差がはっきり）
 const SUNDIR=[-.55,1,.35];                           // 太陽の向き（せかい。左上・手前から）
 const TOON=[.36,.62,1,1];                             // トゥーンの明るさのだん（かげ→光。なめらかにつなぐ）
@@ -38,11 +38,13 @@ const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：か�
 // ドット絵シェーダー（持ち主が送った記事「実践ドット絵シェーダー」mizuooon.hatenablog.jp のやり方）：
 // 光の量（光の色をのせた明るさ ÷ もとの色の明るさ）を lo〜hi で0〜1にし、PXLV だんにへらす。だん−0.5 を d として、
 // 明るさ ×(1+d×PXV)・暗い所は色を青へ（PXHUE）・明るい所はあざやかさを下げる（PXSAT）。ふちどりは、いちばん暗い所の色
-const HULL={w:1.3};   // 背面法の線：裏返した形を、ゲームの1ドット×この太さぶん外へふくらませて、いちばん暗いだんの色で描く（輪郭と、物どうしの境界の線）
+const HULL={w:.8};   // 背面法の線：裏返した形を、ゲームの1ドット×この太さぶん外へふくらませて、いちばん暗いだんの色で描く（輪郭と、物どうしの境界の線）
 const PX={lv:4,vUp:.28,vDn:.85,hue:.28,sat:.15,gain:1.0,edge:.035,shadow:.45,hl:.95,hlk:.32};
+// なめらかなトゥーン（セル画ふう。持ち主がえらんだ）：かげ・光の2だん＋ハイライト。さかいめは細くぼかして、ギザギザをとる
+const CEL={cut:.5,soft:.012,shade:-.5,light:.12,hl:.93,hlk:.55};  // cut：かげと光のさかい（シェーディングマップの明るさ×かげ）・shade／light：色の式にわたす d・hl：ハイライトのさかい・hlk：ハイライトの d
 // lv：だんの数・vUp／vDn：明るいがわ・暗いがわの明るさの差・shadow：太陽のかげの中は明るさをこの倍に・hl：シェーディングマップがこれより明るい所はハイライト（hlk だけ明るいだん）・edge：ふちどりにする奥行きの差（カメラからのきょりの割合）
 // シェーディングマップ（記事）：画面から見た面の向き（x 右・y 上）で、太陽のほう（左上・手前）ほど明るい 0.5+0.5×(太陽との内積)
-const MIST={h:1.2,k:.1,col:'#e8f2ea'};               // 地面の近くのもや：この高さ（マス）より下ほど、この色をこのこさで
+const MIST={h:1.2,k:.03,col:'#e8f2ea'};               // 地面の近くのもや：この高さ（マス）より下ほど、この色をこのこさで
 const WIND={amp:.035,speed:1.3};                     // 風：植物の高さ²にかけるゆれの大きさ・速さ
 const CLOUDSH={scale:.05,speed:[.035,.02],k:.3};     // 流れる雲のかげ：ノイズの細かさ・流れる速さ・暗くする量
 const SSS={k:.55,col:[1.05,1.0,.55]};                // すける葉：光と反対を向いた葉を、この色で明るく
@@ -50,13 +52,13 @@ const METAL={refl:.5,spec:1.6,pow:48};               // 金属：空のうつり
 const FALLING={n:22,size:.18};                       // 舞う葉：数・大きさ（マス）
 const BLOB={k:.42};
 const PATHDIP=.12;                                   // 道を草地より下げる高さ（マス）
-const GBUMP={amp:.09,scale:.55,f:1.3,k:.6,t:.012};  // 地面のこぼこ：もりあがりの高さ（マス）・細かさ（形）／面の向きだけのこまかいこぼこ：細かさ・強さ・草の絵から作る強さ
+const GBUMP={amp:.09,scale:.55,f:1.3,k:.12,t:.001};  // 地面のこぼこ：もりあがりの高さ（マス）・細かさ（形）／面の向きだけのこまかいこぼこ：細かさ・強さ・草の絵から作る強さ
 const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#6cbf4f','#b0e37a']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
-const RAYS={k:.22,col:[1,.9,.66]};                   // 光の筋
+const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
-const DOF={near:.45,far:.7,amt:.55};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
-const BLOOM={th:.6,k:.85,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
-const GRADE={warm:[1.03,1.0,.95],sat:1.15,vig:.32,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
+const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
+const BLOOM={th:.85,k:.35,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
+const GRADE={warm:[1.02,1.0,.97],sat:1.22,vig:.22,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
 const COLS={grassA:'#7fca57',grassB:'#5daf48',grassC:'#9dd86a',dry:'#a9c96a',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
 const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
@@ -152,8 +154,9 @@ const LUM='vec3(.3,.59,.11)';
 // 光のあと（トゥーンの光の量を見て）：光の温度・流れる雲のかげ・地面の近くのもや。どの物にもかける
 // ドット絵シェーダー（記事）：シェーディングマップの明るさ×太陽のかげ → PX.lv だん → 記事の色の式。そのあと、もとの光は使わない
 const PXSHADE_FS=`{vec3 nV=normalize(normal+tnBump);float sm=.5+.5*dot(nV,uSunV),shd=getShadowMask(),s=sm*mix(${PX.shadow},1.,shd);
-  float sq=floor(min(s,.999)*${PX.lv}.)/${PX.lv-1}.;vec3 b=pow(max(diffuseColor.rgb,0.),vec3(1./2.2));vec3 o=pxShade(b,sq-.5);
-  if(sm>${PX.hl}&&shd>.5)o=pxShade(b,.5+${PX.hlk});outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
+  vec3 b=pow(max(diffuseColor.rgb,0.),vec3(1./2.2));float lit=smoothstep(${CEL.cut-CEL.soft},${CEL.cut+CEL.soft},s);
+  vec3 o=mix(pxShade(b,${CEL.shade.toFixed(2)}),pxShade(b,${CEL.light.toFixed(2)}),lit);
+  o=mix(o,pxShade(b,${CEL.hlk.toFixed(2)}),smoothstep(${CEL.hl-CEL.soft},${CEL.hl+CEL.soft},sm)*step(.5,shd));outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
 `;
 // 光のあと：流れる雲のかげ・地面の近くのもや。どの物にもかける
 const AIR_FS=`{float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
@@ -488,7 +491,7 @@ const blur=pass(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;
   void main(){vec4 c=texture2D(t,vUv)*.227;c+=(texture2D(t,vUv+d*1.385)+texture2D(t,vUv-d*1.385))*.316;c+=(texture2D(t,vUv+d*3.23)+texture2D(t,vUv-d*3.23))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
 const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;varying vec2 vUv;${NOISE}
   uniform sampler2D dz;uniform float cn,cf,focus;
-  void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);U=(floor(U*res)+.5)/res;   // ドットにそろえる
+  void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);
     vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;
    
     float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;                  // 奥行き（カメラからのきょり）とピントの所との差
@@ -504,13 +507,13 @@ const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;
 function resize(){
   renderer.setSize(innerWidth,innerHeight,false);const sz=renderer.getDrawingBufferSize(new THREE.Vector2());
   cam.aspect=innerWidth/innerHeight;placeCam();
-  if(sz.x===W0&&sz.y===H0&&rtMain&&rtMain.width===Math.ceil(W0/OPT.zoom))return;W0=sz.x;H0=sz.y;
+  if(sz.x===W0&&sz.y===H0&&rtMain)return;W0=sz.x;H0=sz.y;
   for(const r of [rtMain,rtA,rtB])if(r)r.dispose();
   // ドット絵：1ドット＝画面の点「大きさ」こぶんの、小さい画面に描く（なめらかにしない）
-  const LW=Math.ceil(W0/OPT.zoom),LH=Math.ceil(H0/OPT.zoom);
-  rtMain=new THREE.WebGLRenderTarget(LW,LH,{type:THREE.HalfFloatType,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});rtMain.depthTexture=new THREE.DepthTexture(LW,LH);
+  const LW=W0,LH=H0;   // なめらかなトゥーン：画面の細かさのまま描く（ギザギザは MSAA でとる）
+  rtMain=new THREE.WebGLRenderTarget(LW,LH,{type:THREE.HalfFloatType,samples:4});rtMain.depthTexture=new THREE.DepthTexture(LW,LH);
   fin.m.uniforms.dz.value=rtMain.depthTexture;
-  fin.m.uniforms.res.value.set(LW,LH);fin.m.uniforms.crop.value.set(W0/(LW*OPT.zoom),H0/(LH*OPT.zoom));
+  fin.m.uniforms.res.value.set(LW,LH);fin.m.uniforms.crop.value.set(1,1);
   const q=[Math.max(1,LW>>2),Math.max(1,LH>>2)];
   rtA=new THREE.WebGLRenderTarget(...q,{type:THREE.HalfFloatType});rtB=new THREE.WebGLRenderTarget(...q,{type:THREE.HalfFloatType});
   fin.m.uniforms.t.value=rtMain.texture;fin.m.uniforms.b.value=rtB.texture;
