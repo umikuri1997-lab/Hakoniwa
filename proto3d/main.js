@@ -59,6 +59,9 @@ const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,fieldPer:46,fieldH:.62,col:[
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 const PEBBLE={per:1.6,r:[.04,.11],col:['#a99c88','#c9bfae']};   /* 荒れた土地の小石：1マスあたりの数・大きさ（マス）・色 */
 const CRACK={scale:1.5,w:.07,k:.3};                              /* 荒れた土地のひび：細かさ・線のはば・こさ */
+const RIPPLE={cell:1.7,period:5.5,r:.62,k:.5};   /* 水面の波紋：1つの波紋のマスの大きさ・出るまでの秒・広がる半径・明るさ */
+const GLINT={n:16,k:1.3};                         /* 水面のきらめきの粒：細かさ（1マスあたり）・明るさ */
+const DUST={n:160,every:.22,life:.7,size:.34,dry:'#d9c7a2',grass:'#a6cf7a'};   /* 足もとの土けむり：粒の数（上限）・出す間（秒）・消えるまで（秒）・大きさ（マス）・荒れた土地と草地の色 */
 // ---- しあげ ----
 const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
 const SSAO={r:.6,k:1.7,bias:.012,max:1.6};  /* すみのやわらかいかげ（空の光がとどきにくい所）：しらべる半径（マス）・こさ・平らな面を暗くしないためのあそび・これより奥行きがはなれた物は数えない（マス） */
@@ -311,6 +314,9 @@ function buildGround(){
         vec3 sky=mix(lin(${C3(SKY)}),lin(${C3(SKYTOP)}),smoothstep(0.,.6,Rf.y));
         vec3 deep=mix(lin(${C3(COLS.waterB)}),lin(${C3(COLS.water)}),smoothstep(.45,1.1,h0));
         vec3 c=mix(deep,sky,clamp(fr*1.6,0.,1.))+vec3(1.,.93,.78)*2.2*pow(max(dot(Rf,uSunW),0.),180.);       // 日の光のきらめき
+        {vec2 q=p/${RIPPLE.cell},ci=floor(q);float ph=fract(uTime/${RIPPLE.period}+hs(ci)),rr=ph*${RIPPLE.r},dd=length(fract(q)-.5-(vec2(hs(ci+3.1),hs(ci+7.7))-.5)*.4)*${RIPPLE.cell};   /* 波紋：マスごとに、広がって消える輪 */
+         c+=vec3(${RIPPLE.k})*smoothstep(.035,0.,abs(dd-rr))*(1.-ph)*smoothstep(0.,.08,ph)*step(.35,hs(ci+1.3));
+         vec2 gi=floor(p*${GLINT.n}.);float tw=pow(.5+.5*sin(uTime*2.6+hs(gi)*6.283),12.);c+=vec3(1.,.97,.86)*${GLINT.k}*tw*step(.972,hs(gi+5.))*smoothstep(.3,0.,length(fract(p*${GLINT.n}.)-.5));}   /* きらめきの粒 */
         float foam=smoothstep(.62,.5,w+.06*sin(uTime*2.+fbm(p*3.)*9.));c=mix(c,lin(${C3(COLS.foam)}),foam*.85);
         gl_FragColor=vec4(c,mix(.62,.95,max(fr,foam)));\n#include <fog_fragment>\n}`});
   const water=new THREE.Mesh(wg,wm);water.renderOrder=1;scene.add(water);
@@ -483,6 +489,24 @@ function placeMap(){
   return SOLID;
 }
 
+// ---- 足もとの土けむり：歩くせいれいの足もとに出る、カメラを向いた丸い粒（ふくらんで、小さくなって消える） ----
+let dust=null;
+function buildDust(){
+  const m=new THREE.MeshBasicMaterial({map:blobTex,color:0xffffff,transparent:true,opacity:.75,depthWrite:false});m.onBeforeCompile=curveVS;m.customProgramCacheKey=()=>'dust';
+  dust={mesh:new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),m,DUST.n),p:[],next:0};dust.mesh.frustumCulled=false;dust.mesh.renderOrder=3;
+  const z=new THREE.Matrix4().makeScale(0,0,0),c=new THREE.Color(DUST.dry);for(let i=0;i<DUST.n;i++){dust.p.push({t:9,x:0,y:0,z:0,vx:0,vz:0});dust.mesh.setMatrixAt(i,z);dust.mesh.setColorAt(i,c)}
+  scene.add(dust.mesh);
+}
+const DCOL=new THREE.Color();
+function puff(x,y,z){const i=dust.next;dust.next=(i+1)%DUST.n;const tx=Math.floor(x),tz=Math.floor(z),g=inMap(tx,tz)&&GRASS[tz][tx]&&pmAt(x,z)<.3;
+  Object.assign(dust.p[i],{t:0,x:x+(Math.random()-.5)*.12,y:y+.05,z:z+(Math.random()-.5)*.12,vx:(Math.random()-.5)*.25,vz:(Math.random()-.5)*.25,s:(g?.55:1)*(.7+Math.random()*.6)});
+  dust.mesh.setColorAt(i,DCOL.set(g?DUST.grass:DUST.dry));dust.mesh.instanceColor.needsUpdate=true}
+const DM=new THREE.Matrix4(),DV=new THREE.Vector3(),DS=new THREE.Vector3();
+function stepDust(dt){
+  dust.p.forEach((d,i)=>{if(d.t>DUST.life)return;d.t+=dt;const k=d.t/DUST.life,sz=k>=1?0:DUST.size*d.s*Math.sin(Math.PI*Math.sqrt(k));   /* ふくらんで、小さくなって消える */
+    DM.compose(DV.set(d.x+d.vx*d.t,d.y+.25*k,d.z+d.vz*d.t),cam.quaternion,DS.set(sz,sz,sz));dust.mesh.setMatrixAt(i,DM)});
+  dust.mesh.instanceMatrix.needsUpdate=true;
+}
 // ---- せいれい ----
 let sprites=[];let blocked=new Set();
 function walkable(x,z,h){return inMap(x,z)&&KIND[z][x]!=='w'&&HM[z][x]===h&&!blocked.has(x+','+z)}
@@ -506,6 +530,7 @@ function stepSpirits(dt){
     if(s.to){const d=new THREE.Vector3(s.to.x-p.x,0,s.to.z-p.z),L=d.length();
       if(L<.05){s.to=null;s.wait=.8+rnd()*2.5}
       else{const st=Math.min(L,WALK*dt);p.addScaledVector(d.normalize(),st);moving=true;
+        if((s.dust=(s.dust||0)-dt)<=0){s.dust=DUST.every;puff(p.x,groundH(p.x,p.z),p.z)}
         const ang=Math.atan2(d.x,d.z);let da=ang-s.obj.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));s.obj.rotation.y+=da*Math.min(1,dt*10)}}
     else if((s.wait-=dt)<=0){
       for(let t=0;t<8;t++){const tx=Math.floor(p.x)+Math.round((rnd()-.5)*8),tz=Math.floor(p.z)+Math.round((rnd()-.5)*8);
@@ -618,7 +643,7 @@ function draw(to,sc,cm){renderer.setRenderTarget(to);renderer.render(sc,cm);call
 function frame(now){
   const dt=Math.min(.1,(now-prev)/1000);prev=now;uTime.value=now/1000;
   const t0=performance.now();
-  stepSpirits(dt);stepLeaves(dt,now/1000);calls=0;tris=0;
+  stepSpirits(dt);stepDust(dt);stepLeaves(dt,now/1000);calls=0;tris=0;
   uSunV.value.set(...SUNDIR).normalize().transformDirection(cam.matrixWorldInverse);uViewInv.value.setFromMatrix4(cam.matrixWorld);
   draw(rtMain,scene,cam);
   blur.m.uniforms.t.value=rtMain.texture;blur.m.uniforms.d.value.set(1/rtA.width,0);draw(rtA,blur.s,postCam);
@@ -642,7 +667,7 @@ async function loadGroundTex(){
 }
 async function main(){
   await loadMats();await loadGroundTex();
-  buildGround();buildBlades();buildPebbles();buildSky();buildLeaves();
+  buildGround();buildBlades();buildPebbles();buildSky();buildLeaves();buildDust();
   await Promise.all([...PROPS.map(loadProp),...ELS.map(loadSpirit),loadMapObjs()]);
   sun.castShadow=OPT.shadow;blocked=placeMap();makeSpirits(OPT.spirits);
   resize();addEventListener('resize',resize);buildUI();gpu=gpuName();
