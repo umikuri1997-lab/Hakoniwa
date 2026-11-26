@@ -39,8 +39,8 @@ def posed(sp, face, p):
         pn = p.get('prop' if near else 'propF')
         if pn:
             (P, C), fx = PR.prop(pn); kw = g('k'+k)
-            if kw: P = wrist(P, kw); fx = {a: (v if a == 'up' else wrist(v[None], kw)[0]) for a, v in fx.items()}
-            Pw = body(f(P)); fw = {a: body(f(v[None]))[0] for a, v in fx.items() if a != 'up'}
+            if kw: P = wrist(P, kw); fx = {a: (v if a in ('up', 'fwd') else wrist(v[None], kw)[0]) for a, v in fx.items()}
+            Pw = body(f(P)); fw = {a: body(f(v[None]))[0] for a, v in fx.items() if a not in ('up', 'fwd')}
             if 'up' in fx:   # たいらに持つ道具（フライパン・ボウル・お皿）：道具の「上」が、まうえを向くように、手のまわりで回す
                 hc0 = body(f(HANDU))[0]; u0 = body(f((HANDU[0]+fx['up'])[None]))[0]-hc0; u0 = u0/np.linalg.norm(u0); z = np.array([0, 0, 1.0])
                 ax = np.cross(u0, z); sn = np.linalg.norm(ax); cs = float(u0@z)

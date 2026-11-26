@@ -8,8 +8,9 @@
    文は js/ev-text.js（EVTALK・EVTALKOK・EVCHAT・EVDY・EVDYB）。 */
 const EVMGT=10000,EVOK=.6,EVPLAY={work:1,move:1,sta:1,atk:5,cap:0},EVPLAYFUN=5,EVCLXP=.6,EVCLXMS=3600,EVCOMF=5,EVCOMFD=3,EVDREAMP=.6,EVTAIKOCD=2;
 const EVKIND={taiso:'move',soji:'move',oni:'move',ensoku:'move',takara:'move',mizu:'move',matoate:'move',undo:'move',gochi:'eat',pikunikku:'eat',shukaku:'eat',utage:'eat',cha:'eat',ocha:'eat',yomi:'calm',hoshi:'calm',hokomairi:'calm',onsen:'calm',camp:'calm',hana:'fest',lantern:'fest',himatsuri:'fest',hanabi:'fest',taikokai:'fest'};
-const EVSONGMOVE=new Set(['taiso','soji','oni','ensoku','takara','mizu','matoate','undo','taikokai','himatsuri','hana']);/* 動く曲（MusMus「BGM-141」）。ほかは、しずかな曲（魔王魂「fantasy05」） */
+const EVSONGMOVE=new Set(['soji','oni','ensoku','takara','mizu','matoate','undo','taikokai','himatsuri','hana']);/* 動く曲（MusMus「BGM-141」）。ほかは、しずかな曲（魔王魂「fantasy05」） */
 const EVDECO={undo:'rw',hana:'flower',pikunikku:'flower',lantern:'lamp',hanabi:'lamp',himatsuri:'lamp',camp:'lamp',hoshi:'lamp',taikokai:'lamp',utage:'lamp',onsen:'lamp',ocha:'lamp',hokomairi:'lamp',cha:'flower',gochi:'flower',shukaku:'flower',yomi:'flower'};/* かざりのしゅるい（ほかは旗） */
+const EVNOSONG=new Set(['taiso']),EVNODECO=new Set(['taiso']);/* 曲を鳴らさないイベント（体そうは、みんなの声のメロディ taisoTick だけ）・かざりを出さないイベント */
 /* たのしさ（実数）と、能力のほかに足すごほうび（説明の文。evExtra と同じ数） */
 const EVFUN={taiso:15,soji:10,oni:20,ensoku:20,gochi:15,takara:15,yomi:10,mizu:20,camp:20,cha:15,hoshi:20,onsen:15,matoate:10,pikunikku:20,taikokai:20,ocha:10,hokomairi:10,undo:30,hana:40,lantern:30,shukaku:30,himatsuri:30,utage:30,hanabi:30};
 const EVBOND={oni:3,gochi:2,camp:3,pikunikku:3,utage:3,hanabi:3};
@@ -24,9 +25,9 @@ function evBoxOf(E){const P=Object.values(E.slot||{});let x0=1e9,x1=-1e9,y0=1e9,
   if(x0>1e8){const[cx,cy]=E.c||evTemple();x0=Math.floor(cx)-2;x1=Math.floor(cx)+2;y0=Math.floor(cy)-1;y1=Math.floor(cy)+1}if(x1-x0<3){x0--;x1++}return{x0,x1,y0,y1}}
 /* ---------- はじまり ---------- */
 function evShowBegin(E,P){if(!evShowOn(E)||E.shw)return;E.shw=1;const now=performance.now();EVV.id=E.id;EVV.t0=now;EVV.clx=0;EVV.cid=null;EVV.end=null;EVV.rip=[];EVV.met=[];EVV.lan=[];EVV.pet=[];EVV.shine=0;EVV.flash=0;E.cx=0;E.ek=0;
-  EVV.song=EVSONGMOVE.has(E.id)?'cupmove':'cupcalm';EVV.box=evBoxOf(E);if(typeof MEMRUN!=='undefined'&&MEMRUN)return;
+  EVV.song=EVNOSONG.has(E.id)?'':EVSONGMOVE.has(E.id)?'cupmove':'cupcalm';EVV.box=evBoxOf(E);if(typeof MEMRUN!=='undefined'&&MEMRUN)return;
   if(!EVV.back)EVV.back=evCamCenter();if(E.c)evCamTo(E.c[0]*TS,E.c[1]*TS,1.4);
-  const n=evDecoN();for(let i=0;i<Math.min(n,8);i++)later(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);
+  const n=EVNODECO.has(E.id)?0:evDecoN();for(let i=0;i<Math.min(n,8);i++)later(()=>{if(S.ev===E)j3Ding(i*2,0,.35)},300+i*110);
   later(()=>{if(S.ev!==E)return;sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of evPeople(E))JUMP.set(r,performance.now()+Math.random()*200)},1500);
   if(EVMG[E.id]&&started)later(()=>{if(S.ev===E&&E.ph)evAsk(E)},2300)}
 function evDecoN(){const B=EVV.box;return B?Math.max(3,Math.floor(((B.x1-B.x0+3)*TS-16)/10)):6}
@@ -228,44 +229,37 @@ function evTopic(r){const m=r.evm;if(!m||dayNo()-m.d>1||m.told===dayNo()||!EVTAL
 function evMemBoth(r,p,id){const a=r.evm,b=p.evm;return !!a&&!!b&&a.id===id&&b.id===id&&a.d===b.d&&dayNo()-a.d<=1}
 /* ---------- 見た目：世界の上の層（夜の暗さより上。juice3Draw から） ---------- */
 const pR=(c,col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)};
-function evGarland(c,B,kind,t0,now){const x0=(B.x0-1)*TS+8,x1=(B.x1+2)*TS-8,y=(B.y0-1.4)*TS,age=now-t0;pR(c,'#7a5a3a',x0,y-8,2,TS*1.5+8);pR(c,'#7a5a3a',x1-2,y-8,2,TS*1.5+8);
-  const len=Math.max(0,Math.min(1,age/700));for(let x=x0+2;x<x0+2+(x1-x0-4)*len;x+=2){const t=(x-x0)/(x1-x0),sag=Math.round(Math.sin(t*Math.PI)*6);pR(c,'#5c4a32',x,y+sag,2,1)}
-  const C=kind==='rw'?['#ff5a4a','#ffffff']:kind==='lamp'?['#ff8a5c','#ffb070','#ff6a5c']:kind==='flower'?['#ff9fb8','#fff0a0','#ffffff','#c49cff']:['#ff8a5c','#ffd23f','#7fc6ff','#a8f08a','#ff8fb1'];
-  let i=0;for(let x=x0+6;x<x1-8;x+=10,i++){const a=age-250-i*110;if(a<0)break;const t=(x+3-x0)/(x1-x0),sag=Math.round(Math.sin(t*Math.PI)*6),drop=a<160?Math.round((1-a/160)*-6):0,yy=y+sag+1+drop,col=C[i%C.length],sw=Math.floor(now/400+i)%2;
-    if(kind==='lamp'){pR(c,'#5c4a32',x+2,yy,1,2);pR(c,col,x,yy+2,6,7);pR(c,'#ffe9a8',x+1,yy+3,4,4);pR(c,'#7a4a2a',x,yy+2,6,1);pR(c,'#7a4a2a',x,yy+8,6,1)}
-    else if(kind==='flower'){pR(c,'#7fb070',x+1,yy+3,4,2);pR(c,col,x+1,yy,4,4);pR(c,col,x,yy+1,6,2);pR(c,'#ffd23f',x+2,yy+1,2,2)}
-    else for(let k=0;k<6;k++)pR(c,col,x+Math.ceil(k/2)+(sw&&k>3?1:0),yy+k,6-k,1)}}
 function evTag(c,x,y,L,a){c.font='10px PixelMplus10, sans-serif';const w=Math.ceil(Math.max(...L.map(t=>c.measureText(t).width)))+10,h=L.length*12+5,x0=Math.round(x-w/2),y0=Math.round(y-h-(a<1?(1-a)*8:0));
   pR(c,'#5c3a22',x0+1,y0+h,w-2,2);pR(c,'#8a5a32',x0,y0,w,h);pR(c,'#c9965c',x0+1,y0+1,w-2,h-2);pR(c,'#ddb07a',x0+1,y0+1,w-2,1);pR(c,'#5c4a32',Math.round(x)-1,y0-5,2,5);
   c.textAlign='center';c.textBaseline='top';L.forEach((t,i)=>{c.fillStyle='#ecd2a4';c.fillText(t,Math.round(x),y0+4+i*12);c.fillStyle='#4a2a14';c.fillText(t,Math.round(x),y0+3+i*12)});return{x0,y0,w,h}}
 function evStamp(c,x,y,a){const s=a<1?1+(1-a)*.8:1,r=Math.round(6*s);c.save();c.globalAlpha=Math.min(1,a*2);pR(c,'#d04030',x-r,y-r+1,r*2,r*2-2);pR(c,'#d04030',x-r+1,y-r,r*2-2,r*2);pR(c,'#f4e9d2',x-r+2,y-r+2,r*2-4,r*2-4);pR(c,'#d04030',x-r+3,y-r+3,r*2-6,r*2-6);pR(c,'#f4e9d2',x-1,y-1,2,2);c.restore()}
 function evShowDraw(now){const E=S&&S.ev,c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const live=E&&E.ph&&evShowOn(E)&&EVV.id===E.id,A=EVV.end;
-  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box)evGarland(c,EVV.box,EVDECO[EVV.id]||'flag',EVV.t0,now);
+  if((live&&E.ph!=='go'||A)&&EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}/* クォータービュー：会場のまん中を足もとに（iso-fx.js） */if((live&&E.ph!=='go'||A)&&EVV.box&&!EVNODECO.has(EVV.id))isoGarland(c,EVV.box.x0-1,EVV.box.x1+1,EVV.box.y0,EVDECO[EVV.id]||'flag',now);/* かざりは、会場のおくの行の北のふちにそって（3Dのチップ・iso-fx.js） */
   if(live){const cc=E.c||evTemple(),e=now-EVV.t0;if(e>1300&&e<2700){const u=Math.min(1,(e-1300)/180);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.4)*TS);cupText(c,'せーの！',cc[0]*TS,(EVV.box.y0-2.4)*TS,2.2+(1-u)*1.4,Math.max(0,Math.min(1,(2700-e)/400)))}
     {const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evProps(c,E,evPeople(E),now);
     if(EVV.clx&&EVV.cid===E.id){const ce=now-EVV.clx,tx=EVCLXTX[E.id];if(tx&&ce<2600){const u=Math.min(1,ce/160);isoUIAt(c,cc[0]*TS,cc[1]*TS,cc[0]*TS,(EVV.box.y0-2.6)*TS);cupText(c,tx,cc[0]*TS,(EVV.box.y0-2.6)*TS,2.4+(1-u)*1.2,Math.max(0,Math.min(1,(2600-ce)/500)))}{const B=EVV.box;if(B)isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}evClimaxDraw(c,E,cc,ce,now)}}
   if(A){const e=now-A.t0;A.tags.forEach((T,i)=>{const a=(e-500-i*450)/160;if(a<0||!S.res.includes(T.r))return;isoUIAt(c,T.r.x*TS,T.r.y*TS,T.r.x*TS,(T.r.y-1.45)*TS);const b=evTag(c,T.r.x*TS,(T.r.y-1.45)*TS,T.L,Math.min(1,a));const sa=(e-500-i*450-220)/140;if(sa>0)evStamp(c,b.x0+b.w-2,b.y0+2,Math.min(1,sa))});
     if(e>A.t1&&e<A.t1+3000){isoUIAt(c,A.c[0]*TS,A.c[1]*TS,A.c[0]*TS,(A.c[1]-3.2)*TS);cupText(c,A.n+'、おしまい！',A.c[0]*TS,(A.c[1]-3.2)*TS,2,Math.max(0,Math.min(1,(A.t1+3000-e)/500)))}}
   if(EVV.box){const B=EVV.box;isoAt(c,(B.x0+B.x1+1)/2*TS,(B.y0+B.y1+1)/2*TS)}
-  for(const R of EVV.rip){const a=(now-R.t)/700;if(a>1)continue;const r=Math.round((R.big?14:6)+a*(R.big?60:30)),x=Math.round(R.x*TS),y=Math.round(R.y*TS);c.globalAlpha=1-a;for(let k=0;k<16;k++){const an=k/16*Math.PI*2;pR(c,'#ffe9a8',x+Math.cos(an)*r,y+Math.sin(an)*r*.55,2,2)}c.globalAlpha=1}
+  for(const R of EVV.rip){const a=(now-R.t)/700;if(a>1)continue;const r=(R.big?14:6)+a*(R.big?60:30),G=gFoot(R.x*TS,R.y*TS);isoScreenTf(c);c.globalAlpha=1-a;for(let k=0;k<16;k++){const an=k/16*Math.PI*2,dx=Math.cos(an)*r,dy=Math.sin(an)*r;pR(c,'#ffe9a8',G.px+isoX(dx,dy)-1,G.py+isoY(dx,dy)-1,3,3)}c.globalAlpha=1}/* 地面の輪：地面の円（半径 r のせかいの点）の点を、1つずつ画面にうつす（だ円にちぢめた絵にしない） */
   EVV.rip=EVV.rip.filter(R=>now-R.t<700);
-  for(const L of EVV.lan){const a=(now-L.t)/1000;if(a<0)continue;const x=Math.round((L.x+Math.sin(a*1.3+L.s)*.25)*TS),y=Math.round((L.y-a*.7)*TS);c.globalAlpha=Math.max(0,Math.min(1,(9-a)/2));pR(c,'#ff8a5c',x-3,y-4,6,8);pR(c,'#ffe9a8',x-2,y-3,4,5);pR(c,'#7a4a2a',x-3,y+4,6,1);c.globalAlpha=1}
+  for(const L of EVV.lan){const a=(now-L.t)/1000;if(a<0)continue;isoAt(c,L.x*TS,(L.y+1)*TS);/* とばしたせいれいの足もとから立てる */const x=Math.round((L.x+Math.sin(a*1.3+L.s)*.25)*TS),y=Math.round((L.y-a*.7)*TS);c.globalAlpha=Math.max(0,Math.min(1,(9-a)/2));pR(c,'#ff8a5c',x-3,y-4,6,8);pR(c,'#ffe9a8',x-2,y-3,4,5);pR(c,'#7a4a2a',x-3,y+4,6,1);c.globalAlpha=1}
   EVV.lan=EVV.lan.filter(L=>now-L.t<9000);if(EVV.lan.length>40)EVV.lan.splice(0,EVV.lan.length-40);
   c.imageSmoothingEnabled=sm;isoBack(c);evScreenDraw(now)}
 let EVDISH=null;function evDishes(){if(!EVDISH){EVDISH=(typeof COOKD!=='undefined'?COOKD:[]).filter(d=>FOODS[d.id]&&!/^fsg/.test(d.id)&&!(d.f&&d.f.bad)).map(d=>d.id).slice(0,24);if(!EVDISH.length)EVDISH=['berry','apple']}return EVDISH}
 /* 小道具（する、のあいだ） */
-function evProps(c,E,P,now){const cc=E.c||evTemple(),X=cc[0]*TS,Y=cc[1]*TS;
-  if(E.id==='oni'&&P.length>1){const o=P[Math.floor((S.t-E.t0)/9)%P.length];if(o){const x=Math.round(o.x*TS),y=Math.round((o.y-1.55)*TS)+(Math.floor(now/300)%2);pR(c,'#d04030',x-3,y,6,4);pR(c,'#d04030',x-1,y-3,2,3);pR(c,'#ffe9a8',x-1,y+1,2,1)}if(EVV.oni!==o.id){if(EVV.oni!=null){addFloatG(o.x,o.y,-1.8,'タッチ！','#ffe7a8');sfx('pat')}EVV.oni=o.id}}
-  if(E.id==='yomi'&&E.reader!=null){const r=P.find(q=>q.id===E.reader);if(r){const x=Math.round(r.x*TS),y=Math.round((r.y-1.9)*TS),k=(Math.floor((S.t-E.t0)/6)+(E.pic||0))%4;pR(c,'#5c4a32',x-12,y-15,24,18);pR(c,'#fff6ea',x-11,y-14,22,16);pR(c,'#fff6ea',x-2,y+3,4,2);
+function evProps(c,E,P,now){const cc=E.c||evTemple(),X=cc[0]*TS,Y=cc[1]*TS;isoAt(c,X,Y);/* クォータービュー：小道具は、それぞれの地面の点（会場のまん中・せいれいの足もと・食卓のマス）を足もとにして立てる（会場のまん中1つを足もとにすると、はなれた物の場所がずれる） */
+  if(E.id==='oni'&&P.length>1){const o=P[Math.floor((S.t-E.t0)/9)%P.length];if(o){isoAt(c,o.x*TS,o.y*TS);const x=Math.round(o.x*TS),y=Math.round((o.y-1.55)*TS)+(Math.floor(now/300)%2);pR(c,'#d04030',x-3,y,6,4);pR(c,'#d04030',x-1,y-3,2,3);pR(c,'#ffe9a8',x-1,y+1,2,1)}if(EVV.oni!==o.id){if(EVV.oni!=null){addFloatG(o.x,o.y,-1.8,'タッチ！','#ffe7a8');sfx('pat')}EVV.oni=o.id}}
+  if(E.id==='yomi'&&E.reader!=null){const r=P.find(q=>q.id===E.reader);if(r){isoAt(c,r.x*TS,r.y*TS);const x=Math.round(r.x*TS),y=Math.round((r.y-1.9)*TS),k=(Math.floor((S.t-E.t0)/6)+(E.pic||0))%4;pR(c,'#5c4a32',x-12,y-15,24,18);pR(c,'#fff6ea',x-11,y-14,22,16);pR(c,'#fff6ea',x-2,y+3,4,2);
     if(k===0){pR(c,'#7fb070',x-6,y-11,12,8);pR(c,'#8a5a32',x-1,y-3,2,4)}else if(k===1){pR(c,'#ffd86a',x-4,y-11,8,8);pR(c,'#fff6ea',x-1,y-12,6,6)}else if(k===2){pR(c,'#9a9aa0',x-6,y-8,12,7);pR(c,'#9a9aa0',x-4,y-11,2,3);pR(c,'#9a9aa0',x+2,y-11,2,3);pR(c,'#ff6a5c',x-1,y-12,2,2)}else{pR(c,'#7fc6ff',x-7,y-5,14,3);pR(c,'#ffffff',x-3,y-9,6,4)}}}
-  if(E.id==='gochi'&&E.tab){const n=Math.min(12,(E.dn||0)+2)-(E.cx?Math.floor((S.t-E.cxS)/2):0),T=[...new Set(Object.values(E.tab))];let i=0;for(const t of T){for(const[x,y]of fp(S.obj[t],t%W,(t/W)|0))for(let k=0;k<2;k++,i++){if(i>=n)break;const DL=evDishes(),im=cupImg(DL[i%DL.length],'cup4');const px=x*TS+4+k*13,py=y*TS-8;pR(c,'#ffffff',px-1,py+10,14,3);if(im.complete&&im.naturalWidth){c.imageSmoothingEnabled=true;c.drawImage(im,px,py,12,12);c.imageSmoothingEnabled=false}else pR(c,'#ff8a5c',px+2,py+4,8,6)}}}
+  if(E.id==='gochi'&&E.tab){const n=Math.min(12,(E.dn||0)+2)-(E.cx?Math.floor((S.t-E.cxS)/2):0),T=[...new Set(Object.values(E.tab))];let i=0;for(const t of T){for(const[x,y]of fp(S.obj[t],t%W,(t/W)|0)){isoAtA(c,cellFoot(y*W+x));for(let k=0;k<2;k++,i++){if(i>=n)break;const DL=evDishes(),im=cupImg(DL[i%DL.length],'cup4');const px=x*TS+4+k*13,py=y*TS-8;pR(c,'#ffffff',px-1,py+10,14,3);if(im.complete&&im.naturalWidth){c.imageSmoothingEnabled=true;c.drawImage(im,px,py,12,12);c.imageSmoothingEnabled=false}else pR(c,'#ff8a5c',px+2,py+4,8,6)}}}}
   if(E.id==='shukaku'){const n=Math.min(10,(E.pile||0)+1),C=['mugi','imo','tomato'];for(let i=0;i<n;i++){let row=0,k=i,w=4;while(k>=w){k-=w;w--;row++}const im=cupImg(C[i%3],'cup4'),px=X-w*7+k*14,py=Y-8-row*9;if(im.complete&&im.naturalWidth){c.imageSmoothingEnabled=true;c.drawImage(im,px,py,14,14);c.imageSmoothingEnabled=false}else pR(c,'#ffd23f',px+2,py+2,10,10)}}
   if(E.id==='hokomairi'){const a=.5+Math.sin(now/500)*.2;c.globalAlpha=a*.6;pR(c,'#fff3a0',X-6,Y-120,12,110);pR(c,'#ffffff',X-2,Y-120,4,110);c.globalAlpha=1}
-  if(E.id==='mizu')for(let k=0;k<2;k++){const r1=P[k],r2=P[k+1];if(!r1||!r2)continue;const a=((now/900)+k*.5)%1,x=(r1.x+(r2.x-r1.x)*a)*TS,y=(r1.y+(r2.y-r1.y)*a-.8-Math.sin(a*Math.PI)*1.2)*TS;pR(c,'#cfefff',x-1,y-1,3,3);pR(c,'#7fc6ff',x-3,y+2,2,2)}
+  if(E.id==='mizu')for(let k=0;k<2;k++){const r1=P[k],r2=P[k+1];if(!r1||!r2)continue;const a=((now/900)+k*.5)%1,x=(r1.x+(r2.x-r1.x)*a)*TS,gy=(r1.y+(r2.y-r1.y)*a)*TS,y=gy-(.8+Math.sin(a*Math.PI)*1.2)*TS;isoAt(c,x,gy);pR(c,'#cfefff',x-1,y-1,3,3);pR(c,'#7fc6ff',x-3,y+2,2,2)}
   if(E.id==='pikunikku')for(let k=0;k<2;k++){const t=now/1000+k*2.1,x=X+Math.cos(t*.8)*40,y=Y-30+Math.sin(t*1.7)*10,w=Math.floor(now/120+k)%2;pR(c,'#ffd23f',x-1,y-1,2,4);pR(c,k?'#ff8fb1':'#ffffff',x-(w?5:4),y-3,w?4:3,4);pR(c,k?'#ff8fb1':'#ffffff',x+1,y-3,w?4:3,4)}
   if(E.id==='matoate'){const n=Math.min(8,Math.floor((S.t-E.t0)/4));for(let i=0;i<n;i++){const ax=X+((i*7)%11)-5,ay=Y-14+((i*5)%9)-4;pR(c,'#7a4a2a',ax,ay,1,7);pR(c,'#ffffff',ax-1,ay+6,3,2)}}
   if(E.id==='camp'||E.id==='himatsuri'){const h=E.id==='himatsuri'?20:12,f=Math.round(Math.sin(now/90)*2);pR(c,'#ff6a3c',X-6,Y-h-6+f,12,h);pR(c,'#ffd23f',X-3,Y-h*.6-6+f,6,h*.6)}}
-function evClimaxDraw(c,E,cc,ce,now){const X=cc[0]*TS,Y=cc[1]*TS;
+function evClimaxDraw(c,E,cc,ce,now){const X=cc[0]*TS,Y=cc[1]*TS;isoAt(c,X,Y);
   if(E.id==='mizu'&&ce<6000){const a=Math.min(1,ce/600)*Math.min(1,(6000-ce)/800);c.globalAlpha=a*.85;const C=['#ff8a8a','#ffb070','#ffe066','#a8f08a','#8ac8ff','#c49cff'];C.forEach((col,i)=>{const R=70-i*4;for(let k=0;k<=40;k++){const an=Math.PI+k/40*Math.PI;pR(c,col,X+Math.cos(an)*R,Y-20+Math.sin(an)*R*.7,3,3)}});c.globalAlpha=1}
   if((E.id==='camp'||E.id==='himatsuri')&&ce<2500){const h=Math.round((E.id==='himatsuri'?70:46)*Math.sin(Math.min(1,ce/2500)*Math.PI));pR(c,'#ff6a3c',X-9,Y-6-h,18,h);pR(c,'#ffd23f',X-4,Y-6-h*.8,8,h*.7);pR(c,'#ffffff',X-1,Y-6-h*.5,2,h*.3)}
   if(E.id==='hokomairi'&&ce<3000){const a=Math.sin(Math.min(1,ce/3000)*Math.PI);c.globalAlpha=a;pR(c,'#fff3a0',X-14,Y-160,28,150);pR(c,'#ffffff',X-5,Y-160,10,150);c.globalAlpha=1}
@@ -279,7 +273,7 @@ function evScreenDraw(now){if(!EVV.shine&&!EVV.met.length&&!EVV.pet.length&&!EVV
   if(EVV.flash){const a=(now-EVV.flash)/350;if(a>1)EVV.flash=0;else{c.globalAlpha=(1-a)*.55;c.fillStyle='#ffffff';c.fillRect(0,0,VW,VH);c.globalAlpha=1}}
   c.setTransform(T)}
 /* 地面の層：体そうのお立ち台 */
-function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;const x=Math.round(r.x*TS),y=Math.round(r.y*TS),dr=()=>{pR(ctx,'#5c3a22',x-12,y-2,24,7);pR(ctx,'#c9965c',x-11,y-3,22,5);pR(ctx,'#ddb07a',x-11,y-3,22,1)};isoStand(ctx,{fx:x,fy:y,px:isoX(x,y),py:isoY(x,y)-isoLv((r.y|0)*W+(r.x|0))*IQL},dr)}/* クォータービュー：その子の足もとに立てて */
+function evShowGround(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do'||!E.who)return;const r=S.res.find(q=>q.id===E.who[0]);if(!r)return;isoChipTile(ctx,'evdai',Math.floor(r.x),Math.floor(r.y),0)}/* 体そうのお立ち台：その子のいるマスに、3Dのチップ（tools/art/furn3d/items/evdai.py）を立てる */
 /* ---------- 文をつなぐ（読みこむときに1回）：手紙・雑談・日記 ---------- */
 LETTERK.ev='イベントのこと';/* イベントの手紙の文は letter-data.js の LETTERD.ev（イベント→属性→5通、1通まるごと） */
 if(typeof EVCHAT!=='undefined')for(const id of Object.keys(EVCHAT).sort())for(const ch of EVCHAT[id])CHATS.push(Object.assign(ch,{evc:1,ok:(r,p)=>evMemBoth(r,p,id)}));/* CHATS の番号はセーブに入るので、うしろに足すだけ（id の名前の順） */

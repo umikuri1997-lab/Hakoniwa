@@ -10,7 +10,7 @@ const GLHIT=110;/* まもりの光の音は、光の槌が地面に当たるコ�
 const GLFX=250;/* 画面のゆれと光、ダメージ・とめる・素材が落ちる（glHit）も、光の槌が地面に当たるコマ（0.25秒、godlight の5コマめ）に合わせる */
 const ATRAIL=14,ABURSTY=31;/* 木の矢の光のすじのつぶの数・arrowburst の光のまん中は置く所より31点上 */
 function lightSnd(x,y,ch){villageTimeout(()=>sfxAt(ch?'glightc':'glight',x,y),GLHIT);/* ぴったりにためた光は、低いひびきのある音 */villageTimeout(()=>skillFx('light'),GLFX)}
-function fxSpr(n,x,y,col,fl,gy){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x,y,col,fl:fl||1,life:1,dur:g.n/g.fps,gy})}/* エフェクトを1回ながす（x,y は世界の座標。gy：x,y が地面より上のときの、地面の y。クォータービューの足もと iso-fx.js） */
+function fxSpr(n,x,y,col,fl,gy,A){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x,y,col,fl:fl||1,life:1,dur:g.n/g.fps,gy,A})}/* エフェクトを1回ながす（x,y は世界の座標。gy：x,y が地面より上のときの、地面の y。A：物の足もと（objFootJ）。クォータービューの足もと iso-fx.js） */
 'use strict';
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
 function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
@@ -68,6 +68,7 @@ function drawEnemy(e,now){
 // 建てている足場の見た目の広さ（マス）。x0:左はし, w:はば, rows:足もとまでの行数, hf:高さの倍率
 // 足場の絵は、大きさごとに3Dから写したチップ（tools/art/furn3d/items/site*.py）。建物の大きさで、えらぶ
 const chipOK=k=>{const C=window.CHIPS;return !!(C&&C[k]&&chipImgs(C[k],k)[0].ok)};
+function chipWait(...K){/* その絵のページを読みこみ中か（読みはじめる）。読みこみ中は、コードの仮の絵を出さずに、何も描かない（CHPN：地面の区画・アイコンは、とどいたら作りなおす） */const C=window.CHIPS;let w=false;for(const k of K){const ch=C&&C[k];if(ch&&!chipImgs(ch,k)[0].ok&&chipPend(ch.src||ch))w=true}if(w)CHPN++;return w}
 function siteKey(id){if(id==='statue')return'site:s3';if(id==='windmill')return'site:s2t';const sp=id&&siteSpan(id);if(sp&&sp.w>=2)return sp.rows>=2?'site:s2d':'site:s2';return'site:s1'}
 function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x0:-1,w:3,rows:1,hf:1.25};if(BIG2.has(id))return{x0:-.5,w:2,rows:1,hf:1.4};if(b.sz)return{x0:0,w:b.sz[0],rows:b.sz[1],hf:1};if(b.kind==='build')return{x0:-.2,w:1.4,rows:1,hf:1.1};return null}
 function objBox(o,j){if(STAIRS.has(o)){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x-TS-4,y-TS-30,x+2*TS+4,y+2*TS+4]}/* 階段は1×2で、どの向きにものびる */if(o==='site'&&S.dyn[j]){const ch=(window.CHIPS||{})[siteKey(S.dyn[j].build)];if(ch){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x+ch.ax/2-4,y+ch.ay/2-20,x+(ch.ax+ch.w)/2+4,y+(ch.ay+ch.h)/2+4]}}/* 足場の絵の大きさ（上は進みぐあいのバーのぶん） */
