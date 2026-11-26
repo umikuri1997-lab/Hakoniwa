@@ -86,6 +86,9 @@ def pose(el, p, face):
             s = 'M' if nm.endswith('.R') else 'P'   # ゲームの M はキャラの −x（モデルの .R）
             hip = F@rest['thigh'+nm[nm.index('.'):]][:3, 3]*100
             T[nm] = rigid(rx(g('leg'+s)), hip, (g('x'), g('y'), g('legz')+g('lift'+s)))
+            if g('legbody'): T[nm] = Tb@rigid(rx(g('leg'+s)), hip)   # legbody：足も、体といっしょに たおす・かたむける（横になる・ねころぶ）
+            if g('knee') and nm.startswith(('shin', 'foot')):   # knee：ひざから下を、うしろへまげる（いすにすわる：ももは前・すねは下）
+                kn = F@rest['shin'+nm[nm.index('.'):]][:3, 3]*100; T[nm] = T[nm]@rigid(rx(-g('knee')), kn)
         elif nm.startswith(('upper_arm', 'forearm', 'hand')):
             side = 1 if nm.endswith('.L') else -1   # キャラの +x のうで
             near = side == NEARSIDE[face]; k = 'N' if near else 'F'

@@ -55,7 +55,7 @@ def job(a):
             pts, anc = FM.props(el, p, face)
             yaw = core.ISOY if (iso and face in (0, 2)) else 0.0
             ic = FP.ISOCAM if (iso and p.get('isocam')) else (None, 1.0)   # 横になる絵は、家具と同じ見おろしで写す
-            img, inf = FP.render(FM.triangles(el, eyes=False), face, points=pts, spin=p.get('spin', 0.0), info=True, yaw=yaw, elev=ic[0], vs=ic[1])
+            img, inf = FP.render(FM.triangles(el, eyes=False), face, points=pts, spin=p.get('spin', 0.0), info=True, yaw=yaw, elev=ic[0], vs=ic[1], pad=40 if ic[0] else 0)
             cam, Rs = inf['cam'], inf['Rs']
             def scr3(P):
                 Q = cam(np.atleast_2d(P)@Rs.T); return Q[:, 0], -Q[:, 1], Q[:, 2]   # 画面 x, y（下が +）, 手前ほど大

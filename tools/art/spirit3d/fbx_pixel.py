@@ -151,8 +151,9 @@ def _down(img, a, thin, H, W, ss, out):
                 if cnt[t] > cnt[bi] or (cnt[t] == cnt[bi] and (cols[t, 0] < cols[bi, 0] or (cols[t, 0] == cols[bi, 0] and (cols[t, 1] < cols[bi, 1] or (cols[t, 1] == cols[bi, 1] and cols[t, 2] < cols[bi, 2]))))): bi = t
             out[r, c, 0] = cols[bi, 0]; out[r, c, 1] = cols[bi, 1]; out[r, c, 2] = cols[bi, 2]
             out[r, c, 3] = 150 if nth*2 >= ss*ss else 255
-def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=0.0, elev=None, vs=1.0):
+def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=0.0, elev=None, vs=1.0, pad=0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
+    B = H-12; H = H+pad   # 足もとの行は、上から B（pad：わくを下へ広げる。見おろしで写す横になった絵は、手前の所が足もとより下にうつる）
     Ws, Hs = W*ss, H*ss
     zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）・3 すける（風のはね）
     zt = np.full(Ws*Hs, -1e9); ct = np.zeros((Ws*Hs, 3)); nt = np.zeros((Ws*Hs, 3))   # すける物（いちばん手前）
@@ -172,12 +173,12 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
         TAG = np.array([TAGS.index(t[4]) if len(t) > 4 else 0 for t in tris], np.int64)
         if spin: P = P@Rs.T; N = N@Rs.T
         Q = cam(P.reshape(-1, 3)).reshape(-1, 3, 3); NN = cam(N.reshape(-1, 3)).reshape(-1, 3, 3)
-        SX = (Q[..., 0]+W/2)*ss; SY = (H-12-Q[..., 1])*ss
+        SX = (Q[..., 0]+W/2)*ss; SY = (B-Q[..., 1])*ss
         RP = np.array([t[5] if len(t) > 5 else np.zeros((3, 3)) for t in tris], float)
         _raster(SX, SY, np.ascontiguousarray(Q[..., 2]), np.ascontiguousarray(NN), COL, MAT, TAG, Ws, Hs, zb, cb, nb, mb, tg, hcov, zt, ct, nt, zt2, ct2, nt2, RP, rb)
     for P, C in points:   # 道具：点（かげなし。カメラを向いた面として）
         if spin: P = P@Rs.T
-        Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((H-12-Q[:, 1])*ss).astype(int)
+        Q = cam(P); sx = ((Q[:, 0]+W/2)*ss).astype(int); sy = ((B-Q[:, 1])*ss).astype(int)
         ok = (sx >= 0) & (sx < Ws) & (sy >= 0) & (sy < Hs); j = sy[ok]*Ws+sx[ok]; z = Q[ok, 2]; cc = np.asarray(C)[ok]
         bt = z > zb[j]; j = j[bt]; zb[j] = z[bt]; cb[j] = cc[bt]; nb[j] = light; ib[j] = -2; tg[j] = 5
     # 左上の光で3だん
