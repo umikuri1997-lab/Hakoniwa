@@ -2,7 +2,7 @@
    ゲームとはべつのページ。持ち主が「ルールを破ってもいいので、ゲーム性を保ったまま、できるだけきれいに」とたのんだ（ドット絵・彩度だけのかげ・ゲームの絵の地面は使わない）。
    - 画面：スマホの細かさのまま（2倍まで）なめらかに描く。遠近のあるカメラ（せまい画角）。奥・手前ほど地面が下へまがる（丸い地面 CURVE）。
    - 光：空と地面の色の光（HemisphereLight）・太陽のやわらかいかげ（PCF）・トゥーンのかげ（さかいめをぼかす TOON）・ふちの光（RIM）。
-   - しあげ：画面の上と下を少しぼかす（ミニチュア TILT）・明るい所のにじみ（BLOOM）・あたたかい色（GRADE）・四すみを少し暗く。
+   - しあげ（HD-2D。持ち主がたのんだ）：奥行きでぼかす（ピントはカメラの見るまん中。手前と奥ほどぼける DOF）・明るい所の強いにじみ（BLOOM）・光の筋・あたたかい色（GRADE）・四すみを暗く。
    - 地面：草・あれ地・土の道・がけ・池を、その場で作る色（ノイズ）で描く。地形のマスの絵（マスク）をなめらかに読んで、さかいめを自然に。
    - 植物は持ち主のモデル（make_plants.py）、岩・小物はトリポのモデル（make_uv.py で UV 展開）。材質の絵（make_textures.py）は明るさのむらとしてうすくのせる。
    - マスの大きさ・段差・置き場所・歩ける所は、前の試作と同じ（ゲーム性）。
@@ -44,11 +44,11 @@ const FALLING={n:22,size:.18};                       // 舞う葉：数・大き
 const BLOB={k:.42};
 const PATHDIP=.12;                                   // 道を草地より下げる高さ（マス）
 const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#6cbf4f','#b0e37a']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
-const RAYS={k:.16,col:[1,.9,.66]};                   // 光の筋
+const RAYS={k:.22,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
-const TILT={top:.3,bot:.82,amt:.9};    // ぼかす所：画面の上からこの割合まで・この割合から下（ぼかしの強さ）
-const BLOOM={th:.68,k:.6,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
-const GRADE={warm:[1.02,1.0,.97],sat:1.15,vig:.2,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
+const DOF={near:.2,far:.28,amt:.9};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
+const BLOOM={th:.6,k:.85,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
+const GRADE={warm:[1.03,1.0,.95],sat:1.15,vig:.32,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
 const COLS={grassA:'#7fca57',grassB:'#5daf48',grassC:'#9dd86a',dry:'#a9c96a',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
 const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
@@ -447,9 +447,11 @@ const pass=(fs,uniforms)=>{const m=new THREE.ShaderMaterial({uniforms,vertexShad
 const blur=pass(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;
   void main(){vec4 c=texture2D(t,vUv)*.227;c+=(texture2D(t,vUv+d*1.385)+texture2D(t,vUv-d*1.385))*.316;c+=(texture2D(t,vUv+d*3.23)+texture2D(t,vUv-d*3.23))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
 const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;varying vec2 vUv;${NOISE}
+  uniform sampler2D dz;uniform float cn,cf,focus;
   void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);U=(floor(U*res)+.5)/res;   // ドットにそろえる
     vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;
-    float tl=max(smoothstep(${TILT.top.toFixed(2)},0.,1.-U.y),smoothstep(${TILT.bot.toFixed(2)},1.,1.-U.y))*${TILT.amt.toFixed(2)};
+    float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;                  // 奥行き（カメラからのきょり）とピントの所との差
+    float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};
     c=mix(c,bl,tl);                                                                  // ミニチュアのぼかし（上と下）
     c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)}*vec3(${BLOOM.col.join(',')});  // あたたかい色のにじみ
     {vec2 dir=normalize(vec2(.55,-1.));float u=dot(U-vec2(0.,1.),vec2(-dir.y,dir.x));float along=dot(U-vec2(0.,1.),dir); // 左上から、光の筋
@@ -457,7 +459,7 @@ const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;
     c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),max(c,0.),${GRADE.sat.toFixed(2)}); // あたたかい色・あざやかに
     c*=${GRADE.exp.toFixed(2)};c=clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.);   // ACES のトーンカーブ（明るい所をやわらかく、こさを出す）
     vec2 q=U-.5;c*=1.-${GRADE.vig.toFixed(2)}*smoothstep(.35,.75,length(q));        // 四すみ
-    gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime,res:{value:new THREE.Vector2(1,1)},crop:{value:new THREE.Vector2(1,1)}});
+    gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime,res:{value:new THREE.Vector2(1,1)},crop:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40}});
 function resize(){
   renderer.setSize(innerWidth,innerHeight,false);const sz=renderer.getDrawingBufferSize(new THREE.Vector2());
   cam.aspect=innerWidth/innerHeight;placeCam();
@@ -465,7 +467,8 @@ function resize(){
   for(const r of [rtMain,rtA,rtB])if(r)r.dispose();
   // ドット絵：1ドット＝画面の点「大きさ」こぶんの、小さい画面に描く（なめらかにしない）
   const LW=Math.ceil(W0/OPT.zoom),LH=Math.ceil(H0/OPT.zoom);
-  rtMain=new THREE.WebGLRenderTarget(LW,LH,{type:THREE.HalfFloatType,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+  rtMain=new THREE.WebGLRenderTarget(LW,LH,{type:THREE.HalfFloatType,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});rtMain.depthTexture=new THREE.DepthTexture(LW,LH);
+  fin.m.uniforms.dz.value=rtMain.depthTexture;
   fin.m.uniforms.res.value.set(LW,LH);fin.m.uniforms.crop.value.set(W0/(LW*OPT.zoom),H0/(LH*OPT.zoom));
   const q=[Math.max(1,LW>>2),Math.max(1,LH>>2)];
   rtA=new THREE.WebGLRenderTarget(...q,{type:THREE.HalfFloatType});rtB=new THREE.WebGLRenderTarget(...q,{type:THREE.HalfFloatType});
@@ -474,6 +477,7 @@ function resize(){
 function placeCam(){
   const vw=viewW(),dist=vw/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*cam.aspect);
   cam.fov=FOV;cam.position.copy(target).addScaledVector(CAMDIR,dist);cam.lookAt(target);cam.updateProjectionMatrix();
+  Object.assign(fin.m.uniforms,{cn:{value:cam.near},cf:{value:cam.far},focus:{value:dist}});
   uCurve.value.set(target.x,target.z,CURVE,0);scene.fog.near=dist+FOG[0];scene.fog.far=dist+FOG[1];
 }
 
