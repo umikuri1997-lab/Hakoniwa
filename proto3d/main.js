@@ -177,13 +177,15 @@ async function loadGround(){
 
 // ---- モデル ----
 const gltf=new GLTFLoader(),fbx=new FBXLoader();
-// くらい色・色むらをへらし、あざやかに（blueprint.model_tris と同じ考え）
+// トリポのモデルの色：くらい色・色むらをへらし、あざやかに（tools/art/blueprint.py の model_tris と同じ式。sRGB の HSV で、
+// 明るさ V はならした明るさ vm との差を0.4倍にして .6〜1 に、あざやかさ S は ×1.12+.04）
 function cleanColors(geo){
-  const a=geo.getAttribute('color');if(!a)return;const c=new THREE.Color(),hsl={};let lsum=0;
-  for(let i=0;i<a.count;i++){c.fromBufferAttribute(a,i);c.getHSL(hsl);lsum+=hsl.l}
-  const lm=lsum/a.count;
-  for(let i=0;i<a.count;i++){c.fromBufferAttribute(a,i);c.getHSL(hsl);
-    const l=Math.max(.38,hsl.l*.5+lm*.5),s=Math.min(1,hsl.s*1.15+.05);c.setHSL(hsl.h,s,l);a.setXYZ(i,c.r,c.g,c.b)}
+  const a=geo.getAttribute('color');if(!a)return;const c=new THREE.Color(),H=[];let vm=0;
+  for(let i=0;i<a.count;i++){c.fromBufferAttribute(a,i).convertLinearToSRGB();const mx=Math.max(c.r,c.g,c.b),mn=Math.min(c.r,c.g,c.b),d=mx-mn;
+    let h=0;if(d>0)h=mx===c.r?((c.g-c.b)/d+6)%6:mx===c.g?(c.b-c.r)/d+2:(c.r-c.g)/d+4;H.push([h/6,mx>0?d/mx:0,mx]);vm+=mx}
+  vm/=a.count;
+  for(let i=0;i<a.count;i++){let [h,s,v]=H[i];v=Math.min(1,Math.max(.6,vm+(v-vm)*.4));s=Math.min(1,Math.max(0,s*1.12+.04));
+    const k=n=>{const t=(n+h*6)%6;return v-v*s*Math.max(0,Math.min(t,4-t,1))};c.setRGB(k(5),k(3),k(1)).convertSRGBToLinear();a.setXYZ(i,c.r,c.g,c.b)}
   a.needsUpdate=true;
 }
 // だんのさかい：見える面（カメラを向いた面。面積×向きの重み。置くときにまわすので、8つの向きをまぜる）の、太陽との内積の順で CUTQ の所
