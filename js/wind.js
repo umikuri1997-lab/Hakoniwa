@@ -155,7 +155,7 @@ function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c
 
 function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白いつぶ */if(i==null)return;const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}
 
-/* 遊具の絵（コードの仮のドット絵。メリーゴーラウンド・コーヒーカップは3Dのチップだけ）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
+/* 遊具の絵（コードの仮のドット絵。観覧車いがいは3Dのチップだけ）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
 function rideFrame(id,i,now){/* 遊具の絵のコマ（16コマでひとまわり。チップの pf がまわる速さの倍） */const ch=window.CHIPS&&CHIPS[id];if(!ch||!ch.pf||i==null)return 0;const a=rideAng(i,now||0)*ch.pf/6.2832*16;return((Math.round(a)%16)+16)%16}
 function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。ないときはコードの仮の絵 */const C=window.CHIPS;
   if(C){if(brk){const ch=C[id+'b'];if(ch&&drawChip(c,ch,id+'b',x0,y0,now,i))return}else if(i==null||ICON){const ch=C[id];if(ch&&drawChip(c,ch,id,x0,y0,now,i))return}else{const st=C[id+':s'],mv=C[id+':m'+rideFrame(id,i,now)];if(st&&mv&&drawChip(c,st,id,x0,y0,now,i)){drawChip(c,mv,id,x0,y0,now,i);return}}}
@@ -168,10 +168,7 @@ function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0)
     for(let q=0;q<56;q++){const th=q*6.2832/56;R(cx+Math.cos(th)*RR-1,cy+Math.sin(th)*RR-1,2,2,P.p)}
     for(let q=0;q<4;q++){const th=A*.35+q*1.5708,gx=cx+Math.cos(th)*RR,gy=cy+Math.sin(th)*RR;R(gx-1,gy,2,4,P.w);R(gx-6,gy+4,12,9,q%2?P.a:P.m);R(gx-6,gy+4,12,2,P.b);R(gx-4,gy+7,8,3,brk?'#d8d2c6':'#eaf7fb')}
     O(cx,cy,4,4,P.w);O(cx,cy,2,2,P.b);if(brk){Ln(cx-30,40,cx-18,58,P.w,2);R(cx+14,50,10,3,P.a)}return}
-  O(32,56,30,7,'rgba(60,50,30,.2)');
-  if(id==='skyswing'){O(32,52,16,5,P.w);O(32,50,16,5,P.p);R(30,-34,4,84,P.p);R(31,-34,1,84,P.b);const sp=brk?0:5;
-    for(let q=0;q<3;q++){const th=A+q*2.0944,sx=32+Math.cos(th)*(22+sp),sy=22+Math.sin(th)*9;Ln(32+Math.cos(th)*14,-30+Math.sin(th)*4,sx,sy,P.m,1);R(sx-4,sy,9,3,P.a);R(sx-4,sy+3,9,1,P.w)}
-    O(32,-31,18,5,P.w);O(32,-33,18,5,P.a);for(let q=-16;q<16;q+=8)R(32+q,-35,4,2,P.b);R(30,-42,4,6,P.a);if(brk)Ln(44,-28,52,6,P.m,1);return}}
+  O(32,56,30,7,'rgba(60,50,30,.2)');}
 /* ---------- 観覧車の山場・雲の下（目標6・7）：観覧車のてっぺんから、雲のすきまにヌシ様のつばさが見える（wind:peek）。
    雲の海のはしでカザネたちが待つ所に、まもりの光を落とすと、雲がひらいて、つばさ・ヌシ様の顔・つばさのかげでねむる影が見え、ヌシ様が話す（windGlHit・windPartScene）。
    絵はコードで描くかりのドット絵（drawWindScene）。場面の動き・カメラは実時間、ひらく場面のあいだは村の時間を止める（SCENEHOLD） ---------- */
