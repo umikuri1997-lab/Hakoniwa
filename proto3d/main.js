@@ -5,7 +5,7 @@
    - せいれいは持ち主のモデル（tools/art/spirit3d/model/*.fbx）。色・かげ・輪郭はゲームの絵を写す道具（fbx_pixel.py）と同じ数：
      画面の向きの光で3だん、明るさはかえず彩度だけ、まわりに1ドットの輪郭（となりの色×0.72）。見おろしは25度（体を奥へたおす）。
      ゲームと同じく、せいれいだけは画面の細かい点で描く（地面と物は、ゲームの1ドットの大きさ）。
-   - 岩・小物はトリポのモデル。植物・岩・小物のかげは家具の5色のかげ（furntone.py）と同じ数。同じ物は、まとめて1回で描く（InstancedMesh）。
+   - 岩・小物はトリポのモデル。植物・岩・小物のかげは、ゲームの木・岩と同じ5色のかげ（natcommon.tone5）の数。同じ物は、まとめて1回で描く（InstancedMesh）。
    - 画面のしあげはゲームの HD-2D（js/hd2d.js）と同じ数：時間の光の色・空気の遠近・四すみの暗さ・明るい所のにじみ。 */
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -40,10 +40,11 @@ const SPCOL={
 const SPROUT='#5e8f43',HEADACC='#e8cdb0';
 const FIRE=[[255,84,48],[255,150,40],[255,226,92]]; // 火のずきん：外がわ・中・こちらを向く所
 const ELS=['earth','water','fire','wind','wood'];
-// 物のかげ（furntone.py と同じ数）：(明るさ, あざやかさ) の足し算（%）
-const TONE={deep:[0,20],shade:[0,10],base:[0,0],hi:[0,-5],hi2:[0,-10],line:[-38,10]};
-const CUTS=[-.2,.4,.88,.97];
-const LIGHT=[-.6,-.5,.8];      // 画面の向き（右・下・手前）
+// 物のかげ（tools/art/furn3d/items/natcommon.py の tone5 と同じ数）：(明るさ, あざやかさ) の足し算（%）
+const TONE={deep:[-28,8],shade:[-15,4],base:[0,0],hi:[10,-4],hi2:[19,-8],line:[-38,10]};
+const CUTS=[.3,.55,.8,.93];   // だんのさかい（太陽との内積。tone5 は明るさの順の 12・35・72・92% で分ける）
+// 太陽（natcommon.SUN：高さ30度・正面から左へ8度）。ゲームの x 東 → x・y 南 → z・上 → y
+const SUNEL=30*Math.PI/180,SUNAZ=8*Math.PI/180;
 const AMB=.5,SUN=.6;
 const OUTLINE_DEPTH=.004;      // 物の輪郭にする奥行きの差（0〜1の奥行き）
 const LOWKEEP=.25;             // 形をあらくするとき、のこす点のわりあい
@@ -90,9 +91,9 @@ sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-20,right:20,top:20,bottom:-20,near:1,far:90});
 sun.shadow.bias=-.002;scene.add(amb,sun,sun.target);
 
-// 物の光の向き（せかい）：画面の向きの光を、せかいの向きに（furntone.worldlight と同じ考え）
-const LW=(()=>{const D=CAMDIR.clone().negate(),U=new THREE.Vector3().crossVectors(RT,D).normalize();if(U.y<0)U.negate();
-  const l=new THREE.Vector3(...LIGHT).normalize();return new THREE.Vector3().addScaledVector(RT,l.x).addScaledVector(U,-l.y).addScaledVector(D,-l.z).normalize()})();
+// 物の光の向き（せかい）：太陽は、画面の正面（手前）から左へ SUNAZ・高さ SUNEL（natcommon.SUN・sunscreen と同じ考え。カメラの向きから）
+const LW=(()=>{const F=new THREE.Vector3(CAMDIR.x,0,CAMDIR.z).normalize();
+  return new THREE.Vector3().addScaledVector(RT,-Math.cos(SUNEL)*Math.sin(SUNAZ)).addScaledVector(F,Math.cos(SUNEL)*Math.cos(SUNAZ)).add(new THREE.Vector3(0,Math.sin(SUNEL),0)).normalize()})();
 const uLV={value:new THREE.Vector3()};
 
 // ---- マテリアル ----
