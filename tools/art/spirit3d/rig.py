@@ -6,6 +6,7 @@
   頭  hp（うなずく、+で下）・hr（かたむく）・hy（左右を向く）。回す中心は首 (0,0,26)
   上の物 top（左右にゆれる）・topz（上下）／しっぽ tail・風のはね wing（板の面の中で回す）
   spin（ぜんぶを、まうえから見て回す。くるくるまわる）
+  knee（ひざから下をうしろへまげる。持ち主のモデルで写すときだけ）・legbody（1 で、足も体といっしょに たおす・かたむける）・isocam（1 で、クォータービューの絵を、家具と同じ見おろしで写す。横になる絵）
   wingfold（風のはねをたたむ。根もとのまわりに下へ回す角度。持ち主のモデルで写すときだけ：fbx_motion.triangles）
   道具 prop（手前の手に持つ道具の名前）・propF（奥の手）・kN・kF（手首：道具を、にぎる所のまわりで、うでのふる向きに回す。+で道具の先が、かたから手への向きへたおれる）"""
 import math
@@ -31,7 +32,8 @@ def posed(sp, face, p):
     hx_ = getattr(sp, 'hipx', 8.0)   # また（足の回る所）。持ち主のモデルは、モデルの足のまん中
     for nm, hipx in (('M', -hx_), ('P', hx_)):
         h = np.array([hipx, 0, 11.]); R = rx(g('leg'+nm)); d = np.array([g('x'), g('y'), g('legz')+g('lift'+nm)])
-        out['leg'+nm] = ((sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h+d, 'creamf' if face == 1 and nm == 'P' else 'cream', 'c')   # 横向きの奥の足（+x）は1段暗い色
+        Lp = (sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h
+        out['leg'+nm] = (body(Lp) if g('legbody') else Lp+d, 'creamf' if face == 1 and nm == 'P' else 'cream', 'c')   # 横向きの奥の足（+x）は1段暗い色
     anchors = {}
     for near, k in ((True, 'N'), (False, 'F')):
         f, _ = arm_xf(face, near, g('s'+k), g('b'+k), g('t'+k)); A, Hn = sp.arm[face]
@@ -95,6 +97,11 @@ def darker(c, k=0.72): return tuple(int(v*k) for v in c)
 def shoot(sp, face, p):
     """ポーズ p の絵（EXT の大きさ、RGBA）と、場所（目のずれ・手・道具の先。チップのドット、足もとが原点）"""
     parts, anc = posed(sp, face, p); V = view(face, p.get('spin', 0.0))
+    import core as _core
+    if p.get('isocam') and _core.ISOY:   # 横になる絵：家具と同じ見おろし（fbx_pixel.ISOCAM と同じ角度・たての倍）
+        _ih = 72/(128/math.sqrt(2)); _el = math.atan(0.75/_ih); _vs = 0.75/math.sin(_el); _ce, _se = math.cos(_el), math.sin(_el); V0 = V
+        def V(P):
+            x, y, t = V0(P); return x, -((-y)*_ce-t*_se)*_vs, t*_ce+(-y)*_se
     names = list(parts); Wd, Hd = (EXT[1]-EXT[0])*SSN, (EXT[3]-EXT[2])*SSN
     zb = np.full(Wd*Hd, -1e9); idb = np.full(Wd*Hd, -1); cb = np.zeros((Wd*Hd, 3), np.uint8); gz = np.full(Wd*Hd, -1e9)
     # 重なりは、本当の奥行き（手前の点が勝つ）。ただし、同じ部品のまとまりの中だけで、少しの差をつける：

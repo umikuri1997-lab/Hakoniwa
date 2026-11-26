@@ -28,9 +28,9 @@ function workAnim(r){const a=r.act;if(!a)return'';
   if(a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))){const h=boxReach(a);if(h&&typeof SPM!=='undefined'&&SPM[h])return h}/* 箱の高さに合わせて、とる・しまう */
   return a.type}
 /* その行動で使う動きの絵の名前（歩いてむかうあいだに先に読む：draw-spirits.js の spmWarm） */
-const ANIMSET={fish:['fishcast','fish','fishpull','raise'],sleep:['bed','doze','sleepcurl'],rest:['sit']};
+const ANIMSET={fish:['fishcast','fish','fishpull','raise'],sleep:['bed','doze','sleepcurl'],rest:['sit'],watchpost:['bowidle','bow','climb']};
 function workAnims(r){const a=r.act;if(!a)return null;if(ANIMSET[a.type])return ANIMSET[a.type];
-  if(a.type==='eat')return['sit',eatAnim(r)];
+  if(a.type==='eat')return['sit',eatAnim(r),'sit_'+eatAnim(r)];
   if(a.type==='cook')return a.obj!=null&&r.cing?['cookprep','raise',cookWorkAnim(r)]:['cookprep','raise'];
   if(a.type==='craft'){const o=craftOrder(r);return o&&o.cs!=null&&S.obj[o.cs]==='wbench'?['wbprep','wbsaw','wbham','wbpolish','raise']:['craftprep','saw','craft','polish','raise']}
   return[workAnim(r)]}
