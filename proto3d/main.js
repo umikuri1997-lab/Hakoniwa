@@ -55,8 +55,10 @@ const FALLING={n:22,size:.18};                       // 舞う葉：数・大き
 const BLOB={k:.42};
 const PATHDIP=.12;                                   // 道を草地より下げる高さ（マス）
 const GBUMP={amp:.09,scale:.55,f:1.3,k:.12,t:.001};  // 地面のこぼこ：もりあがりの高さ（マス）・細かさ（形）／面の向きだけのこまかいこぼこ：細かさ・強さ・草の絵から作る強さ
-const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#5e9c48','#93c466']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
+const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,fieldPer:46,fieldH:.62,col:['#5e9c48','#93c466']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
+const PEBBLE={per:1.6,r:[.04,.11],col:['#a99c88','#c9bfae']};   /* 荒れた土地の小石：1マスあたりの数・大きさ（マス）・色 */
+const CRACK={scale:1.5,w:.07,k:.3};                              /* 荒れた土地のひび：細かさ・線のはば・こさ */
 // ---- しあげ ----
 const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
 const SSAO={r:.6,k:1.7,bias:.012,max:1.6};  /* すみのやわらかいかげ（空の光がとどきにくい所）：しらべる半径（マス）・こさ・平らな面を暗くしないためのあそび・これより奥行きがはなれた物は数えない（マス） */
@@ -223,6 +225,7 @@ const maskTex=(()=>{const W=MN*MASKR,d=new Uint8Array(W*W*4);
 const NOISE=`
 float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
+float vor(vec2 p){vec2 i=floor(p),f=fract(p);float a=8.,b=8.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));float d=length(g+vec2(hs(i+g),hs(i+g+17.3))-f);if(d<a){b=a;a=d;}else if(d<b)b=d;}return b-a;}   /* ひびのもよう：いちばん近い点と2ばんめの点の差（0がさかいめ） */
 float fbm(vec2 p){return .5*vn(p)+.25*vn(p*2.03+7.)+.125*vn(p*4.01+3.)+.0625*vn(p*8.07+11.);}
 vec3 lin(vec3 c){return pow(c,vec3(2.2));}
 vec3 pxHsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
@@ -250,6 +253,7 @@ function groundMat(){
    float tuft=step(.82,hs(floor(p*5.)))*smoothstep(.35,.0,length(fract(p*5.)-.5));g=mix(g,g*1.12+vec3(.02,.03,0.),tuft); // 小さな草のかたまり
    vec3 dry=mix(${C3(COLS.dry)},${C3(COLS.dry)}*.92,n2);
    {vec3 dt=texture2D(uG[1],p/${GTEX.dirt.span}+.37).rgb;dry=pow(lin(dry)*mix(1.,dot(dt,vec3(.3,.59,.11))/${GTEX.dirt.lum},.7),vec3(1./2.2));}  // 荒れた土地：土の絵の明るさのむら
+   dry*=1.-${CRACK.k}*smoothstep(${CRACK.w},0.,vor(p*${CRACK.scale}+vec2(n1,n2)*.6))*smoothstep(.4,.62,fbm(p*.22+3.));   /* かわいた土のひび（所どころ） */
    g=mix(g,dry,smoothstep(.45,.6,mk.b+(n1-.5)*.3));
    vec3 pth=mix(${C3(COLS.pathB)},${C3(COLS.path)},smoothstep(.2,.8,n2))*(.95+.08*n3);
    {vec3 dt=texture2D(uG[1],p/${GTEX.dirt.span}).rgb;pth=pow(mix(lin(pth)*dot(dt,vec3(.3,.59,.11))/${GTEX.dirt.lum},dt*1.05,.55),vec3(1./2.2));}  // 土の絵
@@ -318,11 +322,23 @@ function buildBlades(){
     if(isW(x,z)||!GRASS[z][x])continue;const y=yTop(x,z);  // とげとげの草は、よみがえった草地だけ
     if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,groundH(px,pz),pz,(rnd()-.5)*.5,rnd()*6.28)}
     for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){if(yTop(x+dx,z+dz)>=y-1e-4)continue;
+    if(!FLAT.has(x+','+z))for(let k=0;k<BLADES.fieldPer;k++){const px=x+rnd(),pz=z+rnd();if(pmAt(px,pz)<.01){add(px,groundH(px,pz),pz,(rnd()-.5)*.6,rnd()*6.28);L[L.length-1].elements[5]*=BLADES.fieldH;L[L.length-1].elements[4]*=BLADES.fieldH;L[L.length-1].elements[6]*=BLADES.fieldH}}   /* 草地ぜんたいの短い草 */
       for(let k=0;k<BLADES.edgePer;k++){const t=rnd(),ex=dx?x+(dx>0?1:0)-dx*.03:x+t,ez=dz?z+(dz>0?1:0)-dz*.03:z+t;add(ex,y,ez,.7+rnd()*.5,Math.atan2(dz,dx))}}
   }
   const m=toon({vertexColors:true,color:BLADES.col[1]},{wind:true});const im=new THREE.InstancedMesh(g,m,L.length);
   const c=new THREE.Color();L.forEach((mm,i)=>{im.setMatrixAt(i,mm);c.set(BLADES.col[0]).lerp(new THREE.Color(BLADES.col[1]),rnd());im.setColorAt(i,c)});
   im.receiveShadow=true;im.frustumCulled=false;scene.add(im);
+}
+// 荒れた土地の小石：ひくい多面体を、荒れた土地にばらまく（石の絵をのせる）
+function buildPebbles(){
+  const g=new THREE.IcosahedronGeometry(1,1);g.scale(1,.55,1);const n=g.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(v),1);
+  g.setAttribute('_mat',mk(MATIDX.stone));g.setAttribute('_under',mk(0));
+  const L=[],M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler();seed=131;
+  for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){if(isW(x,z)||GRASS[z][x]||KIND[z][x]!=='g'||FLAT.has(x+','+z))continue;
+    for(let k=0;k<3;k++){if(rnd()>PEBBLE.per/3)continue;const px=x+.08+rnd()*.84,pz=z+.08+rnd()*.84,r=PEBBLE.r[0]+rnd()*rnd()*(PEBBLE.r[1]-PEBBLE.r[0]);
+      E.set((rnd()-.5)*.5,rnd()*6.28,(rnd()-.5)*.5);Q.setFromEuler(E);L.push(M.compose(new THREE.Vector3(px,groundH(px,pz)+r*.2,pz),Q,new THREE.Vector3(r*(.8+rnd()*.5),r,r*(.8+rnd()*.5))).clone())}}
+  const im=new THREE.InstancedMesh(g,toon({color:0xffffff},{mat:true,uvk:3,span:1}),L.length),c=new THREE.Color();
+  L.forEach((m,i)=>{im.setMatrixAt(i,m);c.set(PEBBLE.col[0]).lerp(new THREE.Color(PEBBLE.col[1]),rnd());im.setColorAt(i,c)});im.receiveShadow=true;im.frustumCulled=false;scene.add(im);
 }
 // ---- 空 ----
 // 空：上はこい青・地平はうすい青のグラデーションに、ゆっくり流れる白い雲（その場で作る）。丸い地面はかけない。
@@ -613,7 +629,7 @@ async function loadGroundTex(){
 }
 async function main(){
   await loadMats();await loadGroundTex();
-  buildGround();buildBlades();buildSky();buildLeaves();
+  buildGround();buildBlades();buildPebbles();buildSky();buildLeaves();
   await Promise.all([...PROPS.map(loadProp),...ELS.map(loadSpirit),loadMapObjs()]);
   sun.castShadow=OPT.shadow;blocked=placeMap();makeSpirits(OPT.spirits);
   resize();addEventListener('resize',resize);buildUI();gpu=gpuName();
