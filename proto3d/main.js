@@ -17,9 +17,10 @@ const SPDIR='../tools/art/spirit3d/model/';
 // 見え方（js/iso.js と同じ）
 const IQW=64,IQH=48,IQL=36;
 const PPU=IQW/Math.SQRT2;                       // 1マスの1辺のドット数
-const PITCH=Math.asin(IQH/IQW);                 // 見おろす角度（ラジアン）
+const GPITCH=Math.asin(IQH/IQW);                // ゲームの見おろす角度（ひし形のたて:よこ 48:64。段の高さと地面の絵の写し方に使う）
+const PITCH=35*Math.PI/180;                     // 試作のカメラの見おろす角度（持ち主がえらんだ）
 const YAW=Math.PI/4;                            // マスの x が右下・y（z）が左下
-const HSTEP=IQL/(PPU*Math.cos(PITCH));          // 段差1つの高さ（マス）
+const HSTEP=IQL/(PPU*Math.cos(GPITCH));         // 段差1つの高さ（マス）：ゲームの画面で36ドットになる高さ
 const RT=new THREE.Vector3(Math.cos(YAW),0,-Math.sin(YAW));                     // 画面の右
 const CAMDIR=new THREE.Vector3(Math.sin(YAW)*Math.cos(PITCH),Math.sin(PITCH),Math.cos(YAW)*Math.cos(PITCH)); // カメラのほう
 const BORDER=14;        // 地形のまわりに足す、平らなあれ地（マス）
@@ -30,7 +31,10 @@ const WALK=1.2;         // 歩く速さ（マス/秒）
 const SPLIGHT=[-.5,.6,.62];                     // 光（画面の右・上・手前）
 const SPCUT=[.35,-.1];                          // かげのだんのさかい（光との内積）
 const SPSAT={head:[.10,.20,.03,.06],body:[.06,.12,.02,.04]}; // 彩度の足し算：かげ・こいかげ・白っぽい色のおまけ（かげ・こいかげ）
-const SPLINE=.72;       // 輪郭：となりの色×0.72
+const SPLINE=.72;       // 輪郭・部品のさかいの線：となりの色×0.72
+// 部品のしるし（細かい画面のアルファ）：体・頭・ずきん・かざり。目・ほっぺ（1）はさかいの線をつけない。さかいの線は、奥の部品のがわに引く
+const SPID={body:.6,head:.7,hood:.8,acc:.9,decal:1};
+const SPDEPTH=.001;     // 同じ部品の中でも、奥行きがこれよりはなれていれば線（うで・足と体のさかい）
 const SPSHADOW={r:.31,k:.33};                   // 足もとのかげ：半径（マス）・たて/よこ
 const CREAM='#fdf8ef';
 const SPCOL={
@@ -150,7 +154,7 @@ function makeShadeMap(){
 const uLowD={value:null},uHiRes={value:new THREE.Vector2(1,1)};
 const depthCut=sh=>{sh.uniforms.uLowD=uLowD;sh.uniforms.uHiRes=uHiRes;
   sh.fragmentShader='uniform sampler2D uLowD;uniform vec2 uHiRes;\n'+sh.fragmentShader.replace('void main() {','void main() {\nif(gl_FragCoord.z>texture2D(uLowD,gl_FragCoord.xy/uHiRes).x+.0015)discard;')};
-function spMat(color,part,mode){ // part：head・body（かげのゆるさ）。mode：''・'water'（つやの点）・'fire'（光る色）
+function spMat(color,part,mode,id){ // part：head・body（かげのゆるさ）。mode：''・'water'（つやの点）・'fire'（光る色）。id：部品のしるし（SPID）
   const m=new THREE.MeshLambertMaterial({color}),A=SPSAT[part],L=new THREE.Vector3(...SPLIGHT).normalize(),HV=L.clone().add(new THREE.Vector3(0,0,1)).normalize();
   const v3=v=>v.toArray().map(x=>x.toFixed(5)).join(',');
   m.onBeforeCompile=sh=>{depthCut(sh);
@@ -161,11 +165,11 @@ function spMat(color,part,mode){ // part：head・body（かげのゆるさ）�
   h.y=min(1.,h.y);vec3 c=tnHsv2rgb(h);
   ${mode==='water'?`if(dot(n,vec3(${v3(HV)}))>.996)c=vec3(1.);`:''}
   ${mode==='fire'?`{float t=clamp(n.z,0.,1.);vec3 e=vec3(${f3(FIRE[0])}),m=vec3(${f3(FIRE[1])}),k=vec3(${f3(FIRE[2])});c=t<.55?mix(e,m,t/.55):mix(m,k,(t-.55)/.45);}`:''}
-  gl_FragColor=vec4(pow(c,vec3(2.2)),1.);
+  gl_FragColor=vec4(pow(c,vec3(2.2)),${id.toFixed(2)});
 }`)};
-  m.customProgramCacheKey=()=>'sp'+part+mode;return m;
+  m.customProgramCacheKey=()=>'sp'+part+mode+id;return m;
 }
-function spFlat(color){const m=new THREE.MeshBasicMaterial({color});m.onBeforeCompile=depthCut;m.customProgramCacheKey=()=>'spflat';return m}
+function spFlat(color){const m=new THREE.MeshBasicMaterial({color});m.onBeforeCompile=depthCut;m.customProgramCacheKey=()=>'spflat';return m} // 目・ほっぺ（しるし1）
 // ブレンドしても、アルファの印をかえない（かげの絵）
 const keepAlpha={blending:THREE.CustomBlending,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendSrcAlpha:THREE.ZeroFactor,blendDstAlpha:THREE.OneFactor,transparent:true,depthWrite:false};
 
@@ -233,10 +237,10 @@ async function loadSpirit(el){
   g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();o.frustumCulled=false;
     if(n.startsWith('eye'))o.material=spFlat(c.eye);
     else if(n.startsWith('cheek'))o.material=spFlat(c.cheek);
-    else if(n.startsWith('hood')||n.startsWith('hane'))o.material=spMat(c.hood,'head',el==='water'?'water':el==='fire'?'fire':'');
-    else if(n.startsWith('sprout'))o.material=spMat(SPROUT,'head','');
-    else if(n.startsWith('headacc'))o.material=spMat(HEADACC,'head','');
-    else o.material=spMat(CREAM,n==='body'?'body':'head','');
+    else if(n.startsWith('hood')||n.startsWith('hane'))o.material=spMat(c.hood,'head',el==='water'?'water':el==='fire'?'fire':'',SPID.hood);
+    else if(n.startsWith('sprout'))o.material=spMat(SPROUT,'head','',SPID.acc);
+    else if(n.startsWith('headacc'))o.material=spMat(HEADACC,'head','',SPID.acc);
+    else o.material=spMat(CREAM,n==='body'?'body':'head','',n==='body'?SPID.body:SPID.head);
   });
   SPMODELS[el]=g;
 }
@@ -326,14 +330,18 @@ const VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.
 const pass=(fs,uniforms)=>{const m=new THREE.ShaderMaterial({uniforms,vertexShader:VS,fragmentShader:fs,depthTest:false,depthWrite:false});const s=new THREE.Scene();s.add(new THREE.Mesh(quadGeo,m));return {m,s}};
 // かさねる：物の輪郭（中がわ・furntone の OLK）、せいれいと輪郭（外がわ・×0.72）、時間の光（soft-light）・空気の遠近・四すみ
 const comp=pass(GLSL_HSV+GLSL_PX+`
-  uniform sampler2D tLow,tLowD,tHi;uniform vec2 lp,hp;uniform vec4 tint;varying vec2 vUv;
+  uniform sampler2D tLow,tLowD,tHi,tHiD;uniform vec2 lp,hp;uniform vec4 tint;varying vec2 vUv;
   float sl(float b,float s){return s<=.5?b-(1.-2.*s)*b*(1.-b):b+(2.*s-1.)*((b<=.25?((16.*b-12.)*b+4.)*b:sqrt(b))-b);}
   void main(){
     vec2 uv=(floor(vUv/lp)+.5)*lp;vec4 c=sRGBTransferOETF(texture2D(tLow,uv));float d=texture2D(tLowD,uv).x;
     float n=max(max(texture2D(tLowD,uv+vec2(lp.x,0.)).x,texture2D(tLowD,uv-vec2(lp.x,0.)).x),max(texture2D(tLowD,uv+vec2(0.,lp.y)).x,texture2D(tLowD,uv-vec2(0.,lp.y)).x));
     if(abs(c.a-${TAG.prop.toFixed(2)})<.1 && n-d>${OUTLINE_DEPTH})c.rgb=pxShade(c.rgb,-.5); // ふちどりは、いちばん暗い所の色（記事）
     vec4 s=texture2D(tHi,vUv);
-    if(s.a>.5)c.rgb=sRGBTransferOETF(s).rgb;
+    if(s.a>.5){c.rgb=sRGBTransferOETF(s).rgb;
+      if(s.a<.95){float d0=texture2D(tHiD,vUv).x;bool ln=false; // 部品のさかいの線：となりがちがう部品で手前か、同じ部品でも、ずっと手前
+        for(int i=0;i<4;i++){vec2 o=i==0?vec2(hp.x,0.):i==1?vec2(-hp.x,0.):i==2?vec2(0.,hp.y):vec2(0.,-hp.y);vec4 q=texture2D(tHi,vUv+o);float d1=texture2D(tHiD,vUv+o).x;
+          if(q.a>.5&&q.a<.95&&d1<d0&&(abs(q.a-s.a)>.05||d0-d1>${SPDEPTH}))ln=true;}
+        if(ln)c.rgb*=${SPLINE};}}
     else{vec4 a=texture2D(tHi,vUv+vec2(0.,hp.y));if(a.a<.5)a=texture2D(tHi,vUv-vec2(0.,hp.y));if(a.a<.5)a=texture2D(tHi,vUv+vec2(hp.x,0.));if(a.a<.5)a=texture2D(tHi,vUv-vec2(hp.x,0.));
       if(a.a>.5)c.rgb=sRGBTransferOETF(a).rgb*${SPLINE};}
     c.rgb=mix(c.rgb,vec3(sl(c.r,tint.r),sl(c.g,tint.g),sl(c.b,tint.b)),tint.a);
@@ -341,7 +349,7 @@ const comp=pass(GLSL_HSV+GLSL_PX+`
     vec2 q=(vUv-.5)/hp;float r=length(q)/(.5*length(1./hp));
     c.rgb=mix(c.rgb,vec3(${f3(HD.vigCol)}),${HD.vig}*clamp((r-${HD.vigR[0]})/(${HD.vigR[1]}-${HD.vigR[0]}),0.,1.));
     gl_FragColor=vec4(c.rgb,1.);
-  }`,{tLow:{value:null},tLowD:{value:null},tHi:{value:null},lp:{value:new THREE.Vector2()},hp:{value:new THREE.Vector2()},tint:{value:new THREE.Vector4(1,1,1,0)}});
+  }`,{tLow:{value:null},tLowD:{value:null},tHi:{value:null},tHiD:{value:null},lp:{value:new THREE.Vector2()},hp:{value:new THREE.Vector2()},tint:{value:new THREE.Vector4(1,1,1,0)}});
 const copy=pass('uniform sampler2D t;varying vec2 vUv;void main(){gl_FragColor=texture2D(t,vUv);}',{t:{value:null}});
 // 出す：にじみ（小さくした絵を3回かけ算して、明るい所だけを screen でかさねる）
 const fin=pass(`uniform sampler2D t,g;uniform vec2 crop;varying vec2 vUv;
@@ -360,7 +368,7 @@ function resize(){
   rtA=mkRT(Math.max(1,Math.round(hiW/HD.a)),Math.max(1,Math.round(hiH/HD.a)),THREE.LinearFilter,false);
   rtB=mkRT(Math.max(1,Math.round(hiW/HD.b)),Math.max(1,Math.round(hiH/HD.b)),THREE.LinearFilter,false);
   uLowD.value=rtLow.depthTexture;uHiRes.value.set(hiW,hiH);
-  comp.m.uniforms.tLow.value=rtLow.texture;comp.m.uniforms.tLowD.value=rtLow.depthTexture;comp.m.uniforms.tHi.value=rtHi.texture;
+  comp.m.uniforms.tLow.value=rtLow.texture;comp.m.uniforms.tLowD.value=rtLow.depthTexture;comp.m.uniforms.tHi.value=rtHi.texture;comp.m.uniforms.tHiD.value=rtHi.depthTexture;
   comp.m.uniforms.lp.value.set(1/lowW,1/lowH);comp.m.uniforms.hp.value.set(1/hiW,1/hiH);
   fin.m.uniforms.t.value=rtComp.texture;fin.m.uniforms.g.value=rtB.texture;fin.m.uniforms.crop.value.set(devW/hiW,devH/hiH);
   placeCam();
