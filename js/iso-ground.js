@@ -122,12 +122,13 @@ function igWaterPat(){if(IG.pt)return IG.pt;const im=chipImgs(window.CHIPS['tex:
   for(let v=0;v<h;v++)for(let u=0;u<w;u++){const wx=Math.floor(((u+.5)/IQA+(v+.5)/IQB)/2),wy=Math.floor(((v+.5)/IQB-(u+.5)/IQA)/2),ti=((((wy%T.h)+T.h)%T.h)*T.w+(((wx%T.w)+T.w)%T.w))*4,o=(v*w+u)*4;id.data[o]=T.d[ti];id.data[o+1]=T.d[ti+1];id.data[o+2]=T.d[ti+2];id.data[o+3]=255}
   g.putImageData(id,0,0);return IG.pt={c,w,h}}
 /* 水面：水の模様を、1秒に よこ4・たて2ドット（せかいの向き）流す */
-function igShimmer(k,O,c0,r0,c1,r1,now){const P=igWaterPat(),t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128,dx=Math.round((sx-sy)*IQA),dy=Math.round((sx+sy)*IQB),dc=dcLayer('w'),lod=k<1.2,key=dx+','+dy+','+dc;
+function igShimmer(k,O,c0,r0,c1,r1,now){const P=igWaterPat(),t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128,dx=Math.round((sx-sy)*IQA),dy=Math.round((sx+sy)*IQB),dc=dcLayer('w'),lod=k<1.2,ik=iceKey(),key=dx+','+dy+','+dc+','+ik;/* ik：池の氷（snow.js） */
   for(let cy=r0;cy<=r1;cy++)for(let cx=c0;cx<=c1;cx++){const q=IG.c.get(cy*64+cx);if(!q||!q.w)continue;
     if(lod&&q.ws&&q.wk===key){const x=igX(q)+q.wx,y=igY(q)+q.wy,a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(q.ws,a,b,Math.round(O[0]+k*(x+q.w.width))-a,Math.round(O[1]+k*(y+q.w.height))-b);continue}/* ちぢめたときは、流れが1ドットうごくまで、作った絵を使いまわす（IGWLOD） */
     const T=lod?(q.ws||(q.ws=document.createElement('canvas'))):IG.tmp||(IG.tmp=document.createElement('canvas'));if(lod){if(T.width!==q.w.width||T.height!==q.w.height){T.width=q.w.width;T.height=q.w.height}q.wk=key}else if(T.width<q.w.width||T.height<q.w.height){T.width=Math.max(T.width,q.w.width);T.height=Math.max(T.height,q.w.height)}
     const g=T.getContext('2d'),x=igX(q)+q.wx,y=igY(q)+q.wy,ww=q.w.width,hh=q.w.height;g.globalCompositeOperation='copy';g.drawImage(q.w,0,0);g.globalCompositeOperation='source-in';
     const ox=((x-dx)%P.w+P.w)%P.w,oy=((y-dy)%P.h+P.h)%P.h;for(let b=-oy;b<hh;b+=P.h)for(let a=-ox;a<ww;a+=P.w)g.drawImage(P.c,a,b);
+    if(ik){const I=iceRegion(q,P,ik);if(I){g.globalCompositeOperation='source-atop';g.drawImage(I,0,0)}}/* こおった池：止めた水の模様から作った氷を、水面の形の中に */
     if(dc){g.globalCompositeOperation='multiply';g.fillStyle=dc;g.fillRect(0,0,ww,hh);g.globalCompositeOperation='destination-in';g.drawImage(q.w,0,0)}/* 夜の水の色（daycolor.js） */
     g.globalCompositeOperation='source-over';const a=Math.round(O[0]+k*x),b=Math.round(O[1]+k*y);ctx.drawImage(T,0,0,ww,hh,a,b,Math.round(O[0]+k*(x+ww))-a,Math.round(O[1]+k*(y+hh))-b)}}
 /* 1マスの地面を、画面の (ix,iy)（そのマスのひし形の上のかど、ゲームの点）に描く（高い段の上の面）。c は画面の向き（ゲームの点）で描く */
