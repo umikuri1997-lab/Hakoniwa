@@ -38,7 +38,9 @@ const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：か�
 // ドット絵シェーダー（持ち主が送った記事「実践ドット絵シェーダー」mizuooon.hatenablog.jp のやり方）：
 // 光の量（光の色をのせた明るさ ÷ もとの色の明るさ）を lo〜hi で0〜1にし、PXLV だんにへらす。だん−0.5 を d として、
 // 明るさ ×(1+d×PXV)・暗い所は色を青へ（PXHUE）・明るい所はあざやかさを下げる（PXSAT）。ふちどりは、いちばん暗い所の色
-const PX={lo:.3,hi:1.4,lv:4,v:.45,hue:.28,sat:.3,gain:1.05,edge:.035};  // edge：ふちどりにする奥行きの差（カメラからのきょりに対する割合）
+const PX={lv:4,vUp:.28,vDn:.85,hue:.28,sat:.15,gain:1.0,edge:.035,shadow:.45,hl:.95,hlk:.32};
+// lv：だんの数・vUp／vDn：明るいがわ・暗いがわの明るさの差・shadow：太陽のかげの中は明るさをこの倍に・hl：シェーディングマップがこれより明るい所はハイライト（hlk だけ明るいだん）・edge：ふちどりにする奥行きの差（カメラからのきょりの割合）
+// シェーディングマップ（記事）：画面から見た面の向き（x 右・y 上）で、太陽のほう（左上・手前）ほど明るい 0.5+0.5×(太陽との内積)
 const MIST={h:1.2,k:.1,col:'#e8f2ea'};               // 地面の近くのもや：この高さ（マス）より下ほど、この色をこのこさで
 const WIND={amp:.035,speed:1.3};                     // 風：植物の高さ²にかけるゆれの大きさ・速さ
 const CLOUDSH={scale:.05,speed:[.035,.02],k:.3};     // 流れる雲のかげ：ノイズの細かさ・流れる速さ・暗くする量
@@ -47,6 +49,7 @@ const METAL={refl:.5,spec:1.6,pow:48};               // 金属：空のうつり
 const FALLING={n:22,size:.18};                       // 舞う葉：数・大きさ（マス）
 const BLOB={k:.42};
 const PATHDIP=.12;                                   // 道を草地より下げる高さ（マス）
+const GBUMP={amp:.09,scale:.55,f:1.3,k:.6,t:.012};  // 地面のこぼこ：もりあがりの高さ（マス）・細かさ（形）／面の向きだけのこまかいこぼこ：細かさ・強さ・草の絵から作る強さ
 const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#6cbf4f','#b0e37a']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
 const RAYS={k:.22,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
@@ -146,10 +149,13 @@ const RIM_FS=`outgoingLight+=vec3(${RIM.col.join(',')})*${RIM.k.toFixed(2)}*pow(
 const uMat={value:[]},uSunV={value:new THREE.Vector3()},uViewInv={value:new THREE.Matrix3()};
 const LUM='vec3(.3,.59,.11)';
 // 光のあと（トゥーンの光の量を見て）：光の温度・流れる雲のかげ・地面の近くのもや。どの物にもかける
-const AIR_FS=`{float lr=dot(outgoingLight,${LUM})/max(dot(diffuseColor.rgb,${LUM}),1e-3);
-  {float sq=floor(min(clamp((lr-${PX.lo})/${(PX.hi-PX.lo).toFixed(2)},0.,1.),.999)*${PX.lv}.)/${PX.lv-1}.;               // ドット絵シェーダー：光の量を${PX.lv}だんに
-   outgoingLight=lin(pxShade(pow(max(diffuseColor.rgb,0.),vec3(1./2.2)),sq-.5))*${PX.gain};}
-  float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
+// ドット絵シェーダー（記事）：シェーディングマップの明るさ×太陽のかげ → PX.lv だん → 記事の色の式。そのあと、もとの光は使わない
+const PXSHADE_FS=`{vec3 nV=normalize(normal+tnBump);float sm=.5+.5*dot(nV,uSunV),shd=getShadowMask(),s=sm*mix(${PX.shadow},1.,shd);
+  float sq=floor(min(s,.999)*${PX.lv}.)/${PX.lv-1}.;vec3 b=pow(max(diffuseColor.rgb,0.),vec3(1./2.2));vec3 o=pxShade(b,sq-.5);
+  if(sm>${PX.hl}&&shd>.5)o=pxShade(b,.5+${PX.hlk});outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
+`;
+// 光のあと：流れる雲のかげ・地面の近くのもや。どの物にもかける
+const AIR_FS=`{float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
   outgoingLight=mix(outgoingLight,lin(${C3(MIST.col)})*dot(outgoingLight,${LUM})*1.3,${MIST.k}*clamp(1.-vWP.y/${MIST.h},0.,1.));}  // もや
 `;
 // o：MeshToonMaterial の設定。extra：{mat:材質の絵をのせる, uvk:UV にかける数, span, wind:風でゆれる}
@@ -159,8 +165,9 @@ function toon(o={},extra={}){
     if(extra.wind)sh.vertexShader='#define TN_WIND\n'+sh.vertexShader;
     sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
     sh.fragmentShader='uniform sampler2D uMat[6];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+NOISE+sh.fragmentShader
+      .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <color_fragment>',`#include <color_fragment>
-  int tnK=int(vMat+.5)-1;
+  int tnK=int(vMat+.5)-1;vec3 tnBump=vec3(0.);
   ${extra.mat?`{int k=tnK;
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
@@ -168,7 +175,7 @@ function toon(o={},extra={}){
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;
     float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:${MATK[5].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
-      .replace('#include <opaque_fragment>',RIM_FS+`
+      .replace('#include <opaque_fragment>',PXSHADE_FS+RIM_FS+`
   {vec3 n=normalize(normal),V=normalize(vViewPosition);
    if(tnK==5)outgoingLight+=diffuseColor.rgb*vec3(${SSS.col.join(',')})*${SSS.k}*max(0.,-dot(n,uSunV));      // すける葉：光と反対を向いた葉も明るく
    if(tnK==2){vec3 Rv=reflect(-V,n),Rw=uViewInv*Rv;vec3 env=mix(lin(${C3(GROUND)}),lin(${C3(SKYTOP)})*1.4,smoothstep(-.2,.6,Rw.y)); // 金属：空のうつりこみとつや
@@ -203,17 +210,21 @@ float fbm(vec2 p){return .5*vn(p)+.25*vn(p*2.03+7.)+.125*vn(p*4.01+3.)+.0625*vn(
 vec3 lin(vec3 c){return pow(c,vec3(2.2));}
 vec3 pxHsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
 vec3 pxRgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}
-vec3 pxShade(vec3 c,float d){vec3 h=pxHsv(c);h.z=clamp(h.z*(1.+d*${PX.v}),0.,1.);   // 記事の色の式（sRGB の色で）
+vec3 pxShade(vec3 c,float d){vec3 h=pxHsv(c);h.z=clamp(h.z*(1.+d*(d>0.?${PX.vUp}:${PX.vDn})),0.,1.);   // 記事の色の式（sRGB の色で）
   if(d<0.){float dh=fract(2./3.-h.x+.5)-.5;h.x=fract(h.x+dh*(-d)*${PX.hue});}else h.y=clamp(h.y*(1.-d*${PX.sat}),0.,1.);return pxRgb(h);}
 `;
 
 const uGTex={value:[]};
 function groundMat(){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD});
-  m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMask:{value:maskTex},uG:uGTex});
+  m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMask:{value:maskTex},uG:uGTex,uSunV});
     sh.vertexShader='attribute float aTop;varying vec3 vW,vWP;varying float vTop,vNy;\n'+sh.vertexShader.replace('void main() {','void main() {\nvW=(modelMatrix*vec4(position,1.)).xyz;vTop=aTop;vNy=normal.y;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
-    sh.fragmentShader='uniform sampler2D uMask,uG[3];uniform float uTime;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('#include <opaque_fragment>',AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
-  {vec2 p=vW.xz;vec2 muv=(p+${BORDER}.)/${MN}.;
+    sh.fragmentShader='uniform sampler2D uMask,uG[3];uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <opaque_fragment>',PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
+  vec3 tnBump=vec3(0.);
+  {vec2 p=vW.xz;
+   if(vNy>.5){float e=.1,h0=fbm(p*${GBUMP.f}),hx=fbm((p+vec2(e,0.))*${GBUMP.f}),hz=fbm((p+vec2(0.,e))*${GBUMP.f});   // 地面のこまかいこぼこ（面の向きだけ）
+     vec3 gt0=texture2D(uG[0],p/${GTEX.grass.span}.).rgb,gtx=texture2D(uG[0],(p+vec2(.03,0.))/${GTEX.grass.span}.).rgb,gtz=texture2D(uG[0],(p+vec2(0.,.03))/${GTEX.grass.span}.).rgb;
+     float l0=dot(gt0,vec3(.3,.59,.11));tnBump=mat3(viewMatrix)*vec3(-(hx-h0)/e*${GBUMP.k}-(dot(gtx,vec3(.3,.59,.11))-l0)/.03*${GBUMP.t},0.,-(hz-h0)/e*${GBUMP.k}-(dot(gtz,vec3(.3,.59,.11))-l0)/.03*${GBUMP.t});}vec2 muv=(p+${BORDER}.)/${MN}.;
    float n1=fbm(p*.35),n2=fbm(p*1.7+5.),n3=vn(p*6.);
    vec3 mk=texture2D(uMask,muv+(vec2(fbm(p*1.3),fbm(p*1.3+9.))-.5)*.012).rgb;
    vec3 g=mix(${C3(COLS.grassB)},${C3(COLS.grassA)},smoothstep(.3,.7,n1));g=mix(g,${C3(COLS.grassC)},smoothstep(.62,.8,n2)*.6);
@@ -234,14 +245,19 @@ function groundMat(){
   };
   m.customProgramCacheKey=()=>'ground';return m;
 }
-const SUB=4;   // 道のまわりのマスは、上の面を SUB×SUB に分けて、道を下げる
+const SUB=4;   // 地形のマスは、上の面を SUB×SUB に分けて、道を下げ、ゆるやかにもりあげる
+// 地面の高さ：段の高さ − 道の下げ ＋ ゆるやかなもりあがり（段・池・地図のはしのさかいでは0にして、ふちをそろえる）
+function bumpAt(px,pz){const x=Math.floor(px),z=Math.floor(pz);if(!inMap(x,z)||isW(x,z))return 0;const y=yTop(x,z);let f=1;
+  for(const [dx,dz,d] of [[1,0,x+1-px],[-1,0,px-x],[0,1,z+1-pz],[0,-1,pz-z]]){const nx=x+dx,nz=z+dz;if(!inMap(nx,nz)||yTop(nx,nz)!==y){const t=Math.min(1,d/.35);f*=t*t*(3-2*t)}}
+  return GBUMP.amp*(cpuNoise(px*GBUMP.scale+31,pz*GBUMP.scale+17)-.5)*2*f}
+const groundH=(px,pz)=>{const x=Math.floor(px),z=Math.floor(pz);return yTop(x,z)-(inMap(x,z)&&!isW(x,z)?PATHDIP*pmAt(px,pz):0)+bumpAt(px,pz)};
 const nearPath=(x,z)=>{for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(pathTile(x+dx,z+dz))return true;return false};
 function buildGround(){
   const P=[],N=[],T=[];
   const quad=(vs,n,top)=>{for(const i of [0,1,2,0,2,3]){P.push(...vs[i]);N.push(...(Array.isArray(n[0])?n[i]:n));T.push(top)}};
   for(let z=-BORDER;z<MAPN+BORDER;z++)for(let x=-BORDER;x<MAPN+BORDER;x++){
     const y=yTop(x,z);
-    if(inMap(x,z)&&nearPath(x,z)&&!isW(x,z)){const H=(px,pz)=>y-PATHDIP*pmAt(px,pz),e=.05,nm=(px,pz)=>{const a=H(px-e,pz)-H(px+e,pz),b=H(px,pz-e)-H(px,pz+e),l=Math.hypot(a,2*e,b);return [a/l,2*e/l,b/l]};
+    if(inMap(x,z)&&!isW(x,z)){const H=(px,pz)=>groundH(Math.min(x+.9999,Math.max(x,px)),Math.min(z+.9999,Math.max(z,pz))),e=.05,nm=(px,pz)=>{const a=H(px-e,pz)-H(px+e,pz),b=H(px,pz-e)-H(px,pz+e),l=Math.hypot(a,2*e,b);return [a/l,2*e/l,b/l]};
       for(let j=0;j<SUB;j++)for(let i=0;i<SUB;i++){const x0=x+i/SUB,x1=x+(i+1)/SUB,z0=z+j/SUB,z1=z+(j+1)/SUB,V=[[x0,z1],[x1,z1],[x1,z0],[x0,z0]];
         quad(V.map(([a,b])=>[a,H(a,b),b]),V.map(([a,b])=>nm(a,b)),y)}}
     else quad([[x,y,z+1],[x+1,y,z+1],[x+1,y,z],[x,y,z]],[0,1,0],y);
@@ -280,7 +296,7 @@ function buildBlades(){
     L.push(M.compose(new THREE.Vector3(x,y,z),Q,new THREE.Vector3(1,h,1)).clone())};
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){
     if(isW(x,z))continue;const y=yTop(x,z);
-    if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,y-PATHDIP*pm,pz,(rnd()-.5)*.5,rnd()*6.28)}
+    if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,groundH(px,pz),pz,(rnd()-.5)*.5,rnd()*6.28)}
     for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){if(yTop(x+dx,z+dz)>=y-1e-4)continue;
       for(let k=0;k<BLADES.edgePer;k++){const t=rnd(),ex=dx?x+(dx>0?1:0)-dx*.03:x+t,ez=dz?z+(dz>0?1:0)-dz*.03:z+t;add(ex,y,ez,.7+rnd()*.5,Math.atan2(dz,dx))}}
   }
@@ -396,8 +412,8 @@ function placeProps(level){
       if(p.kind==='tree'&&(hAt(x,z+1)<hAt(x,z)||hAt(x+1,z)<hAt(x,z)))continue; // がけのふちには木を植えない
       if(big)used.add(key);
       const jx=p.kind==='tiny'?rnd()*.8+.1:.5,jz=p.kind==='tiny'?rnd()*.8+.1:.5,sc=.85+rnd()*.3;
-      Q.setFromAxisAngle(Y,rnd()*Math.PI*2);V.set(x+jx,yTop(x,z),z+jz);S.set(sc,sc,sc);M.compose(V,Q,S);mats.push(M.clone());i++;
-      if(p.kind!=='tiny'){const r=(p.kind==='tree'?1.5:.75)*sc*OBJSCALE*(p.kind==='item'?.6:1);blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(x+jx,yTop(x,z)+.01,z+jz),new THREE.Quaternion(),new THREE.Vector3(r,1,r)))}
+      Q.setFromAxisAngle(Y,rnd()*Math.PI*2);V.set(x+jx,groundH(x+jx,z+jz),z+jz);S.set(sc,sc,sc);M.compose(V,Q,S);mats.push(M.clone());i++;
+      if(p.kind!=='tiny'){const r=(p.kind==='tree'?1.5:.75)*sc*OBJSCALE*(p.kind==='item'?.6:1);blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(x+jx,groundH(x+jx,z+jz)+.01,z+jz),new THREE.Quaternion(),new THREE.Vector3(r,1,r)))}
     }
     for(const part of p.parts){
       const im=new THREE.InstancedMesh(OPT.low?lowGeo(part):part.geo,part.mat,Math.max(1,mats.length));im.count=mats.length;
@@ -420,7 +436,7 @@ function makeSpirits(n){
     const el=ELS[i%ELS.length],obj=SkeletonUtils.clone(SPMODELS[el]);
     let x,z;do{x=Math.floor(rnd()*MAPN);z=Math.floor(rnd()*MAPN)}while(!walkable(x,z,HM[z][x])||!GRASS[z][x]);
     const h=HM[z][x];const bones={};obj.traverse(o=>{if(o.isBone)bones[o.name]={b:o,q:o.quaternion.clone()}});
-    obj.position.set(x+.5,yTop(x,z),z+.5);obj.rotation.y=rnd()*Math.PI*2;scene.add(obj);
+    obj.position.set(x+.5,groundH(x+.5,z+.5),z+.5);obj.rotation.y=rnd()*Math.PI*2;scene.add(obj);
     const bl=new THREE.Mesh(blobGeo,blobMat);bl.scale.set(.7*OBJSCALE*SPH,1,.7*OBJSCALE*SPH);bl.renderOrder=2;scene.add(bl);
     sprites.push({obj,bl,h,bones,to:null,wait:rnd()*2,ph:rnd()*6});
   }
@@ -442,8 +458,8 @@ function stepSpirits(dt){
     s.ph+=dt*(moving?9:2.5);
     const sw=moving?Math.sin(s.ph)*.6:0;
     bend(s,'thighL',sw);bend(s,'thighR',-sw);bend(s,'upper_armL',-sw*.7);bend(s,'upper_armR',sw*.7);
-    p.y=s.h*HSTEP+(moving?Math.abs(Math.sin(s.ph))*.04:Math.sin(s.ph)*.008);
-    s.bl.position.set(p.x,s.h*HSTEP+.012,p.z);
+    const gy=groundH(p.x,p.z);p.y=gy+(moving?Math.abs(Math.sin(s.ph))*.04:Math.sin(s.ph)*.008);
+    s.bl.position.set(p.x,gy+.012,p.z);
   }
   if(sprites.length)renderer.shadowMap.needsUpdate=true; // せいれいのかげは動く
 }
