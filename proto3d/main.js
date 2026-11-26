@@ -12,7 +12,7 @@ import {SimplifyModifier} from 'three/addons/modifiers/SimplifyModifier.js';
 import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 
 const TRIPO='../tools/art/models/tripo/', SPDIR='../tools/art/spirit3d/model/';
-const PPU=16;          // 1マスのドット数（小さい画面の上で）
+const PPU=32;          // 1マスのドット数（小さい画面の上で。ゲームの地面の絵は1マス64ドット）
 const HSTEP=.75;       // 段差1つの高さ（マス）
 const MAPN=24;         // マップのはば（マス）
 const PITCH=38;        // 見おろす角度（度）
@@ -26,13 +26,16 @@ const AMB=.5,SUN=.6;       // 明かり（かげの所かどうかを見分け�
 const OUTLINE_DEPTH=.004;
 const LOWKEEP=.25;        // 形をあらくするとき、のこす点のわりあい  // 輪郭にする奥行きの差（0〜1の奥行き）
 // 色
-const COL={grass:'#8fcf6a',grass2:'#86c763',path:'#e6c993',cliff:'#c99c6c',cliffTop:'#7fbf5c',pondBed:'#9ccfd8',water:'#7cc6ec'};
 const SPCOL={body:'#fdf8ef',eye:'#5a4038',cheek:'#f4a7a0',
   earth:{hood:'#8f6a50',acc:'#8bc34a'},water:{hood:'#78c3fb'},fire:{hood:'#e8604f'},wind:{hood:'#c8e2b4',acc:'#9ccf7a'},wood:{hood:'#6fae4c'}};
 const ELS=['earth','water','fire','wind','wood'];
 // 置く物：モデル・高さ（マス）・物の数（少し・ふつう・多い）
 const PROPS=[
-  {id:'oak',h:2.4,n:[3,7,16],kind:'tree'},{id:'maple',h:2.1,n:[2,6,14],kind:'tree'},{id:'cedar',h:2.8,n:[2,5,12],kind:'tree'},{id:'appletree',h:2.1,n:[1,3,8],kind:'tree'},
+  // 木は、ゲームの木の設計図（tools/art/furn3d/items/nat_tree・nat_oak・nat_cedar・nat_maple）と同じモデル・高さ・はば・葉の5色（明るい→暗い）・幹の色
+  {id:'nat_tree',h:1.9,wide:1.3,n:[4,10,24],kind:'tree',bark:[196,124,84],leaf:[[195,227,107],[178,218,100],[151,203,98],[120,188,105],[92,171,108]]},
+  {id:'oak',h:1.9,n:[2,5,10],kind:'tree',bark:[182,128,94],leaf:[[178,222,128],[156,208,112],[130,192,104],[108,174,100],[90,156,98]]},
+  {id:'cedar',h:2.0,n:[2,4,8],kind:'tree',bark:[212,152,120],leaf:[[168,206,120],[150,194,110],[134,182,102],[120,170,96],[108,158,90]]},
+  {id:'maple',h:1.8,n:[1,3,6],kind:'tree',bark:[176,124,94],leaf:[[252,206,104],[248,180,92],[240,154,84],[226,130,78],[208,110,74]]},
   {id:'nat_bush',h:.6,n:[4,10,24],kind:'small'},{id:'berrybush',h:.6,n:[3,8,18],kind:'small'},
   {id:'grass',h:.35,n:[16,50,130],kind:'tiny'},{id:'clover',h:.3,n:[8,25,60],kind:'tiny'},{id:'bellflower',h:.4,n:[8,25,60],kind:'tiny'},
   {id:'rock',h:.3,n:[3,6,12],kind:'small'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small'},
@@ -44,9 +47,9 @@ const showErr=e=>{const b=$('err');b.style.display='block';b.textContent+=String
 addEventListener('error',e=>showErr(e.error||e.message));addEventListener('unhandledrejection',e=>showErr(e.reason));
 
 // ---- 設定（ボタン） ----
-const OPT={dot:3,spirits:20,props:1,shadow:true,yaw:0,low:false};
-try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d')||'{}'))}catch(e){}
-const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d',JSON.stringify(OPT))}catch(e){}};
+const OPT={dot:2,spirits:20,props:1,shadow:true,yaw:0,low:false};
+try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d2')||'{}'))}catch(e){}
+const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d2',JSON.stringify(OPT))}catch(e){}};
 
 // ---- しかけ ----
 const cv=$('cv');
@@ -55,7 +58,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio||1,3));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.BasicShadowMap;
 const scene=new THREE.Scene();
-scene.background=new THREE.Color('#cfe6c4');
+scene.background=new THREE.Color('#7fa66b'); // ゲームの地図の外の色（index.html の html の背景）
 const cam=new THREE.OrthographicCamera(-1,1,1,-1,30,100);
 const target=new THREE.Vector3(MAPN/2,0,MAPN/2);
 scene.add(new THREE.AmbientLight(0xffffff,AMB));
@@ -86,23 +89,27 @@ const toneFrag=`
 {
   vec3 tnBase=diffuseColor.rgb;
   float tnD=dot(normalize(normal),normalize(uLV));
-  float tnLb=dot(tnBase,vec3(.299,.587,.114))+1e-4, tnLo=dot(outgoingLight,vec3(.299,.587,.114));
-  float tnK=tnLo/tnLb, tnExp=${AMB.toFixed(3)}+${SUN.toFixed(3)}*max(tnD,0.);
-  if(tnD>0. && tnK<tnExp-.12) tnD=min(tnD,-.3); // かげの中（ほかの物のかげ）
-  vec2 tnS=vec2(${TONE.base[0]}.,${TONE.base[1]}.);
-  if(tnD<${CUTS[0]}) tnS=vec2(${TONE.deep[0]}.,${TONE.deep[1]}.);
-  else if(tnD<${CUTS[1]}) tnS=vec2(${TONE.shade[0]}.,${TONE.shade[1]}.);
-  else if(tnD<${CUTS[2]}) tnS=vec2(${TONE.base[0]}.,${TONE.base[1]}.);
-  else if(tnD<${CUTS[3]}) tnS=vec2(${TONE.hi[0]}.,${TONE.hi[1]}.);
-  else tnS=vec2(${TONE.hi2[0]}.,${TONE.hi2[1]}.);
+  if(tnD>0. && getShadowMask()<.5) tnD=min(tnD,-.3); // ほかの物のかげの中
+  int tnB=tnD<${CUTS[0]}?0:tnD<${CUTS[1]}?1:tnD<${CUTS[2]}?2:tnD<${CUTS[3]}?3:4;  // 0 こいかげ・1 かげ・2 もとの色・3 ハイライト・4 明るいハイライト
+#ifdef TN_PAL
+  vec3 tnC=tnB==0?uPal[0]:tnB==1?uPal[1]:tnB==2?uPal[2]:tnB==3?uPal[3]:uPal[4];
+  gl_FragColor=vec4(pow(tnC,vec3(2.2)),diffuseColor.a);
+#else
+  vec2 tnS=tnB==0?vec2(${TONE.deep}):tnB==1?vec2(${TONE.shade}):tnB==2?vec2(${TONE.base}):tnB==3?vec2(${TONE.hi}):vec2(${TONE.hi2});
   gl_FragColor=vec4(tnShift(tnBase,tnS),diffuseColor.a);
+#endif
 }`;
-function toneMat(o={}){
+// pal：5色（こいかげ→明るいハイライト、0〜255）をわたすと、かげのだんごとにその色（ゲームの木の葉の TONES と同じ）
+function toneMat(o={},pal=null){
   const m=new THREE.MeshLambertMaterial(o);
+  const P=pal&&pal.map(c=>new THREE.Vector3(c[0]/255,c[1]/255,c[2]/255));
   m.onBeforeCompile=sh=>{
-    sh.uniforms.uLV=uLV;
-    sh.fragmentShader=GLSL_TONE+sh.fragmentShader.replace('#include <opaque_fragment>',toneFrag);
+    sh.uniforms.uLV=uLV;if(P)sh.uniforms.uPal={value:P};
+    sh.fragmentShader=(P?'#define TN_PAL\nuniform vec3 uPal[5];\n':'')+GLSL_TONE+sh.fragmentShader
+      .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
+      .replace('#include <opaque_fragment>',toneFrag);
   };
+  if(P)m.customProgramCacheKey=()=>'pal';
   return m;
 }
 
@@ -117,29 +124,42 @@ for(let z=0;z<MAPN;z++){HM.push([]);KIND.push([]);for(let x=0;x<MAPN;x++){
 const hAt=(x,z)=>(x<0||z<0||x>=MAPN||z>=MAPN)?-1:HM[z][x];
 const yTop=(x,z)=>hAt(x,z)*HSTEP-(KIND[z]&&KIND[z][x]==='w'?.3:0);
 
+// 地面の絵は、ゲームのチップ（proto3d/make_tex.py で切り出す）。ゲームは1マス64ドット
+const TEXL=new THREE.TextureLoader();
+function gameTex(name,rep){
+  const t=TEXL.load('./tex/'+name+'.png');t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestMipmapNearestFilter;return t;
+}
+const TEXTILE={grass:3.5,water:2,path:1,cliff:1}; // 絵1まいが何マスぶんか（224・128・32（1マスに1つ）・64ドット）
 function buildGround(){
-  const P=[],N=[],C=[];const c=new THREE.Color();
-  const quad=(a,b,cc,d,n,col)=>{for(const v of [a,b,cc,a,cc,d]){P.push(...v);N.push(...n);c.set(col).convertSRGBToLinear();C.push(c.r,c.g,c.b)}};
+  const G={grass:{p:[],n:[],u:[]},path:{p:[],n:[],u:[]},cliff:{p:[],n:[],u:[]}};
+  const quad=(D,vs,n,uv)=>{for(const i of [0,1,2,0,2,3]){D.p.push(...vs[i]);D.n.push(...n);D.u.push(...uv[i])}};
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){
-    const k=KIND[z][x],y=yTop(x,z);
-    const col=k==='p'?COL.path:k==='w'?COL.pondBed:((x+z)&1?COL.grass:COL.grass2);
-    quad([x,y,z+1],[x+1,y,z+1],[x+1,y,z],[x,y,z],[0,1,0],col);
-    // 横の面：となりが低い所
+    const k=KIND[z][x],y=yTop(x,z),T=TEXTILE.grass;
+    if(k==='p'){const v=(x*7+z*3)%4;quad(G.path,[[x,y,z+1],[x+1,y,z+1],[x+1,y,z],[x,y,z]],[0,1,0],[[v/4,0],[(v+1)/4,0],[(v+1)/4,1],[v/4,1]])}
+    else if(k==='g')quad(G.grass,[[x,y,z+1],[x+1,y,z+1],[x+1,y,z],[x,y,z]],[0,1,0],[[x/T,-(z+1)/T],[(x+1)/T,-(z+1)/T],[(x+1)/T,-z/T],[x/T,-z/T]]);
+    // 横の面：となりが低い所（がけの土のだん。1だんに絵1まい）
     const side=[[0,1,[x,y,z+1],[x+1,y,z+1],[0,0,1]],[0,-1,[x+1,y,z],[x,y,z],[0,0,-1]],[1,0,[x+1,y,z+1],[x+1,y,z],[1,0,0]],[-1,0,[x,y,z],[x,y,z+1],[-1,0,0]]];
     for(const [dx,dz,A,B,n] of side){
       const nx=x+dx,nz=z+dz;const ny=(nx<0||nz<0||nx>=MAPN||nz>=MAPN)?-1.2:yTop(nx,nz);
       if(ny>=y-1e-4)continue;
-      quad([A[0],ny,A[2]],[B[0],ny,B[2]],[B[0],y,B[2]],[A[0],y,A[2]],n,k==='w'?COL.pondBed:COL.cliff);
+      const v0=-ny/HSTEP,v1=-y/HSTEP;
+      quad(G.cliff,[[A[0],ny,A[2]],[B[0],ny,B[2]],[B[0],y,B[2]],[A[0],y,A[2]]],n,[[0,v0],[1,v0],[1,v1],[0,v1]]);
     }
   }
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
-  const m=new THREE.Mesh(g,toneMat({vertexColors:true}));m.receiveShadow=true;m.castShadow=true;scene.add(m);
-  // 池の水
+  const out={};
+  for(const [name,D] of Object.entries(G)){
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(D.p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(D.n,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(D.u,2));
+    const m=new THREE.Mesh(g,toneMat({map:gameTex(name)}));m.receiveShadow=true;m.castShadow=name==='cliff';scene.add(m);out[name]=m;
+  }
+  // 池の水（ゲームの水の絵）
   const wg=new THREE.CircleGeometry(2.6,32);wg.rotateX(-Math.PI/2);
-  const w=new THREE.Mesh(wg,toneMat({color:COL.water,transparent:true,opacity:.85}));w.position.set(5,-.08,18.5);w.receiveShadow=true;
-  scene.add(w);
-  return {ground:m,water:w};
+  const uv=wg.getAttribute('uv'),pp=wg.getAttribute('position');
+  for(let i=0;i<uv.count;i++)uv.setXY(i,(pp.getX(i)+5)/TEXTILE.water,-(pp.getZ(i)+18.5)/TEXTILE.water);
+  const w=new THREE.Mesh(wg,toneMat({map:gameTex('water')}));w.position.set(5,-.08,18.5);w.receiveShadow=true;
+  scene.add(w);out.water=w;
+  return out;
 }
 
 // ---- モデル ----
@@ -153,13 +173,27 @@ function cleanColors(geo){
     const l=Math.max(.38,hsl.l*.5+lm*.5),s=Math.min(1,hsl.s*1.15+.05);c.setHSL(hsl.h,s,l);a.setXYZ(i,c.r,c.g,c.b)}
   a.needsUpdate=true;
 }
+const rgbHex=c=>new THREE.Color(c[0]/255,c[1]/255,c[2]/255);
+// 木を葉と幹に分ける（tree_prep.py と同じ見分け方：緑かあざやかな色なら葉、茶なら幹。三角形ごと）
+function splitLeaf(geo){
+  const g=geo.index?geo.toNonIndexed():geo,P=g.getAttribute('position'),N=g.getAttribute('normal'),C=g.getAttribute('color');
+  const L={p:[],n:[]},B={p:[],n:[]};const c=new THREE.Color();
+  for(let t=0;t<P.count;t+=3){
+    let r=0,gg=0,b=0;for(let k=0;k<3;k++){c.fromBufferAttribute(C,t+k).convertLinearToSRGB();r+=c.r;gg+=c.g;b+=c.b}
+    const mx=Math.max(r,gg,b),mn=Math.min(r,gg,b),D=(gg>r||(mx-mn)/3>140/255)?L:B;
+    for(let k=0;k<3;k++){D.p.push(P.getX(t+k),P.getY(t+k),P.getZ(t+k));D.n.push(N.getX(t+k),N.getY(t+k),N.getZ(t+k))}
+  }
+  return [L,B].map(d=>{const o=new THREE.BufferGeometry();o.setAttribute('position',new THREE.Float32BufferAttribute(d.p,3));o.setAttribute('normal',new THREE.Float32BufferAttribute(d.n,3));return o});
+}
 async function loadProp(p){
   const g=await gltf.loadAsync(TRIPO+p.id+'.glb');const root=g.scene;root.updateMatrixWorld(true);
-  const bb=new THREE.Box3().setFromObject(root),sz=bb.getSize(new THREE.Vector3()),s=p.h/sz.y;
-  const norm=new THREE.Matrix4().makeScale(s,s,s).multiply(new THREE.Matrix4().makeTranslation(-(bb.min.x+bb.max.x)/2,-bb.min.y,-(bb.min.z+bb.max.z)/2));
+  const bb=new THREE.Box3().setFromObject(root),sz=bb.getSize(new THREE.Vector3()),s=p.h/sz.y,sw=s*(p.wide||1);
+  const norm=new THREE.Matrix4().makeScale(sw,s,sw).multiply(new THREE.Matrix4().makeTranslation(-(bb.min.x+bb.max.x)/2,-bb.min.y,-(bb.min.z+bb.max.z)/2));
   const parts=[];
   root.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
-    if(!geo.getAttribute('normal'))geo.computeVertexNormals();cleanColors(geo);
+    if(!geo.getAttribute('normal'))geo.computeVertexNormals();
+    if(p.leaf){const [lg,bg]=splitLeaf(geo);parts.push({geo:lg,mat:toneMat({},[...p.leaf].reverse())},{geo:bg,mat:toneMat({color:rgbHex(p.bark)})});return}
+    cleanColors(geo);
     const src=o.material||{};parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color'),color:geo.getAttribute('color')?0xffffff:(src.color||0xffffff),map:src.map||null})})});
   p.parts=parts;p.foot=Math.max(sz.x,sz.z)*s;
 }
@@ -255,7 +289,7 @@ const post=new THREE.ShaderMaterial({
   fragmentShader:GLSL_TONE.replace('uniform vec3 uLV;','')+`
     uniform sampler2D tC,tD;uniform vec2 px;varying vec2 vUv;
     void main(){
-      vec2 uv=(floor(vUv/px)+.5)*px;vec4 c=texture2D(tC,uv);float d=texture2D(tD,uv).x;
+      vec2 uv=(floor(vUv/px)+.5)*px;vec4 c=sRGBTransferOETF(texture2D(tC,uv));float d=texture2D(tD,uv).x;
       float n=max(max(texture2D(tD,uv+vec2(px.x,0.)).x,texture2D(tD,uv-vec2(px.x,0.)).x),max(texture2D(tD,uv+vec2(0.,px.y)).x,texture2D(tD,uv-vec2(0.,px.y)).x));
       if(n-d>${OUTLINE_DEPTH}){vec3 h=tnRgb2hsv(c.rgb);h.z=clamp(h.z+${TONE.line[0]}./100.,0.,1.);h.y=clamp(h.y+${TONE.line[1]}./100.,0.,1.);c.rgb=tnHsv2rgb(h);}
       gl_FragColor=vec4(c.rgb,1.);
@@ -303,7 +337,7 @@ function refresh(){groups.forEach(g=>g.refresh&&g.refresh())}
 function buildUI(){
   groups.push(group('せいれい',[['5',5],['20',20],['50',50],['100',100]],()=>OPT.spirits,v=>{OPT.spirits=v;makeSpirits(v)}));
   groups.push(group('物',[['少し',0],['ふつう',1],['多い',2]],()=>OPT.props,v=>{OPT.props=v;blocked=placeProps(v);makeSpirits(OPT.spirits)}));
-  groups.push(group('ドット',[['2',2],['3',3],['4',4]],()=>OPT.dot,v=>{OPT.dot=v;resize()}));
+  groups.push(group('ドット',[['1',1],['2',2],['3',3]],()=>OPT.dot,v=>{OPT.dot=v;resize()}));
   groups.push(group('形',[['もとのまま',false],['あらく',true]],()=>OPT.low,v=>{OPT.low=v;blocked=placeProps(OPT.props)}));
   groups.push(group('かげ',[['あり',true],['なし',false]],()=>OPT.shadow,v=>{OPT.shadow=v;sun.castShadow=v}));
   const g=document.createElement('div');g.className='g';
