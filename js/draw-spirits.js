@@ -354,7 +354,6 @@ function drawRes0(r,now){
   const tt=now/1000+r.id*1.7,fy=py+9-bob;
   ctx.save();// 発熱対策：ぼかし影はなし
 if(flSl){const sd=r.id%2?1:-1;ctx.translate(px-sd*FLSLX,fy-FLSLY);ctx.rotate(sd*Math.PI/2);ctx.translate(-px,-fy)}/* 床・地面で寝る：丸くなった絵を、よこにたおす（頭は、子ごとに左か右） *//* 横のベッドでは、頭をまくら（左）にして横になる */
-  if(r._toyCut!=null&&toyR(r)){ctx.beginPath();ctx.rect(px-80,fy-200,160,200+r._toyCut/IQSY);ctx.clip()}/* カップにすわる子：ふちの手前（_toyCut）より下は、かべにかくれる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*wadeH);ctx.clip()}
   {const sj3=(r.y|0)*W+(r.x|0),o3=S.obj[sj3];if(o3&&SEATS.includes(o3)&&r.act&&r.act.stage==='do'&&!walking){const c3=chipOf(o3,sj3);if(c3&&c3.cut!=null){ctx.beginPath();ctx.rect(px-60,fy-120,120,((sj3/W)|0)*TS+c3.cut-(fy-120));ctx.clip()}}}/* 後ろ向きのいすにすわる子は、座面の下のはし（チップの cut）より下（足）を描かない */
   const wpA=r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?r.act:null,onWP=wpA&&(wpA.cl||0)>=1;if(wpA&&!onWP)v.back=true;{const sw=Math.max(r.swing||0,r.swingT||0);if(sw&&now>=sw&&now-sw<700)v.back=!!r.fback}/* たたくときは、敵のほうを向く（うしろの敵には、うしろ向き） *//* 見張り台のハシゴは、うしろ向きでよじのぼる。上では弓をかまえる */
