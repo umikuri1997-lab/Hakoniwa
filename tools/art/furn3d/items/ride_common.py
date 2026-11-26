@@ -12,9 +12,9 @@ R=_load('ride_render',os.path.join(ART,'handoff3d','render.py'))   # Model（遊
 import rides as RD
 Model=R.Model
 FRAMES=16
-def put(sc,make,cx,cy,phase,broken=False,**kw):
+def put(sc,make,cx,cy,phase,broken=False,faded=False,**kw):
     """遊具をつくり、まん中を (cx,cy) へずらして sc に足す。かえすのは、座席の点（ずらしたあと）"""
-    n0=len(sc.t);m=Model();m.sc=sc;seats=[];make(m,phase,broken,seats,**kw)
+    n0=len(sc.t);m=Model(faded=faded);m.sc=sc;seats=[];make(m,phase,broken,seats,**kw)
     d=__import__('numpy').array([cx,cy,0.0])
     for i in range(n0,len(sc.t)):
         a,b,c,col,pid=sc.t[i];sc.t[i]=(a+d,b+d,c+d,col,pid)

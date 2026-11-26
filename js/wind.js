@@ -153,7 +153,7 @@ function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c
 
 function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白いつぶ */if(i==null)return;const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}
 
-/* 遊具の絵（コードの仮のドット絵）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
+/* 遊具の絵（コードの仮のドット絵。メリーゴーラウンドは3Dのチップだけ）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
 function rideFrame(id,i,now){/* 遊具の絵のコマ（16コマでひとまわり。チップの pf がまわる速さの倍） */const ch=window.CHIPS&&CHIPS[id];if(!ch||!ch.pf||i==null)return 0;const a=rideAng(i,now||0)*ch.pf/6.2832*16;return((Math.round(a)%16)+16)%16}
 function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。ないときはコードの仮の絵 */const C=window.CHIPS;
   if(C){if(brk){const ch=C[id+'b'];if(ch&&drawChip(c,ch,id+'b',x0,y0,now,i))return}else if(i==null||ICON){const ch=C[id];if(ch&&drawChip(c,ch,id,x0,y0,now,i))return}else{const st=C[id+':s'],mv=C[id+':m'+rideFrame(id,i,now)];if(st&&mv&&drawChip(c,st,id,x0,y0,now,i)){drawChip(c,mv,id,x0,y0,now,i);return}}}
@@ -167,11 +167,6 @@ function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0)
     for(let q=0;q<4;q++){const th=A*.35+q*1.5708,gx=cx+Math.cos(th)*RR,gy=cy+Math.sin(th)*RR;R(gx-1,gy,2,4,P.w);R(gx-6,gy+4,12,9,q%2?P.a:P.m);R(gx-6,gy+4,12,2,P.b);R(gx-4,gy+7,8,3,brk?'#d8d2c6':'#eaf7fb')}
     O(cx,cy,4,4,P.w);O(cx,cy,2,2,P.b);if(brk){Ln(cx-30,40,cx-18,58,P.w,2);R(cx+14,50,10,3,P.a)}return}
   O(32,56,30,7,'rgba(60,50,30,.2)');
-  if(id==='merry'){O(32,50,28,9,P.w);O(32,47,28,9,brk?'#d8d0bf':'#ecd9a8');R(30,6,4,42,P.p);
-    for(let q=0;q<3;q++){const th=A+q*2.0944,hx=32+Math.cos(th)*20,hy=48+Math.sin(th)*7;if(Math.sin(th)<=0){R(hx,hy-30,1,26,P.b);R(hx-4,hy-13,9,6,P.b);R(hx+3,hy-17,3,5,P.b);R(hx-3,hy-7,2,4,P.b);R(hx+3,hy-7,2,4,P.b)}}
-    for(let q=0;q<18;q++){const w=13+q;for(let s=-w;s<w;s+=6){const k=Math.floor((s+w+A*14)/6)&1;R(32+s,-10+q,Math.min(6,w-s),1,k?P.a:P.b)}}R(19,8,26,3,P.p);R(30,-15,4,6,P.a);R(31,-18,2,3,brk?P.w:'#ffd84a');
-    for(let q=0;q<3;q++){const th=A+q*2.0944,hx=32+Math.cos(th)*20,hy=48+Math.sin(th)*7;if(Math.sin(th)>0){R(hx,hy-34,1,30,P.b);R(hx-4,hy-13,9,6,P.b);R(hx+3,hy-17,3,5,P.b);R(hx-3,hy-7,2,4,P.b);R(hx+3,hy-7,2,4,P.b);R(hx-2,hy-12,5,2,P.a)}}
-    if(brk){Ln(8,38,20,52,P.w,2);R(40,52,9,5,P.b)}return}
   if(id==='cup'){O(32,50,30,10,P.w);O(32,47,30,10,brk?'#d5cfc2':'#bfe0d6');O(32,47,22,7,brk?'#c6c0b3':'#a9d3c7');
     for(let q=0;q<2;q++){const th=A*1.3+q*3.1416,ux=32+Math.cos(th)*15,uy=47+Math.sin(th)*6,col=q?P.a:(brk?P.m:'#ffe08a');R(ux-9,uy-12,18,11,col);R(ux-9,uy-12,18,2,P.b);R(ux-7,uy-1,14,2,P.w);R(ux+9,uy-9,3,6,col)}
     O(32,44,5,3,P.p);R(31,34,2,10,P.p);O(32,33,4,2,P.a);if(brk)R(6,50,12,4,P.a);return}

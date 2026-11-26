@@ -32,6 +32,8 @@ def run(iid,out,I,only_frames=None):
     assert len({im.size for im in imgs})==1
     I.SZ[iid]=tuple(M.SZ)   # 置くマスの大きさは、設計図の SZ（data.js の BL から読む道具は、行のとちゅうにある遊具を読めない）
     u,v=I.anchor(inf,iid,0)
+    if NF==1:   # こわれた遊具：動かない1まい
+        I.SZ[iid]=tuple(M.SZ);u,v=I.anchor(inf,iid,0);bb=imgs[0].getbbox();c=imgs[0].crop(bb);R={iid:{'g':64,'ax':round(bb[0]-u),'ay':round(bb[1]-v),'w':c.width,'h':c.height,'f':[c],'iso':1}};R['_full']=[R[iid]]*16;return R
     fr=palette(imgs);stable=np.logical_and.reduce([(a==fr[0]).all(axis=2) for a in fr])
     still=Image.fromarray(np.where(stable[...,None],fr[0],0).astype(np.uint8))
     R={};dx=lambda bb:round(bb[0]-u);dy=lambda bb:round(bb[1]-v)
