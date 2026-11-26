@@ -615,12 +615,12 @@ def punch(u, face):
 P1('punch', punch)
 def bowidle(w, face):
     """見張り台でまつ：弓を持った手を下げる"""
-    return breathe(dict(prop='bow', sN=0.5, bN=0.15, kN=-0.3, sF=0.1, hr=0.03*S(w)), w, 0.6)
+    return breathe(dict(prop='bow', sN=0.7, bN=0.45, kN=-0.3, sF=0.1, hr=0.03*S(w)), w, 0.6)
 M('bowidle', 8, 0.25, bowidle)
 def bow(u, face):
     """弓をうつ：弓を前へかまえ、奥の手で弦を胸まで引いて、はなす"""
     pull = ease(u/0.68) if u < 0.8 else 1-ease((u-0.8)/0.08)   # ゲームの BOW_PULL・BOW_REL・BOW_ALL（850・1000・1250 ミリ秒）と同じ割合
-    return dict(prop='bow', sN=1.5, bN=0.1, sF=1.5-0.55*pull, bF=-0.25-0.45*pull, lean=-0.04*pull, hp=-0.03, yaw=0.1*pull)
+    return dict(prop='bow', sN=1.5, bN=0.45, sF=1.5-0.55*pull, bF=-0.25-0.45*pull, lean=-0.04*pull, hp=-0.03, yaw=0.1*pull)   # bN：弓を、体の横へ出す（頭にかくれない）
 P1('bow', bow)
 def climb(w, face):
     """がけ・ハシゴをよじのぼる：両手を前の上へ、こうごにのばし、足もこうごに上げる"""
