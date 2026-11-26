@@ -25,18 +25,18 @@ const viewW=()=>innerWidth*Math.min(devicePixelRatio||1,3)/OPT.zoom/(64/Math.SQR
 const CURVE=.018;              // 丸い地面：カメラの見るまん中から、奥・手前へ d マスはなれた所を d²×CURVE だけ下げる
 const MAXPR=2;                 // 画面の細かさ（スマホの点の何倍まで）
 // ---- 光とかげ ----
-const SKY='#bfe8f5',GROUND='#6f9a52',FOG=[6,30];     // 空の色（背景・霧）・地面からの光・霧のはじまりとおわり（カメラの見るまん中より先、マス）
-const HEMI=1.35,SUN=2.3,SUNCOL='#fff1d6';            // 空と地面の光・太陽の光
+const SKY='#cfeefa',SKYTOP='#2f86d6',GROUND='#6f9a52',FOG=[8,34];  // 地平の空の色（霧）・上の空の色・地面からの光・霧のはじまりとおわり（カメラの見るまん中より先、マス）
+const HEMI=.85,SUN=2.0,SUNCOL='#fff0d0';             // 空と地面の光・太陽の光（持ち主の参考の絵：日の光が強く、かげとの差がはっきり）
 const SUNDIR=[-.55,1,.35];                           // 太陽の向き（せかい。左上・手前から）
-const TOON=[.42,.7,1,1];                             // トゥーンの明るさのだん（かげ→光。なめらかにつなぐ）
+const TOON=[.36,.62,1,1];                             // トゥーンの明るさのだん（かげ→光。なめらかにつなぐ）
 const RIM={k:.35,pow:3,col:[1,.96,.86]};             // ふちの光
 const AO=.13;                                        // 葉の下のかげ：_under 1だんごとに暗くする量
 // ---- しあげ ----
 const TILT={top:.3,bot:.82,amt:.9};    // ぼかす所：画面の上からこの割合まで・この割合から下（ぼかしの強さ）
 const BLOOM={th:.72,k:.55};            // にじみ：これより明るい所を、この強さで
-const GRADE={warm:[1.04,1.0,.93],sat:1.12,vig:.22};
+const GRADE={warm:[1.02,1.0,.97],sat:1.15,vig:.2,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
-const COLS={grassA:'#a3dc72',grassB:'#7fca60',grassC:'#c2e690',dry:'#bdd27e',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
+const COLS={grassA:'#7fca57',grassB:'#5daf48',grassC:'#9dd86a',dry:'#a9c96a',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
 const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
 // ---- せいれい ----
 const SPH=.8,WALK=1.2;
@@ -58,7 +58,8 @@ const PROPS=[
   {id:'firewood',h:.4,n:[1,2,3],kind:'item',mat:'bark',tint:'#a8754e'},{id:'stump',h:.4,n:[2,3,5],kind:'item',mat:'bark',tint:'#a4724c'},
   {id:'log_lying',h:.35,n:[1,2,3],kind:'item',mat:'bark',tint:'#a8754e'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item',mat:'stone',tint:'#cf8a5c'},
   {id:'wateringcan',h:.35,n:[1,1,2],kind:'item',mat:'metal',tint:'#79aab4'}];
-const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5};
+const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5,leaf:6};
+const LEAFTEX={file:'m_leaf.jpg',span:.45,mean:[.1373,.4102,0]};  // 持ち主の葉っぱの絵（色つき）：1まいのマス・絵の色の平均（linear）
 const MATK=.35;                // 材質の絵の明るさのむらを、色にのせる強さ
 
 const $=id=>document.getElementById(id);
@@ -91,7 +92,7 @@ const PR=Math.min(devicePixelRatio||1,MAXPR);
 renderer.setPixelRatio(PR);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(SKY);scene.fog=new THREE.Fog(SKY,50,80);
+scene.background=new THREE.Color(SKY);scene.fog=new THREE.Fog(SKY,50,80);  // 背景は空の球（buildSky）でおおう
 const cam=new THREE.PerspectiveCamera(FOV,1,1,200);
 const target=new THREE.Vector3(MAPN/2,0,MAPN/2);
 const CAMDIR=new THREE.Vector3(Math.sin(YAW)*Math.cos(PITCH),Math.sin(PITCH),Math.cos(YAW)*Math.cos(PITCH));
@@ -124,9 +125,12 @@ function toon(o={},extra={}){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD,...o});
   m.onBeforeCompile=sh=>{curveVS(sh);sh.uniforms.uMat=uMat;
     sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUv2;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;');
-    sh.fragmentShader='uniform sampler2D uMat[5];varying float vUnder,vMat;varying vec2 vUv2;\n'+sh.fragmentShader
+    sh.fragmentShader='uniform sampler2D uMat[6];varying float vUnder,vMat;varying vec2 vUv2;\n'+sh.fragmentShader
       .replace('#include <color_fragment>',`#include <color_fragment>
-  ${extra.mat?`{int k=int(vMat+.5)-1;if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;
+  ${extra.mat?`{int k=int(vMat+.5)-1;
+    if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),vec3(.3,.59,.11)); // 葉：葉っぱの絵のすじと明るさを、植物の緑にのせる
+      float l=dot(t,vec3(.3,.59,.11))/lm;diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,vec3(.3,.59,.11))/lm,.45);}
+    else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;
     diffuseColor.rgb*=mix(1.,l*2.,${MATK.toFixed(2)});}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
       .replace('#include <opaque_fragment>',RIM_FS+'\n#include <opaque_fragment>');
@@ -198,6 +202,20 @@ function buildGround(){
   const water=new THREE.Mesh(wg,wm);water.renderOrder=1;scene.add(water);
 }
 
+// ---- 空 ----
+// 空：上はこい青・地平はうすい青のグラデーションに、ゆっくり流れる白い雲（その場で作る）。丸い地面はかけない。
+// カメラは見おろしているので、画面の上に見えるのは、地平より下の向き（丸い地面のむこう）。そこを地平として色をつける（SKYH：向きの上下の成分）
+const SKYH=[-.62,-.3];
+function buildSky(){
+  const g=new THREE.SphereGeometry(150,32,16);
+  const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{uTime},
+    vertexShader:'varying vec3 vD;void main(){vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:`uniform float uTime;varying vec3 vD;${NOISE}
+      void main(){vec3 c=mix(${C3(SKY)},${C3(SKYTOP)},smoothstep(${SKYH[0]},${SKYH[1]},vD.y));   // 丸い地面のむこうに見える所から上へ、こい青に
+        vec2 q=vD.xz/(vD.y+.9)*2.2+vec2(uTime*.01,0.);float cl=smoothstep(.55,.8,fbm(q))*smoothstep(${SKYH[0]},${SKYH[0]}+.12,vD.y);
+        c=mix(c,vec3(1.),cl*.85);gl_FragColor=vec4(lin(c),1.);}`});
+  const sky=new THREE.Mesh(g,m);sky.renderOrder=-1;sky.frustumCulled=false;scene.add(sky);return sky;
+}
 // ---- モデル ----
 const gltf=new GLTFLoader(),fbx=new FBXLoader();
 // 面の向きを、同じ場所の点でならす（UV のさかいで点がわかれていても、なめらかなかげに）
@@ -222,7 +240,7 @@ async function loadProp(p){
     smoothNormals(geo);const n=geo.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(v),1);
     if(p.src!=='plants'){geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_under',mk(0));geo.deleteAttribute('color')}
     const span=p.src==='plants'?MATSPAN.bark:MATSPAN[p.mat]||1;
-    const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span});
+    const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span,span}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span,span});
     parts.push({geo,mat})});
   p.parts=parts;
 }
@@ -327,7 +345,8 @@ const fin=pass(`uniform sampler2D t,b;varying vec2 vUv;
     float tl=max(smoothstep(${TILT.top.toFixed(2)},0.,1.-vUv.y),smoothstep(${TILT.bot.toFixed(2)},1.,1.-vUv.y))*${TILT.amt.toFixed(2)};
     c=mix(c,bl,tl);                                                                  // ミニチュアのぼかし（上と下）
     c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)};                       // にじみ
-    c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,${GRADE.sat.toFixed(2)}); // あたたかい色・あざやかに
+    c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),max(c,0.),${GRADE.sat.toFixed(2)}); // あたたかい色・あざやかに
+    c*=${GRADE.exp.toFixed(2)};c=clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.);   // ACES のトーンカーブ（明るい所をやわらかく、こさを出す）
     vec2 q=vUv-.5;c*=1.-${GRADE.vig.toFixed(2)}*smoothstep(.35,.75,length(q));        // 四すみ
     gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null}});
 function resize(){
@@ -409,12 +428,13 @@ function frame(now){
 
 async function loadMats(){
   const meta=await (await fetch('./tex/mats.json')).json(),names=Object.keys(MATIDX).sort((a,b)=>MATIDX[a]-MATIDX[b]);
-  for(const k of names){const t=await new THREE.TextureLoader().loadAsync('./tex/m_'+k+'.png');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;
-    uMat.value.push(t);MATSPAN[k]=meta[k].span}
+  for(const k of names){if(k==='leaf'){const t=await new THREE.TextureLoader().loadAsync('./tex/'+LEAFTEX.file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;uMat.value.push(t);MATSPAN.leaf=LEAFTEX.span;continue}
+    const t=await new THREE.TextureLoader().loadAsync('./tex/m_'+k+'.png');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;
+    if(meta[k]){uMat.value.push(t);MATSPAN[k]=meta[k].span}}
 }
 async function main(){
   await loadMats();
-  buildGround();
+  buildGround();buildSky();
   await Promise.all([...PROPS.map(loadProp),...ELS.map(loadSpirit)]);
   sun.castShadow=OPT.shadow;blocked=placeProps(OPT.props);makeSpirits(OPT.spirits);
   resize();addEventListener('resize',resize);buildUI();gpu=gpuName();

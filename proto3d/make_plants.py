@@ -6,7 +6,7 @@
 - 色（ゲームの色から）：木のみき（いちばん下にとどく部品）は幹の色、ほかは葉の色（植物ごとに、ゲームの木の葉の5色の まん中の色）。
   花と草：下からのびる細い部品はくき、下の大きい部品は葉、上のほう（高さの FLOWERY より上から始まる）の部品は花の色。
 - 植物ごとに、足もとのまん中を原点にし、下のはしを高さ0に。大きさは、もとのまま（試作が高さをきめる）。
-- 材質：点の値 _MAT（試作の main.js の MATIDX）。木のみきは木の皮（bark）。UV 展開（xatlas、glbio.unwrap）して、絵をはれるようにする。
+- 材質：点の値 _MAT（試作の main.js の MATIDX）。木のみきは木の皮（bark）、葉は持ち主の葉っぱの絵（leaf）。UV 展開（xatlas、glbio.unwrap）して、絵をはれるようにする。
 - 葉の下のかげ（natcommon.tone5 の under と同じ考え）：点ごとに真上へ線をのばし、ほかの面に UNDERH（植物の高さに対して）より近くで当たれば、
   近いほど暗くするだんの数（UNDERB まで）を、点の値 _UNDER に入れる。"""
 import json, os, struct, sys
@@ -27,7 +27,7 @@ FLOWER = ['#8a8fe0', '#f2b14e', '#f07fa6', '#e8604f', '#ffffff', '#a58be0', '#f0
 FLOWERY = .3                                # 花：植物の高さのこれより上から始まる部品は花
 TRUNKY = .08                                # 木：植物の高さのこれより下にとどく部品はみき
 UNDERH, UNDERB = .12, 3.0                   # 葉の下のかげ：とどく高さ（植物の高さに対して）・いちばん近いときに暗くするだんの数
-MATIDX = {'bark': 5}                        # 材質の番号（main.js の MATIDX と同じ）
+MATIDX = {'bark': 5, 'leaf': 6}             # 材質の番号（main.js の MATIDX と同じ）
 
 
 def load(path):
@@ -94,7 +94,7 @@ def colors(V, F, cid, fi, name):
         ext = Q.max(0)-Q.min(0); thin = ext[1] > 2.5*max(ext[0], ext[2])
         if row == 'T': col, kd = (BARK, 'bark') if lo < TRUNKY else (LEAF[TREE_LEAF[q]], 'leaf')
         elif row == 'B': col, kd = LEAF['bush'], 'leaf'
-        else: col, kd = (hexrgb(FLOWER[q]), '') if lo > FLOWERY else (STEM, '') if thin else (LEAF['herb'], '')
+        else: col, kd = (hexrgb(FLOWER[q]), '') if lo > FLOWERY else (STEM, '') if thin else (LEAF['herb'], 'leaf')
         out[m] = col; kind[m] = kd
     return out, kind
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
         fi = np.where(pl == k)[0]; P = V[F[fi]]; C, kd = colors(V, F, cid, fi, name)
         base = P.reshape(-1, 3); lo = base[:, 1].min(); foot = base[base[:, 1] < lo+.01*(base[:, 1].max()-lo)]
         org = np.array([foot[:, 0].mean(), lo, foot[:, 2].mean()])   # 足もとのまん中
-        P = P-org; MT = np.where(kd == 'bark', MATIDX['bark'], 0).astype(float)
+        P = P-org; MT = np.select([kd == 'bark', kd == 'leaf'], [MATIDX['bark'], MATIDX['leaf']], 0).astype(float)
         rep = lambda a: np.repeat(a, 3, 0)
         meshes.append((name, P.reshape(-1, 3), (rep(C)/255.0)**2.2, rep(MT)))   # 色は linear で入れる（glTF の決まり）
     glb(meshes, OUT); print(OUT, len(meshes), '植物', sum(len(m[1])//3 for m in meshes), '三角形')
