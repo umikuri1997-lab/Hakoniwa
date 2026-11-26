@@ -266,7 +266,9 @@ function groundMat(){
 const SUB=4;   // 地形のマスは、上の面を SUB×SUB に分けて、道を下げ、ゆるやかにもりあげる
 // 地面の高さ：段の高さ − 道の下げ ＋ ゆるやかなもりあがり（段・池・地図のはしのさかいでは0にして、ふちをそろえる）
 function bumpAt(px,pz){const x=Math.floor(px),z=Math.floor(pz);if(!inMap(x,z)||isW(x,z)||FLAT.has(x+','+z))return 0;const y=yTop(x,z);let f=1;
-  for(const [dx,dz,d] of [[1,0,x+1-px],[-1,0,px-x],[0,1,z+1-pz],[0,-1,pz-z]]){const nx=x+dx,nz=z+dz;if(!inMap(nx,nz)||yTop(nx,nz)!==y){const t=Math.min(1,d/.35);f*=t*t*(3-2*t)}}
+  const ex=[px-x,0,x+1-px],ez=[pz-z,0,z+1-pz];   /* となりのマスのがわのはしまでの長さ（ななめのとなりは、かどまで。長いほう） */
+  for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;
+    if(!inMap(nx,nz)||yTop(nx,nz)!==y||FLAT.has(nx+','+nz)){const t=Math.min(1,Math.max(dx?ex[dx+1]:0,dz?ez[dz+1]:0)/.35);f*=t*t*(3-2*t)}}   /* 段・池・地図のはし・家などの平らなマスとのさかいでは0（すきまを作らない） */
   return GBUMP.amp*(cpuNoise(px*GBUMP.scale+31,pz*GBUMP.scale+17)-.5)*2*f}
 const groundH=(px,pz)=>{const x=Math.floor(px),z=Math.floor(pz);return yTop(x,z)-(inMap(x,z)&&!isW(x,z)?PATHDIP*pmAt(px,pz):0)+bumpAt(px,pz)};
 const nearPath=(x,z)=>{for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(pathTile(x+dx,z+dz))return true;return false};
@@ -619,4 +621,4 @@ async function main(){
   requestAnimationFrame(t=>{prev=t;frame(t)});
 }
 main().catch(showErr);
-window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
+window.__pm=()=>propMeshes;window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
