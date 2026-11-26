@@ -115,10 +115,10 @@ function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYAT
 const RIDEPH=new Map();
 function rideAng(j,now){let p=RIDEPH.get(j);if(!p){p={a:(j*.37)%6.28,t:now};RIDEPH.set(j,p)}const dt=Math.max(0,Math.min(.1,(now-p.t)/1000));p.t=now;if(S&&RIDES.has(S.obj[j])&&rideOn(j))p.a+=dt*1.5;return p.a}
 /* 3Dから写した遊具（チップに iso）の座席：床の中心から、座る点までの向き a（ラジアン）・はなれ r（マス）・高さ h（マス）。3Dの設計図（tools/art/handoff3d/rides.py）の式と同じ。A＝遊具のまわる角度（rideAng） */
-const RIDESEAT={merry:(k,A)=>{const i=k%3;return{a:A+i*2.0944,r:.94,h:1.124+.12*Math.sin(4*(A+i*.5236))}}/* 馬i：床の角度から120度ずつ。馬の高さ .96（柱の上下 .12 を、馬ごとに30度ずつずらして1周に4回）＋鞍 .164 */,
-  cup:(k,A)=>({a:A*1.3-1.5708+(k%2+1)*2.0944,r:.71,h:.477})/* カップ1・2ばん（3つのうち、0ばんにはのらない）：軌道の角度は床の1.3倍。高さは皿の上 .30＋底 .087＋.09 */,
-  skyswing:(k,A)=>({a:A+(k%3)*2.0944,r:1.35,h:1.138})/* 座席6つのうち、1つおき（0・2・4ばん）にのる。半径1.35・高さ 1.07＋座面 .068 */,
-  wheel:(k,A)=>{const th=A*.35+(k%4)*1.5708;return{x:1.405*Math.cos(th),y:.073,h:2.32-1.405*Math.sin(th),front:1}}/* 8室のうち、1つおき（0・2・4・6ばん）にのる。輪の半径1.405・軸の高さ2.64・室の座面は輪の点から .32 下。輪は床の中心から見て x と高さの面（室は y=.073）。いつも遊具より手前（室は輪より手前につるされている） */};
+const RIDESEAT={merry:(k,A)=>{const i=k%3;return{a:A+i*2.0944,r:1.41,h:1.686+.18*Math.sin(4*(A+i*.5236))}}/* 馬i：床の角度から120度ずつ。3Dは rides.py の寸法の1.5倍（ride_common.py の SCALE）：はなれ .94→1.41・馬の高さ .96（柱の上下 .12 を、馬ごとに30度ずつずらして1周に4回）＋鞍 .164 の1.5倍 */,
+  cup:(k,A)=>({a:A*1.3-1.5708+(k%2+1)*2.0944,r:1.065,h:.716})/* カップ1・2ばん（3つのうち、0ばんにはのらない）：軌道の角度は床の1.3倍。高さは皿の上 .30＋底 .087＋.09（rides.py の寸法の1.5倍。半径 .71→1.065・高さ .477→.716）*/,
+  skyswing:(k,A)=>({a:A+(k%3)*2.0944,r:2.025,h:1.707})/* 座席6つのうち、1つおき（0・2・4ばん）にのる。半径1.35・高さ 1.07＋座面 .068 の1.5倍（半径2.025・高さ1.707）*/,
+  wheel:(k,A)=>{const th=A*.35+(k%4)*1.5708;return{x:2.1075*Math.cos(th),y:.1095,h:3.48-2.1075*Math.sin(th),front:1}}/* 8室のうち、1つおき（0・2・4・6ばん）にのる。輪の半径1.405・軸の高さ2.64・室の座面は輪の点から .32 下の1.5倍（半径2.1075・高さ 3.48−…）。輪は床の中心から見て x と高さの面（室は y=.073）。いつも遊具より手前（室は輪より手前につるされている） */};
 function windRidePose(r,a,now){r._toyH=0;if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
   {const sf=RIDESEAT[a.what],ic=window.CHIPS&&CHIPS[a.what];if(sf&&ic&&ic.iso){/* 3Dの絵（クォータービュー）：座る点を、床の中心から、せかいの点で。高さは、せいれいを画面で上へ（uLift） */const q=sf(k,A),sz=BL[a.what].sz,dx=q.x!=null?q.x:Math.cos(q.a)*q.r,dy=q.y!=null?q.y:Math.sin(q.a)*q.r;r.face=q.x!=null?1:-Math.sin(q.a)-Math.cos(q.a)>0?1:-1;/* x・y で書いた座席（観覧車）は、右向き *//* 進む向きが、画面の右なら右向き */r._toyH=q.h;const wx=X+(sz[0]/2+dx)*TS,wy=Y+(sz[1]/2+dy)*TS,rx=r.x*TS,ry=r.y*TS;return{x:rx+(isoX(wx,wy)-isoX(rx,ry))/IQSX,y:ry+(isoY(wx,wy)-isoY(rx,ry))/IQSY/* せいれいの絵は、いまいる点を足もとに、立てる形（standTf）で描くので、せかいの点の画面でのずれを、立てる形のずれにして返す */,z:Y/TS+(q.front||dx+dy>0?sz[1]+.06:sz[1]-.6)/* 手前の半分は遊具より手前・奥の半分は遊具のうしろ */}}}
   const K=RIDEK,fx=X+(a.what==='wheel'?48:32),fy=Y+56,PX=v=>fx+(v-fx)*K,PY=v=>fy+(v-fy)*K;
