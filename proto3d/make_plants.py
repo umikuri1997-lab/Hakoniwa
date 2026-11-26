@@ -94,7 +94,7 @@ def colors(V, F, cid, fi, name):
         ext = Q.max(0)-Q.min(0); thin = ext[1] > 2.5*max(ext[0], ext[2])
         if row == 'T': col, kd = (BARK, 'bark') if lo < TRUNKY else (LEAF[TREE_LEAF[q]], 'leaf')
         elif row == 'B': col, kd = LEAF['bush'], 'leaf'
-        else: col, kd = (hexrgb(FLOWER[q]), '') if lo > FLOWERY else (STEM, '') if thin else (LEAF['herb'], 'leaf')
+        else: col, kd = (hexrgb(FLOWER[q]), 'leaf') if lo > FLOWERY else (STEM, 'leaf') if thin else (LEAF['herb'], 'leaf')   # 花びら・くきも、葉っぱの絵のすじをのせる
         out[m] = col; kind[m] = kd
     return out, kind
 
