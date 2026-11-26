@@ -5,7 +5,8 @@
    - しあげ（HD-2D。持ち主がたのんだ）：奥行きでぼかす（ピントはカメラの見るまん中。手前と奥ほどぼける DOF）・明るい所の強いにじみ（BLOOM）・光の筋・あたたかい色（GRADE）・四すみを暗く。
    - 地面：草・あれ地・土の道・がけ・池を、その場で作る色（ノイズ）で描く。地形のマスの絵（マスク）をなめらかに読んで、さかいめを自然に。
    - 植物は持ち主のモデル（make_plants.py）、岩・小物はトリポのモデル（make_uv.py で UV 展開）。材質の絵（make_textures.py）は明るさのむらとしてうすくのせる。
-   - マスの大きさ・段差・置き場所・歩ける所は、前の試作と同じ（ゲーム性）。
+   - 地形と物は、ゲームの草原の最初のマップ（新しいゲーム）のまん中 32×32 マス（map0.js・tex/map.glb。make_map.py が書く）。
+     物の形は、ゲームのドット絵を作った3Dの設計図から。木・しげみ・雑草は持ち主の植物のモデル。
    - 空気感（持ち主がえらんだ）：日なたは金色・かげは青むらさき（光の温度）・奥ほどかすむもや・風でゆれる植物・流れる雲のかげ・光の粒と舞う葉・
      すける葉・接地のかげ・光の筋とあたたかいにじみ。ドット絵（小さい画面に描いて、なめらかにせず大きくする）。
    - 道は草地より少し低く（PATHDIP）、道のふちと段のふちに、とげとげの草（BLADES）。どの面にも絵（地面は Poly Haven の CC0：leafy_grass・dirt_floor・cliff_side）。水はすけて空がうつる・金属は空がうつる。 */
@@ -14,10 +15,11 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import {SimplifyModifier} from 'three/addons/modifiers/SimplifyModifier.js';
+import {MAP} from './map0.js';
 
 const SPDIR='../tools/art/spirit3d/model/';
 // ---- 見え方 ----
-const MAPN=24;                 // 地形のはば（マス）
+const MAPN=MAP.n;              // 地形のはば（マス）。ゲームの草原の最初のマップのまん中（make_map.py）
 const BORDER=16;               // まわりに足す地面（マス）
 const HSTEP=1.2;               // 段差1つの高さ（マス。前の試作と同じ）
 const PITCH=35*Math.PI/180;    // 見おろす角度
@@ -60,7 +62,7 @@ const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所�
 const BLOOM={th:.85,k:.35,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
 const GRADE={warm:[1.02,1.0,.97],sat:1.06,vig:.22,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
-const COLS={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#a4b46c',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
+const COLS={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#d8bf8e',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
 const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
 // ---- せいれい ----
 const SPH=.8,WALK=1.2;
@@ -73,15 +75,11 @@ const ELS=['earth','water','fire','wind','wood'];
 // 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
 const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
 // 岩・小物（props）：tint＝ぬる色（sRGB）・mat＝明るさのむらにする材質の絵
-const PROPS=[
-  ...['T0','T2','T3','T4','T5','T6','T8','T9'].map(id=>PLANT(id,1.9,[1,2,4],'tree')),PLANT('T1',2.2,[1,2,3],'tree'),PLANT('T7',2.2,[0,1,2],'tree'),
-  ...['B0','B1','B2'].map(id=>PLANT(id,.7,[2,4,9],'small')),
-  ...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9'].map(id=>PLANT(id,.45,[2,6,14],'tiny')),
-  {id:'rock',h:.3,n:[3,6,12],kind:'small',mat:'stone',tint:'#b9b4aa'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small',mat:'stone',tint:'#c4bdb0'},
-  {id:'lantern',h:.7,n:[2,3,4],kind:'item',mat:'metal',tint:'#6f6a66'},{id:'sack',h:.5,n:[2,3,4],kind:'item',mat:'cloth',tint:'#dcc08e'},
-  {id:'firewood',h:.4,n:[1,2,3],kind:'item',mat:'bark',tint:'#a8754e'},{id:'stump',h:.4,n:[2,3,5],kind:'item',mat:'bark',tint:'#a4724c'},
-  {id:'log_lying',h:.35,n:[1,2,3],kind:'item',mat:'bark',tint:'#a8754e'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item',mat:'stone',tint:'#cf8a5c'},
-  {id:'wateringcan',h:.35,n:[1,1,2],kind:'item',mat:'metal',tint:'#79aab4'}];
+const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9'].map(id=>PLANT(id,.45,0,'tiny'))];
+// マップの物（tex/map.glb）：ゲームのドット絵を作った3Dの設計図から。nat：自然の物（地形に対して OBJSCALE 倍・向きをばらばらに）。piv：まわす・大きくするまん中（マスの左上から）
+const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
+const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
+const objBase=n=>n.split('_')[0];  // 名前の _ のあとは、つなぎ方（壁・畑）・向き（ドア）
 const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5,leaf:6};
 const LEAFTEX={file:'m_leaf.jpg',span:.45,mean:[.1373,.4102,0]};  // 持ち主の葉っぱの絵（色つき）：1まいのマス・絵の色の平均（linear）
 const MATK={1:.6,2:.7,3:.45,4:.65,5:1.0};  // 材質の絵の明るさのむらを、色にのせる強さ（材質の番号ごと。木の皮はこく）
@@ -97,15 +95,18 @@ const OPT={zoom:3,spirits:20,props:1,shadow:true,low:false};
 try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d5')||'{}'))}catch(e){}
 const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d5',JSON.stringify(OPT))}catch(e){}};
 
-// ---- 地形（前の試作と同じ） ----
+// ---- 地形（ゲームの草原の最初のマップ） ----
 const HM=[],KIND=[],GRASS=[];
 for(let z=0;z<MAPN;z++){HM.push([]);KIND.push([]);GRASS.push([]);for(let x=0;x<MAPN;x++){
-  let h=0;if(z<7)h=1;if(x>17&&z<12)h=1;if(x<5&&z<4)h=2;
-  let k='g';if(z===14||(x===11&&z>=7))k='p';
-  if(Math.hypot(x+.5-5,z+.5-18.5)<2.6){k='w';h=0}
-  const d=Math.hypot(x+.5-12,z+.5-13),a=Math.atan2(z-13,x-12);
-  HM[z].push(h);KIND[z].push(k);GRASS[z].push(d<11+1.6*Math.sin(a*3)+1.1*Math.sin(a*5+1)?1:0)}}
+  const k=MAP.kind[z][x];HM[z].push(MAP.hi[z][x]);KIND[z].push(k==='w'||k==='s'?'w':k==='p'?'p':'g');GRASS[z].push(+MAP.grass[z][x])}}  // 地形：段の高さ・水（浅瀬も）・道・よみがえった草地（ほかは荒れた土地）
 const inMap=(x,z)=>x>=0&&z>=0&&x<MAPN&&z<MAPN;
+// 地面をもりあげない所（家・畑・神殿・切り株の下）と、せいれいが通れない所
+const FLAT=new Set(),SOLID=new Set();
+for(const [x,z,n] of MAP.objs){const b=objBase(n),add=(S,a,c)=>{for(let dz=0;dz<c;dz++)for(let dx=0;dx<a;dx++)S.add((x+dx)+','+(z+dz))};
+  if(b==='statueb'){for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){FLAT.add((x+dx)+','+(z+dz));if(dz<1||dx===0)SOLID.add((x+dx)+','+(z+dz))}}
+  else if(b==='sacred'){add(FLAT,4,4);for(const [a,c] of [[1,1],[2,1],[1,2],[2,2]])SOLID.add((x+a)+','+(z+c))}
+  else if(['floor','door','hwall','farm'].includes(b))add(FLAT,1,1);
+  if(MAPOBJ[b]&&MAPOBJ[b].solid||MAPPLANT[b])SOLID.add(x+','+z)}
 const hAt=(x,z)=>inMap(x,z)?HM[z][x]:0;
 const isW=(x,z)=>inMap(x,z)&&KIND[z][x]==='w';
 const yTop=(x,z)=>hAt(x,z)*HSTEP-(isW(x,z)?.45:0);
@@ -208,14 +209,15 @@ const cpuNoise=(()=>{const N=64,v=new Float32Array(N*N);let sd=91;for(let i=0;i<
   const at=(i,j)=>v[((j%N+N)%N)*N+((i%N+N)%N)];return (x,y)=>{const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);
     return (at(i,j)*(1-sx)+at(i+1,j)*sx)*(1-sy)+(at(i,j+1)*(1-sx)+at(i+1,j+1)*sx)*sy}})();
 const pathTile=(x,z)=>inMap(x,z)&&KIND[z][x]==='p'?1:0;
-function pmAt(px,pz){ // 道の度合い：マスの中心で 0/1 をなめらかにつなぎ、ノイズでさかいめをゆらす
+const waterTile=(x,z)=>isW(x,z)?1:0;
+function pmAt(px,pz,tile=pathTile){ // 道（と池）の度合い：マスの中心で 0/1 をなめらかにつなぎ、ノイズでさかいめをゆらす（池のかどもまるく）
   const u=px-.5,v=pz-.5,i=Math.floor(u),j=Math.floor(v),fx=u-i,fy=v-j;
-  const b=(pathTile(i,j)*(1-fx)+pathTile(i+1,j)*fx)*(1-fy)+(pathTile(i,j+1)*(1-fx)+pathTile(i+1,j+1)*fx)*fy;
+  const b=(tile(i,j)*(1-fx)+tile(i+1,j)*fx)*(1-fy)+(tile(i,j+1)*(1-fx)+tile(i+1,j+1)*fx)*fy;
   const n=cpuNoise(px*1.7,pz*1.7)*.6+cpuNoise(px*4.1+9,pz*4.1)*.4;const t=Math.min(1,Math.max(0,(b+(n-.5)*.35-.47)/.06));return t*t*(3-2*t);  // さかいめはくっきり
 }
 const maskTex=(()=>{const W=MN*MASKR,d=new Uint8Array(W*W*4);
   for(let j=0;j<W;j++)for(let i=0;i<W;i++){const px=(i+.5)/MASKR-BORDER,pz=(j+.5)/MASKR-BORDER,x=Math.floor(px),z=Math.floor(pz),k=inMap(x,z)?KIND[z][x]:'g',o=(j*W+i)*4;
-    d[o]=Math.round(255*pmAt(px,pz));d[o+1]=k==='w'?255:0;d[o+2]=inMap(x,z)&&!GRASS[z][x]&&k==='g'?255:0;d[o+3]=255}
+    d[o]=Math.round(255*pmAt(px,pz));d[o+1]=Math.round(255*pmAt(px,pz,waterTile));d[o+2]=inMap(x,z)&&!GRASS[z][x]&&k==='g'?255:0;d[o+3]=255}
   const t=new THREE.DataTexture(d,W,W);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t})();
 const NOISE=`
 float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -246,6 +248,7 @@ function groundMat(){
    {vec3 gt=texture2D(uG[0],p/${GTEX.grass.span}.).rgb;g=lin(g);g*=mix(1.,dot(gt,vec3(.3,.59,.11))/${GTEX.grass.lum},.75);g=pow(g,vec3(1./2.2));} // 草の絵（明るさのむら）
    float tuft=step(.82,hs(floor(p*5.)))*smoothstep(.35,.0,length(fract(p*5.)-.5));g=mix(g,g*1.12+vec3(.02,.03,0.),tuft); // 小さな草のかたまり
    vec3 dry=mix(${C3(COLS.dry)},${C3(COLS.dry)}*.92,n2);
+   {vec3 dt=texture2D(uG[1],p/${GTEX.dirt.span}+.37).rgb;dry=pow(lin(dry)*mix(1.,dot(dt,vec3(.3,.59,.11))/${GTEX.dirt.lum},.7),vec3(1./2.2));}  // 荒れた土地：土の絵の明るさのむら
    g=mix(g,dry,smoothstep(.45,.6,mk.b+(n1-.5)*.3));
    vec3 pth=mix(${C3(COLS.pathB)},${C3(COLS.path)},smoothstep(.2,.8,n2))*(.95+.08*n3);
    {vec3 dt=texture2D(uG[1],p/${GTEX.dirt.span}).rgb;pth=pow(mix(lin(pth)*dot(dt,vec3(.3,.59,.11))/${GTEX.dirt.lum},dt*1.05,.55),vec3(1./2.2));}  // 土の絵
@@ -261,7 +264,7 @@ function groundMat(){
 }
 const SUB=4;   // 地形のマスは、上の面を SUB×SUB に分けて、道を下げ、ゆるやかにもりあげる
 // 地面の高さ：段の高さ − 道の下げ ＋ ゆるやかなもりあがり（段・池・地図のはしのさかいでは0にして、ふちをそろえる）
-function bumpAt(px,pz){const x=Math.floor(px),z=Math.floor(pz);if(!inMap(x,z)||isW(x,z))return 0;const y=yTop(x,z);let f=1;
+function bumpAt(px,pz){const x=Math.floor(px),z=Math.floor(pz);if(!inMap(x,z)||isW(x,z)||FLAT.has(x+','+z))return 0;const y=yTop(x,z);let f=1;
   for(const [dx,dz,d] of [[1,0,x+1-px],[-1,0,px-x],[0,1,z+1-pz],[0,-1,pz-z]]){const nx=x+dx,nz=z+dz;if(!inMap(nx,nz)||yTop(nx,nz)!==y){const t=Math.min(1,d/.35);f*=t*t*(3-2*t)}}
   return GBUMP.amp*(cpuNoise(px*GBUMP.scale+31,pz*GBUMP.scale+17)-.5)*2*f}
 const groundH=(px,pz)=>{const x=Math.floor(px),z=Math.floor(pz);return yTop(x,z)-(inMap(x,z)&&!isW(x,z)?PATHDIP*pmAt(px,pz):0)+bumpAt(px,pz)};
@@ -309,7 +312,7 @@ function buildBlades(){
   const add=(x,y,z,lean,dir)=>{const h=BLADES.h[0]+rnd()*(BLADES.h[1]-BLADES.h[0]);E.set(lean*Math.cos(dir),camYaw+(rnd()-.5)*.9,lean*Math.sin(dir),'YXZ');Q.setFromEuler(E);
     L.push(M.compose(new THREE.Vector3(x,y,z),Q,new THREE.Vector3(1,h,1)).clone())};
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){
-    if(isW(x,z))continue;const y=yTop(x,z);
+    if(isW(x,z)||!GRASS[z][x])continue;const y=yTop(x,z);  // とげとげの草は、よみがえった草地だけ
     if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,groundH(px,pz),pz,(rnd()-.5)*.5,rnd()*6.28)}
     for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){if(yTop(x+dx,z+dz)>=y-1e-4)continue;
       for(let k=0;k<BLADES.edgePer;k++){const t=rnd(),ex=dx?x+(dx>0?1:0)-dx*.03:x+t,ez=dz?z+(dz>0?1:0)-dz*.03:z+t;add(ex,y,ez,.7+rnd()*.5,Math.atan2(dz,dx))}}
@@ -359,6 +362,14 @@ async function loadProp(p){
     const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span,span,wind:true}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span,span});
     parts.push({geo,mat,hull:hullMat(p.src==='plants'?{vertexColors:true}:{color:p.tint},dotW())})});
   p.parts=parts;
+}
+let MAPPARTS={};
+async function loadMapObjs(){
+  const g=await gltf.loadAsync('./tex/map.glb');
+  g.scene.traverse(o=>{if(!o.isMesh)return;const b=objBase(o.name),d=MAPOBJ[b];if(!d)return;const s=d.nat&&!d.big?OBJSCALE:1;  // 御神木の切り株は、ゲームと同じ大きさ（4×4マスの物）
+    const geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().makeScale(s,s,s).multiply(new THREE.Matrix4().makeTranslation(-d.piv[0],0,-d.piv[1])));  // まん中を原点に・大きさ
+    smoothNormals(geo);
+    MAPPARTS[o.name]={geo,mat:toon({vertexColors:true},{mat:true,uvk:s,span:1}),hull:hullMat({vertexColors:true},dotW())}});
 }
 const SPMODELS={};
 async function loadSpirit(el){
@@ -416,32 +427,28 @@ function stepLeaves(dt,t){
 
 // ---- 置く ----
 let propMeshes=[];
-const free=(x,z)=>x>=1&&z>=1&&x<MAPN-1&&z<MAPN-1&&KIND[z][x]==='g'&&GRASS[z][x];
-function placeProps(level){
+// マップの物を置く（ゲームの草原の最初のマップと同じ場所）
+function placeMap(){
   for(const m of propMeshes){scene.remove(m)}propMeshes=[];
-  seed=11;const used=new Set(),blobs=[];
-  const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),Y=new THREE.Vector3(0,1,0),V=new THREE.Vector3(),S=new THREE.Vector3();
-  for(const p of PROPS){
-    const n=p.n[level],mats=[];
-    for(let i=0,tries=0;i<n&&tries<n*40;tries++){
-      const x=Math.floor(rnd()*MAPN),z=Math.floor(rnd()*MAPN);if(!free(x,z))continue;
-      const big=p.kind==='item'||p.kind==='tree';const key=x+','+z;if(big&&used.has(key))continue;
-      if(p.kind==='tree'&&(hAt(x,z+1)<hAt(x,z)||hAt(x+1,z)<hAt(x,z)))continue; // がけのふちには木を植えない
-      if(big)used.add(key);
-      const jx=p.kind==='tiny'?rnd()*.8+.1:.5,jz=p.kind==='tiny'?rnd()*.8+.1:.5,sc=.85+rnd()*.3;
-      Q.setFromAxisAngle(Y,rnd()*Math.PI*2);V.set(x+jx,groundH(x+jx,z+jz),z+jz);S.set(sc,sc,sc);M.compose(V,Q,S);mats.push(M.clone());i++;
-      if(p.kind!=='tiny'){const r=(p.kind==='tree'?1.5:.75)*sc*OBJSCALE*(p.kind==='item'?.6:1);blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(x+jx,groundH(x+jx,z+jz)+.01,z+jz),new THREE.Quaternion(),new THREE.Vector3(r,1,r)))}
-    }
-    for(const part of p.parts){
-      const im=new THREE.InstancedMesh(OPT.low?lowGeo(part):part.geo,part.mat,Math.max(1,mats.length));im.count=mats.length;
-      mats.forEach((m,i)=>im.setMatrixAt(i,m));im.castShadow=p.kind!=='tiny';im.receiveShadow=true;im.computeBoundingSphere();
-      scene.add(im);propMeshes.push(im);
-      if(p.kind!=='tiny'||p.src==='plants'){const hm=new THREE.InstancedMesh(im.geometry,part.hull,im.count);mats.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}  // 背面法の線
-    }
+  seed=11;const blobs=[],G={},add=(key,m)=>(G[key]=G[key]||[]).push(m);
+  const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),Y=new THREE.Vector3(0,1,0),V=new THREE.Vector3(),S=new THREE.Vector3(1,1,1);
+  const blob=(x,z,r)=>blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(x,groundH(x,z)+.01,z),new THREE.Quaternion(),new THREE.Vector3(r,1,r)));
+  for(const [x,z,n] of MAP.objs){const b=objBase(n);
+    if(b==='weed'){for(let k=0;k<3;k++){const px=x+.15+rnd()*.7,pz=z+.15+rnd()*.7,sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:F'+Math.floor(rnd()*10),M.compose(V.set(px,groundH(px,pz),pz),Q,S).clone())}continue}
+    if(MAPPLANT[b]){const sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:'+MAPPLANT[b],M.compose(V.set(x+.5,groundH(x+.5,z+.5),z+.5),Q,S).clone());blob(x+.5,z+.5,(b==='ntree'?1.5:.75)*sc*OBJSCALE);continue}
+    const d=MAPOBJ[b];if(!d||!MAPPARTS[n])continue;
+    if(d.nat){const px=x+d.piv[0],pz=z+d.piv[1];Q.setFromAxisAngle(Y,b==='sacred'?0:rnd()*Math.PI*2);S.set(1,1,1);add(n,M.compose(V.set(px,groundH(px,pz),pz),Q,S).clone());if(b!=='kinoko')blob(px,pz,b==='sacred'?2.4:(b==='deadtree'?1.2:.75)*OBJSCALE)}
+    else{Q.identity();S.set(1,1,1);add(n,M.compose(V.set(x,yTop(x,z),z),Q,S).clone())}
+  }
+  const inst=(geo,mat,ms,shadow,hull)=>{const im=new THREE.InstancedMesh(geo,mat,ms.length);ms.forEach((m,i)=>im.setMatrixAt(i,m));im.castShadow=shadow;im.receiveShadow=true;im.computeBoundingSphere();scene.add(im);propMeshes.push(im);
+    if(hull){const hm=new THREE.InstancedMesh(geo,hull,ms.length);ms.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}};  // 背面法の線
+  for(const [key,ms] of Object.entries(G)){
+    if(key.startsWith('P:')){const p=PROPS.find(q=>q.id===key.slice(2));for(const part of p.parts)inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,p.kind!=='tiny',part.hull);continue}
+    const part=MAPPARTS[key];inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,objBase(key)!=='floor',objBase(key)==='floor'?null:part.hull);
   }
   const bm=new THREE.InstancedMesh(blobGeo,blobMat,Math.max(1,blobs.length));bm.count=blobs.length;blobs.forEach((m,i)=>bm.setMatrixAt(i,m));bm.renderOrder=2;bm.frustumCulled=false;scene.add(bm);propMeshes.push(bm);
   renderer.shadowMap.needsUpdate=true;
-  return used;
+  return SOLID;
 }
 
 // ---- せいれい ----
@@ -544,9 +551,8 @@ let groups=[];
 function refresh(){groups.forEach(g=>g.refresh&&g.refresh())}
 function buildUI(){
   groups.push(group('せいれい',[['5',5],['20',20],['50',50],['100',100]],()=>OPT.spirits,v=>{OPT.spirits=v;makeSpirits(v)}));
-  groups.push(group('物',[['少し',0],['ふつう',1],['多い',2]],()=>OPT.props,v=>{OPT.props=v;blocked=placeProps(v);makeSpirits(OPT.spirits)}));
   groups.push(group('大きさ',[['2',2],['3',3],['4',4]],()=>OPT.zoom,v=>{OPT.zoom=v;resize()}));
-  groups.push(group('形',[['もとのまま',false],['あらく',true]],()=>OPT.low,v=>{OPT.low=v;blocked=placeProps(OPT.props)}));
+  groups.push(group('形',[['もとのまま',false],['あらく',true]],()=>OPT.low,v=>{OPT.low=v;blocked=placeMap()}));
   groups.push(group('かげ',[['あり',true],['なし',false]],()=>OPT.shadow,v=>{OPT.shadow=v;sun.castShadow=v;renderer.shadowMap.needsUpdate=true}));
   const g=document.createElement('div');g.className='g';
   const mb=document.createElement('button');mb.textContent='10秒はかる';mb.onclick=()=>startMeasure(mb);
@@ -599,10 +605,11 @@ async function loadGroundTex(){
 async function main(){
   await loadMats();await loadGroundTex();
   buildGround();buildBlades();buildSky();buildLeaves();
-  await Promise.all([...PROPS.map(loadProp),...ELS.map(loadSpirit)]);
-  sun.castShadow=OPT.shadow;blocked=placeProps(OPT.props);makeSpirits(OPT.spirits);
+  await Promise.all([...PROPS.map(loadProp),...ELS.map(loadSpirit),loadMapObjs()]);
+  sun.castShadow=OPT.shadow;blocked=placeMap();makeSpirits(OPT.spirits);
   resize();addEventListener('resize',resize);buildUI();gpu=gpuName();
   $('load').remove();hud();window.__proto3dReady=true;
   requestAnimationFrame(t=>{prev=t;frame(t)});
 }
 main().catch(showErr);
+window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
