@@ -13,8 +13,8 @@
       else{r.x=j%W+.5;r.y=(j/W|0)+.5;r.act=mode==='eat'?{type:'eat',stage:'do',t:0,items:['bread'],e:'🍞'}:{type:'rest',stage:'do',obj:j,t:0}}});
     recount();USERPAUSE=true;document.querySelectorAll('.hud,.dock,.quest,#qrow,.qrow,#skill,#toast,#tutHand').forEach(e=>e.style.visibility='hidden');S.t=Math.floor(S.t/1440)*1440+12*60;rebuildStatic(true);
     return JSON.stringify(S.res.slice(0,4).map(r=>[r.elem,r.act.type,mode==='floor'?'':rotAt(window.__bj[S.res.indexOf(r)])]))})()`));
-  const cam=`(()=>{const j=window.__bj[0];cam.z=4;camAt((j%W+2)*TS,((j/W|0)+2)*TS,450,380);dirty=true})()`;
+  const cam=`(()=>{const j=window.__bj[0];cam.z=3;camAt((j%W+1.5)*TS,((j/W|0)+1.5)*TS,450,350);dirty=true})()`;
   await run(cam);await page.waitForTimeout(3000);await run(cam);await page.waitForTimeout(1500);
   await run(`(()=>{const e=[...document.querySelectorAll('div')].find(d=>/読みこみの時間/.test(d.textContent)&&d.children.length<3);if(e)e.style.display='none'})()`);
-  await page.waitForTimeout(300);await page.screenshot({path:out,clip:{x:200,y:130,width:520,height:400}});
+  await page.waitForTimeout(300);await page.screenshot({path:out,clip:{x:150,y:100,width:600,height:460}});
   console.log('errors',errors.slice(0,4));await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

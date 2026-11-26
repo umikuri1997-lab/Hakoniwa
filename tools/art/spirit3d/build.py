@@ -80,7 +80,7 @@ def main():
         if m: old = json.loads(m.group(1))
     used0 = {v for d in old.values() for v in list(d.get('s', {}).values())+list(d.get('x', {}).values())+list(d.get('k', {}).values())}
     new = {k: v for k, v in old.items() if k in MOTIONS and (add or k not in names)}
-    jobs = [(n, e) for n in names for e in els]
+    jobs = [(n, e) for e in els for n in names]   # 属性ごとにならべる（モデルの読みこみは、属性がかわるたび。同じ属性をつづけると速い）
     cache = os.environ.get('SPIRIT_CACHE')   # 仕事ごとの結果をとっておく所（とちゅうで止まっても、つづきから）
     if cache: os.makedirs(cache, exist_ok=True)
     ck = lambda n, e: os.path.join(cache, ('iso_' if iso else '')+n+'_'+e+'.pkl')
@@ -92,7 +92,7 @@ def main():
     def results():
         yield from done
         with Pool(min(4, os.cpu_count() or 1)) as pool:
-            for r in pool.imap_unordered(job, jobs):
+            for r in pool.imap_unordered(job, jobs, chunksize=max(1, min(len(names), len(jobs)//4 or 1))):
                 if cache:
                     import pickle; pickle.dump(r, open(ck(r[0], r[1]), 'wb'))
                 yield r
