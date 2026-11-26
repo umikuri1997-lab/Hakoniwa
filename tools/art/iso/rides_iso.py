@@ -30,6 +30,7 @@ def run(iid,out,I,only_frames=None):
             if f==0:print(iid,'コマ',im.size,flush=True)
     finally:O.Scene.turn=T0
     assert len({im.size for im in imgs})==1
+    I.SZ[iid]=tuple(M.SZ)   # 置くマスの大きさは、設計図の SZ（data.js の BL から読む道具は、行のとちゅうにある遊具を読めない）
     u,v=I.anchor(inf,iid,0)
     fr=palette(imgs);stable=np.logical_and.reduce([(a==fr[0]).all(axis=2) for a in fr])
     still=Image.fromarray(np.where(stable[...,None],fr[0],0).astype(np.uint8))
