@@ -211,7 +211,7 @@ def tone_cave(R):
     for f,k in inv.items():
         if f in R:c=R.pop(f);c['f']=[Image.fromarray(CT.tone(np.asarray(i.convert('RGBA'))).astype(np.uint8),'RGBA') for i in c['f']];R[k]=c
     return R
-RIDEIDS={'merry','cup','skyswing','wheel'}   # 遊園地の遊具：動く絵（rides_iso.py。動かない所 :s と、動く所 :m0〜m15）
+RIDEIDS={'merry','cup','skyswing','wheel','merryb','cupb','skyswingb','wheelb'}   # 遊園地の遊具：動く絵（rides_iso.py。動かない所 :s と、動く所 :m0〜m15）
 def run_ride(iid,out):
     import rides_iso as RI;R=RI.run(iid,out,sys.modules[__name__]);full=R.pop('_full');D=os.path.join(out,'_view');os.makedirs(D,exist_ok=True)
     for n in (0,4,8,12):RI.view(full[n],4,szof(iid)).save(os.path.join(D,'%s_f%d_x4.png'%(iid,n)))
