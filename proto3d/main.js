@@ -58,9 +58,13 @@ const PROPS=[
   ...['T0','T2','T3','T4','T5','T6','T8','T9'].map(id=>PLANT(id,1.9,[1,2,4],'tree')),PLANT('T1',2.2,[1,2,3],'tree'),PLANT('T7',2.2,[0,1,2],'tree'),
   ...['B0','B1','B2'].map(id=>PLANT(id,.7,[2,4,9],'small')),
   ...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9'].map(id=>PLANT(id,.45,[2,6,14],'tiny')),
-  {id:'rock',h:.3,n:[3,6,12],kind:'small'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small'},
-  {id:'lantern',h:.7,n:[2,3,4],kind:'item'},{id:'sack',h:.5,n:[2,3,4],kind:'item'},{id:'firewood',h:.4,n:[1,2,3],kind:'item'},{id:'stump',h:.4,n:[2,3,5],kind:'item'},
-  {id:'log_lying',h:.35,n:[1,2,3],kind:'item'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item'},{id:'wateringcan',h:.35,n:[1,1,2],kind:'item'}];
+  // トリポのモデル：mat＝材質（ゲームの家具の設計図のように、物ごとにきめる）
+  {id:'rock',h:.3,n:[3,6,12],kind:'small',mat:'stone'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small',mat:'stone'},
+  {id:'lantern',h:.7,n:[2,3,4],kind:'item',mat:'metal'},{id:'sack',h:.5,n:[2,3,4],kind:'item',mat:'cloth'},{id:'firewood',h:.4,n:[1,2,3],kind:'item',mat:'bark'},{id:'stump',h:.4,n:[2,3,5],kind:'item',mat:'bark'},
+  {id:'log_lying',h:.35,n:[1,2,3],kind:'item',mat:'bark'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item',mat:'stone'},{id:'wateringcan',h:.35,n:[1,1,2],kind:'item',mat:'metal'}];
+// 材質（ゲームの道具の oblique3d.Tex と同じもよう。make_textures.py が tex/m_<名前>.png を作る）。番号は点の値 _mat
+const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5};
+const SHINY={cut:.95,dv:34,ds:-40};  // 金属のつや（oblique3d の SHINYSPEC・SHINYSHINE）：光と目のあいだの向きとの内積がこれより大きい所
 // 小さい画面のアルファにつける印（輪郭のつけ方を分ける）
 const TAG={ground:1,prop:.75};
 
@@ -103,21 +107,33 @@ vec3 tnHsv2rgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);retur
 vec3 tnShift(vec3 lin,vec2 dvs){vec3 h=tnRgb2hsv(pow(max(lin,0.),vec3(1./2.2)));h.z=clamp(h.z+dvs.x/100.,0.,1.);h.y=clamp(h.y+dvs.y/100.,0.,1.);return pow(tnHsv2rgb(h),vec3(2.2));}
 `;
 // 物・地面：5色のかげ（flat：地面。ゲームの絵をそのまま出し、ほかの物のかげだけかさねる）。
-// cuts：だんのさかい（太陽との内積。objCuts）。点の値 _under：葉の下のかげ（暗くするだんの数。make_plants.py）
-function toneMat(o={},flat=false,cuts=[0,0,0,0]){
-  const m=new THREE.MeshLambertMaterial(o),uCuts={value:new THREE.Vector4(...cuts)};
+// cuts：だんのさかい（太陽との内積。objCuts）。点の値 _under：葉の下のかげ（暗くするだんの数）・_flat：葉の部品（色をそのまま）・_mat：材質（MATIDX）。
+// ax：材質のもようの流れる向き（物の座標。oblique3d は部品のいちばん長い向き）
+const MATT={},uMat={value:[]},uMatK={value:[]};  // もようの絵・(1まいのマス, こい所にかける数, 明るい所にかける数)
+function toneMat(o={},flat=false,cuts=[0,0,0,0],ax=[0,1,0]){
+  const m=new THREE.MeshLambertMaterial(o),uCuts={value:new THREE.Vector4(...cuts)},uAx={value:new THREE.Vector3(...ax).normalize()};
   m.onBeforeCompile=sh=>{
-    sh.uniforms.uLV=uLV;sh.uniforms.uCuts=uCuts;
-    sh.vertexShader='attribute float _under;varying float vUnder;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;');
-    sh.fragmentShader='uniform vec3 uLV;uniform vec4 uCuts;varying float vUnder;\n'+GLSL_HSV+sh.fragmentShader
+    sh.uniforms.uLV=uLV;sh.uniforms.uCuts=uCuts;sh.uniforms.uAx=uAx;sh.uniforms.uMat=uMat;sh.uniforms.uMatK=uMatK;
+    sh.vertexShader='attribute float _under,_flat,_mat;varying float vUnder,vFlat,vMat;varying vec3 vOP,vON;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vFlat=_flat;vMat=_mat;vOP=position;vON=normal;');
+    sh.fragmentShader='uniform vec3 uLV,uAx;uniform vec4 uCuts;uniform sampler2D uMat[5];uniform vec3 uMatK[5];varying float vUnder,vFlat,vMat;varying vec3 vOP,vON;\n'+GLSL_HSV+`
+float tnTex(int k,vec2 uv){return k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;}
+`+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <opaque_fragment>',`{
   vec3 tnC=diffuseColor.rgb;
-  ${flat?'':`float tnD=dot(normalize(normal),normalize(uLV));
+  int tnM=int(vMat+.5)-1;
+  if(tnM>=0){ // 材質のもよう：部品ののびる向き uAx にそって、明るさを3だん（oblique3d.Tex と同じ）
+    vec3 n=normalize(vON),v2=cross(n,uAx);if(length(v2)<.3)v2=cross(n,vec3(0.,1.,0.));v2=normalize(v2);
+    vec3 k=tnM==0?uMatK[0]:tnM==1?uMatK[1]:tnM==2?uMatK[2]:tnM==3?uMatK[3]:uMatK[4];
+    float t=tnTex(tnM,vec2(dot(vOP,uAx),dot(vOP,v2))/k.x);
+    vec3 s=pow(tnC,vec3(1./2.2))*(t<.25?k.y:t>.75?k.z:1.);tnC=pow(min(s,vec3(1.)),vec3(2.2));
+  }
+  ${flat?'':`if(vFlat<.5){float tnD=dot(normalize(normal),normalize(uLV));
   float tnF=tnD<uCuts.x?0.:tnD<uCuts.y?1.:tnD<uCuts.z?2.:tnD<uCuts.w?3.:4.;
   int tnB=int(clamp(floor(tnF-vUnder+.5),0.,4.));
   vec2 tnS=tnB==0?vec2(${TONE.deep}):tnB==1?vec2(${TONE.shade}):tnB==2?vec2(${TONE.base}):tnB==3?vec2(${TONE.hi}):vec2(${TONE.hi2});
-  tnC=tnShift(tnC,tnS);`}
+  tnC=tnShift(tnC,tnS);
+  if(tnM==${MATIDX.metal-1}&&dot(normalize(normal),normalize(uLV+vec3(0.,0.,1.)))>${SHINY.cut})tnC=tnShift(tnC,vec2(${SHINY.dv},${SHINY.ds}));}`}
   if(getShadowMask()<.5){vec3 s=pow(tnC,vec3(1./2.2));s=mix(s,vec3(${f3(GSHADOW)}),${GSHADOW[3]});tnC=pow(s,vec3(2.2));}
   gl_FragColor=vec4(tnC,${flat?TAG.ground.toFixed(2):TAG.prop.toFixed(2)});
 }`);
@@ -191,9 +207,10 @@ function cleanColors(geo){
 // だんのさかい：見える面（カメラを向いた面。面積×向きの重み。置くときにまわすので、8つの向きをまぜる）の、太陽との内積の順で CUTQ の所
 function objCuts(geo){
   const P=geo.getAttribute('position'),I=geo.index,n=I?I.count/3:P.count/3,ds=[],ws=[],a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),N=new THREE.Vector3();
-  const vi=k=>I?I.getX(k):k;
+  const vi=k=>I?I.getX(k):k,FL=geo.getAttribute('_flat');
   for(let r=0;r<8;r++){const q=r*Math.PI/4,cs=Math.cos(q),sn=Math.sin(q);
     for(let t=0;t<n;t++){a.fromBufferAttribute(P,vi(3*t));b.fromBufferAttribute(P,vi(3*t+1));c.fromBufferAttribute(P,vi(3*t+2));
+      if(FL&&FL.getX(vi(3*t))>.5)continue; // 葉の部品は、かげをつけなおさないので数えない
       N.subVectors(b,a).cross(c.sub(a));const ar=N.length();if(!(ar>0))continue;N.divideScalar(ar);N.set(N.x*cs+N.z*sn,N.y,-N.x*sn+N.z*cs);
       const v=N.dot(CAMDIR);if(v<=0)continue;ds.push(N.dot(LW));ws.push(v*ar)}}
   const o=ds.map((_,i)=>i).sort((i,j)=>ds[i]-ds[j]),tot=ws.reduce((x,y)=>x+y,0);let acc=0,k=0;const out=[];
@@ -211,8 +228,11 @@ async function loadProp(p){
   const parts=[];
   root.traverse(o=>{if(!o.isMesh)return;let geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
     geo.deleteAttribute('normal');geo=mergeVertices(geo);geo.computeVertexNormals(); // まるい面は、なめらかなかげ
-    if(p.src!=='plants')cleanColors(geo); // 植物の色は、make_plants.py でゲームの色をぬってある
-    const src=o.material||{};parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color'),color:geo.getAttribute('color')?0xffffff:(src.color||0xffffff),map:src.map||null},false,objCuts(geo))})});
+    if(p.src!=='plants'){cleanColors(geo); // 植物の色は、make_plants.py でゲームの色をぬってある
+      const n=geo.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(v),1);
+      geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_flat',mk(0));geo.setAttribute('_under',mk(0))}
+    geo.computeBoundingBox();const bs=geo.boundingBox.getSize(new THREE.Vector3()),ax=p.src==='plants'?[0,1,0]:bs.x>=bs.y&&bs.x>=bs.z?[1,0,0]:bs.y>=bs.z?[0,1,0]:[0,0,1]; // もようの向き：植物（みき）はたて、ほかは物のいちばん長い向き
+    const src=o.material||{};parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color'),color:geo.getAttribute('color')?0xffffff:(src.color||0xffffff),map:src.map||null},false,objCuts(geo),ax)})});
   p.parts=parts;
 }
 const SPMODELS={};
@@ -430,7 +450,13 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
+async function loadMats(){
+  const meta=await (await fetch('./tex/mats.json')).json(),names=Object.keys(MATIDX).sort((a,b)=>MATIDX[a]-MATIDX[b]);
+  for(const k of names){const t=await TEXL.loadAsync('./tex/m_'+k+'.png');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
+    uMat.value.push(t);uMatK.value.push(new THREE.Vector3(meta[k].span,meta[k].dark,meta[k].light))}
+}
 async function main(){
+  await loadMats();
   await Promise.all([loadGround(),...PROPS.map(loadProp),...ELS.map(loadSpirit)]);
   if(GIMG.glow)comp.m.uniforms.tint.value.set(GIMG.glow[0]/255,GIMG.glow[1]/255,GIMG.glow[2]/255,GIMG.glow[3]);
   sun.castShadow=OPT.shadow;blocked=placeProps(OPT.props);makeSpirits(OPT.spirits);

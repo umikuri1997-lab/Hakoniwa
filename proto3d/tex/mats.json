@@ -1,0 +1,27 @@
+{
+ "wood": {
+  "span": 2.0,
+  "dark": 0.82,
+  "light": 1.12
+ },
+ "stone": {
+  "span": 0.57,
+  "dark": 0.91,
+  "light": 1.06
+ },
+ "metal": {
+  "span": 0.65,
+  "dark": 0.9,
+  "light": 1.06
+ },
+ "cloth": {
+  "span": 0.72,
+  "dark": 0.9,
+  "light": 1.06
+ },
+ "bark": {
+  "span": 0.8,
+  "dark": 0.86,
+  "light": 1.08
+ }
+}
