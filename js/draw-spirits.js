@@ -14,12 +14,8 @@ const SPC={
   wind:{hood:'#a6cc8a',cheek:'#d2e2bc',dark:'#86b46a',eye:'#456a2a',hand:'#c8e2b4',line:'#c2dcaa',tend:'#e8cdb0'},
   wood:{hood:'#6fae4c',cheek:'#b6d39e',dark:'#4f8a35',eye:'#3f5e26',hand:'#d6e8c2',line:'#e2d6bc',vein:'#9fd27e'},
 };
-const CREAM='#fdf8ef';
-// 見た目の微調整用の数値（デザイン調整ツールで作った値をここに入れる）
-const KEYTUNE={head:1.13,faceW:24.5,faceH:21,faceY:2,eyeY:1,eyeGap:11,eyeW:2.8,eyeH:4.6,cheekS:1,cheekA:.42,bodyW:1,bodyH:1,armL:1,armW:.88,hand:1,tail:1.04,line:2.4,sEye:3,sCheek:-16,sFaceX:9.5,sFaceW:8,sHead:.95,sHoodX:4.5,sMouth:3};/* キーキャラ（フタバ・ノドカ）の見た目 */
-const BASETUNE={head:1.13,faceW:24.5,faceH:21,faceY:2,eyeY:1,eyeGap:11,eyeW:2.8,eyeH:4.6,cheekS:1,cheekA:.42,bodyW:1,bodyH:1,armL:1,armW:.88,hand:1,tail:1.04,line:2.4,sEye:3,sCheek:-16,sFaceX:9.5,sFaceW:8,sHead:.95,sHoodX:4.5,sMouth:3};
 // 足元(0,0)基準・高さ約100単位。右向きで描いてfで反転。o:{t,back,turn(0正面〜1真横),walk,work,sleep,blink,lean}
-const PSPR={"wmBody":{"src": "assets/g/67ccde7704.webp"},"wmSail":{"src": "assets/g/a6e83e73cf.webp"},"well":{"w": 192, "h": 168, "src": "assets/g/4076e7cf97.webp"},"lumber":{"w": 96, "h": 95, "src": "assets/g/1cf99a0e22.webp"},"quarry":{"w": 96, "h": 90, "src": "assets/g/def842f310.webp"},"puddle":{"w": 96, "h": 58, "src": "assets/g/7d236e5659.webp"},"firetrap":{"w": 96, "h": 95, "src": "assets/g/c7a01d832d.webp"},"gust":{"w": 96, "h": 94, "src": "assets/g/c3f6e5b647.webp"},"torch":{"w": 34, "h": 96, "src": "assets/g/377580bdc3.webp"},"can":{"w":80,"h":44,"src":"assets/g/a152791e98.webp"},"hammer":{"w":80,"h":48,"src":"assets/g/c4e04e0342.webp"},"axe":{"w":80,"h":48,"src":"assets/g/f28741502b.webp"},"saw":{"w":80,"h":32,"src":"assets/g/678b62430a.webp"},"pick":{"w":80,"h":72,"src":"assets/g/6c33c2cfb4.webp"},"hoe":{"w":80,"h":36,"src":"assets/g/39079f38b3.webp"},"swing":{"w":80,"h":63,"src":"assets/g/cbdd29487c.webp"}};
+const PSPR={"wmBody":{"src": "assets/g/67ccde7704.webp"},"wmSail":{"src": "assets/g/a6e83e73cf.webp"},"well":{"w": 192, "h": 168, "src": "assets/g/4076e7cf97.webp"},"lumber":{"w": 96, "h": 95, "src": "assets/g/1cf99a0e22.webp"},"quarry":{"w": 96, "h": 90, "src": "assets/g/def842f310.webp"},"puddle":{"w": 96, "h": 58, "src": "assets/g/7d236e5659.webp"},"firetrap":{"w": 96, "h": 95, "src": "assets/g/c7a01d832d.webp"},"gust":{"w": 96, "h": 94, "src": "assets/g/c3f6e5b647.webp"},"torch":{"w": 34, "h": 96, "src": "assets/g/377580bdc3.webp"},"axe":{"w":80,"h":48,"src":"assets/g/f28741502b.webp"},"swing":{"w":80,"h":63,"src":"assets/g/cbdd29487c.webp"}};
 for(const k in PSPR){const g=PSPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1;dirty=true;if(typeof iconCache!=="undefined"){delete iconCache[k];if(k.startsWith("wm"))delete iconCache.windmill}};g.img.src=g.src}
 // 顔・手のアイコン（絵文字のかわりに使う）
 const EMOS={"muscle": "assets/g/5554bd7111.webp", "one": "assets/g/88db2f2e48.webp", "point": "assets/g/00ac3e5a20.webp", "palm": "assets/g/ebf1b027f0.webp", "thumb": "assets/g/8f7bd1849e.webp", "laugh": "assets/g/9a40ea6fe9.webp", "shock": "assets/g/824f985b69.webp", "bang": "assets/g/3b6a37fa64.webp", "q": "assets/g/b78fb718c4.webp", "cry": "assets/g/3367f045df.webp"};
@@ -57,115 +53,13 @@ const emoSrc=t=>{t=nfe(t);return EIMG[t]||(EMO_IC[t]&&ICONS[EMO_IC[t]])||(EMO_OF
 const hex2hsl=h=>{const n=parseInt(h.slice(1),16),r=(n>>16)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let H=0,S2=0;if(mx!==mn){const d=mx-mn;S2=l>.5?d/(2-mx-mn):d/(mx+mn);H=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;H*=60}return[H,S2,l]};
 const hsl2hex=(H,S2,l)=>{const k=n=>(n+H/30)%12,a=S2*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));return'#'+[f(0),f(8),f(4)].map(v=>Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0')).join('')};
 const SPCV={};function spcVar(el,v){const B=SPC[el]||SPC.wood;if(!v||(!v.h&&!v.l))return B;const k=el+v.h+'_'+v.l;if(SPCV[k])return SPCV[k];const o={};for(const q in B){if(q==='line'||q==='hand'){o[q]=B[q];continue}const[H,S2,l]=hex2hsl(B[q]);o[q]=hsl2hex((H+v.h+360)%360,S2,Math.max(.08,Math.min(.92,l+v.l)))}return SPCV[k]=o}
-let EATSIDE=-.1;
-function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・かたむき・道具など（描き方とは別） */
-  const rs=o.anim==='rest'?.5:1;/* ベンチで休むときは、息・腕のゆれを半分に */
-  const br=(o.sleep?Math.sin(t*1.6)*.035:Math.sin(t*2.6)*.022)*rs;
-  const st=o.walk?Math.sin(t*9):0,arm=o.carry?0:o.work?Math.sin(t*12)*.6:o.walk?st*.35:Math.sin(t*1.7)*.08*rs;
-  // 作業ごとの動き：aN=手前の腕、aF=奥の腕（負で上がる）
-  const A=/^eat_/.test(o.anim||'')?'eat':o.anim||'',cyc=(sp)=>(t*sp)%1;/* 食べ方ごとの動き（eat_〜）は、3Dの絵がないとき（横にすわる など）は、いままでの食べる形 */let aN=null,aF=null,prop='',lean2=0,sq=0,frontArm=false,bothF=false;
-  if(A==='climb'){aN=-1.5+Math.sin(t*8)*.25;aF=-1.5-Math.sin(t*8)*.25;lean2=-.05;sq=Math.abs(Math.sin(t*8))*.02;frontArm=bothF=true}/* 段差をよじのぼる：両手を頭の左右へ、ななめ上にのばして、こうごに動かす（頭の前・うしろに手をかさねない） */
-  else if(A==='bowidle'){aN=-.2+Math.sin(t*1.7)*.04;aF=.15;prop='bow';o.bowPull=0;frontArm=true}/* 見張り台でまつ：弓を持った手を下げる */
-  else if(A==='bow'){const p=o.pp==null?1:Math.max(0,Math.min(1,o.pp)),pull=p<BOW_PULL/BOW_ALL?p*BOW_ALL/BOW_PULL:p<BOW_REL/BOW_ALL?1:0;aN=-1.45;aF=-1.45+.75*pull;prop='bow';o.bowPull=pull;lean2=-.03*pull;frontArm=bothF=true}/* 見張り台で弓をうつ：前の手で弓をかまえ、うしろの手で弦を引いて、はなす */
-  else if(A==='punch'){const p=Math.min(1,o.pp||0),v=p<.55?-1.95*(p/.55):-1.95+2.4*((p-.55)/.45);aN=aF=v;lean2=p<.55?-.04:.07;frontArm=bothF=true}/* 攻撃：両手を振り上げて、ぽかっと振り下ろす */
-  else if(A==='storySoil'){const p=o.sceneP||0,v=Math.sin(Math.PI*p);aN=.3+v*.55;aF=.35;lean2=.06+v*.13;sq=v*.08;frontArm=bothF=true}
-  else if(A==='storyTouch'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneP||0)*1.3));aN=.35-v*1.4;aF=.2;lean2=v*.14;frontArm=true}
-  else if(A==='storyStone'){const p=o.sceneP||0,v=p<.3?0:Math.min(1,(p-.3)/.6);aN=aF=-1.1+v*1.7;lean2=v*.17;sq=v*.1;frontArm=bothF=true}
-  else if(A==='storyCover'){const v=Math.sin(Math.PI*(o.sceneP||0));aN=.4+v*.6;aF=.4-v*.2;lean2=.12*v;sq=.08*v;frontArm=bothF=true}
-  else if(A==='storyPour'){aN=-.75;aF=-.4;prop='can';lean2=.1;frontArm=bothF=true}
-  else if(A==='storyWind'){aN=-.6-Math.sin((o.sceneP||0)*Math.PI)*.6;aF=.1;lean2=-.02;frontArm=true}
-  else if(A==='storyListen'){aN=.35;aF=.35;lean2=.025;frontArm=true}
-  else if(A==='storyBump'){const p=o.sceneP||0,v=p<.5?sacredEase(p*2):1-sacredEase((p-.5)*2);aN=.4-v*1.6;aF=.2;lean2=v*.1;frontArm=true}
-  else if(A==='storyOffer'){const p=o.sceneP||0,v=sacredEase(Math.min(1,p/.35));aN=aF=-.4-2.3*v;lean2=-.05*v;frontArm=bothF=true}/* かけらを両手でささげる：手を前から上へもち上げる */
-  else if(A==='storyHug'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.8));aN=-1.6*v;aF=-1.35*v;lean2=.2*v;frontArm=bothF=true}
-  /* 火山の物語の動き（どの章でも使える）。後ろ向きのときは、spPose のさいごで腕を頭より先に描く */
-  else if(A==='lookback'){const T=o.sceneT||0;aN=aF=.3;lean2=T<.65?.06:-.03*Math.sin(Math.PI*Math.min(1,(T-.65)/.6));frontArm=true}/* 背中を見せていて、ふりかえる */
-  else if(A==='kneel'){aN=.5+Math.sin(t*2)*.04;aF=.55;lean2=.12;sq=.15;frontArm=bothF=true}/* ひざをつく */
-  else if(A==='kneelGaze'){const T=o.sceneT||0,v=sacredEase(Math.min(1,Math.max(0,(T-.9)/.7))),w=Math.sin(Math.max(0,T-1.6)*1.7)*v;aN=aF=.5-1.45*v;lean2=.12+.12*v+w*.06;sq=.15;frontArm=bothF=true}/* しゃがんで、ほっぺに両手をあて、みをのりだして、頭を左右にかしげながら、芽をのぞきこむ */
-  else if(A==='kneelTouch'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneT||0)/1.4));aN=.5-v*.7;aF=.55;lean2=.14+v*.06;sq=.15;frontArm=true}/* ひざをついて、地面にふれる */
-  else if(A==='kneelHeat'){aN=aF=-.85+Math.sin(t*3)*.06;lean2=.12;sq=.15;frontArm=bothF=true}/* ひざをついて、両手を熱にかざす */
-  else if(A==='tremble'){aN=aF=-.45+Math.sin(t*40)*.05;lean2=-.03;sq=.04;frontArm=bothF=true}/* ふるえる（体のゆれは sacredBody） */
-  else if(A==='stepBack'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.6));aN=aF=.2-1.3*v;lean2=-.09*v;frontArm=bothF=true}/* 一歩さがる */
-  else if(A==='grabSleeve'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.45));aN=.3-1.3*v;aF=.2;lean2=.12*v;frontArm=true}/* そでをつかむ */
-  else if(A==='fistClench'){aN=aF=.22+Math.sin(t*34)*.035;lean2=.05;sq=.03;frontArm=bothF=true}/* こぶしをにぎる */
-  else if(A==='ojigi'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneP||0)*1.15));aN=aF=.45;lean2=.34*v;frontArm=bothF=true}/* おじぎ（弓の bow とはべつ） */
-  else if(A==='fan'){aN=-1.95+Math.sin(t*15)*.38;aF=.2;lean2=-.02;frontArm=true}/* 手であおぐ */
-  else if(A==='armsCross'){aN=aF=-1.25;lean2=-.03;frontArm=bothF=true}/* うで組み */
-  else if(A==='backToBack'){aN=aF=.3;lean2=-.07;frontArm=true}/* せなかあわせ */
-  else if(A==='headPat'){aN=-2.45+Math.sin(t*7)*.16;aF=.2;frontArm=true}/* 頭をなでる */
-  else if(A==='soak'){aN=.5+Math.sin(t*1.3)*.1;aF=.5-Math.sin(t*1.3)*.1;sq=.02;frontArm=bothF=true}/* お湯につかる */
-  else if(A==='shoulderDrop'){const p=Math.min(1,(o.sceneT||0)/1.7),v=p<.6?sacredEase(p/.6):1;aN=aF=.3;lean2=p<.6?.11*v:.11-.2*sacredEase((p-.6)/.4);sq=p<.6?.04*v:.04*(1-sacredEase((p-.6)/.4));frontArm=bothF=true}/* 肩をおとして、それから顔を上げる */
-  else if(A==='lookUp'){aN=aF=.3;lean2=-.09;frontArm=bothF=true}/* 空を見あげる */
-  else if(A==='shield'){aN=aF=-1.05;lean2=.05;frontArm=bothF=true}/* 前に出て、かばう */
-  else if(A==='point'){aN=-1.55;aF=.2;frontArm=true}/* 指さす */
-  else if(A==='pray'){aN=aF=-2.4+Math.sin(t*1.4)*.03;lean2=.07+Math.sin(t*1.4)*.015;frontArm=bothF=true}/* おいのり：胸の前で手を合わせて、少しうつむく */
-  else if(A==='pluck'){aN=-1.95+Math.sin(t*9)*.28;aF=.15;lean2=.03;frontArm=true}/* ベリーをむしる：片手を上げて、ひっぱる */
-  else if(A==='hold'){aN=aF=-.85+Math.sin(t*3)*.03;frontArm=bothF=true}/* 手に持つ */
-  else if(A==='eat'){aN=aF=(tr?EATSIDE:-2.45)+Math.sin(t*7)*.06;frontArm=bothF=true}/* 横向きは、両手を前にのばして、食べ物を持つ */
-  else if(A==='chop'||A==='mine'||A==='till'){const p=cyc(1.4),v=p<.72?-2.3*(p/.72):-2.3+2.9*((p-.72)/.28);aN=v;aF=v;prop=A==='chop'?'axe':A==='mine'?'pick':'hoe';lean2=p<.72?-.06*(p/.72):-.06+.2*((p-.72)/.28);frontArm=true}
-  else if(A==='build'||A==='repair'||A==='craft'||A==='cookcut'){const p=cyc(2.6),v=p<.6?-1.3*(p/.6):-1.3+1.7*((p-.6)/.4);aN=v;aF=.2;prop=A==='cookcut'?'':'hammer';lean2=p>.6?.06:0;frontArm=true}
-  else if(A==='draw'){const p=cyc(1.5),v=p<.45?.95-.3*(p/.45):p<.8?.65-3.0*((p-.45)/.35):-2.35+.0;sq=p<.45?.08:.02;aN=aF=v;lean2=p<.45?.12:.02;prop='can';frontArm=bothF=true}/* 水をくむ：かがんで、水の入れ物をおろし、両手でひき上げる */
-  else if(A==='sweep'){aN=-2.05+Math.sin(t*7)*.38;aF=.15;prop='duster';lean2=-.03+Math.sin(t*7)*.02;frontArm=true}/* クモの巣のそうじ：はたきを上へのばして、左右にはらう */
-  else if(A==='water'||A==='tend'){aN=-.55+Math.sin(t*2)*.08;aF=.25;prop='can';lean2=.05;frontArm=true}
-  else if(A==='cook'){aN=-.5+Math.sin(t*5)*.22;aF=.15;prop='ladle';frontArm=true}
-  else if(A==='talk'){aN=-.6+Math.sin(t*4.7)*.4;aF=-.15+Math.sin(t*3.3)*.2;lean2=Math.sin(t*2.4)*.025;frontArm=true}
-  else if(A==='talkjoy'){aN=-1.35+Math.sin(t*7)*.38;aF=-1.25-Math.sin(t*7)*.32;sq=Math.sin(t*7)*.025;frontArm=bothF=true}
-  else if(A==='talkshock'){aN=aF=-1.7+Math.sin(t*8)*.12;lean2=-.075;sq=.04;frontArm=bothF=true}
-  else if(A==='talkthink'){aN=-2.05+Math.sin(t*2)*.06;aF=.15;lean2=-.06;frontArm=true}
-  else if(A==='talksad'){aN=.18+Math.sin(t*2)*.08;aF=.18;lean2=.07;sq=.025;frontArm=bothF=true}
-  else if(A==='wave'){aN=-2.55+Math.sin(t*9)*.35;frontArm=true}/* 手をふる */
-  else if(A==='clap'){const c=Math.sin(t*16);aN=-1.05+c*.32;aF=-1.05+c*.32;frontArm=bothF=true}
-  else if(A==='tubbath'){aN=.5+Math.sin(t*1.3)*.1;aF=.5-Math.sin(t*1.3)*.1;lean2=Math.sin(t*1.1)*.05;sq=.02+Math.sin(t*1.8)*.012}/* バスタブ：ゆったりつかる */
-  else if(A==='bathe'){const p=cyc(1.2),v=p<.45?.5-3.4*(p/.45):-2.9+3.4*((p-.45)/.55);aN=aF=v;frontArm=bothF=true;sq=.04+Math.sin(t*7.5)*.02;prop='splash'}
-  else if(A==='fish'){if(o.fishPull){aN=-1.5+Math.sin(t*14)*.18;aF=-.6+Math.sin(t*14)*.12}else{aN=-.95+Math.sin(t*1.4)*.05;aF=-.15}prop='rod';frontArm=true}
-  else if(A==='weed'){const p=cyc(1.1),pull=p<.6?p/.6:1-(p-.6)/.4;sq=.12-pull*.06;aN=aF=.75-pull*.35;lean2=.14-pull*.3;frontArm=bothF=true}/* 雑草：しゃがんで両手でつかみ、うしろへひっぱって抜く */
-  else if(A==='plant'||A==='sow'||A==='harvest'||A==='gather'||A==='forage'||A==='pickseed'||A==='pickdrop'){sq=.09+Math.sin(t*5)*.025;aN=.6+Math.sin(t*6)*.35;aF=.6-Math.sin(t*6)*.35;lean2=.1;frontArm=bothF=true}
-  else if(A==='store'||A==='storeh'||A==='storem'||A==='smat'||A==='fetch'||A==='cgrab'||(typeof TAKEACT!=='undefined'&&(TAKEACT.has(A)||PUTACT.has(A)))){sq=.05;aN=.4+Math.sin(t*5)*.2;aF=aN;frontArm=bothF=true}
-  else if(A==='offer'){aN=aF=-1.5+Math.sin(t*3)*.1;frontArm=bothF=true}
-  else if(A==='play'){aN=aF=-1.7+Math.sin(t*7)*.35;frontArm=bothF=true}
-  else if(A==='qstone'){sq=.12;lean2=.13;aN=.7+Math.max(0,Math.sin(t*3))*.35;aF=.55;frontArm=bothF=true}/* しゃがんで、小石をならべる */
-  else if(A==='qsniff'){lean2=.13+Math.sin(t*2.2)*.03;sq=.03;aN=aF=.2}/* 花に顔をよせて、においをかぐ */
-  else if(A==='qlookup'){lean2=-.08;aN=-2.1+Math.sin(t*1.5)*.05;aF=.15;frontArm=true}/* 手をひたいにかざして、木を見上げる */
-  else if(A==='qpeek'){sq=.13;lean2=.18;aN=aF=.55;frontArm=bothF=true}/* しゃがんで、水をのぞきこむ */
-  else if(A==='qwarm'){aN=-1.15+Math.sin(t*2)*.08;aF=-1.1-Math.sin(t*2)*.08;lean2=.05;frontArm=bothF=true}/* 火に手をかざす */
-  else if(A==='qbox'){const p=cyc(2.2);aN=p<.5?-1.55:-.4;aF=p<.5?-.4:-1.55;lean2=.05;frontArm=bothF=true}/* こぶしをふる練習 */
-  else if(A==='qrain'){const p=Math.abs(Math.sin(t*5));aN=aF=-.95-p*.2;sq=-p*.05;frontArm=bothF=true}/* 雨によろこんで、ばんざい */
-  else if(A==='qstretch'){const p=Math.min(1,t%5/1.2);aN=aF=-.7-p*.4;sq=-p*.09;lean2=-.03*p;frontArm=bothF=true}/* 朝の、のび */
-  else if(A==='qspin'){aN=aF=-1.2+Math.sin(t*10)*.1;sq=Math.abs(Math.sin(t*9))*.03;frontArm=bothF=true}/* 両手をひろげて、くるくるまわる */
-  else if(A==='chat'||A==='chatwait'){aN=-.7+Math.sin(t*5)*.45}
-  if(o.banzai){aN=aF=-1+Math.sin(t*4)*.07;frontArm=bothF=true}/* わーい */
-  if(o.carry&&!back){frontArm=bothF=true}
-  if(tr>.5)bothF=false;
-  if(back){frontArm=false;bothF=false;}/* 後ろ向きは、どの動作でも腕を頭より先に描く。頭巾の上へ手を重ねない */
-  return {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}}
-function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save();c.translate(sx*15,0);if(prop!=='food'&&prop!=='splash'){const g=sx*(.35+a);c.translate(Math.sin(g)*6,Math.cos(g)*6)}/* 道具は、手より下（画面の下へ6）で持つ */if(prop!=='food')c.scale(1.5,1.5);
-    if(prop==='splash'){for(let k=0;k<5;k++){const ph=(t*1.2+k*.2)%1,dx=sx*(-4+k*2.2)+Math.sin(k*2.1)*2,dy=-8-ph*16+ph*ph*30;c.globalAlpha=Math.max(0,1-ph);c.fillStyle=k%2?'#d6f2ff':'#6fc0ff';c.beginPath();c.arc(dx*1.4,dy,2.6-ph,0,7);c.fill()}c.globalAlpha=1;c.restore();return}/* 水しぶき */
-    const TPL={hammer:[-5,.5,26],axe:[-5,.68,30],pick:[-5,.5,30],saw:[-6,.4,32],hoe:[-5,.8,32]}[prop];
-    if(TPL&&PSPR[prop]&&PSPR[prop].ok){const g=PSPR[prop],h=TPL[2]*g.h/g.w;c.save();c.scale(sx,prop==='axe'||prop==='hoe'?-1:1);/* 斧・くわの刃は、ふりおろす向き（下）に */c.drawImage(g.img,TPL[0],-h*TPL[1],TPL[2],h);c.restore()}
-    else if(prop==='axe'||prop==='pick'||prop==='hoe'||prop==='hammer'||prop==='saw'){
-      if(prop==='saw'){c.fillStyle='#b9bfc6';c.beginPath();c.moveTo(sx*2,-4);c.lineTo(sx*30,-3);c.lineTo(sx*30,5);c.lineTo(sx*2,6);c.closePath();c.fill();c.fillStyle='#8a5a33';rr(c,sx>0?-4:-4,-5,8,12,3)}
-      else{const L=prop==='hammer'?16:24;c.strokeStyle='#b5764a';c.lineWidth=4.5;c.beginPath();c.moveTo(-sx*3,0);c.lineTo(sx*L,0);c.stroke();c.fillStyle='#a8a29a';
-        if(prop==='axe'){c.beginPath();c.moveTo(sx*(L-7),-2);c.quadraticCurveTo(sx*(L-6),-16,sx*(L+5),-17);c.quadraticCurveTo(sx*(L+6),-8,sx*(L+3),2);c.closePath();c.fill();c.fillStyle='#e6e1d8';c.beginPath();c.moveTo(sx*(L+5),-17);c.quadraticCurveTo(sx*(L+7),-8,sx*(L+3),2);c.lineTo(sx*(L+1),1);c.quadraticCurveTo(sx*(L+4),-8,sx*(L+2.5),-16);c.closePath();c.fill();c.fillStyle='#7d5238';rr(c,sx>0?L-4:-L-1,-4,5,8,1.5)}
-        else if(prop==='pick'){c.fillStyle='#a8a29a';c.beginPath();c.moveTo(sx*(L-1),-1);c.quadraticCurveTo(sx*(L-10),-14,sx*(L-20),-15);c.quadraticCurveTo(sx*(L-6),-17,sx*(L+2),-5);c.quadraticCurveTo(sx*(L+7),5,sx*(L+4),17);c.quadraticCurveTo(sx*(L+1),5,sx*(L-1),-1);c.closePath();c.fill();c.fillStyle='#7d5238';rr(c,sx>0?L-3:-L-2,-4,5,8,1.5)}
-        else if(prop==='hoe'){c.fillStyle='#a7adb5';c.beginPath();c.moveTo(sx*L,-2);c.lineTo(sx*(L+2),-2);c.lineTo(sx*(L+2),12);c.lineTo(sx*(L-6),12);c.closePath();c.fill()}
-        else{c.fillStyle='#8f949b';rr(c,sx>0?L-2:-L-5,-7,7,14,2)}}}
-    else{c.rotate(-sx*(.35+a));
-      if(prop==='food'&&o.food){const ei=emoImg(o.food);if(ei){const ih=44,iw=ih*ei.width/ei.height;c.drawImage(ei,-iw/2,-4-ih/2,iw,ih)}else{c.font='44px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,0,-4);c.textAlign='start';c.textBaseline='alphabetic'}}
-      else if(prop==='can'&&PSPR.can.ok){const g=PSPR.can,h=30*g.h/g.w;c.scale(sx,1);c.drawImage(g.img,-12.6,-9.7,30,h);
-        for(let k=0;k<3;k++){const ph=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-ph)+')';c.beginPath();c.ellipse(18+ph*3,-6+ph*24,1.8,2.6,0,0,7);c.fill()}}
-      else if(prop==='can'){c.fillStyle='#8fb4c8';rr(c,-9,-8,18,14,4);c.fillStyle='#a9c8d9';rr(c,-9,-8,18,4,2);c.strokeStyle='#8fb4c8';c.lineWidth=3.5;c.beginPath();c.moveTo(8,-2);c.lineTo(20,-10);c.stroke();
-        for(let k=0;k<3;k++){const ph=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-ph)+')';c.beginPath();c.ellipse(21+ph*3,-8+ph*26,1.8,2.6,0,0,7);c.fill()}}
-      else if(prop==='bow'){const pl=o.bowPull||0;c.strokeStyle='#5e3a1f';c.lineWidth=4.4;c.beginPath();c.arc(-4,-6,13,-1.2,1.2);c.stroke();c.strokeStyle='#b5764a';c.lineWidth=2.4;c.beginPath();c.arc(-4,-6,13,-1.2,1.2);c.stroke();const ex=-4+13*Math.cos(1.2),ey=13*Math.sin(1.2);c.strokeStyle='rgba(245,236,214,.95)';c.lineWidth=1;c.beginPath();c.moveTo(ex,-6-ey);c.lineTo(ex-7*pl,-6);c.lineTo(ex,-6+ey);c.stroke();if(pl>0){c.strokeStyle='#c9a06a';c.lineWidth=1.6;c.beginPath();c.moveTo(ex-7*pl,-6);c.lineTo(ex-7*pl+18,-6);c.stroke();c.fillStyle='#cfd6de';c.beginPath();c.moveTo(ex-7*pl+21,-6);c.lineTo(ex-7*pl+17,-8.5);c.lineTo(ex-7*pl+17,-3.5);c.closePath();c.fill()}}/* 弓（引いているあいだは矢をつがえる） */
-      else if(prop==='duster'){c.strokeStyle='#9a6a48';c.lineWidth=2.6;c.beginPath();c.moveTo(0,4);c.lineTo(5,-26);c.stroke();for(let k=0;k<5;k++){const sw=Math.sin(t*14+k)*2;c.strokeStyle=k%2?'#f2ead8':'#d9cdb2';c.lineWidth=2.2;c.beginPath();c.moveTo(5,-25);c.lineTo(5+(k-2)*3+sw,-37+Math.abs(k-2));c.stroke()}}
-      else if(prop==='ladle'){c.strokeStyle='#9a6a48';c.lineWidth=3;c.beginPath();c.moveTo(0,-6);c.lineTo(6,14);c.stroke();c.fillStyle='#8f949b';c.beginPath();c.ellipse(7,16,5,3,0,0,7);c.fill()}
-      else if(prop==='rod'){c.strokeStyle='#9a6a48';c.lineWidth=3;c.beginPath();c.moveTo(-4,4);c.lineTo(30,-34);c.stroke();const bb=Math.sin(t*3)*3;c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.2;c.beginPath();c.moveTo(30,-34);c.lineTo(38,14+bb);c.stroke();c.fillStyle='#e8604f';c.beginPath();c.arc(38,14+bb,3,0,7);c.fill()}}
-    c.restore()}
-// せいれいのドット絵：パーツ（頭・体・うで・手・しっぽ・表情）を、spPoseの動きで組み立てる。体・うで・手・表情は全属性で共通の絵を、色だけかえて使う
-/* 3Dから写した動き（js/spirit-motions.js の SPM。tools/art/spirit3d/build.py が作る）。
+/* せいれいの絵は、3Dから写した動きの絵（js/spirit-motions.js の SPM・クォータービューは js/spirit-motions-iso.js の SPMQ。tools/art/spirit3d/build.py が作る）だけ。目・まつげ・ほっぺは、チップ（sp:face・sp:lash・sp:cheek）をかさねる。
    動きの絵は、はじめて使うときに読みこみ、SPMIDLE ミリ秒使わなければ手ばなす。せいれいの色にかえたコマは、ぜんぶで SPMCAP まで持つ（古い物からすてる） */
 const SPMI={},SPMC=new Map(),SPMCAP=500,SPMIDLE=60000;let SPMT=0;
 function spmImg(nm,el,T){const k=(T||SPM)[nm].s[spArt(el)];let g=SPMI[k];if(!g){g=SPMI[k]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=k}/* 同じ形の動き（しまう・とる など）は、同じ絵のファイル */g.u=performance.now();return g.ok?g.img:null}
-function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const k in SPMI){const g=SPMI[k];if(now-g.u>SPMIDLE){g.img.src='';delete SPMI[k];for(const[c0,cv]of SPMC)if(c0.startsWith(k+'|')){cv.width=cv.height=0;SPMC.delete(c0)}}}}
+const SPMPIN={};function spmPin(el){/* 立ち姿（正面・クォータービュー）の絵は、はじめに読んで、手ばなさない（ほかの動きの絵を読むあいだの絵・一覧の小さい絵） */if(SPMPIN[el]||typeof SPM==='undefined')return;SPMPIN[el]=1;for(const T of[SPM,typeof SPMQ!=='undefined'?SPMQ:null]){const k=T&&T.stand&&T.stand.s[spArt(el)];if(k){spmImg('stand',el,T);SPMI[k].pin=1}}}
+function spmWarm(el,L){/* これから使う動きの絵を、先に読んでおく（L：動きの名前のならび。使っているあいだ、手ばなさない） */if(typeof SPM==='undefined'||!L)return;const T=typeof SPMQ!=='undefined'?SPMQ:SPM;for(const nm of L)if(T[nm]&&T[nm].s[spArt(el)])spmImg(nm,el,T)}
+function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const k in SPMI){const g=SPMI[k];if(!g.pin&&now-g.u>SPMIDLE){g.img.src='';delete SPMI[k];for(const[c0,cv]of SPMC)if(c0.startsWith(k+'|')){cv.width=cv.height=0;SPMC.delete(c0)}}}}
 function spmCell(nm,el,vr,dir,i,T){/* せいれいの色にした1コマ（色のかえ方は spDot と同じ。色をかえないときは、もとの絵の場所）。dir 3〜5 は、目の上にかさねる絵（正面・横・うしろ。G[5] の高さ） */
   const m=(T||SPM)[nm],ae=spArt(el),G=m.g[ae];if(!G)return null;const im=spmImg(nm,el,T);if(!im)return null;const ov=dir>2,H=ov?G[5]:G[1],sx=i*G[0],sy=ov?G[1]*3+(dir-3)*H:dir*G[1],A=SPC[ae],B=spcVar(el,vr);
   if(A===B)return[im,sx,sy];
@@ -195,15 +89,15 @@ function spmXCell(nm,el,vr,dir,li,i,T){/* 表情の目・ほっぺの層の1コ�
 const ISOEYEUV=[[-9,-40],[9,-40],[-15,-35],[15,-35]];/* 左・右の目、左・右のほっぺのまん中（絵の点。rig.py の ISOEYEUV と同じ） */const SPMSIT=new Set(['sunset','ysit','tkwatch']);/* 地面にすわる動き（sitF でも3Dの絵） */
 /* つり：おわりの FISHPULL（行動の時間）は、魚がかかって、うきのまわりで水がバシャバシャ・さおをぐいぐい引く */
 const FISHPULL=8,FISHEND=50;function fishPullNow(r){const a=r.act;return !!(a&&a.type==='fish'&&a.stage==='do'&&a.sh==null&&(a.yk!=null?a.t<a.yk+FISHYANK:a.t>=FISHEND-FISHPULL))}/* にげられるときは、つつかれたときに、さっとひく */
-function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは '' で、いままでの描き方） */
-  if(typeof SPM==='undefined'||o.sit||o.bed||o.sleep&&!(o.iso&&o.walk)||o.banzai||o.sitF&&!SPMSIT.has(A))return'';/* クォータービュー：ねむいまま歩くときも、3Dの歩く絵（いままでの描き方は正面の絵になる） */
-  if(o.walk){const hs=o.hturn?(o.hturn>0?'_hp':'_hn')+Math.min(HTSTEP,Math.max(1,Math.round(Math.abs(o.hturn)*HTSTEP))):'';/* 首を先に向ける絵（spHeadTurn） */return o.carry?(SPM['carry'+hs]?'carry'+hs:SPM.carry?'carry':''):o.chase&&SPM.chase?'chase':SPM['walk'+hs]?'walk'+hs:SPM.walk?'walk':''}
-  if(o.carry)return o.iso&&typeof SPMQ!=='undefined'&&SPMQ.carry?'carry':'';/* クォータービュー：持って立ち止まっているときも、3Dの持つ絵（足はとめる：spmDraw）。いままでの描き方は正面の絵になる */
-  if(A==='fish'&&o.fishPull&&SPM.fishpull)return'fishpull';/* 魚がかかった：さおをぐいぐい引く */
+function spMotion(o,A){/* いまの動きの名前（SPM・SPMQ のキー）。その行動の絵がないときは、立ち姿（stand） */
+  if(o.bed)return'bed';if(o.banzai)return'banzai';/* ベッドで眠る・わーい（なかまの紹介） */
+  if(!o.walk){if(o.sleep)return o.sitF?'sitfront':'doze';/* うたたね（ベッド・床でない所で眠る） */if(o.sitF)return SPMSIT.has(A)&&SPM[A]?A:'sitfront';/* 地面にすわる */if(o.sit)return SPM[A]?A:'sit'}/* いす・ベンチにすわる（食べる・話すなど、その動きの絵があれば、そちら） */
+  if(o.walk){const hs=o.hturn?(o.hturn>0?'_hp':'_hn')+Math.min(HTSTEP,Math.max(1,Math.round(Math.abs(o.hturn)*HTSTEP))):'';/* 首を先に向ける絵（spHeadTurn） */return o.carry?(SPM['carry'+hs]?'carry'+hs:'carry'):o.chase?'chase':SPM['walk'+hs]?'walk'+hs:'walk'}
+  if(o.carry)return'carry';/* 持って立ち止まっているとき（足はとめる：spmDraw） */
+  if(A==='fish'&&o.fishPull)return'fishpull';/* 魚がかかった：さおをぐいぐい引く */
   if(A==='play'&&o.toy&&SPM['play_'+o.toy])return'play_'+o.toy;
-  if((typeof TAKEACT!=='undefined'&&(TAKEACT.has(A)||PUTACT.has(A)))&&!SPM[A]&&SPM.store)return'store';/* 箱などから取る・置くは、箱にしまうのと同じ動き */
-  if(o.iso&&typeof SPMQ!=='undefined'&&!SPM[A]&&SPMQ.stand)return'stand';/* クォータービュー：3Dの絵のない立ち姿も、ななめの3Dの絵で立つ */
-  return SPM[A]?A:''}
+  if((typeof TAKEACT!=='undefined'&&(TAKEACT.has(A)||PUTACT.has(A)))&&!SPM[A])return'store';/* 箱などから取る・置くは、箱にしまうのと同じ動き */
+  return SPM[A]?A:'stand'}
 /* 首を先に向ける（Frostwind の attention.js の考え方。MIT）：歩いていて、よこ向きと正面・うしろ向きがかわるとき、HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵（walk_hp・walk_hn など、motions.py の HTURN）。
    正面では hy＋が画面の右・うしろでは画面の左・よこでは＋がこちら（正面）・−が奥（うしろ）。正面とうしろのあいだ・よこの右と左のあいだは、そのまま切りかえる。
    首はいっぺんに向けない：HTSTEP だんの絵（walk_hp1〜walk_hp6 など、s は ±k/HTSTEP）を、同じ時間ずつ（画面の1コマくらい）順に出して、同じ速さでなめらかに向く */
@@ -241,18 +135,18 @@ function drawMitt(c,x,y,D,col,ol){const X=Math.round(x/D)-2,Y=Math.round(y/D)-2;
   c.fillStyle=col;for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(MITT[j][i]==='#')c.fillRect((X+i)*D,(Y+j)*D,D,D)}
 const WHAND={gf_open:{s:28,dy:-4},gf_unfold:{s:36,dy:-6},gf_lift:{s:24,at:'n',dy:-10},gf_ear:{s:20,at:'n',dy:-2},gf_wave:{s:26,at:'n',dy:-10},gf_sniff:{s:22,dy:-4},gf_hug:{s:24,dy:0},gf_spin:{s:20,at:'n',dy:6},gf_read:{s:26,dy:-4},gf_peek:{s:20,at:'n',dy:-4},gf_shake:{s:20,at:'n',dy:-6},lnod:{s:22,dy:0},cookprep:{s:30,dy:-6},cookplate:{s:28,at:'tip',dy:-8},cookfry:{s:22,at:'tip',dy:-6},raise:{s:36,dy:0}};/* 手に持つ物の大きさ・場所（at:'tip' は道具の先。raise は頭の上） */
 function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさね、その上に、ずきん・顔の手前にある、うで・手・道具（G[4]・G[5]）をかさねる */
-  const T=o.iso&&typeof SPMQ!=='undefined'&&SPMQ[nm]&&SPMQ[nm].g[spArt(el)]?SPMQ:SPM;/* クォータービュー：前ななめ・うしろななめの絵（js/spirit-motions-iso.js） */const m=T[nm],G=m.g[spArt(el)];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):nm==='carry'&&!o.walk?0:o.walk&&o.wd!=null&&typeof m.r==='number'?((o.wd*WALKPT*m.r/WALKR)%1+1)%1/* 歩いた道のりで進める（WALKPT） */:((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i,T);if(!cell)return false;
+  const T=o.iso&&typeof SPMQ!=='undefined'&&SPMQ[nm]&&SPMQ[nm].g[spArt(el)]?SPMQ:SPM;/* クォータービュー：前ななめ・うしろななめの絵（js/spirit-motions-iso.js） */const m=T[nm],G=m&&m.g[spArt(el)];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):nm==='carry'&&!o.walk?0:o.walk&&o.wd!=null&&typeof m.r==='number'?((o.wd*WALKPT*m.r/WALKR)%1+1)%1/* 歩いた道のりで進める（WALKPT） */:((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i,T);if(!cell)return false;
   const fl=(nm==='fish'||nm==='fishcast'||nm==='fishpull')&&o.fishTo?m.h[dir][i]:null,fT=fl&&[o.isx?x+(o.fishTo[0]-x)/ISOSPX:o.fishTo[0],o.fishTo[1]];/* よこを ISOSPX にのばした中なので、うきの場所はもどす */if(fl&&fl.length>4&&dir===2)drawFishLine(c,x+fl[4]*D*s*f,y+fl[5]*D*s,fT[0],fT[1],t,o.fishB);/* うしろ向き（上の水）：糸とうきは体より奥 */
   const vr=o.vr,e=m.e[spArt(el)][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  const cwx=((tr?-4:0)+e[0])*D,cwy=((CROWNY[el]||-66)+e[1])*D;if(o.crown&&e[2]<2)drawCrown(c,cwx,cwy,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭より先（頭にかくれる） */
+  const cwx=((tr?-4:0)+e[0])*D,cwy=((CROWNY[el]||-66)+e[1])*D;if(o.crown&&!o.bed&&e[2]<2)drawCrown(c,cwx,cwy,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭より先（頭にかくれる） */
   c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
-  if(e[2]<2){const S2=e[2]===1?'S':'',md=o.floorSleep?''/* 床・地面で寝ているあいだは、気持ちの顔にしないで、目をとじる */:o.mood==='cry'?'teary':o.mood||'',fm=o.floorSleep||o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D,wy=0;/* 目の場所は、持ち主のモデルの目から（クォータービューも、守り神と話すときの正面の絵も） */
+  if(e[2]<2){const S2=e[2]===1?'S':'',md=o.sleep||o.floorSleep?''/* 眠っているあいだは、気持ちの顔にしないで、目をとじる */:o.mood==='cry'?'teary':o.mood||'',fm=o.sleep||o.floorSleep||o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D,wy=0;/* 目の場所は、持ち主のモデルの目から（クォータービューも、守り神と話すときの正面の絵も） */
     const eyes=(X,Y,w)=>{if(vr&&vr.cheek&&w!==1)spr('sp:cheek'+S2,X,Y);if(w===2)return;spr('sp:face'+S2+'#'+fm,X,Y);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,X,Y)};/* w：1 目だけ・2 ほっぺだけ */
     const XG=m.xg&&m.xg[spArt(el)];if(XG&&m.x[spArt(el)]){if(e[3])c.scale(-1,1);/* あとの もどし（if(e[3])c.scale(-1,1)）と つりあわせる */const lay=nm2=>{const cl=spmXCell(nm,el,vr,dir,SPMXL.indexOf(nm2),i,T);if(cl){if(e[3])c.scale(-1,1);c.drawImage(cl[0],cl[1],cl[2],XG[0],XG[1],XG[2]*D,XG[3]*D,XG[0]*D,XG[1]*D);if(e[3])c.scale(-1,1)}};if(vr&&vr.cheek)lay('cheek');lay(fm);if(vr&&vr.lash&&fm!=='strain')lay('lash:'+fm)}/* 表情の目・ほっぺは、3Dの顔にはって写した層をそのまま（ずらさない・のばさない） */
     else if(e.length>4){const eyesQ=(X,Y,w)=>{if(vr&&vr.cheek&&w!==1)spr('sp:cheek',X,Y);if(w===2)return;spr('sp:face#'+fm,X,Y);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash#'+fm,X,Y)};for(let k=0;k<4;k++){const q=e.slice(4+k*7,11+k*7);if(q.length<7||!q[6])continue;const U=ISOEYEUV[k];c.save();c.transform(q[2],q[3],q[4],q[5],q[0]*D-(q[2]*U[0]+q[4]*U[1])*D,q[1]*D-(q[3]*U[0]+q[5]*U[1])*D);c.beginPath();c.rect(k%2?0:-60*D,-90*D,60*D,100*D);c.clip();eyesQ(0,wy,k<2?1:2);c.restore()}}/* 左右の目・ほっぺを、それぞれ持ち主のモデルの顔の3Dの面の場所とちぢみ方で（tools/art/spirit3d/fbx_build.py） */
     else{if(e[3]){c.scale(-1,1)}
     eyes(e[3]?-ex:ex,ey)}
-    if(e[3])c.scale(-1,1);if(o.crown)drawCrown(c,cwx,cwy,D,null,0,0,'f');if(G[5]){const ov=spmCell(nm,el,vr,dir+3,i,T);if(ov)c.drawImage(ov[0],ov[1],ov[2],G[0],G[5],G[2]*D,(G[3]+G[4])*D,G[0]*D,G[5]*D)}}/* 目の上に、手前のうで・手・道具をもう1回 */
+    if(e[3])c.scale(-1,1);if(o.crown&&!o.bed)drawCrown(c,cwx,cwy,D,null,0,0,'f');if(G[5]){const ov=spmCell(nm,el,vr,dir+3,i,T);if(ov)c.drawImage(ov[0],ov[1],ov[2],G[0],G[5],G[2]*D,(G[3]+G[4])*D,G[0]*D,G[5]*D)}}/* 目の上に、手前のうで・手・道具をもう1回 */
   const h=m.h[dir][i];/* 手前の手・奥の手・道具の先（チップのドット） */
   if(o.handItem&&!o.crownHand&&dir!==2){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;drawHandItem(c,hx+(dir===1&&nm==='offer2'?6*D:0),hy-2*D,D,o.handItem)}/* 手に持つ小物：両手のあいだ（さしだすときは前へ） */
   if(o.crownHand){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;if(nm==='crownput'&&dir===1)drawCrown(c,hx+14*D,hy-6*D,D,o.crownN,8,3);else drawCrown(c,hx,hy-2*D,D,o.crownN,8,3)}/* 手に持つ花かんむり：両手のあいだ（のせるときは、前へさしだした所） */
@@ -268,6 +162,7 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
   spmFree(performance.now());return true}
 function fishTo(r){/* つっている子の、うきの場所（見る水のマスのまん中）。せいれいは足もとで立てて描く（standTf）ので、水のマスの画面の点（ひし形）を、いまの描き方の点にもどす。水面は岸より WBANK ひくい（洞窟はない） */const a=r.act;if(!a||a.type!=='fish'||a.stage!=='do'||a.got||a.yk!=null&&a.t>=a.yk+FISHYANK)return null;const w=fishW(a.stand);if(w<0)return null;
   return fishBobPt(ctx,w)}
+function standPt(c,wx,wy,up){/* せかいの地面の点 (wx,wy) の up（ゲームの点）上を、c のいまの描き方（せいれいを立てて描く standTf の中）の点で */const B=gFoot(wx,wy),k=dpr*cam.z,O=isoOff(k),X=k*B.px+O[0],Y=k*(B.py-up)+O[1],T=c.getTransform().invertSelf();return[T.a*X+T.c*Y+T.e,T.b*X+T.d*Y+T.f]}
 function fishBobPt(c,w){/* 水のマス w のうきの点を、c のいまの描き方の点で（釣り中の子・釣りスポットの家具） */const B=gFoot((w%W+.5)*TS,((w/W|0)+.55)*TS),k=dpr*cam.z,O=isoOff(k),X=k*B.px+O[0],Y=k*(B.py+(caveOn()?0:WBANK))+O[1],T=c.getTransform().invertSelf();return[T.a*X+T.c*Y+T.e,T.b*X+T.d*Y+T.f]}
 function fishBob(r){/* うきのようす：cast 投げて、とんでいる（0〜1）・dip ちょんとしずむ（ドット）・ring 波の輪（0〜1、大きいほど広がった）・big ずぼっとしずんだ・yank にげられて、うきが水からとびだす（0〜1） */
   const a=r.act;if(!a||a.type!=='fish'||a.stage!=='do')return null;const B={};if(a.t<FISHCAST){const u=a.t/FISHCAST;B.cast=u<.55?-1:(u-.55)/.45;return B}
@@ -294,76 +189,18 @@ function spDot(key,el,vr){/* 絵の色を、その子の色にかえる（もと
   const d=g.getImageData(0,0,ch.w,ch.h),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
   for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const h='#'+((1<<24)|(p[i]<<16)|(p[i+1]<<8)|p[i+2]).toString(16).slice(1),to=M[h];if(to){p[i]=parseInt(to.slice(1,3),16);p[i+1]=parseInt(to.slice(3,5),16);p[i+2]=parseInt(to.slice(5,7),16)}}
   g.putImageData(d,0,0);return SPDOT[k]=cv}
-function spDotReady(el){if(SPDOK[el])return true;if(!window.CHIPS)return false;
+function spDotReady(el){spmPin(el);if(SPDOK[el])return true;if(!window.CHIPS)return false;
   for(const k in CHIPS)if((k.startsWith('sp:')||k.startsWith('sp_'+spArt(el)+':'))&&!chipImgs(CHIPS[k],k)[0].ok)return false;return SPDOK[el]=true}
-const SOLE=['....ooooooo....','..oofffffffoo..','.offfffffffffo.','.offsssssssffo.','offsssssssssffo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','offsssssssssffo','.offsssssssffo.','.offfffffffffo.','..oofffffffoo..','....ooooooo....'],SOLEC={};
-function soleImg(el,vr){/* 足のうら（正面にすわって足をこちらへのばしたとき）：足の絵の色（ふち・体の色）から作るドット絵。丸い形で、指はない。まん中は少し色のついたうら */
-  const k=el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SOLEC[k])return SOLEC[k];const ft=spDot('sp:footL',el,vr);if(!ft)return null;
-  const g0=document.createElement('canvas');g0.width=16;g0.height=15;const a=g0.getContext('2d');a.drawImage(ft,0,0);const px=(x,y)=>a.getImageData(x,y,1,1).data;
-  const F=px(7,3),O=px(1,3),M=[0,1,2].map(i=>Math.round(F[i]*.3+O[i]*.7)),O2=[0,1,2].map(i=>Math.round(O[i]*.72)),col={o:O2,f:F,s:M};g0.width=g0.height=0;
-  const cv=document.createElement('canvas');cv.width=15;cv.height=SOLE.length;const g=cv.getContext('2d');
-  SOLE.forEach((r,y)=>[...r].forEach((ch,x)=>{const c=col[ch];if(!c)return;g.fillStyle='rgb('+c[0]+','+c[1]+','+c[2]+')';g.fillRect(x,y,1,1)}));return SOLEC[k]=cv}
-const SITF=6;/* 正面にすわる（sitF）：体を下げる量（ドット） */
 const bowNow=(r,now)=>!!r.bowT&&now>=r.bowT&&now-r.bowT<BOW_ALL;/* 弓をうった直後か（セーブに残った前の時刻は、いまより先になることがあるので見ない） */
 const ISOSPX=IQSY/IQSX;/* クォータービュー：立てる描き方（よこ IQSX・たて IQSY）のままだと、せいれいがたてにつぶれる。よこを高さと同じ大きさにして、もとの絵の比にもどす（高さはそのまま。頭の上の物・ふきだしの場所はかわらない） */
-function drawSpiritDot(c,el,x,y,s,f,o){
-  if(!spDotReady(el))return false;
+function drawSpiritDot(c,el,x,y,s,f,o){/* せいれいを描く：3Dから写した動きの絵（SPM・SPMQ）。その動きの絵がまだ読めていないあいだは、立ち姿（stand。はじめに読んで、手ばなさない：spmPin）で待つ。立ち姿も読めていなければ、描かない（false） */
+  if(typeof SPM==='undefined'||!spDotReady(el))return false;
   if((o.iso||o.isoS)&&!o.isx){o.isx=1;c.save();c.translate(x,0);c.scale(ISOSPX,1);c.translate(-x,0);try{return drawSpiritDot(c,el,x,y,s,f,o)}finally{c.restore();o.isx=0}}
-  const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE,vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.87;/* せいれいの絵は、ゲームの1ドットを2×2に分けた細かさ */
-  let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
-  const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};
-  {const nm=spMotion(o,o.anim||A);if(nm&&spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D))return true}/* 3Dから写した動き */
-  const E0='sp_'+spArt(el)+':',S=tr?'S':'';
-  // いきをする・しゃがむ・かたむくは、絵を回さずに、頭とうでをドット単位でずらす（ドットがくずれないように）
-  const L=(o.lean||0)+lean2,hDy=-Math.round((br-sq)*44)*D,aDy=-Math.round((br-sq)*20)*D,hDx=Math.round(L*52)*D,aDx=Math.round(L*22)*D;
-  c.save();c.translate(x,y);c.scale(s*f,s);
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  const sitF=!!o.sitF&&!tr&&!back;if(sitF)c.translate(0,SITF*D);/* 正面にすわって、足をこちらへのばす：体を下げて、足のかわりに足のうらを2つ前に描く */
-  const tail=(tx,ty,rot)=>{c.save();c.translate(tx,ty);c.rotate((rot||0)+Math.sin(t*3)*.18);spr(E0+'tail');c.restore()};
-  const wings=bk=>{if(o.bed)return;const fl=Math.sin(t*(o.walk?10:3.2))*.12,W=[[-16,-60,44,-2.5-fl],[16,-60,44,-.64+fl],[-18,-40,38,2.75+fl],[18,-40,38,.39-fl]];
-    const lf=(w,k)=>{c.save();c.translate(w[0],w[1]);c.rotate(w[3]);if(w[2]!==44)c.scale(w[2]/44,w[2]/44);spr(E0+k);c.restore()};
-    for(const w of W)lf(w,'leaf');if(bk){c.globalAlpha=.25;lf(W[0],'leafW');lf(W[1],'leafW');c.globalAlpha=1}};/* うしろ向きは、上のはねを少し白っぽく */
-  if(el==='wind'&&!back){c.save();c.translate(-tr*9+hDx,hDy);c.scale(1-tr*.3,1);wings();c.restore()}
-  if(!back&&el!=='wind'&&tr)tail(-18,-16,-.85);
-  const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2,-26*TUNE.bodyH+aDy);c.translate(aDx,0);c.rotate(sx*(.35+a));
-    c.save();c.scale(sx,1);spr('sp:arm'+S);c.restore();if(prop&&sx===-farA&&!back)spProp(c,prop,sx,a,t,o);c.save();c.scale(sx,1);spr('sp:hand');c.restore();c.restore()};
-  const farA=back?1:-1,aA0=sx=>o.carry?-1.85+Math.sin(t*9)*.08:tr?1.22+(o.walk?st*.6:Math.sin(t*1.7)*.05):(back?1:-1)*sx*arm+(back?0:.35),aA=sx=>sx===-farA?(aN!=null?aN:aA0(sx)):(aF!=null&&!o.carry?aF:aA0(sx));
-  if(!bothF&&!tr)armD(farA,aA(farA));if(!tr&&!frontArm)armD(-farA,aA(-farA));
-  {const ws=o.walk?st:0,up=v=>-Math.max(0,v)*3*D;/* 足：もとの体の下の部分を切り分けた絵。体より先にかいて、上のはしは体の下にもぐらせる（つけねに線を出さない）。止まっているときは、もとの形と同じ。歩くときは交互に上げる（横向きは前後にもふる） */
-    if(tr){if(o.sit){spr('sp:rumpS');c.save();c.translate(4*D,-6*D);c.rotate(-Math.PI/2);c.scale(.8,1.3);c.translate(.5*D,8*D);spr('sp:footS');c.restore()}/* 横向きにすわる：まるいおしり（sp:rumpS）をかいて、足をつけねを中心に90度回して前へのばす */
-      else{spr('sp:footS',-ws*3*D,up(ws));spr('sp:footS',ws*3*D,up(-ws))}}
-    else if(!sitF){spr('sp:footL',0,up(ws));spr('sp:footR',0,up(-ws))}}
-  spr('sp:body'+S+'0');if(CHIPS[E0+'cape']&&!tr){spr(E0+'cape');if(!back)spr(E0+'chest')}/* 光・闇のケープと胸のかざり */
-  if(tr&&!frontArm)armD(-farA,aA(-farA));
-  if(back&&el!=='wind')tail(-tr*12,-17);
-  // 頭と顔（食べるときは、うなずく）
-  const nod=A==='eat'?Math.round(Math.max(0,Math.sin(t*7))*2.8)*D:0;c.save();c.translate(hDx,hDy+nod);
-  // 頭巾だけ属性ごと。顔の丸は共通（風の子は頭巾のかわりに、まるい頭とつる）。小さく動く所（頭巾の先・芽・火の玉・つる）は別のパーツ
-  const H=TUNE.head,hs=tr&&!back?'S':'',hp=(lx,ly)=>[(hs?-TUNE.sHoodX+lx*TUNE.sHead:lx)*H,-30*TUNE.bodyH+H*(ly+36)],/* 頭の中の位置→体の位置 */
-    rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.87)*D;
-  if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭巾より先（頭にかくれる） */
-  if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
-  if(el==='light')spr(E0+'tip'+hs);/* 光のせいれいの光（頭巾のうしろ） */spr(E0+'hood'+hs);if(el==='dark'){spr(E0+'cap'+hs);spr(E0+'tip'+hs)}/* 闇のせいれいのナイトキャップと房 */
-  if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
-  if(el==='water'){const v=dd(Math.sin(t*2.2)*1.4);if(v<0)spr(E0+'tip'+hs);spr(E0+'tip'+hs,0,v)}/* 水の子は上下（上がるときは、すきまがあかないように元の位置にも描く） */
-  if(el==='fire')spr(E0+'ember'+hs,0,dd(Math.sin(t*3)*2.5));/* 火の玉がふわふわ */
-  if(el==='earth')rot(E0+'sprout'+hs,1,-88,Math.sin(t*2.4)*.18);/* 芽がゆれる */
-  if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings(1);c.restore()}/* うしろ向きのはねは、頭といっしょに */
-  if(!back){if(el!=='wind')spr(CHIPS[E0+'face'+S]?E0+'face'+S:'sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
-    const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-3*D:0;
-    const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n';
-    if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);
-    spr('sp:face'+S+'#'+fm,0,fy);
-    if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
-  if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D,null,0,0,'f');/* 花かんむりの手前の半分（頭といっしょにうごく） */
-  c.restore();
-  if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
-  if(sitF){const si=soleImg(el,vr);if(si)for(const sx of[-1,1]){c.save();c.translate(sx*9*D,(-SITF-12)*D);c.scale(-sx,1);c.drawImage(si,-7*D,0,15*D,16*D);c.restore()}}/* 足のうら：左右で鏡うつし（つまさきが外がわ） */
-  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?25:0;/* 横向きのときは、食べ物を顔の前に（体の大きさ0.435で、およそ11ドット前） */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
-  if(A==='eat'&&tr&&o.food&&!back)armD(-farA,aA(-farA));/* 横向きで食べるときは、手前の手を食べ物の上にかさねて、持っている形に */
-  c.imageSmoothingEnabled=sm;c.restore();return true}
+  const vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.87;/* せいれいの絵は、ゲームの1ドットを2×2に分けた細かさ */
+  const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};/* 目・まつげ・ほっぺの絵 */
+  const nm=spMotion(o,o.anim||'');return spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D)||nm!=='stand'&&spmDraw(c,el,x,y,s,f,o,'stand',t,back,tr,spr,D)}
 /* せいれいの輪郭線：外がわのまわりに1ドット、となりの色より少しだけ暗い色（黒にしない）。体と手足・頭のつなぎ目には引かない。
-   3Dの動きの絵も、いままでの描き方（spPose・チップ）も同じに：いったん べつの画面（SPOLA）に描き、少し暗くした写し（SPOLB）を上下左右に1ドットずらして うしろにかさねる（外がわだけに見える）。
+   いったん べつの画面（SPOLA）に描き、少し暗くした写し（SPOLB）を上下左右に1ドットずらしてうしろにかさねる。
    べつの画面は2まいを使いまわす（毎コマ作らない）。大きさは画面のピクセルで SPOLMAX まで */
 const SPOLA=document.createElement('canvas'),SPOLB=document.createElement('canvas'),SPOLMAX=1024,SPOLDARK='rgba(60,36,24,.26)';
 const SPWHITE=.8;/* たたかれて止まっているあいだの白さ */
@@ -380,96 +217,14 @@ function drawSpiritOL(c,el,x,y,s,f,o){const T=c.getTransform(),k=Math.hypot(T.a,
   c.save();c.setTransform(1,0,0,1,0,0);for(const[ox,oy]of[[-d,0],[d,0],[0,-d],[0,d]])c.drawImage(SPOLB,0,0,w,h,x0+ox,y0+oy,w,h);c.drawImage(SPOLA,0,0,w,h,x0,y0,w,h);c.restore();return true}
 function guestDraw(c,x,y,s,f,o){/* 食堂のお客さん（旅の外套、GPT の H-7）：正面・右・うしろの絵。左は右の反転。足もとが x,y */const k=o.back?'guest>2':(o.turn||0)>.5?'guest>1':'guest',ch=window.CHIPS&&CHIPS[k];if(!ch)return false;const im=chipImgs(ch,k)[0];if(!im.ok)return false;
   const q=s/.87,bob=o.walk?Math.round(Math.abs(Math.sin((o.t||0)*9))*2):0,fl=k==='guest>1'&&f<0;c.save();c.translate(x,y-bob);if(fl)c.scale(-1,1);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,ch.ax*q,ch.ay*q,ch.w*q,ch.h*q);c.imageSmoothingEnabled=sm;c.restore();return true}
-function drawSpirit(c,el,x,y,s,f,o){
-  if(isoFaceOK(c)){if(o.front0)o.isoS=1;else{const q=isoFace(o.back,(o.turn||0)>.5,f<0?-1:1);o.back=q.back;o.turn=0;o.hturn=0;o.iso=1;f=q.f}}/* クォータービュー：前ななめ・うしろななめの2つの絵と、左右の反転（iso-face.js）。守り神と話している子（front0）だけは、真正面（前の正面の絵。持ち主がきめた） */
-  if(o.guest&&guestDraw(c,x,y,s,f,o))return;
-  if(o.dot&&drawSpiritOL(c,el,x,y,s,f,o))return;
-  const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE;
-  const P=spcVar(el,o.vr),t=o.t||0,back=!!o.back,tr=o.turn||0;
-  let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
-  c.save();c.translate(x,y);c.scale(s*f*(1-br*.6+sq*.35),s*(1+br-sq));if(o.lean)c.rotate(o.lean);if(lean2)c.rotate(lean2);
-  c.lineJoin='round';c.lineCap='round';
-  const E=(cx,cy,rx,ry,rot,fill,stroke,lw)=>{c.beginPath();c.ellipse(cx,cy,rx,ry,rot||0,0,7);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.lineWidth=lw||2.4;c.stroke()}};
-  const leaf=(cx,cy,len,w,rot,col)=>{c.save();c.translate(cx,cy);c.rotate(rot);c.fillStyle=col;c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(len*.35,-w,len,0);c.quadraticCurveTo(len*.55,w*.9,0,0);c.fill();c.restore()};
-  // しっぽ（前向きは横、うしろ向きは真ん中）
-  const tail=(tx,ty,sc,rot)=>{c.save();c.translate(tx,ty);sc*=TUNE.tail;c.scale(sc,sc);c.rotate((rot||0)+Math.sin(t*3)*.18);
-    if(el==='earth'){c.fillStyle=P.hood;c.beginPath();c.moveTo(-9,-11);c.lineTo(6,-12);c.lineTo(11,-2);c.lineTo(8,9);c.lineTo(-6,11);c.lineTo(-11,1);c.closePath();c.fill()}
-    else if(el==='water'){const w=Math.sin(t*4)*1.5;c.fillStyle=P.hood;c.beginPath();c.moveTo(0+w,-16);c.quadraticCurveTo(11,0,7,7);c.quadraticCurveTo(0,14,-7,7);c.quadraticCurveTo(-11,0,0+w,-16);c.fill()}
-    else if(el==='fire'){const w=Math.sin(t*11)*2.5;c.fillStyle=P.hood;c.beginPath();c.moveTo(w,-17);c.quadraticCurveTo(-2,-6,8,-2);c.quadraticCurveTo(12,8,2,11);c.quadraticCurveTo(-11,9,-9,0);c.quadraticCurveTo(-7,-8,w,-17);c.fill()}
-    else if(el==='wood'){c.fillStyle=P.hood;c.beginPath();c.moveTo(0,-15);c.quadraticCurveTo(12,-4,0,12);c.quadraticCurveTo(-12,-4,0,-15);c.fill();c.strokeStyle=P.vein;c.lineWidth=1.8;c.beginPath();c.moveTo(0,-11);c.lineTo(0,9);c.stroke()}
-    c.restore()};
-  // 葉っぱの羽（木）
-  const wings=front=>{if(o.bed)return;/* ベッドではねをたたむ（ふとんからはみ出さない） */const fl=Math.sin(t*(o.walk?10:3.2))*.12;
-    leaf(-16,-60,44,19,-2.5-fl,P.hood);leaf(16,-60,44,19,-.64+fl,P.hood);
-    leaf(-18,-40,38,16,2.75+fl,P.hood);leaf(18,-40,38,16,.39-fl,P.hood);
-    if(!front){c.globalAlpha=.25;leaf(-16,-60,44,19,-2.5-fl,'#fff');leaf(16,-60,44,19,-.64+fl,'#fff');c.globalAlpha=1}};
-  if(el==='wind'&&!back){c.save();c.translate(-tr*9,0);c.scale(1-tr*.3,1);wings(true);c.restore()}
-  if(!back&&el!=='wind'&&tr>0)tail(-13-tr*5,-16,1,-.85*tr);/* 正面からはしっぽは見えない *//* 横向きは、ななめにして体のうしろに刺す（体より先に描く） */
-  // 腕
-  const drawProp=(sx,a)=>spProp(c,prop,sx,a,t,o);
-  const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2,-26*TUNE.bodyH);c.rotate(sx*(.35+a));E(sx*9*TUNE.armL,0,10*TUNE.armL,6*TUNE.armW*(tr>.5?1.5:1),0,CREAM,P.line,TUNE.line*.92);if(prop&&sx===-farA&&!back)drawProp(sx,a);E(sx*15*TUNE.armL,0,5*TUNE.hand,5.2*TUNE.hand,0,P.hand);c.restore()};
-  const farA=back?1:-1,aA0=sx=>o.carry?-1.85+Math.sin(t*9)*.08:tr>.5?1.22+(o.walk?st*.6:Math.sin(t*1.7)*.05):(back?1:-1)*sx*arm+(back?0:.35)/* 正面は腕を少し下ろす */,/* 横向きは、腕を体の真横にさげて前後にふる */aA=sx=>sx===-farA?(aN!=null?aN:aA0(sx)):(aF!=null&&!o.carry?aF:aA0(sx));if(!bothF&&tr<=.5)armD(farA,aA(farA));if(tr<=.5&&!frontArm)armD(-farA,aA(-farA));
-  // からだと足
-  c.save();c.scale((1-tr*.18)*TUNE.bodyW,TUNE.bodyH);const sh=o.walk?st*4*tr:0;
-  const l1=o.walk?Math.max(0,st)*4*(1-tr*.5):0,l2=o.walk?Math.max(0,-st)*4*(1-tr*.5):0;
-  c.fillStyle=CREAM;c.strokeStyle=P.line;c.lineWidth=TUNE.line;c.beginPath();
-  if(tr>.5){const sw=o.walk?st*5:0,lf=o.walk?Math.abs(st)*2.5:0;/* 横向きは足を1本だけ見せる */
-    c.moveTo(-15,-32);c.quadraticCurveTo(-19,-18,-10+sw,-8-lf);c.quadraticCurveTo(-8+sw,0-lf,-1+sw,0-lf);c.quadraticCurveTo(6+sw,0-lf,9+sw,-8-lf);c.quadraticCurveTo(19,-18,15,-32);c.closePath();c.fill();c.stroke()}
-  else{
-  c.moveTo(-15,-32);c.quadraticCurveTo(-19,-18,-17-sh,-8-l1);c.quadraticCurveTo(-14-sh,0-l1,-8-sh,0-l1);c.quadraticCurveTo(-3-sh,0-l1,-1,-8);c.lineTo(1,-8);
-  c.quadraticCurveTo(3+sh,0-l2,8+sh,0-l2);c.quadraticCurveTo(14+sh,0-l2,17+sh,-9-l2);c.quadraticCurveTo(19,-18,15,-32);c.closePath();c.fill();c.stroke()}c.restore();
-  if(tr>.5&&!frontArm)armD(-farA,aA(-farA));
-  if(back&&el!=='wind')tail(-tr*12,-17,1.05-tr*.15);
-  // 頭
-  const nod=A==='eat'?Math.max(0,Math.sin(t*7))*3.2:0;c.save();c.translate(0,-30*TUNE.bodyH+nod);c.rotate(nod*.012);c.scale(TUNE.head,TUNE.head);c.translate(0,36);
-  const hx=0,hy=-55;
-  if(el==='wind'){
-    // つる
-    const sw=Math.sin(t*2)*.15;c.save();c.translate((back?1:-1)*tr*4,hy-24);c.rotate(sw);c.strokeStyle=P.tend;c.lineWidth=3;c.beginPath();c.moveTo(0,4);c.quadraticCurveTo(-2,-8,6,-12);c.arc(6,-18,6,Math.PI*.5,Math.PI*2.2);c.stroke();c.restore();
-    E(hx,hy,25,22,0,CREAM,P.line,2.6);
-    if(back){c.save();c.translate(-tr*9,0);c.scale(1-tr*.3,1);wings(false);c.restore()}
-  }else{
-    const sw=Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4);
-    c.save();if(tr>0&&!back){c.translate(-tr*TUNE.sHoodX,0);c.scale(1-tr*(1-TUNE.sHead),1)}/* 横向きは頭巾を少しうしろへ。顔より前に出ないように */
-    c.fillStyle=P.hood;c.beginPath();
-    if(el==='earth'){c.moveTo(-36,-36);c.quadraticCurveTo(-42,-46,-30,-56);c.quadraticCurveTo(-26,-80,-6,-82);c.quadraticCurveTo(14,-84,22,-70);c.quadraticCurveTo(30,-56,36,-52);c.quadraticCurveTo(44,-44,34,-34);c.quadraticCurveTo(0,-26,-36,-36)}
-    else if(el==='water'){c.moveTo(-28,-36);c.quadraticCurveTo(-38,-50,-28,-66);c.quadraticCurveTo(-14,-80,0,-94+sw);c.quadraticCurveTo(10,-108,22,-100+sw);c.quadraticCurveTo(28,-94,22,-92);c.quadraticCurveTo(16,-94,15,-86);c.quadraticCurveTo(18,-76,26,-64);c.quadraticCurveTo(36,-48,26,-36);c.quadraticCurveTo(0,-28,-28,-36)}
-    else if(el==='fire'){c.moveTo(-28,-36);c.quadraticCurveTo(-38,-54,-24,-68);c.quadraticCurveTo(-12,-78,-6,-88);c.quadraticCurveTo(0,-100,12+sw,-102);c.quadraticCurveTo(4,-92,10,-82);c.quadraticCurveTo(28,-70,30,-56);c.quadraticCurveTo(34,-44,26,-36);c.quadraticCurveTo(0,-28,-28,-36)}
-    else{c.moveTo(-30,-36);c.quadraticCurveTo(-42,-56,-26,-74);c.quadraticCurveTo(-12,-90,6+sw,-104);c.quadraticCurveTo(26,-88,30,-66);c.quadraticCurveTo(38,-48,28,-36);c.quadraticCurveTo(0,-28,-30,-36)}
-    c.fill();
-    if(el==='wood'){c.strokeStyle=P.vein;c.lineWidth=2.4;c.beginPath();c.moveTo(4+sw*.6,-98);c.quadraticCurveTo(2,-86,0,-76);c.moveTo(1,-86);c.lineTo(-10,-78);c.moveTo(2,-88);c.lineTo(12,-80);c.stroke();c.strokeStyle=P.dark;c.lineWidth=3;c.beginPath();c.moveTo(6+sw,-104);c.quadraticCurveTo(10,-112,16,-112);c.stroke()}
-    if(el==='fire'){const dy=Math.sin(t*3)*2.5;c.save();c.translate(24,-112+dy);c.fillStyle=P.hood;c.beginPath();c.moveTo(2,-9);c.quadraticCurveTo(8,0,5,4);c.quadraticCurveTo(0,8,-4,3);c.quadraticCurveTo(-6,-3,2,-9);c.fill();c.restore()}
-    if(el==='earth'){const ls=Math.sin(t*2.4)*.18;c.strokeStyle=P.leaf;c.lineWidth=2.6;c.beginPath();c.moveTo(0,-80);c.lineTo(1,-88);c.stroke();leaf(1,-88,20,9,-2.6+ls,P.leaf);leaf(1,-88,30,12,-.55+ls,P.leaf)}
-    c.restore();
-    if(!back){E(hx+tr*TUNE.sFaceX,hy+TUNE.faceY,TUNE.faceW-tr*TUNE.sFaceW,TUNE.faceH,0,CREAM);/* 横顔は奥行きを短く */
-      if(el==='fire'&&tr<.5){c.save();c.translate(tr*9,0);c.fillStyle=P.hood;c.beginPath();c.moveTo(-6,-76);c.quadraticCurveTo(8,-66,4,-50);c.quadraticCurveTo(10,-60,12,-74);c.fill();c.restore()}}
-  }
-  // 顔
-  if(!back){const ey=(el==='wind'?-53:-50)+TUNE.eyeY,xn=TUNE.eyeGap+tr*TUNE.sEye,xf=-TUNE.eyeGap+tr*14,/* 横顔の目は少し奥 */sf=1,showF=tr<.85;
-    const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'';c.strokeStyle=P.eye;c.fillStyle=P.eye;c.lineWidth=2.1;
-    const eyeL=(x,w,k)=>{c.beginPath();if(k==='happy'){c.moveTo(x-3*w,ey+1.5);c.quadraticCurveTo(x,ey-3.5,x+3*w,ey+1.5)}else{c.moveTo(x-3*w,ey);c.quadraticCurveTo(x,ey+2.5,x+3*w,ey)}c.stroke()};
-    if(o.vr&&o.vr.cheek){const ck=P.cheek;/* ほっぺは、頭巾の色をうすくした色 */E(xn+5+tr*TUNE.sCheek,ey+8-tr*2,4.2*TUNE.cheekS*(1-tr*.25),2.6*TUNE.cheekS,0,ck);if(showF)E(xf-5*sf,ey+8,4.2*TUNE.cheekS*sf,2.6*TUNE.cheekS,0,ck)}/* ほっぺ（目より下のレイヤー） */
-    if(o.sleep||(o.blink&&!md))[[xn,1],showF&&[xf,sf]].forEach(e=>e&&eyeL(e[0],e[1]));
-    else if(md==='smile'||md==='joy'||md==='eat')[[xn,1],showF&&[xf,sf]].forEach(e=>e&&eyeL(e[0],e[1],'happy'));
-    else if(md==='teary'||md==='tear'){/* うるうる・片目の涙：目を開いたまま潤ませる */
-      const watery=(x,w)=>{c.save();c.globalAlpha=.7;c.strokeStyle='#8fd3ff';c.lineWidth=1.8;c.beginPath();c.ellipse(x,ey+1.5,TUNE.eyeW*w*.88,TUNE.eyeH*.72,0,0,Math.PI*2);c.stroke();c.globalAlpha=.88;c.fillStyle='#b5e7ff';c.beginPath();c.ellipse(x+TUNE.eyeW*w*.55,ey+TUNE.eyeH*.65,1.4,2,0,0,7);c.fill();c.restore()};
-      E(xn,ey+1,TUNE.eyeW,TUNE.eyeH*.92,0,P.eye);if(showF)E(xf,ey+1,TUNE.eyeW*sf,TUNE.eyeH*.92,0,P.eye);
-      if(md==='tear'){watery(xn,1)}else{watery(xn,1);if(showF)watery(xf,sf)}
-    }
-    else if(md==='shock'){E(xn,ey,TUNE.eyeW*1.14,TUNE.eyeH*1.13,0,P.eye);if(showF)E(xf,ey,TUNE.eyeW*1.14*sf,TUNE.eyeH*1.13,0,P.eye)}
-    else if(md==='strain'){c.lineWidth=2.3;const ch=(x,d)=>{c.beginPath();c.moveTo(x-3*d,ey-3.5);c.lineTo(x+3*d,ey);c.lineTo(x-3*d,ey+3.5);c.stroke()};if(showF){ch(Math.min(xn,xf),1);ch(Math.max(xn,xf),-1)}else ch(xn,1)}
-    else{const eh=md==='sad'?TUNE.eyeH*.78:TUNE.eyeH;E(xn,ey+(md==='sad'?1:0),TUNE.eyeW,eh,0,P.eye);if(showF)E(xf,ey+(md==='sad'?1:0),TUNE.eyeW*sf,eh,0,P.eye)}
-    if(md==='sad'){c.lineWidth=2;c.beginPath();c.moveTo(xn-5,ey-10);c.lineTo(xn+3,ey-8);c.stroke()}/* 悲しいときの眉は片側だけ */
-    if(o.vr&&o.vr.lash&&md!=='strain'){/* まつ毛：目の外がわに1本。目の形に合わせて付け根をかえる */
-      const shut=o.sleep||(o.blink&&!md),hap=!shut&&(md==='smile'||md==='joy'||md==='eat'),k=md==='shock'?1.14:1,sy=md==='sad'?1:0,eh=(md==='sad'?.78:1)*TUNE.eyeH*k;
-      const lash=(x,d)=>{let bx,by;if(shut){bx=x+3*d;by=ey}else if(hap){bx=x+3*d;by=ey+1.5}else{bx=x+TUNE.eyeW*k*.8*d;by=ey+sy-eh*.6}
-        c.moveTo(bx,by);c.quadraticCurveTo(bx+1.8*d,by-.6,bx+3*d,by-2.4)};
-      c.strokeStyle=P.eye;c.lineWidth=1.5;c.beginPath();lash(xn,1);if(showF)lash(xf,-1);c.stroke()}
-}
-  c.restore();if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8;if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,0,yy);c.textAlign='start';c.textBaseline='alphabetic'}}c.restore();
-}
+function drawSpirit(c,el,x,y,s,f,o){/* 描けたら true（絵がまだ読めていないときは false） */
+  if(isoFaceOK(c)){if(o.front0)o.isoS=1;else{const q=isoFace(o.back,(o.turn||0)>.5,f<0?-1:1);o.back=q.back;o.turn=0;o.hturn=0;o.iso=1;f=q.f}}/* クォータービュー：前ななめ・うしろななめの2つの絵と、左右の反転（iso-face.js）。守り神と話している子（front0）だけは、真正面（持ち主がきめた） */
+  if(o.guest&&guestDraw(c,x,y,s,f,o))return true;
+  return drawSpiritOL(c,el,x,y,s,f,o)}
 const portCache={};
-function spiritPort(el,sz,vr){const k=el+sz+(vr?JSON.stringify(vr):'');if(portCache[k])return portCache[k];const cv=document.createElement('canvas');cv.width=cv.height=sz;const g=cv.getContext('2d');drawSpirit(g,el,sz/2,sz*.97,sz/124,1,{t:0,vr});return portCache[k]=cv.toDataURL()}
+function spiritPort(el,sz,vr){/* 一覧などの小さい絵：3Dの立ち姿（正面）を、1ドット＝2ピクセルで描いてから、なめらかに sz へ入れる（ドットをとばしてちぢめない）。絵がまだ読めていないときは、とっておかない（つぎによばれたときに描く） */
+  const k=el+sz+(vr?JSON.stringify(vr):'');if(portCache[k])return portCache[k];spmPin(el);const B=224,b=document.createElement('canvas');b.width=b.height=B;const ok=drawSpirit(b.getContext('2d'),el,B/2,B-6,1.74,1,{t:0,vr});
+  const cv=document.createElement('canvas');cv.width=cv.height=sz;const g=cv.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(b,0,0,B,B,0,0,sz,sz);b.width=b.height=0;const u=cv.toDataURL();if(ok)portCache[k]=u;return u}
 const WALLHIT=new Map(),JUMP=new WeakMap(),DOOROP=new Map(),SPV=new WeakMap();
 /* ドアの開き：せいれいが近づいたら、通る前に開く（開きはじめにガチャ） */
 function doorOp(i,x,y,ax,ay){let d=DOOROP.get(i);if(!d){d={op:0};DOOROP.set(i,d)}d.cx=x/TS+.5;d.cy=y/TS+.5;d.ax=ax;d.ay=ay;return d.op}/* 描くときは読むだけ。開け閉めは stepLooks で進める（ax・ay：せいれいが近いとみなす はんい） */
@@ -570,7 +325,8 @@ function wbSlot(r,walking,now){/* 作業台で作るせいれい（WBSLOT）・�
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.nap||r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act&&r.act.obj!=null&&BEDSET.has(S.obj[r.act.obj])&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&BENCHES.has(S.obj[r.act.obj])?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
-  const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */const bxy=bedJ>=0&&BEDXY[S.obj[bedJ]];let sj=bedJ>=0?bedJ:benchJ,px=bxy?(bedJ%W)*TS+bxy[bedH?1:0][0]:bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bxy?((bedJ/W)|0)*TS+bxy[bedH?1:0][1]:bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const walking=!!(r.act&&(r.act.stage==='walk'&&r.path.length>0&&!(r.greetStop>S.t)&&!(r.slipT>S.t)&&!(typeof spFrontNow==='function'&&spFrontNow(r,now))||r.act.type==='tag'))&&!(!$('#dialog').hidden&&(typeof TALKID!=='undefined'&&TALKID===r.id||DLGN.has(r.name)));/* お話のあいだは（村の時間が止まっている）、話す子は立ちどまって正面を向く（お世話タブのお話も、マップの「！」のお話も） *//* 歩いているあいだは、会話・拍手・手をふる・よろこぶときも、歩く向き・歩く動きのまま（こっちを向いたまま、すべらない）。止まったら、こっちを向く */
+  const bedR=bedJ>=0?rotAt(bedJ)&3:0;/* ベッドの向き：頭（まくら）は 0 北・1 西・2 南・3 東 */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */let sj=bedJ>=0?bedJ:benchJ,px=sj>=0?(sj%W+.5)*TS:r.x*TS,py=benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;if(bedJ>=0){const z=szR(S.obj[bedJ],bedR)||[1,1],D=[[0,1],[1,0],[0,-1],[-1,0]][bedR],P=standPt(ctx,(bedJ%W+z[0]/2+D[0]*BEDLIE.along)*TS,(((bedJ/W)|0)+z[1]/2+D[1]*BEDLIE.along)*TS,BEDLIE.up);px=P[0];py=P[1]-9}/* ベッド：ベッドのまん中から足のほうへ along マスの地面の点の、up 上（ふとんの上）を、いまの描き方の点にして、そこを絵の足もとに。-9 は、下で足す足もとのずれ（fy=py+9）をもどす分 */const walking=!!(r.act&&(r.act.stage==='walk'&&r.path.length>0&&!(r.greetStop>S.t)&&!(r.slipT>S.t)&&!(typeof spFrontNow==='function'&&spFrontNow(r,now))||r.act.type==='tag'))&&!(!$('#dialog').hidden&&(typeof TALKID!=='undefined'&&TALKID===r.id||DLGN.has(r.name)));/* お話のあいだは（村の時間が止まっている）、話す子は立ちどまって正面を向く（お世話タブのお話も、マップの「！」のお話も） *//* 歩いているあいだは、会話・拍手・手をふる・よろこぶときも、歩く向き・歩く動きのまま（こっちを向いたまま、すべらない）。止まったら、こっちを向く */
+  if(typeof workAnims==='function')spmWarm(r.elem,workAnims(r));/* その行動で使う動きの絵は、歩いてむかうあいだに先に読む（動きが切りかわるとき、立ち姿にもどらない） */
   const flSl=sleeping&&bedJ<0&&benchJ<0&&!!(r.act?.ground||r.nap&&!(r.act&&r.act.obj>=0))&&typeof SPM!=='undefined'&&!!SPM.sleepcurl;/* 床・地面で寝る：横になって丸くなる */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','draw','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
@@ -597,12 +353,12 @@ function drawRes0(r,now){
   const lvR=rLv(r);
   const tt=now/1000+r.id*1.7,fy=py+9-bob;
   ctx.save();// 発熱対策：ぼかし影はなし
-  if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */if(flSl){const sd=r.id%2?1:-1;ctx.translate(px-sd*FLSLX,fy-FLSLY);ctx.rotate(sd*Math.PI/2);ctx.translate(-px,-fy)}/* 床・地面で寝る：丸くなった絵を、よこにたおす（頭は、子ごとに左か右） *//* 横のベッドでは、頭をまくら（左）にして横になる */
+if(flSl){const sd=r.id%2?1:-1;ctx.translate(px-sd*FLSLX,fy-FLSLY);ctx.rotate(sd*Math.PI/2);ctx.translate(-px,-fy)}/* 床・地面で寝る：丸くなった絵を、よこにたおす（頭は、子ごとに左か右） *//* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*wadeH);ctx.clip()}
   {const sj3=(r.y|0)*W+(r.x|0),o3=S.obj[sj3];if(o3&&SEATS.includes(o3)&&r.act&&r.act.stage==='do'&&!walking){const c3=chipOf(o3,sj3);if(c3&&c3.cut!=null){ctx.beginPath();ctx.rect(px-60,fy-120,120,((sj3/W)|0)*TS+c3.cut-(fy-120));ctx.clip()}}}/* 後ろ向きのいすにすわる子は、座面の下のはし（チップの cut）より下（足）を描かない */
   const wpA=r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?r.act:null,onWP=wpA&&(wpA.cl||0)>=1;if(wpA&&!onWP)v.back=true;{const sw=Math.max(r.swing||0,r.swingT||0);if(sw&&now>=sw&&now-sw<700)v.back=!!r.fback}/* たたくときは、敵のほうを向く（うしろの敵には、うしろ向き） *//* 見張り台のハシゴは、うしろ向きでよじのぼる。上では弓をかまえる */
   if(!walking&&ad&&(at==='cook'||at==='craft'||at==='fish')&&r.act.sh!=null){v.turn=0;v.back=false}/* できた物をかかげるときは、こちらを向く */
-  const gSl=sleeping&&bedJ<0&&!flSl&&!!(r.act?.ground||r.nap&&!(r.act&&r.act.obj>=0))||!walking&&(r.act?.type==='sunset'||r.act?.type==='ysit'||r.act?.type==='tkwatch')&&r.act.stage==='do';/* 夕焼けを見るときは、正面を向いて地面にすわる */if(gSl||flSl){v.back=false;v.turn=0}/* 床・地面で寝るときは、横になって丸くなる（flSl：sleepcurl の絵をよこにたおす） */const front=!walking&&!sleeping&&typeof spFrontNow==='function'&&spFrontNow(r,now);/* なでられている・つりの結果などは、正面を向く */const ci0=carryIcon(r),an=spAnimFix(r,now,flSl,front,storyPose?.anim||(typeof starLook==='function'&&starLook(r,now)?'qlookup':'')||(r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':fieldStoryAnim(r)):''));const talkMe=typeof TALKID!=='undefined'&&TALKID===r.id&&!$('#dialog').hidden&&!sleeping;/* 守り神が話しかけている子は、拍手・のこった横向きの姿勢より、こちらを向くのが先 */const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping&&!walking&&!talkMe,wv=!clap&&!sleeping&&!walking&&(r.waveU||0)>S.t,facePlayer=talkMe||!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping&&!walking&&!storyPose?.side&&!storyPose?.back&&!storyPose?.keep;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();if(r.act&&r.act.type==='quirk'&&r.act.k==='stone'&&r.act.stage==='do'&&!walking)drawPebbles(ctx,px,fy,r.face<0?-1:1,r.act.n||0);/* ならべた小石 */drawSpirit(ctx,r.elem,px,fy,.435,clap?1:benchV&&!facePlayer?benchD:ht?ht.face:r.face<0?-1:1,{dot:1,t:tt,front0:facePlayer,white:hitOff(r,now,1)[2]?SPWHITE:0,fishTo:walking?null:fishTo(r),fishB:walking?null:fishBob(r),fishPull:!walking&&fishPullNow(r),sceneP:(storyPose&&sacredBody(r,now))?.p,sceneT:(storyPose&&sacredBody(r,now))?.t,vr:r.vr,guest:r.guest,banzai:held,pp:onWP?(bowNow(r,now)?(now-r.bowT)/BOW_ALL:1):pk,anim:clap?'clap':CLIMB.has(r)?'climb':sw0&&sw0.anim?sw0.anim:onWP?(bowNow(r,now)?'bow':'bowidle'):pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:storyPose&&storyPose.gfood&&!clap?storyPose.gfood:(an==='eat'||/^eat_/.test(an)||an==='forage'&&r.act.t>=2)&&!clap?(storyPose?.anim==='eat'?(storyPose.food||''):eatIcon(r.act)):!clap&&!storyPose&&(at==='cook'||at==='craft'||at==='fish')&&ad?workFood(r):'',/* 料理・もの作り：材料・できた物を手に *//* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray'&&!(at==='fish'&&ad&&r.act.sh!=null)/* つった魚は、かかげているあいだ手に */,toy:r.act&&r.act.type==='play'&&r.act.stage==='do'?r.act.what:'',chase:r.act&&r.act.type==='critwatch',ph:storyPose&&storyPose.prog?Math.min(.999,Math.max(0,1-(storyPose.until-now)/storyPose.duration))/* 1回だけの場面の動き（紙をひらく gf_unfold）：のこり時間から */:at==='draw'&&ad?Math.min(.999,(r.act.t||0)/6):at==='fish'&&ad&&r.act.t<FISHCAST?Math.min(.999,r.act.t/FISHCAST)/* 投げる（1回だけ） */:spToyPh(r,now)/* 水くみは1回だけ：くむ行動の進みぐあい（done は a.t 6） */,back:clap||wv||facePlayer||front?false:ht?ht.back:v.back,turn:clap||wv||facePlayer||front?0:ht?ht.turn:v.turn,hturn:ht&&!clap?ht.s:0,mood:clap?'joy':mood,walk:walking&&!clap,wd,work:working&&!clap,sleep:sleeping&&!flSl,floorSleep:flSl,sitF:gSl,bed:bedJ>=0,sit:(storyPose?.sit||benchV||v.side)&&!facePlayer&&!clap/* 横に置いたいす・ベンチは、横向きにすわる */,blink:flSl||now>v.bl,crown:spCrownOn(r),crownHand:!!storyPose?.crownHand,handItem:storyPose?.handItem||'',crownN:storyPose?.crownN,lean:storyPose?.lean??(rp?rp.angle:sleeping?Math.sin(tt*.8)*(benchJ>=0?.02:.06):0)/* ベンチでうとうとするときは、小さくゆれる */});if((at==='cook'||at==='craft'||at==='proc'||at==='build'||at==='repair'||at==='chop'||at==='mine'||at==='draw'||at==='water'||at==='tend'||at==='till'||at==='sow'||at==='plant'||at==='weed'||at==='sweep'||at==='harvest'||at==='gather')&&ad&&!walking&&!clap&&!storyPose&&typeof workBeat==='function')workBeat(r,workAnim(r),tt,at==='draw'?Math.min(.999,(r.act.t||0)/6):null);if(at==='eat'&&ad&&!walking&&!clap&&!storyPose&&/^eat_/.test(an)&&typeof workBeat==='function')workBeat(r,an,tt);/* 食べる・のむ音は、食べ方の動きに合わせて */if(!walking&&typeof boxBeat==='function')boxBeat(r,boxActT(r));/* 取る・置く音は、手が物にとどく所で *//* 手もとの音と粒は、動きに合わせて */if(!sleeping&&!ci0&&!r.bubble&&!front&&funLow(r)&&!clap){if(moodOn(r,'moya',now)){drawMoya(ctx,px,fy-54,now,r.id);moodMark(r,'moya',now)}}/* たのしさが低いとき、たまに：頭のまわりに、もやもや（moodOn） */else if(!sleeping&&!ci0&&!r.bubble&&!clap&&!front&&humTick(r)&&moodOn(r,'hum',now)){drawHum(ctx,px,fy-52,now,r);moodMark(r,'hum',now)}/* ごきげんなとき、たまに：鼻歌（音符） */if(sleeping&&r.act&&r.act.blanket)drawBlanket(ctx,px,fy);/* 毛布 */if(S.rain&&walking&&(r.elem==='wood'||r.elem==='wind')&&!roomOf((r.y|0)*W+(r.x|0)))drawLeafHat(ctx,px,fy,r.face<0?-1:1);/* 雨の日、外を歩く木・風のせいれいは、頭に葉っぱ */ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}{const ta=toyR(r);if(ta&&ta.what==='swing'&&rotAt(ta.obj)===1)drawChipFix(ctx,'swing',ta.obj)}}/* 縦のブランコ：横木・手前の柱を、乗っている子の手前に重ねる *//* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
+  const gSl=sleeping&&bedJ<0&&!flSl&&!!(r.act?.ground||r.nap&&!(r.act&&r.act.obj>=0))||!walking&&(r.act?.type==='sunset'||r.act?.type==='ysit'||r.act?.type==='tkwatch')&&r.act.stage==='do';/* 夕焼けを見るときは、正面を向いて地面にすわる */if(gSl||flSl){v.back=false;v.turn=0}if(bedJ>=0){v.back=bedR===2;v.turn=bedR&1;if(v.turn)r.face=bedR===1?1:-1}/* ベッド：頭をまくらのほうへ。あおむけなので、頭は顔の向きの反対（頭が北＝南を向いた前ななめの絵・西＝東向き＝その左右反対・南＝北を向いたうしろななめの絵・東＝西向き＝その左右反対） *//* 床・地面で寝るときは、横になって丸くなる（flSl：sleepcurl の絵をよこにたおす） */const front=!walking&&!sleeping&&typeof spFrontNow==='function'&&spFrontNow(r,now);/* なでられている・つりの結果などは、正面を向く */const ci0=carryIcon(r),an=spAnimFix(r,now,flSl,front,storyPose?.anim||(typeof starLook==='function'&&starLook(r,now)?'qlookup':'')||(r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':fieldStoryAnim(r)):''));const talkMe=typeof TALKID!=='undefined'&&TALKID===r.id&&!$('#dialog').hidden&&!sleeping;/* 守り神が話しかけている子は、拍手・のこった横向きの姿勢より、こちらを向くのが先 */const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping&&!walking&&!talkMe,wv=!clap&&!sleeping&&!walking&&(r.waveU||0)>S.t,facePlayer=talkMe||!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping&&!walking&&!storyPose?.side&&!storyPose?.back&&!storyPose?.keep;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();if(r.act&&r.act.type==='quirk'&&r.act.k==='stone'&&r.act.stage==='do'&&!walking)drawPebbles(ctx,px,fy,r.face<0?-1:1,r.act.n||0);/* ならべた小石 */drawSpirit(ctx,r.elem,px,fy,.435,clap?1:benchV&&!facePlayer?benchD:ht?ht.face:r.face<0?-1:1,{dot:1,t:tt,front0:facePlayer,white:hitOff(r,now,1)[2]?SPWHITE:0,fishTo:walking?null:fishTo(r),fishB:walking?null:fishBob(r),fishPull:!walking&&fishPullNow(r),sceneP:(storyPose&&sacredBody(r,now))?.p,sceneT:(storyPose&&sacredBody(r,now))?.t,vr:r.vr,guest:r.guest,banzai:held,pp:onWP?(bowNow(r,now)?(now-r.bowT)/BOW_ALL:1):pk,anim:clap?'clap':CLIMB.has(r)?'climb':sw0&&sw0.anim?sw0.anim:onWP?(bowNow(r,now)?'bow':'bowidle'):pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:storyPose&&storyPose.gfood&&!clap?storyPose.gfood:(an==='eat'||/^eat_/.test(an)||an==='forage'&&r.act.t>=2)&&!clap?(storyPose?.anim==='eat'?(storyPose.food||''):eatIcon(r.act)):!clap&&!storyPose&&(at==='cook'||at==='craft'||at==='fish')&&ad?workFood(r):'',/* 料理・もの作り：材料・できた物を手に *//* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray'&&!(at==='fish'&&ad&&r.act.sh!=null)/* つった魚は、かかげているあいだ手に */,toy:r.act&&r.act.type==='play'&&r.act.stage==='do'?r.act.what:'',chase:r.act&&r.act.type==='critwatch',ph:storyPose&&storyPose.prog?Math.min(.999,Math.max(0,1-(storyPose.until-now)/storyPose.duration))/* 1回だけの場面の動き（紙をひらく gf_unfold）：のこり時間から */:at==='draw'&&ad?Math.min(.999,(r.act.t||0)/6):at==='fish'&&ad&&r.act.t<FISHCAST?Math.min(.999,r.act.t/FISHCAST)/* 投げる（1回だけ） */:spToyPh(r,now)/* 水くみは1回だけ：くむ行動の進みぐあい（done は a.t 6） */,back:clap||wv||facePlayer||front?false:ht?ht.back:v.back,turn:clap||wv||facePlayer||front?0:ht?ht.turn:v.turn,hturn:ht&&!clap?ht.s:0,mood:clap?'joy':mood,walk:walking&&!clap,wd,work:working&&!clap,sleep:sleeping&&!flSl,floorSleep:flSl,sitF:gSl,bed:bedJ>=0,sit:(storyPose?.sit||benchV||v.side)&&!facePlayer&&!clap/* 横に置いたいす・ベンチは、横向きにすわる */,blink:flSl||now>v.bl,crown:spCrownOn(r),crownHand:!!storyPose?.crownHand,handItem:storyPose?.handItem||'',crownN:storyPose?.crownN,lean:storyPose?.lean??(rp?rp.angle:sleeping?Math.sin(tt*.8)*(benchJ>=0?.02:.06):0)/* ベンチでうとうとするときは、小さくゆれる */});if((at==='cook'||at==='craft'||at==='proc'||at==='build'||at==='repair'||at==='chop'||at==='mine'||at==='draw'||at==='water'||at==='tend'||at==='till'||at==='sow'||at==='plant'||at==='weed'||at==='sweep'||at==='harvest'||at==='gather')&&ad&&!walking&&!clap&&!storyPose&&typeof workBeat==='function')workBeat(r,workAnim(r),tt,at==='draw'?Math.min(.999,(r.act.t||0)/6):null);if(at==='eat'&&ad&&!walking&&!clap&&!storyPose&&/^eat_/.test(an)&&typeof workBeat==='function')workBeat(r,an,tt);/* 食べる・のむ音は、食べ方の動きに合わせて */if(!walking&&typeof boxBeat==='function')boxBeat(r,boxActT(r));/* 取る・置く音は、手が物にとどく所で *//* 手もとの音と粒は、動きに合わせて */if(!sleeping&&!ci0&&!r.bubble&&!front&&funLow(r)&&!clap){if(moodOn(r,'moya',now)){drawMoya(ctx,px,fy-54,now,r.id);moodMark(r,'moya',now)}}/* たのしさが低いとき、たまに：頭のまわりに、もやもや（moodOn） */else if(!sleeping&&!ci0&&!r.bubble&&!clap&&!front&&humTick(r)&&moodOn(r,'hum',now)){drawHum(ctx,px,fy-52,now,r);moodMark(r,'hum',now)}/* ごきげんなとき、たまに：鼻歌（音符） */if(sleeping&&r.act&&r.act.blanket)drawBlanket(ctx,px,fy);/* 毛布 */if(S.rain&&walking&&(r.elem==='wood'||r.elem==='wind')&&!roomOf((r.y|0)*W+(r.x|0)))drawLeafHat(ctx,px,fy,r.face<0?-1:1);/* 雨の日、外を歩く木・風のせいれいは、頭に葉っぱ */ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}{const ta=toyR(r);if(ta&&ta.what==='swing'&&rotAt(ta.obj)===1)drawChipFix(ctx,'swing',ta.obj)}}/* 縦のブランコ：横木・手前の柱を、乗っている子の手前に重ねる *//* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
@@ -613,7 +369,7 @@ function drawRes0(r,now){
   const over=()=>{
   if(CLAPON)return;
   if(ci){const cb=walking?spWalkBob(wd,.435):0;/* 持っている物も、歩く絵の体といっしょに上下 */ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */if(cl[0]==='⚰️'){const cb0=coffinBmp(),cy=fy-(r.elem==='wood'?34:29)-cb+10;if(cb0)ctx.drawImage(cb0.c,px-cb0.w/2,cy-cb0.h,cb0.w,cb0.h);cl=[]}/* 棺は、いつもの1.5倍の大きさ（39px）で、頭の上に乗せる（木の子は葉っぱの上） */for(let i=0;i<cl.length;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(e1==='⚰️'?7:0),iw,ih)}else if(!/^(obj|ic|chip|crop):/.test(String(e1)))ctx.fillText(e1,px+ox,fy-47-cb+oy)}}/* たくさん持つときは、アイコンを上へ重ねる（いちばん下の位置は、数がふえても下げない） */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
-  const gx=bedH?px-10:px,gy=bedH?py+20:py+11;/* 横のベッドで寝ているときは、横になった体の下のまん中に出す */
+  const gx=px,gy=bedJ>=0?py+20:py+11;
   if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=gx-12,byy=gy;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='9px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',gx+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,gx-12,gy,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,gx-11,gy+1,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad&&!CLAPON){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */

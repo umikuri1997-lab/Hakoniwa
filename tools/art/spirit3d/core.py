@@ -33,6 +33,10 @@ def chips():
     if _CH is None:
         import chips as CH
         _, C = CH.load_imgs(); _CH = {k: (np.array(v['f'][0].convert('RGBA')), v['ax'], v['ay']) for k, v in C.items() if k.startswith('sp')}
+        # パーツ（頭・体・うで・手・足・しっぽ・ずきん など）は、ゲームのチップからけした（ゲームは3Dの動きの絵だけで描く）。形を作るもとの絵として parts/ においてある
+        pd = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'parts'); import json
+        for k, v in json.load(open(os.path.join(pd, 'parts.json'), encoding='utf8')).items():
+            _CH.setdefault(k, (np.array(Image.open(os.path.join(pd, v['f'])).convert('RGBA')), v['ax'], v['ay']))
     return _CH
 def chip(k): return chips()[k]
 def inside(k, X, Y):

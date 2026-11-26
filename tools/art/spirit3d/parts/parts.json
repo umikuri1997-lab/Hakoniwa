@@ -1,0 +1,302 @@
+{
+"sp:arm": {
+"f": "sp__arm.png",
+"ax": -2,
+"ay": -6
+},
+"sp:armS": {
+"f": "sp__armS.png",
+"ax": -2,
+"ay": -8
+},
+"sp:body0": {
+"f": "sp__body0.png",
+"ax": -16,
+"ay": -29
+},
+"sp:bodyS0": {
+"f": "sp__bodyS0.png",
+"ax": -12,
+"ay": -29
+},
+"sp:footL": {
+"f": "sp__footL.png",
+"ax": -16,
+"ay": -14
+},
+"sp:footR": {
+"f": "sp__footR.png",
+"ax": 0,
+"ay": -14
+},
+"sp:footS": {
+"f": "sp__footS.png",
+"ax": -9,
+"ay": -14
+},
+"sp:hand": {
+"f": "sp__hand.png",
+"ax": 9,
+"ay": -5
+},
+"sp:head": {
+"f": "sp__head.png",
+"ax": -24,
+"ay": -64
+},
+"sp:headS": {
+"f": "sp__headS.png",
+"ax": -7,
+"ay": -63
+},
+"sp:rumpS": {
+"f": "sp__rumpS.png",
+"ax": -9,
+"ay": -14
+},
+"sp_dark:cap": {
+"f": "sp_dark__cap.png",
+"ax": -36,
+"ay": -94
+},
+"sp_dark:capS": {
+"f": "sp_dark__capS.png",
+"ax": -47,
+"ay": -94
+},
+"sp_dark:cape": {
+"f": "sp_dark__cape.png",
+"ax": -32,
+"ay": -29
+},
+"sp_dark:chest": {
+"f": "sp_dark__chest.png",
+"ax": -6,
+"ay": -26
+},
+"sp_dark:face": {
+"f": "sp_dark__face.png",
+"ax": -24,
+"ay": -63
+},
+"sp_dark:faceS": {
+"f": "sp_dark__faceS.png",
+"ax": -7,
+"ay": -63
+},
+"sp_dark:hood": {
+"f": "sp_dark__hood.png",
+"ax": -32,
+"ay": -61
+},
+"sp_dark:hoodS": {
+"f": "sp_dark__hoodS.png",
+"ax": -35,
+"ay": -61
+},
+"sp_dark:tail": {
+"f": "sp_dark__tail.png",
+"ax": -23,
+"ay": -23
+},
+"sp_dark:tip": {
+"f": "sp_dark__tip.png",
+"ax": -3,
+"ay": -43
+},
+"sp_dark:tipS": {
+"f": "sp_dark__tipS.png",
+"ax": -52,
+"ay": -43
+},
+"sp_earth:hood": {
+"f": "sp_earth__hood.png",
+"ax": -37,
+"ay": -72
+},
+"sp_earth:hoodS": {
+"f": "sp_earth__hoodS.png",
+"ax": -40,
+"ay": -72
+},
+"sp_earth:sprout": {
+"f": "sp_earth__sprout.png",
+"ax": -16,
+"ay": -93
+},
+"sp_earth:sproutS": {
+"f": "sp_earth__sproutS.png",
+"ax": -19,
+"ay": -93
+},
+"sp_earth:tail": {
+"f": "sp_earth__tail.png",
+"ax": -10,
+"ay": -11
+},
+"sp_fire:bang": {
+"f": "sp_fire__bang.png",
+"ax": -5,
+"ay": -65
+},
+"sp_fire:ember": {
+"f": "sp_fire__ember.png",
+"ax": 19,
+"ay": -110
+},
+"sp_fire:emberS": {
+"f": "sp_fire__emberS.png",
+"ax": 14,
+"ay": -109
+},
+"sp_fire:hood": {
+"f": "sp_fire__hood.png",
+"ax": -32,
+"ay": -77
+},
+"sp_fire:hoodS": {
+"f": "sp_fire__hoodS.png",
+"ax": -34,
+"ay": -77
+},
+"sp_fire:tail": {
+"f": "sp_fire__tail.png",
+"ax": -8,
+"ay": -15
+},
+"sp_fire:tip": {
+"f": "sp_fire__tip.png",
+"ax": -6,
+"ay": -91
+},
+"sp_fire:tipS": {
+"f": "sp_fire__tipS.png",
+"ax": -10,
+"ay": -91
+},
+"sp_light:cape": {
+"f": "sp_light__cape.png",
+"ax": -32,
+"ay": -29
+},
+"sp_light:chest": {
+"f": "sp_light__chest.png",
+"ax": -5,
+"ay": -27
+},
+"sp_light:face": {
+"f": "sp_light__face.png",
+"ax": -24,
+"ay": -63
+},
+"sp_light:faceS": {
+"f": "sp_light__faceS.png",
+"ax": -7,
+"ay": -63
+},
+"sp_light:hood": {
+"f": "sp_light__hood.png",
+"ax": -32,
+"ay": -87
+},
+"sp_light:hoodS": {
+"f": "sp_light__hoodS.png",
+"ax": -35,
+"ay": -87
+},
+"sp_light:tail": {
+"f": "sp_light__tail.png",
+"ax": -23,
+"ay": -23
+},
+"sp_light:tip": {
+"f": "sp_light__tip.png",
+"ax": -48,
+"ay": -109
+},
+"sp_light:tipS": {
+"f": "sp_light__tipS.png",
+"ax": -40,
+"ay": -109
+},
+"sp_water:hood": {
+"f": "sp_water__hood.png",
+"ax": -32,
+"ay": -76
+},
+"sp_water:hoodS": {
+"f": "sp_water__hoodS.png",
+"ax": -35,
+"ay": -76
+},
+"sp_water:tail": {
+"f": "sp_water__tail.png",
+"ax": -7,
+"ay": -14
+},
+"sp_water:tip": {
+"f": "sp_water__tip.png",
+"ax": -7,
+"ay": -92
+},
+"sp_water:tipS": {
+"f": "sp_water__tipS.png",
+"ax": -11,
+"ay": -92
+},
+"sp_wind:hood": {
+"f": "sp_wind__hood.png",
+"ax": -26,
+"ay": -68
+},
+"sp_wind:hoodS": {
+"f": "sp_wind__hoodS.png",
+"ax": -26,
+"ay": -68
+},
+"sp_wind:leaf": {
+"f": "sp_wind__leaf.png",
+"ax": 0,
+"ay": -8
+},
+"sp_wind:leafW": {
+"f": "sp_wind__leafW.png",
+"ax": 0,
+"ay": -8
+},
+"sp_wind:vine": {
+"f": "sp_wind__vine.png",
+"ax": -2,
+"ay": -94
+},
+"sp_wind:vineS": {
+"f": "sp_wind__vineS.png",
+"ax": -6,
+"ay": -93
+},
+"sp_wood:hood": {
+"f": "sp_wood__hood.png",
+"ax": -35,
+"ay": -86
+},
+"sp_wood:hoodS": {
+"f": "sp_wood__hoodS.png",
+"ax": -37,
+"ay": -86
+},
+"sp_wood:tail": {
+"f": "sp_wood__tail.png",
+"ax": -6,
+"ay": -13
+},
+"sp_wood:tip": {
+"f": "sp_wood__tip.png",
+"ax": -2,
+"ay": -102
+},
+"sp_wood:tipS": {
+"f": "sp_wood__tipS.png",
+"ax": -7,
+"ay": -102
+}
+}

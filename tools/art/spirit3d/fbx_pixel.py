@@ -90,6 +90,8 @@ def shade(cb, nb, mb, light, soft=None):
 
 TAGS = ['', 'body', 'arm', 'head', 'face', 'prop']
 ELEV = 25.0   # 見おろす角度（度。持ち主が「少しだけ見おろす」をえらんだ）
+# 家具・ベッドと同じ見おろし（tools/art/iso/iso3d.py の ISOELEV・ISOK）：地面は たてに0.75・高さは マスの1辺の0.8。横になる絵（motions の isocam=1）は、これで写す（立つ絵のカメラだと、体の向きがベッドと合わない）
+_ISOH = 72/(128/math.sqrt(2)); ISOCAM = (math.degrees(math.atan(0.75/_ISOH)), 0.75/math.sin(math.atan(0.75/_ISOH)))
 from numba import njit
 
 @njit(cache=True)
@@ -149,7 +151,7 @@ def _down(img, a, thin, H, W, ss, out):
                 if cnt[t] > cnt[bi] or (cnt[t] == cnt[bi] and (cols[t, 0] < cols[bi, 0] or (cols[t, 0] == cols[bi, 0] and (cols[t, 1] < cols[bi, 1] or (cols[t, 1] == cols[bi, 1] and cols[t, 2] < cols[bi, 2]))))): bi = t
             out[r, c, 0] = cols[bi, 0]; out[r, c, 1] = cols[bi, 1]; out[r, c, 2] = cols[bi, 2]
             out[r, c, 3] = 150 if nth*2 >= ss*ss else 255
-def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=0.0):
+def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=0.0, elev=None, vs=1.0):
     """view：0 正面（−Y から）・1 横（右向き：+X から見る…キャラの右手が手前）・2 うしろ。返すのは RGBA（足もとが下から 12 ドット）"""
     Ws, Hs = W*ss, H*ss
     zb = np.full(Ws*Hs, -1e9); cb = np.zeros((Ws*Hs, 3)); nb = np.zeros((Ws*Hs, 3)); ib = np.full(Ws*Hs, -1); mb = np.zeros(Ws*Hs, int)   # mb：0 ふつう・1 つや（水）・2 光る（火）・3 すける（風のはね）
@@ -161,9 +163,9 @@ def render(tris, view, W=144, H=136, ss=4, points=(), spin=0.0, info=False, yaw=
     cam0 = (lambda Q: np.stack([Q[:, 0], Q[:, 2], -Q[:, 1]], 1)) if view == 0 else \
               (lambda Q: np.stack([-Q[:, 1], Q[:, 2], -Q[:, 0]], 1)) if view == 1 else \
               (lambda Q: np.stack([-Q[:, 0], Q[:, 2], Q[:, 1]], 1))   # 横は右を向く：キャラの前（−Y）が画面の右
-    ce, se = math.cos(math.radians(ELEV)), math.sin(math.radians(ELEV))
+    ce, se = math.cos(math.radians(ELEV if elev is None else elev)), math.sin(math.radians(ELEV if elev is None else elev))   # elev・vs：家具と同じ見おろし（ベッドに横になる絵。ISOCAM）
     def cam(Q):   # 少し見おろす（ELEV 度）：画面の上 ＝ 上と奥のあいだ・奥行き ＝ 手前と上のあいだ
-        C = cam0(Q); return np.stack([C[:, 0], C[:, 1]*ce-C[:, 2]*se, C[:, 1]*se+C[:, 2]*ce], 1)
+        C = cam0(Q); return np.stack([C[:, 0], (C[:, 1]*ce-C[:, 2]*se)*vs, C[:, 1]*se+C[:, 2]*ce], 1)
     if len(tris):
         P = np.array([t[0] for t in tris], float); N = np.array([t[1] for t in tris], float)
         COL = np.array([t[2] for t in tris], float); MAT = np.array([t[3] if len(t) > 3 else 0 for t in tris], np.int64)
