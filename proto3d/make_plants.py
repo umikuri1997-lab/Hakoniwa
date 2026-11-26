@@ -6,11 +6,13 @@
 - 色（ゲームの色から）：木のみき（いちばん下にとどく部品）は幹の色、ほかは葉の色（植物ごとに、ゲームの木の葉の5色の まん中の色）。
   花と草：下からのびる細い部品はくき、下の大きい部品は葉、上のほう（高さの FLOWERY より上から始まる）の部品は花の色。
 - 植物ごとに、足もとのまん中を原点にし、下のはしを高さ0に。大きさは、もとのまま（試作が高さをきめる）。
-- 材質：点の値 _MAT（試作の main.js の MATIDX）。木のみきは木の皮（bark）。
+- 材質：点の値 _MAT（試作の main.js の MATIDX）。木のみきは木の皮（bark）。UV 展開（xatlas、glbio.unwrap）して、絵をはれるようにする。
 - 葉の下のかげ（natcommon.tone5 の under と同じ考え）：点ごとに真上へ線をのばし、ほかの面に UNDERH（植物の高さに対して）より近くで当たれば、
   近いほど暗くするだんの数（UNDERB まで）を、点の値 _UNDER に入れる。"""
-import json, os, struct
+import json, os, struct, sys
 import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import glbio
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'tools', 'art', 'models', 'plants', 'plants.glb')
@@ -109,8 +111,9 @@ def glb(meshes, path):
     for name, P, C, MT in meshes:
         U, idx = np.unique(np.round(np.c_[P, C, MT], 6), axis=0, return_inverse=True); P, C, MT = U[:, :3], U[:, 3:6], U[:, 6]
         tri = P[idx.reshape(-1, 3)]; un = under(P, tri, P[:, 1].max()-P[:, 1].min())
-        pi = add(P, 'VEC3', P.min(0).tolist(), P.max(0).tolist()); ci = add(C, 'VEC3'); ui = add(un, 'SCALAR'); mi = add(MT, 'SCALAR'); ii = add(idx.ravel(), 'SCALAR', ct=5125)
-        ms.append({'name': name, 'primitives': [{'attributes': {'POSITION': pi, 'COLOR_0': ci, '_UNDER': ui, '_MAT': mi}, 'indices': ii}]}); nodes.append({'name': name, 'mesh': len(ms)-1})
+        vm, ni, uv = glbio.unwrap(P, idx.reshape(-1, 3)); P, C, un, MT, idx = P[vm], C[vm], un[vm], MT[vm], ni   # UV 展開（みきに木の皮の絵をはる）
+        pi = add(P, 'VEC3', P.min(0).tolist(), P.max(0).tolist()); ci = add(C, 'VEC3'); ti = add(uv, 'VEC2'); ui = add(un, 'SCALAR'); mi = add(MT, 'SCALAR'); ii = add(idx.ravel(), 'SCALAR', ct=5125)
+        ms.append({'name': name, 'primitives': [{'attributes': {'POSITION': pi, 'COLOR_0': ci, 'TEXCOORD_0': ti, '_UNDER': ui, '_MAT': mi}, 'indices': ii}]}); nodes.append({'name': name, 'mesh': len(ms)-1})
     j = {'asset': {'version': '2.0', 'generator': 'proto3d/make_plants.py'}, 'scene': 0, 'scenes': [{'nodes': list(range(len(nodes)))}],
          'nodes': nodes, 'meshes': ms, 'accessors': acc, 'bufferViews': views, 'buffers': [{'byteLength': len(bins)}]}
     js = json.dumps(j, separators=(',', ':')).encode(); js += b' '*((4-len(js) % 4) % 4); bins += b'\0'*((4-len(bins) % 4) % 4)
