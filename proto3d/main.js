@@ -38,6 +38,7 @@ const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：か�
 // ドット絵シェーダー（持ち主が送った記事「実践ドット絵シェーダー」mizuooon.hatenablog.jp のやり方）：
 // 光の量（光の色をのせた明るさ ÷ もとの色の明るさ）を lo〜hi で0〜1にし、PXLV だんにへらす。だん−0.5 を d として、
 // 明るさ ×(1+d×PXV)・暗い所は色を青へ（PXHUE）・明るい所はあざやかさを下げる（PXSAT）。ふちどりは、いちばん暗い所の色
+const HULL={w:1.3};   // 背面法の線：裏返した形を、ゲームの1ドット×この太さぶん外へふくらませて、いちばん暗いだんの色で描く（輪郭と、物どうしの境界の線）
 const PX={lv:4,vUp:.28,vDn:.85,hue:.28,sat:.15,gain:1.0,edge:.035,shadow:.45,hl:.95,hlk:.32};
 // lv：だんの数・vUp／vDn：明るいがわ・暗いがわの明るさの差・shadow：太陽のかげの中は明るさをこの倍に・hl：シェーディングマップがこれより明るい所はハイライト（hlk だけ明るいだん）・edge：ふちどりにする奥行きの差（カメラからのきょりの割合）
 // シェーディングマップ（記事）：画面から見た面の向き（x 右・y 上）で、太陽のほう（左上・手前）ほど明るい 0.5+0.5×(太陽との内積)
@@ -185,6 +186,16 @@ function toon(o={},extra={}){
   m.customProgramCacheKey=()=>'toon'+(extra.mat?extra.uvk.toFixed(3):'')+(extra.wind?'w':'');
   return m;
 }
+
+// 背面法の線のマテリアル：o はもとの物の色（color・vertexColors）。w：ふくらませる長さ（物の座標。ドットの太さ÷物の大きさ）
+function hullMat(o,w){
+  const m=new THREE.MeshBasicMaterial({...o,side:THREE.BackSide});
+  m.onBeforeCompile=sh=>{curveVS(sh);
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','vec3 transformed=position+normalize(normal)*'+w.toFixed(5)+';');
+    sh.fragmentShader=NOISE+sh.fragmentShader.replace('#include <opaque_fragment>','gl_FragColor=vec4(lin(pxShade(pow(max(diffuseColor.rgb,0.),vec3(1./2.2)),-.5))*.85,1.);')};
+  m.customProgramCacheKey=()=>'hull'+w.toFixed(5)+(o.vertexColors?'v':'');return m;
+}
+const dotW=()=>HULL.w/(64/Math.SQRT2);   // ゲームの1ドットの長さ（マス）×太さ
 
 // ---- 地面（その場で作る色） ----
 // マスクの絵：R 道・G 池・B あれ地（草のない所）。1マス MASKR 点。なめらかに読み、ノイズでさかいめをゆらす
@@ -343,7 +354,7 @@ async function loadProp(p){
     if(p.src!=='plants'){geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_under',mk(0));geo.deleteAttribute('color')}
     const span=p.src==='plants'?MATSPAN.bark:MATSPAN[p.mat]||1;
     const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span,span,wind:true}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span,span});
-    parts.push({geo,mat})});
+    parts.push({geo,mat,hull:hullMat(p.src==='plants'?{vertexColors:true}:{color:p.tint},dotW())})});
   p.parts=parts;
 }
 const SPMODELS={};
@@ -362,6 +373,9 @@ async function loadSpirit(el){
     else if(n.startsWith('headacc'))o.material=sm(HEADACC);
     else o.material=sm(CREAM);
   });
+  {const add=[];g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();if(n.startsWith('eye')||n.startsWith('cheek'))return;   // 背面法の線（目・ほっぺはのぞく）
+    const h=o.clone();g.updateMatrixWorld(true);h.material=hullMat({color:o.material.color.getHex()},dotW()/o.getWorldScale(new THREE.Vector3()).x);h.castShadow=false;h.receiveShadow=false;add.push([o.parent,h])});
+   add.forEach(([p,h])=>p.add(h))}
   SPMODELS[el]=g;
 }
 // 形をあらくする（三角形をへらす。はじめてえらんだときに作る）
@@ -419,6 +433,7 @@ function placeProps(level){
       const im=new THREE.InstancedMesh(OPT.low?lowGeo(part):part.geo,part.mat,Math.max(1,mats.length));im.count=mats.length;
       mats.forEach((m,i)=>im.setMatrixAt(i,m));im.castShadow=p.kind!=='tiny';im.receiveShadow=true;im.computeBoundingSphere();
       scene.add(im);propMeshes.push(im);
+      if(p.kind!=='tiny'||p.src==='plants'){const hm=new THREE.InstancedMesh(im.geometry,part.hull,im.count);mats.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}  // 背面法の線
     }
   }
   const bm=new THREE.InstancedMesh(blobGeo,blobMat,Math.max(1,blobs.length));bm.count=blobs.length;blobs.forEach((m,i)=>bm.setMatrixAt(i,m));bm.renderOrder=2;bm.frustumCulled=false;scene.add(bm);propMeshes.push(bm);
@@ -475,9 +490,7 @@ const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;
   uniform sampler2D dz;uniform float cn,cf,focus;
   void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);U=(floor(U*res)+.5)/res;   // ドットにそろえる
     vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;
-    {float z0=texture2D(dz,U).x,l0=cn*cf/(cf-z0*(cf-cn));bool e=false;vec2 px=1./res;                    // ふちどり：となりがずっと奥なら、いちばん暗い所の色に
-     for(int i=0;i<4;i++){vec2 o=i==0?vec2(px.x,0.):i==1?vec2(-px.x,0.):i==2?vec2(0.,px.y):vec2(0.,-px.y);float z1=texture2D(dz,U+o).x,l1=cn*cf/(cf-z1*(cf-cn));if(l1-l0>${PX.edge}*l0)e=true;}
-     if(e&&z0<1.)c=lin(pxShade(pow(max(c,0.),vec3(1./2.2)),-.5));}
+   
     float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;                  // 奥行き（カメラからのきょり）とピントの所との差
     float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};
     c=mix(c,bl,tl);                                                                  // ミニチュアのぼかし（上と下）
