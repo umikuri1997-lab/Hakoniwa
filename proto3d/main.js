@@ -37,6 +37,7 @@ const BLOOM={th:.72,k:.55};            // にじみ：これより明るい所�
 const GRADE={warm:[1.04,1.0,.93],sat:1.12,vig:.22};
 // ---- 地面の色（sRGB） ----
 const COLS={grassA:'#a3dc72',grassB:'#7fca60',grassC:'#c2e690',dry:'#bdd27e',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
+const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
 // ---- せいれい ----
 const SPH=.8,WALK=1.2;
 const CREAM='#fdf8ef';
@@ -214,7 +215,7 @@ async function loadProp(p){
   if(p.src==='plants'){PLANTS=PLANTS||gltf.loadAsync('./tex/plants.glb');root=(await PLANTS).scene.getObjectByName(p.id).clone()}
   else{PROPSGLB=PROPSGLB||gltf.loadAsync('./tex/props.glb');root=(await PROPSGLB).scene.getObjectByName(p.id).clone()}
   root.position.set(0,0,0);root.updateMatrixWorld(true);
-  const bb=new THREE.Box3().setFromObject(root),sz=bb.getSize(new THREE.Vector3()),s=p.h/sz.y;
+  const bb=new THREE.Box3().setFromObject(root),sz=bb.getSize(new THREE.Vector3()),s=p.h*OBJSCALE/sz.y;
   const norm=new THREE.Matrix4().makeScale(s,s,s).multiply(new THREE.Matrix4().makeTranslation(-(bb.min.x+bb.max.x)/2,-bb.min.y,-(bb.min.z+bb.max.z)/2));
   const parts=[];
   root.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
@@ -228,7 +229,7 @@ async function loadProp(p){
 const SPMODELS={};
 async function loadSpirit(el){
   const g=await fbx.loadAsync(SPDIR+el+'.fbx');
-  g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH/bb.getSize(new THREE.Vector3()).y;
+  g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH*OBJSCALE/bb.getSize(new THREE.Vector3()).y;
   g.scale.multiplyScalar(s);
   const c=SPCOL[el],flat=col=>{const m=new THREE.MeshBasicMaterial({color:col});m.onBeforeCompile=curveVS;m.customProgramCacheKey=()=>'flat';return m};
   g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;
