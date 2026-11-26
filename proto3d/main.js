@@ -20,7 +20,8 @@ const HSTEP=1.2;               // 段差1つの高さ（マス。前の試作と
 const PITCH=35*Math.PI/180;    // 見おろす角度
 const YAW=Math.PI/4;           // カメラの向き（マスの x が右下・z が左下）
 const FOV=28;                  // 画角（度）
-const VIEWW={2:7,3:10,4:14};   // 「大きさ」：画面の横に入るマスの数（近い・ふつう・遠い）
+// 「大きさ」（2・3・4）：前の試作と同じ大きさ。ゲームの1ドット（1マス 64/√2 ドット）を、画面の細かい点 2・3・4 こぶんに（細かさは3倍まで）
+const viewW=()=>innerWidth*Math.min(devicePixelRatio||1,3)/OPT.zoom/(64/Math.SQRT2);  // 画面の横に入るマスの数（カメラの見るまん中で）
 const CURVE=.018;              // 丸い地面：カメラの見るまん中から、奥・手前へ d マスはなれた所を d²×CURVE だけ下げる
 const MAXPR=2;                 // 画面の細かさ（スマホの点の何倍まで）
 // ---- 光とかげ ----
@@ -339,7 +340,7 @@ function resize(){
   fin.m.uniforms.t.value=rtMain.texture;fin.m.uniforms.b.value=rtB.texture;
 }
 function placeCam(){
-  const vw=VIEWW[OPT.zoom]||10,dist=vw/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*cam.aspect);
+  const vw=viewW(),dist=vw/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*cam.aspect);
   cam.fov=FOV;cam.position.copy(target).addScaledVector(CAMDIR,dist);cam.lookAt(target);cam.updateProjectionMatrix();
   uCurve.value.set(target.x,target.z,CURVE,0);scene.fog.near=dist+FOG[0];scene.fog.far=dist+FOG[1];
 }
@@ -347,7 +348,7 @@ function placeCam(){
 // ---- さわる：ドラッグで動かす ----
 let drag=null;
 cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{if(!drag)return;const k=(VIEWW[OPT.zoom]||10)/innerWidth,dx=(e.clientX-drag.x)*k,dy=(e.clientY-drag.y)*k;drag={x:e.clientX,y:e.clientY};
+cv.addEventListener('pointermove',e=>{if(!drag)return;const k=viewW()/innerWidth,dx=(e.clientX-drag.x)*k,dy=(e.clientY-drag.y)*k;drag={x:e.clientX,y:e.clientY};
   target.addScaledVector(RT,-dx).add(new THREE.Vector3(FWD.x,0,FWD.y).multiplyScalar(dy/Math.sin(PITCH)));
   target.x=Math.max(0,Math.min(MAPN,target.x));target.z=Math.max(0,Math.min(MAPN,target.z));placeCam()});
 cv.addEventListener('pointerup',()=>drag=null);cv.addEventListener('pointercancel',()=>drag=null);
@@ -364,7 +365,7 @@ function refresh(){groups.forEach(g=>g.refresh&&g.refresh())}
 function buildUI(){
   groups.push(group('せいれい',[['5',5],['20',20],['50',50],['100',100]],()=>OPT.spirits,v=>{OPT.spirits=v;makeSpirits(v)}));
   groups.push(group('物',[['少し',0],['ふつう',1],['多い',2]],()=>OPT.props,v=>{OPT.props=v;blocked=placeProps(v);makeSpirits(OPT.spirits)}));
-  groups.push(group('大きさ',[['近い',2],['ふつう',3],['遠い',4]],()=>OPT.zoom,v=>{OPT.zoom=v;placeCam()}));
+  groups.push(group('大きさ',[['2',2],['3',3],['4',4]],()=>OPT.zoom,v=>{OPT.zoom=v;placeCam()}));
   groups.push(group('形',[['もとのまま',false],['あらく',true]],()=>OPT.low,v=>{OPT.low=v;blocked=placeProps(OPT.props)}));
   groups.push(group('かげ',[['あり',true],['なし',false]],()=>OPT.shadow,v=>{OPT.shadow=v;sun.castShadow=v;renderer.shadowMap.needsUpdate=true}));
   const g=document.createElement('div');g.className='g';
