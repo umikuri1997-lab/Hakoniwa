@@ -18,9 +18,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'tools', 'art', 'models', 'plants', 'plants.glb')
 OUT = os.path.join(ROOT, 'proto3d', 'tex', 'plants.glb')
 BARK = (148, 116, 92)                       # 幹（赤みをへらした茶色。持ち主がたのんだ）
-LEAF = {                                    # 葉：ゲームの木の葉の5色の まん中（nat_tree・nat_oak・nat_cedar）と、草の色
-    'tree': (151, 203, 98), 'oak': (130, 192, 104), 'cedar': (134, 182, 102), 'bush': (120, 188, 105), 'herb': (120, 188, 105)}
-STEM = (112, 170, 92)                       # 花のくき
+LEAF = {                                    # 葉：自然な緑（黄色によりすぎない、少し深い緑。木ごとに少しちがう）と、草の色
+    'tree': (104, 160, 82), 'oak': (88, 146, 84), 'cedar': (80, 134, 88), 'bush': (96, 150, 76), 'herb': (108, 158, 80)}
+STEM = (104, 150, 84)                       # 花のくき
 # 木10こ・しげみ3こ・花と草10この、葉の色と花の色（花は、ゲームの花の色に近い色）
 TREE_LEAF = ['oak', 'cedar', 'tree', 'tree', 'tree', 'oak', 'tree', 'tree', 'oak', 'tree']
 FLOWER = ['#8a8fe0', '#f2b14e', '#f07fa6', '#e8604f', '#ffffff', '#a58be0', '#f07fa6', '#ffd75a', '#f2a7c3', '#8a8fe0']

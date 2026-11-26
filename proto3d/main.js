@@ -53,14 +53,14 @@ const FALLING={n:22,size:.18};                       // 舞う葉：数・大き
 const BLOB={k:.42};
 const PATHDIP=.12;                                   // 道を草地より下げる高さ（マス）
 const GBUMP={amp:.09,scale:.55,f:1.3,k:.12,t:.001};  // 地面のこぼこ：もりあがりの高さ（マス）・細かさ（形）／面の向きだけのこまかいこぼこ：細かさ・強さ・草の絵から作る強さ
-const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#6cbf4f','#b0e37a']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
+const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#5e9c48','#93c466']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
 const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
 const BLOOM={th:.85,k:.35,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
-const GRADE={warm:[1.02,1.0,.97],sat:1.22,vig:.22,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
+const GRADE={warm:[1.02,1.0,.97],sat:1.06,vig:.22,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
-const COLS={grassA:'#7fca57',grassB:'#5daf48',grassC:'#9dd86a',dry:'#a9c96a',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
+const COLS={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#a4b46c',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
 const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
 // ---- せいれい ----
 const SPH=.8,WALK=1.2;
@@ -175,7 +175,7 @@ function toon(o={},extra={}){
   ${extra.mat?`{int k=tnK;
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
-      diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.45*gr);}
+      diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);}  // 葉っぱの絵の色（黄緑）は少しだけ
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;
     float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:${MATK[5].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
@@ -589,12 +589,12 @@ function frame(now){
 
 async function loadMats(){
   const meta=await (await fetch('./tex/mats.json')).json(),names=Object.keys(MATIDX).sort((a,b)=>MATIDX[a]-MATIDX[b]);
-  for(const k of names){if(k==='leaf'){const t=await new THREE.TextureLoader().loadAsync('./tex/'+LEAFTEX.file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;uMat.value.push(t);MATSPAN.leaf=LEAFTEX.span;continue}
-    const t=await new THREE.TextureLoader().loadAsync('./tex/m_'+k+'.png');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;
+  for(const k of names){if(k==='leaf'){const t=await new THREE.TextureLoader().loadAsync('./tex/'+LEAFTEX.file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;uMat.value.push(t);MATSPAN.leaf=LEAFTEX.span;continue}
+    const t=await new THREE.TextureLoader().loadAsync('./tex/m_'+k+'.jpg');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;t.anisotropy=8;
     if(meta[k]){uMat.value.push(t);MATSPAN[k]=meta[k].span}}
 }
 async function loadGroundTex(){
-  for(const k of ['grass','dirt','cliff']){const t=await new THREE.TextureLoader().loadAsync('./tex/'+GTEX[k].f);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;uGTex.value.push(t)}
+  for(const k of ['grass','dirt','cliff']){const t=await new THREE.TextureLoader().loadAsync('./tex/'+GTEX[k].f);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;uGTex.value.push(t)}
 }
 async function main(){
   await loadMats();await loadGroundTex();
