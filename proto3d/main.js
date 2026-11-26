@@ -27,7 +27,7 @@ const YAW=Math.PI/4;           // カメラの向き（マスの x が右下・z
 const FOV=28;                  // 画角（度）
 // 「大きさ」（2・3・4）：前の試作と同じ大きさ。ゲームの1ドット（1マス 64/√2 ドット）を、画面の細かい点 2・3・4 こぶんに（細かさは3倍まで）
 const viewW=()=>innerWidth*Math.min(devicePixelRatio||1,3)/OPT.zoom/(64/Math.SQRT2);  // 画面の横に入るマスの数（カメラの見るまん中で）
-const CURVE=.018;              // 丸い地面：カメラの見るまん中から、奥・手前へ d マスはなれた所を d²×CURVE だけ下げる
+const CURVE=0;                 // 丸い地面：カメラの見るまん中から、奥・手前へ d マスはなれた所を d²×CURVE だけ下げる（0：まげない。持ち主がきめた）
 const MAXPR=2;                 // 画面の細かさ（スマホの点の何倍まで）。ドット絵の1ドットは、この点の「大きさ」こぶん
 // ---- 光とかげ ----
 const SKY='#d7ecf0',SKYTOP='#2f86d6',GROUND='#7f9a5a',FOG=[14,46];  // 地平の空の色（霧）・上の空の色・地面からの光・霧のはじまりとおわり（カメラの見るまん中より先、マス）
@@ -43,7 +43,7 @@ const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：か�
 const HULL={w:.8};   // 背面法の線：裏返した形を、ゲームの1ドット×この太さぶん外へふくらませて、いちばん暗いだんの色で描く（輪郭と、物どうしの境界の線）
 const PX={lv:4,vUp:.28,vDn:.85,hue:.28,sat:.15,gain:1.0,edge:.035,shadow:.45,hl:.95,hlk:.32};
 // なめらかなトゥーン（セル画ふう。持ち主がえらんだ）：かげ・光の2だん＋ハイライト。さかいめは細くぼかして、ギザギザをとる
-const CEL={cut:.5,soft:.012,shade:-.5,light:.12,hl:.93,hlk:.55};  // cut：かげと光のさかい（シェーディングマップの明るさ×かげ）・shade／light：色の式にわたす d・hl：ハイライトのさかい・hlk：ハイライトの d
+const CEL={cut:.5,soft:.08,shade:-.5,light:.06,hl:.95,hlk:.18};  // cut：かげと光のさかい（シェーディングマップの明るさ×かげ）・shade／light：色の式にわたす d・hl：ハイライトのさかい・hlk：ハイライトの d
 // lv：だんの数・vUp／vDn：明るいがわ・暗いがわの明るさの差・shadow：太陽のかげの中は明るさをこの倍に・hl：シェーディングマップがこれより明るい所はハイライト（hlk だけ明るいだん）・edge：ふちどりにする奥行きの差（カメラからのきょりの割合）
 // シェーディングマップ（記事）：画面から見た面の向き（x 右・y 上）で、太陽のほう（左上・手前）ほど明るい 0.5+0.5×(太陽との内積)
 const MIST={h:1.2,k:.03,col:'#e8f2ea'};               // 地面の近くのもや：この高さ（マス）より下ほど、この色をこのこさで
@@ -59,10 +59,10 @@ const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#5e9c48','#93c466']}; 
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
 const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
-const BLOOM={th:.85,k:.35,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
-const GRADE={warm:[1.02,1.0,.97],sat:1.06,vig:.22,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
+const BLOOM={th:.95,k:.12,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
+const GRADE={warm:[1.0,1.0,1.0],sat:1.0,vig:.15,exp:.9};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
-const COLS={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#d8bf8e',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
+const COLS={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#c4a97c',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
 const OBJSCALE=1.5;             // 地形（マス・段差）に対する、せいれい・植物・岩・小物の大きさ（持ち主がきめた）
 // ---- せいれい ----
 const SPH=.8,WALK=1.2;
@@ -91,9 +91,9 @@ const showErr=e=>{const b=$('err');b.style.display='block';b.textContent+=String
 addEventListener('error',e=>showErr(e.error||e.message));addEventListener('unhandledrejection',e=>showErr(e.reason));
 
 // ---- 設定（ボタン） ----
-const OPT={zoom:3,spirits:20,props:1,shadow:true,low:false};
-try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d5')||'{}'))}catch(e){}
-const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d5',JSON.stringify(OPT))}catch(e){}};
+const OPT={zoom:1.5,spirits:20,props:1,shadow:true,low:false};
+try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d6')||'{}'))}catch(e){}
+const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d6',JSON.stringify(OPT))}catch(e){}};
 
 // ---- 地形（ゲームの草原の最初のマップ） ----
 const HM=[],KIND=[],GRASS=[];
@@ -217,7 +217,7 @@ function pmAt(px,pz,tile=pathTile){ // 道（と池）の度合い：マスの�
 }
 const maskTex=(()=>{const W=MN*MASKR,d=new Uint8Array(W*W*4);
   for(let j=0;j<W;j++)for(let i=0;i<W;i++){const px=(i+.5)/MASKR-BORDER,pz=(j+.5)/MASKR-BORDER,x=Math.floor(px),z=Math.floor(pz),k=inMap(x,z)?KIND[z][x]:'g',o=(j*W+i)*4;
-    d[o]=Math.round(255*pmAt(px,pz));d[o+1]=Math.round(255*pmAt(px,pz,waterTile));d[o+2]=inMap(x,z)&&!GRASS[z][x]&&k==='g'?255:0;d[o+3]=255}
+    d[o]=Math.round(255*pmAt(px,pz));d[o+1]=Math.round(255*pmAt(px,pz,waterTile));d[o+2]=!inMap(x,z)||!GRASS[z][x]&&k==='g'?255:0;/* マップの外も荒れた土地 */d[o+3]=255}
   const t=new THREE.DataTexture(d,W,W);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t})();
 const NOISE=`
 float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -551,7 +551,7 @@ let groups=[];
 function refresh(){groups.forEach(g=>g.refresh&&g.refresh())}
 function buildUI(){
   groups.push(group('せいれい',[['5',5],['20',20],['50',50],['100',100]],()=>OPT.spirits,v=>{OPT.spirits=v;makeSpirits(v)}));
-  groups.push(group('大きさ',[['2',2],['3',3],['4',4]],()=>OPT.zoom,v=>{OPT.zoom=v;resize()}));
+  groups.push(group('大きさ',[['1.5',1.5],['2',2],['3',3],['4',4]],()=>OPT.zoom,v=>{OPT.zoom=v;resize()}));
   groups.push(group('形',[['もとのまま',false],['あらく',true]],()=>OPT.low,v=>{OPT.low=v;blocked=placeMap()}));
   groups.push(group('かげ',[['あり',true],['なし',false]],()=>OPT.shadow,v=>{OPT.shadow=v;sun.castShadow=v;renderer.shadowMap.needsUpdate=true}));
   const g=document.createElement('div');g.className='g';
