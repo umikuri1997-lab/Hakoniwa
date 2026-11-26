@@ -83,7 +83,7 @@ function windTick(){if(!windOn())return;if(!WN||WNS!==S)windSync();windCarry();w
    遊具（RIDES）は、風のせいれいが係（rideop）になって風を送っているあいだだけ動き、ほかのせいれいがのれる。係は、のったせいれいが遊びおわるたびに、たのしさ+RIDEOPFUN。風の道が2マス以内にとどいている遊具は、係がつかれない。
    わすれた楽しさ：この土地のせいれいは、遊び家具の遊び方をわすれている（r.rem にない遊び家具へは、自分から行かない）。動いている遊具にはのる。遊具にはじめてのる・係をつとめると、遊び方を1つ思い出す。
    こわれた遊具（RIDEB）は「しらべる」でタップすると、せいれいが直す（建てる所のしくみ S.dyn[j].wfix）。直すと、その遊具のレシピをおぼえる。 */
-const RIDEK=1.5/* 遊具の絵の大きさ（足もとのまん中から） */,RIDEFIXT=90,RIDEOPT=120,RIDEOPFUN=5,RIDETIRE=.08/* 係のつかれ（1秒あたり。風の道がとどいていれば0） */;
+const RIDEFIXT=90,RIDEOPT=120,RIDEOPFUN=5,RIDETIRE=.08/* 係のつかれ（1秒あたり。風の道がとどいていれば0） */;
 const rideOn=j=>!!S&&S.res.some(q=>!q.hidden&&q.act&&q.act.type==='rideop'&&q.act.obj===j&&q.act.stage==='do');
 const rideOp=j=>S.res.find(q=>!q.hidden&&q.act&&q.act.type==='rideop'&&q.act.obj===j&&q.act.stage==='do');
 const windFun=()=>WD===WIND&&!!S&&!S.free;
@@ -116,19 +116,12 @@ const RIDEPH=new Map();
 function rideAng(j,now){let p=RIDEPH.get(j);if(!p){p={a:(j*.37)%6.28,t:now};RIDEPH.set(j,p)}const dt=Math.max(0,Math.min(.1,(now-p.t)/1000));p.t=now;if(S&&RIDES.has(S.obj[j])&&rideOn(j))p.a+=dt*1.5;return p.a}
 /* 3Dから写した遊具（チップに iso）の座席：床の中心から、座る点までの向き a（ラジアン）・はなれ r（マス）・高さ h（マス）。3Dの設計図（tools/art/handoff3d/rides.py）の式と同じ。A＝遊具のまわる角度（rideAng） */
 const RIDESEAT={merry:(k,A)=>{const i=k%3;return{a:A+i*2.0944,r:1.41,h:1.686+.18*Math.sin(4*(A+i*.5236))}}/* 馬i：床の角度から120度ずつ。3Dは rides.py の寸法の1.5倍（ride_common.py の SCALE）：はなれ .94→1.41・馬の高さ .96（柱の上下 .12 を、馬ごとに30度ずつずらして1周に4回）＋鞍 .164 の1.5倍 */,
-  cup:(k,A)=>({a:A*1.3-1.5708+(k%2+1)*2.0944,r:1.065,h:.716})/* カップ1・2ばん（3つのうち、0ばんにはのらない）：軌道の角度は床の1.3倍。高さは皿の上 .30＋底 .087＋.09（rides.py の寸法の1.5倍。半径 .71→1.065・高さ .477→.716）*/,
+  cup:(k,A)=>({a:A*1.3-1.5708+(k%2+1)*2.0944,r:1.065,h:.45,cut:-6.4})/* カップ1・2ばん（3つのうち、0ばんにはのらない）：軌道の角度は床の1.3倍。高さ .45（カップの底 .30＋.087 の1.5倍より少し下。カップの中にすわる）・cut：カップのふちの手前（カップの高さ1.1・半径.5マス）の画面の高さ。半径 .71→1.065（rides.py の寸法の1.5倍）*/,
   skyswing:(k,A)=>({a:A+(k%3)*2.0944,r:2.025,h:1.707})/* 座席6つのうち、1つおき（0・2・4ばん）にのる。半径1.35・高さ 1.07＋座面 .068 の1.5倍（半径2.025・高さ1.707）*/,
   wheel:(k,A)=>{const th=A*.35+(k%4)*1.5708;return{x:2.1075*Math.cos(th),y:.1095,h:3.48-2.1075*Math.sin(th),front:1}}/* 8室のうち、1つおき（0・2・4・6ばん）にのる。輪の半径1.405・軸の高さ2.64・室の座面は輪の点から .32 下の1.5倍（半径2.1075・高さ 3.48−…）。輪は床の中心から見て x と高さの面（室は y=.073）。いつも遊具より手前（室は輪より手前につるされている） */};
-function windRidePose(r,a,now){r._toyH=0;if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
-  {const sf=RIDESEAT[a.what],ic=window.CHIPS&&CHIPS[a.what];if(sf&&ic&&ic.iso){/* 3Dの絵（クォータービュー）：座る点を、床の中心から、せかいの点で。高さは、せいれいを画面で上へ（uLift） */const q=sf(k,A),sz=BL[a.what].sz,dx=q.x!=null?q.x:Math.cos(q.a)*q.r,dy=q.y!=null?q.y:Math.sin(q.a)*q.r;r.face=q.x!=null?1:-Math.sin(q.a)-Math.cos(q.a)>0?1:-1;/* x・y で書いた座席（観覧車）は、右向き *//* 進む向きが、画面の右なら右向き */r._toyH=q.h;const wx=X+(sz[0]/2+dx)*TS,wy=Y+(sz[1]/2+dy)*TS,rx=r.x*TS,ry=r.y*TS;return{x:rx+(isoX(wx,wy)-isoX(rx,ry))/IQSX,y:ry+(isoY(wx,wy)-isoY(rx,ry))/IQSY/* せいれいの絵は、いまいる点を足もとに、立てる形（standTf）で描くので、せかいの点の画面でのずれを、立てる形のずれにして返す */,z:Y/TS+(q.front||dx+dy>0?sz[1]+.06:sz[1]-.6)/* 手前の半分は遊具より手前・奥の半分は遊具のうしろ */}}}
-  const K=RIDEK,fx=X+(a.what==='wheel'?48:32),fy=Y+56,PX=v=>fx+(v-fx)*K,PY=v=>fy+(v-fy)*K;
-  const ch=window.CHIPS&&CHIPS[a.what];if(ch&&ch.seats){/* 3Dの絵の座席（コマごと、足もとからの g64）。そのコマの座席の、うしろ半分にいるときは、遊具の奥に描く */const F=ch.seats,f=rideFrame(a.what,j,now),n=F[0].length,q=k%n,p=F[f][q],nx=F[(f+1)%16][q];let my=0;for(const L of F)my+=L[q][1];my/=16;
-    r.face=a.what==='wheel'?1:nx[0]>p[0]?1:nx[0]<p[0]?-1:r.face||1;const front=p[1]>=my;return{x:fx+p[0]/2,y:fy+p[1]/2,z:Y/TS+(front?2.06:a.what==='skyswing'?.95:1.4)}}
-  if(a.what==='wheel'){const th=A*.35+k*1.5708,cx=X+48,cy=Y-6;r.face=1;return{x:PX(cx+Math.cos(th)*34),y:PY(cy+Math.sin(th)*34+12),z:Y/TS+2.06}}
-  const cx=X+32,n=a.what==='cup'?2:3,th=A*(a.what==='cup'?1.3:1)+k*6.2832/n,sn=Math.sin(th),cs=Math.cos(th);r.face=sn>0?(cs>0?-1:1):(cs>0?1:-1);
-  if(a.what==='skyswing')return{x:PX(cx+cs*27),y:PY(Y+30+sn*9),z:Y/TS+(sn>0?2.06:.95)};
-  if(a.what==='cup')return{x:PX(cx+cs*15),y:PY(Y+47+sn*6),z:Y/TS+(sn>0?2.06:1.4)};
-  return{x:PX(cx+cs*20),y:PY(Y+48+sn*7)-Math.abs(Math.sin(A*2+k))*3,z:Y/TS+(sn>0?2.06:1.4)}}
+function windRidePose(r,a,now){r._toyH=0;r._toyCut=null;if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
+  {const sf=RIDESEAT[a.what],ic=window.CHIPS&&CHIPS[a.what];if(sf&&ic&&ic.iso){/* 3Dの絵（クォータービュー）：座る点を、床の中心から、せかいの点で。高さは、せいれいを画面で上へ（uLift） */const q=sf(k,A),sz=BL[a.what].sz,dx=q.x!=null?q.x:Math.cos(q.a)*q.r,dy=q.y!=null?q.y:Math.sin(q.a)*q.r;r.face=q.x!=null?1:-Math.sin(q.a)-Math.cos(q.a)>0?1:-1;/* x・y で書いた座席（観覧車）は、右向き *//* 進む向きが、画面の右なら右向き */r._toyH=q.h;r._toyCut=q.cut!=null?q.cut:null;/* cut：足もとより上のこの高さ（画面の点）から下は描かない（カップの手前のかべで、下半身をかくす） */const wx=X+(sz[0]/2+dx)*TS,wy=Y+(sz[1]/2+dy)*TS,rx=r.x*TS,ry=r.y*TS;return{x:rx+(isoX(wx,wy)-isoX(rx,ry))/IQSX,y:ry+(isoY(wx,wy)-isoY(rx,ry))/IQSY/* せいれいの絵は、いまいる点を足もとに、立てる形（standTf）で描くので、せかいの点の画面でのずれを、立てる形のずれにして返す */,z:Y/TS+sz[1]/2+(q.front||dx+dy>0?.36:.24)/* 奥行きの順（draw-world.js の dd＝z＋せいれいの x）：遊具のまん中 .3 より、手前の半分は後（遊具の上）・奥の半分は先（遊具のうしろ）になるように */}}}
+  return null}/* 遊具の絵（チップ）がまだ読めていないあいだは、のる位置なし（立ったまま） */
 /* ---------- 絵（コードの仮のドット絵。1ドット＝世界の1ドット） ---------- */
 function windCover(k,now){/* しずんだ島の雲のこさ（0〜1）。うかんだ島は、雲がわれるあいだだけ */if(!S.wind.up[k])return 1;const T=WRISE.get(S.wind),t=T&&T.get(k);if(t==null)return 0;if(t===Infinity)return 1;const p=(now-t)/WINDRISE;if(p>=1){T.delete(k);return 0}return 1-p}
 const WCOVPI=new WeakMap();
@@ -158,18 +151,9 @@ function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白い
 
 /* 遊具の絵（コードの仮のドット絵。観覧車いがいは3Dのチップだけ）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
 function rideFrame(id,i,now){/* 遊具の絵のコマ（16コマでひとまわり。チップの pf がまわる速さの倍） */const ch=window.CHIPS&&CHIPS[id];if(!ch||!ch.pf||i==null)return 0;const a=rideAng(i,now||0)*ch.pf/6.2832*16;return((Math.round(a)%16)+16)%16}
-function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。ないときはコードの仮の絵 */const C=window.CHIPS;
+function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。*/const C=window.CHIPS;
   if(C){if(brk){const ch=C[id+'b'];if(ch&&drawChip(c,ch,id+'b',x0,y0,now,i))return}else if(i==null||ICON){const ch=C[id];if(ch&&drawChip(c,ch,id,x0,y0,now,i))return}else{const st=C[id+':s'],mv=C[id+':m'+rideFrame(id,i,now)];if(st&&mv&&drawChip(c,st,id,x0,y0,now,i)){drawChip(c,mv,id,x0,y0,now,i);return}}}
-const fx=id==='wheel'?48:32,fy=56;c.save();c.translate(Math.round(x0+fx),Math.round(y0+fy));c.scale(RIDEK,RIDEK);const x=-fx,y=-fy,R=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)};drawRide0(c,id,brk,x,y,i,now,R);c.restore()}
-function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0):.6,O=(cx,cy,rx,ry,col)=>{c.fillStyle=col;for(let q=-ry;q<=ry;q++){const w=Math.round(rx*Math.sqrt(Math.max(0,1-q*q/(ry*ry+.01))));if(w>0)c.fillRect(Math.round(x+cx-w),Math.round(y+cy+q),w*2,1)}},
-    Ln=(x0,y0,x1,y1,col,t)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))|0;c.fillStyle=col;for(let q=0;q<=n;q++)c.fillRect(Math.round(x+x0+(x1-x0)*q/Math.max(1,n)),Math.round(y+y0+(y1-y0)*q/Math.max(1,n)),t||1,t||1)},
-    P=brk?{a:'#c9c2b4',b:'#e3ddd0',p:'#a79f90',w:'#8f8676',m:'#b3aa98'}:{a:'#f2a7b5',b:'#fff6e8',p:'#c9a46a',w:'#b08a52',m:'#8fd3c2'};
-  if(id==='wheel'){const cx=48,cy=-6,RR=34;O(48,60,40,5,'rgba(60,50,30,.2)');Ln(cx,cy,cx-22,58,P.w,3);Ln(cx,cy,cx+22,58,P.w,3);R(cx-28,57,56,4,P.p);
-    for(let q=0;q<8;q++){const th=A*.35+q*.7854;Ln(cx,cy,cx+Math.cos(th)*RR,cy+Math.sin(th)*RR,P.m,1)}
-    for(let q=0;q<56;q++){const th=q*6.2832/56;R(cx+Math.cos(th)*RR-1,cy+Math.sin(th)*RR-1,2,2,P.p)}
-    for(let q=0;q<4;q++){const th=A*.35+q*1.5708,gx=cx+Math.cos(th)*RR,gy=cy+Math.sin(th)*RR;R(gx-1,gy,2,4,P.w);R(gx-6,gy+4,12,9,q%2?P.a:P.m);R(gx-6,gy+4,12,2,P.b);R(gx-4,gy+7,8,3,brk?'#d8d2c6':'#eaf7fb')}
-    O(cx,cy,4,4,P.w);O(cx,cy,2,2,P.b);if(brk){Ln(cx-30,40,cx-18,58,P.w,2);R(cx+14,50,10,3,P.a)}return}
-  O(32,56,30,7,'rgba(60,50,30,.2)');}
+}/* 遊具の絵（チップ）がまだ読めていないあいだは、何も描かない */
 /* ---------- 観覧車の山場・雲の下（目標6・7）：観覧車のてっぺんから、雲のすきまにヌシ様のつばさが見える（wind:peek）。
    雲の海のはしでカザネたちが待つ所に、まもりの光を落とすと、雲がひらいて、つばさ・ヌシ様の顔・つばさのかげでねむる影が見え、ヌシ様が話す（windGlHit・windPartScene）。
    絵はコードで描くかりのドット絵（drawWindScene）。場面の動き・カメラは実時間、ひらく場面のあいだは村の時間を止める（SCENEHOLD） ---------- */
