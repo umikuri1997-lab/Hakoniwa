@@ -34,7 +34,11 @@ const SUNDIR=[-.55,1,.35];                           // 太陽の向き（せか
 const TOON=[.36,.62,1,1];                             // トゥーンの明るさのだん（かげ→光。なめらかにつなぐ）
 const RIM={k:.35,pow:3,col:[1,.96,.86]};             // ふちの光
 const AO=.13;                                        // 葉の下のかげ：_under 1だんごとに暗くする量
-const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：かげ（青むらさき）・日なた（金色）にかける色
+const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：かげ（青むらさき）・日なた（金色）にかける色（PX の前の、もとの考え。いまは PX の青へずらす色で）
+// ドット絵シェーダー（持ち主が送った記事「実践ドット絵シェーダー」mizuooon.hatenablog.jp のやり方）：
+// 光の量（光の色をのせた明るさ ÷ もとの色の明るさ）を lo〜hi で0〜1にし、PXLV だんにへらす。だん−0.5 を d として、
+// 明るさ ×(1+d×PXV)・暗い所は色を青へ（PXHUE）・明るい所はあざやかさを下げる（PXSAT）。ふちどりは、いちばん暗い所の色
+const PX={lo:.3,hi:1.4,lv:4,v:.45,hue:.28,sat:.3,gain:1.05,edge:.035};  // edge：ふちどりにする奥行きの差（カメラからのきょりに対する割合）
 const MIST={h:1.2,k:.1,col:'#e8f2ea'};               // 地面の近くのもや：この高さ（マス）より下ほど、この色をこのこさで
 const WIND={amp:.035,speed:1.3};                     // 風：植物の高さ²にかけるゆれの大きさ・速さ
 const CLOUDSH={scale:.05,speed:[.035,.02],k:.3};     // 流れる雲のかげ：ノイズの細かさ・流れる速さ・暗くする量
@@ -46,7 +50,7 @@ const PATHDIP=.12;                                   // 道を草地より下げ
 const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#6cbf4f','#b0e37a']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
 const RAYS={k:.22,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
-const DOF={near:.2,far:.28,amt:.9};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
+const DOF={near:.45,far:.7,amt:.55};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
 const BLOOM={th:.6,k:.85,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
 const GRADE={warm:[1.03,1.0,.95],sat:1.15,vig:.32,exp:1.0};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
@@ -143,7 +147,8 @@ const uMat={value:[]},uSunV={value:new THREE.Vector3()},uViewInv={value:new THRE
 const LUM='vec3(.3,.59,.11)';
 // 光のあと（トゥーンの光の量を見て）：光の温度・流れる雲のかげ・地面の近くのもや。どの物にもかける
 const AIR_FS=`{float lr=dot(outgoingLight,${LUM})/max(dot(diffuseColor.rgb,${LUM}),1e-3);
-  outgoingLight*=mix(vec3(${TEMP.shadow.join(',')}),vec3(${TEMP.light.join(',')}),clamp((lr-.45)/.9,0.,1.));            // 光の温度
+  {float sq=floor(min(clamp((lr-${PX.lo})/${(PX.hi-PX.lo).toFixed(2)},0.,1.),.999)*${PX.lv}.)/${PX.lv-1}.;               // ドット絵シェーダー：光の量を${PX.lv}だんに
+   outgoingLight=lin(pxShade(pow(max(diffuseColor.rgb,0.),vec3(1./2.2)),sq-.5))*${PX.gain};}
   float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
   outgoingLight=mix(outgoingLight,lin(${C3(MIST.col)})*dot(outgoingLight,${LUM})*1.3,${MIST.k}*clamp(1.-vWP.y/${MIST.h},0.,1.));}  // もや
 `;
@@ -196,6 +201,10 @@ float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){return .5*vn(p)+.25*vn(p*2.03+7.)+.125*vn(p*4.01+3.)+.0625*vn(p*8.07+11.);}
 vec3 lin(vec3 c){return pow(c,vec3(2.2));}
+vec3 pxHsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
+vec3 pxRgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}
+vec3 pxShade(vec3 c,float d){vec3 h=pxHsv(c);h.z=clamp(h.z*(1.+d*${PX.v}),0.,1.);   // 記事の色の式（sRGB の色で）
+  if(d<0.){float dh=fract(2./3.-h.x+.5)-.5;h.x=fract(h.x+dh*(-d)*${PX.hue});}else h.y=clamp(h.y*(1.-d*${PX.sat}),0.,1.);return pxRgb(h);}
 `;
 
 const uGTex={value:[]};
@@ -450,6 +459,9 @@ const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;
   uniform sampler2D dz;uniform float cn,cf,focus;
   void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);U=(floor(U*res)+.5)/res;   // ドットにそろえる
     vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;
+    {float z0=texture2D(dz,U).x,l0=cn*cf/(cf-z0*(cf-cn));bool e=false;vec2 px=1./res;                    // ふちどり：となりがずっと奥なら、いちばん暗い所の色に
+     for(int i=0;i<4;i++){vec2 o=i==0?vec2(px.x,0.):i==1?vec2(-px.x,0.):i==2?vec2(0.,px.y):vec2(0.,-px.y);float z1=texture2D(dz,U+o).x,l1=cn*cf/(cf-z1*(cf-cn));if(l1-l0>${PX.edge}*l0)e=true;}
+     if(e&&z0<1.)c=lin(pxShade(pow(max(c,0.),vec3(1./2.2)),-.5));}
     float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;                  // 奥行き（カメラからのきょり）とピントの所との差
     float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};
     c=mix(c,bl,tl);                                                                  // ミニチュアのぼかし（上と下）
