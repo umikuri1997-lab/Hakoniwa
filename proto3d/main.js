@@ -1,11 +1,11 @@
 /* はこにわ 3Dの試作：ゲームと同じ見た目で、地面・段差は3Dの形、せいれい・小物は3Dのモデルで描いて、重さをはかる（ゲームとはべつのページ）。
    - 見え方はゲームのクォータービュー（js/iso.js：ひし形 64×48・段1だん36ドット）。カメラは回さない。
    - 地面（草・あれ地・道・池・がけ）は、ゲームそのものに描かせた絵（bake_ground.cjs → tex/ground.webp）を、画面の向きから3Dの地面にはる。
-   - 木は、ゲームのチップを立てる（make_tex.py）。足もとに、その木のかげの絵。
+   - 植物（木・しげみ・花と草）は持ち主のモデル（tools/art/models/plants/plants.glb）。make_plants.py が植物ごとに分けて部品ごとに色をぬる（tex/plants.glb）。
    - せいれいは持ち主のモデル（tools/art/spirit3d/model/*.fbx）。色・かげ・輪郭はゲームの絵を写す道具（fbx_pixel.py）と同じ数：
      画面の向きの光で3だん、明るさはかえず彩度だけ、まわりに1ドットの輪郭（となりの色×0.72）。見おろしは25度（体を奥へたおす）。
      ゲームと同じく、せいれいだけは画面の細かい点で描く（地面と物は、ゲームの1ドットの大きさ）。
-   - 草花・岩・小物はトリポのモデル。かげは家具の5色のかげ（furntone.py）と同じ数。同じ物は、まとめて1回で描く（InstancedMesh）。
+   - 岩・小物はトリポのモデル。植物・岩・小物のかげは家具の5色のかげ（furntone.py）と同じ数。同じ物は、まとめて1回で描く（InstancedMesh）。
    - 画面のしあげはゲームの HD-2D（js/hd2d.js）と同じ数：時間の光の色・空気の遠近・四すみの暗さ・明るい所のにじみ。 */
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -50,18 +50,18 @@ const LOWKEEP=.25;             // 形をあらくするとき、のこす点の�
 const GSHADOW=[40,46,104,.22]; // かげの色（ゲームの足もとのかげ shadow() と同じ）
 // 画面のしあげ（js/hd2d.js と同じ数）
 const HD={air:.16,airCol:[200,216,236],airH:.55,vig:.3,vigR:[.42,.78],vigCol:[24,20,36],glow:.48,a:6,b:12};
-const SPR_LIFT=.5;             // 立てた木の絵を、カメラのほうへ出す量（マス）
-// 木：ゲームのチップ。数（少し・ふつう・多い）
-const TREES=[{k:'tree',n:[3,6,14]},{k:'tree~m',n:[1,2,4]},{k:'tree~v',n:[1,2,4]},{k:'maple~m',n:[1,1,3]}];
 // 置く物：モデル・高さ（マス）・数（少し・ふつう・多い）
+// 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
+const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
 const PROPS=[
-  {id:'nat_bush',h:.6,n:[4,10,24],kind:'small'},{id:'berrybush',h:.6,n:[3,8,18],kind:'small'},
-  {id:'grass',h:.35,n:[16,50,130],kind:'tiny'},{id:'clover',h:.3,n:[8,25,60],kind:'tiny'},{id:'bellflower',h:.4,n:[8,25,60],kind:'tiny'},
+  ...['T0','T2','T3','T4','T5','T6','T8','T9'].map(id=>PLANT(id,1.9,[1,2,4],'tree')),PLANT('T1',2.2,[1,2,3],'tree'),PLANT('T7',2.2,[0,1,2],'tree'),
+  ...['B0','B1','B2'].map(id=>PLANT(id,.7,[2,4,9],'small')),
+  ...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9'].map(id=>PLANT(id,.45,[2,6,14],'tiny')),
   {id:'rock',h:.3,n:[3,6,12],kind:'small'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small'},
   {id:'lantern',h:.7,n:[2,3,4],kind:'item'},{id:'sack',h:.5,n:[2,3,4],kind:'item'},{id:'firewood',h:.4,n:[1,2,3],kind:'item'},{id:'stump',h:.4,n:[2,3,5],kind:'item'},
   {id:'log_lying',h:.35,n:[1,2,3],kind:'item'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item'},{id:'wateringcan',h:.35,n:[1,1,2],kind:'item'}];
 // 小さい画面のアルファにつける印（輪郭のつけ方を分ける）
-const TAG={ground:1,prop:.75,sprite:.5};
+const TAG={ground:1,prop:.75};
 
 const $=id=>document.getElementById(id);
 const showErr=e=>{const b=$('err');b.style.display='block';b.textContent+=String(e&&e.stack||e)+'\n'};
@@ -182,14 +182,18 @@ function cleanColors(geo){
     const l=Math.max(.38,hsl.l*.5+lm*.5),s=Math.min(1,hsl.s*1.15+.05);c.setHSL(hsl.h,s,l);a.setXYZ(i,c.r,c.g,c.b)}
   a.needsUpdate=true;
 }
+let PLANTS=null;
 async function loadProp(p){
-  const g=await gltf.loadAsync(TRIPO+p.id+'.glb');const root=g.scene;root.updateMatrixWorld(true);
+  let root;
+  if(p.src==='plants'){PLANTS=PLANTS||gltf.loadAsync('./tex/plants.glb');root=(await PLANTS).scene.getObjectByName(p.id).clone();root.position.set(0,0,0)}
+  else root=(await gltf.loadAsync(TRIPO+p.id+'.glb')).scene;
+  root.updateMatrixWorld(true);
   const bb=new THREE.Box3().setFromObject(root),sz=bb.getSize(new THREE.Vector3()),s=p.h/sz.y;
   const norm=new THREE.Matrix4().makeScale(s,s,s).multiply(new THREE.Matrix4().makeTranslation(-(bb.min.x+bb.max.x)/2,-bb.min.y,-(bb.min.z+bb.max.z)/2));
   const parts=[];
   root.traverse(o=>{if(!o.isMesh)return;let geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
     geo.deleteAttribute('normal');geo=mergeVertices(geo);geo.computeVertexNormals(); // まるい面は、なめらかなかげ
-    cleanColors(geo);
+    if(p.src!=='plants')cleanColors(geo); // 植物の色は、make_plants.py でゲームの色をぬってある
     const src=o.material||{};parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color'),color:geo.getAttribute('color')?0xffffff:(src.color||0xffffff),map:src.map||null})})});
   p.parts=parts;
 }
@@ -216,27 +220,8 @@ function lowGeo(part){
   return part.low;
 }
 
-// ---- 木の絵 ----
-const SPR={};  // チップの名前 → {tex, ax, ay, w, h}
-async function loadSprites(){
-  const meta=await (await fetch('./tex/sprites.json')).json();
-  await Promise.all(Object.entries(meta).map(async([k,m])=>{const t=await TEXL.loadAsync('./tex/'+m.f);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;SPR[k]={...m,tex:t}}));
-}
-function sprMat(tex){const m=new THREE.SpriteMaterial({map:tex,alphaTest:.5,transparent:false});
-  m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <opaque_fragment>',`gl_FragColor=vec4(outgoingLight,${TAG.sprite.toFixed(2)});`)};return m}
-// 画面の絵（右へ sx・下へ sy ドット）を、地面の上の点にもどす
+// 画面の下へ1ドット動くと、地面の上では、どれだけ手前か
 const DN=new THREE.Vector3(Math.sin(YAW),0,Math.cos(YAW)).multiplyScalar(1/Math.sin(PITCH));
-function treeSprite(k,x,z){
-  const S=SPR[k],H=SPR[k+':sh'],gy=yTop(x,z),at=new THREE.Vector3(x+.5,gy,z+.5);
-  const sp=new THREE.Sprite(sprMat(S.tex));sp.center.set(-S.ax/S.w,1+S.ay/S.h);sp.scale.set(S.w/PPU,S.h/PPU,1);
-  sp.position.copy(at).addScaledVector(CAMDIR,SPR_LIFT);
-  const P=(sx,sy)=>at.clone().addScaledVector(RT,sx/PPU).addScaledVector(DN,sy/PPU).setY(gy+.01);
-  const x0=H.ax,y0=H.ay,x1=H.ax+H.w,y1=H.ay+H.h,g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute([P(x0,y1),P(x1,y1),P(x1,y0),P(x0,y1),P(x1,y0),P(x0,y0)].flatMap(v=>v.toArray()),3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,0,1,1,0,1],2));
-  const sh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:H.tex,...keepAlpha,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4}));
-  sh.renderOrder=1;scene.add(sp,sh);return [sp,sh];
-}
 
 // ---- 置く ----
 let propMeshes=[];
@@ -244,17 +229,13 @@ const free=(x,z)=>x>=1&&z>=1&&x<MAPN-1&&z<MAPN-1&&KIND[z][x]==='g'&&GRASS[z][x];
 function placeProps(level){
   for(const m of propMeshes){scene.remove(m)}propMeshes=[];
   seed=11;const used=new Set();
-  for(const t of TREES)for(let i=0,tries=0;i<t.n[level]&&tries<400;tries++){
-    const x=Math.floor(rnd()*MAPN),z=Math.floor(rnd()*MAPN),key=x+','+z;
-    if(!free(x,z)||used.has(key)||hAt(x,z+1)<hAt(x,z)||hAt(x+1,z)<hAt(x,z))continue; // がけのふちには木を植えない
-    used.add(key);propMeshes.push(...treeSprite(t.k,x,z));i++;
-  }
   const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),Y=new THREE.Vector3(0,1,0),V=new THREE.Vector3(),S=new THREE.Vector3();
   for(const p of PROPS){
     const n=p.n[level],mats=[];
     for(let i=0,tries=0;i<n&&tries<n*40;tries++){
       const x=Math.floor(rnd()*MAPN),z=Math.floor(rnd()*MAPN);if(!free(x,z))continue;
-      const big=p.kind==='item';const key=x+','+z;if(big&&used.has(key))continue;
+      const big=p.kind==='item'||p.kind==='tree';const key=x+','+z;if(big&&used.has(key))continue;
+      if(p.kind==='tree'&&(hAt(x,z+1)<hAt(x,z)||hAt(x+1,z)<hAt(x,z)))continue; // がけのふちには木を植えない
       if(big)used.add(key);
       const jx=p.kind==='tiny'?rnd()*.8+.1:.5,jz=p.kind==='tiny'?rnd()*.8+.1:.5,sc=.85+rnd()*.3;
       Q.setFromAxisAngle(Y,rnd()*Math.PI*2);V.set(x+jx,yTop(x,z),z+jz);S.set(sc,sc,sc);M.compose(V,Q,S);mats.push(M.clone());i++;
@@ -432,7 +413,7 @@ function frame(now){
 }
 
 async function main(){
-  await Promise.all([loadGround(),...PROPS.map(loadProp),...ELS.map(loadSpirit),loadSprites()]);
+  await Promise.all([loadGround(),...PROPS.map(loadProp),...ELS.map(loadSpirit)]);
   if(GIMG.glow)comp.m.uniforms.tint.value.set(GIMG.glow[0]/255,GIMG.glow[1]/255,GIMG.glow[2]/255,GIMG.glow[3]);
   sun.castShadow=OPT.shadow;blocked=placeProps(OPT.props);makeSpirits(OPT.spirits);
   resize();addEventListener('resize',resize);buildUI();gpu=gpuName();
