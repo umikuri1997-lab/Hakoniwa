@@ -59,6 +59,7 @@ const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,col:['#5e9c48','#93c466']}; 
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 // ---- しあげ ----
 const DOF={near:.5,far:.8,amt:.4};   // 奥行きのぼかし：ピントの所（カメラの見るまん中）から、手前へ near・奥へ far（カメラのきょりに対する割合）はなれると、いちばんぼける（ぼかしの強さ）
+const SSAO={r:.6,k:1.7,bias:.012,max:1.6};  /* すみのやわらかいかげ（空の光がとどきにくい所）：しらべる半径（マス）・こさ・平らな面を暗くしないためのあそび・これより奥行きがはなれた物は数えない（マス） */
 const BLOOM={th:.95,k:.12,col:[1,.86,.62]};  // にじみ：これより明るい所を、この強さ・あたたかい色で
 const GRADE={warm:[1.0,1.0,1.0],sat:1.0,vig:.15,exp:.9};  // あたたかい色・あざやかさ・四すみ・明るさ（ACES のトーンカーブの前にかける）
 // ---- 地面の色（sRGB） ----
@@ -497,12 +498,17 @@ const pass=(fs,uniforms)=>{const m=new THREE.ShaderMaterial({uniforms,vertexShad
 const blur=pass(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;
   void main(){vec4 c=texture2D(t,vUv)*.227;c+=(texture2D(t,vUv+d*1.385)+texture2D(t,vUv-d*1.385))*.316;c+=(texture2D(t,vUv+d*3.23)+texture2D(t,vUv-d*3.23))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
 const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;varying vec2 vUv;${NOISE}
-  uniform sampler2D dz;uniform float cn,cf,focus;
+  uniform sampler2D dz;uniform float cn,cf,focus,pscale;
+  float lz(vec2 u){float z=texture2D(dz,u).x;return cn*cf/(cf-z*(cf-cn));}
   void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);
     vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;
    
     float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;                  // 奥行き（カメラからのきょり）とピントの所との差
     float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};
+    if(zd<1.){float ry=${SSAO.r}*pscale/zv,rx=ry*res.y/res.x,a0=6.2832*fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715)))),ao=0.;  // すみのかげ：向かいあう2点の奥行きの平均が、ここより手前ならへこみ（平らな面は0）
+      for(int i=0;i<6;i++){float a=a0+float(i)*.5236,rr=.35+.65*fract(float(i)*.618+a0);vec2 o=vec2(cos(a)*rx,sin(a)*ry)*rr;
+        float z1=lz(U+o),z2=lz(U-o),d=zv-.5*(z1+z2);ao+=clamp((d-${SSAO.bias})/${SSAO.r},0.,1.)*step(abs(zv-z1),${SSAO.max})*step(abs(zv-z2),${SSAO.max});}
+      c*=mix(vec3(1.),vec3(.62,.66,.82),clamp(ao/6.*${SSAO.k},0.,1.));}   // かげは少し青く（空の光）
     c=mix(c,bl,tl);                                                                  // ミニチュアのぼかし（上と下）
     c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)}*vec3(${BLOOM.col.join(',')});  // あたたかい色のにじみ
     {vec2 dir=normalize(vec2(.55,-1.));float u=dot(U-vec2(0.,1.),vec2(-dir.y,dir.x));float along=dot(U-vec2(0.,1.),dir); // 左上から、光の筋
@@ -510,7 +516,7 @@ const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;
     c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),max(c,0.),${GRADE.sat.toFixed(2)}); // あたたかい色・あざやかに
     c*=${GRADE.exp.toFixed(2)};c=clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.);   // ACES のトーンカーブ（明るい所をやわらかく、こさを出す）
     vec2 q=U-.5;c*=1.-${GRADE.vig.toFixed(2)}*smoothstep(.35,.75,length(q));        // 四すみ
-    gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime,res:{value:new THREE.Vector2(1,1)},crop:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40}});
+    gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime,res:{value:new THREE.Vector2(1,1)},crop:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40},pscale:{value:1}});
 function resize(){
   renderer.setSize(innerWidth,innerHeight,false);const sz=renderer.getDrawingBufferSize(new THREE.Vector2());
   cam.aspect=innerWidth/innerHeight;placeCam();
@@ -528,7 +534,7 @@ function resize(){
 function placeCam(){
   const vw=viewW(),dist=vw/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*cam.aspect);
   cam.fov=FOV;cam.position.copy(target).addScaledVector(CAMDIR,dist);cam.lookAt(target);cam.updateProjectionMatrix();
-  Object.assign(fin.m.uniforms,{cn:{value:cam.near},cf:{value:cam.far},focus:{value:dist}});
+  Object.assign(fin.m.uniforms,{cn:{value:cam.near},cf:{value:cam.far},focus:{value:dist},pscale:{value:1/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2))}});
   uCurve.value.set(target.x,target.z,CURVE,0);scene.fog.near=dist+FOG[0];scene.fog.far=dist+FOG[1];
 }
 
