@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   const els=['wood','earth','fire','water','wind','light','dark'];
   const cases=[[{},'stand'],[{sit:true},'sit'],[{bed:true,sleep:true},'bed'],[{sleep:true},'doze'],[{sleep:true,sitF:true},'sitfront'],[{banzai:true},'banzai'],[{sitF:true,anim:'ysit'},'sitfront'],[{sitF:true,anim:'sunset'},'sunset'],
-    [{anim:'fish'},'fish'],[{anim:'fish',fishPull:true},'fishpull'],[{anim:'nosuch'},'stand'],[{walk:true},'walk'],[{carry:true},'carry'],[{anim:'eat_bread',sit:true},'eat_bread']];
+    [{anim:'fish'},'fish'],[{anim:'fish',fishPull:true},'fishpull'],[{anim:'nosuch'},'stand'],[{walk:true},'walk'],[{carry:true},'carry'],[{anim:'eat_bread',sit:true},'sit_eat_bread'],[{anim:'talk',sit:true},'sit_talk'],[{anim:'clap',sit:true},'sit'],[{anim:'punch',pp:.5},'punch'],[{anim:'bow',pp:.5},'bow'],[{anim:'bowidle'},'bowidle'],[{anim:'climb'},'climb'],[{anim:'pray'},'pray'],[{anim:'kneel'},'kneel'],[{anim:'storyHug',sceneT:.4},'storyHug'],[{anim:'ojigi',sceneP:.5},'ojigi'],[{anim:'sleepcurl',floorSleep:true},'sleepcurl']];
   assert.equal(await run(`typeof spPose+typeof spProp+typeof soleImg`),'undefinedundefinedundefined','the old part drawing is gone');
   assert.equal(await run(`Object.keys(CHIPS).filter(k=>/^sp[:_]/.test(k)&&!/^sp:(face|lash|cheek)/.test(k)).length`),0,'only eye, lash and cheek chips remain');
   for(const[o,nm]of cases)assert.equal(await run(`spMotion(${JSON.stringify(o)},${JSON.stringify(o.anim||'')})`),nm,JSON.stringify(o));
@@ -23,6 +23,11 @@ const assert=require('node:assert/strict');
   let b=a;for(let i=0;i<40&&b.wait;i++){await page.waitForTimeout(500);b=JSON.parse(await run(draw))}
   assert.equal(b.wait,0,'every motion sheet loads');assert.deepEqual(b.bad,[]);
   console.log('3D sheets only: '+els.length+' elements x '+cases.length+' cases x 2 views');
+  /* 古い描き方でだけ描いていた動きは、どれも3Dの絵がある（立ち姿にならない） */
+  const OLD=['climb','bowidle','bow','punch','storySoil','storyTouch','storyStone','storyCover','storyPour','storyWind','storyListen','storyBump','storyOffer','storyHug','lookback','kneel','kneelGaze','kneelTouch','kneelHeat','tremble','stepBack','grabSleeve','fistClench','ojigi','fan','armsCross','backToBack','headPat','soak','shoulderDrop','lookUp','shield','pray','offer','tubbath','chat','chatwait','rest'];
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify(${JSON.stringify(OLD)}.filter(k=>!SPM[k]||!SPMQ[k]||Object.keys(SPMQ[k].g).length<7))`)),[],'every old pose has a 3D sheet for 7 elements');
+  /* 進みぐあいの動き：はじめは0コマめ・おわりは、さいごのコマ（はじめにもどらない） */
+  assert.equal(await run(`Object.keys(SPMPROG).every(k=>SPM[k]&&SPM[k].r==='ph')`),true);
   /* 一覧の小さい絵 */
   const P=JSON.parse(await run(`JSON.stringify(${JSON.stringify(els)}.map(el=>{const u=spiritPort(el,96);return[el,u.length,!!portCache[el+96]]}))`));
   for(const[el,len,cached]of P){assert.ok(len>1500,el+' portrait is drawn');assert.ok(cached,el+' portrait is kept')}

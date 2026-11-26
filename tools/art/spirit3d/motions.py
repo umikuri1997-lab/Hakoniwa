@@ -573,14 +573,17 @@ def anipat(w, face):
 M('anipat', 8, 0.7, anipat)
 # ---- 床で寝る ----
 def sleepcurl(w, face):
-    """床・地面で寝る：ひざをまげて、手を胸によせ、頭をまるめる（ゲームは絵をよこにたおして、横になって寝る形に）"""
-    return breathe(dict(legM=1.15, legP=1.0, legz=-1.0, sN=1.3, sF=1.15, bN=-1.05, bF=-0.95, hp=0.28, lean=0.12, z=0.0), w, 0.7)
+    """床・地面で寝る：体を横にたおして（頭は キャラの −x のほう）、ひざをまげ、手を胸によせ、頭をまるめる。足も体といっしょにたおす。
+    クォータービューの絵は、家具と同じ見おろし（isocam）で写す（ゲームは、絵をまわさない。子ごとに左右反対）"""
+    k = 0.4*S(w)
+    return dict(roll=1.5, legbody=1, z=9.0+k, legM=1.15, legP=0.95, knee=1.2, sN=1.3, sF=1.15, bN=-1.05, bF=-0.95, hp=0.25, hr=-0.15, wingfold=1.1, isocam=1, top=0.05*S(w-0.6), tail=0.1*S(w+0.8))
 M('sleepcurl', 8, 0.25, sleepcurl)
 
 # ---- いす・ベッド・うたたね・ばんざい（前は、パーツのドット絵を組んで描いていた場面） ----
+SITLEG = dict(legM=1.45, legP=1.45, knee=1.35)   # いすにすわる足：ももを前へ・ひざから下をおろす
 def chair(w, face):
-    """いす・ベンチにすわる：足を前へ出して、手をひざに。体の高さは立っているときのまま（すわる場所は、ゲームの SEATOFF）"""
-    return breathe(dict(legM=1.3, legP=1.3, sN=0.6, sF=0.6, bN=-0.6, bF=-0.6, hp=0.03*S(w)), w, 0.5)
+    """いす・ベンチにすわる：ももを前へ出して、ひざから下をおろし、手をひざに。腰の高さは立っているときのまま（すわる場所は、ゲームの SEATOFF）"""
+    return breathe(dict(SITLEG, sN=0.6, sF=0.6, bN=-0.6, bF=-0.6, hp=0.03*S(w)), w, 0.5)
 M('sit', 8, 0.2, chair)
 def bed(w, face):
     """ベッドで眠る：あおむけに横になる（体をうしろへたおして、足を前へのばす）。うでは体にそわせ、ゆっくり息をする。風のはねは、たたむ。
@@ -597,6 +600,107 @@ def banzai(w, face):
     """わーい（なかまの紹介で、もち上げられているとき）：両手を、胸の前から外へひろげて上げ（頭より上だと、ずきんにかくれる）、小さくゆらす"""
     return dict(sN=1.6+0.12*S(w), sF=1.6-0.12*S(w), bN=0.55, bF=0.55, hp=-0.2, hr=0.05*S(w), top=0.12*S(w), tail=0.25*S(w), wing=0.15*S(w*2))
 M('banzai', 8, 4/(2*PI), banzai)
+
+# ---- たたく・弓・よじのぼる・お話の場面の姿勢（前は、パーツのドット絵でだけ描いていた動き） ----
+# 'ph' の動きは、ゲームが進みぐあい（0〜1）をわたす（js の SPMPROG）。コマは、はじめ（0）からおわり（1）まで（U）。
+def ease(t): t = max(0.0, min(1.0, t)); return t*t*(3-2*t)
+def U(w, n=8): return min(1.0, (w/(2*PI))*n/(n-1))
+CROUCH = dict(z=-4.0, legz=-2.2, legM=0.7, legP=0.7)   # しゃがむ・ひざをつく
+def P1(name, f, n=8):   # 進みぐあいでコマをえらぶ動き
+    M(name, n, 'ph', lambda w, face: f(U(w, n), face))
+def punch(u, face):
+    """たたく：両手をふり上げて、ぽかっとふりおろす"""
+    if u < 0.55: k = u/0.55; return dict(sN=0.6+1.5*k, sF=0.6+1.5*k, bN=0.15, bF=0.15, lean=-0.06*k, hp=-0.08*k, z=0.8*k, legz=0.4*k)
+    v = ease((u-0.55)/0.45); return dict(sN=2.1-1.4*v, sF=2.1-1.4*v, bN=0.15-0.3*v, bF=0.15-0.3*v, lean=-0.06+0.2*v, hp=-0.08+0.2*v, z=0.8-1.6*v)
+P1('punch', punch)
+def bowidle(w, face):
+    """見張り台でまつ：弓を持った手を下げる"""
+    return breathe(dict(prop='bow', sN=0.5, bN=0.15, kN=-0.3, sF=0.1, hr=0.03*S(w)), w, 0.6)
+M('bowidle', 8, 0.25, bowidle)
+def bow(u, face):
+    """弓をうつ：弓を前へかまえ、奥の手で弦を胸まで引いて、はなす"""
+    pull = ease(u/0.68) if u < 0.8 else 1-ease((u-0.8)/0.08)   # ゲームの BOW_PULL・BOW_REL・BOW_ALL（850・1000・1250 ミリ秒）と同じ割合
+    return dict(prop='bow', sN=1.5, bN=0.1, sF=1.5-0.55*pull, bF=-0.25-0.45*pull, lean=-0.04*pull, hp=-0.03, yaw=0.1*pull)
+P1('bow', bow)
+def climb(w, face):
+    """がけ・ハシゴをよじのぼる：両手を前の上へ、こうごにのばし、足もこうごに上げる"""
+    return dict(sN=1.9+0.35*S(w), sF=1.9-0.35*S(w), bN=0.25, bF=0.25, liftM=1.6*max(0, S(w)), liftP=1.6*max(0, -S(w)), legM=0.25*max(0, S(w)), legP=0.25*max(0, -S(w)), lean=0.06, z=0.5*abs(S(w)), hp=-0.15)
+M('climb', 8, 8/(2*PI), climb)
+def storySoil(u, face):
+    v = S(PI*u); return dict(z=-3.5*v, legz=-1.8*v, legM=0.6*v, legP=0.6*v, lean=0.08+0.25*v, sN=0.5+0.5*v, sF=0.4, bN=-0.2, bF=-0.2, hp=0.15*v)
+P1('storySoil', storySoil)
+def storyTouch(u, face):
+    v = S(PI*min(1, u*1.3)); return dict(sN=0.4+1.2*v, bN=-0.1, sF=0.2, lean=0.14*v, hp=0.05*v)
+P1('storyTouch', storyTouch)
+def storyStone(u, face):
+    v = 0.0 if u < 0.3 else min(1.0, (u-0.3)/0.6); return dict(sN=1.6-1.0*v, sF=1.6-1.0*v, bN=-0.5, bF=-0.5, lean=0.2*v, z=-3.5*v, legz=-1.8*v, legM=0.6*v, legP=0.6*v)
+P1('storyStone', storyStone)
+def storyCover(u, face):
+    v = S(PI*u); return dict(sN=0.7+0.5*v, sF=0.7-0.1*v, bN=-0.2, bF=-0.2, lean=0.14*v, z=-3.0*v, legz=-1.5*v, legM=0.5*v, legP=0.5*v)
+P1('storyCover', storyCover)
+M('storyPour', 8, 0.3, lambda w, face: breathe(dict(prop='can', sN=0.75, bN=-0.25, kN=0.5, sF=0.5, lean=0.1), w, 0.4))
+def storyWind(u, face):
+    v = S(PI*u); return dict(sN=0.9+0.8*v, bN=0.3, sF=0.1, lean=-0.03, hp=-0.1*v)
+P1('storyWind', storyWind)
+M('storyListen', 8, 0.2, lambda w, face: breathe(dict(sN=0.45, sF=0.45, bN=-0.45, bF=-0.45, hr=0.05, lean=0.03, hp=0.02*S(w)), w, 0.6))
+def storyBump(u, face):
+    v = ease(u*2) if u < 0.5 else 1-ease((u-0.5)*2); return dict(sN=0.4+1.4*v, bN=-0.1, sF=0.2, lean=0.1*v)
+P1('storyBump', storyBump)
+def storyOffer(u, face):
+    v = ease(u/0.35); return dict(sN=0.5+1.2*v, sF=0.5+1.2*v, bN=-0.7, bF=-0.7, lean=-0.05*v, hp=-0.08*v)
+P1('storyOffer', storyOffer)
+def storyHug(u, face):
+    v = ease(u); return dict(sN=1.6*v, sF=1.4*v, bN=-0.2-0.5*v, bF=-0.2-0.5*v, lean=0.2*v, hp=0.1*v)
+P1('storyHug', storyHug)
+def lookback(u, face):
+    """せなかを見せていて、ふりかえる：頭から先に、ゆっくり向ける（ゲームが、とちゅうで正面の絵にかえる）"""
+    return dict(sN=0.3, sF=0.3, lean=0.06*(1-ease(u*2)), hy=0.5*S(PI*min(1, u*1.2)), hr=0.05*S(PI*u))
+P1('lookback', lookback)
+M('kneel', 8, 0.3, lambda w, face: breathe(dict(CROUCH, lean=0.12, sN=0.5+0.03*S(w), sF=0.55, bN=-0.4, bF=-0.4), w, 0.4))
+def kneelGaze(u, face):
+    T = u*2.6; v = ease((T-0.9)/0.7); sw = S(max(0, T-1.6)*1.7)*v
+    return dict(CROUCH, sN=0.5+1.2*v, sF=0.5+1.2*v, bN=-0.4-0.6*v, bF=-0.4-0.6*v, lean=0.12+0.12*v+0.05*sw, hp=-0.1*v)
+P1('kneelGaze', kneelGaze, 12)
+def kneelTouch(u, face):
+    v = S(PI*u); return dict(CROUCH, sN=0.5+0.6*v, bN=-0.3, sF=0.55, bF=-0.4, lean=0.14+0.08*v, hp=0.1*v)
+P1('kneelTouch', kneelTouch)
+M('kneelHeat', 8, 0.5, lambda w, face: dict(CROUCH, sN=1.25+0.05*S(w), sF=1.25-0.05*S(w), bN=-0.3, bF=-0.3, lean=0.12))
+M('tremble', 8, 3.0, lambda w, face: dict(sN=0.9, sF=0.9, bN=-0.9, bF=-0.9, x=0.5*S(w*2), lean=-0.03, z=-0.6, hp=0.08, top=0.1*S(w*2), tail=0.2*S(w*2)))
+def stepBack(u, face):
+    v = ease(u); return dict(sN=0.2+0.9*v, sF=0.2+0.9*v, bN=0.2*v, bF=0.2*v, lean=-0.12*v, y=-2.0*v, hp=-0.05*v)
+P1('stepBack', stepBack)
+def grabSleeve(u, face):
+    v = ease(u); return dict(sN=0.3+1.1*v, bN=0.15*v, sF=0.2, lean=0.12*v)
+P1('grabSleeve', grabSleeve)
+M('fistClench', 8, 3.0, lambda w, face: dict(sN=0.25, sF=0.25, bN=0.2+0.04*S(w), bF=0.2+0.04*S(w), lean=0.05, z=-0.5, hp=0.06))
+def ojigi(u, face):
+    v = S(PI*min(1, u*1.15)); return dict(lean=0.5*v, hp=0.25*v, sN=0.45, sF=0.45, bN=-0.5, bF=-0.5)
+P1('ojigi', ojigi)
+M('fan', 8, 2.2, lambda w, face: dict(sN=1.7+0.12*S(w), bN=-0.45, tN=0.5*S(w), sF=0.2, lean=-0.02, hr=0.04))
+M('armsCross', 8, 0.25, lambda w, face: breathe(dict(sN=1.05, sF=1.05, bN=-1.15, bF=-1.15, lean=-0.03), w, 0.5))
+M('backToBack', 8, 0.25, lambda w, face: breathe(dict(sN=0.3, sF=0.3, lean=-0.07, hp=-0.05), w, 0.5))
+M('headPat', 8, 0.5, MOTIONS['headpat']['f'])
+M('soak', 8, 0.2, lambda w, face: breathe(dict(sN=0.5+0.1*S(w), sF=0.5-0.1*S(w), bN=0.2, bF=0.2, z=-0.5, hp=-0.05), w, 0.6))
+M('tubbath', 8, 0.2, lambda w, face: breathe(dict(sN=0.5+0.1*S(w), sF=0.5-0.1*S(w), bN=0.2, bF=0.2, z=-0.5, roll=0.05*S(w), hr=-0.04*S(w), hp=-0.08), w, 0.6))
+def shoulderDrop(u, face):
+    v = ease(u/0.6) if u < 0.6 else 1-ease((u-0.6)/0.4)
+    return dict(sN=0.3, sF=0.3, lean=0.11*v if u < 0.6 else 0.11*v-0.06*(1-v), z=-1.2*v, hp=0.18*v)
+P1('shoulderDrop', shoulderDrop)
+M('lookUp', 8, 0.2, lambda w, face: breathe(dict(sN=0.3, sF=0.3, lean=-0.09, hp=-0.32+0.02*S(w)), w, 0.5))
+M('shield', 8, 0.3, lambda w, face: breathe(dict(sN=0.5, sF=0.5, bN=1.15, bF=1.15, lean=0.05, legM=0.15, legP=-0.15), w, 0.4))
+M('pray', 8, 0.22, lambda w, face: breathe(dict(sN=1.6, sF=1.6, bN=-1.05, bF=-1.05, hp=0.16+0.02*S(w), lean=0.07+0.015*S(w)), w, 0.4))
+M('offer', 8, 0.5, lambda w, face: breathe(dict(sN=1.5+0.05*S(w), sF=1.5+0.05*S(w), bN=-0.6, bF=-0.6, hp=-0.05), w, 0.4))
+def chat(w, face):
+    return breathe(dict(sN=0.9+0.4*S(w), bN=-0.2+0.15*S(w*2), sF=0.15, hr=0.05*S(w)), w, 0.5)
+M('chat', 8, 0.8, chat); M('chatwait', 8, 0.8, chat)
+M('rest', 4, 0.25, lambda w, face: breathe({}, w, 0.5))
+# ---- いすにすわったまま、食べる・話す・持つ・聞く（足と腰は、すわる形。上半身は、もとの動き）。ゲームは、すわっているとき sit_<動き> があれば、それを使う ----
+SITOF = ('eat', 'eat_drink', 'eat_bread', 'eat_fruit', 'eat_meal', 'talk', 'talkjoy', 'talkshock', 'talkthink', 'talksad', 'hold', 'storyListen')
+for _n in SITOF:
+    _m = MOTIONS[_n]
+    def _sf(w, face, f0=_m['f']):
+        p = dict(f0(w, face)); p.update(SITLEG); p['z'] = 0.3*p.get('z', 0.0); p['legz'] = 0.0; p.pop('liftM', None); p.pop('liftP', None); return p
+    M('sit_'+_n, _m['n'], _m['rate'], _sf)
 
 # ---- プレゼント（gift-furn.js の GFMOT）：つつみをあけて、中身によってちがう動き。物の絵はゲームが手にかさねる（WHAND） ----
 def gf_open(w, face):
