@@ -38,6 +38,11 @@ jobs:
           node tools/jsver.cjs _site
           node tools/sizes.cjs _site
           cp -R assets/. _site/assets/
+          # 3Dの試作（proto3d/）と、そこで使うモデル（PROPS の {id:'…'} と、せいれいの FBX）
+          cp -R proto3d _site/proto3d
+          mkdir -p _site/tools/art/models/tripo _site/tools/art/spirit3d/model
+          for m in $(grep -o "{id:'[a-z_0-9]*'" proto3d/main.js | cut -d"'" -f2); do cp "tools/art/models/tripo/$m.glb" _site/tools/art/models/tripo/ || exit 1; done
+          cp tools/art/spirit3d/model/*.fbx _site/tools/art/spirit3d/model/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

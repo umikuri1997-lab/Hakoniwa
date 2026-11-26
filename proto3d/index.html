@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>はこにわ 3Dの試作</title>
+<!-- 全部を3Dにしたときの重さをはかる試作（ゲームとはべつのページ）。three.js 0.170.0（vendor/。MIT） -->
+<style>
+:root{--bg:#cfe6c4;--panel:rgba(253,248,239,.92);--ink:#4a3a35;--btn:#f4e6cf;--on:#e8b07a}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;touch-action:none}
+canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated}
+#hud{position:fixed;left:8px;top:calc(8px + env(safe-area-inset-top));background:var(--panel);border-radius:0;padding:8px 10px;font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums;max-width:calc(100vw - 36px);box-shadow:0 2px 8px rgba(74,58,53,.15)}
+#hud b{font-size:20px}
+#ctl{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+#ctl .g{background:var(--panel);border-radius:0;padding:5px 6px;display:flex;align-items:center;gap:4px;font-size:15px;box-shadow:0 2px 8px rgba(74,58,53,.15)}
+#ctl button{font:inherit;font-size:15px;border:0;border-radius:0;background:var(--btn);color:var(--ink);padding:6px 9px;min-width:34px}
+#ctl button.on{background:var(--on);color:#fff}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;pointer-events:none}
+#err{position:fixed;left:8px;right:8px;top:40%;background:#fff3f0;color:#a0402a;padding:10px;border-radius:0;display:none;white-space:pre-wrap;font-size:15px}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">読みこみ中…</div>
+<div id="ctl"></div>
+<div id="load">3Dのモデルを読みこみ中…</div>
+<div id="err"></div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
