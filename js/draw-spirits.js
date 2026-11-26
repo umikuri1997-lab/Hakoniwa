@@ -156,7 +156,7 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
     c.save();if(f<0)c.scale(-1,1);c.drawImage(ei,(f<0?-hx:hx)-iw/2,hy-ih/2,iw,ih);c.restore();
     const P=spcVar(el,vr),hands=one>=0?[[h[one],h[one+1]]]:[[h[0],h[1]],[h[2],h[3]]];const[H0,S0,L0]=hex2hsl(P.hand),ol=hsl2hex(H0,S0,Math.max(0,L0-.16));for(const[x,y]of hands)drawMitt(c,x*D,y*D,D,P.hand,ol)}}
   if(nm==='bathe'){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;for(let k=0;k<6;k++){const p=(ph-.44-k*.025)/.42;if(p<=0||p>=1)continue;const dx=(dir===1?(8+k*3)*p:(k-2.5)*4.5*p)*D,dy=(-(20+(k%3)*5)*p+34*p*p)*D;c.globalAlpha=1-p*.7;c.fillStyle=k%2?'#d6f2ff':'#6fc0ff';c.fillRect(hx+dx-D,hy+dy-D,2*D,2*D)}c.globalAlpha=1}/* 水浴び：はねあげた手から、しずくが前へとぶ（ドット） */
-  if((nm==='water'||nm==='tend')&&h.length>4){for(let k=0;k<3;k++){const p=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-p)+')';c.beginPath();c.ellipse(h[4]*D+p*3,h[5]*D+p*24,1.8,2.6,0,0,7);c.fill()}}/* じょうろの先から水のつぶ */
+  if((nm==='water'||nm==='tend')&&h.length>4){for(let k=0;k<3;k++){const p=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-p)+')';c.beginPath();c.ellipse(h[4]*D+p*3,h[5]*D+p*(dir===2?8:24),1.8,2.6,0,0,7);c.fill()}}/* じょうろの先から水のつぶ。うしろ向きは、畑が画面のななめ上にあるので、落ちる先は土の高さまで（8） */
   c.imageSmoothingEnabled=sm;c.restore();
   if(fl&&fl.length>4&&dir!==2)drawFishLine(c,x+h[4]*D*s*f,y+h[5]*D*s,fT[0],fT[1],t,o.fishB);/* さおの先から、水の上のうきへ糸 */
   spmFree(performance.now());return true}
@@ -318,7 +318,8 @@ const WBFAR=.04;/* 作業台の2マス（台・材料置き場）のうち、う
 function wbDepth(r){/* 台のむこう（向き2・3）で作業台で作るせいれいは、うしろの材料置き場より手前・台よりうしろ（ふつうの深さの順。WBSLOT の立つ所は、材料置き場より手前・台よりうしろ） */const a=r.act;if(!a||a.stage!=='do'||a.type!=='craft'||a.obj==null||r.path&&r.path.length)return null;const j=anc(a.obj);if(S.obj[j]!=='wbench'||(rotAt(j)&3)<2)return null;
   const b=wbCells(j).b,A=objFootJ(b);return A.x+A.y+(A.w+A.h)/2+.3+(objectDepth('wbench',b)-(A.y+A.h))-WBFAR/2-r.x}
 const WBIN=new WeakMap(),WBSLIDE=250;/* 作業台の前によるとき・はなれるとき、立つ所のずれを WBSLIDE ミリ秒で（絵がとばない） */
-function wbSlot(r,walking,now){/* 作業台で作るせいれいの、絵のずれ（WBSLOT） */const a=r.act;let o=null;if(!walking&&a&&a.stage==='do'&&a.type==='craft'&&a.obj!=null){const wj=anc(a.obj);if(S.obj[wj]==='wbench'){const k=rotAt(wj)&3;r.face=WBFACE[k];o=WBSLOT[k]}}
+function wbSlot(r,walking,now){/* 作業台で作るせいれい（WBSLOT）・水やりのせいれいの、絵のずれ */const a=r.act;let o=null;if(!walking&&a&&a.stage==='do'&&a.type==='craft'&&a.obj!=null){const wj=anc(a.obj);if(S.obj[wj]==='wbench'){const k=rotAt(wj)&3;r.face=WBFACE[k];o=WBSLOT[k]}}
+  if(!walking&&a&&a.stage==='do'&&(a.type==='water'||a.type==='tend')&&a.obj!=null){const dx=a.obj%W-(r.x|0),dy=(a.obj/W|0)-(r.y|0);if(Math.abs(dx)+Math.abs(dy)===1)o=[dx*TS*.25,dy*TS*.25]}/* 水やり：うでが短く、じょうろが畑にとどかないので、畑のほうへ0.25マスよって立つ（持ち主がえらんだ） */
   let w=WBIN.get(r);if(o){if(!w||w.a!==a){w={a,t:now,o,out:null};WBIN.set(r,w)}const f=Math.min(1,Math.max(0,(now-w.t)/WBSLIDE));return[o[0]*f,o[1]*f]}
   if(!w)return[0,0];if(w.out==null)w.out=now;const f=1-(now-w.out)/WBSLIDE;if(f<=0||f>1){WBIN.delete(r);return[0,0]}return[w.o[0]*f,w.o[1]*f]}
 function drawRes0(r,now){

@@ -13,7 +13,7 @@ function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけ�
 function chaReady(){for(const k in CHA){const a=CHA[k];if(!a.ok&&!a.bad&&!a.fr)return false}return true}/* 読みはじめたアトラスのページが、ぜんぶ読みこめたか（使わない物のページは読まない） */
 function assetPct(){/* 絵の読みこみの進みぐあい（0〜1）。マップチップのアトラス（読みはじめたページ）で半分、ほかの絵で半分 */let n=0,d=0,cn=0,cp=0;for(const k in CHA){const a=CHA[k];cp++;if(a.ok||a.bad||a.fr)cn++}/* アトラスは、読みはじめたページだけ */for(const k in ICI){const im=ICI[k];d++;if(im.ok||im.bad||im.complete)n++}for(const k in ART){const a=ART[k];d++;if(a.ok||a.bad)n++}return ((cp?cn/cp:1)+(d?n/d:1))/2}
 function loadPct(){/* 読みこみの%：絵の読みこみが30%、マップを作るのが70% */const J=GRD.job;return Math.min(99,Math.floor(J&&J.s===S?30+70*J.i/J.L.length:30*assetPct()))}
-function assetsOK(){/* 絵が読みこめたか（マップチップのアトラスは読みはじめたページ・アイコン・そのほかの絵）。地面と水の絵は、ここで読みはじめる */if(!chaReady())return false;for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===KAZAN||waterChipsOK())}
+function assetsOK(){/* 絵が読みこめたか（マップチップのアトラスは読みはじめたページ・アイコン・そのほかの絵）。地面と水の絵は、ここで読みはじめる */if(!chaReady())return false;for(const a of ITIP)if(!a.ok&&!a.bad)return false;for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===KAZAN||waterChipsOK())}
 /* 読みこみの時間をはかって、おわったら画面の上に出す（スマホでどこがおそいかをしらべるための、かりのしかけ。わかったらけす） */
 let LDT=null,LDCG=null,LDTITLE=null;/* LDCG：「つづきから」でセーブを開きはじめた時刻・LDTITLE：タイトルのボタンが出た時刻（ページを開いてから） */
 function ldStart(){LDT={s:S,w:performance.now(),cg:LDCG};LDCG=null}
