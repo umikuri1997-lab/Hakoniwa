@@ -21,7 +21,21 @@ def _tinit(self, path, *a, **k):
     _init(self, path, *a, **k); self.path = os.path.basename(path)
 O.Tex.__init__ = _tinit
 TEXMAT = {'wood049.png': 'wood', 'rock030.png': 'stone', 'bark001.png': 'bark'}   # 設計図の絵 → 試作の材質の絵（main.js の MATIDX）
-MATIDX = {'wood': 1, 'stone': 2, 'metal': 3, 'cloth': 4, 'bark': 5, 'leaf': 6}
+MATIDX = {'wood': 1, 'stone': 2, 'metal': 3, 'cloth': 4, 'bark': 5, 'leaf': 6, 'soil': 7}
+BASEMAT = {'rock': 'stone', 'deadtree': 'bark', 'sacred': 'bark', 'farm': 'soil', 'kinoko': 'cloth'}   # 設計図に絵の指定がない所の材質（どの面にも絵をはる。持ち主がきめた）
+
+
+def fill_mat(o, C, mt):
+    """絵の指定がない三角形（0）に材質をつける。神殿は色でわける：緑→葉・金色→金属・青→布・水色の水晶→金属・ほか→石"""
+    mt = mt.copy(); z = mt == 0
+    if not z.any(): return mt
+    if o == 'statueb':
+        r, g, b = C[:, 0], C[:, 1], C[:, 2]
+        k = np.where(g > r + 15, MATIDX['leaf'], np.where((r > 190) & (g > 160) & (b < 150), MATIDX['metal'], np.where(b > r + 30, np.where((b > 230) & (g > 180), MATIDX['metal'], MATIDX['cloth']), MATIDX['stone'])))
+        mt[z] = k[z]
+    else:
+        mt[z] = MATIDX[BASEMAT[o.split('_')[0]]]
+    return mt
 
 
 def scene_tris(M):
@@ -143,7 +157,7 @@ def main(src):
         elif o == 'sacred': P, C, mt, pid = sacred_stump()
         elif o == 'kinoko': P, C, mt, pid = item('nat_kinoko0')
         else: P, C, mt, pid = item({'statueb': 'statueb', 'deadtree': 'nat_deadtree', 'rock': 'nat_rock'}[o])
-        att, ni = to_mesh(P, C, mt, pid); meshes.append((o, att, ni)); print(o, len(ni), '三角形')
+        mt = fill_mat(o, C, mt); att, ni = to_mesh(P, C, mt, pid); meshes.append((o, att, ni)); print(o, len(ni), '三角形')
     glbio.write(meshes, os.path.join(HERE, 'tex', 'map.glb'), 'proto3d make_map.py')
     js = '// ゲームの草原の最初のマップ（新しいゲーム）のまん中 %d×%d マス（ゲームのマス x %d〜・y %d〜）。proto3d/make_map.py が書く\n' % (N, N, X0, Y0)
     js += 'export const MAP=' + json.dumps({'n': N, 'hi': hi, 'kind': [''.join(r) for r in kind], 'grass': [''.join(map(str, r)) for r in grass], 'objs': objs}, separators=(',', ':')) + ';\n'

@@ -80,9 +80,9 @@ const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2
 const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
 const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
 const objBase=n=>n.split('_')[0];  // 名前の _ のあとは、つなぎ方（壁・畑）・向き（ドア）
-const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5,leaf:6};
+const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5,leaf:6,soil:7};  // soil：畑の土（地面の土の絵 g_dirt）
 const LEAFTEX={file:'m_leaf.jpg',span:.45,mean:[.1373,.4102,0]};  // 持ち主の葉っぱの絵（色つき）：1まいのマス・絵の色の平均（linear）
-const MATK={1:.6,2:.7,3:.45,4:.65,5:1.0};  // 材質の絵の明るさのむらを、色にのせる強さ（材質の番号ごと。木の皮はこく）
+const MATK={1:.6,2:.7,3:.45,4:.65,5:1.0,7:.7};  // 材質の絵の明るさのむらを、色にのせる強さ（材質の番号ごと。木の皮はこく）
 const GTEX={grass:{f:'g_grass.jpg',span:3,lum:.248},dirt:{f:'g_dirt.jpg',span:2.5,lum:.316},cliff:{f:'g_cliff.jpg',span:2.4,lum:.121}};  // 地面の絵（1まいのマス・明るさの平均 linear）
 
 const C3=h=>{const c=new THREE.Color(h);c.convertLinearToSRGB();return `vec3(${c.r.toFixed(4)},${c.g.toFixed(4)},${c.b.toFixed(4)})`};
@@ -169,7 +169,7 @@ function toon(o={},extra={}){
   m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMat,uSunV,uViewInv});
     if(extra.wind)sh.vertexShader='#define TN_WIND\n'+sh.vertexShader;
     sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
-    sh.fragmentShader='uniform sampler2D uMat[6];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+NOISE+sh.fragmentShader
+    sh.fragmentShader='uniform sampler2D uMat[7];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+NOISE+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <color_fragment>',`#include <color_fragment>
   int tnK=int(vMat+.5)-1;vec3 tnBump=vec3(0.);
@@ -177,8 +177,8 @@ function toon(o={},extra={}){
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
       diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);}  // 葉っぱの絵の色（黄緑）は少しだけ
-    else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;
-    float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:${MATK[5].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);}}`:''}
+    else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:k==4?texture2D(uMat[4],uv).r:texture2D(uMat[6],uv).g;
+    float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
       .replace('#include <opaque_fragment>',PXSHADE_FS+RIM_FS+`
   {vec3 n=normalize(normal),V=normalize(vViewPosition);
@@ -595,7 +595,8 @@ function frame(now){
 
 async function loadMats(){
   const meta=await (await fetch('./tex/mats.json')).json(),names=Object.keys(MATIDX).sort((a,b)=>MATIDX[a]-MATIDX[b]);
-  for(const k of names){if(k==='leaf'){const t=await new THREE.TextureLoader().loadAsync('./tex/'+LEAFTEX.file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;uMat.value.push(t);MATSPAN.leaf=LEAFTEX.span;continue}
+  for(const k of names){if(k==='soil'){const t=await new THREE.TextureLoader().loadAsync('./tex/'+GTEX.dirt.f);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;t.anisotropy=8;uMat.value.push(t);MATSPAN.soil=GTEX.dirt.span;continue}
+    if(k==='leaf'){const t=await new THREE.TextureLoader().loadAsync('./tex/'+LEAFTEX.file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;uMat.value.push(t);MATSPAN.leaf=LEAFTEX.span;continue}
     const t=await new THREE.TextureLoader().loadAsync('./tex/m_'+k+'.jpg');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;t.anisotropy=8;
     if(meta[k]){uMat.value.push(t);MATSPAN[k]=meta[k].span}}
 }
