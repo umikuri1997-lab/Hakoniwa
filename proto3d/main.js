@@ -1,12 +1,11 @@
-/* はこにわ 3Dの試作：ゲームと同じ見た目で、地面・段差は3Dの形、せいれい・小物は3Dのモデルで描いて、重さをはかる（ゲームとはべつのページ）。
-   - 見え方はゲームのクォータービュー（js/iso.js：ひし形 64×48・段1だん36ドット）。カメラは回さない。
-   - 地面（草・あれ地・道・池・がけ）は、ゲームそのものに描かせた絵（bake_ground.cjs → tex/ground.webp）を、画面の向きから3Dの地面にはる。
-   - 植物（木・しげみ・花と草）は持ち主のモデル（tools/art/models/plants/plants.glb）。make_plants.py が植物ごとに分けて部品ごとに色をぬる（tex/plants.glb）。
-   - せいれいは持ち主のモデル（tools/art/spirit3d/model/*.fbx）。色・かげ・輪郭はゲームの絵を写す道具（fbx_pixel.py）と同じ数：
-     画面の向きの光で3だん、明るさはかえず彩度だけ、まわりに1ドットの輪郭（となりの色×0.72）。見おろしは25度（体を奥へたおす）。
-     ゲームと同じく、せいれいだけは画面の細かい点で描く（地面と物は、ゲームの1ドットの大きさ）。
-   - 岩・小物はトリポのモデル。植物・岩・小物のかげは、ゲームの木・岩と同じ5色のかげ（natcommon.tone5）の数。同じ物は、まとめて1回で描く（InstancedMesh）。
-   - 画面のしあげはゲームの HD-2D（js/hd2d.js）と同じ数：時間の光の色・空気の遠近・四すみの暗さ・明るい所のにじみ。 */
+/* はこにわ 3Dの試作：やわらかい3Dの箱庭（スマホの『どうぶつの森』のような見え方。形・キャラクター・絵はまねしない）。
+   ゲームとはべつのページ。持ち主が「ルールを破ってもいいので、ゲーム性を保ったまま、できるだけきれいに」とたのんだ（ドット絵・彩度だけのかげ・ゲームの絵の地面は使わない）。
+   - 画面：スマホの細かさのまま（2倍まで）なめらかに描く。遠近のあるカメラ（せまい画角）。奥・手前ほど地面が下へまがる（丸い地面 CURVE）。
+   - 光：空と地面の色の光（HemisphereLight）・太陽のやわらかいかげ（PCF）・トゥーンのかげ（さかいめをぼかす TOON）・ふちの光（RIM）。
+   - しあげ：画面の上と下を少しぼかす（ミニチュア TILT）・明るい所のにじみ（BLOOM）・あたたかい色（GRADE）・四すみを少し暗く。
+   - 地面：草・あれ地・土の道・がけ・池を、その場で作る色（ノイズ）で描く。地形のマスの絵（マスク）をなめらかに読んで、さかいめを自然に。
+   - 植物は持ち主のモデル（make_plants.py）、岩・小物はトリポのモデル（make_uv.py で UV 展開）。材質の絵（make_textures.py）は明るさのむらとしてうすくのせる。
+   - マスの大きさ・段差・置き場所・歩ける所は、前の試作と同じ（ゲーム性）。 */
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
@@ -14,190 +13,187 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import {SimplifyModifier} from 'three/addons/modifiers/SimplifyModifier.js';
 
 const SPDIR='../tools/art/spirit3d/model/';
-// 見え方（js/iso.js と同じ）
-const IQW=64,IQH=48,IQL=36;
-const PPU=IQW/Math.SQRT2;                       // 1マスの1辺のドット数
-const GPITCH=Math.asin(IQH/IQW);                // ゲームの見おろす角度（ひし形のたて:よこ 48:64。段の高さと地面の絵の写し方に使う）
-const PITCH=35*Math.PI/180;                     // 試作のカメラの見おろす角度（持ち主がえらんだ）
-const YAW=Math.PI/4;                            // マスの x が右下・y（z）が左下
-const HSTEP=IQL/(PPU*Math.cos(GPITCH));         // 段差1つの高さ（マス）：ゲームの画面で36ドットになる高さ
-const RT=new THREE.Vector3(Math.cos(YAW),0,-Math.sin(YAW));                     // 画面の右
-const CAMDIR=new THREE.Vector3(Math.sin(YAW)*Math.cos(PITCH),Math.sin(PITCH),Math.cos(YAW)*Math.cos(PITCH)); // カメラのほう
-const BORDER=14;        // 地形のまわりに足す、平らなあれ地（マス）
-// せいれい（fbx_pixel.py と同じ数）
-const SPH=.8;           // 高さ（マス）
-const SPELEV=25;        // せいれいの見おろし（度）
-const WALK=1.2;         // 歩く速さ（マス/秒）
-const SPLIGHT=[-.5,.6,.62];                     // 光（画面の右・上・手前）
-const SPCUT=[.35,-.1];                          // かげのだんのさかい（光との内積）
-const SPSAT={head:[.10,.20,.03,.06],body:[.06,.12,.02,.04]}; // 彩度の足し算：かげ・こいかげ・白っぽい色のおまけ（かげ・こいかげ）
-const SPLINE=.72;       // 輪郭・部品のさかいの線：となりの色×0.72
-// 部品のしるし（細かい画面のアルファ）：体・頭・ずきん・かざり。目・ほっぺ（1）はさかいの線をつけない。さかいの線は、奥の部品のがわに引く
-const SPID={body:.6,head:.7,hood:.8,acc:.9,decal:1};
-const SPDEPTH=.001;     // 同じ部品の中でも、奥行きがこれよりはなれていれば線（うで・足と体のさかい）
-const SPSHADOW={r:.31,k:.33};                   // 足もとのかげ：半径（マス）・たて/よこ
+// ---- 見え方 ----
+const MAPN=24;                 // 地形のはば（マス）
+const BORDER=16;               // まわりに足す地面（マス）
+const HSTEP=1.2;               // 段差1つの高さ（マス。前の試作と同じ）
+const PITCH=35*Math.PI/180;    // 見おろす角度
+const YAW=Math.PI/4;           // カメラの向き（マスの x が右下・z が左下）
+const FOV=28;                  // 画角（度）
+const VIEWW={2:7,3:10,4:14};   // 「大きさ」：画面の横に入るマスの数（近い・ふつう・遠い）
+const CURVE=.018;              // 丸い地面：カメラの見るまん中から、奥・手前へ d マスはなれた所を d²×CURVE だけ下げる
+const MAXPR=2;                 // 画面の細かさ（スマホの点の何倍まで）
+// ---- 光とかげ ----
+const SKY='#bfe8f5',GROUND='#6f9a52',FOG=[6,30];     // 空の色（背景・霧）・地面からの光・霧のはじまりとおわり（カメラの見るまん中より先、マス）
+const HEMI=1.35,SUN=2.3,SUNCOL='#fff1d6';            // 空と地面の光・太陽の光
+const SUNDIR=[-.55,1,.35];                           // 太陽の向き（せかい。左上・手前から）
+const TOON=[.42,.7,1,1];                             // トゥーンの明るさのだん（かげ→光。なめらかにつなぐ）
+const RIM={k:.35,pow:3,col:[1,.96,.86]};             // ふちの光
+const AO=.13;                                        // 葉の下のかげ：_under 1だんごとに暗くする量
+// ---- しあげ ----
+const TILT={top:.3,bot:.82,amt:.9};    // ぼかす所：画面の上からこの割合まで・この割合から下（ぼかしの強さ）
+const BLOOM={th:.72,k:.55};            // にじみ：これより明るい所を、この強さで
+const GRADE={warm:[1.04,1.0,.93],sat:1.12,vig:.22};
+// ---- 地面の色（sRGB） ----
+const COLS={grassA:'#a3dc72',grassB:'#7fca60',grassC:'#c2e690',dry:'#bdd27e',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',cliffB:'#9a7250',water:'#5cc3e6',waterB:'#2f9ccc',foam:'#eafaff'};
+// ---- せいれい ----
+const SPH=.8,WALK=1.2;
 const CREAM='#fdf8ef';
-const SPCOL={
-  earth:{hood:'#8f6a50',cheek:'#c6b1a0',eye:'#5e3d2a'},water:{hood:'#78c3fb',cheek:'#badef5',eye:'#1d4f7c'},fire:{hood:'#e8604f',cheek:'#f2ac9f',eye:'#8f3a22'},
-  wind:{hood:'#a6cc8a',cheek:'#d2e2bc',eye:'#456a2a'},wood:{hood:'#6fae4c',cheek:'#b6d39e',eye:'#3f5e26'}};
+const SPCOL={earth:{hood:'#8f6a50',cheek:'#f1b8a8',eye:'#5e3d2a'},water:{hood:'#78c3fb',cheek:'#f4b8b8',eye:'#1d4f7c'},fire:{hood:'#f07a4f',cheek:'#f2ac9f',eye:'#8f3a22'},
+  wind:{hood:'#a6cc8a',cheek:'#f0c0b0',eye:'#456a2a'},wood:{hood:'#6fae4c',cheek:'#f0c0b0',eye:'#3f5e26'}};
 const SPROUT='#5e8f43',HEADACC='#e8cdb0';
-const FIRE=[[255,84,48],[255,150,40],[255,226,92]]; // 火のずきん：外がわ・中・こちらを向く所
 const ELS=['earth','water','fire','wind','wood'];
-// 植物・石・小物のかげ（持ち主が送った記事「実践ドット絵シェーダー」mizuooon.hatenablog.jp のやり方）：
-// 明るさはシェーディングマップ（画面から見た面の向き → 明るさ。光は太陽）からとり、PXLV だんにへらす（階調化）。
-// 明るさの減りはやわらげ（PXV）、暗い所ほど色を青へずらす（PXHUE）。明るい所はあざやかさを下げる（PXSAT）。ふちどりは、いちばん暗い所の色
-const PXLV=4;          // 明るさのだんの数
-const PXV=.5;          // 明るさ：(だん−0.5)×PXV を明るさにかける（いちばん暗い所で ×0.75・明るい所で ×1.25）
-const PXHUE=.5;        // 暗い所の色を青（色相 240°）へよせる量：(0.5−だん)×PXHUE（いちばん暗い所で 1/4 だけよせる）
-const PXSAT=.5;        // 明るい所のあざやかさ：(だん−0.5)×PXSAT をへらす
-// 太陽（natcommon.SUN：高さ30度・正面から左へ8度）。ゲームの x 東 → x・y 南 → z・上 → y
-const SUNEL=30*Math.PI/180,SUNAZ=8*Math.PI/180;
-const AMB=.5,SUN=.6;
-const OUTLINE_DEPTH=.004;      // 物の輪郭にする奥行きの差（0〜1の奥行き）
-const LOWKEEP=.25;             // 形をあらくするとき、のこす点のわりあい
-const GSHADOW=[40,46,104,.22]; // かげの色（ゲームの足もとのかげ shadow() と同じ）
-// 画面のしあげ（js/hd2d.js と同じ数）
-const HD={air:.16,airCol:[200,216,236],airH:.55,vig:.3,vigR:[.42,.78],vigCol:[24,20,36],glow:.48,a:6,b:12};
-// 置く物：モデル・高さ（マス）・数（少し・ふつう・多い）
+// ---- 置く物 ----
 // 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
 const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
+// 岩・小物（props）：tint＝ぬる色（sRGB）・mat＝明るさのむらにする材質の絵
 const PROPS=[
   ...['T0','T2','T3','T4','T5','T6','T8','T9'].map(id=>PLANT(id,1.9,[1,2,4],'tree')),PLANT('T1',2.2,[1,2,3],'tree'),PLANT('T7',2.2,[0,1,2],'tree'),
   ...['B0','B1','B2'].map(id=>PLANT(id,.7,[2,4,9],'small')),
   ...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9'].map(id=>PLANT(id,.45,[2,6,14],'tiny')),
-  // トリポのモデル：mat＝材質（ゲームの家具の設計図のように、物ごとにきめる）
-  {id:'rock',h:.3,n:[3,6,12],kind:'small',mat:'stone'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small',mat:'stone'},
-  {id:'lantern',h:.7,n:[2,3,4],kind:'item',mat:'metal'},{id:'sack',h:.5,n:[2,3,4],kind:'item',mat:'cloth'},{id:'firewood',h:.4,n:[1,2,3],kind:'item',mat:'bark'},{id:'stump',h:.4,n:[2,3,5],kind:'item',mat:'bark'},
-  {id:'log_lying',h:.35,n:[1,2,3],kind:'item',mat:'bark'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item',mat:'stone'},{id:'wateringcan',h:.35,n:[1,1,2],kind:'item',mat:'metal'}];
-// 材質（ゲームの道具の oblique3d.Tex と同じもよう。make_textures.py が tex/m_<名前>.png を作る）。番号は点の値 _mat
+  {id:'rock',h:.3,n:[3,6,12],kind:'small',mat:'stone',tint:'#b9b4aa'},{id:'stone_big',h:.45,n:[2,4,8],kind:'small',mat:'stone',tint:'#c4bdb0'},
+  {id:'lantern',h:.7,n:[2,3,4],kind:'item',mat:'metal',tint:'#6f6a66'},{id:'sack',h:.5,n:[2,3,4],kind:'item',mat:'cloth',tint:'#dcc08e'},
+  {id:'firewood',h:.4,n:[1,2,3],kind:'item',mat:'bark',tint:'#a8754e'},{id:'stump',h:.4,n:[2,3,5],kind:'item',mat:'bark',tint:'#a4724c'},
+  {id:'log_lying',h:.35,n:[1,2,3],kind:'item',mat:'bark',tint:'#a8754e'},{id:'jar_band',h:.5,n:[1,2,3],kind:'item',mat:'stone',tint:'#cf8a5c'},
+  {id:'wateringcan',h:.35,n:[1,1,2],kind:'item',mat:'metal',tint:'#79aab4'}];
 const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5};
-// 小さい画面のアルファにつける印（輪郭のつけ方を分ける）
-const TAG={ground:1,prop:.75};
+const MATK=.35;                // 材質の絵の明るさのむらを、色にのせる強さ
 
 const $=id=>document.getElementById(id);
 const showErr=e=>{const b=$('err');b.style.display='block';b.textContent+=String(e&&e.stack||e)+'\n'};
 addEventListener('error',e=>showErr(e.error||e.message));addEventListener('unhandledrejection',e=>showErr(e.reason));
-const f3=a=>a.slice(0,3).map(v=>(v/255).toFixed(4)).join(',');
 
 // ---- 設定（ボタン） ----
 const OPT={zoom:3,spirits:20,props:1,shadow:true,low:false};
-try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d4')||'{}'))}catch(e){}
-const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d4',JSON.stringify(OPT))}catch(e){}};
+try{Object.assign(OPT,JSON.parse(localStorage.getItem('hakoniwa-proto3d5')||'{}'))}catch(e){}
+const saveOpt=()=>{try{localStorage.setItem('hakoniwa-proto3d5',JSON.stringify(OPT))}catch(e){}};
+
+// ---- 地形（前の試作と同じ） ----
+const HM=[],KIND=[],GRASS=[];
+for(let z=0;z<MAPN;z++){HM.push([]);KIND.push([]);GRASS.push([]);for(let x=0;x<MAPN;x++){
+  let h=0;if(z<7)h=1;if(x>17&&z<12)h=1;if(x<5&&z<4)h=2;
+  let k='g';if(z===14||(x===11&&z>=7))k='p';
+  if(Math.hypot(x+.5-5,z+.5-18.5)<2.6){k='w';h=0}
+  const d=Math.hypot(x+.5-12,z+.5-13),a=Math.atan2(z-13,x-12);
+  HM[z].push(h);KIND[z].push(k);GRASS[z].push(d<11+1.6*Math.sin(a*3)+1.1*Math.sin(a*5+1)?1:0)}}
+const inMap=(x,z)=>x>=0&&z>=0&&x<MAPN&&z<MAPN;
+const hAt=(x,z)=>inMap(x,z)?HM[z][x]:0;
+const isW=(x,z)=>inMap(x,z)&&KIND[z][x]==='w';
+const yTop=(x,z)=>hAt(x,z)*HSTEP-(isW(x,z)?.45:0);
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 
 // ---- しかけ ----
 const cv=$('cv');
 const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:false,powerPreference:'high-performance'});
-const PR=Math.min(devicePixelRatio||1,3);
+const PR=Math.min(devicePixelRatio||1,MAXPR);
 renderer.setPixelRatio(PR);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.BasicShadowMap;renderer.shadowMap.autoUpdate=false;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;
 const scene=new THREE.Scene();
-const BG=new THREE.Color('#7fa66b'); // ゲームの地図の外の色
-const cam=new THREE.OrthographicCamera(-1,1,1,-1,30,100);
-let MAPN=24;const target=new THREE.Vector3(12,0,12);
-const amb=new THREE.AmbientLight(0xffffff,AMB),sun=new THREE.DirectionalLight(0xffffff,SUN);
-amb.layers.enable(1);sun.layers.enable(1);
-sun.shadow.mapSize.set(2048,2048);
-Object.assign(sun.shadow.camera,{left:-20,right:20,top:20,bottom:-20,near:1,far:90});
-sun.shadow.bias=-.002;scene.add(amb,sun,sun.target);
+scene.background=new THREE.Color(SKY);scene.fog=new THREE.Fog(SKY,50,80);
+const cam=new THREE.PerspectiveCamera(FOV,1,1,200);
+const target=new THREE.Vector3(MAPN/2,0,MAPN/2);
+const CAMDIR=new THREE.Vector3(Math.sin(YAW)*Math.cos(PITCH),Math.sin(PITCH),Math.cos(YAW)*Math.cos(PITCH));
+const RT=new THREE.Vector3(Math.cos(YAW),0,-Math.sin(YAW));        // 画面の右
+const FWD=new THREE.Vector2(-Math.sin(YAW),-Math.cos(YAW));         // 画面の奥（地面の上）
+scene.add(new THREE.HemisphereLight(SKY,GROUND,HEMI));
+const sun=new THREE.DirectionalLight(SUNCOL,SUN);
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:120});
+sun.shadow.bias=-.0006;sun.shadow.normalBias=.03;sun.shadow.radius=3;
+sun.position.set(MAPN/2,0,MAPN/2).addScaledVector(new THREE.Vector3(...SUNDIR).normalize(),50);sun.target.position.set(MAPN/2,0,MAPN/2);
+scene.add(sun,sun.target);
 
-// 物の光の向き（せかい）：太陽は、画面の正面（手前）から左へ SUNAZ・高さ SUNEL（natcommon.SUN・sunscreen と同じ考え。カメラの向きから）
-const LW=(()=>{const F=new THREE.Vector3(CAMDIR.x,0,CAMDIR.z).normalize();
-  return new THREE.Vector3().addScaledVector(RT,-Math.cos(SUNEL)*Math.sin(SUNAZ)).addScaledVector(F,Math.cos(SUNEL)*Math.cos(SUNAZ)).add(new THREE.Vector3(0,Math.sin(SUNEL),0)).normalize()})();
-
-// ---- マテリアル ----
-const GLSL_HSV=`
-vec3 tnRgb2hsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
-vec3 tnHsv2rgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}
-vec3 tnShift(vec3 lin,vec2 dvs){vec3 h=tnRgb2hsv(pow(max(lin,0.),vec3(1./2.2)));h.z=clamp(h.z+dvs.x/100.,0.,1.);h.y=clamp(h.y+dvs.y/100.,0.,1.);return pow(tnHsv2rgb(h),vec3(2.2));}
-`;
-// 記事の色の式（暗い所ほど明るさを少し落として青へ、明るい所はあざやかさを下げる）。d：明るさのだん−0.5（−0.5〜0.5）。sRGB の色で
-const GLSL_PX=`
-vec3 pxShade(vec3 c,float d){vec3 h=tnRgb2hsv(c);h.z=clamp(h.z*(1.+d*${PXV.toFixed(2)}),0.,1.);
-  if(d<0.){float dh=fract(2./3.-h.x+.5)-.5;h.x=fract(h.x+dh*(-d)*${PXHUE.toFixed(2)});}else h.y=clamp(h.y*(1.-d*${PXSAT.toFixed(2)}),0.,1.);
-  return tnHsv2rgb(h);}
-`;
-// 植物・石・小物（記事のやり方）と、地面（flat：ゲームの絵をそのまま出し、ほかの物のかげだけかさねる）。
-// 点の値 _under：葉の下のかげ（暗くするだんの数）・_mat：材質（MATIDX）。材質のある所は、UV でその材質の絵をはる（色は絵のまま）。uvs：UV にかける数（モデルをちぢめた数）
-const uMat={value:[]},uMatK={value:[]},uShadeMap={value:null};  // 材質の絵・(1まいのマス, たて/よこ)・シェーディングマップ
-function toneMat(o={},flat=false,uvs=1){
-  const m=new THREE.MeshLambertMaterial(o),uUVs={value:uvs};
-  m.onBeforeCompile=sh=>{
-    Object.assign(sh.uniforms,{uMat,uMatK,uShadeMap,uUVs});
-    sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUV;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUV=uv;');
-    sh.fragmentShader='uniform sampler2D uMat[5],uShadeMap;uniform vec2 uMatK[5];uniform float uUVs;varying float vUnder,vMat;varying vec2 vUV;\n'+GLSL_HSV+GLSL_PX+`
-vec3 pxTex(int k,vec2 uv){return k==0?texture2D(uMat[0],uv).rgb:k==1?texture2D(uMat[1],uv).rgb:k==2?texture2D(uMat[2],uv).rgb:k==3?texture2D(uMat[3],uv).rgb:texture2D(uMat[4],uv).rgb;}
-`+sh.fragmentShader
-      .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
-      .replace('#include <opaque_fragment>',`{
-  vec3 tnC=diffuseColor.rgb;bool tnSh=getShadowMask()<.5;
-  ${flat?`if(tnSh){vec3 s=pow(tnC,vec3(1./2.2));s=mix(s,vec3(${f3(GSHADOW)}),${GSHADOW[3]});tnC=pow(s,vec3(2.2));}`:`
-  int tnM=int(vMat+.5)-1;
-  if(tnM>=0){vec2 k=tnM==0?uMatK[0]:tnM==1?uMatK[1]:tnM==2?uMatK[2]:tnM==3?uMatK[3]:uMatK[4];tnC=pxTex(tnM,vUV*uUVs/vec2(k.x,k.x*k.y));} // 材質の絵（sRGB → linear は絵の読みこみで）
-  vec3 n=normalize(normal);float s=texture2D(uShadeMap,n.xy*.5+.5).r;           // シェーディングマップ
-  float q=floor(clamp(s,0.,.999)*${PXLV}.)/${PXLV-1}.-vUnder/${PXLV-1}.;if(tnSh)q=0.;q=clamp(q,0.,1.);
-  tnC=pow(pxShade(pow(tnC,vec3(1./2.2)),q-.5),vec3(2.2));`}
-  gl_FragColor=vec4(tnC,${flat?TAG.ground.toFixed(2):TAG.prop.toFixed(2)});
-}`);
+// ---- マテリアル（トゥーン・ふちの光・丸い地面） ----
+const uCurve={value:new THREE.Vector4(target.x,target.z,CURVE,0)},uTime={value:0};
+const GRAD=(()=>{const d=new Uint8Array(TOON.length*4);TOON.forEach((v,i)=>{d[i*4]=d[i*4+1]=d[i*4+2]=Math.round(v*255);d[i*4+3]=255});
+  const t=new THREE.DataTexture(d,TOON.length,1);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t})();
+const CURVE_VS=`
+vec4 mvPosition=vec4(transformed,1.);
+#ifdef USE_INSTANCING
+mvPosition=instanceMatrix*mvPosition;
+#endif
+vec4 cwp=modelMatrix*mvPosition;float cd=dot(cwp.xz-uCurve.xy,vec2(${FWD.x.toFixed(5)},${FWD.y.toFixed(5)}));cwp.y-=uCurve.z*cd*cd;
+mvPosition=viewMatrix*cwp;gl_Position=projectionMatrix*mvPosition;`;
+// 全部の物の頂点に、丸い地面をかける（three の project_vertex をおきかえる）
+function curveVS(sh){sh.uniforms.uCurve=uCurve;sh.vertexShader='uniform vec4 uCurve;\n'+sh.vertexShader.replace('#include <project_vertex>',CURVE_VS)}
+const RIM_FS=`outgoingLight+=vec3(${RIM.col.join(',')})*${RIM.k.toFixed(2)}*pow(1.-clamp(dot(normalize(normal),normalize(vViewPosition)),0.,1.),${RIM.pow}.)*(.4+.6*clamp(normal.y*.5+.5,0.,1.));`;
+const uMat={value:[]};
+// o：MeshToonMaterial の設定。extra：{mat:材質の絵をのせる, uvk:UV にかける数}
+function toon(o={},extra={}){
+  const m=new THREE.MeshToonMaterial({gradientMap:GRAD,...o});
+  m.onBeforeCompile=sh=>{curveVS(sh);sh.uniforms.uMat=uMat;
+    sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUv2;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;');
+    sh.fragmentShader='uniform sampler2D uMat[5];varying float vUnder,vMat;varying vec2 vUv2;\n'+sh.fragmentShader
+      .replace('#include <color_fragment>',`#include <color_fragment>
+  ${extra.mat?`{int k=int(vMat+.5)-1;if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:texture2D(uMat[4],uv).r;
+    diffuseColor.rgb*=mix(1.,l*2.,${MATK.toFixed(2)});}}`:''}
+  diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
+      .replace('#include <opaque_fragment>',RIM_FS+'\n#include <opaque_fragment>');
   };
-  m.customProgramCacheKey=()=>'px'+flat;
+  m.customProgramCacheKey=()=>'toon'+(extra.mat?extra.uvk.toFixed(3):'');
   return m;
 }
-// シェーディングマップ：画面から見た面の向き（x 右・y 上）→ 明るさ 0.5+0.5×(太陽との内積)。太陽は画面の向きにしてから作る（カメラは回さない）
-function makeShadeMap(){
-  const N=64,d=new Uint8Array(N*N*4),L=LW.clone().transformDirection(cam.matrixWorldInverse);
-  for(let y=0;y<N;y++)for(let x=0;x<N;x++){let nx=(x+.5)/N*2-1,ny=(y+.5)/N*2-1;const r=Math.hypot(nx,ny);if(r>1){nx/=r;ny/=r}
-    const nz=Math.sqrt(Math.max(0,1-nx*nx-ny*ny)),v=Math.round(255*Math.max(0,Math.min(1,.5+.5*(nx*L.x+ny*L.y+nz*L.z)))),i=(y*N+x)*4;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}
-  const t=new THREE.DataTexture(d,N,N);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;uShadeMap.value=t;
-}
-// せいれい：細かい画面に描く。奥行きは、小さい画面（地面・物）の奥行きとくらべて、うしろならけす
-const uLowD={value:null},uHiRes={value:new THREE.Vector2(1,1)};
-const depthCut=sh=>{sh.uniforms.uLowD=uLowD;sh.uniforms.uHiRes=uHiRes;
-  sh.fragmentShader='uniform sampler2D uLowD;uniform vec2 uHiRes;\n'+sh.fragmentShader.replace('void main() {','void main() {\nif(gl_FragCoord.z>texture2D(uLowD,gl_FragCoord.xy/uHiRes).x+.0015)discard;')};
-function spMat(color,part,mode,id){ // part：head・body（かげのゆるさ）。mode：''・'water'（つやの点）・'fire'（光る色）。id：部品のしるし（SPID）
-  const m=new THREE.MeshLambertMaterial({color}),A=SPSAT[part],L=new THREE.Vector3(...SPLIGHT).normalize(),HV=L.clone().add(new THREE.Vector3(0,0,1)).normalize();
-  const v3=v=>v.toArray().map(x=>x.toFixed(5)).join(',');
-  m.onBeforeCompile=sh=>{depthCut(sh);
-    sh.fragmentShader=GLSL_HSV+sh.fragmentShader.replace('#include <opaque_fragment>',`{
-  vec3 n=normalize(normal);float dl=dot(n,vec3(${v3(L)}));
-  vec3 h=tnRgb2hsv(pow(diffuseColor.rgb,vec3(1./2.2)));bool pale=h.y<.08;
-  if(dl<=${SPCUT[1].toFixed(2)})h.y+=${A[1].toFixed(2)}+(pale?${A[3].toFixed(2)}:0.);else if(dl<=${SPCUT[0].toFixed(2)})h.y+=${A[0].toFixed(2)}+(pale?${A[2].toFixed(2)}:0.);
-  h.y=min(1.,h.y);vec3 c=tnHsv2rgb(h);
-  ${mode==='water'?`if(dot(n,vec3(${v3(HV)}))>.996)c=vec3(1.);`:''}
-  ${mode==='fire'?`{float t=clamp(n.z,0.,1.);vec3 e=vec3(${f3(FIRE[0])}),m=vec3(${f3(FIRE[1])}),k=vec3(${f3(FIRE[2])});c=t<.55?mix(e,m,t/.55):mix(m,k,(t-.55)/.45);}`:''}
-  gl_FragColor=vec4(pow(c,vec3(2.2)),${id.toFixed(2)});
-}`)};
-  m.customProgramCacheKey=()=>'sp'+part+mode+id;return m;
-}
-function spFlat(color){const m=new THREE.MeshBasicMaterial({color});m.onBeforeCompile=depthCut;m.customProgramCacheKey=()=>'spflat';return m} // 目・ほっぺ（しるし1）
-// ブレンドしても、アルファの印をかえない（かげの絵）
-const keepAlpha={blending:THREE.CustomBlending,blendSrc:THREE.SrcAlphaFactor,blendDst:THREE.OneMinusSrcAlphaFactor,blendSrcAlpha:THREE.ZeroFactor,blendDstAlpha:THREE.OneFactor,transparent:true,depthWrite:false};
 
-// ---- 地図（ゲームに描かせた地面） ----
-let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-let HM=[],KIND=[],GRASS=[],GIMG=null;
-const TEXL=new THREE.TextureLoader();
-const inMap=(x,z)=>x>=0&&z>=0&&x<MAPN&&z<MAPN;
-const hAt=(x,z)=>inMap(x,z)?HM[z][x]:0;
-const yTop=(x,z)=>hAt(x,z)*HSTEP;
-async function loadGround(){
-  GIMG=await (await fetch('./tex/ground.json')).json();MAPN=GIMG.n;HM=GIMG.hm;KIND=GIMG.kind;GRASS=GIMG.grass;target.set(MAPN/2,0,MAPN/2);
-  const tex=await TEXL.loadAsync('./tex/ground.webp');tex.colorSpace=THREE.SRGBColorSpace;tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;
-  // せかいの点 → 絵の中の場所（ゲームの式：isoX・isoY・段の高さ IQL）
-  const uv=(x,y,z)=>[(GIMG.ox+(x-z)*IQW/2)/GIMG.w,1-(GIMG.oy+(x+z)*IQH/2-y/HSTEP*IQL)/GIMG.h];
-  const P=[],N=[],U=[];
-  const quad=(vs,n)=>{for(const i of [0,1,2,0,2,3]){P.push(...vs[i]);N.push(...n);U.push(...uv(...vs[i]))}};
+// ---- 地面（その場で作る色） ----
+// マスクの絵：R 道・G 池・B あれ地（草のない所）。1マス MASKR 点。なめらかに読み、ノイズでさかいめをゆらす
+const MASKR=4,MN=MAPN+2*BORDER;
+const maskTex=(()=>{const W=MN*MASKR,d=new Uint8Array(W*W*4);
+  for(let j=0;j<W;j++)for(let i=0;i<W;i++){const x=Math.floor(i/MASKR)-BORDER,z=Math.floor(j/MASKR)-BORDER,k=inMap(x,z)?KIND[z][x]:'g',o=(j*W+i)*4;
+    d[o]=k==='p'?255:0;d[o+1]=k==='w'?255:0;d[o+2]=inMap(x,z)&&!GRASS[z][x]&&k==='g'?255:0;d[o+3]=255}
+  const t=new THREE.DataTexture(d,W,W);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t})();
+const NOISE=`
+float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){return .5*vn(p)+.25*vn(p*2.03+7.)+.125*vn(p*4.01+3.)+.0625*vn(p*8.07+11.);}
+vec3 lin(vec3 c){return pow(c,vec3(2.2));}
+`;
+const C3=h=>{const c=new THREE.Color(h);c.convertLinearToSRGB();return `vec3(${c.r.toFixed(4)},${c.g.toFixed(4)},${c.b.toFixed(4)})`};
+function groundMat(){
+  const m=new THREE.MeshToonMaterial({gradientMap:GRAD});
+  m.onBeforeCompile=sh=>{curveVS(sh);sh.uniforms.uMask={value:maskTex};
+    sh.vertexShader='attribute float aTop;varying vec3 vW;varying float vTop,vNy;\n'+sh.vertexShader.replace('void main() {','void main() {\nvW=(modelMatrix*vec4(position,1.)).xyz;vTop=aTop;vNy=normal.y;');
+    sh.fragmentShader='uniform sampler2D uMask;varying vec3 vW;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+  {vec2 p=vW.xz;vec2 muv=(p+${BORDER}.)/${MN}.;
+   float n1=fbm(p*.35),n2=fbm(p*1.7+5.),n3=vn(p*6.);
+   vec3 mk=texture2D(uMask,muv+(vec2(fbm(p*1.3),fbm(p*1.3+9.))-.5)*.012).rgb;
+   vec3 g=mix(${C3(COLS.grassB)},${C3(COLS.grassA)},smoothstep(.3,.7,n1));g=mix(g,${C3(COLS.grassC)},smoothstep(.62,.8,n2)*.6);
+   g*=.94+.1*n3;                                                         // 草のこまかい色むら
+   float tuft=step(.82,hs(floor(p*5.)))*smoothstep(.35,.0,length(fract(p*5.)-.5));g=mix(g,g*1.12+vec3(.02,.03,0.),tuft); // 小さな草のかたまり
+   vec3 dry=mix(${C3(COLS.dry)},${C3(COLS.dry)}*.92,n2);
+   g=mix(g,dry,smoothstep(.45,.6,mk.b+(n1-.5)*.3));
+   vec3 pth=mix(${C3(COLS.pathB)},${C3(COLS.path)},smoothstep(.2,.8,n2))*(.95+.08*n3);
+   float pm=smoothstep(.42,.58,mk.r+(n2-.5)*.25);
+   vec3 c=mix(g,pth,pm);
+   if(vNy<.5){  // がけの横の面：土の地層と、上のふちの草
+     float st=fbm(vec2((p.x+p.y)*1.6,vW.y*5.));vec3 cl=mix(${C3(COLS.cliffB)},${C3(COLS.cliff)},smoothstep(.3,.7,st))*(.92+.1*n3);
+     float lip=smoothstep(vTop-.2,vTop-.06,vW.y+.06*(n2-.5));c=mix(cl,c,lip);}
+   diffuseColor.rgb=lin(c);}`);
+  };
+  m.customProgramCacheKey=()=>'ground';return m;
+}
+function buildGround(){
+  const P=[],N=[],T=[];
+  const quad=(vs,n,top)=>{for(const i of [0,1,2,0,2,3]){P.push(...vs[i]);N.push(...n);T.push(top)}};
   for(let z=-BORDER;z<MAPN+BORDER;z++)for(let x=-BORDER;x<MAPN+BORDER;x++){
-    const y=yTop(x,z);quad([[x,y,z+1],[x+1,y,z+1],[x+1,y,z],[x,y,z]],[0,1,0]);
+    const y=yTop(x,z);quad([[x,y,z+1],[x+1,y,z+1],[x+1,y,z],[x,y,z]],[0,1,0],y);
     for(const [dx,dz,A,B,n] of [[0,1,[x,y,z+1],[x+1,y,z+1],[0,0,1]],[0,-1,[x+1,y,z],[x,y,z],[0,0,-1]],[1,0,[x+1,y,z+1],[x+1,y,z],[1,0,0]],[-1,0,[x,y,z],[x,y,z+1],[-1,0,0]]]){
       const ny=yTop(x+dx,z+dz);if(ny>=y-1e-4)continue;
-      quad([[A[0],ny,A[2]],[B[0],ny,B[2]],[B[0],y,B[2]],[A[0],y,A[2]]],n);
+      quad([[A[0],ny,A[2]],[B[0],ny,B[2]],[B[0],y,B[2]],[A[0],y,A[2]]],n,y);
     }
   }
   const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));
-  const m=new THREE.Mesh(g,toneMat({map:tex},true));m.receiveShadow=true;m.castShadow=true;scene.add(m);
-  sun.position.copy(target).addScaledVector(LW,40);sun.target.position.copy(target);sun.target.updateMatrixWorld();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('aTop',new THREE.Float32BufferAttribute(T,1));
+  const m=new THREE.Mesh(g,groundMat());m.receiveShadow=true;m.castShadow=true;scene.add(m);
+  // 池の水：ゆれる水面・岸のあわ
+  const wg=new THREE.PlaneGeometry(MAPN,MAPN,MAPN*2,MAPN*2);wg.rotateX(-Math.PI/2);wg.translate(MAPN/2,-.16,MAPN/2);
+  const wm=new THREE.ShaderMaterial({transparent:true,fog:true,uniforms:{uMask:{value:maskTex},uTime,uCurve,...THREE.UniformsLib.fog},
+    vertexShader:`uniform vec4 uCurve;varying vec3 vW;\n#include <fog_pars_vertex>\nvoid main(){vec3 transformed=position;vW=(modelMatrix*vec4(position,1.)).xyz;${CURVE_VS}\n#include <fog_vertex>\n}`,
+    fragmentShader:`uniform sampler2D uMask;uniform float uTime;varying vec3 vW;\n#include <fog_pars_fragment>\n${NOISE}
+      void main(){vec2 p=vW.xz;float w=texture2D(uMask,(p+${BORDER}.)/${MN}.+(vec2(fbm(p*1.3),fbm(p*1.3+9.))-.5)*.012).g;if(w<.42)discard;
+        float r=fbm(p*1.6+vec2(uTime*.15,uTime*.1))+.5*fbm(p*3.1-vec2(uTime*.12,0.));vec3 c=mix(${C3(COLS.waterB)},${C3(COLS.water)},smoothstep(.45,1.1,r));
+        float hl=smoothstep(.93,1.,fbm(p*2.4+vec2(uTime*.2,-uTime*.15)));c=mix(c,vec3(1.),hl*.55);           // 水面の光
+        float foam=smoothstep(.62,.5,w+.06*sin(uTime*2.+fbm(p*3.)*9.));c=mix(c,${C3(COLS.foam)},foam*.9);      // 岸のあわ
+        gl_FragColor=vec4(lin(c),.92);\n#include <fog_fragment>\n}`});
+  const water=new THREE.Mesh(wg,wm);water.renderOrder=1;scene.add(water);
 }
 
 // ---- モデル ----
@@ -211,21 +207,21 @@ function smoothNormals(geo){
   const N=new Float32Array(P.count*3);for(let i=0;i<P.count;i++){const v=M.get(key(i)),l=Math.hypot(...v)||1;N[3*i]=v[0]/l;N[3*i+1]=v[1]/l;N[3*i+2]=v[2]/l}
   geo.setAttribute('normal',new THREE.BufferAttribute(N,3));
 }
-let PLANTS=null,PROPSGLB=null;
+let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   let root;
   if(p.src==='plants'){PLANTS=PLANTS||gltf.loadAsync('./tex/plants.glb');root=(await PLANTS).scene.getObjectByName(p.id).clone()}
-  else{PROPSGLB=PROPSGLB||gltf.loadAsync('./tex/props.glb');root=(await PROPSGLB).scene.getObjectByName(p.id).clone()}  // make_uv.py で UV 展開したトリポのモデル
-  root.position.set(0,0,0);
-  root.updateMatrixWorld(true);
+  else{PROPSGLB=PROPSGLB||gltf.loadAsync('./tex/props.glb');root=(await PROPSGLB).scene.getObjectByName(p.id).clone()}
+  root.position.set(0,0,0);root.updateMatrixWorld(true);
   const bb=new THREE.Box3().setFromObject(root),sz=bb.getSize(new THREE.Vector3()),s=p.h/sz.y;
   const norm=new THREE.Matrix4().makeScale(s,s,s).multiply(new THREE.Matrix4().makeTranslation(-(bb.min.x+bb.max.x)/2,-bb.min.y,-(bb.min.z+bb.max.z)/2));
   const parts=[];
-  root.traverse(o=>{if(!o.isMesh)return;let geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
-    smoothNormals(geo); // まるい面は、なめらかなかげ
-    if(p.src!=='plants'){const n=geo.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(v),1);
-      geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_under',mk(0))}
-    parts.push({geo,mat:toneMat({vertexColors:!!geo.getAttribute('color')},false,s)})});
+  root.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(norm,o.matrixWorld));
+    smoothNormals(geo);const n=geo.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(v),1);
+    if(p.src!=='plants'){geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_under',mk(0));geo.deleteAttribute('color')}
+    const span=p.src==='plants'?MATSPAN.bark:MATSPAN[p.mat]||1;
+    const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span});
+    parts.push({geo,mat})});
   p.parts=parts;
 }
 const SPMODELS={};
@@ -233,26 +229,26 @@ async function loadSpirit(el){
   const g=await fbx.loadAsync(SPDIR+el+'.fbx');
   g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH/bb.getSize(new THREE.Vector3()).y;
   g.scale.multiplyScalar(s);
-  const c=SPCOL[el];
-  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();o.frustumCulled=false;
-    if(n.startsWith('eye'))o.material=spFlat(c.eye);
-    else if(n.startsWith('cheek'))o.material=spFlat(c.cheek);
-    else if(n.startsWith('hood')||n.startsWith('hane'))o.material=spMat(c.hood,'head',el==='water'?'water':el==='fire'?'fire':'',SPID.hood);
-    else if(n.startsWith('sprout'))o.material=spMat(SPROUT,'head','',SPID.acc);
-    else if(n.startsWith('headacc'))o.material=spMat(HEADACC,'head','',SPID.acc);
-    else o.material=spMat(CREAM,n==='body'?'body':'head','',n==='body'?SPID.body:SPID.head);
+  const c=SPCOL[el],flat=col=>{const m=new THREE.MeshBasicMaterial({color:col});m.onBeforeCompile=curveVS;m.customProgramCacheKey=()=>'flat';return m};
+  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;
+    if(n.startsWith('eye'))o.material=flat(c.eye);
+    else if(n.startsWith('cheek'))o.material=flat(c.cheek);
+    else if(n.startsWith('hood')||n.startsWith('hane'))o.material=toon({color:c.hood});
+    else if(n.startsWith('sprout'))o.material=toon({color:SPROUT});
+    else if(n.startsWith('headacc'))o.material=toon({color:HEADACC});
+    else o.material=toon({color:CREAM});
   });
   SPMODELS[el]=g;
 }
 // 形をあらくする（三角形をへらす。はじめてえらんだときに作る）
+const LOWKEEP=.25;
 function lowGeo(part){
   if(!part.low){const g=part.geo.clone();const n=g.getAttribute('position').count;
-    part.low=new SimplifyModifier().modify(g,Math.floor(n*(1-LOWKEEP)));part.low.computeVertexNormals()}
+    part.low=new SimplifyModifier().modify(g,Math.floor(n*(1-LOWKEEP)));part.low.computeVertexNormals();
+    const m=part.low.getAttribute('position').count,src=part.geo;
+    for(const a of ['_mat','_under'])part.low.setAttribute(a,new THREE.Float32BufferAttribute(new Float32Array(m).fill(src.getAttribute(a).getX(0)),1))}
   return part.low;
 }
-
-// 画面の下へ1ドット動くと、地面の上では、どれだけ手前か
-const DN=new THREE.Vector3(Math.sin(YAW),0,Math.cos(YAW)).multiplyScalar(1/Math.sin(PITCH));
 
 // ---- 置く ----
 let propMeshes=[];
@@ -283,29 +279,23 @@ function placeProps(level){
 
 // ---- せいれい ----
 let sprites=[];let blocked=new Set();
-const TILT=new THREE.Quaternion().setFromAxisAngle(RT,-(PITCH-SPELEV*Math.PI/180)); // 体を奥へたおして、25度の見おろしに見せる
-const shGeo=new THREE.CircleGeometry(1,20);shGeo.rotateX(-Math.PI/2);
-const shMat=new THREE.MeshBasicMaterial({color:new THREE.Color(GSHADOW[0]/255,GSHADOW[1]/255,GSHADOW[2]/255),opacity:GSHADOW[3],...keepAlpha,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4});
 function walkable(x,z,h){return inMap(x,z)&&KIND[z][x]!=='w'&&HM[z][x]===h&&!blocked.has(x+','+z)}
 function lineOK(a,b,h){const n=Math.ceil(a.distanceTo(b)*3);for(let i=0;i<=n;i++){const t=i/n;if(!walkable(Math.floor(a.x+(b.x-a.x)*t),Math.floor(a.z+(b.z-a.z)*t),h))return false}return true}
 function makeSpirits(n){
-  for(const s of sprites)scene.remove(s.holder,s.sh);sprites=[];seed=3;
+  for(const s of sprites)scene.remove(s.obj);sprites=[];seed=3;
   for(let i=0;i<n;i++){
     const el=ELS[i%ELS.length],obj=SkeletonUtils.clone(SPMODELS[el]);
     let x,z;do{x=Math.floor(rnd()*MAPN);z=Math.floor(rnd()*MAPN)}while(!walkable(x,z,HM[z][x])||!GRASS[z][x]);
-    const h=HM[z][x];const bones={};obj.traverse(o=>{o.layers.set(1);if(o.isBone)bones[o.name]={b:o,q:o.quaternion.clone()}});
-    const tilt=new THREE.Group();tilt.quaternion.copy(TILT);tilt.add(obj);const holder=new THREE.Group();holder.add(tilt);
-    holder.position.set(x+.5,yTop(x,z),z+.5);obj.rotation.y=rnd()*Math.PI*2;
-    const sh=new THREE.Mesh(shGeo,shMat);sh.rotation.y=YAW;sh.scale.set(SPSHADOW.r,1,SPSHADOW.r*SPSHADOW.k/Math.sin(PITCH));sh.renderOrder=2;
-    scene.add(holder,sh);
-    sprites.push({holder,obj,sh,h,bones,to:null,wait:rnd()*2,ph:rnd()*6});
+    const h=HM[z][x];const bones={};obj.traverse(o=>{if(o.isBone)bones[o.name]={b:o,q:o.quaternion.clone()}});
+    obj.position.set(x+.5,yTop(x,z),z+.5);obj.rotation.y=rnd()*Math.PI*2;scene.add(obj);
+    sprites.push({obj,h,bones,to:null,wait:rnd()*2,ph:rnd()*6});
   }
 }
 const QA=new THREE.Quaternion(),AX=new THREE.Vector3(1,0,0);
 function bend(s,name,a){const r=s.bones[name];if(!r)return;QA.setFromAxisAngle(AX,a);r.b.quaternion.copy(r.q).multiply(QA)}
 function stepSpirits(dt){
   for(const s of sprites){
-    const p=s.holder.position;let moving=false;
+    const p=s.obj.position;let moving=false;
     if(s.to){const d=new THREE.Vector3(s.to.x-p.x,0,s.to.z-p.z),L=d.length();
       if(L<.05){s.to=null;s.wait=.8+rnd()*2.5}
       else{const st=Math.min(L,WALK*dt);p.addScaledVector(d.normalize(),st);moving=true;
@@ -318,75 +308,47 @@ function stepSpirits(dt){
     s.ph+=dt*(moving?9:2.5);
     const sw=moving?Math.sin(s.ph)*.6:0;
     bend(s,'thighL',sw);bend(s,'thighR',-sw);bend(s,'upper_armL',-sw*.7);bend(s,'upper_armR',sw*.7);
-    const gy=s.h*HSTEP;p.y=gy+(moving?Math.abs(Math.sin(s.ph))*.04:Math.sin(s.ph)*.008);
-    s.sh.position.set(p.x,gy+.02,p.z);
+    p.y=s.h*HSTEP+(moving?Math.abs(Math.sin(s.ph))*.04:Math.sin(s.ph)*.008);
   }
+  if(sprites.length)renderer.shadowMap.needsUpdate=true; // せいれいのかげは動く
 }
 
-// ---- 画面：小さい画面（地面・物）→ 細かい画面（せいれい）→ かさねてしあげ → にじみ ----
-let rtLow=null,rtHi=null,rtComp=null,rtA=null,rtB=null,lowW=0,lowH=0,hiW=0,hiH=0,devW=0,devH=0;
+// ---- しあげ：画面 → ちぢめてぼかす → ミニチュアのぼかし・にじみ・色 ----
+let rtMain=null,rtA=null,rtB=null,W0=0,H0=0;
 const quadGeo=new THREE.PlaneGeometry(2,2),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
 const pass=(fs,uniforms)=>{const m=new THREE.ShaderMaterial({uniforms,vertexShader:VS,fragmentShader:fs,depthTest:false,depthWrite:false});const s=new THREE.Scene();s.add(new THREE.Mesh(quadGeo,m));return {m,s}};
-// かさねる：物の輪郭（中がわ・furntone の OLK）、せいれいと輪郭（外がわ・×0.72）、時間の光（soft-light）・空気の遠近・四すみ
-const comp=pass(GLSL_HSV+GLSL_PX+`
-  uniform sampler2D tLow,tLowD,tHi,tHiD;uniform vec2 lp,hp;uniform vec4 tint;varying vec2 vUv;
-  float sl(float b,float s){return s<=.5?b-(1.-2.*s)*b*(1.-b):b+(2.*s-1.)*((b<=.25?((16.*b-12.)*b+4.)*b:sqrt(b))-b);}
-  void main(){
-    vec2 uv=(floor(vUv/lp)+.5)*lp;vec4 c=sRGBTransferOETF(texture2D(tLow,uv));float d=texture2D(tLowD,uv).x;
-    float n=max(max(texture2D(tLowD,uv+vec2(lp.x,0.)).x,texture2D(tLowD,uv-vec2(lp.x,0.)).x),max(texture2D(tLowD,uv+vec2(0.,lp.y)).x,texture2D(tLowD,uv-vec2(0.,lp.y)).x));
-    if(abs(c.a-${TAG.prop.toFixed(2)})<.1 && n-d>${OUTLINE_DEPTH})c.rgb=pxShade(c.rgb,-.5); // ふちどりは、いちばん暗い所の色（記事）
-    vec4 s=texture2D(tHi,vUv);
-    if(s.a>.5){c.rgb=sRGBTransferOETF(s).rgb;
-      if(s.a<.95){float d0=texture2D(tHiD,vUv).x;bool ln=false; // 部品のさかいの線：となりがちがう部品で手前か、同じ部品でも、ずっと手前
-        for(int i=0;i<4;i++){vec2 o=i==0?vec2(hp.x,0.):i==1?vec2(-hp.x,0.):i==2?vec2(0.,hp.y):vec2(0.,-hp.y);vec4 q=texture2D(tHi,vUv+o);float d1=texture2D(tHiD,vUv+o).x;
-          if(q.a>.5&&q.a<.95&&d1<d0&&(abs(q.a-s.a)>.05||d0-d1>${SPDEPTH}))ln=true;}
-        if(ln)c.rgb*=${SPLINE};}}
-    else{vec4 a=texture2D(tHi,vUv+vec2(0.,hp.y));if(a.a<.5)a=texture2D(tHi,vUv-vec2(0.,hp.y));if(a.a<.5)a=texture2D(tHi,vUv+vec2(hp.x,0.));if(a.a<.5)a=texture2D(tHi,vUv-vec2(hp.x,0.));
-      if(a.a>.5)c.rgb=sRGBTransferOETF(a).rgb*${SPLINE};}
-    c.rgb=mix(c.rgb,vec3(sl(c.r,tint.r),sl(c.g,tint.g),sl(c.b,tint.b)),tint.a);
-    c.rgb=mix(c.rgb,vec3(${f3(HD.airCol)}),${HD.air}*clamp((vUv.y-${(1-HD.airH).toFixed(2)})/${HD.airH},0.,1.));
-    vec2 q=(vUv-.5)/hp;float r=length(q)/(.5*length(1./hp));
-    c.rgb=mix(c.rgb,vec3(${f3(HD.vigCol)}),${HD.vig}*clamp((r-${HD.vigR[0]})/(${HD.vigR[1]}-${HD.vigR[0]}),0.,1.));
-    gl_FragColor=vec4(c.rgb,1.);
-  }`,{tLow:{value:null},tLowD:{value:null},tHi:{value:null},tHiD:{value:null},lp:{value:new THREE.Vector2()},hp:{value:new THREE.Vector2()},tint:{value:new THREE.Vector4(1,1,1,0)}});
-const copy=pass('uniform sampler2D t;varying vec2 vUv;void main(){gl_FragColor=texture2D(t,vUv);}',{t:{value:null}});
-// 出す：にじみ（小さくした絵を3回かけ算して、明るい所だけを screen でかさねる）
-const fin=pass(`uniform sampler2D t,g;uniform vec2 crop;varying vec2 vUv;
-  void main(){vec2 uv=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);vec3 c=texture2D(t,uv).rgb,b=texture2D(g,uv).rgb;b=b*b*b*${HD.glow};gl_FragColor=vec4(1.-(1.-c)*(1.-b),1.);}`,
-  {t:{value:null},g:{value:null},crop:{value:new THREE.Vector2(1,1)}});
-function mkRT(w,h,filter,depth){const r=new THREE.WebGLRenderTarget(w,h,{minFilter:filter,magFilter:filter,depthBuffer:!!depth});if(depth)r.depthTexture=new THREE.DepthTexture(w,h);return r}
+const blur=pass(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;
+  void main(){vec4 c=texture2D(t,vUv)*.227;c+=(texture2D(t,vUv+d*1.385)+texture2D(t,vUv-d*1.385))*.316;c+=(texture2D(t,vUv+d*3.23)+texture2D(t,vUv-d*3.23))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
+const fin=pass(`uniform sampler2D t,b;varying vec2 vUv;
+  void main(){vec3 c=texture2D(t,vUv).rgb,bl=texture2D(b,vUv).rgb;
+    float tl=max(smoothstep(${TILT.top.toFixed(2)},0.,1.-vUv.y),smoothstep(${TILT.bot.toFixed(2)},1.,1.-vUv.y))*${TILT.amt.toFixed(2)};
+    c=mix(c,bl,tl);                                                                  // ミニチュアのぼかし（上と下）
+    c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)};                       // にじみ
+    c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,${GRADE.sat.toFixed(2)}); // あたたかい色・あざやかに
+    vec2 q=vUv-.5;c*=1.-${GRADE.vig.toFixed(2)}*smoothstep(.35,.75,length(q));        // 四すみ
+    gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null}});
 function resize(){
-  renderer.setSize(innerWidth,innerHeight,false);const sz=renderer.getDrawingBufferSize(new THREE.Vector2());devW=sz.x;devH=sz.y;
-  const Z=OPT.zoom,W=Math.ceil(devW/Z/2)*2,H=Math.ceil(devH/Z/2)*2;
-  if(W===lowW&&H===lowH&&rtLow&&hiW===W*Z){fin.m.uniforms.crop.value.set(devW/hiW,devH/hiH);return}
-  for(const r of [rtLow,rtHi,rtComp,rtA,rtB])if(r){if(r.depthTexture)r.depthTexture.dispose();r.dispose()}
-  lowW=W;lowH=H;hiW=W*Z;hiH=H*Z;
-  rtLow=mkRT(lowW,lowH,THREE.NearestFilter,true);rtLow.texture.colorSpace=THREE.SRGBColorSpace;
-  rtHi=mkRT(hiW,hiH,THREE.NearestFilter,true);rtHi.texture.colorSpace=THREE.SRGBColorSpace;
-  rtComp=mkRT(hiW,hiH,THREE.LinearFilter,false);
-  rtA=mkRT(Math.max(1,Math.round(hiW/HD.a)),Math.max(1,Math.round(hiH/HD.a)),THREE.LinearFilter,false);
-  rtB=mkRT(Math.max(1,Math.round(hiW/HD.b)),Math.max(1,Math.round(hiH/HD.b)),THREE.LinearFilter,false);
-  uLowD.value=rtLow.depthTexture;uHiRes.value.set(hiW,hiH);
-  comp.m.uniforms.tLow.value=rtLow.texture;comp.m.uniforms.tLowD.value=rtLow.depthTexture;comp.m.uniforms.tHi.value=rtHi.texture;comp.m.uniforms.tHiD.value=rtHi.depthTexture;
-  comp.m.uniforms.lp.value.set(1/lowW,1/lowH);comp.m.uniforms.hp.value.set(1/hiW,1/hiH);
-  fin.m.uniforms.t.value=rtComp.texture;fin.m.uniforms.g.value=rtB.texture;fin.m.uniforms.crop.value.set(devW/hiW,devH/hiH);
-  placeCam();
+  renderer.setSize(innerWidth,innerHeight,false);const sz=renderer.getDrawingBufferSize(new THREE.Vector2());
+  cam.aspect=innerWidth/innerHeight;placeCam();
+  if(sz.x===W0&&sz.y===H0&&rtMain)return;W0=sz.x;H0=sz.y;
+  for(const r of [rtMain,rtA,rtB])if(r)r.dispose();
+  rtMain=new THREE.WebGLRenderTarget(W0,H0,{type:THREE.HalfFloatType,samples:4});
+  const q=[Math.max(1,W0>>2),Math.max(1,H0>>2)];
+  rtA=new THREE.WebGLRenderTarget(...q,{type:THREE.HalfFloatType});rtB=new THREE.WebGLRenderTarget(...q,{type:THREE.HalfFloatType});
+  fin.m.uniforms.t.value=rtMain.texture;fin.m.uniforms.b.value=rtB.texture;
 }
 function placeCam(){
-  const hw=lowW/PPU/2,hh=lowH/PPU/2;Object.assign(cam,{left:-hw,right:hw,top:hh,bottom:-hh});cam.updateProjectionMatrix();
-  cam.position.copy(target).addScaledVector(CAMDIR,60);cam.lookAt(target);cam.updateMatrixWorld();
-  // ドットにそろえる：カメラの右・上の向きで、1ドットの倍数に
-  const r=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,0),u=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,1);
-  const pr=cam.position.dot(r),pu=cam.position.dot(u),q=1/PPU;
-  cam.position.addScaledVector(r,Math.round(pr/q)*q-pr).addScaledVector(u,Math.round(pu/q)*q-pu);cam.updateMatrixWorld();
+  const vw=VIEWW[OPT.zoom]||10,dist=vw/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*cam.aspect);
+  cam.fov=FOV;cam.position.copy(target).addScaledVector(CAMDIR,dist);cam.lookAt(target);cam.updateProjectionMatrix();
+  uCurve.value.set(target.x,target.z,CURVE,0);scene.fog.near=dist+FOG[0];scene.fog.far=dist+FOG[1];
 }
 
 // ---- さわる：ドラッグで動かす ----
 let drag=null;
 cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{if(!drag)return;const k=PR/OPT.zoom/PPU,dx=(e.clientX-drag.x)*k,dy=(e.clientY-drag.y)*k;drag={x:e.clientX,y:e.clientY};
-  target.addScaledVector(RT,-dx).addScaledVector(DN,-dy);
+cv.addEventListener('pointermove',e=>{if(!drag)return;const k=(VIEWW[OPT.zoom]||10)/innerWidth,dx=(e.clientX-drag.x)*k,dy=(e.clientY-drag.y)*k;drag={x:e.clientX,y:e.clientY};
+  target.addScaledVector(RT,-dx).add(new THREE.Vector3(FWD.x,0,FWD.y).multiplyScalar(dy/Math.sin(PITCH)));
   target.x=Math.max(0,Math.min(MAPN,target.x));target.z=Math.max(0,Math.min(MAPN,target.z));placeCam()});
 cv.addEventListener('pointerup',()=>drag=null);cv.addEventListener('pointercancel',()=>drag=null);
 
@@ -402,7 +364,7 @@ function refresh(){groups.forEach(g=>g.refresh&&g.refresh())}
 function buildUI(){
   groups.push(group('せいれい',[['5',5],['20',20],['50',50],['100',100]],()=>OPT.spirits,v=>{OPT.spirits=v;makeSpirits(v)}));
   groups.push(group('物',[['少し',0],['ふつう',1],['多い',2]],()=>OPT.props,v=>{OPT.props=v;blocked=placeProps(v);makeSpirits(OPT.spirits)}));
-  groups.push(group('大きさ',[['2',2],['3',3],['4',4]],()=>OPT.zoom,v=>{OPT.zoom=v;resize()}));
+  groups.push(group('大きさ',[['近い',2],['ふつう',3],['遠い',4]],()=>OPT.zoom,v=>{OPT.zoom=v;placeCam()}));
   groups.push(group('形',[['もとのまま',false],['あらく',true]],()=>OPT.low,v=>{OPT.low=v;blocked=placeProps(OPT.props)}));
   groups.push(group('かげ',[['あり',true],['なし',false]],()=>OPT.shadow,v=>{OPT.shadow=v;sun.castShadow=v;renderer.shadowMap.needsUpdate=true}));
   const g=document.createElement('div');g.className='g';
@@ -422,23 +384,20 @@ function endMeasure(){
 }
 function hud(){
   $('hud').innerHTML=`<b>${fps.toFixed(0)}</b> コマ/秒　1コマの処理 ${cpuMs.toFixed(1)}ms<br>`+
-    `描く回数 ${calls}・三角形 ${(tris/1000).toFixed(0)}千<br>地面と物 ${lowW}×${lowH}・せいれい ${hiW}×${hiH}<br>`+
+    `描く回数 ${calls}・三角形 ${(tris/1000).toFixed(0)}千<br>画面 ${W0}×${H0}<br>`+
     `せいれい ${sprites.length}体`+(measRes?`<br>${measRes}`:'')+(gpu?`<br><span style="opacity:.6">${gpu}</span>`:'');
 }
 
 // ---- まわす ----
 let gpu='',prev=performance.now();
-const CLEAR0=new THREE.Color(0,0,0);
 function draw(to,sc,cm){renderer.setRenderTarget(to);renderer.render(sc,cm);calls+=renderer.info.render.calls;tris+=renderer.info.render.triangles}
 function frame(now){
-  const dt=Math.min(.1,(now-prev)/1000);prev=now;
+  const dt=Math.min(.1,(now-prev)/1000);prev=now;uTime.value=now/1000;
   const t0=performance.now();
   stepSpirits(dt);calls=0;tris=0;
-  cam.layers.set(0);renderer.setClearColor(BG,1);draw(rtLow,scene,cam);          // 地面・木・物（ゲームの1ドット）
-  cam.layers.set(1);renderer.setClearColor(CLEAR0,0);draw(rtHi,scene,cam);       // せいれい（細かい点）
-  draw(rtComp,comp.s,postCam);
-  copy.m.uniforms.t.value=rtComp.texture;draw(rtA,copy.s,postCam);
-  copy.m.uniforms.t.value=rtA.texture;draw(rtB,copy.s,postCam);
+  draw(rtMain,scene,cam);
+  blur.m.uniforms.t.value=rtMain.texture;blur.m.uniforms.d.value.set(1/rtA.width,0);draw(rtA,blur.s,postCam);
+  blur.m.uniforms.t.value=rtA.texture;blur.m.uniforms.d.value.set(0,1/rtA.height);draw(rtB,blur.s,postCam);
   draw(null,fin.s,postCam);
   cpuAcc+=performance.now()-t0;frames++;
   if(meas){meas.dts.push(dt*1000);if(now-meas.t0>10000)endMeasure()}
@@ -448,15 +407,15 @@ function frame(now){
 
 async function loadMats(){
   const meta=await (await fetch('./tex/mats.json')).json(),names=Object.keys(MATIDX).sort((a,b)=>MATIDX[a]-MATIDX[b]);
-  for(const k of names){const t=await TEXL.loadAsync('./tex/m_'+k+'.png');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
-    t.colorSpace=THREE.SRGBColorSpace;uMat.value.push(t);uMatK.value.push(new THREE.Vector2(meta[k].span,meta[k].aspect))}
+  for(const k of names){const t=await new THREE.TextureLoader().loadAsync('./tex/m_'+k+'.png');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.NoColorSpace;
+    uMat.value.push(t);MATSPAN[k]=meta[k].span}
 }
 async function main(){
   await loadMats();
-  await Promise.all([loadGround(),...PROPS.map(loadProp),...ELS.map(loadSpirit)]);
-  if(GIMG.glow)comp.m.uniforms.tint.value.set(GIMG.glow[0]/255,GIMG.glow[1]/255,GIMG.glow[2]/255,GIMG.glow[3]);
+  buildGround();
+  await Promise.all([...PROPS.map(loadProp),...ELS.map(loadSpirit)]);
   sun.castShadow=OPT.shadow;blocked=placeProps(OPT.props);makeSpirits(OPT.spirits);
-  resize();makeShadeMap();addEventListener('resize',resize);buildUI();gpu=gpuName();
+  resize();addEventListener('resize',resize);buildUI();gpu=gpuName();
   $('load').remove();hud();window.__proto3dReady=true;
   requestAnimationFrame(t=>{prev=t;frame(t)});
 }
