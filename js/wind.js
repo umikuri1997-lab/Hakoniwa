@@ -114,7 +114,12 @@ function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYAT
 /* のっているせいれいの位置（遊具の絵に合わせて、まわる） */
 const RIDEPH=new Map();
 function rideAng(j,now){let p=RIDEPH.get(j);if(!p){p={a:(j*.37)%6.28,t:now};RIDEPH.set(j,p)}const dt=Math.max(0,Math.min(.1,(now-p.t)/1000));p.t=now;if(S&&RIDES.has(S.obj[j])&&rideOn(j))p.a+=dt*1.5;return p.a}
-function windRidePose(r,a,now){if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
+/* 3Dから写した遊具（チップに iso）の座席：床の中心から、座る点までの向き a（ラジアン）・はなれ r（マス）・高さ h（マス）。3Dの設計図（tools/art/handoff3d/rides.py）の式と同じ。A＝遊具のまわる角度（rideAng） */
+const RIDESEAT={merry:(k,A)=>{const i=k%3;return{a:A+i*2.0944,r:.94,h:1.124+.12*Math.sin(4*(A+i*.5236))}}/* 馬i：床の角度から120度ずつ。馬の高さ .96（柱の上下 .12 を、馬ごとに30度ずつずらして1周に4回）＋鞍 .164 */,
+  cup:(k,A)=>({a:A*1.3-1.5708+(k%2+1)*2.0944,r:.71,h:.477})/* カップ1・2ばん（3つのうち、0ばんにはのらない）：軌道の角度は床の1.3倍。高さは皿の上 .30＋底 .087＋.09 */,
+  skyswing:(k,A)=>({a:A+(k%3)*2.0944,r:1.35,h:1.138})/* 座席6つのうち、1つおき（0・2・4ばん）にのる。半径1.35・高さ 1.07＋座面 .068 */};
+function windRidePose(r,a,now){r._toyH=0;if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
+  {const sf=RIDESEAT[a.what],ic=window.CHIPS&&CHIPS[a.what];if(sf&&ic&&ic.iso){/* 3Dの絵（クォータービュー）：座る点を、床の中心から、せかいの点で。高さは、せいれいを画面で上へ（uLift） */const q=sf(k,A),sz=BL[a.what].sz,dx=Math.cos(q.a)*q.r,dy=Math.sin(q.a)*q.r;r.face=-Math.sin(q.a)-Math.cos(q.a)>0?1:-1;/* 進む向きが、画面の右なら右向き */r._toyH=q.h;const wx=X+(sz[0]/2+dx)*TS,wy=Y+(sz[1]/2+dy)*TS,rx=r.x*TS,ry=r.y*TS;return{x:rx+(isoX(wx,wy)-isoX(rx,ry))/IQSX,y:ry+(isoY(wx,wy)-isoY(rx,ry))/IQSY/* せいれいの絵は、いまいる点を足もとに、立てる形（standTf）で描くので、せかいの点の画面でのずれを、立てる形のずれにして返す */,z:Y/TS+(dx+dy>0?sz[1]+.06:sz[1]-.6)/* 手前の半分は遊具より手前・奥の半分は遊具のうしろ */}}}
   const K=RIDEK,fx=X+(a.what==='wheel'?48:32),fy=Y+56,PX=v=>fx+(v-fx)*K,PY=v=>fy+(v-fy)*K;
   const ch=window.CHIPS&&CHIPS[a.what];if(ch&&ch.seats){/* 3Dの絵の座席（コマごと、足もとからの g64）。そのコマの座席の、うしろ半分にいるときは、遊具の奥に描く */const F=ch.seats,f=rideFrame(a.what,j,now),n=F[0].length,q=k%n,p=F[f][q],nx=F[(f+1)%16][q];let my=0;for(const L of F)my+=L[q][1];my/=16;
     r.face=a.what==='wheel'?1:nx[0]>p[0]?1:nx[0]<p[0]?-1:r.face||1;const front=p[1]>=my;return{x:fx+p[0]/2,y:fy+p[1]/2,z:Y/TS+(front?2.06:a.what==='skyswing'?.95:1.4)}}
@@ -150,7 +155,7 @@ function drawWindObj(c,id,x,y,i,g,now){const R=(a,b,w,h,col)=>{c.fillStyle=col;c
 
 function windHoleDots(c,x,y,i,now){/* 風穴から、風の向きへ出る白いつぶ */if(i==null)return;const h=windHoleAt(i),d=h?h.d&3:0,t=(now||0)/1000;for(let q=0;q<3;q++){const ph=(t*1.8+q/3)%1,k=Math.floor(ph*12);c.fillStyle='rgba(255,255,255,'+(.9-ph*.7)+')';c.fillRect(Math.round(x+15+WDIR[d][0]*k+(q-1)*3*Math.abs(WDIR[d][1])),Math.round(y+17+WDIR[d][1]*k+(q-1)*3*Math.abs(WDIR[d][0])),2,2)}}
 
-/* 遊具の絵（コードの仮のドット絵）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
+/* 遊具の絵（コードの仮のドット絵。観覧車いがいは3Dのチップだけ）。brk：こわれた遊具（色がさめて、かたむき、動かない） */
 function rideFrame(id,i,now){/* 遊具の絵のコマ（16コマでひとまわり。チップの pf がまわる速さの倍） */const ch=window.CHIPS&&CHIPS[id];if(!ch||!ch.pf||i==null)return 0;const a=rideAng(i,now||0)*ch.pf/6.2832*16;return((Math.round(a)%16)+16)%16}
 function drawRide(c,id,brk,x0,y0,i,now,R0){/* 3Dから写したチップ：動かない所 :s に、そのコマの動く所 :m<コマ> をかさねる。こわれた遊具は <id>b の1まい。ないときはコードの仮の絵 */const C=window.CHIPS;
   if(C){if(brk){const ch=C[id+'b'];if(ch&&drawChip(c,ch,id+'b',x0,y0,now,i))return}else if(i==null||ICON){const ch=C[id];if(ch&&drawChip(c,ch,id,x0,y0,now,i))return}else{const st=C[id+':s'],mv=C[id+':m'+rideFrame(id,i,now)];if(st&&mv&&drawChip(c,st,id,x0,y0,now,i)){drawChip(c,mv,id,x0,y0,now,i);return}}}
@@ -163,18 +168,7 @@ function drawRide0(c,id,brk,x,y,i,now,R){const A=i!=null&&!brk?rideAng(i,now||0)
     for(let q=0;q<56;q++){const th=q*6.2832/56;R(cx+Math.cos(th)*RR-1,cy+Math.sin(th)*RR-1,2,2,P.p)}
     for(let q=0;q<4;q++){const th=A*.35+q*1.5708,gx=cx+Math.cos(th)*RR,gy=cy+Math.sin(th)*RR;R(gx-1,gy,2,4,P.w);R(gx-6,gy+4,12,9,q%2?P.a:P.m);R(gx-6,gy+4,12,2,P.b);R(gx-4,gy+7,8,3,brk?'#d8d2c6':'#eaf7fb')}
     O(cx,cy,4,4,P.w);O(cx,cy,2,2,P.b);if(brk){Ln(cx-30,40,cx-18,58,P.w,2);R(cx+14,50,10,3,P.a)}return}
-  O(32,56,30,7,'rgba(60,50,30,.2)');
-  if(id==='merry'){O(32,50,28,9,P.w);O(32,47,28,9,brk?'#d8d0bf':'#ecd9a8');R(30,6,4,42,P.p);
-    for(let q=0;q<3;q++){const th=A+q*2.0944,hx=32+Math.cos(th)*20,hy=48+Math.sin(th)*7;if(Math.sin(th)<=0){R(hx,hy-30,1,26,P.b);R(hx-4,hy-13,9,6,P.b);R(hx+3,hy-17,3,5,P.b);R(hx-3,hy-7,2,4,P.b);R(hx+3,hy-7,2,4,P.b)}}
-    for(let q=0;q<18;q++){const w=13+q;for(let s=-w;s<w;s+=6){const k=Math.floor((s+w+A*14)/6)&1;R(32+s,-10+q,Math.min(6,w-s),1,k?P.a:P.b)}}R(19,8,26,3,P.p);R(30,-15,4,6,P.a);R(31,-18,2,3,brk?P.w:'#ffd84a');
-    for(let q=0;q<3;q++){const th=A+q*2.0944,hx=32+Math.cos(th)*20,hy=48+Math.sin(th)*7;if(Math.sin(th)>0){R(hx,hy-34,1,30,P.b);R(hx-4,hy-13,9,6,P.b);R(hx+3,hy-17,3,5,P.b);R(hx-3,hy-7,2,4,P.b);R(hx+3,hy-7,2,4,P.b);R(hx-2,hy-12,5,2,P.a)}}
-    if(brk){Ln(8,38,20,52,P.w,2);R(40,52,9,5,P.b)}return}
-  if(id==='cup'){O(32,50,30,10,P.w);O(32,47,30,10,brk?'#d5cfc2':'#bfe0d6');O(32,47,22,7,brk?'#c6c0b3':'#a9d3c7');
-    for(let q=0;q<2;q++){const th=A*1.3+q*3.1416,ux=32+Math.cos(th)*15,uy=47+Math.sin(th)*6,col=q?P.a:(brk?P.m:'#ffe08a');R(ux-9,uy-12,18,11,col);R(ux-9,uy-12,18,2,P.b);R(ux-7,uy-1,14,2,P.w);R(ux+9,uy-9,3,6,col)}
-    O(32,44,5,3,P.p);R(31,34,2,10,P.p);O(32,33,4,2,P.a);if(brk)R(6,50,12,4,P.a);return}
-  if(id==='skyswing'){O(32,52,16,5,P.w);O(32,50,16,5,P.p);R(30,-34,4,84,P.p);R(31,-34,1,84,P.b);const sp=brk?0:5;
-    for(let q=0;q<3;q++){const th=A+q*2.0944,sx=32+Math.cos(th)*(22+sp),sy=22+Math.sin(th)*9;Ln(32+Math.cos(th)*14,-30+Math.sin(th)*4,sx,sy,P.m,1);R(sx-4,sy,9,3,P.a);R(sx-4,sy+3,9,1,P.w)}
-    O(32,-31,18,5,P.w);O(32,-33,18,5,P.a);for(let q=-16;q<16;q+=8)R(32+q,-35,4,2,P.b);R(30,-42,4,6,P.a);if(brk)Ln(44,-28,52,6,P.m,1);return}}
+  O(32,56,30,7,'rgba(60,50,30,.2)');}
 /* ---------- 観覧車の山場・雲の下（目標6・7）：観覧車のてっぺんから、雲のすきまにヌシ様のつばさが見える（wind:peek）。
    雲の海のはしでカザネたちが待つ所に、まもりの光を落とすと、雲がひらいて、つばさ・ヌシ様の顔・つばさのかげでねむる影が見え、ヌシ様が話す（windGlHit・windPartScene）。
    絵はコードで描くかりのドット絵（drawWindScene）。場面の動き・カメラは実時間、ひらく場面のあいだは村の時間を止める（SCENEHOLD） ---------- */
