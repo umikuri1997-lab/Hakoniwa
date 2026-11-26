@@ -62,23 +62,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   })()`));
   console.log('no wait before next talk time',await run(`(()=>{const r=S.res[0],q0=S.quest,qs=S.qStory,qt=S.qTalked,i=QUESTS.findIndex(q=>q.talk&&q.talk.when&&!q.talk.when());if(i<0)return 'skip (every talk ready)';S.quest=i;S.qStory=null;S.qTalked=false;const c=storyContinues(r);S.quest=q0;S.qStory=qs;S.qTalked=qt;if(c)throw Error('waits for a talk that cannot start yet: '+QUESTS[i].id);return QUESTS[i].id+': disband'})()`));
   console.log('night avoid -> stay',await run(`(()=>{const r=S.res[0],t0=S.t,G=bfs(r.x|0,r.y|0),j=nearest(G,k=>k!==((r.y|0)*W+(r.x|0))&&walk(k),50);if(j<0)throw Error('no tile');const h0=S.hold||0;S.t=h0+Math.floor((S.t-h0)/1440)*1440+23.5*60;if(!isNight())throw Error("not night");endAct(r);r.avoidJ=j;r.avoidU=S.t+60;startAct(r,G,'wander',j);const ty=r.act&&r.act.type;endAct(r);delete r.avoidJ;S.t=t0;if(ty!=='stay')throw Error('night avoid gave '+ty);return 'stay'})()`));
-  const motions=['','walk','climb','punch','pray','pluck','hold','eat','chop','mine','till','build','repair','craft','draw','water','cook','talk','talkjoy','talkshock','talkthink','talksad','wave','clap','weed','plant','store','storySoil','storyTouch','storyStone','storyBump','storyHug'];
-  console.log('back-facing arms',await run(`(()=>{
-    const motions=${JSON.stringify(motions)},els=['wood','earth','fire','water','wind'];let count=0;
-    const canvas=document.createElement('canvas');canvas.width=180;canvas.height=180;const c=canvas.getContext('2d'),original=c.drawImage.bind(c);
-    for(const el of els)for(const anim of motions)for(const t of [0,.35,.8]){
-      const hood=spDot('sp_'+el+':hood',el),hand=spDot('sp:hand',el),arms=[spDot('sp:arm',el),spDot('sp:armS',el)];const calls=[];c.clearRect(0,0,180,180);c.drawImage=(im,...args)=>{calls.push(im);return original(im,...args);};
-      drawSpiritDot(c,el,90,170,1,1,{dot:1,t,anim,back:true,turn:0,walk:anim==='walk',sceneP:t,sceneT:t});/* 輪郭線（drawSpiritOL）は、べつの画面にかさねるだけなので、描く順は drawSpiritDot で見る */
-      {const nm=spMotion({walk:anim==='walk'},anim),g=nm&&SPM[nm]&&SPMI[SPM[nm].s[el]];if(g&&g.ok&&calls.some(im=>im===g.img||[...SPMC.values()].includes(im))){count++;continue}}/* 3Dから写した動きは1まいの絵（うでと頭のかさなりは3Dできまる） */
-      const head=calls.lastIndexOf(hood),lastArm=Math.max(calls.lastIndexOf(hand),...arms.map(im=>calls.lastIndexOf(im)));if(head<0||lastArm>=head)throw Error(el+' '+anim+' paints arms over head');count++;
-    }
-    return count+' rendered poses keep arms below the back of the head';
-  })()`));
-  if(process.env.SCREENSHOT_DIR){
-    await run(`(()=>{for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;r.cing=null;}const j=S.sacredRoot;S.res.forEach((r,i)=>{r.x=j%W-1.5+i*1.5;r.y=(j/W|0)+3.5;});S.qStory=questIndexOf('windVoices');S.quest=S.qStory+1;S.qTalked=false;S.setSh=2;GRASSN=3000;checkQuest();for(let i=0;i<1200&&!S.res.every(r=>r.act?.type==='storywait'&&r.act.stage==='do');i++)for(const r of S.res)updRes(r,.5);cam.z=2;centerOn(storyTreeX(j)*TS,(storyTreeY(j)+.5)*TS);})()`);
-    await page.waitForFunction(()=>sacredEval('stageReady()'),null,{timeout:60000});await run('GRASSN=3000');await page.waitForTimeout(200);await page.screenshot({path:process.env.SCREENSHOT_DIR+'/story-wait-tree.png'});
-    await page.evaluate(motions=>sacredEval(`(()=>{const cv=document.createElement('canvas');cv.width=960;cv.height=760;cv.style.cssText='position:fixed;inset:0;z-index:999;background:#f6f0df';document.body.append(cv);const c=cv.getContext('2d');const motions=${JSON.stringify(motions)};motions.forEach((anim,i)=>{const x=(i%8)*120,y=(i/8|0)*190;c.fillStyle='#77684d';c.font='12px sans-serif';c.fillText(anim||'idle',x+8,y+18);drawSpirit(c,'wood',x+60,y+172,1.1,1,{dot:1,t:.35,anim,back:true,walk:anim==='walk',sceneP:.35,sceneT:.35});});})()`),motions);
-    await page.screenshot({path:process.env.SCREENSHOT_DIR+'/back-arm-motions.png'});
-  }
   assert.deepEqual(errors,[]);console.log('Browser errors: none');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

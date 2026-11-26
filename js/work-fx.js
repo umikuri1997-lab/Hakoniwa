@@ -18,14 +18,22 @@ function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mi
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}
 function craftOrder(r){return r.act&&r.act.type==='craft'?S.orders.find(q=>q.id===r.act.order):null}
 function craftP(r){const o=craftOrder(r);return o?Math.min(1,o.prog/Math.max(1,o.need)):0}
+function cookWorkAnim(r){const a=r.act,t=cookTool(r);return t==='board'?'cookcut':t==='pot'?(S.obj[a.obj]==='campfire'?'cookhi':'cook'):CKSTIR.has(t)?'cookstir':'cookfan'}
 /* いまの動き（料理・もの作りでないときは、行動の名前のまま） */
 function workAnim(r){const a=r.act;if(!a)return'';
-  if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */const t=cookTool(r);return t==='board'?'cookcut':t==='pot'?(S.obj[a.obj]==='campfire'&&typeof SPM!=='undefined'&&SPM.cookhi?'cookhi':'cook'):CKSTIR.has(t)?(typeof SPM!=='undefined'&&SPM.cookstir?'cookstir':'cookmix'):'cookfan'}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。たき火のなべは高いので cookhi。フライパン・天板・網・くしは、うちわであおぐ） */
+  if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */return cookWorkAnim(r)}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。たき火のなべは高いので cookhi。フライパン・天板・網・くしは、うちわであおぐ） */
   if(a.type==='craft'){if(a.sh!=null)return'raise';const p=craftP(r),nm=p<.1?'craftprep':p<.45?'saw':p<.85?'craft':'polish',o=craftOrder(r),wb=WBMO[nm];return o&&o.cs!=null&&S.obj[o.cs]==='wbench'&&typeof SPM!=='undefined'&&SPM[wb]?wb:nm}/* 作業台では、天板の高さで手を動かす（wb*）。作業台がないときは、地面の動き */
   if(a.type==='fish')return a.sh!=null?'raise':a.stage==='do'&&a.t<FISHCAST&&typeof SPM!=='undefined'&&SPM.fishcast?'fishcast':'fish';/* つり：投げる・かかげる */
   if(a.type==='proc'){const o=S.obj[a.obj];return o==='loom'?'loomweave':o==='mill'?'millgrind':'proc'}/* はたおり・粉ひき */
   if(a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))){const h=boxReach(a);if(h&&typeof SPM!=='undefined'&&SPM[h])return h}/* 箱の高さに合わせて、とる・しまう */
   return a.type}
+/* その行動で使う動きの絵の名前（歩いてむかうあいだに先に読む：draw-spirits.js の spmWarm） */
+const ANIMSET={fish:['fishcast','fish','fishpull','raise'],sleep:['bed','doze','sleepcurl'],rest:['sit']};
+function workAnims(r){const a=r.act;if(!a)return null;if(ANIMSET[a.type])return ANIMSET[a.type];
+  if(a.type==='eat')return['sit',eatAnim(r)];
+  if(a.type==='cook')return a.obj!=null&&r.cing?['cookprep','raise',cookWorkAnim(r)]:['cookprep','raise'];
+  if(a.type==='craft'){const o=craftOrder(r);return o&&o.cs!=null&&S.obj[o.cs]==='wbench'?['wbprep','wbsaw','wbham','wbpolish','raise']:['craftprep','saw','craft','polish','raise']}
+  return[workAnim(r)]}
 /* 手に持つ物の絵（材料・できた料理・作った物） */
 function workFood(r){const a=r.act;if(!a||a.stage!=='do')return'';
   if(a.type==='cook'&&r.cing){const ph=cookPh(r),R=recOf(r.cing.rec);if(!R)return'';if(ph==='prep')return foodEmo(Object.keys(R.need)[0]);if(ph==='raise')return FOODS[R.out]?foodEmo(R.out):'';return''}/* もりつけた料理は台の上。かかげるときに持ち上げる */

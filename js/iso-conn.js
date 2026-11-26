@@ -56,6 +56,9 @@ function iqGateId(i,o,hz){if(HOME_DOORS.has(o)){for(const k of hz?[i-1,i+1]:[i-W
 const IQSTAKE=new Set(['ropefence']);
 function iqNoStake(i,o,m){if(!IQSTAKE.has(o))return m;let d=0;for(const[b,k]of[[1,i-1],[2,i+1],[4,i-W],[8,i+W]])if(m&b&&GATE_IDS.has(typeAt(k)))d|=b;
   return d&&window.CHIPS&&CHIPS['iso:'+o+':'+m+'~d'+d]?m+'~d'+d:m}
+/* 屋根をはずした手前のドアのしきい（~sill）：柱（~low）とべつの絵。地面の物の順で、またぐせいれいの下に描く（draw-world.js） */
+function iqSillDraw(c,i,o){const g=iqGrp(o),x=i%W,y=(i/W)|0,lv=Math.max(0,hiAt(i)),hz=iqDoorHz(i,o,g);if(iqChip(c,'iso:'+iqGateId(i,o,hz)+':'+(hz?'h':'v')+'~sill',i,lv))return;
+  const fc=iqCols(IQC[[i-1,i+1,i-W,i+W].map(typeAt).find(k=>HOME_WALLS.has(k))]||'#c89a64');iqArms(c,x,y,hz?3:12,TS*.3,lv*IQL,lv*IQL+2,fc)}
 function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)|0,lv=Math.max(0,hiAt(i)),b=lv*IQL,m=iqMask(i,g),low=g==='h'&&iqFront(i),door=HOME_DOORS.has(o)||GATE_IDS.has(o),hz=door?iqDoorHz(i,o,g):!!(m&3)||!(m&12),
     op=door?(hz?doorOp(i,x*TS,y*TS,.9,2.1):doorOp(i,x*TS,y*TS,2.1,.9)):0,n=Math.min(3,Math.round(op*3));
   if(iqChip(c,'iso:'+(door?iqGateId(i,o,hz):o)+':'+(door?(hz?'h':'v'):iqNoStake(i,o,m))+(low?'~low':'')+(door&&n&&!low?'#'+n:''),i,lv)){if(g==='h'&&!low){if(!door||hz&&S.win&&S.win[i]==='wreath')door?iqChip(c,'iso:win:wreath:d'+(n?'#'+n:''),i,lv):iqWinDraw(c,i,hz,TS*.3,lv);iqCut(c,i,o,door?(hz?3:12):m,lv)}return}/* ドアは向き（h よこ・v たて）と開いたコマ。壁の絵のときも、かけた物は上にかさねる。ドアのリースは、とびらの面に */
@@ -68,7 +71,7 @@ function iqConnDraw(c,i,o,now){const g=iqGrp(o);if(!g)return;const x=i%W,y=(i/W)
   const t=g==='w'?TS*.4:TS*.3,zt=b+(g==='w'?IQL*.8:low?IQLOWH:IQWALLH);/* 家の壁・石の塀 */
   if(!door){iqArms(c,x,y,m,t,b,zt,col);if(g==='h'&&!low)iqWinDraw(c,i,!!(m&3)||!(m&12),t,lv);return}
   const fc=iqCols(IQC[[i-1,i+1,i-W,i+W].map(typeAt).find(k=>HOME_WALLS.has(k))]||'#c89a64'),X=x*TS,Y=y*TS,cx=X+TS/2,cy=Y+TS/2,h=t/2,jb=TS*.16;/* ドア：両わきの柱・上のかもい・とびら。わくは、となりの壁の色 */
-  if(low){iqArms(c,x,y,dm,t,b,b+2,fc);return}/* 手前のドアは、しきいだけ */
+  if(low)return;/* 手前のドア：しきいは iqSillDraw */
   const zl=b+IQWALLH*.7;
   if(hz){iqPrism(c,X-.5,cy-h,X+jb,cy+h,b,zt,fc);if(n<2)iqPrism(c,X+jb,cy-h*.4,X+TS-jb,cy+h*.4,b,zl,col);iqPrism(c,X+TS-jb,cy-h,X+TS+.5,cy+h,b,zt,fc);iqPrism(c,X+jb,cy-h,X+TS-jb,cy+h,zl,zt,fc)}
   else{iqPrism(c,cx-h,Y-.5,cx+h,Y+jb,b,zt,fc);if(n<2)iqPrism(c,cx-h*.4,Y+jb,cx+h*.4,Y+TS-jb,b,zl,col);iqPrism(c,cx-h,Y+TS-jb,cx+h,Y+TS+.5,b,zt,fc);iqPrism(c,cx-h,Y+jb,cx+h,Y+TS-jb,zl,zt,fc)}}

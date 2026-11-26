@@ -1,7 +1,7 @@
 /* 季節と記念日（season.js）
    季節：SEASONDAYS 日ごとに、春・夏・秋・冬（1日めから春。ひとめぐり20日）。見た目・セリフと、季節の効き目（下の SEAFX。あとからつく倍なので掛け算）。
      朝にかわったら知らせて、思い出帳にのこす（seasonMorning）。日の欄のはじめに季節の名前。
-     画面：春は花びら・秋は落ち葉・冬は雪（雨の日は雪がたくさんで、日の欄は「雪」）。夏は、ふだんのホタル。
+     画面：春は花びら・秋は落ち葉・冬は雪（雨の日は雪がたくさんで、日の欄は「雪」。雪の粒は、画面のそれぞれの行でとまって、少しのこる）。夏は、ふだんのホタル。
      色：秋はあたたかく、冬はつめたく、ほんのり（SEATINT）。粒はドットの四角（seasonDraw）。
    記念日：村に来てから ANNIV 日めの朝、その子と、なかよしがよろこぶ。その日のお話は、記念日の話（annivTopic）。 */
 const SEASONDAYS=5,SEASONS=['春','夏','秋','冬'],SEATINT=['rgba(255,214,232,.05)','','rgba(255,168,92,.07)','rgba(222,238,255,.11)'];
@@ -14,8 +14,13 @@ function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))re
 const SEAP=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.5,1),c:Math.random()}));
 const SEACOL=[['#f7c4d6','#f3aec5','#fbe0ea'],null,['#f6a650','#ec6f45','#f5d25a','#e2884a'],['#ffffff','#f1f6ff','#e4eefb']];
 function seasonN(k){return k===3?(snowNow()?60:0):k===0?22:k===2?30:0}/* 冬でも、雪の日だけ雪がふる */
+/* 雪は、それぞれの粒がきめた行（SEALAND の間）で地面にとまり、SEAREST ミリ秒のこってから、上からまたふる。SEAVANISH の粒は、ついたらすぐ消える */
+const SEALAND=[.08,1],SEAREST=550,SEAVANISH=1/3;
+function seaLand(m){m.ly=SEALAND[0]+Math.random()*(SEALAND[1]-SEALAND[0]);m.vz=Math.random()<SEAVANISH;m.rt=0}
 function seasonStep(dt,now){if(!S)return;const k=seasonNow(),n=seasonN(k);if(!n)return;for(let i=0;i<n;i++){const m=SEAP[i];
+  if(k===3){if(m.ly==null)seaLand(m);if(m.rt){if(now<m.rt)continue;m.y=-.02;m.x=Math.random();seaLand(m);continue}}/* 雪：とまっているあいだは、動かない */
   m.y+=dt*(k===3?.08:.035)*m.s*(k===3&&S.rain?1.6:1);m.x+=Math.sin(now/1400+m.p)*dt*(k===3?.006:.014)+(k===2?dt*.006:0);
+  if(k===3&&m.y>=m.ly){if(m.vz){m.y=-.02;m.x=Math.random();seaLand(m)}else{m.y=m.ly;m.rt=now+SEAREST}}
   if(m.y>1.02){m.y=-.02;m.x=Math.random()}if(m.x>1.02)m.x=-.02;if(m.x<-.02)m.x=1.02}}
 function seasonDraw(ctx,now,dk){if(!S)return;const k=seasonNow();
   if(SEATINT[k]){ctx.fillStyle=SEATINT[k];ctx.fillRect(0,0,VW,VH)}
