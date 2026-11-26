@@ -115,7 +115,8 @@ function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYAT
 const RIDEPH=new Map();
 function rideAng(j,now){let p=RIDEPH.get(j);if(!p){p={a:(j*.37)%6.28,t:now};RIDEPH.set(j,p)}const dt=Math.max(0,Math.min(.1,(now-p.t)/1000));p.t=now;if(S&&RIDES.has(S.obj[j])&&rideOn(j))p.a+=dt*1.5;return p.a}
 /* 3Dから写した遊具（チップに iso）の座席：床の中心から、座る点までの向き a（ラジアン）・はなれ r（マス）・高さ h（マス）。3Dの設計図（tools/art/handoff3d/rides.py）の式と同じ。A＝遊具のまわる角度（rideAng） */
-const RIDESEAT={merry:(k,A)=>{const i=k%3;return{a:A+i*2.0944,r:.94,h:1.124+.12*Math.sin(4*(A+i*.5236))}}/* 馬i：床の角度から120度ずつ。馬の高さ .96（柱の上下 .12 を、馬ごとに30度ずつずらして1周に4回）＋鞍 .164 */};
+const RIDESEAT={merry:(k,A)=>{const i=k%3;return{a:A+i*2.0944,r:.94,h:1.124+.12*Math.sin(4*(A+i*.5236))}}/* 馬i：床の角度から120度ずつ。馬の高さ .96（柱の上下 .12 を、馬ごとに30度ずつずらして1周に4回）＋鞍 .164 */,
+  cup:(k,A)=>({a:A*1.3-1.5708+(k%2+1)*2.0944,r:.71,h:.477})/* カップ1・2ばん（3つのうち、0ばんにはのらない）：軌道の角度は床の1.3倍。高さは皿の上 .30＋底 .087＋.09 */};
 function windRidePose(r,a,now){r._toyH=0;if(!RIDES.has(a.what))return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS-(S.hi?S.hi[j]|0:0)*0,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),A=rideAng(j,now);
   {const sf=RIDESEAT[a.what],ic=window.CHIPS&&CHIPS[a.what];if(sf&&ic&&ic.iso){/* 3Dの絵（クォータービュー）：座る点を、床の中心から、せかいの点で。高さは、せいれいを画面で上へ（uLift） */const q=sf(k,A),sz=BL[a.what].sz,dx=Math.cos(q.a)*q.r,dy=Math.sin(q.a)*q.r;r.face=-Math.sin(q.a)-Math.cos(q.a)>0?1:-1;/* 進む向きが、画面の右なら右向き */r._toyH=q.h;const wx=X+(sz[0]/2+dx)*TS,wy=Y+(sz[1]/2+dy)*TS,rx=r.x*TS,ry=r.y*TS;return{x:rx+(isoX(wx,wy)-isoX(rx,ry))/IQSX,y:ry+(isoY(wx,wy)-isoY(rx,ry))/IQSY/* せいれいの絵は、いまいる点を足もとに、立てる形（standTf）で描くので、せかいの点の画面でのずれを、立てる形のずれにして返す */,z:Y/TS+(dx+dy>0?sz[1]+.06:sz[1]-.6)/* 手前の半分は遊具より手前・奥の半分は遊具のうしろ */}}}
   const K=RIDEK,fx=X+(a.what==='wheel'?48:32),fy=Y+56,PX=v=>fx+(v-fx)*K,PY=v=>fy+(v-fy)*K;

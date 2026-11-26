@@ -289,18 +289,18 @@ def cups(m, phase, broken, seats, spin=0):
         low=z+.087
         h=a+spin*phase   # カップのむき（取っ手の向き）。軌道の向き a に、自分で回るぶんをたす
         profile=[(0,low),(.201,low),(.257,low+.056),(.305,low+.174),
-                 (.332,low+.345),(.302,low+.345),(.27,low+.172),
-                 (.212,low+.067),(0,low+.067)]
+                 (.332,low+.345),(.272,low+.345),(.24,low+.172),
+                 (.212,low+.067),(0,low+.067)]   # 壁のあつさ：ふちで.06マス
         m.lathe(profile,LINEN,x,y,surface="enamel")
-        m.lathe([(.30,low+.33),(.333,low+.33),(.334,low+.355),(.303,low+.355)],
+        m.lathe([(.27,low+.33),(.333,low+.33),(.334,low+.357),(.272,low+.357)],
                 IVORY,x,y,surface="enamel")
-        m.lathe([(0,low+.074),(.213,low+.074),(.263,low+.17),
-                 (.289,low+.30),(.30,low+.322)],BLUE,x,y,surface="enamel")
+        m.lathe([(0,low+.074),(.205,low+.074),(.236,low+.17),
+                 (.255,low+.28),(.262,low+.30)],BLUE,x,y,surface="enamel")   # 中身：ふちから.045マス下
         if not (broken and i==0):
-            handle=[(x+cos(h)*(.268+.145*sin(tau*j/32)),
-                     y+sin(h)*(.268+.145*sin(tau*j/32)),
+            handle=[(x+cos(h)*(.28+.20*sin(tau*j/32)),   # 取っ手：壁（半径約.30）から、外へ約.18マス出る（手前を向いても、カップの輪郭からはみ出して見える）
+                     y+sin(h)*(.28+.20*sin(tau*j/32)),
                      low+.185+.118*cos(tau*j/32)) for j in range(17)]
-            m.bent_tube(handle,.034,LINEN,(-sin(h),cos(h),0),surface="enamel")
+            m.bent_tube(handle,.040,LINEN,(-sin(h),cos(h),0),surface="enamel")
         for t in (h+tau/4,h+3*tau/4):
             dx,dy,_=polar(.293,t,0)
             sprig(m,(x+dx,y+dy,low+.124),(-sin(t),cos(t)),.17)
