@@ -17,7 +17,7 @@ import glbio
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'tools', 'art', 'models', 'plants', 'plants.glb')
 OUT = os.path.join(ROOT, 'proto3d', 'tex', 'plants.glb')
-BARK = (196, 124, 84)                       # 幹（nat_tree.py の BARK）
+BARK = (148, 116, 92)                       # 幹（赤みをへらした茶色。持ち主がたのんだ）
 LEAF = {                                    # 葉：ゲームの木の葉の5色の まん中（nat_tree・nat_oak・nat_cedar）と、草の色
     'tree': (151, 203, 98), 'oak': (130, 192, 104), 'cedar': (134, 182, 102), 'bush': (120, 188, 105), 'herb': (120, 188, 105)}
 STEM = (112, 170, 92)                       # 花のくき
