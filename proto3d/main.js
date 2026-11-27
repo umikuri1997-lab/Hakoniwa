@@ -405,10 +405,41 @@ async function loadProp(p){
     parts.push({geo,mat,hull:hullMat(p.src==='plants'?{vertexColors:true}:{color:p.tint},dotW())})});
   p.parts=parts;
 }
+// 御神木の切り株：なめらかな形を、その場で作る（もとのモデルは粗く、大きくするとガビガビに見えた）。
+// 丸い幹（上へ少し細く）・根のはり出し（根もとで外へ広がる、ふぞろいな5本）・ふちを丸めた切り口（年輪の絵）・木の皮の絵。4×4マスのまん中が原点
+const STUMP={r:.74,h:.92,flare:.78,flareH:.62,roots:5,bark:'#b0845c',barkDark:'#7a563c',cut:'#f0d9ad',ring:'#b58e5e',seg:96,rows:28};
+function buildStump(){
+  const S=STUMP,P=[],C=[],U=[],I=[],MT=[],bark=new THREE.Color(S.bark),dark=new THREE.Color(S.barkDark),col=new THREE.Color();
+  const ph=[.3,1.7,2.9,4.1,5.4],am=[1,.75,.9,.6,.85];   /* 根の向きと大きさ */
+  const root=a=>{let v=0;for(let k=0;k<S.roots;k++){let d=Math.atan2(Math.sin(a-ph[k]),Math.cos(a-ph[k]));v=Math.max(v,am[k]*Math.exp(-d*d/.05))}return v};
+  const rad=(a,t)=>{const y=t*S.h,f=Math.max(0,1-y/S.flareH);return S.r*(1-.1*t)+.035*Math.sin(a*9+1)*(1-t*.5)+.02*Math.sin(a*23+t*5)+S.flare*f*f*f*(.12+.88*root(a))};
+  for(let j=0;j<=S.rows;j++){const t=j/S.rows,bev=Math.max(0,(t-.93)/.07);   /* 上のふちは丸める */
+    for(let i=0;i<=S.seg;i++){const a=i/S.seg*Math.PI*2,r=rad(a,t)*(1-.07*bev*bev),y=t*S.h-(.0)*bev;
+      P.push(Math.cos(a)*r,y,Math.sin(a)*r);U.push(y,a*S.r);   /* 木の皮のすじは、たて向き */MT.push(MATIDX.bark);
+      const g=.5+.5*Math.sin(a*9+1),k=Math.min(1,.25+.75*Math.min(1,y/.25))*(.8+.2*g);col.copy(dark).lerp(bark,k);C.push(col.r,col.g,col.b)}}   /* みぞと根もとは暗く */
+  const W=S.seg+1;for(let j=0;j<S.rows;j++)for(let i=0;i<S.seg;i++){const a=j*W+i,b=a+1,c=a+W,d=c+1;I.push(a,c,b,b,c,d)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));
+  g.setAttribute('_mat',new THREE.Float32BufferAttribute(MT,1));g.setAttribute('_under',new THREE.Float32BufferAttribute(new Float32Array(MT.length),1));g.setIndex(I);g.computeVertexNormals();
+  /* 切り口：少しふくらんだ円（ふちは幹の上のはしと同じ形）。年輪の絵 */
+  const P2=[0,S.h+.02,0],U2=[.5,.5],I2=[],RN=6;for(let k=1;k<=RN;k++)for(let i=0;i<=S.seg;i++){const a=i/S.seg*Math.PI*2,q=k/RN,r=rad(a,1)*.93*q;P2.push(Math.cos(a)*r,S.h+.02*(1-q*q),Math.sin(a)*r);U2.push(.5+.48*q*Math.cos(a),.5+.48*q*Math.sin(a))}
+  for(let i=0;i<S.seg;i++)I2.push(0,2+i,1+i);for(let k=1;k<RN;k++)for(let i=0;i<S.seg;i++){const a=1+(k-1)*W+i,b=a+1,c=a+W,d=c+1;I2.push(a,b,c,b,d,c)}
+  const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.Float32BufferAttribute(P2,3));g2.setAttribute('uv',new THREE.Float32BufferAttribute(U2,2));g2.setIndex(I2);g2.computeVertexNormals();
+  const n2=P2.length/3;g2.setAttribute('_mat',new THREE.Float32BufferAttribute(new Float32Array(n2),1));g2.setAttribute('_under',new THREE.Float32BufferAttribute(new Float32Array(n2),1));
+  /* 年輪の絵：ゆらいだ輪・まん中から外への細いひび・外がわはこい色 */
+  const N=512,cv=document.createElement('canvas');cv.width=cv.height=N;const x=cv.getContext('2d');x.fillStyle=S.cut;x.fillRect(0,0,N,N);
+  const gr=x.createRadialGradient(N/2,N/2,0,N/2,N/2,N/2);gr.addColorStop(0,'rgba(190,140,90,.35)');gr.addColorStop(.25,'rgba(255,240,200,0)');gr.addColorStop(.8,'rgba(255,240,200,0)');gr.addColorStop(1,'rgba(150,105,65,.55)');x.fillStyle=gr;x.fillRect(0,0,N,N);
+  let sd=5;const rn=()=>(sd=(sd*16807)%2147483647)/2147483647;x.strokeStyle=S.ring;
+  for(let r=10;r<N/2-6;r+=9+rn()*9){x.lineWidth=2.5+rn()*3;x.globalAlpha=.6+rn()*.35;const p1=rn()*6,p2=rn()*6;x.beginPath();for(let i=0;i<=120;i++){const a=i/120*Math.PI*2,rr=r*(1+.035*Math.sin(a*3+p1)+.02*Math.sin(a*7+p2));x[i?'lineTo':'moveTo'](N/2+Math.cos(a)*rr,N/2+Math.sin(a)*rr)}x.closePath();x.stroke()}
+  x.globalAlpha=.5;x.strokeStyle='#9a7350';for(let k=0;k<7;k++){const a=rn()*6.28,r0=rn()*30,r1=60+rn()*150;x.lineWidth=1+rn()*2;x.beginPath();x.moveTo(N/2+Math.cos(a)*r0,N/2+Math.sin(a)*r0);x.lineTo(N/2+Math.cos(a+.05)*r1,N/2+Math.sin(a+.05)*r1);x.stroke()}
+  const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;
+  const hg=g.clone();
+  return [{geo:g,hgeo:hg,mat:toon({vertexColors:true},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark}),hull:hullMat({vertexColors:true},dotW())},{geo:g2,mat:toon({map:tex},{}),hull:null}];
+}
 let MAPPARTS={};
 async function loadMapObjs(){
   const g=await gltf.loadAsync('./tex/map.glb');
   g.scene.traverse(o=>{if(!o.isMesh)return;const b=objBase(o.name),d=MAPOBJ[b];if(!d)return;const s=d.nat&&!d.big?OBJSCALE:1;  // 御神木の切り株は、ゲームと同じ大きさ（4×4マスの物）
+    if(b==='sacred'){MAPPARTS[o.name]=buildStump();return}
     const geo=o.geometry.clone();geo.applyMatrix4(new THREE.Matrix4().makeScale(s,s,s).multiply(new THREE.Matrix4().makeTranslation(-d.piv[0],0,-d.piv[1])));  // まん中を原点に・大きさ
     smoothNormals(geo);
     if(NATCOL[b]){const nc=NATCOL[b],C=geo.getAttribute('color'),P=geo.getAttribute('position'),base=new THREE.Color(nc.col),moss=nc.moss&&new THREE.Color(nc.moss);geo.computeBoundingBox();const H=geo.boundingBox.max.y;
@@ -493,7 +524,7 @@ function placeMap(){
     if(hull){const hm=new THREE.InstancedMesh(hgeo||geo,hull,ms.length);ms.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}};  // 背面法の線
   for(const [key,ms] of Object.entries(G)){
     if(key.startsWith('P:')){const p=PROPS.find(q=>q.id===key.slice(2));for(const part of p.parts)inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,p.kind!=='tiny',part.hull);continue}
-    const part=MAPPARTS[key];inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,objBase(key)!=='floor',objBase(key)==='floor'?null:part.hull,part.hgeo);   /* 背面法の線は、なめらかにならした向きの形で（かどで線が切れない） */
+    for(const part of [].concat(MAPPARTS[key]))inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,objBase(key)!=='floor',objBase(key)==='floor'?null:part.hull,part.hgeo);   /* 背面法の線は、なめらかにならした向きの形で（かどで線が切れない） */
   }
   const bm=new THREE.InstancedMesh(blobGeo,blobMat,Math.max(1,blobs.length));bm.count=blobs.length;blobs.forEach((m,i)=>bm.setMatrixAt(i,m));bm.renderOrder=2;bm.frustumCulled=false;scene.add(bm);propMeshes.push(bm);
   renderer.shadowMap.needsUpdate=true;
