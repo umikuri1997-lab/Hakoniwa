@@ -179,7 +179,7 @@ def bark_tube(p, pts, radii, col, sides=7, flare=0.):
         if i: L += float(np.linalg.norm(pts[i] - pts[i - 1]))
         for j in range(sides + 1):
             th = 2 * math.pi * j / sides; r = radii[i] * (1 + (flare * max(0, math.cos(5 * th)) ** 2 * max(0, 1 - i / 2.5) if flare else 0) + .06 * math.sin(3 * th + i))
-            V.append(pts[i] + r * (a * math.cos(th) + b * math.sin(th))); C.append(G(*col) * (.85 + .15 * (i / (n - 1)))); U.append((j / sides * 2 * math.pi * radii[i] * 2, L * 1.4))
+            V.append(pts[i] + r * (a * math.cos(th) + b * math.sin(th))); C.append(G(*col) * (.85 + .15 * (i / (n - 1)))); U.append((L * 1.6, j / sides * 2 * math.pi * radii[i] * 2.4))   # 木の皮の絵（bark001）は、よこに長い割れめなので、90度まわして、割れめが幹にそってたてに走るように
     for i in range(n - 1):
         for j in range(sides): q = i * (sides + 1) + j; F += [(q, q + 1, q + sides + 1), (q + 1, q + sides + 2, q + sides + 1)]
     p.add(V, F, C, np.array(U), mat=5)
@@ -701,12 +701,26 @@ def oak(p, apples=0):
         for k in range(12):
             n = unit(G(*rng.normal(0, 1, 3)) + G(0, 0, .5)); q = c0 + n * rng.uniform(.06, .2); dirc = unit(n * .8 + G(*rng.normal(0, .5, 3))); L = rng.uniform(.26, .34)
             place_card(p, q - dirc * L * .4, dirc, L, L * .8, rng, droop=(.1, .3), fold=(.15, .3), tone=(.55 + .35 * lit, .7 + .35 * lit), roll=1.2)
+    def apple(q, r):
+        """りんご（本物の写真）：上と下にくぼみのある、少しひらたい玉（回転体）。地の色は黄緑〜黄色、日のあたる片がわに赤いほお（ぼかし）と、たての赤いすじ。つやはひかえめ"""
+        NA, NR = 14, 9; V = []; C = []; F = []; blush = rng.uniform(0, 6.28); amt = rng.uniform(.85, 1.15); base = G(*[(186, 190, 96), (168, 180, 86), (196, 186, 92)][int(rng.integers(0, 3))])
+        for i in range(NR + 1):
+            t = i / NR; ph = math.pi * t; z = -math.cos(ph) * .88; rr = math.sin(ph) * (1 + .08 * math.sin(ph))
+            z += .22 * math.exp(-(t / .12) ** 2) - .14 * math.exp(-((1 - t) / .12) ** 2)   # 上（へた）と下（おしり）のくぼみ
+            for j in range(NA):
+                a = 2 * math.pi * j / NA; V.append(q + G(math.cos(a) * rr, math.sin(a) * rr, z) * r)
+                side = .5 + .5 * math.cos(a - blush); streak = .5 + .5 * math.sin(a * 9 + t * 2)
+                k = min(1, amt * (side ** .8 * .9 + .25 * streak) * (.55 + .45 * math.sin(ph)))   # 赤いほお・たてのすじ
+                C.append(base * (1 - k) + G(150, 26, 40) * k)
+        for i in range(NR):
+            for j in range(NA): a_ = i * NA + j; b_ = i * NA + (j + 1) % NA; F += [(a_, b_, a_ + NA), (b_, b_ + NA, a_ + NA)]
+        p.add(V, F, C, mat=0)   # つやの絵（葉）をのせない
     if apples:   # りんご（本物の写真：まるく少しひらたい・赤に黄緑のすじ・へたのくぼみ・短い柄で枝から下がる）：葉のかたまりの外がわの、横〜下に下がる
         for k in range(apples):
             e, dd = clumps[int(rng.integers(0, len(clumps)))]; n = unit(G(*rng.normal(0, 1, 2), rng.uniform(-.3, .5))); q = e + n * rng.uniform(.27, .32)   # 葉のかたまりの外がわ（上から見えるように）
             r = rng.uniform(.055, .065); red = rng.uniform(0, 1); col = (int(196 - 40 * red), int(48 + 30 * (1 - red)), 40)
-            sweep(p, [q + G(0, 0, r * 1.5), q + G(0, 0, r * .85)], [.004, .003], [(96, 80, 50)] * 2, sides=3)   # 柄
-            p.ball(q, r, col, squash=.86, axis=(0, 0, 1), n=8, m=5)   # 実（ややひらたい玉。上ほど赤・下ほど黄みがかる）
+            sweep(p, [q + G(0, 0, r * 1.45) + G(.006, 0, 0), q + G(0, 0, r * .7)], [.0035, .0028], [(96, 80, 50)] * 2, sides=3)   # 柄（へたのくぼみから）
+            apple(q, r)
 
 
 def fruit(p):   # りんごの木（持ち主がきめた：オークの形を流用して、りんごの実をつける）
