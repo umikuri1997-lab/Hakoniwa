@@ -88,7 +88,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.4};
-const PETAL={sat:1.7};      /* 花びらのあざやかさ（もとの色の何倍） */
+const PETAL={sat:1.2,tex:.75};      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
 const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
@@ -190,7 +190,7 @@ function toon(o={},extra={}){
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
       diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);
-      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pl=dot(pc,${LUM});diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}),0.)*mix(1.,l,.25);}}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
+      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pl=dot(pc,${LUM});diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}),0.)*mix(1.,l,${PETAL.tex});}}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:k==4?texture2D(uMat[4],uv).r:texture2D(uMat[6],uv).g;
     float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
