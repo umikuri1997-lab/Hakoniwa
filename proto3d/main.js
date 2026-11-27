@@ -88,7 +88,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.4};
-const PETAL={sat:1.2,tex:.75};      /* 花びらのあざやかさ（もとの色の何倍） */
+const PETAL={sat:1.05,tex:.75};      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
 const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
