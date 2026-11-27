@@ -82,7 +82,7 @@ const ELS=['earth','water','fire','wind','wood'];
 // 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
 const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
 // 岩・小物（props）：tint＝ぬる色（sRGB）・mat＝明るさのむらにする材質の絵
-const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花（F9 は草むら） */
+const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9','G0'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花・G0：草むら */
 // マップの物（tex/map.glb）：ゲームのドット絵を作った3Dの設計図から。nat：自然の物（地形に対して OBJSCALE 倍・向きをばらばらに）。piv：まわす・大きくするまん中（マスの左上から）
 const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
@@ -420,21 +420,14 @@ function smoothNormals(geo){
   const N=new Float32Array(P.count*3);for(let i=0;i<P.count;i++){const v=M.get(key(i)),l=Math.hypot(...v)||1;N[3*i]=v[0]/l;N[3*i+1]=v[1]/l;N[3*i+2]=v[2]/l}
   geo.setAttribute('normal',new THREE.BufferAttribute(N,3));
 }
-// ---- ローポリゴンの花（1から作る。持ち主がきめた）：じっさいにある花をモデルに、その花の色と葉のつき方で。その場で組み立てる ----
-// 参考：英語版ウィキペディアの植物の説明（ヒナギク・コスモス・ヒナゲシ・ラベンダー・タンポポ・ネモフィラ。チューリップとカンパニュラは、説明を読めなかったので、ふつうに知られた形）
-//   ヒナギク：地面にはりつく、さじ形の葉のロゼット。葉のない短いくきに花が1つ。白い細い花びら（2れつ）と黄色いまん中
-//   コスモス：背が高く、枝わかれするくき。糸のように細くさけた葉。8まいの花びら（先にぎざぎざ）と黄色いまん中
-//   ヒナゲシ：4まいの大きな赤い花びらが少し重なる。つけ根に黒いもよう。くきに毛、葉はふかくさける
-//   ラベンダー：細い葉は下のほう。葉のない細いくきの先に、むらさきの花の穂
-//   タンポポ：葉はぜんぶ根もと（ぎざぎざにさける）。葉のないくきに、花びらだけの黄色い花が1つ
-//   ネモフィラ：背がひくい。青い花びら5まい（まん中は白）。さけた葉
+// ---- ローポリゴンの花（1から作る。持ち主がきめた）：持ち主の参考の絵（tools/art/ref/plants_ref.png の下の段）の形と色で、その場で組み立てる ----
+// 絵の形：根もとに、はばの広い明るい緑の葉がこんもりとあつまり、その上に、大きな花が3〜5こまとまってのる。花は少し外を向く。色ははっきり。
+//   チューリップ（赤・長い葉）／ひまわり（黄色・茶色のまん中）／ゆり（白・とがった花びら6まい）／あじさい（うすむらさきの小さな花の玉）／あさがお（青・まん中に白い星）／
+//   コスモス（ピンク・糸のような葉）／ラベンダー（むらさきの穂・細い葉）／デイジー（白・黄色のまん中）／パンジー（むらさきと黄色・まん中にこいもよう）／ばら（ピンク・うずまきの花びら）
 // 花びら・葉は、つけ根から先へ3だんの面（まん中に折れ目）。色は、つけ根（a）から先（b）へ。高さはマス（OBJSCALE をふくむ）
-const FLW={stem:'#5a8f3c',center:'#f2b705',
-  kinds:[{k:'tulip',a:'#a81218',b:'#e8322d',leaf:['#3f7f55','#7fb890']},{k:'tulip',a:'#dc9c00',b:'#ffd426',leaf:['#3f7f55','#7fb890']},
-    {k:'daisy',a:'#f4f1e6',b:'#ffffff',leaf:['#2f7a30','#62aa48']},{k:'cosmos',a:'#c2337f',b:'#f47cb8',leaf:['#3f8a36','#7cc05a']},
-    {k:'poppy',a:'#1c0a0a',b:'#e3261c',leaf:['#3d7f3a','#74b058']},{k:'spike',a:'#5a3fa6',b:'#9478de',leaf:['#5f8468','#a9c2a6']},
-    {k:'bell',a:'#4a39ad',b:'#8676e6',leaf:['#2f7a30','#62aa48']},{k:'dandelion',a:'#eea200',b:'#ffdc24',leaf:['#2f7f2c','#5fae42']},
-    {k:'nemophila',a:'#ffffff',b:'#3a8be0',leaf:['#3f8a36','#78bb58']},{k:'grass',a:'#4f8a47',b:'#86b765',leaf:['#4f8a47','#86b765']}]};
+const FLW={stem:'#5e9a36',leaf:['#3f8f2a','#93d14c'],
+  kinds:[{k:'tulip',a:'#c9280f',b:'#f4582c'},{k:'sunflower',a:'#f0a80c',b:'#ffd829'},{k:'lily',a:'#f3f1e4',b:'#ffffff'},{k:'hydrangea',a:'#7d6ad0',b:'#b3a6f0'},{k:'glory',a:'#ffffff',b:'#3b5bd9'},
+    {k:'cosmos',a:'#e0559a',b:'#ff9dcb'},{k:'spike',a:'#6a4bbf',b:'#a88cf0'},{k:'daisy',a:'#f4f2e8',b:'#ffffff'},{k:'pansy',a:'#3a1560',b:'#7a3fc8'},{k:'rose',a:'#e8607f',b:'#ffa3b8'},{k:'grass',a:'#4f8a47',b:'#86b765'}]};
 function buildFlower(F){
   const kind=F.k,P=[],C=[],U=[],v=new THREE.Vector3(),col=h=>new THREE.Color(h);let sd=kind.length*31+parseInt(F.a.slice(1,3),16);const rn=()=>(sd=(sd*16807)%2147483647)/2147483647;
   const put=(m,pts,cols,tris)=>{for(const t of tris)for(const i of t){v.set(...pts[i]).applyMatrix4(m);P.push(v.x,v.y,v.z);C.push(cols[i].r,cols[i].g,cols[i].b);U.push(pts[i][0],pts[i][2])}};
@@ -442,40 +435,47 @@ function buildFlower(F){
   const blade=(m,len,w,cup,fold,cA,cB,wide=.55,tip=0)=>{const y=t=>cup*len*t*t,t1=wide*.5,c1=cA.clone().lerp(cB,.55),c2=cA.clone().lerp(cB,.85),tw=w*tip/2;
     put(m,[[0,0,0],[-w*.36,y(t1),len*t1],[0,y(t1)-fold*w*.7,len*t1],[w*.36,y(t1),len*t1],[-w/2,y(wide),len*wide],[0,y(wide)-fold*w,len*wide],[w/2,y(wide),len*wide],[-tw,y(1),len],[tw,y(1),len]],
       [cA,c1,c1,c1,c2,c2,c2,cB,cB],tip?[[0,2,1],[0,3,2],[1,2,4],[2,5,4],[2,3,5],[3,6,5],[4,5,7],[5,8,7],[5,6,8]]:[[0,2,1],[0,3,2],[1,2,4],[2,5,4],[2,3,5],[3,6,5],[4,5,7],[5,6,7]])};
-  const X=new THREE.Vector3(1,0,0),Yv=new THREE.Vector3(0,1,0),mat=(pos,yaw,tilt)=>new THREE.Matrix4().makeTranslation(pos[0],pos[1],pos[2]).multiply(new THREE.Matrix4().makeRotationAxis(Yv,yaw)).multiply(new THREE.Matrix4().makeRotationAxis(X,-tilt));
+  const X=new THREE.Vector3(1,0,0),Yv=new THREE.Vector3(0,1,0),M4=()=>new THREE.Matrix4(),rY=a=>M4().makeRotationAxis(Yv,a),rX=a=>M4().makeRotationAxis(X,a),T=p=>M4().makeTranslation(p[0],p[1],p[2]);
+  const mat=(pos,yaw,tilt)=>T(pos).multiply(rY(yaw)).multiply(rX(-tilt));
+  const pet=(H,yaw,tilt)=>H.clone().multiply(rY(yaw)).multiply(rX(-tilt));        // 花の中の花びらの向き（H：花の場所と向き）
+  const face=(p,dir,lean)=>T(p).multiply(rY(-dir+Math.PI/2)).multiply(rX(lean));  // 花の場所と向き：dir の向きへ lean だけかたむく
   // くき：5角のつつを3だん（少ししなる）。かえす物：くきの上の点をもとめる関数
-  const stem=(x,z,h,bend,dir,r=.016)=>{const cs=col(FLW.stem),cd=cs.clone().multiplyScalar(.8),q=t=>[x+Math.cos(dir)*bend*t*t,h*t,z+Math.sin(dir)*bend*t*t],I=new THREE.Matrix4(),N=5;
+  const stem=(x,z,h,bend,dir,r=.016)=>{const cs=col(FLW.stem),cd=cs.clone().multiplyScalar(.8),q=t=>[x+Math.cos(dir)*bend*t*t,h*t,z+Math.sin(dir)*bend*t*t],I=M4(),N=5;
     for(let s=0;s<3;s++){const a=q(s/3),b=q((s+1)/3),ra=r*(1-s*.18),rb=r*(1-(s+1)*.18);for(let k=0;k<N;k++){const a0=k/N*6.283,a1=(k+1)/N*6.283,p=(c,rr,an)=>[c[0]+Math.cos(an)*rr,c[1],c[2]+Math.sin(an)*rr];
       put(I,[p(a,ra,a0),p(a,ra,a1),p(b,rb,a0),p(b,rb,a1)],[cd,cd,cs,cs],[[0,2,1],[1,2,3]])}}return q};
-  const lA=col(F.leaf[0]),lB=col(F.leaf[1]);
-  const leaf=(p,yaw,len,w,tilt,wide=.5,cup=.3)=>blade(mat(p,yaw,tilt),len,w,cup,.2,lA,lB,wide);           // ふつうの葉（先がとがる）
-  const lobed=(p,yaw,len,w,tilt)=>{for(let j=0;j<3;j++)blade(mat([p[0]+Math.sin(yaw)*len*j*.27*Math.cos(tilt),p[1]+len*j*.27*Math.sin(tilt),p[2]+Math.cos(yaw)*len*j*.27*Math.cos(tilt)],yaw,tilt),len*(.5-j*.03),w*(1-j*.18),.2,.15,lA,lB,.45)};   // ぎざぎざにさける葉（3つの山）
-  const feather=(p,yaw,len,tilt)=>{const m=mat(p,yaw,tilt);blade(m,len,.02,.2,0,lA,lB);for(let j=1;j<=4;j++)for(const sgn of [-1,1])blade(m.clone().multiply(new THREE.Matrix4().makeTranslation(0,0,len*j*.2)).multiply(new THREE.Matrix4().makeRotationAxis(Yv,sgn*.9)),len*(.42-j*.05),.018,.2,0,lA,lB)};   // 糸のようにさけた葉（まん中のすじと、左右の細い葉）
-  const pA=col(F.a),pB=col(F.b),cen=col(FLW.center);
-  const dome=(pos,r,h,c,N=8)=>{const I=new THREE.Matrix4().makeTranslation(...pos),pts=[[0,h,0]],cols=[c.clone().lerp(col('#ffffff'),.18)],tr=[];for(let k=0;k<N;k++){const a=k/N*6.283;pts.push([Math.cos(a)*r*.6,h*.75,Math.sin(a)*r*.6],[Math.cos(a)*r,0,Math.sin(a)*r]);cols.push(c,c.clone().multiplyScalar(.72));const i=1+2*k,j=1+2*((k+1)%N);tr.push([0,j,i],[i,j,i+1],[j,j+1,i+1])}put(I,pts,cols,tr)};
-  const up=(p,d)=>[p[0],p[1]+d,p[2]];
-  const head={tulip:p=>{for(let k=0;k<3;k++)blade(mat(p,k/3*6.283+1.05,1.3),.19,.15,.3,-.16,pA,pB,.5);for(let k=0;k<3;k++)blade(mat(p,k/3*6.283,1.12),.21,.17,.28,-.16,pA,pB,.5)},   // チューリップ：内がわ3まい・外がわ3まいの花びらのつぼ
-    daisy:p=>{for(let k=0;k<11;k++)blade(mat(p,k/11*6.283,.12+rn()*.08),.095,.03,.15,.06,pA,pB,.7,.5);for(let k=0;k<11;k++)blade(mat(up(p,.004),(k+.5)/11*6.283,.3+rn()*.08),.08,.028,.15,.06,pA,pB,.7,.5);dome(up(p,.008),.036,.028,cen)},
-    cosmos:p=>{for(let k=0;k<8;k++)blade(mat(p,k/8*6.283,.2+rn()*.12),.17,.105,.18,.08,pA,pB,.75,.6);dome(up(p,.008),.034,.03,cen)},
-    poppy:p=>{for(let k=0;k<4;k++)blade(mat(up(p,(k%2)*.006),k/4*6.283,.5+(k%2)*.22),.17,.25,.35,-.06,pA,pB,.62,.55);dome(up(p,.01),.03,.05,col('#3b4a22'))},
-    nemophila:p=>{for(let k=0;k<5;k++)blade(mat(p,k/5*6.283,.42),.085,.1,.3,-.05,pA,pB,.62,.6);dome(up(p,.004),.012,.012,col('#f4f1d0'),5)},
-    bell:(p,yaw)=>{for(let k=0;k<5;k++)blade(mat(p,yaw+(k-2)*.5,0).multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0,0,1),k/5*6.283)).multiply(new THREE.Matrix4().makeRotationAxis(X,-.55)),.12,.085,-.5,-.1,pA,pB,.6)},
-    dandelion:p=>{for(const [n,tl,ln] of [[16,.15,.085],[13,.55,.075],[9,.95,.06],[5,1.3,.04]])for(let k=0;k<n;k++)blade(mat(p,k/n*6.283+tl,tl),ln,.024,.1,.04,pA,pB,.8,.8)}};
-  if(kind==='grass'){for(let k=0;k<10;k++){const a=rn()*6.283,d=rn()*.08;blade(mat([Math.cos(a)*d,0,Math.sin(a)*d],rn()*6.283,1.0+rn()*.45),.16+rn()*.2,.028,-.5,.15,lA,lB)}}
-  else if(kind==='spike'){for(let s=0;s<5;s++){const a=s/5*6.283+rn(),d=.04+rn()*.07,h=.42+rn()*.14,x=Math.cos(a)*d,z=Math.sin(a)*d,q=stem(x,z,h,.05,a,.011);
-      for(let j=0;j<8;j++)for(let k=0;k<4;k++)blade(mat(q(1-j*.05),k/4*6.283+j*.9,.75),.045,.04,.2,.1,pA,pB,.6,.4);
-      for(let j=0;j<5;j++)leaf(q(.06+j*.07),a+j*2.4,.16,.022,.95,.5,.1)}}                                   // ラベンダー：細い葉は下のほうだけ
-  else if(kind==='dandelion'){for(let k=0;k<8;k++)lobed([0,.02,0],k/8*6.283+rn()*.3,.26+rn()*.06,.09,.4+rn()*.15);
-    for(let s=0;s<3;s++){const a=s/3*6.283+rn(),d=.02+rn()*.04,q=stem(Math.cos(a)*d,Math.sin(a)*d,.15+rn()*.1,.03,a,.012);head.dandelion(q(1))}}
-  else if(kind==='daisy'){for(let k=0;k<9;k++)blade(mat([0,.02,0],k/9*6.283+rn()*.3,.38+rn()*.15),.15+rn()*.03,.085,.15,.15,lA,lB,.72,.5);   // ヒナギク：さじ形の葉のロゼット
-    for(let s=0;s<5;s++){const a=s/5*6.283+rn(),d=.03+rn()*.07,q=stem(Math.cos(a)*d,Math.sin(a)*d,.12+rn()*.1,.02,a,.009);head.daisy(q(1))}}
-  else if(kind==='nemophila'){for(let s=0;s<6;s++){const a=s/6*6.283+rn(),d=.04+rn()*.1,x=Math.cos(a)*d,z=Math.sin(a)*d,q=stem(x,z,.08+rn()*.06,.05,a,.008);head.nemophila(q(1));lobed([x,.01,z],a+1.2,.13,.06,.25);lobed([x,.01,z],a-1.5,.12,.055,.3)}}
-  else{const n=kind==='tulip'?3:kind==='bell'?3:4,hh={tulip:.3,bell:.4,cosmos:.4,poppy:.34}[kind];
-    for(let s=0;s<n;s++){const a=s/n*6.283+rn(),d=.05+rn()*.08,h=hh+rn()*.12,x=Math.cos(a)*d,z=Math.sin(a)*d,q=stem(x,z,h,kind==='bell'?.05:.04,a,kind==='tulip'?.02:.012);
-      if(kind==='tulip'){head.tulip(q(1));leaf([x,.01,z],a+1.5,.32,.12,1.0,.45);leaf([x,.01,z],a-1.7,.28,.11,1.12,.45);leaf(q(.12),a+3.3,.2,.08,1.2,.45)}           // チューリップ：根もとから立つ、はばの広い葉
-      else if(kind==='bell'){for(let j=0;j<4;j++)head.bell(q(1-j*.15),a+j*2.1);for(let j=0;j<5;j++)leaf(q(.08+j*.09),a+j*2.4,.12,.03,.7,.5,.1);for(let k=0;k<5;k++)leaf([x,.01,z],k/5*6.283,.12,.05,.25)}   // カンパニュラ：くきにそって細い葉・外を向いたつりがねの花
-      else if(kind==='cosmos'){head.cosmos(q(1));const b=q(.55),q2=stem(b[0],b[2],h*.3,.07,a+2,.008);/* 枝 */void q2;for(let j=0;j<4;j++)feather(q(.12+j*.17),a+j*2.2,.2,.5)}
-      else{head.poppy(q(1));for(let j=0;j<3;j++)lobed(q(.05+j*.14),a+j*2.3,.2,.07,.55)}}}                  // ヒナゲシ：くきの下のほうに、さける葉
+  const lA=col(FLW.leaf[0]),lB=col(FLW.leaf[1]);
+  const leaf=(p,yaw,len,w,tilt,wide=.5,cup=.3)=>blade(mat(p,yaw,tilt),len,w,cup,.2,lA,lB,wide);
+  const feather=(p,yaw,len,tilt)=>{const m=mat(p,yaw,tilt);blade(m,len,.02,.2,0,lA,lB);for(let j=1;j<=4;j++)for(const sgn of [-1,1])blade(m.clone().multiply(T([0,0,len*j*.2])).multiply(rY(sgn*.9)),len*(.42-j*.05),.018,.2,0,lA,lB)};
+  // 根もとの、こんもりした葉（絵の形）：外がわはねかせて・内がわは立てて、2れつ
+  const mound=(r,len,w,n=8)=>{for(let k=0;k<n;k++){const a=k/n*6.283+rn()*.3;leaf([Math.cos(a)*r*.3,.01,Math.sin(a)*r*.3],-a+Math.PI/2,len*(.9+rn()*.2),w,.45+rn()*.2,.55,.25)}
+    for(let k=0;k<n-2;k++){const a=(k+.5)/(n-2)*6.283+rn()*.3;leaf([Math.cos(a)*r*.12,.02,Math.sin(a)*r*.12],-a+Math.PI/2,len*.8,w*.9,.95+rn()*.2,.55,.2)}};
+  const pA=col(F.a),pB=col(F.b);
+  const dome=(H,r,h,c,N=8)=>{const pts=[[0,h,0]],cols=[c.clone().lerp(col('#ffffff'),.18)],tr=[];for(let k=0;k<N;k++){const a=k/N*6.283;pts.push([Math.cos(a)*r*.6,h*.75,Math.sin(a)*r*.6],[Math.cos(a)*r,0,Math.sin(a)*r]);cols.push(c,c.clone().multiplyScalar(.72));const i=1+2*k,j=1+2*((k+1)%N);tr.push([0,j,i],[i,j,i+1],[j,j+1,i+1])}put(H,pts,cols,tr)};
+  const upH=(H,d)=>H.clone().multiply(T([0,d,0])),yel=col('#f6c21a');
+  const head={tulip:H=>{for(let k=0;k<3;k++)blade(pet(H,k/3*6.283+1.05,1.3),.2,.17,.3,-.16,pA,pB,.5);for(let k=0;k<3;k++)blade(pet(H,k/3*6.283,1.12),.22,.19,.28,-.16,pA,pB,.5)},
+    sunflower:H=>{for(let k=0;k<14;k++)blade(pet(H,k/14*6.283,.12+(k%2)*.14),.12,.065,.15,.08,pA,pB,.6);dome(upH(H,.008),.085,.04,col('#6f4a22'),10)},
+    lily:H=>{for(let k=0;k<6;k++)blade(pet(H,k/6*6.283,.75-(k%2)*.12),.22,.1,-.35,-.12,pA,pB,.5);for(let k=0;k<3;k++)dome(upH(H,.05).multiply(T([Math.cos(k*2.1)*.02,0,Math.sin(k*2.1)*.02])),.012,.03,col('#e8a52a'),4)},
+    hydrangea:H=>{const R=.12;for(let i=0;i<22;i++){const u=i/22,ph=Math.acos(1-u*1.25),th=i*2.4,d=[Math.sin(ph)*Math.cos(th),Math.cos(ph),Math.sin(ph)*Math.sin(th)],c=T([d[0]*R,d[1]*R*.85+R*.2,d[2]*R]),o=H.clone().multiply(c).multiply(rY(-th)).multiply(M4().makeRotationAxis(new THREE.Vector3(0,0,1),-ph));   // 小さな4まいの花を、玉の形にならべる
+        for(let k=0;k<4;k++)blade(pet(o,k/4*6.283+i,.2),.055,.055,.15,.05,i%3?pA:pA.clone().lerp(pB,.5),pB,.6,.7)}},
+    glory:H=>{for(let k=0;k<5;k++)blade(pet(H,k/5*6.283,.55),.15,.2,.25,.06,pA,pB,.75,.85);dome(upH(H,.004),.014,.02,col('#f7e9a0'),5)},   // あさがお：5まいがつながった、ろうとの形。まん中は白い星
+    cosmos:H=>{for(let k=0;k<8;k++)blade(pet(H,k/8*6.283,.2+rn()*.12),.15,.1,.18,.08,pA,pB,.75,.6);dome(upH(H,.008),.034,.03,yel)},
+    daisy:H=>{for(let k=0;k<12;k++)blade(pet(H,k/12*6.283,.12+rn()*.08),.11,.042,.15,.06,pA,pB,.7,.6);for(let k=0;k<12;k++)blade(pet(upH(H,.004),(k+.5)/12*6.283,.3),.095,.04,.15,.06,pA,pB,.7,.6);dome(upH(H,.008),.045,.035,yel)},
+    pansy:(H,alt)=>{const pu=alt?[col('#e8a80c'),col('#ffd93a')]:[pA,pB],lo=alt?[col('#5a1f10'),col('#ffd93a')]:[col('#2a0f4a'),col('#f6c832')];   // パンジー：上2まい・下3まい（下はまん中がこい）。顔をこちらへ向ける
+      for(const a of [-.5,.5])blade(pet(H,Math.PI+a,.25),.12,.14,.2,.05,pu[0],pu[1],.65,.7);for(const a of [-1.5,0,1.5])blade(pet(upH(H,.004),a,.25),.115,.14,.2,.05,lo[0],lo[1],.65,.7);dome(upH(H,.008),.012,.012,yel,5)},
+    rose:H=>{for(const [n,tl,ln,w,off] of [[5,.75,.14,.16,0],[5,1.05,.12,.13,.6],[3,1.3,.1,.1,.3]])for(let k=0;k<n;k++)blade(pet(H,k/n*6.283+off,tl),ln,w,.35,-.1,pA,pB,.65,.7)}};   // ばら：外から内へ、だんだん立つ花びら3れつ
+  const ring=(n,r,h,lean,fn,r0=0)=>{for(let s=0;s<n;s++){const a=s/n*6.283+rn()*.5,d=s?r:r0,x=Math.cos(a)*d,z=Math.sin(a)*d,hh=h*.8*(s?.82+rn()*.2:1.08),q=stem(x,z,hh,s?.05:0,a,.014);fn(face(q(1),a,s?lean:lean*.3),s,a,q)}};
+  if(kind==='grass'){for(let k=0;k<10;k++){const a=rn()*6.283,d=rn()*.08;blade(mat([Math.cos(a)*d,0,Math.sin(a)*d],rn()*6.283,1.0+rn()*.45),.16+rn()*.2,.028,-.5,.15,col(F.a),col(F.b))}}
+  else if(kind==='tulip'){ring(3,.1,.34,.15,H=>head.tulip(H));for(let k=0;k<7;k++){const a=k/7*6.283+rn()*.3;leaf([Math.cos(a)*.04,.01,Math.sin(a)*.04],-a+Math.PI/2,.3+rn()*.06,.13,.85+rn()*.25,.45,.2)}}   // チューリップ：根もとから立つ、長くはばの広い葉
+  else if(kind==='sunflower'){mound(.3,.2,.14);ring(3,.11,.42,.6,H=>head.sunflower(H))}
+  else if(kind==='lily'){ring(3,.1,.4,.7,H=>head.lily(H));for(let k=0;k<9;k++){const a=k/9*6.283+rn()*.3;leaf([Math.cos(a)*.04,.01,Math.sin(a)*.04],-a+Math.PI/2,.28+rn()*.06,.07,.8+rn()*.3,.45,-.2)}}
+  else if(kind==='hydrangea'){mound(.34,.22,.16,9);ring(3,.11,.26,.35,H=>head.hydrangea(H))}
+  else if(kind==='glory'){mound(.32,.19,.15);ring(3,.11,.3,.75,H=>head.glory(H))}
+  else if(kind==='cosmos'){for(let k=0;k<12;k++)feather([0,.01,0],k/12*6.283+rn()*.3,.2+rn()*.06,.5+rn()*.5);ring(4,.11,.4,.5,H=>head.cosmos(H))}
+  else if(kind==='spike'){for(let k=0;k<16;k++){const a=k/16*6.283+rn()*.3;leaf([Math.cos(a)*.03,.01,Math.sin(a)*.03],-a+Math.PI/2,.2+rn()*.08,.03,.7+rn()*.5,.5,.1)}
+    for(let s=0;s<7;s++){const a=s/7*6.283+rn(),d=s?.05+rn()*.08:0,h=.36+rn()*.16,q=stem(Math.cos(a)*d,Math.sin(a)*d,h,.06,a,.011);for(let j=0;j<8;j++)for(let k=0;k<4;k++)blade(mat(q(1-j*.055),k/4*6.283+j*.9,.75),.05,.045,.2,.1,pA,pB,.6,.4)}}
+  else if(kind==='daisy'){mound(.3,.18,.13);ring(5,.12,.3,.45,H=>head.daisy(H))}
+  else if(kind==='pansy'){mound(.3,.17,.14);ring(4,.11,.2,1.0,(H,s)=>head.pansy(H,s%2))}
+  else if(kind==='rose'){mound(.3,.18,.13);ring(3,.1,.32,.4,H=>head.rose(H))}
   const g=new THREE.BufferGeometry(),n=P.length/3,mk=x=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(x),1);
   g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));
   g.setAttribute('_mat',mk(MATIDX.leaf));g.setAttribute('_under',mk(0));g.scale(OBJSCALE,OBJSCALE,OBJSCALE);g.computeVertexNormals();   // 点をつながない形なので、面ごとの向き（角のあるかげ）
@@ -608,7 +608,7 @@ function placeMap(){
   const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),Y=new THREE.Vector3(0,1,0),V=new THREE.Vector3(),S=new THREE.Vector3(1,1,1);
   const blob=(x,z,r)=>blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(x,groundH(x,z)+.01,z),new THREE.Quaternion(),new THREE.Vector3(r,1,r)));
   for(const [x,z,n] of MAP.objs){const b=objBase(n);
-    if(b==='weed'){for(let k=0;k<3;k++){const px=x+.15+rnd()*.7,pz=z+.15+rnd()*.7,sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:F9',M.compose(V.set(px,meshH(px,pz)-.01,pz),Q,S).clone())}continue}   /* 雑草は草むら */
+    if(b==='weed'){for(let k=0;k<3;k++){const px=x+.15+rnd()*.7,pz=z+.15+rnd()*.7,sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:G0',M.compose(V.set(px,meshH(px,pz)-.01,pz),Q,S).clone())}continue}   /* 雑草は草むら */
     if(MAPPLANT[b]){const sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:'+MAPPLANT[b],M.compose(V.set(x+.5,groundH(x+.5,z+.5),z+.5),Q,S).clone());blob(x+.5,z+.5,(b==='ntree'?1.5:.75)*sc*OBJSCALE);continue}
     const d=MAPOBJ[b];if(!d||!MAPPARTS[n])continue;
     if(d.nat){const px=x+d.piv[0],pz=z+d.piv[1];Q.setFromAxisAngle(Y,b==='sacred'?0:rnd()*Math.PI*2);S.set(1,1,1);add(n,M.compose(V.set(px,groundH(px,pz),pz),Q,S).clone());if(b!=='kinoko')blob(px,pz,b==='sacred'?2.4:(b==='deadtree'?1.2:.75)*OBJSCALE)}
@@ -813,4 +813,4 @@ async function main(){
   requestAnimationFrame(t=>{prev=t;frame(t)});
 }
 main().catch(showErr);
-window.__pm=()=>propMeshes;window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
+window.__pm=()=>propMeshes;window.__flowers=(x0,z0)=>{PROPS.filter(p=>p.src==='proc').forEach((p,i)=>{const x=x0+(i%5)*.9,z=z0+Math.floor(i/5)*.9,m=new THREE.InstancedMesh(p.parts[0].geo,p.parts[0].mat,1);m.setMatrixAt(0,new THREE.Matrix4().makeTranslation(x,groundH(x,z),z));m.frustumCulled=false;scene.add(m)})};  /* たしかめ用：花をぜんぶならべる */window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
