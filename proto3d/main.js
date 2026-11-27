@@ -93,7 +93,8 @@ const GLOSS=LOOK==='a'?{k:.1,pow:7,sheen:.03,tint:.85}:{k:.03,pow:7,sheen:.001,t
 const PETAL={sat:1.15,tex:.5,from:.35,base:.7,tip:1.02,satBase:1.15};   /* from：花のはじまる高さ（植物の高さの割合）・base／tip：つけ根と先の明るさ・satBase：つけ根のあざやかさ */      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
-const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
+const MAPPLANT={ntree:'oak',berry:'berry',deadtree:'deadtree'};   // 木・ベリーのしげみ・枯れ木は、スキルで作った物（make_flowers.py）。雑草（weed）は、草地ならしなやかな草かふんばり草・荒れた土地ならかさかさ草
+const MAPFLOWERS=['salvia','clover','bellf','lily'];   // よみがえった草地に置く花（ゲームの草原の花。ハスは池）
 const objBase=n=>n.split('_')[0];  // 名前の _ のあとは、つなぎ方（壁・畑）・向き（ドア）
 const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5,leaf:6,soil:7};  // soil：畑の土（地面の土の絵 g_dirt）
 const LEAFTEX={file:'m_leaf.jpg',span:.45,mean:[.1373,.4102,0]};  // 持ち主の葉っぱの絵（色つき）：1まいのマス・絵の色の平均（linear）
@@ -571,18 +572,20 @@ function placeMap(){
   const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),Y=new THREE.Vector3(0,1,0),V=new THREE.Vector3(),S=new THREE.Vector3(1,1,1);
   const blob=(x,z,r)=>blobs.push(new THREE.Matrix4().compose(new THREE.Vector3(x,groundH(x,z)+.01,z),new THREE.Quaternion(),new THREE.Vector3(r,1,r)));
   for(const [x,z,n] of MAP.objs){const b=objBase(n);
-    if(b==='weed'){for(let k=0;k<3;k++){const px=x+.15+rnd()*.7,pz=z+.15+rnd()*.7,sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:G0',M.compose(V.set(px,meshH(px,pz)-.01,pz),Q,S).clone())}continue}   /* 雑草は草むら */
-    if(MAPPLANT[b]){const sc=.85+rnd()*.3;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:'+MAPPLANT[b],M.compose(V.set(x+.5,groundH(x+.5,z+.5),z+.5),Q,S).clone());blob(x+.5,z+.5,(b==='ntree'?1.5:.75)*sc*OBJSCALE);continue}
+    if(b==='weed'){const id=GRASS[z]&&GRASS[z][x]?(rnd()<.6?'weed0g':'weedc'):'weed0k';add('P:'+id,flowerMatrix(x+.5,z+.5,rnd));continue}   /* 雑草：1マスに1株 */
+    if(MAPPLANT[b]){const id=MAPPLANT[b],big=b!=='berry';add('P:'+id,flowerMatrix(x+.5,z+.5,rnd));blob(x+.5,z+.5,big?2.4:1.3);continue}
     const d=MAPOBJ[b];if(!d||!MAPPARTS[n])continue;
     if(d.nat){const px=x+d.piv[0],pz=z+d.piv[1];Q.setFromAxisAngle(Y,b==='sacred'?0:rnd()*Math.PI*2);S.set(1,1,1);add(n,M.compose(V.set(px,groundH(px,pz),pz),Q,S).clone());if(b!=='kinoko')blob(px,pz,b==='sacred'?2.4:(b==='deadtree'?1.2:.75)*OBJSCALE)}
     else{Q.identity();S.set(1,1,1);add(n,M.compose(V.set(x,yTop(x,z),z),Q,S).clone())}
   }
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){if(!GRASS[z][x]||KIND[z][x]!=='g'||FLAT.has(x+','+z)||SOLID.has(x+','+z)||rnd()>FLOWERS.per)continue;   /* よみがえった草地の花・草 */
-    for(let k=0;k<1;k++){const px=x+.2+rnd()*.6,pz=z+.2+rnd()*.6,sc=.85+rnd()*.3;if(pmAt(px,pz)>.01)continue;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:F'+Math.floor(rnd()*10),M.compose(V.set(px,meshH(px,pz)-.01,pz),Q,S).clone());blob(px,pz,.5*sc)}}
+    if(pmAt(x+.5,z+.5)>.01)continue;const id=MAPFLOWERS[Math.floor(rnd()*MAPFLOWERS.length)];add('P:'+id,flowerMatrix(x+.5,z+.5,rnd));blob(x+.5,z+.5,.7)}   /* 1マスに1株（ゲームの植え方。株ごとにばらつき） */
+  for(let z=1;z<MAPN-1;z++)for(let x=1;x<MAPN-1;x++){if(!isW(x,z)||!isW(x+1,z)||!isW(x-1,z)||!isW(x,z+1)||!isW(x,z-1)||rnd()>.35)continue;   /* 池のまん中に、ハス */
+    const M2=new THREE.Matrix4().makeTranslation(x+.5,-.16,z+.5).multiply(new THREE.Matrix4().makeRotationY(rnd()*6.283));add('P:lotus',M2)}
   const inst=(geo,mat,ms,shadow,hull,hgeo)=>{const im=new THREE.InstancedMesh(geo,mat,ms.length);ms.forEach((m,i)=>im.setMatrixAt(i,m));im.castShadow=shadow;im.receiveShadow=true;im.computeBoundingSphere();scene.add(im);propMeshes.push(im);
     if(hull){const hm=new THREE.InstancedMesh(hgeo||geo,hull,ms.length);ms.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}};  // 背面法の線
   for(const [key,ms] of Object.entries(G)){
-    if(key.startsWith('P:')){const p=PROPS.find(q=>q.id===key.slice(2));for(const part of p.parts)inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,p.kind!=='tiny',part.hull);continue}
+    if(key.startsWith('P:')){const p=PROPS.find(q=>q.id===key.slice(2));for(const part of p.parts)inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,true,part.hull);continue}   /* 花も木も、かげをおとす */
     for(const part of [].concat(MAPPARTS[key]))inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,objBase(key)!=='floor',objBase(key)==='floor'?null:part.hull,part.hgeo);   /* 背面法の線は、なめらかにならした向きの形で（かどで線が切れない） */
   }
   const bm=new THREE.InstancedMesh(blobGeo,blobMat,Math.max(1,blobs.length));bm.count=blobs.length;blobs.forEach((m,i)=>bm.setMatrixAt(i,m));bm.renderOrder=2;bm.frustumCulled=false;scene.add(bm);propMeshes.push(bm);
