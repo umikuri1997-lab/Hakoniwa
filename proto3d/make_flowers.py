@@ -185,6 +185,13 @@ def bark_tube(p, pts, radii, col, sides=7, flare=0.):
     p.add(V, F, C, np.array(U), mat=5)
 
 
+def sag(b, out, h, sg):
+    """重力でしなるくき（先に重さがある、はりの曲がり）：b から立ち、上へ h。sg：先の外へのずれ（長さの割合）。根もとはまっすぐ、上ほど外へまがり、先は下を向くこともある。
+    かえす物：くきの上の点をもとめる関数 P(t)"""
+    b = G(*b); out = G(*out)
+    return lambda t: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))
+
+
 def place_card(p, o, d, L, Wd, rng, droop=(.18, .3), fold=(.12, .25), tone=(.74, .92), roll=.5):
     """アルファ抜きの葉のカード（たて5×よこ2・三角形20）を、o から d の向きへ、長さ L・はば Wd でおく。先へたれ・まん中で少し折れ・ねじれる。
     絵のたて（V）0 がつけ根、1 が先。p.card にためる"""
@@ -493,8 +500,8 @@ def clover(p):
         top = b + rad(a + rng.uniform(-40, 40), 0) * .02 + G(0, 0, h); sweep(p, [b, (b + top) / 2 + rad(a, 0) * .008, top], [.0035, .003, .0026], [STEMC] * 3, sides=4)
         d = rad(rng.uniform(0, 360), rng.uniform(-6, 6)); L = rng.uniform(.17, .21); place_card(p, top - d * L * .5, d, L, L * .75, rng, droop=(0, .04), fold=(.0, .06), tone=(.9, 1.08), roll=.15)
     for f in range(3):   # 花：葉のない花のくき（葉より高い）＋まるい花のかたまり
-        a = f * 120 + rng.uniform(-30, 30); b = rad(a, 0) * rng.uniform(.06, .2); h = rng.uniform(.18, .23); top = b + rad(a, 0) * .02 + G(0, 0, h)
-        sweep(p, [b, (b + top) / 2 + rad(a + 90, 0) * .01, top], [.004, .0035, .003], [STEMC] * 3, sides=4)
+        a = f * 120 + rng.uniform(-30, 30); b = rad(a, 0) * rng.uniform(.06, .2); P = sag(b, rad(a, 0), rng.uniform(.18, .23), rng.uniform(.2, .35)); top = P(1)   # 花の重さで少ししなる
+        sweep(p, [P(k / 5) for k in range(6)], [.004 - .001 * k / 5 for k in range(6)], [STEMC] * 6, sides=4)
         R = .028; c = top + G(0, 0, R * .75); p.ball(c, R * .45, (150, 170, 110), n=6, m=3)   # まん中のしん
         for i in range(44):   # 小さな花：らせんにならべる。上（z>0）はつぼみ・外を向く。下ほど、下へたれて色がかわる
             u = (i + .5) / 44; z = 1 - 1.7 * u; z = max(-.75, z); ph = i * 2.39996; rr = math.sqrt(1 - z * z); n = G(math.cos(ph) * rr, math.sin(ph) * rr, z)
@@ -744,10 +751,10 @@ def berry(p):
     葉：小さなだ円の葉が、枝に互いちがい。明るい緑。実：枝先にふさでなる。青むらさきで白い粉（ブルーム）をふき、先に星形のくぼみ。まだのものは緑〜白っぽい"""
     rng = p.rng; BK = (122, 96, 78); tips = []
     for s_ in range(7):   # シュート：根もとから立ち、外へ少しかたむく・上で2〜3にわかれる
-        a = s_ * 51.4 + rng.uniform(-15, 15); b = rad(a, 0) * rng.uniform(.02, .08); h = rng.uniform(.3, .42); top = b + G(0, 0, h) + rad(a, 0) * rng.uniform(.08, .16)
-        mid = (b + top) / 2 + rad(a, 0) * .02; bark_tube(p, [b, mid, top], [.009, .007, .005], BK, sides=4)
+        a = s_ * 51.4 + rng.uniform(-15, 15); b = rad(a, 0) * rng.uniform(.02, .08); P = sag(b, rad(a, 0), rng.uniform(.3, .42), rng.uniform(.3, .5))   # 枝は、葉と実の重さで外へしなる
+        bark_tube(p, [P(k / 5) for k in range(6)], [.009 - .004 * k / 5 for k in range(6)], BK, sides=4); top = P(1)
         for k in range(rng.integers(2, 4)):
-            d = unit(rad(a + rng.uniform(-60, 60), rng.uniform(15, 55))); e = top + d * rng.uniform(.08, .14); bark_tube(p, [top, (top + e) / 2 + G(0, 0, .01), e], [.005, .004, .003], BK, sides=3); tips.append((e, d))
+            d = unit(rad(a + rng.uniform(-60, 60), rng.uniform(15, 55))); L = rng.uniform(.08, .14); e = top + d * L - G(0, 0, .25 * L); bark_tube(p, [top, top + d * L * .5 - G(0, 0, .06 * L), e], [.005, .004, .003], BK, sides=3)   # 小枝も先がたれる; tips.append((e, d))
     CC = G(0, 0, .42)
     for i in range(44):   # しげみの外がわ（だ円の玉）にも葉のかたまり：こんもりまるく、枝をかくす
         u = (i + .5) / 44; z = 1 - 1.55 * u; th = i * 2.39996; rr = math.sqrt(max(0, 1 - z * z)); q = CC + G(math.cos(th) * rr * .4, math.sin(th) * rr * .4, z * .3); tips.append((q, unit(q - CC)))
@@ -772,11 +779,11 @@ def eleusine(p, dry=False):
     for i in range(22):
         a = i * 137.5 + rng.uniform(-15, 15); L = rng.uniform(.18, .3); place_card(p, rad(a, 0) * .01, rad(a, rng.uniform(15, 45)), L, .045, rng, droop=(.3, .6), fold=(.2, .35), tone=(.82, .98), roll=.4)
     for s_ in range(4):
-        a = s_ * 90 + rng.uniform(-25, 25); b = rad(a, 0) * .015; top = b + rad(a, 0) * rng.uniform(.06, .12) + G(0, 0, rng.uniform(.18, .26))
-        sweep(p, [b, (b + top) / 2 + rad(a, 0) * .02, top], [.004, .0035, .003], [G1] * 3, sides=4, flat=.6)
+        a = s_ * 90 + rng.uniform(-25, 25); b = rad(a, 0) * .015; P = sag(b, rad(a, 0), rng.uniform(.2, .28), rng.uniform(.45, .7))   # くきは、穂の重さで外へしなる
+        sweep(p, [P(k / 6) for k in range(7)], [.004 - .001 * k / 6 for k in range(7)], [G1] * 7, sides=4, flat=.6); top = P(1); dd = unit(P(1) - P(.9))
         for k in range(rng.integers(3, 6)):   # 指のような穂
-            d = unit(rad(a + k * 72 + rng.uniform(-15, 15), rng.uniform(30, 60))); L = rng.uniform(.06, .09)
-            pts = [top + d * L * t + G(0, 0, -.015 * t * t) for t in (0, .5, 1)]; sweep(p, pts, [.0045, .004, .0015], [G1, G2, G2], sides=4, flat=.5, cap=True)
+            d = unit(dd * .6 + rad(a + k * 72 + rng.uniform(-15, 15), 0) * .8); L = rng.uniform(.06, .09)
+            pts = [top + d * L * t + G(0, 0, -.03 * t * t) for t in (0, .5, 1)]; sweep(p, pts, [.0045, .004, .0015], [G1, G2, G2], sides=4, flat=.5, cap=True)   # 穂も、自分の重さで先がたれる
 
 
 def setaria(p, dry=False):
@@ -788,10 +795,10 @@ def setaria(p, dry=False):
         a = i * 137.5 + rng.uniform(-15, 15); L = rng.uniform(.22, .34)
         place_card(p, rad(a, 0) * .015, rad(a, rng.uniform(50, 80)), L, .04, rng, droop=(.45, .8) if not dry else (.8, 1.2), fold=(.25, .4), tone=(.82, .98), roll=.5)
     for s_ in range(6):
-        a = s_ * 60 + rng.uniform(-20, 20); b = rad(a, 0) * .015; h = rng.uniform(.3, .42); out = rad(a, 0); sg = rng.uniform(.25, .45)
+        a = s_ * 60 + rng.uniform(-20, 20); b = rad(a, 0) * .015; h = rng.uniform(.3, .42); out = rad(a, 0); sg = rng.uniform(.5, .85)   # 穂が重いので、くきは大きくしなる
         P = lambda t, b=b, h=h, out=out, sg=sg: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))
         sweep(p, [P(k / 5) for k in range(6)], [.0028] * 6, [LC] * 6, sides=3)
-        top = P(1); d = unit(P(1) - P(.9)); nod = unit(d + out * .7 - G(0, 0, .5)); L = rng.uniform(.07, .1)   # 穂：先がうなだれる
+        top = P(1); d = unit(P(1) - P(.9)); nod = unit(d + out * .5 - G(0, 0, .9)); L = rng.uniform(.07, .1)   # 穂：先がうなだれる
         pts = [top + d * L * .3 * t + nod * L * t * t for t in (0, .35, .7, 1)]
         sweep(p, pts, [.011, .016, .014, .005], [SPK[0], SPK[1], SPK[1], SPK[0]], sides=6, cap=True)   # ふさふさの穂（太めのつつ）
         for k in range(26):   # 穂の毛（のぎ）：短いとげ
