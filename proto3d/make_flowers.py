@@ -490,8 +490,11 @@ def bellf(p):
     def bud(o, ax, s_):
         """つぼみ：5角の紙ふうせん"""
         sweep(p, [o, o + ax * .012 * s_, o + ax * .026 * s_, o + ax * .036 * s_], [.005 * s_, .014 * s_, .013 * s_, .002 * s_], [(130, 160, 100), (176, 168, 230), (184, 172, 236), (160, 146, 226)], sides=5, cap=True)
-    for s_, (az, h, lean) in enumerate(((0, .4, .04), (110, .34, .08), (230, .36, .07), (300, .27, .1), (170, .24, .1))):
-        b = rad(az, 0) * (.01 if not s_ else .03); top = b + G(0, 0, h) + rad(az, 0) * lean; P, D = p.stem(b, top, .0055, .0035, rad(az + 90, 0) * .01, color=STEMC, n=4)
+    for s_, (az, h, lean) in enumerate(((0, .4, .06), (110, .34, .11), (230, .36, .1), (300, .27, .13), (170, .24, .13))):
+        b = rad(az, 0) * (.01 if not s_ else .03); out = rad(az, 0); side = rad(az + 90, 0); bd = rng.uniform(-1, 1); zg = rng.uniform(0, 6.28)
+        P = lambda t, b=b, h=h, lean=lean, out=out, side=side, bd=bd, zg=zg: b + G(0, 0, h * t) + out * lean * 1.1 * t ** 1.8 + side * .025 * bd * math.sin(math.pi * t) + side * .004 * math.sin(9 * math.pi * t + zg)   # くき：外へかたむきながら弓なりにまがる・横へもゆるくまがる・節ごとに少しジグザグ
+        D = lambda t, P=P: unit(P(min(1, t + .02)) - P(max(0, t - .02)))
+        sweep(p, [P(i / 10) for i in range(11)], [.0055 - .002 * i / 10 for i in range(11)], [(84, 124, 60)] + [STEMC] * 10, sides=5)
         for k in range(9):   # 葉：柄のない葉が、互いちがいに（137.5度ずつ）。上ほど小さく・立つ
             t = .06 + .095 * k; L = (.13 - .009 * k) * rng.uniform(.9, 1.08); place_card(p, P(t), rad(az + k * 137.5 + rng.uniform(-15, 15), 26 + 4 * k), L, L * .62, rng, droop=(.12, .25), fold=(.15, .3), tone=(.9, 1.05), roll=.3)
         ax = unit(D(1) * .5 + unit(rad(az, 0) * .7 + G(0, 0, .7)) * .5)
