@@ -82,7 +82,7 @@ const ELS=['earth','water','fire','wind','wood'];
 // 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
 const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
 // 岩・小物（props）：tint＝ぬる色（sRGB）・mat＝明るさのむらにする材質の絵
-const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9','G0','salvia','clover','bellf','lily','lotus'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花・G0：草むら */
+const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9','G0','salvia','clover','bellf','lily','lotus','nebari','hotaru'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花・G0：草むら */
 // マップの物（tex/map.glb）：ゲームのドット絵を作った3Dの設計図から。nat：自然の物（地形に対して OBJSCALE 倍・向きをばらばらに）。piv：まわす・大きくするまん中（マスの左上から）
 const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
@@ -428,7 +428,7 @@ function flowerMatrix(x,z,r){const ox=(r()-.5)*2*FLVAR.off,oz=(r()-.5)*2*FLVAR.o
 const flowerTint=r=>{const k=FLVAR.tint[0]+r()*(FLVAR.tint[1]-FLVAR.tint[0]);return new THREE.Color(k,k,k)};
 let FLOWERSGLB=null,LEAFCARD={},PETALCARD={};
 const PETALCARDTEX={bellf:'card_bellf_petal'};   /* 花ごとの花びらの絵（なければ、ばらの花びら） */
-const LEAFCARDTEX={salvia:'card_salvia_leaf',clover:'card_clover_leaf',bellf:'card_bellf_leaf',lily:'card_lily_leaf',lotus:'card_lotus_leaf'};   /* 花ごとの葉のカードの絵（なければ、ばらの葉） */
+const LEAFCARDTEX={salvia:'card_salvia_leaf',clover:'card_clover_leaf',bellf:'card_bellf_leaf',lily:'card_lily_leaf',lotus:'card_lotus_leaf',nebari:'card_nebari_leaf',hotaru:'card_hotaru_leaf'};   /* 花ごとの葉のカードの絵（なければ、ばらの葉） */
 const PETALCARD_N=1.4;   /* 花びらのノーマルマップの強さ */
 const LEAFCARD_N=2.2,LEAFCARD_NS={lotus:1.2};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
