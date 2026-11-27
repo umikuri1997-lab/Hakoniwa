@@ -13,3 +13,4 @@ paths:
   - `make-interfaces-feel-better`：数字の幅・おせる所の広さ・目で見たまん中。`web-design-guidelines`：さわれる所の大きさ・スマホの指・うごきをへらす設定・読みやすさ。`unslop`：UIを見なおすものさし（わくはしずかに・目立つ物はしぼる・直す順番。CC BY 4.0 なので作者名をのこす）。
   - `sakurai`（kociden/sakurai-skill）と `game-ui-basics`（csoda/game_ui_basics）はライセンスがないので、このリポジトリに写さず、クラウドの環境のセットアップで毎回 `~/.claude/skills/` に入れる（ないときは、そのもとから入れる）。ほかは `.claude/skills`。
 - PRの文・ゲームの画面の文（セリフ・説明・知らせ）・長い説明の文を書く・直すときは `nihongo`（`.claude/skills/nihongo`、もとは AnIT012/nihongo、MIT）を読む。チャットのふつうの返事では読まない（クレジットをおさえる。持ち主がきめた）。ゲームの文は、ひらがなを多め・（）の注意書きを書かない・せいれいを「子」と書かない など、`CLAUDE.md` の決まりが先。
+- 効果音を lumina-sfx でさがす・作るときは `lumina-sfx`（`.claude/skills/lumina-sfx`。本体は `tools/sound/lumina/setup.sh` でとってくる。もとは LuminaBench/lumina-sfx、コードは MIT・音は Lumina Open Game Audio License 1.0）を読む。
