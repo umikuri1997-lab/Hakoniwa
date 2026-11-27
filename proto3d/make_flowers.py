@@ -182,6 +182,22 @@ def place_card(p, o, d, L, Wd, rng, droop=(.18, .3), fold=(.12, .25), tone=(.74,
     p.card.add(V, Fc, C, np.array(UV))
 
 
+def star_petal_texture(path, npath, size=512, lobes=5, rin=.7, col=((232, 232, 252), (112, 84, 226), (84, 52, 204)), vein=(54, 28, 150), seed=3):
+    """5つの先がとがった星の形の花（つけ根でつながった花びら。ききょうなど）の絵：アルファ抜き。まん中（0.5, 0.5）から、半径0.48で先。
+    色：まん中は白っぽく→青むらさき→ふちは少しこい。こいすじ（花びらのまん中のすじと、その左右の細いすじ）。ノーマル：ふちのきわが下がる・すじはくぼむ"""
+    from PIL import Image
+    rng = np.random.default_rng(seed); yy, xx = np.mgrid[0:size, 0:size]; X = (xx + .5) / size - .5; Y = .5 - (yy + .5) / size; r = np.hypot(X, Y); th = np.arctan2(Y, X) + math.pi / 2
+    k = (th * lobes / (2 * math.pi)) % 1; saw = np.abs(k * 2 - 1)   # 0 が花びらのまん中・1 が花びらのあいだ
+    R = .48 * (rin + (1 - rin) * (1 - saw) ** 1.25) * (1 + .008 * np.sin(th * 23))   # 先がとがる星の形・ふちは少しなみうつ
+    px = 1 / size; d = (R - r) / px; a = np.clip(d + .5, 0, 1); t = np.clip(r / .48, 0, 1)
+    c = np.array(col[0]) * (1 - np.clip(t / .25, 0, 1))[..., None] + np.array(col[1]) * (np.clip(t / .25, 0, 1) * (1 - np.clip((t - .55) / .45, 0, 1)))[..., None] + np.array(col[2]) * np.clip((t - .55) / .45, 0, 1)[..., None]
+    v = np.exp(-(saw / .025) ** 2) + .55 * (np.exp(-((saw - .32) / .02) ** 2) + np.exp(-((saw - .6) / .02) ** 2))   # すじ：まん中と、左右に2本ずつ
+    vk = np.clip(v * np.clip((t - .12) / .2, 0, 1), 0, 1) * .75; c = c * (1 - vk[..., None]) + np.array(vein) * vk[..., None]
+    Image.fromarray(np.dstack([c, a * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(path)
+    ht = np.sqrt(np.clip(d / 14, 0, 1)) - .25 * v; gy, gx = np.gradient(ht * 4.0); nx = -gx; ny = gy; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+    Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
+
+
 def rad(az, el):
     """向き：方位 az・あおぎ el（度）"""
     a, e = math.radians(az), math.radians(el); return G(math.cos(a) * math.cos(e), math.sin(a) * math.cos(e), math.sin(e))
@@ -450,12 +466,46 @@ def clover(p):
             sweep(p, [base, base + dn * L * .55, base + dn * L], [.0035, .0042, .0028], [col0, col1, col1], sides=4, cap=True)
 
 
+def bellf(p):
+    """ききょう（Platycodon grandiflorus）。本物の写真（NC State Extension の7まい）を見て、構造を書き出してから作った：
+    株：まっすぐなくきが何本か立つ。葉は、たまご形〜細長くぎざぎざ、柄がなく、くきに互いちがい。上ほど小さい。
+    花：くきの先。5まいの花びらがつけ根でつながった浅いおわん。先は5つのとがった星の形にひらき、ななめ上〜外を向く。
+    色：青むらさきにこいすじ。まん中は白っぽく、白いおしべと5つにわかれためしべ。つぼみ：紙ふうせんのようにふくらんだ5角の形（うすい色）"""
+    rng = p.rng; STEMC = (96, 140, 70)
+    def flower(o, ax, D_):
+        """花：浅いおわんの面（4だん×20）に、星の形の絵（アルファ抜き）をはる。D_：花のはば"""
+        f, sx, ux = frame(ax, (0, 0, 1) if abs(ax[2]) < .95 else (1, 0, 0)); rot = rng.uniform(0, 6.283); V = []; UV = []; C = []; F = []; NR, NA = 4, 20
+        V.append(o + f * .002); UV.append((.5, .5)); C.append(G(255, 255, 255))
+        for i in range(1, NR + 1):
+            rr = i / NR; z = .32 * D_ * rr ** 1.6   # 浅いおわん：外ほど上がる
+            for j in range(NA):
+                a = 2 * math.pi * j / NA + rot; V.append(o + (sx * math.cos(a) + ux * math.sin(a)) * rr * D_ / 2 + f * z); UV.append((.5 + .5 * rr * math.cos(a - rot) * 1.04, .5 + .5 * rr * math.sin(a - rot) * 1.04)); C.append(G(255, 255, 255))
+        for j in range(NA): F.append((0, 1 + j, 1 + (j + 1) % NA))
+        for i in range(NR - 1):
+            for j in range(NA): a_ = 1 + i * NA + j; b_ = 1 + i * NA + (j + 1) % NA; F += [(a_, a_ + NA, b_), (b_, a_ + NA, b_ + NA)]
+        p.pcard.add(V, F, C, np.array(UV))
+        sweep(p, [o, o + f * .03], [.005, .003], [(240, 240, 236), (240, 240, 236)], sides=5)   # おしべとめしべ（白いしん）
+        for k in range(5): q = o + f * .03; dd = unit(f + (sx * math.cos(k * 1.2566) + ux * math.sin(k * 1.2566)) * 1.2); sweep(p, [q, q + dd * .011], [.0024, .001], [(236, 236, 246)] * 2, sides=3)   # めしべの先（5つにわかれる）
+        sweep(p, [o - f * .012, o - f * .002], [.003, .007], [(84, 128, 60), (98, 140, 70)], sides=5)   # 花の下のふくらみ（がく）
+    def bud(o, ax, s_):
+        """つぼみ：5角の紙ふうせん"""
+        sweep(p, [o, o + ax * .012 * s_, o + ax * .026 * s_, o + ax * .036 * s_], [.005 * s_, .014 * s_, .013 * s_, .002 * s_], [(130, 160, 100), (176, 168, 230), (184, 172, 236), (160, 146, 226)], sides=5, cap=True)
+    for s_, (az, h, lean) in enumerate(((0, .4, .04), (110, .34, .08), (230, .36, .07), (300, .27, .1), (170, .24, .1))):
+        b = rad(az, 0) * (.01 if not s_ else .03); top = b + G(0, 0, h) + rad(az, 0) * lean; P, D = p.stem(b, top, .0055, .0035, rad(az + 90, 0) * .01, color=STEMC, n=4)
+        for k in range(9):   # 葉：柄のない葉が、互いちがいに（137.5度ずつ）。上ほど小さく・立つ
+            t = .06 + .095 * k; L = (.13 - .009 * k) * rng.uniform(.9, 1.08); place_card(p, P(t), rad(az + k * 137.5 + rng.uniform(-15, 15), 26 + 4 * k), L, L * .62, rng, droop=(.12, .25), fold=(.15, .3), tone=(.9, 1.05), roll=.3)
+        ax = unit(D(1) * .5 + unit(rad(az, 0) * .7 + G(0, 0, .7)) * .5)
+        if s_ < 3: flower(P(1), ax, rng.uniform(.15, .17))   # 花は大きい（株の高さの4分の1くらい）
+        else: bud(P(1), D(1), 1.2)
+        if s_ < 2: b2 = P(.82); bud(b2 + rad(az + 140, 30) * .01, unit(rad(az + 140, 0) * .4 + G(0, 0, 1)), .9)   # わきのつぼみ
+
+
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'F9': 1.5, 'salvia': 1.5, 'clover': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover)]
+SIZE = {'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf)]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
@@ -467,6 +517,9 @@ if __name__ == '__main__':
         ob = lambda u: np.sin(np.pi * np.clip(u, 0, 1) ** 1.35) ** .38 * (.3 + .7 * np.clip(u, 0, 1) ** .45)
         for a in (0, 120, 240): leaflet((0, .5), math.radians(a + rng.uniform(-6, 6)), .345, 1.0, rng.uniform(.95, 1.05), prof=ob, teeth=14, tooth=.025, chevron=.9, notch=.025)
     leaf_card_texture(os.path.join(HERE, 'tex', 'card_clover_leaf.png'), os.path.join(TX, '..', 'leaf_broad', 'basecolor.png'), nsrc=os.path.join(TX, '..', 'leaf_broad', 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_clover_leaf_n.png'), layout=clover_leaf, gain=.95)
+    star_petal_texture(os.path.join(HERE, 'tex', 'card_bellf_petal.png'), os.path.join(HERE, 'tex', 'card_bellf_petal_n.png'))
+    def bellf_leaf(seg, leaflet, rng): leaflet((0, .02), 0, .96, .5, 1.0, teeth=11, tooth=.07)   # ききょうの葉：柄がなく、たまご形〜細長い・ぎざぎざ
+    leaf_card_texture(os.path.join(HERE, 'tex', 'card_bellf_leaf.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_bellf_leaf_n.png'), layout=bellf_leaf, gain=1.2)
     leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
     meshes = []
