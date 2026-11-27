@@ -669,33 +669,35 @@ def hotaru(p):
             for k in range(6): p.petal(top + d * .028, unit(d + rad(a + k * 60, 0) * .9), .028, .014, (220, 236, 176), (244, 250, 214), up=d, rows=4, cols=3, bend=.1, curl=.05, cup=.2, twist=0, wave=0, tip_width=.3)   # 少しひらいたつぼみ
 
 
-def oak(p, apples=0):
+def oak(p, apples=0, dead=False):
     """木（植えた木・森の木。持ち主がきめた：オーク。本物の写真（NC State Extension のシロガシワ・アカガシワ・オウシュウナラ・ライブオーク・バーオーク）を見て、構造を書き出してから作った）：
     幹：太く短い。根もとが広がって（根のはり出し）、ひくい所で太い枝にわかれる。木の皮はたての割れめのある灰茶色。
     枝：太い枝が3〜5本、ななめ上と横へ大きく広がり、先で何回もわかれる。樹冠は、高さより横はばが広い、まるく広がった形。
     葉：深く切れこんだ（まるい山がいくつもある）葉が、枝先にかたまってつく。葉のかたまりのあいだに、すきまと枝が見える。
     大きさ：ゲームの絵に合わせて、高さ 約2.6マス・はば 約2.6マス（作った形の1.5倍のあと）"""
-    rng = p.rng; BARK = (124, 108, 92)
+    rng = p.rng; BARK = (124, 108, 92) if not dead else (150, 144, 134)   # 枯れ木：皮がはげて、灰色っぽい
     def branch(o, d, L, r, depth, tips, pdir=G(0, 0, 1), pr=None):
         """枝：o から d の向きへ長さ L・太さ r。先で2〜3本にわかれる（depth まで）。葉のかたまりをつける所を tips にためる。
         つけ根をなだらかに（持ち主がきめた）：親の枝（pdir の向き・太さ pr）の中からはじまり、はじめは親の向きにそってのびてから、ゆるくまがって外へ出る（3次のベジェ）。
         つけ根は太く（親の太さに近く）、すぐに自分の太さへ細る（枝のえり）"""
-        pr = pr or r * 1.6; side = unit(np.cross(d, G(0, 0, 1)) + G(0, 0, 1e-6)) * rng.uniform(-1, 1) * .05 * L
+        pr = pr or r * 1.6; side = unit(np.cross(d, G(0, 0, 1)) + G(0, 0, 1e-6)) * rng.uniform(-1, 1) * (.05 if not dead else .16) * L   # 枯れ木の枝は、くねくねまがる
         P0 = o - pdir * pr * .9; P1 = o + pdir * L * .28; P2 = o + d * L * .62 + G(0, 0, .1 * L) + side; P3 = o + d * L + G(0, 0, .1 * L)
         ts = (0, .1, .22, .38, .58, .8, 1); B = lambda t: P0 * (1 - t) ** 3 + 3 * P1 * t * (1 - t) ** 2 + 3 * P2 * t * t * (1 - t) + P3 * t ** 3
         pts = [B(t) for t in ts]; rads = [r + (pr * .85 - r) * max(0, 1 - t / .3) ** 2 - r * .38 * t for t in ts]
-        bark_tube(p, pts, rads, BARK, sides=7 if r > .02 else 5); e = pts[-1]; dd = unit(e - pts[-2])
-        if depth == 0 or r < .012: tips.append((e, dd)); return
+        bark_tube(p, pts, rads, BARK, sides=7 if r > .02 else 5 if r > .01 else 3); e = pts[-1]; dd = unit(e - pts[-2])
+        if depth == 0 or r < (.012 if not dead else .006): tips.append((e, dd)); return
+        if dead and depth < 3 and rng.random() < .22: return   # 枯れ木：先が折れた枝（そこで終わる）
         for k in range(rng.integers(2, 4)):
-            az = math.degrees(math.atan2(dd[1], dd[0])) + rng.uniform(-60, 60) + (k - 1) * 40; el = math.degrees(math.asin(max(-1, min(1, dd[2])))) * .6 + rng.uniform(5, 30)
+            az = math.degrees(math.atan2(dd[1], dd[0])) + rng.uniform(-60, 60) * (1.4 if dead else 1) + (k - 1) * 40; el = math.degrees(math.asin(max(-1, min(1, dd[2])))) * .6 + rng.uniform(5, 30)
             branch(e, rad(az, el), L * rng.uniform(.55, .72), r * .62, depth - 1, tips, dd, r * .62)
     tips = []
     trunk = [G(0, 0, 0), G(.01, 0, .18), G(.025, .01, .4), G(.02, .01, .58)]; bark_tube(p, trunk, [.14, .105, .095, .088], BARK, sides=9, flare=.55)   # 幹：太く短い・根もとが広がる
     az0 = rng.uniform(0, 360)
     for k in range(5):   # 太い枝：ひくい所から、まわり5方向へ、ななめ上と横へ大きく広がる
         az = az0 + k * 72 + rng.uniform(-15, 15); el = rng.uniform(25, 40); o = trunk[-1] + G(0, 0, rng.uniform(-.08, -.01))   # 幹の中からはじまる
-        branch(o, rad(az, el), rng.uniform(.4, .5), .06, 2, tips, G(0, 0, 1), .085)
-    branch(trunk[-1], rad(rng.uniform(0, 360), 78), .42, .055, 2, tips, G(0, 0, 1), .085)   # まん中から上へのびる枝
+        branch(o, rad(az, el), rng.uniform(.4, .5), .06, 2 if not dead else 4, tips, G(0, 0, 1), .085)
+    branch(trunk[-1], rad(rng.uniform(0, 360), 78), .42, .055, 2 if not dead else 4, tips, G(0, 0, 1), .085)
+    if dead: return   # 枯れ木：葉はつけない   # まん中から上へのびる枝
     CC, RX, RZ = G(0, 0, 1.2), .9, .5   # 樹冠：横に広いまるい屋根（だ円の玉）。葉のかたまりを、その外がわにならべる（すきまも少しのこす）
     clumps = [(e + dd * .08, dd) for e, dd in tips]
     for i in range(26):
@@ -728,6 +730,10 @@ def oak(p, apples=0):
             apple(q, r)
 
 
+def deadtree(p):   # 枯れ木（本物の枯れたオークの写真4まい）：オークの骨組み・葉なし・枝は細かくわかれてくねくね・先が折れた枝・皮がはげた灰色
+    oak(p, dead=True)
+
+
 def fruit(p):   # りんごの木（持ち主がきめた：オークの形を流用して、りんごの実をつける）
     oak(p, apples=22)
 
@@ -736,8 +742,8 @@ def grass(p):   # 草むら（イネ科）：根もとから細い葉がたば�
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'oak': 1.5, 'fruit': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak), ('fruit', fruit)]
+SIZE = {'oak': 1.5, 'fruit': 1.5, 'deadtree': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak), ('fruit', fruit), ('deadtree', deadtree)]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
