@@ -88,7 +88,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={farm:{col:'#7d5638'},rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.4};
-const GLOSS={k:.55,pow:26,sheen:.22};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ・ふちのてり */
+const GLOSS={k:.2,pow:9,sheen:.1,tint:.6};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
 const PETAL={sat:1.05,tex:.75,from:.35,base:.62,tip:1.12,satBase:1.35};   /* from：花のはじまる高さ（植物の高さの割合）・base／tip：つけ根と先の明るさ・satBase：つけ根のあざやかさ */      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
@@ -210,7 +210,7 @@ function toon(o={},extra={}){
    if(tnK==5){float up=(uViewInv*n).y;outgoingLight*=mix(${LEAFSOFT.lo},${LEAFSOFT.hi},smoothstep(-.5,.8,up));   /* 木の葉をふんわり：上を向いた面は明るく・下はこく、ふちに日の色の光 */
      outgoingLight+=diffuseColor.rgb*vec3(1.,.98,.7)*${LEAFSOFT.rim}*pow(1.-clamp(dot(n,V),0.,1.),2.)*clamp(up+.4,0.,1.);}
    if(tnPetal>.5){vec3 Rv=reflect(-V,n);float shd=getShadowMask();   /* 花びらの光沢：日の光のつやと、ふちのてり（かげの中は弱く） */
-     outgoingLight+=vec3(1.,.98,.94)*(${GLOSS.k}*pow(max(dot(Rv,uSunV),0.),${GLOSS.pow}.)*shd+${GLOSS.sheen}*pow(1.-clamp(dot(n,V),0.,1.),3.)*(.4+.6*shd));}
+     outgoingLight+=mix(vec3(1.,.98,.94),diffuseColor.rgb*1.6+.15,${GLOSS.tint})*(${GLOSS.k}*pow(max(dot(Rv,uSunV),0.),${GLOSS.pow}.)*shd+${GLOSS.sheen}*pow(1.-clamp(dot(n,V),0.,1.),3.)*(.4+.6*shd));}
    if(tnK==5)outgoingLight+=diffuseColor.rgb*vec3(${SSS.col.join(',')})*${SSS.k}*max(0.,-dot(n,uSunV));      // すける葉：光と反対を向いた葉も明るく
    if(tnK==2){vec3 Rv=reflect(-V,n),Rw=uViewInv*Rv;vec3 env=mix(lin(${C3(GROUND)}),lin(${C3(SKYTOP)})*1.4,smoothstep(-.2,.6,Rw.y)); // 金属：空のうつりこみとつや
      outgoingLight=mix(outgoingLight,env*diffuseColor.rgb*2.2,${METAL.refl})+vec3(1.,.95,.85)*${METAL.spec}*pow(max(dot(Rv,uSunV),0.),${METAL.pow}.);}}
