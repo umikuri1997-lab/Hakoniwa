@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>はこにわ暮らし</title>
+<meta name="description" content="守り神とせいれいのものがたり。荒れた土地に、せいれいたちと村をつくる、ブラウザで遊べる無料のゲーム。">
+<meta property="og:title" content="はこにわ暮らし">
+<meta property="og:description" content="守り神とせいれいのものがたり。荒れた土地に、もう一度いのちを。ブラウザで無料で遊べます。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://umikuri1997-lab.github.io/Hakoniwa/assets/about/title.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* 紹介ページ（ゲームの外）。ゲームのタイトル画面の夕やけと、木の板の色にそろえる */
+:root{
+  --sky1:#c9a9c4; --sky2:#f0c9a0; --sand:#e8c79a;
+  --paper:#fbf3e2; --paper2:#f3e6c8; --ink:#4a3a2a; --muted:#7a6650;
+  --wood:#b07a45; --wood-d:#7d5430; --leaf:#6f9a4c;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,sans-serif;font-weight:500;line-height:1.8;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%;height:auto}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+
+/* いちばん上 */
+.hero{background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 55%,var(--sand) 100%);padding:40px 0 48px;text-align:center}
+.hero .sub{margin:0;font-size:15px;letter-spacing:.08em;color:#5b4636}
+.hero h1{margin:4px 0 6px;font-size:clamp(34px,8vw,56px);font-weight:700;letter-spacing:.06em;color:#fff;text-shadow:0 2px 0 var(--wood-d),0 0 1px var(--wood-d)}
+.hero .lead{margin:0 0 24px;font-size:16px;color:#5b4636}
+.shot{border:4px solid var(--wood-d);background:var(--wood-d);box-shadow:0 6px 0 rgba(90,60,30,.25)}
+.hero .shot{margin:0 auto 28px;width:100%;max-width:760px}
+.play{display:inline-block;padding:14px 44px;background:var(--wood);color:#fff;font-size:20px;font-weight:700;letter-spacing:.12em;text-decoration:none;border:3px solid var(--wood-d);box-shadow:0 5px 0 var(--wood-d);transition:transform .08s ease,box-shadow .08s ease}
+.play:hover{background:#bd8650}
+.play:active{transform:translateY(4px);box-shadow:0 1px 0 var(--wood-d)}
+.play:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.free{margin:12px 0 0;font-size:14px;color:#5b4636}
+
+section{padding:44px 0 8px}
+h2{margin:0 0 16px;font-size:24px;font-weight:700;color:var(--wood-d);border-bottom:3px dashed var(--paper2);padding-bottom:6px}
+p{margin:0 0 14px}
+
+/* 土地のならび */
+.lands{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:8px}
+.land{background:#fff;border:3px solid var(--paper2);padding:10px}
+.land h3{margin:10px 0 2px;font-size:18px;font-weight:700}
+.land .tag{font-size:13px;color:var(--muted)}
+.land p{margin:4px 0 0;font-size:15px}
+
+/* あそびかた */
+dl.how{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;margin:0}
+dl.how dt{font-weight:700;color:var(--wood-d)}
+dl.how dd{margin:0}
+ul{margin:0 0 14px;padding-left:1.2em}
+li{margin:4px 0}
+
+.end{text-align:center;padding:48px 0 56px}
+footer{background:var(--paper2);color:var(--muted);font-size:13px;text-align:center;padding:16px}
+
+@media (max-width:600px){
+  .lands{grid-template-columns:minmax(0,1fr)}
+  dl.how{grid-template-columns:1fr;gap:2px}
+  dl.how dd{margin-bottom:10px}
+  .hero{padding-top:28px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="sub">守り神とせいれいのものがたり</p>
+    <h1>はこにわ暮らし</h1>
+    <p class="lead">荒れた土地に、もう一度いのちを。</p>
+    <img class="shot" src="assets/about/title.webp" width="1280" height="720" alt="タイトル画面。かわいた土地に、葉っぱの頭のせいれいがねむっている">
+    <a class="play" href="index.html">あそぶ</a>
+    <p class="free">ブラウザですぐ遊べます。無料です。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>どんなゲーム？</h2>
+    <p>あなたは、荒れた土地をまもる守り神。そこにくらす、ちいさなせいれいたちといっしょに、村をつくっていきます。</p>
+    <p>せいれいたちは、ごはんを食べて、はたらいて、あそんで、ねむります。家や畑をつくり、なかまをむかえ、村をゆたかにしていきましょう。夜になると、こわいものたちがやってきます。村のみんなを守りながら、土地ごとのお話をすすめて、ヌシ様の力をとりもどします。</p>
+  </section>
+
+  <section>
+    <h2>5つの土地</h2>
+    <p>はじめは「はじまりの草原」から。お話をすすめると、ほかの土地もひらきます。</p>
+    <div class="lands">
+      <div class="land">
+        <img class="shot" src="assets/about/title.webp" width="1280" height="720" alt="はじまりの草原" loading="lazy">
+        <h3>はじまりの草原</h3><span class="tag">WORLD 1・木</span>
+        <p>自然の力がくずれて荒れた草原。せいれいたちと村をつくり、守護の力をとりもどそう。</p>
+      </div>
+      <div class="land">
+        <img class="shot" src="assets/about/kazan.webp" width="1280" height="720" alt="火山のふもとの村の画面。火のせいれいが道を歩いている" loading="lazy">
+        <h3>火山のふもとの村</h3><span class="tag">WORLD 2・火</span>
+        <p>地面の熱が冷えきった、火の山のふもとの村。こおりかけた温泉に、ぬくもりをとりもどそう。</p>
+      </div>
+      <div class="land">
+        <img class="shot" src="assets/about/tani.webp" width="1280" height="720" alt="ひびわれた岩の谷の画面。土のせいれいが畑のそばにいる" loading="lazy">
+        <h3>ひびわれた岩の谷</h3><span class="tag">WORLD 3・土</span>
+        <p>大地がひびわれ、くずれかけた谷の村。ちいさな土のせいれいと、谷をつなぎなおそう。</p>
+      </div>
+      <div class="land">
+        <img class="shot" src="assets/about/mizube.webp" width="1280" height="720" alt="霧のみずべの村の画面。水のせいれいが神殿のそばにいる" loading="lazy">
+        <h3>霧のみずべの村</h3><span class="tag">WORLD 4・水</span>
+        <p>霧が晴れず、水の流れが止まった村。水門をあけて、水路で水をながそう。</p>
+      </div>
+      <div class="land">
+        <img class="shot" src="assets/about/sora.webp" width="1280" height="720" alt="風のやんだ空の村の画面。風のせいれいが池のそばにいる" loading="lazy">
+        <h3>風のやんだ空の村</h3><span class="tag">WORLD 5・風</span>
+        <p>風が止まり、しずみかけた浮き島の村。</p>
+      </div>
+    </div>
+    <p style="margin-top:16px">草原のお話をおえると、のんびり自分だけの村をつくれる「フリーモード」もひらきます。</p>
+  </section>
+
+  <section>
+    <h2>あそびかた</h2>
+    <dl class="how">
+      <dt>スマホ</dt><dd>タップでえらぶ・しらべる。ドラッグで地図をうごかし、2本の指で大きく・小さく。</dd>
+      <dt>パソコン</dt><dd>クリックでえらぶ・しらべる。ドラッグで地図をうごかし、マウスのホイールで大きく・小さく。</dd>
+      <dt>画面の下</dt><dd>「しらべる」で物やせいれいを見る。「おく」で家や家具をおく。「メニュー」でセーブなど。</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>うごく環境とセーブ</h2>
+    <ul>
+      <li>スマホ・タブレット・パソコンのブラウザで遊べます。インストールはいりません。</li>
+      <li>セーブは、遊んでいるブラウザに自動でのこります。土地ごとにべつのセーブです。</li>
+      <li>ブラウザのデータを消すと、セーブも消えます。メニューの「セーブの書き出し」でファイルにしておくと、あとで読みこめます。ほかのスマホやパソコンへうつすときも、これを使います。</li>
+    </ul>
+  </section>
+
+  <div class="end">
+    <a class="play" href="index.html">あそぶ</a>
+  </div>
+</main>
+
+<footer>はこにわ暮らし</footer>
+</body>
+</html>

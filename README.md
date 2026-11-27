@@ -2,6 +2,8 @@
 
 [ゲームを開く](https://umikuri1997-lab.github.io/Hakoniwa/index.html)
 
+[紹介ページ](https://umikuri1997-lab.github.io/Hakoniwa/about.html)（`about.html`。絵は `assets/about/`）
+
 GitHub Pagesで公開しています。mainブランチへの更新時に `.github/workflows/pages.yml` が実行され、静的サイトを公開します。
 
 ## セーブデータの引き継ぎ
