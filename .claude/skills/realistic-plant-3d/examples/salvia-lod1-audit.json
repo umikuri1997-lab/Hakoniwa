@@ -1,0 +1,40 @@
+{
+  "file": "/mnt/data/salvia-addon/assets/salvia/salvia_lod1.glb",
+  "status": "pass",
+  "errors": [],
+  "warnings": [],
+  "triangles_instanced": 1488,
+  "mesh_nodes": 2,
+  "materials": 2,
+  "images": 6,
+  "bounds_y_up": [
+    [
+      -0.03653759881854057,
+      -9.545177268043122e-20,
+      -0.03592955321073532
+    ],
+    [
+      0.03760633245110512,
+      0.11800000071525574,
+      0.034994937479496
+    ]
+  ],
+  "nodes": [
+    {
+      "node": "corolla",
+      "triangles": 612
+    },
+    {
+      "node": "calyx",
+      "triangles": 876
+    }
+  ],
+  "not_checked": [
+    "render appearance",
+    "botanical accuracy",
+    "self intersections",
+    "full glTF conformance",
+    "actual draw calls",
+    "normal values and winding correctness"
+  ]
+}

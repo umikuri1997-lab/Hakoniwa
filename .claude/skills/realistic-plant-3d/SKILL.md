@@ -16,6 +16,7 @@ description: 植物名・学名・参考画像・成長段階から植物学的�
 - `assets/geometry_samples.png` と `assets/structure_guide.png`：葉・枝・葉序の技術参考画像。最終品質の上限ではない。
 - `scripts/plant_geometry.py`：曲面葉、テーパー枝、葉序、GLB出力の再利用可能な実装（numpy/trimesh）。`scripts/demo_shapes.py` は実行例。対象種の固有構造を追加して使用し、汎用見本だけで完成させない。
 - `examples/spec-template.json`：制作ごとの形態仕様記録。
+- サルビア（Salvia splendens）の花のみを生成するときは `references/salvia-splendens-flower.md` を読み、`assets/salvia/` と `scripts/salvia_spike.py` を参照する。花穂のみ、葉・栄養茎なし。花序軸は残す。通常1800・遠景800三角形以内を暫定上限とする。別種や単花指定はユーザー指定を優先する。
 - [references/implementation-notes.md](references/implementation-notes.md)：同梱コードの使い方と検査範囲。
 
 **絶対条件：植物の名前が変わっても同じ形の葉・樹冠を使い回すだけの生成は禁止。参考画像の特徴から対象種専用のパラメータ・構造を設計する。実行環境がある限り、生成したモデルのレンダーと参照を比較し、欠点を修正してから納品する。**

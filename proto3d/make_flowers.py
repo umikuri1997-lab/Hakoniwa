@@ -361,22 +361,43 @@ def salvia(p):
     形（ふつうに知られた形。写真は見られていない）：まっすぐ立つ四角いくき・たまご形でぎざぎざの葉が、向かい合って節ごとに90度まわる（十字対生）。
     くきの上に、赤いがくと、細長いつつの形の花（先が上下の唇にわかれる）が、輪になって何だんもつく（穂）。花もがくも赤。
     スキル v9：花はつつ（5角）とがく（玉）だけの軽い形。葉はアルファ抜きのカード（1まいの葉＋葉柄）＋ノーマル"""
-    rng = p.rng; RED_A = (178, 18, 22); RED_B = (240, 50, 40); CAL = (150, 14, 24)
+    rng = p.rng; COR = ((196, 22, 26), (250, 64, 46)); CALC = ((140, 14, 22), (206, 34, 36)); DARK = (70, 6, 12)
+    def ring(o, d, ax, length, width, kind, bud=False, bend=0.):
+        """スキルのサルビアの追加データ（salvia_spike.ringmesh）の形：じくにそったつつで、先が上下の唇にわかれる（ふち非対称）。
+        がく（calyx）：鐘の形・たてのすじ・先に上下の唇。花（corolla）：がくからつき出る細長いつつ・上の唇が長い・口の中は暗い。sides 5・rows 3"""
+        d = unit(d); a = unit(np.cross(ax, d)); b = unit(np.cross(d, a)); sides, rows = 5, 3; vs = []; cs = []; fs = []
+        for i in range(rows + 1):
+            t = i / rows
+            for j in range(sides + 1):
+                th = 2 * math.pi * (j % sides) / sides; dor = math.sin(th)
+                if kind == 'calyx': rad = width * (.35 + .65 * math.sin(math.pi * .72 * t)); lip = (.11 * dor + .11 * math.cos(2 * th)) * t ** 6
+                else: rad = width * (.48 + .52 * t ** .7); lip = (.22 * dor + .08 * math.cos(2 * th)) * t ** 6
+                if bud: rad *= 1 - .8 * t ** 5
+                vs.append(o + d * length * (t + lip) + a * rad * math.cos(th) + b * (rad * .82 * dor + bend * t * t))
+                ca, cb = CALC if kind == 'calyx' else COR; rib = .9 + .1 * math.cos(5 * th) if kind == 'calyx' else 1
+                cs.append((G(*ca) * (1 - t) + G(*cb) * t) * rib if not (kind == 'corolla' and i == rows and not bud) else G(*cb) * .9)
+        for i in range(rows):
+            for j in range(sides): k = i * (sides + 1) + j; l = k + sides + 1; fs += [(k, k + 1, l), (k + 1, l + 1, l)]
+        if kind == 'corolla' and not bud:   # 口の中（暗い）：先のふちを、中へすぼめたふた
+            c0 = len(vs); vs.append(o + d * length * .9); cs.append(G(*DARK)); fs += [(c0, rows * (sides + 1) + j + 1, rows * (sides + 1) + j) for j in range(sides)]
+        p.add(vs, fs, cs)
+    def spike(P, D, tiers, top):
+        """花の穂（スキルのサルビアの追加データ）：くきの上 top の長さに、節を tiers だん。節ごとに2〜4花のまとまり（花柄は短い）。
+        上はつぼみ・まん中は花・下は、花が落ちて赤いがくだけのものもまじる。節ごとに向きを少しまわし、上ほど小さく"""
+        for i in range(tiers):
+            u = i / (tiers - 1); t = 1 - top + top * u; o = P(t); ax = D(t); num = 4 if u < .5 else 3 if u < .85 else 2; bud = u > .86
+            for j in range(num):
+                az = 360 * j / num + (i % 2) * 45 + rng.uniform(-8, 8); d = around(ax, az, 46 if not bud else 62); o2 = o + d * .003   # 花は、外へ・ななめ上へ（穂の形を細くまとめる）; o2 = o + d * .003
+                L = (.032 - .012 * u) * rng.uniform(.92, 1.08); w = (.009 - .003 * u) * rng.uniform(.92, 1.08)
+                ring(o2, d, ax, L, w, 'calyx', bud=bud, bend=.003)
+                if not bud and not (u < .3 and (i + j) % 3 == 0):   # 下のほうは、花の落ちたがくもまじる
+                    ring(o2 + d * L * .6 + ax * .002, unit(d - ax * .05), ax, (.042 - .014 * u) * rng.uniform(.9, 1.1), w * .65, 'corolla', bend=-.005 * (1 - u))
     for s_, (az, h) in enumerate(((20, .36), (140, .31), (260, .28), (80, .22))):
         b = rad(az, 0) * (.035 if s_ else .01); P, D = p.stem(b, b + G(0, 0, h) + rad(az, 0) * .03, .0075, .005, rad(az + 90, 0) * .008, color=(70, 120, 52), n=4)
         for n_ in range(3):   # 葉：十字対生（節ごとに90度）。下ほど大きい
             t = .1 + .16 * n_; L = .14 * (1 - .22 * n_) * rng.uniform(.92, 1.08)
             for k in (0, 180): place_card(p, P(t), rad(az + 90 * n_ + k + rng.uniform(-12, 12), 25 - 8 * n_), L, L * .85, rng, droop=(.2, .35), fold=(.15, .3), tone=(.8, .98))
-        nw = 8 if s_ < 3 else 5   # 穂は長く（くきの上の3割）
-        for w in range(nw):   # 花の穂：上から下へ、輪ごとに3つ。上の花ほど小さく、つぼみ
-            t = 1 - .042 * w - .02; o = P(t); ax = D(t); sc = .6 + .4 * min(1, w / 2)
-            for k in range(3):
-                a = w * 60 + k * 120 + rng.uniform(-15, 15); d = around(ax, a, 30 + rng.uniform(-10, 14))
-                p.ball(o + d * .008 * sc, .009 * sc, CAL, squash=1.6, axis=d, n=5, m=2)   # がく
-                if w >= 1:
-                    e = o + d * .045 * sc + ax * .008 * sc; tip = e + unit(d + ax * .25) * .012 * sc
-                    p.tube([o + d * .01 * sc, e, tip], [.0075 * sc, .0068 * sc, .0035 * sc], RED_B if w > 2 else RED_A, 5)   # 花のつつ（先は少し上へ）
-        p.ball(P(1) + D(1) * .006, .008, CAL, squash=1.8, axis=D(1), n=5, m=2)   # 穂の先のつぼみ
+        spike(P, D, 9 if s_ < 3 else 6, .34 if s_ < 3 else .28)
 
 
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
