@@ -167,12 +167,13 @@ const uMat={value:[]},uSunV={value:new THREE.Vector3()},uViewInv={value:new THRE
 const LUM='vec3(.3,.59,.11)';
 // 光のあと（トゥーンの光の量を見て）：光の温度・流れる雲のかげ・地面の近くのもや。どの物にもかける
 // ドット絵シェーダー（記事）：シェーディングマップの明るさ×太陽のかげ → PX.lv だん → 記事の色の式。そのあと、もとの光は使わない
-// ノーマルマップ（持ち主がきめた：ツルツル（金属・水）いがいの、どの物にも）：材質・地面の絵の明るさを高さ（tnH）として、
-// 画面のとなりの点との高さの差から、面の向きをかたむける（絵から作るバンプ。UV の向きがいらない）。tnHk：でこぼこの深さ（マス）
-const BUMP={mat:.05,leaf:.03,ground:.07,soil:.14,flat:.03,light:.9};   /* light：でこぼこの向きで、明るさをかえる強さ（2だんのかげだけでは、でこぼこが見えない） */
+// ノーマルマップ（持ち主がきめた：ツルツル（金属・水）いがいの、どの物にも）：材質・地面の絵の明るさを高さとして、
+// 絵の上の、となりの場所との高さの差（tnG：UV の向きごとのかたむき）から、面の向きをかたむける。UV の向き（tnUV）は、画面でのかわり方からもとめる。
+// （画面のとなりの点との高さの差から作ると、点ごとにばらばらの向きになって、ザラザラになった。絵はとおくで自動でぼけるので、とおくでもちらつかない）
+const BUMP={mat:.012,leaf:.008,ground:.05,soil:.03,light:.9,e:.004};   /* でこぼこの強さ（材質・葉・地面・畑の土）・でこぼこの向きで明るさをかえる強さ・となりの場所までの長さ（UV） */
 const CLOD={amp:.035,f:11};   /* 畑の土のかたまり：形のでこぼこの高さ（マス）・細かさ */
-const BUMP_FS=`{vec3 sp=-vViewPosition,bdx=dFdx(sp),bdy=dFdy(sp),bN=normalize(normal);vec2 dH=vec2(dFdx(tnH),dFdy(tnH))*tnHk;vec3 R1=cross(bdy,bN),R2=cross(bN,bdx);float det=dot(bdx,R1);
-  tnBump+=normalize(abs(det)*bN-sign(det)*(dH.x*R1+dH.y*R2))-bN;}
+const BUMP_FS=`{vec3 sp=-vViewPosition,q0=dFdx(sp),q1=dFdy(sp),bN=normalize(normal);vec2 s0=dFdx(tnUV),s1=dFdy(tnUV);vec3 q1p=cross(q1,bN),q0p=cross(bN,q0),bT=q1p*s0.x+q0p*s1.x,bB=q1p*s0.y+q0p*s1.y;
+  float bd=max(dot(bT,bT),dot(bB,bB));if(bd>0.)tnBump+=normalize(bN-(bT*tnG.x+bB*tnG.y)*inversesqrt(bd))-bN;}
 `;
 const PXSHADE_FS=`{vec3 nV=normalize(normal+tnBump);float sm=.5+.5*dot(nV,uSunV),shd=getShadowMask(),s=sm*mix(${PX.shadow},1.,shd);
   vec3 b=pow(max(diffuseColor.rgb,0.),vec3(1./2.2));float lit=smoothstep(${CEL.cut-CEL.soft},${CEL.cut+CEL.soft},s);
@@ -189,17 +190,17 @@ function toon(o={},extra={}){
   m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMat,uSunV,uViewInv});
     if(extra.wind)sh.vertexShader='#define TN_WIND\n'+sh.vertexShader;
     sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
-    sh.fragmentShader='uniform sampler2D uMat[7];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+NOISE+sh.fragmentShader
+    sh.fragmentShader='uniform sampler2D uMat[7];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\nfloat tnMh(int k,vec2 u){return k==0?texture2D(uMat[0],u).r:k==1?texture2D(uMat[1],u).r:k==2?texture2D(uMat[2],u).r:k==3?texture2D(uMat[3],u).r:k==4?texture2D(uMat[4],u).r:texture2D(uMat[6],u).g;}\n'+NOISE+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <color_fragment>',`#include <color_fragment>
-  int tnK=int(vMat+.5)-1;vec3 tnBump=vec3(0.);float tnH=0.,tnHk=0.;
+  int tnK=int(vMat+.5)-1;vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vUv2;
   ${extra.mat?`{int k=tnK;
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
       diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);
-      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pl=dot(pc,${LUM});diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}),0.)*mix(1.,l,${PETAL.tex});}tnH=l*.5;tnHk=${BUMP.leaf};}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
+      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pl=dot(pc,${LUM});diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}),0.)*mix(1.,l,${PETAL.tex});}{vec2 uq=vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)};tnUV=uq;tnG=(vec2(dot(texture2D(uMat[5],uq+vec2(${BUMP.e},0.)).rgb,${LUM}),dot(texture2D(uMat[5],uq+vec2(0.,${BUMP.e})).rgb,${LUM}))/lm-l)*${(BUMP.leaf/BUMP.e).toFixed(3)};}}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:k==4?texture2D(uMat[4],uv).r:texture2D(uMat[6],uv).g;
-    float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);tnH=l;tnHk=k==2?0.:k==6?${BUMP.soil}:${BUMP.mat};}}`:`tnH=dot(diffuseColor.rgb,${LUM});tnHk=${BUMP.flat};`}
+    float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);tnUV=uv;tnG=(vec2(tnMh(k,uv+vec2(${BUMP.e},0.)),tnMh(k,uv+vec2(0.,${BUMP.e})))-l)*(k==2?0.:k==6?${(BUMP.soil/BUMP.e).toFixed(3)}:${(BUMP.mat/BUMP.e).toFixed(3)});}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
       .replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+RIM_FS+`
   {vec3 n=normalize(normal),V=normalize(vViewPosition);
@@ -260,7 +261,7 @@ function groundMat(){
   m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMask:{value:maskTex},uG:uGTex,uSunV});
     sh.vertexShader='attribute float aTop;varying vec3 vW,vWP;varying float vTop,vNy;\n'+sh.vertexShader.replace('void main() {','void main() {\nvW=(modelMatrix*vec4(position,1.)).xyz;vTop=aTop;vNy=normal.y;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
     sh.fragmentShader='uniform sampler2D uMask,uG[3];uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
-  vec3 tnBump=vec3(0.);float tnH=0.,tnHk=${BUMP.ground};
+  vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vW.xz;
   {vec2 p=vW.xz;
    if(vNy>.5){float e=.1,h0=fbm(p*${GBUMP.f}),hx=fbm((p+vec2(e,0.))*${GBUMP.f}),hz=fbm((p+vec2(0.,e))*${GBUMP.f});   // 地面のこまかいこぼこ（面の向きだけ）
      vec3 gt0=texture2D(uG[0],p/${GTEX.grass.span}.).rgb,gtx=texture2D(uG[0],(p+vec2(.03,0.))/${GTEX.grass.span}.).rgb,gtz=texture2D(uG[0],(p+vec2(0.,.03))/${GTEX.grass.span}.).rgb;
@@ -283,7 +284,12 @@ function groundMat(){
    if(vNy<.5){  // がけの横の面：土の地層と、上のふちの草
      vec3 ct=texture2D(uG[2],vec2(p.x+p.y,-vW.y)/${GTEX.cliff.span}).rgb;vec3 cl=pow(lin(${C3(COLS.cliff)})*dot(ct,vec3(.3,.59,.11))/${GTEX.cliff.lum}*.7+ct*.9,vec3(1./2.2)); // がけの絵
      float q=(p.x+p.y)*6.,tooth=.06+.16*hs(vec2(floor(q),3.))*(1.-abs(fract(q)*2.-1.));c=mix(cl,c,step(vTop-tooth,vW.y));}  // 上のふちの草：とげとげにたれる
-   tnH=dot(c,vec3(.3,.59,.11));diffuseColor.rgb=lin(c);}`);
+   {float e=.02,sD=max(pm,smoothstep(.45,.6,mk.b+(n1-.5)*.3));vec3 L3=vec3(.3,.59,.11);   /* ノーマルマップ：草・土・がけの絵の明るさを高さに */
+    if(vNy<.5){vec2 q=vec2(p.x+p.y,-vW.y);tnUV=q;tnG=(vec2(dot(texture2D(uG[2],(q+vec2(e,0.))/${GTEX.cliff.span}).rgb,L3),dot(texture2D(uG[2],(q+vec2(0.,e))/${GTEX.cliff.span}).rgb,L3))-dot(texture2D(uG[2],q/${GTEX.cliff.span}).rgb,L3))/e*${BUMP.ground};}
+    else{
+#define TNGH(q) mix(dot(texture2D(uG[0],(q)/${GTEX.grass.span}.).rgb,L3)/${GTEX.grass.lum},dot(texture2D(uG[1],(q)/${GTEX.dirt.span}).rgb,L3)/${GTEX.dirt.lum},sD)
+     tnUV=p;tnG=(vec2(TNGH(p+vec2(e,0.)),TNGH(p+vec2(0.,e)))-TNGH(p))/e*${(BUMP.ground*.3).toFixed(4)};}}
+   diffuseColor.rgb=lin(c);}`);
   };
   m.customProgramCacheKey=()=>'ground';return m;
 }
