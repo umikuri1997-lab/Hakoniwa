@@ -91,28 +91,37 @@ class Plant:
         return {'POSITION': V, 'NORMAL': Nn, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': np.full((len(V), 1), MAT_LEAF), '_UNDER': np.zeros((len(V), 1))}, F
 
 
-def leaf_card_texture(path, src, size=512, seed=7):
+def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None):
     """ばらの複葉のカードの絵（アルファ抜き。持ち主がきめた）：葉柄とじく、小さな葉5まい（2つい＋先の1まい）。
     小さな葉は、スキルの leaf_rose の絵（まん中のすじが、たての中心）を、小さな葉のじくにそって写す。外は透明。
     絵の下が葉のつけ根（V=0）・上が先（V=1）。よこは長さの0.75（左右 -0.375〜0.375）"""
     from PIL import Image
     rng = np.random.default_rng(seed); S = np.asarray(Image.open(src).convert('RGB').resize((256, 256)), float)
+    NS = np.asarray(Image.open(nsrc).convert('RGB').resize((256, 256)), float) / 127.5 - 1 if nsrc else None   # スキルの葉のノーマル（葉脈のでこぼこ。OpenGL：+Y は絵の上＝葉の先）
+    HT = np.zeros((size, size)); DX = np.zeros((size, size)); DY = np.zeros((size, size))   # ノーマルマップ：形の高さ・葉脈のかたむき（カードの x・y）
     ys, xs = np.mgrid[0:size, 0:size]; X = (xs + .5) / size * .75 - .375; Y = 1 - (ys + .5) / size
     col = np.zeros((size, size, 3)); al = np.zeros((size, size)); px = 1 / size
     def seg(a, b, w, c):   # 線（葉柄・じく・小さな葉の柄）
         a = np.array(a); b = np.array(b); d = b - a; L = np.hypot(*d); t = np.clip(((X - a[0]) * d[0] + (Y - a[1]) * d[1]) / L ** 2, 0, 1)
-        r = np.hypot(X - a[0] - t * d[0], Y - a[1] - t * d[1]); k = np.clip((w * (1 - .4 * t) - r) / px + .5, 0, 1); col[:] = col * (1 - k[..., None]) + np.array(c) * k[..., None]; al[:] = np.maximum(al, k)
+        r = np.hypot(X - a[0] - t * d[0], Y - a[1] - t * d[1]); ww = w * (1 - .4 * t); k = np.clip((ww - r) / px + .5, 0, 1); col[:] = col * (1 - k[..., None]) + np.array(c) * k[..., None]; al[:] = np.maximum(al, k)
+        HT[:] = np.maximum(HT, np.sqrt(np.clip(1 - (r / ww) ** 2, 0, 1)) * ww * k)   # 柄・じくは、まるいつつ
     def leaflet(b, ang, L, W, tone):
         d = np.array([math.sin(ang), math.cos(ang)]); n = np.array([d[1], -d[0]]); u = ((X - b[0]) * d[0] + (Y - b[1]) * d[1]) / L; w = ((X - b[0]) * n[0] + (Y - b[1]) * n[1]) / L
         uc = np.clip(u, 0, 1); hw = W / 2 * np.sin(np.pi * uc) ** .72 * (1.16 - .4 * uc); saw = 1 - .09 * (np.mod(uc * 8, 1)) * (uc > .15)   # ぎざぎざ（先へ向く歯）
         m = np.clip((hw * saw - np.abs(w)) * L / px + .5, 0, 1) * (u > 0) * (u < 1)
         sx = np.clip(((w / (W * 1.05) + .5) * 255).astype(int), 0, 255); sy = np.clip(((1 - uc) * 255).astype(int), 0, 255); c = S[sy, sx] * tone * (1 - .12 * np.abs(w) / (W / 2))[..., None]   # ふちは少し暗く
         col[:] = col * (1 - m[..., None]) + c * m[..., None]; al[:] = np.maximum(al, m)
+        a_ = np.clip(np.abs(w) / np.maximum(hw, 1e-6), 0, 1); h = (1 - a_ ** 2) ** .5 * .022 * L * np.sin(np.pi * uc) ** .3 - .006 * L * np.exp(-(w / (.025 * W)) ** 2)   # ふくらみ：ふちへ丸く下がる（厚みに見せる）・まん中のすじは少しくぼむ
+        HT[:] = HT * (1 - m) + h * m
+        if NS is not None: nt = NS[sy, sx]; DX[:] = DX * (1 - m) + (nt[..., 0] * n[0] + nt[..., 1] * d[0]) * m; DY[:] = DY * (1 - m) + (nt[..., 0] * n[1] + nt[..., 1] * d[1]) * m   # 葉脈のかたむきを、小さな葉の向きにまわす
     seg((0, 0), (0, .8), .009, (62, 104, 46))
     for (y, ang, L) in ((.3, 52, .26), (.55, 44, .28)):
         for sg in (-1, 1): a = math.radians(ang) * sg; b = (math.sin(a) * .03, y + math.cos(a) * .03); seg((0, y), b, .006, (62, 104, 46)); leaflet(b, a + rng.uniform(-.08, .08), L * rng.uniform(.93, 1.05), .56, rng.uniform(.95, 1.12))   # W：はば÷長さ
     leaflet((0, .68), rng.uniform(-.05, .05), .31, .58, 1.05)
     img = np.dstack([np.clip(col * 1.35, 0, 255), al * 255]).astype(np.uint8); Image.fromarray(img, 'RGBA').save(path)
+    if npath:   # ノーマルマップ（OpenGL・+Y は絵の上）：形の高さのかたむき＋葉脈
+        gy, gx = np.gradient(HT, px); nx = -gx * .55 + DX * .5; ny = gy * .55 + DY * .5; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+        Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
 
 
 def rad(az, el):
@@ -314,6 +323,8 @@ def grass(p):   # 草むら（イネ科）：根もとから細い葉がたば�
 KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass)]
 
 if __name__ == '__main__':
+    TX = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'leaf_rose')
+    leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
     meshes = []
     for i, (name, fn) in enumerate(KINDS):

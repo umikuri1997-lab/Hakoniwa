@@ -179,7 +179,7 @@ const BUMP_FS=`{vec3 sp=-vViewPosition,q0=dFdx(sp),q1=dFdy(sp),bN=normalize(norm
 const PXSHADE_FS=`{vec3 nV=normalize(normal+tnBump);float sm=.5+.5*dot(nV,uSunV),shd=getShadowMask(),s=sm*mix(${PX.shadow},1.,shd);
   vec3 b=pow(max(diffuseColor.rgb,0.),vec3(1./2.2));float lit=smoothstep(${CEL.cut-CEL.soft},${CEL.cut+CEL.soft},s);
   vec3 o=mix(pxShade(b,${CEL.shade.toFixed(2)}),pxShade(b,${CEL.light.toFixed(2)}),lit);
-  o=mix(o,pxShade(b,${CEL.hlk.toFixed(2)}),smoothstep(${CEL.hl-CEL.soft},${CEL.hl+CEL.soft},sm)*step(.5,shd));o*=clamp(1.+${BUMP.light}*(dot(nV,uSunV)-dot(normalize(normal),uSunV)),.55,1.45);outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
+  o=mix(o,pxShade(b,${CEL.hlk.toFixed(2)}),smoothstep(${CEL.hl-CEL.soft},${CEL.hl+CEL.soft},sm)*step(.5,shd));o*=clamp(1.+${BUMP.light}*(dot(nV,uSunV)-dot(normalize(tnGeoN),uSunV)),.55,1.45);   /* でこぼこ（ノーマルマップ・絵から作るでこぼこ）の向きと、もとの面の向き（tnGeoN）の差で、明るさをかえる */outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
 `;
 // 光のあと：流れる雲のかげ・地面の近くのもや。どの物にもかける
 const AIR_FS=`{float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
@@ -205,7 +205,7 @@ function toon(o={},extra={}){
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:k==4?texture2D(uMat[4],uv).r:texture2D(uMat[6],uv).g;
     float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);tnUV=uv;tnG=(vec2(tnMh(k,uv+vec2(${BUMP.e},0.)),tnMh(k,uv+vec2(0.,${BUMP.e})))-l)*(k==2?0.:k==6?${(BUMP.soil/BUMP.e).toFixed(3)}:${(BUMP.mat/BUMP.e).toFixed(3)})${extra.nobump?'*0.':''};}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
-      .replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+RIM_FS+`
+      .replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+RIM_FS+`
   {vec3 n=normalize(normal),V=normalize(vViewPosition);
    if(tnK==5){float up=(uViewInv*n).y;outgoingLight*=mix(${LEAFSOFT.lo},${LEAFSOFT.hi},smoothstep(-.5,.8,up));   /* 木の葉をふんわり：上を向いた面は明るく・下はこく、ふちに日の色の光 */
      outgoingLight+=diffuseColor.rgb*vec3(1.,.98,.7)*${LEAFSOFT.rim}*pow(1.-clamp(dot(n,V),0.,1.),2.)*clamp(up+.4,0.,1.);}
@@ -265,7 +265,7 @@ function groundMat(){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD});
   m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMask:{value:maskTex},uG:uGTex,uSunV});
     sh.vertexShader='attribute float aTop;varying vec3 vW,vWP;varying float vTop,vNy;\n'+sh.vertexShader.replace('void main() {','void main() {\nvW=(modelMatrix*vec4(position,1.)).xyz;vTop=aTop;vNy=normal.y;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
-    sh.fragmentShader='uniform sampler2D uMask,uG[3];uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
+    sh.fragmentShader='uniform sampler2D uMask,uG[3];uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
   vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vW.xz;
   {vec2 p=vW.xz;
    if(vNy>.5){float e=.1,h0=fbm(p*${GBUMP.f}),hx=fbm((p+vec2(e,0.))*${GBUMP.f}),hz=fbm((p+vec2(0.,e))*${GBUMP.f});   // 地面のこまかいこぼこ（面の向きだけ）
@@ -422,14 +422,16 @@ function smoothNormals(geo){
 }
 // ---- 花（1から作る。持ち主がきめた）：スキル realistic-plant-3d のやり方で作った tex/flowers.glb（make_flowers.py。形の設計は flowers_spec.json） ----
 let FLOWERSGLB=null,LEAFCARD=null;
+const LEAFCARD_N=2.2;   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
     p.parts=[{geo,mat:toon({vertexColors:true,side:THREE.DoubleSide},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark,wind:true}),hull:null}];
     const lf=(await FLOWERSGLB).scene.getObjectByName(p.id+'_leaf');   /* アルファ抜きの葉のカード（持ち主がきめた）：葉の形の絵（透明なふち）を、板にはる */
-    if(lf){LEAFCARD=LEAFCARD||new THREE.TextureLoader().loadAsync('./tex/leaf_rose_card.png').then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t});
+    if(lf){LEAFCARD=LEAFCARD||Promise.all(['leaf_rose_card.png','leaf_rose_card_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
+      const [lmap,lnor]=await LEAFCARD;   /* lnor：葉のカードのノーマルマップ（ふちへ丸く下がるふくらみ・まん中のすじ・葉脈。厚みがあるように見せる。持ち主がきめた） */
       const lg=lf.geometry.clone();lg.scale(OBJSCALE,OBJSCALE,OBJSCALE);lg.computeVertexNormals();
-      p.parts.push({geo:lg,mat:toon({vertexColors:true,map:await LEAFCARD,alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
+      p.parts.push({geo:lg,mat:toon({vertexColors:true,map:lmap,normalMap:lnor,normalScale:new THREE.Vector2(LEAFCARD_N,LEAFCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
     return}   /* 花には、輪郭線をつけない */
   let root;
   if(p.src==='plants'){PLANTS=PLANTS||gltf.loadAsync('./tex/plants.glb');root=(await PLANTS).scene.getObjectByName(p.id).clone()}
