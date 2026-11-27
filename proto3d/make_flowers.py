@@ -427,16 +427,16 @@ def salvia(p):
             for k in (0, 180): flower(o, around(up, az0 + 90 * i + k + rng.uniform(-10, 10), 0), up, size * rng.uniform(.92, 1.06), stage)
         for k in range(3): flower(P(1), around(D(1), az0 + k * 120, 0), D(1), .5, 0)   # 先のつぼみのかたまり
     leaf = lambda o, a, el, L: place_card(p, o, rad(a, el), L, L * .86, rng, droop=(.15, .3), fold=(.15, .28), tone=(.95, 1.12), roll=.35)
-    shoots = ((0, .2, 0, .03), (100, .17, .06, .02), (220, .16, .06, .025), (330, .15, .055, .02))   # 枝：方位・葉の茂みの高さ・根もとのずれ・かたむき
+    shoots = ((0, .2, .05, .03), (100, .17, .17, .02), (220, .16, .18, .025), (330, .15, .16, .02))   # 枝：方位・葉の茂みの高さ・根もとのずれ（マスいっぱいに広げる。となりの株とつながる）・かたむき
     for s_, (az, hv, off, lean) in enumerate(shoots):
         b = rad(az, 0) * off; top = b + G(0, 0, hv) + rad(az, 0) * lean * 2; P, D = p.stem(b, top, .007, .006, G(0, 0, 0), color=(74, 124, 52), n=3)
         for n_ in range(4):   # 葉：十字対生で、下ほど大きく・ねる。上の葉は穂の根もとをかこむ
             t = .15 + .27 * n_; L = (.19 - .025 * n_) * rng.uniform(.92, 1.08)
             for k in (0, 180): leaf(P(t), az + 90 * n_ + k + rng.uniform(-14, 14), 18 + 10 * n_, L)
         spike(P(1), unit(D(1) * .8 + G(0, 0, .5)), 9 if s_ == 0 else 8, .24 if s_ == 0 else .2 * rng.uniform(.9, 1.05))
-    for k in range(7): leaf(rad(k * 51 + 30, 0) * .02, k * 51 + 30 + rng.uniform(-10, 10), 8, .2 * rng.uniform(.9, 1.05))   # 根もとの大きな葉
+    for k in range(7): leaf(rad(k * 51 + 30, 0) * .1, k * 51 + 30 + rng.uniform(-10, 10), 8, .2 * rng.uniform(.9, 1.05))   # 根もとの大きな葉
     for k in range(4):   # 花のない、わきの短い枝（葉だけ）：茂みをこんもりさせる
-        az = 50 + k * 90 + rng.uniform(-15, 15); b = rad(az, 0) * .05; P, D = p.stem(b, b + G(0, 0, .12) + rad(az, 0) * .06, .005, .004, G(0, 0, 0), color=(74, 124, 52), n=2)
+        az = 50 + k * 90 + rng.uniform(-15, 15); b = rad(az, 0) * .2; P, D = p.stem(b, b + G(0, 0, .12) + rad(az, 0) * .06, .005, .004, G(0, 0, 0), color=(74, 124, 52), n=2)
         for n_ in range(2):
             for kk in (0, 180): leaf(P(.4 + .5 * n_), az + 90 * n_ + kk + rng.uniform(-14, 14), 22 + 10 * n_, .17 * rng.uniform(.9, 1.05))
 
@@ -448,13 +448,13 @@ def clover(p):
     花：葉のない花のくきが葉より高くのび、先にまるい花のかたまり。小さな白い花があつまって外を向く。上はつぼみで緑がかり、下の古い花は下へたれて、うすいピンクや茶色になる"""
     rng = p.rng; STEMC = (112, 150, 86)
     for k in range(4):   # はうくき（地面の上の、ひくいつる）
-        a = k * 90 + rng.uniform(-20, 20); pts = [rad(a, 0) * r + G(0, 0, .004) for r in (0, .06, .12)]; sweep(p, pts, [.004, .0035, .003], [STEMC] * 3, sides=4)   # 葉の下にかくれる
+        a = k * 90 + rng.uniform(-20, 20); pts = [rad(a, 0) * r + G(0, 0, .004) for r in (0, .1, .2)]; sweep(p, pts, [.004, .0035, .003], [STEMC] * 3, sides=4)   # 葉の下にかくれる
     for i in range(30):   # 三つ葉：長い葉柄の先に、水平な三つ葉のカード（カードのまん中が、葉柄の先）
-        a = i * 137.5 + rng.uniform(-15, 15); r = .02 + .17 * math.sqrt((i + .5) / 30); b = rad(a, 0) * r; h = rng.uniform(.05, .13) * (1.15 - .45 * r / .19)
+        a = i * 137.5 + rng.uniform(-15, 15); r = .02 + .23 * math.sqrt((i + .5) / 30); b = rad(a, 0) * r; h = rng.uniform(.05, .13) * (1.15 - .45 * r / .19)
         top = b + rad(a + rng.uniform(-40, 40), 0) * .02 + G(0, 0, h); sweep(p, [b, (b + top) / 2 + rad(a, 0) * .008, top], [.0035, .003, .0026], [STEMC] * 3, sides=4)
         d = rad(rng.uniform(0, 360), rng.uniform(-6, 6)); L = rng.uniform(.17, .21); place_card(p, top - d * L * .5, d, L, L * .75, rng, droop=(0, .04), fold=(.0, .06), tone=(.9, 1.08), roll=.15)
     for f in range(3):   # 花：葉のない花のくき（葉より高い）＋まるい花のかたまり
-        a = f * 120 + rng.uniform(-30, 30); b = rad(a, 0) * rng.uniform(.05, .14); h = rng.uniform(.18, .23); top = b + rad(a, 0) * .02 + G(0, 0, h)
+        a = f * 120 + rng.uniform(-30, 30); b = rad(a, 0) * rng.uniform(.06, .2); h = rng.uniform(.18, .23); top = b + rad(a, 0) * .02 + G(0, 0, h)
         sweep(p, [b, (b + top) / 2 + rad(a + 90, 0) * .01, top], [.004, .0035, .003], [STEMC] * 3, sides=4)
         R = .028; c = top + G(0, 0, R * .75); p.ball(c, R * .45, (150, 170, 110), n=6, m=3)   # まん中のしん
         for i in range(44):   # 小さな花：らせんにならべる。上（z>0）はつぼみ・外を向く。下ほど、下へたれて色がかわる
@@ -491,7 +491,7 @@ def bellf(p):
         """つぼみ：5角の紙ふうせん"""
         sweep(p, [o, o + ax * .012 * s_, o + ax * .026 * s_, o + ax * .036 * s_], [.005 * s_, .014 * s_, .013 * s_, .002 * s_], [(130, 160, 100), (176, 168, 230), (184, 172, 236), (160, 146, 226)], sides=5, cap=True)
     for s_, (az, h, lean) in enumerate(((0, .4, .1), (110, .34, .14), (230, .36, .13), (300, .27, .12), (170, .24, .12))):
-        b = rad(az, 0) * (.01 if not s_ else .03); out = rad(az, 0); sg = lean * 2.2 * (h / .4) * rng.uniform(.85, 1.15)   # しなり：先の、外へのずれ（くきの長さの割合）。長いくきほど、よくしなる
+        b = rad(az, 0) * (.04 if not s_ else rng.uniform(.12, .2)); out = rad(az, 0); sg = lean * 2.2 * (h / .4) * rng.uniform(.85, 1.15)   # しなり：先の、外へのずれ（くきの長さの割合）。長いくきほど、よくしなる
         P = lambda t, b=b, h=h, out=out, sg=sg: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))   # 重力でしなる：根もとはまっすぐ立ち、先の花の重さで、上ほど外へまがる（はりの曲がりの形）。長さが同じになるよう、高さを少し下げる
         D = lambda t, P=P: unit(P(min(1, t + .02)) - P(max(0, t - .02)))
         sweep(p, [P(i / 10) for i in range(11)], [.0055 - .002 * i / 10 for i in range(11)], [(84, 124, 60)] + [STEMC] * 10, sides=5)
@@ -524,7 +524,7 @@ def glily(p):
     def bud(o, d, L):
         sweep(p, [o, o + d * L * .3, o + d * L * .75, o + d * L], [L * .05, L * .06, L * .1, L * .03], [(130, 166, 96), (176, 200, 140), (222, 232, 200), (206, 220, 180)], sides=6, cap=True)
     for s_, (az, h, n_fl) in enumerate(((0, .46, 2), (130, .38, 1), (250, .33, 1))):
-        b = rad(az, 0) * (.0 if not s_ else .05); out = rad(az, 0); sg = .1 * (h / .46) * rng.uniform(.8, 1.2)   # じょうぶなくき：重力のしなりは小さい
+        b = rad(az, 0) * (.06 if not s_ else rng.uniform(.15, .19)); out = rad(az, 0); sg = .1 * (h / .46) * rng.uniform(.8, 1.2)   # じょうぶなくき：重力のしなりは小さい
         P = lambda t, b=b, h=h, out=out, sg=sg: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))
         D = lambda t, P=P: unit(P(min(1, t + .02)) - P(max(0, t - .02)))
         sweep(p, [P(i / 8) for i in range(9)], [.0075 - .0025 * i / 8 for i in range(9)], [STEMC] * 9, sides=5)
