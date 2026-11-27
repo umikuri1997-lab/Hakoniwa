@@ -16,7 +16,7 @@ from rose_curved import rose_petal
 from rose_plant_v8 import petal as v8_petal
 
 MAT_LEAF = 6
-REFLEX = (.62, .22, .5)   # 外がわの花びらのそり返り：はじまる所（つけ根0→先1）・外へ出る長さ（花びらの半径の割合）・下へまがる長さ（花びらの高さの割合）
+REFLEX = (.7, .1, .22)   # 外がわの花びらのそり返り：はじまる所（つけ根0→先1）・外へ出る長さ（花びらの半径の割合）・下へまがる長さ（花びらの高さの割合）
 PETAL_T = .004   # 花びらのふちの厚み（マス。花の大きさ1のとき。持ち主がきめた）
 G = lambda *c: np.array(c, float)
 STEM = (94, 154, 54)
