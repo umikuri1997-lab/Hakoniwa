@@ -1,5 +1,5 @@
 """3Dの試作（proto3d）の花：スキル realistic-plant-3d のやり方と、その部品（scripts/plant_geometry.py の leaf・tube）で、花10しゅるいと草むらを作る。
-  python3 proto3d/make_flowers.py        → proto3d/tex/flowers.glb（F0〜F9・G0）
+  python3 proto3d/make_flowers.py        → proto3d/tex/flowers.glb（USE の植物）
 形の設計は proto3d/flowers_spec.json（種ごとの骨格・葉の形とつき方・花の部位。観察した事と、制作上の仮定をわけて書く）。
 - 作る順：骨格（くき・枝）→ 節に葉（葉柄から葉身へ。葉序は種ごと）→ 花（花びら・がく・おしべ・花のまん中）。葉も花びらも、1まいずつ曲面（そり・くぼみ・ねじれ）。
 - 表現：持ち主の参考の絵（tools/art/ref/plants_ref.png）のように、せを低く・花を大きく・色ははっきり。花びらと葉には厚みをつける（持ち主がきめた）。
@@ -90,8 +90,7 @@ class Plant:
         T = V[F]; F = F[np.linalg.norm(np.cross(T[:, 1] - T[:, 0], T[:, 2] - T[:, 0]), axis=1) > 1e-10]   # 面積のない面（玉のてっぺんなど）はのぞく
         V = V[:, [0, 2, 1]] * [1, 1, -1]   # z 上 → y 上（回すだけ。うらがえさない）
         import trimesh
-        Nn = np.asarray(trimesh.Trimesh(V, F, process=False).vertex_normals)   # なめらかな面の向きを、GLB に書く（スキル v6）
-        return {'POSITION': V, 'NORMAL': Nn, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': MT[:, None].astype(float), '_UNDER': np.zeros((len(V), 1))}, F
+        return {'POSITION': V, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': MT[:, None].astype(float)}, F   # 面の向きは、ゲームで計算する（ファイルを小さく）
 
 
 def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None, layout=None, stem_c=(62, 104, 46), gain=1.35):
@@ -811,6 +810,7 @@ def grass(p):   # 草むら（イネ科）：根もとから細い葉がたば�
 
 
 SIZE = {'berry': 1.5, 'weedc': 1.3, 'weed0g': 1.3, 'weed0k': 1.3, 'oak': 1.5, 'fruit': 1.5, 'deadtree': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+USE = {'salvia', 'clover', 'bellf', 'lily', 'lotus', 'nebari', 'hotaru', 'oak', 'fruit', 'deadtree', 'berry', 'weedc', 'weed0g', 'weed0k'}   # main.js の PROPS に合わせる
 KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak), ('fruit', fruit), ('deadtree', deadtree), ('berry', berry), ('weedc', eleusine), ('weed0g', setaria), ('weed0k', lambda p: setaria(p, dry=True))]
 
 if __name__ == '__main__':
@@ -858,6 +858,7 @@ if __name__ == '__main__':
         p = Plant(100 + i); fn(p); att, F = p.mesh(); V = att['POSITION'] = att['POSITION'] * SIZE.get(name, 1)
         T = trimesh.Trimesh(V, F, process=False); bad = int((T.area_faces < 1e-12).sum())
         print(name, fn.__name__, '三角形', len(F), '高さ %.2f はば %.2f' % (V[:, 1].max(), max(np.ptp(V[:, 0]), np.ptp(V[:, 2]))), '面積0の面', bad, '有限', bool(np.isfinite(V).all()), '地面の下 %.3f' % V[:, 1].min())
+        if name not in USE: continue   # いまのマップで使わない物は、書かない（読みこみを軽く。seed は順番のまま）
         meshes.append((name, att, F))
         if p.pcard is not None and p.pcard.V: ca, cF = p.pcard.mesh(); ca['POSITION'] = ca['POSITION'] * SIZE.get(name, 1); meshes.append((name + '_petal', ca, cF)); print(' ', name + '_petal', '三角形', len(cF))
         if p.card is not None and p.card.V: ca, cF = p.card.mesh(); ca['POSITION'] = ca['POSITION'] * SIZE.get(name, 1); meshes.append((name + '_leaf', ca, cF)); print(' ', name + '_leaf', '三角形', len(cF))

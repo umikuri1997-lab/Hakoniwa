@@ -22,7 +22,8 @@ def read(path):
 
 
 def write(meshes, path, generator):
-    """meshes：[(名前, {属性名: 配列 [n,k]}, 三角形の番号 [m,3])] を、メッシュごとのノードにして書く"""
+    """meshes：[(名前, {属性名: 配列 [n,k]}, 三角形の番号 [m,3])] を、メッシュごとのノードにして書く。
+    ファイルを小さく（読みこみを軽く）：色（COLOR_0）は 0〜1 を 16bit の整数（RGBA）、三角形の番号は点が 65536 より少なければ 16bit"""
     bins = b''; acc = []; views = []; ms = []; nodes = []
     def add(arr, ct=5126):
         nonlocal bins
@@ -30,9 +31,14 @@ def write(meshes, path, generator):
         data = np.ascontiguousarray(arr, CT[ct]).tobytes(); views.append({'buffer': 0, 'byteOffset': len(bins), 'byteLength': len(data)}); bins += data
         k = 1 if arr.ndim == 1 else arr.shape[1]; a = {'bufferView': len(views)-1, 'componentType': ct, 'count': int(len(arr)), 'type': {1: 'SCALAR', 2: 'VEC2', 3: 'VEC3', 4: 'VEC4'}[k]}
         if ct == 5126 and arr.ndim > 1: a['min'] = arr.min(0).tolist(); a['max'] = arr.max(0).tolist()
+        if ct == 5123 and arr.ndim > 1: a['normalized'] = True
         acc.append(a); return len(acc)-1
+    def col(c):
+        c = np.clip(np.asarray(c, float).reshape(len(c), -1), 0, 1); c = np.hstack([c[:, :3], np.ones((len(c), 1))])
+        return np.round(c*65535)
     for name, att, idx in meshes:
-        A = {k: add(v) for k, v in att.items()}; ii = add(np.asarray(idx).ravel(), 5125)
+        A = {k: (add(col(v), 5123) if k == 'COLOR_0' else add(v)) for k, v in att.items()}
+        ii = add(np.asarray(idx).ravel(), 5123 if len(att['POSITION']) < 65536 else 5125)
         ms.append({'name': name, 'primitives': [{'attributes': A, 'indices': ii}]}); nodes.append({'name': name, 'mesh': len(ms)-1})
     j = {'asset': {'version': '2.0', 'generator': generator}, 'scene': 0, 'scenes': [{'nodes': list(range(len(nodes)))}],
          'nodes': nodes, 'meshes': ms, 'accessors': acc, 'bufferViews': views, 'buffers': [{'byteLength': len(bins)}]}
@@ -40,6 +46,21 @@ def write(meshes, path, generator):
     with open(path, 'wb') as f:
         f.write(struct.pack('<III', 0x46546C67, 2, 12+8+len(js)+8+len(bins)))
         f.write(struct.pack('<II', len(js), 0x4E4F534A)); f.write(js); f.write(struct.pack('<II', len(bins), 0x004E4942)); f.write(bins)
+
+
+def repack(path, drop=(), dropattr=()):
+    """いまある glb を、小さい形で書きなおす（drop：使わないメッシュの名前・dropattr：使わない属性）"""
+    b = open(path, 'rb').read(); l = struct.unpack('<I', b[12:16])[0]; j = json.loads(b[20:20+l]); bn = b[20+l+8:]
+    def acc(i):
+        a = j['accessors'][i]; bv = j['bufferViews'][a['bufferView']]; n = NC[a['type']]; dt = CT[a['componentType']]
+        r = np.frombuffer(bn, dt, a['count']*n, bv.get('byteOffset', 0)+a.get('byteOffset', 0)).reshape(-1, n)
+        return r.astype(float)/np.iinfo(dt).max if a.get('normalized') else r
+    out = []
+    for m in j['meshes']:
+        if m['name'] in drop: continue
+        p = m['primitives'][0]; att = {k: acc(v) for k, v in p['attributes'].items() if k not in dropattr}
+        out.append((m['name'], att, acc(p['indices']).reshape(-1, 3).astype(np.int64)))
+    write(out, path, j['asset'].get('generator', ''))
 
 
 def unwrap(P, idx):

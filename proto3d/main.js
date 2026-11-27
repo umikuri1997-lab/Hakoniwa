@@ -13,7 +13,6 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
-import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import {SimplifyModifier} from 'three/addons/modifiers/SimplifyModifier.js';
 import {MAP} from './map0.js';
 
@@ -83,7 +82,7 @@ const ELS=['earth','water','fire','wind','wood'];
 // 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
 const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
 // 岩・小物（props）：tint＝ぬる色（sRGB）・mat＝明るさのむらにする材質の絵
-const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9','G0','salvia','clover','bellf','lily','lotus','nebari','hotaru','oak','fruit','deadtree','berry','weedc','weed0g','weed0k'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花・G0：草むら */
+const PROPS=['salvia','clover','bellf','lily','lotus','nebari','hotaru','oak','fruit','deadtree','berry','weedc','weed0g','weed0k'].map((id,i)=>({id,kind:'tiny',src:'proc',i}));   /* マップに置く植物だけ読む（make_flowers.py の USE と合わせる） */
 // マップの物（tex/map.glb）：ゲームのドット絵を作った3Dの設計図から。nat：自然の物（地形に対して OBJSCALE 倍・向きをばらばらに）。piv：まわす・大きくするまん中（マスの左上から）
 const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
@@ -187,11 +186,20 @@ const PXSHADE_FS=`{vec3 nV=normal+tnBump;nV=dot(nV,nV)>1e-6?normalize(nV):normal
 const AIR_FS=`{float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
   outgoingLight=mix(outgoingLight,lin(${C3(MIST.col)})*dot(outgoingLight,${LUM})*1.3,${MIST.k}*clamp(1.-vWP.y/${MIST.h},0.,1.));}  // もや
 `;
+// せいれいの手足（まとめて描く）：体の点を、ももとうでの4つのグループごとに、つけ根（uSpP）のまわりで軸（uSpA）にそって、ふり（aSw）×向きだけまわす。aGW：点がどのグループにどれだけついているか
+const SPSW=[1,-1,-.7,.7];   /* 左もも・右もも・左うで・右うで のふりの向きと大きさ */
+const SPVS=`attribute vec4 aGW;attribute float aSw;uniform vec3 uSpP[4],uSpA[4];
+vec3 spRot(vec3 v,vec3 k,float a){float c=cos(a),s=sin(a);return v*c+cross(k,v)*s+k*dot(k,v)*(1.-c);}
+vec3 spPos(vec3 p){vec3 o=p;const vec4 K=vec4(${SPSW.join(',')});for(int g=0;g<4;g++)o+=aGW[g]*(spRot(p-uSpP[g],uSpA[g],aSw*K[g])+uSpP[g]-p);return o;}
+vec3 spNor(vec3 n){vec3 o=n;const vec4 K=vec4(${SPSW.join(',')});for(int g=0;g<4;g++)o+=aGW[g]*(spRot(n,uSpA[g],aSw*K[g])-n);return o;}
+`;
+function spiritVS(sh,u){Object.assign(sh.uniforms,u);sh.vertexShader=SPVS+sh.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal=spNor(objectNormal);').replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spPos(transformed);')}
 // o：MeshToonMaterial の設定。extra：{mat:材質の絵をのせる, uvk:UV にかける数, span, wind:風でゆれる}
 function toon(o={},extra={}){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD,...o});
   m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMat,uSunV,uViewInv});
     if(extra.wind)sh.vertexShader='#define TN_WIND\n'+sh.vertexShader;
+    if(extra.spirit)spiritVS(sh,extra.spirit);
     sh.vertexShader='attribute float _under,_mat;varying float vOY;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;vOY=position.y;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
     sh.fragmentShader='uniform sampler2D uMat[7];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat,vOY;varying vec2 vUv2;varying vec3 vWP;\nfloat tnMh(int k,vec2 u){return k==0?texture2D(uMat[0],u).r:k==1?texture2D(uMat[1],u).r:k==2?texture2D(uMat[2],u).r:k==3?texture2D(uMat[3],u).r:k==4?texture2D(uMat[4],u).r:texture2D(uMat[6],u).g;}\n'+NOISE+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
@@ -218,17 +226,18 @@ function toon(o={},extra={}){
      outgoingLight=mix(outgoingLight,env*diffuseColor.rgb*2.2,${METAL.refl})+vec3(1.,.95,.85)*${METAL.spec}*pow(max(dot(Rv,uSunV),0.),${METAL.pow}.);}}
 `+AIR_FS+'\n#include <opaque_fragment>');
   };
-  m.customProgramCacheKey=()=>'toon'+(extra.mat?extra.uvk.toFixed(3):'')+(extra.wind?'w':'')+(extra.nobump?'n':'')+(extra.petalH?'p'+extra.petalH.toFixed(3):'');
+  m.customProgramCacheKey=()=>'toon'+(extra.mat?extra.uvk.toFixed(3):'')+(extra.wind?'w':'')+(extra.nobump?'n':'')+(extra.petalH?'p'+extra.petalH.toFixed(3):'')+(extra.spirit?'s'+extra.spirit.key:'');
   return m;
 }
 
 // 背面法の線のマテリアル：o はもとの物の色（color・vertexColors）。w：ふくらませる長さ（物の座標。ドットの太さ÷物の大きさ）
-function hullMat(o,w){
+function hullMat(o,w,sp){
   const m=new THREE.MeshBasicMaterial({...o,side:THREE.BackSide});
   m.onBeforeCompile=sh=>{curveVS(sh);
-    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','vec3 transformed=position+normalize(normal)*'+w.toFixed(5)+';');
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',sp?'vec3 transformed=spPos(position)+normalize(spNor(normal))*'+w.toFixed(5)+';':'vec3 transformed=position+normalize(normal)*'+w.toFixed(5)+';');
+    if(sp){Object.assign(sh.uniforms,sp);sh.vertexShader=SPVS+sh.vertexShader}
     sh.fragmentShader=NOISE+sh.fragmentShader.replace('#include <opaque_fragment>','gl_FragColor=vec4(lin(pxShade(pow(max(diffuseColor.rgb,0.),vec3(1./2.2)),-.5))*.85,1.);')};
-  m.customProgramCacheKey=()=>'hull'+w.toFixed(5)+(o.vertexColors?'v':'');return m;
+  m.customProgramCacheKey=()=>'hull'+w.toFixed(5)+(o.vertexColors?'v':'')+(sp?'s'+sp.key:'');return m;
 }
 const dotW=()=>HULL.w/(64/Math.SQRT2);   // ゲームの1ドットの長さ（マス）×太さ
 
@@ -510,25 +519,39 @@ async function loadMapObjs(){
     MAPPARTS[o.name]={hgeo:geo,geo:creaseNormals(geo.clone()),mat:toon({vertexColors:true},{mat:true,uvk:s,span:1}),hull:hullMat({vertexColors:true},dotW())}});
 }
 const SPMODELS={};
+// せいれい：しゅるいごとに、体（トゥーン）・目とほっぺ（色だけ）を、それぞれ1つの形にまとめる（同じしゅるいは、何体でも1回で描く。重さの直し）
+// 形は、もとの姿勢のまま大きさをそろえて、足もとのまん中を原点に。手足のふりは、シェーダーでまわす（SPVS）
+const SPLIMB=['thighL','thighR','upper_armL','upper_armR'];
 async function loadSpirit(el){
   const g=await fbx.loadAsync(SPDIR+el+'.fbx');
   g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH*OBJSCALE/bb.getSize(new THREE.Vector3()).y;
-  g.scale.multiplyScalar(s);
-  const sm=col=>toon({color:col},{mat:true,uvk:s/MATSPAN.cloth,span:MATSPAN.cloth,nobump:true});   /* せいれいには、ノーマルマップをかけない（持ち主がきめた） */  // せいれいの体とずきんにも布の絵
-  const c=SPCOL[el],flat=col=>{const m=new THREE.MeshBasicMaterial({color:col});m.onBeforeCompile=curveVS;m.customProgramCacheKey=()=>'flat';return m};
-  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;
-    {const k=o.geometry.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(k).fill(v),1);o.geometry.setAttribute('_mat',mk(MATIDX.cloth));o.geometry.setAttribute('_under',mk(0))}
-    if(n.startsWith('eye'))o.material=flat(c.eye);
-    else if(n.startsWith('cheek'))o.material=flat(c.cheek);
-    else if(n.startsWith('hood')||n.startsWith('hane'))o.material=sm(c.hood);
-    else if(n.startsWith('sprout'))o.material=sm(SPROUT);
-    else if(n.startsWith('headacc'))o.material=sm(HEADACC);
-    else o.material=sm(CREAM);
-  });
-  {const add=[];g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();if(n.startsWith('eye')||n.startsWith('cheek'))return;   // 背面法の線（目・ほっぺはのぞく）
-    const h=o.clone();g.updateMatrixWorld(true);h.material=hullMat({color:o.material.color.getHex()},dotW()/o.getWorldScale(new THREE.Vector3()).x);h.castShadow=false;h.receiveShadow=false;add.push([o.parent,h])});
-   add.forEach(([p,h])=>p.add(h))}
-  SPMODELS[el]=g;
+  g.scale.multiplyScalar(s);g.updateMatrixWorld(true);
+  const c=SPCOL[el],limb=SPLIMB.map(n=>g.getObjectByName(n)),inG=limb.map(b=>{const S=new Set();if(b)b.traverse(o=>S.add(o.name));return S});   /* 骨は、形ごとに同じ名前の組がある（FBX）ので、名前でみる */
+  const u={uSpP:{value:limb.map(b=>b?b.getWorldPosition(new THREE.Vector3()):new THREE.Vector3())},uSpA:{value:limb.map(b=>b?new THREE.Vector3(1,0,0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion())).normalize():new THREE.Vector3(1,0,0))},key:el};
+  const B={body:[],face:[]},v=new THREE.Vector3(),w=new THREE.Vector3(),col=new THREE.Color();
+  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase(),face=n.startsWith('eye')||n.startsWith('cheek');
+    col.set(n.startsWith('eye')?c.eye:n.startsWith('cheek')?c.cheek:n.startsWith('hood')||n.startsWith('hane')?c.hood:n.startsWith('sprout')?SPROUT:n.startsWith('headacc')?HEADACC:CREAM);
+    const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry,P=geo.getAttribute('position'),N=geo.getAttribute('normal'),UV=geo.getAttribute('uv'),SI=geo.getAttribute('skinIndex'),SW=geo.getAttribute('skinWeight'),k=P.count;
+    const pos=new Float32Array(k*3),nor=new Float32Array(k*3),uv=new Float32Array(k*2),cl=new Float32Array(k*3),gw=new Float32Array(k*4),sk=o.isSkinnedMesh&&SI;
+    let anc=-1;for(let a=o;a&&anc<0;a=a.parent)for(let q=0;q<4;q++)if(a.isBone&&a.name===SPLIMB[q])anc=q;   /* 骨の下にじかについた物 */
+    const nm=new THREE.Matrix3().getNormalMatrix(o.matrixWorld);if(sk)o.geometry=geo;   /* 骨のかかり方は、点をばらした形（toNonIndexed）で読む */
+    for(let i=0;i<k;i++){
+      v.fromBufferAttribute(P,i);
+      if(sk){w.copy(v).addScaledVector(new THREE.Vector3().fromBufferAttribute(N,i),.01);o.applyBoneTransform(i,v);o.applyBoneTransform(i,w);w.sub(v).normalize()}
+      else w.fromBufferAttribute(N,i);
+      v.applyMatrix4(o.matrixWorld);if(sk)w.transformDirection(o.matrixWorld);else w.applyMatrix3(nm).normalize();
+      pos.set([v.x,v.y,v.z],3*i);nor.set([w.x,w.y,w.z],3*i);if(UV)uv.set([UV.getX(i),UV.getY(i)],2*i);cl.set([col.r,col.g,col.b],3*i);
+      if(sk){for(let q=0;q<4;q++){const bi=SI.getComponent(i,q),bw=SW.getComponent(i,q);if(!bw)continue;const bone=o.skeleton.bones[bi];for(let gi=0;gi<4;gi++)if(inG[gi].has(bone.name))gw[4*i+gi]+=bw}}
+      else if(anc>=0)gw[4*i+anc]=1;
+    }
+    const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.BufferAttribute(pos,3));ng.setAttribute('normal',new THREE.BufferAttribute(nor,3));ng.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+    ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aGW',new THREE.BufferAttribute(gw,4));ng.setAttribute('_mat',new THREE.BufferAttribute(new Float32Array(k).fill(MATIDX.cloth),1));ng.setAttribute('_under',new THREE.BufferAttribute(new Float32Array(k),1));
+    (face?B.face:B.body).push(ng)});
+  const merge=L=>{const out=new THREE.BufferGeometry();for(const a of ['position','normal','uv','color','aGW','_mat','_under']){const z=L[0].getAttribute(a).itemSize,arr=new Float32Array(L.reduce((t,q)=>t+q.getAttribute(a).array.length,0));let o=0;for(const q of L){arr.set(q.getAttribute(a).array,o);o+=q.getAttribute(a).array.length}out.setAttribute(a,new THREE.BufferAttribute(arr,z))}return out};
+  const fm=new THREE.MeshBasicMaterial({vertexColors:true});fm.onBeforeCompile=sh=>{curveVS(sh);sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spPos(transformed);');Object.assign(sh.uniforms,u);sh.vertexShader=SPVS+sh.vertexShader};fm.customProgramCacheKey=()=>'flat'+el;
+  SPMODELS[el]={body:merge(B.body),face:merge(B.face),
+    mat:toon({vertexColors:true},{mat:true,uvk:s/MATSPAN.cloth,span:MATSPAN.cloth,nobump:true,spirit:u}),   /* せいれいには、ノーマルマップをかけない（持ち主がきめた）。体とずきんにも布の絵 */
+    face_mat:fm,hull:hullMat({vertexColors:true},dotW(),u)};   /* 背面法の線（目・ほっぺはのぞく） */
 }
 // 形をあらくする（三角形をへらす。はじめてえらんだときに作る）
 const LOWKEEP=.25;
@@ -536,7 +559,7 @@ function lowGeo(part){
   if(!part.low){const g=part.geo.clone();const n=g.getAttribute('position').count;
     part.low=new SimplifyModifier().modify(g,Math.floor(n*(1-LOWKEEP)));part.low.computeVertexNormals();
     const m=part.low.getAttribute('position').count,src=part.geo;
-    for(const a of ['_mat','_under'])part.low.setAttribute(a,new THREE.Float32BufferAttribute(new Float32Array(m).fill(src.getAttribute(a).getX(0)),1))}
+    for(const a of ['_mat','_under'])if(src.getAttribute(a))part.low.setAttribute(a,new THREE.Float32BufferAttribute(new Float32Array(m).fill(src.getAttribute(a).getX(0)),1))}   /* _under がない形は 0 */
   return part.low;
 }
 
@@ -615,19 +638,33 @@ function stepDust(dt){
 let sprites=[];let blocked=new Set();
 function walkable(x,z,h){return inMap(x,z)&&KIND[z][x]!=='w'&&HM[z][x]===h&&!blocked.has(x+','+z)}
 function lineOK(a,b,h){const n=Math.ceil(a.distanceTo(b)*3);for(let i=0;i<=n;i++){const t=i/n;if(!walkable(Math.floor(a.x+(b.x-a.x)*t),Math.floor(a.z+(b.z-a.z)*t),h))return false}return true}
+let spInst=[],spBlob=null;
 function makeSpirits(n){
-  for(const s of sprites)scene.remove(s.obj,s.bl);sprites=[];seed=3;
+  for(const m of spInst)scene.remove(m);spInst=[];if(spBlob)scene.remove(spBlob);sprites=[];seed=3;
+  const cnt={};for(const el of ELS)SPMODELS[el].ims=null;
   for(let i=0;i<n;i++){
-    const el=ELS[i%ELS.length],obj=SkeletonUtils.clone(SPMODELS[el]);
+    const el=ELS[i%ELS.length];
     let x,z;do{x=Math.floor(rnd()*MAPN);z=Math.floor(rnd()*MAPN)}while(!walkable(x,z,HM[z][x])||!GRASS[z][x]);
-    const h=HM[z][x];const bones={};obj.traverse(o=>{if(o.isBone)bones[o.name]={b:o,q:o.quaternion.clone()}});
-    obj.position.set(x+.5,groundH(x+.5,z+.5),z+.5);obj.rotation.y=rnd()*Math.PI*2;scene.add(obj);
-    const bl=new THREE.Mesh(blobGeo,blobMat);bl.scale.set(.7*OBJSCALE*SPH,1,.7*OBJSCALE*SPH);bl.renderOrder=2;scene.add(bl);
-    sprites.push({obj,bl,h,bones,to:null,wait:rnd()*2,ph:rnd()*6});
+    const h=HM[z][x];
+    sprites.push({el,k:(cnt[el]=(cnt[el]||0)+1)-1,obj:{position:new THREE.Vector3(x+.5,groundH(x+.5,z+.5),z+.5),rotation:{y:rnd()*Math.PI*2}},h,to:null,wait:rnd()*2,ph:rnd()*6,sw:0});
   }
+  for(const el of ELS){const m=SPMODELS[el],c=cnt[el]||0;if(!c)continue;
+    for(const [geo,mat] of [[m.body,m.mat],[m.face,m.face_mat],[m.body,m.hull]]){
+      if(!geo.getAttribute('aSw')||geo.getAttribute('aSw').count<c)geo.setAttribute('aSw',new THREE.InstancedBufferAttribute(new Float32Array(Math.max(c,100)),1));
+      const im=new THREE.InstancedMesh(geo,mat,c);im.frustumCulled=false;im.castShadow=false;im.receiveShadow=mat!==m.hull;scene.add(im);spInst.push(im)}
+    m.ims=spInst.slice(-3)}
+  spBlob=new THREE.InstancedMesh(blobGeo,blobMat,Math.max(1,n));spBlob.count=n;spBlob.renderOrder=2;spBlob.frustumCulled=false;scene.add(spBlob);   /* せいれいのかげは、足もとの丸いかげだけ（持ち主がきめた） */
+  syncSpirits();
 }
-const QA=new THREE.Quaternion(),AX=new THREE.Vector3(1,0,0);
-function bend(s,name,a){const r=s.bones[name];if(!r)return;QA.setFromAxisAngle(AX,a);r.b.quaternion.copy(r.q).multiply(QA)}
+// せいれいの位置・向き・手足のふりを、まとめて描く形にわたす
+const SPM=new THREE.Matrix4(),SPQ=new THREE.Quaternion(),SPY=new THREE.Vector3(0,1,0),SPS=new THREE.Vector3(1,1,1),SPB=new THREE.Vector3(.7*OBJSCALE*SPH,1,.7*OBJSCALE*SPH),SPV=new THREE.Vector3();
+function syncSpirits(){
+  sprites.forEach((s,i)=>{const m=SPMODELS[s.el],p=s.obj.position;SPQ.setFromAxisAngle(SPY,s.obj.rotation.y);SPM.compose(p,SPQ,SPS);
+    for(const im of m.ims)im.setMatrixAt(s.k,SPM);m.body.getAttribute('aSw').array[s.k]=s.sw;m.face.getAttribute('aSw').array[s.k]=s.sw;
+    SPQ.identity();SPM.compose(SPV.set(p.x,groundH(p.x,p.z)+.012,p.z),SPQ,SPB);spBlob.setMatrixAt(i,SPM)});
+  for(const el of ELS){const m=SPMODELS[el];if(!m.ims)continue;for(const im of m.ims)im.instanceMatrix.needsUpdate=true;m.body.getAttribute('aSw')&&(m.body.getAttribute('aSw').needsUpdate=true);m.face.getAttribute('aSw')&&(m.face.getAttribute('aSw').needsUpdate=true)}
+  if(spBlob)spBlob.instanceMatrix.needsUpdate=true;
+}
 function stepSpirits(dt){
   for(const s of sprites){
     const p=s.obj.position;let moving=false;
@@ -642,12 +679,10 @@ function stepSpirits(dt){
       if(!s.to)s.wait=.5;
     }
     s.ph+=dt*(moving?9:2.5);
-    const sw=moving?Math.sin(s.ph)*.6:0;
-    bend(s,'thighL',sw);bend(s,'thighR',-sw);bend(s,'upper_armL',-sw*.7);bend(s,'upper_armR',sw*.7);
+    s.sw=moving?Math.sin(s.ph)*.6:0;   /* 手足のふり（SPSW の向き・大きさで、シェーダーでまわす） */
     const gy=groundH(p.x,p.z);p.y=gy+(moving?Math.abs(Math.sin(s.ph))*.04:Math.sin(s.ph)*.008);
-    s.bl.position.set(p.x,gy+.012,p.z);
   }
-  if(sprites.length)renderer.shadowMap.needsUpdate=true; // せいれいのかげは動く
+  syncSpirits();   /* せいれいは、マップのかげをおとさない（足もとの丸いかげだけ。毎コマかげを描きなおさない。持ち主がきめた） */
 }
 
 // ---- しあげ：画面 → ちぢめてぼかす → ミニチュアのぼかし・にじみ・色 ----

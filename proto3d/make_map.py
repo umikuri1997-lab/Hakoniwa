@@ -119,7 +119,7 @@ def to_mesh(P, C, mat, pid):
     P = orient(P[:, :, [0, 2, 1]], pid).reshape(-1, 3); idx = np.arange(len(P)).reshape(-1, 3)
     vm, ni, uv = glbio.unwrap(P, idx)
     col = (np.repeat(C, 3, 0) / 255.0) ** 2.2; mt = np.repeat(mat, 3)
-    return {'POSITION': P[vm], 'COLOR_0': col[vm], 'TEXCOORD_0': uv[vm], '_MAT': mt[vm][:, None], '_UNDER': np.zeros((len(vm), 1))}, ni
+    return {'POSITION': P[vm], 'COLOR_0': col[vm], 'TEXCOORD_0': uv[vm], '_MAT': mt[vm][:, None]}, ni
 
 
 def main(src):
