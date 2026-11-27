@@ -16,13 +16,24 @@ from rose_curved import rose_petal
 from rose_plant_v8 import petal as v8_petal
 
 MAT_LEAF = 6
+PETAL_T = .009   # 花びらのふちの厚み（マス。花の大きさ1のとき。持ち主がきめた：厚く）
 G = lambda *c: np.array(c, float)
 STEM = (94, 154, 54)
 
 
 class Plant:
     """部品（点・面・色・UV）をためて、1つのメッシュにする"""
-    def __init__(self, seed): self.V = []; self.F = []; self.C = []; self.U = []; self.n = 0; self.rng = np.random.default_rng(seed)
+    def __init__(self, seed, card=True): self.V = []; self.F = []; self.C = []; self.U = []; self.n = 0; self.rng = np.random.default_rng(seed); self.card = Plant(seed + 1000, False) if card else None   # card：アルファ抜きの葉のカード（べつのメッシュ）
+
+    def rimmed(self, v, f, c, uv, rows, cols, thick, rim_k=.88):
+        """1まいの面（両面にしない）に、ふちだけ厚みをつける（持ち主がきめた）：面のまわりの点を、面のうらへ thick ずらして、帯でつなぐ。
+        面の点のならびは、たて rows+1 × よこ cols+1（i 行 j 列 → i*(cols+1)+j）"""
+        import trimesh
+        v = np.asarray(v, float); n = np.asarray(trimesh.Trimesh(v, f, process=False).vertex_normals); W = cols + 1
+        loop = [j for j in range(cols + 1)] + [i * W + cols for i in range(1, rows + 1)] + [rows * W + j for j in range(cols - 1, -1, -1)] + [i * W for i in range(rows - 1, 0, -1)]
+        A = v[loop]; B = A - n[loop] * thick; k = len(loop); rf = []
+        for a in range(k): b = (a + 1) % k; rf += [(a, b, k + b), (a, k + b, k + a)]
+        self.add(v, f, c, uv); self.add(np.vstack([A, B]), rf, np.vstack([c[loop], c[loop] * rim_k]), np.vstack([uv[loop], uv[loop]]))
 
     def add(self, v, f, c, uv=None):
         v = np.asarray(v, float); self.V.append(v); self.F.append(np.asarray(f) + self.n); self.C.append(np.asarray(c, float)); self.U.append(np.zeros((len(v), 2)) if uv is None else uv); self.n += len(v)
@@ -78,6 +89,30 @@ class Plant:
         import trimesh
         Nn = np.asarray(trimesh.Trimesh(V, F, process=False).vertex_normals)   # なめらかな面の向きを、GLB に書く（スキル v6）
         return {'POSITION': V, 'NORMAL': Nn, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': np.full((len(V), 1), MAT_LEAF), '_UNDER': np.zeros((len(V), 1))}, F
+
+
+def leaf_card_texture(path, src, size=512, seed=7):
+    """ばらの複葉のカードの絵（アルファ抜き。持ち主がきめた）：葉柄とじく、小さな葉5まい（2つい＋先の1まい）。
+    小さな葉は、スキルの leaf_rose の絵（まん中のすじが、たての中心）を、小さな葉のじくにそって写す。外は透明。
+    絵の下が葉のつけ根（V=0）・上が先（V=1）。よこは長さの0.75（左右 -0.375〜0.375）"""
+    from PIL import Image
+    rng = np.random.default_rng(seed); S = np.asarray(Image.open(src).convert('RGB').resize((256, 256)), float)
+    ys, xs = np.mgrid[0:size, 0:size]; X = (xs + .5) / size * .75 - .375; Y = 1 - (ys + .5) / size
+    col = np.zeros((size, size, 3)); al = np.zeros((size, size)); px = 1 / size
+    def seg(a, b, w, c):   # 線（葉柄・じく・小さな葉の柄）
+        a = np.array(a); b = np.array(b); d = b - a; L = np.hypot(*d); t = np.clip(((X - a[0]) * d[0] + (Y - a[1]) * d[1]) / L ** 2, 0, 1)
+        r = np.hypot(X - a[0] - t * d[0], Y - a[1] - t * d[1]); k = np.clip((w * (1 - .4 * t) - r) / px + .5, 0, 1); col[:] = col * (1 - k[..., None]) + np.array(c) * k[..., None]; al[:] = np.maximum(al, k)
+    def leaflet(b, ang, L, W, tone):
+        d = np.array([math.sin(ang), math.cos(ang)]); n = np.array([d[1], -d[0]]); u = ((X - b[0]) * d[0] + (Y - b[1]) * d[1]) / L; w = ((X - b[0]) * n[0] + (Y - b[1]) * n[1]) / L
+        uc = np.clip(u, 0, 1); hw = W / 2 * np.sin(np.pi * uc) ** .72 * (1.16 - .4 * uc); saw = 1 - .09 * (np.mod(uc * 8, 1)) * (uc > .15)   # ぎざぎざ（先へ向く歯）
+        m = np.clip((hw * saw - np.abs(w)) * L / px + .5, 0, 1) * (u > 0) * (u < 1)
+        sx = np.clip(((w / (W * 1.05) + .5) * 255).astype(int), 0, 255); sy = np.clip(((1 - uc) * 255).astype(int), 0, 255); c = S[sy, sx] * tone * (1 - .12 * np.abs(w) / (W / 2))[..., None]   # ふちは少し暗く
+        col[:] = col * (1 - m[..., None]) + c * m[..., None]; al[:] = np.maximum(al, m)
+    seg((0, 0), (0, .8), .009, (62, 104, 46))
+    for (y, ang, L) in ((.3, 52, .26), (.55, 44, .28)):
+        for sg in (-1, 1): a = math.radians(ang) * sg; b = (math.sin(a) * .03, y + math.cos(a) * .03); seg((0, y), b, .006, (62, 104, 46)); leaflet(b, a + rng.uniform(-.08, .08), L * rng.uniform(.93, 1.05), .56, rng.uniform(.95, 1.12))   # W：はば÷長さ
+    leaflet((0, .68), rng.uniform(-.05, .05), .31, .58, 1.05)
+    img = np.dstack([np.clip(col * 1.35, 0, 255), al * 255]).astype(np.uint8); Image.fromarray(img, 'RGBA').save(path)
 
 
 def rad(az, el):
@@ -226,45 +261,48 @@ def rose(p):
     骨格：細い木のくき（先へ細く、しなる）から、わきの枝。葉：小さな葉5まいの複葉が互いちがい。花：がく5まい"""
     rng = p.rng; K = 2.0   # スキルの試作（メートル）→ マス：花のはば 約0.16マス
     def bloom(top, ax, open_, size):
-        """open_：1 ひらいた花・0 つぼみ。層：(まい数, 半径, 高さ, まきつく角度, ひらき)。スキル v8 の段（6・7・6・5・4・3まい）"""
+        """open_：1 ひらいた花・0 つぼみ。層：(まい数, 半径, 高さ, まきつく角度, ひらき)。
+        花びらは少なく（ひらいた花 17まい・つぼみ 5まい）・あらく（たて7×よこ6）。1まいの面に、ふちだけ厚み（持ち主がきめた）"""
         f, sx, ux = frame(ax, (0, 1, 0) if abs(ax[2]) > .9 else (0, 0, 1)); place = lambda v: top + v[:, :1] * sx + v[:, 1:2] * ux + v[:, 2:3] * f
-        tiers = [(6, .044, .034, 1.67, .55), (7, .036, .04, 1.47, .38), (6, .027, .044, 1.66, .2), (5, .019, .045, 2.05, .06), (4, .011, .045, 2.45, 0), (3, .0058, .042, 3.1, 0)]   # 外の段はひらきすぎない・高く：横から見て、深いおわん（スキルの絵のばら。お皿のように平たくしない）
-        if open_ < .5: tiers = [(4, .016, .046, 2.4, 0), (3, .010, .047, 2.7, 0), (3, .0058, .044, 3.1, 0)]   # つぼみ：かたくまいた内がわの段だけ
-        hue = rng.uniform(-1, 1)   # 花ごとの色のちがい（少し赤より・少し青より）
+        tiers = [(5, .044, .034, 1.85, .55), (5, .034, .04, 1.7, .32), (4, .023, .044, 2.0, .12), (3, .012, .045, 2.6, 0)]   # 外の段はひらきすぎない：深いおわん
+        if open_ < .5: tiers = [(3, .015, .046, 2.6, 0), (2, .008, .046, 3.0, 0)]   # つぼみ
+        hue = rng.uniform(-1, 1); RW, CL = 7, 6   # 花ごとの色のちがい・花びらのこまかさ
         for k, (n, r, h, span, op) in enumerate(tiers):
             for i in range(n):
-                a = 2 * math.pi * i / n + k * 2.39996 + rng.uniform(-.09, .09); inner = k >= len(tiers) - 2
-                m = v8_petal(a, r * rng.uniform(.95, 1.05) * (1 + .04 * (i % 2)), h * rng.uniform(.94, 1.06), span, op * open_, rng.uniform(0, 6.283), inner, rows=12, cols=10)   # となりの花びらと、半径を少しずらす
+                a = 2 * math.pi * i / n + k * 2.39996 + rng.uniform(-.09, .09); inner = k >= len(tiers) - 1
+                m = v8_petal(a, r * rng.uniform(.95, 1.05) * (1 + .05 * (i % 2)), h * rng.uniform(.94, 1.06), span, op * open_, rng.uniform(0, 6.283), inner, rows=RW, cols=CL)
                 v = np.asarray(m.vertices) * K * size * [1, 1, 1.25]; uv = np.asarray(m.visual.uv); t = uv[:, 1:2]; q = uv[:, 0:1]; u = 1 - k / (len(tiers) - 1 or 1)   # u：1 外がわ・0 まん中
                 tip = G(246, 140 + 10 * hue, 170 - 8 * hue) * u + G(226, 82 + 8 * hue, 122 - 6 * hue) * (1 - u); base = G(176, 34, 74 - 6 * hue)
-                c = (base * (1 - t ** .7) + tip * t ** .7) * (.8 + .2 * u) * (1 - .1 * (1 - np.abs(2 * q - 1)) * (1 - t))   # つけ根はこく・先は明るく・内がわほどこく・花びらのまん中のつけ根は少し暗い
-                c = c * (1 + .06 * np.sin(q * 9 + i + k))   # 花びらごとの、うすい色むら
-                p.add(place(v), m.faces, c, np.hstack([q * r * 2, t * h]) * K * size)
+                c = (base * (1 - t ** .7) + tip * t ** .7) * (.8 + .2 * u) * (1 - .1 * (1 - np.abs(2 * q - 1)) * (1 - t))
+                p.rimmed(place(v), m.faces, c, np.hstack([q * r * 2, t * h]) * K * size, RW, CL, PETAL_T * size, rim_k=1.08)   # ふちは少し明るく（花びらの厚みの切り口）
         vv = []; ff = []; cc = []   # まん中の、折りこんだ花びら（スキル v8）：じくをまたいで、まん中の穴を上からおおう
-        for i in range(13):
-            t = i / 12
-            for j in range(9):
-                q = 2 * j / 8 - 1; w = .00055 + .0039 * math.sin(math.pi * .74 * t) ** .8
+        for i in range(7):
+            t = i / 6
+            for j in range(5):
+                q = 2 * j / 4 - 1; w = .00055 + .0039 * math.sin(math.pi * .74 * t) ** .8
                 vv.append((.0027 * math.cos(math.pi * 1.15 * t) + q * w * .28, q * w, .010 + .032 * t - .003 * q * q * t ** 3 + .0018 * math.sin(math.pi * t) * q)); cc.append(G(170, 30, 70) * (1 - t) + G(214, 70, 112) * t)
-        for i in range(12):
-            for j in range(8): a_ = i * 9 + j; b_ = a_ + 9; ff += [(a_, b_, a_ + 1), (a_ + 1, b_, b_ + 1)]
+        for i in range(6):
+            for j in range(4): a_ = i * 5 + j; b_ = a_ + 5; ff += [(a_, b_, a_ + 1), (a_ + 1, b_, b_ + 1)]
         p.add(place(np.array(vv) * K * size * [1, 1, 1.25]), ff, cc)
-        for k in range(5): p.blade(top - ax * .002 * size, around(ax, k * 72 + 20 + rng.uniform(-10, 10), -40 + 70 * (1 - open_)), .05 * size * K, .015 * size * K, (50, 104, 42), (94, 150, 64), up=ax, profile=LANCE, bend=-.2, cup=.035, twist=.15, ripple=0, thick=0, seg=10, col=4)   # がく：細くとがり、下へそる
+        for k in range(5): p.blade(top - ax * .002 * size, around(ax, k * 72 + 20 + rng.uniform(-10, 10), -40 + 70 * (1 - open_)), .05 * size * K, .015 * size * K, (50, 104, 42), (94, 150, 64), up=ax, profile=LANCE, bend=-.2, cup=.035, twist=.15, ripple=0, thick=0, seg=5, col=2)   # がく
     def leafs(o, a):
-        """複葉：葉柄 → 2ついの小さな葉 → 先の1まい。じくは先へたれる。小さな葉は、たまご形・ぎざぎざ・まん中のすじの両がわがゆるくふくらむ"""
-        d = rad(a, 30 + rng.uniform(-10, 10)); L = rng.uniform(.115, .15); ax_ = lambda q: o + d * L * q + G(0, 0, -.25 * L * q * q); p.tube([ax_(0), ax_(.5), ax_(1)], [.004, .0032, .002], (84, 132, 56), 5)
-        pairs = ((.28, 1), (.33, -1), (.55, 1), (.6, -1), (.8, 1), (.84, -1), (1, 0)) if rng.random() < .4 else ((.4, 1), (.45, -1), (.72, 1), (.77, -1), (1, 0))   # 小さな葉 7まい か 5まい（スキル v8）
-        for q, sg in pairs:
-            dd = unit(d * (1 if sg == 0 else .53) + rad(a + sg * 82, 6) * .82 + G(0, 0, rng.uniform(-.55, .2))); sz = L * (.62 if sg == 0 else .5 - .08 * (q < .5)) * rng.uniform(.88, 1.1)   # 小さな葉は、1まいずつ、たれぐあいをかえる（横から見て、ぜんぶ水平の板にならないように）
-            upv = unit(G(0, 0, 1) + rad(a + sg * 80, 0) * rng.uniform(-.5, .5) + rad(rng.uniform(0, 360), 0) * .25)
-            o2 = ax_(q); pe = o2 + dd * .008; p.tube([o2, pe], [.0018, .0012], (84, 132, 56), 4)   # 小さな葉の柄
-            lc = rng.uniform(-8, 8); p.blade(pe, dd, sz, sz * .53, (28 + lc, 88 + lc, 36), (74 + lc, 140 + lc, 54), up=upv, profile=lambda t: math.sin(math.pi * t) ** .72 * (1.16 - .4 * t), bend=rng.uniform(-.18, -.08), cup=-.035, twist=rng.uniform(-.22, .22), ripple=.012, teeth=7, serration=.09, asym=.05, thick=0, seg=28, col=4)   # 小さな葉：細めのたまご形で先がとがる・ぎざぎざ（スキル v8）
+        """複葉：アルファ抜きのカード1まい（葉柄・じく・小さな葉5まいは絵。持ち主がきめた）。カードは、じくにそってたれ、まん中のすじで少し折れる。
+        たて5×よこ2のこまかさ（三角形20）。向き・たれぐあい・ねじれは1まいずつかえる"""
+        d = rad(a, 30 + rng.uniform(-12, 10)); L = rng.uniform(.19, .24); Wd = L * .75; roll = rng.uniform(-.5, .5); fold = rng.uniform(.12, .25)
+        sd = unit(np.cross(G(0, 0, 1), d)); upn = unit(np.cross(d, sd)); sd, upn = sd * math.cos(roll) + upn * math.sin(roll), upn * math.cos(roll) - sd * math.sin(roll)
+        V = []; UV = []; C = []; tone = rng.uniform(.74, .92); Fc = []
+        for i in range(6):
+            t = i / 5; c0 = o + d * L * t + G(0, 0, -rng.uniform(.18, .3) * L * t * t * (i > 0))
+            for j, qq in enumerate((-1, 0, 1)): V.append(c0 + sd * qq * Wd / 2 + upn * fold * abs(qq) * Wd / 2); UV.append(((qq + 1) / 2, t)); C.append(G(255, 255, 255) * tone)
+        for i in range(5):
+            for j in range(2): a_ = i * 3 + j; b_ = a_ + 3; Fc += [(a_, a_ + 1, b_), (a_ + 1, b_ + 1, b_)]
+        p.card.add(V, Fc, C, np.array(UV))
     def cane(base, az, h, lean, r0):
         return p.stem(base, G(*base) + G(0, 0, h) + rad(az, 0) * lean, r0, r0 * .45, rad(az + 90, 0) * .03 + rad(az, 0) * .025, color=(76, 118, 52), n=8)   # くきは、先へ細く・ゆるくまがる
     for s_, (az, h, lean) in enumerate(((70, .36, .05), (200, .29, .1))):   # 根もとから2本のくき。それぞれの先に、ひらいた花
         b = rad(az, 0) * .03; P, D = cane(b, az, h, lean, .0085); bloom(P(1), unit(D(1) * .5 + unit(rad(az, 0) * .45 + G(0, 0, .9)) * .5), 1 - .2 * s_, 1 - .12 * s_)
-        for k in range(4): leafs(P(.14 + .2 * k), az + 50 + k * 137.5 + rng.uniform(-15, 15))
-        for k in range(3): t = .15 + .25 * k; a = az + 20 + k * 150; o = P(t); d = rad(a, -15); p.tube([o, o + d * .009, o + d * .015 + G(0, 0, -.003)], [.0035, .002, .0005], (150, 84, 62), 4)   # とげ
+        for k in range(6): leafs(P(.1 + .14 * k), az + 50 + k * 137.5 + rng.uniform(-15, 15))   # 葉はカードなので軽い：数をふやす
+        for k in range(3): t = .15 + .25 * k; a = az + 20 + k * 150; o = P(t); d = rad(a, -15); p.tube([o, o + d * .015 + G(0, 0, -.003)], [.0035, .0005], (150, 84, 62), 3)   # とげ
         t = .5 + .1 * s_; o = P(t); a = az + (115 if s_ == 0 else -100); hb = .13 + .03 * s_; P2, D2 = p.stem(o, o + rad(a, 52) * hb, .005, .003, G(0, 0, .012), color=(84, 128, 56), n=4)   # わきの枝に、つぼみ
         bloom(P2(1), D2(1), .1, .62); leafs(P2(.35), a + 100); leafs(P2(.6), a - 120)
 
@@ -283,4 +321,5 @@ if __name__ == '__main__':
         T = trimesh.Trimesh(V, F, process=False); bad = int((T.area_faces < 1e-12).sum())
         print(name, fn.__name__, '三角形', len(F), '高さ %.2f はば %.2f' % (V[:, 1].max(), max(np.ptp(V[:, 0]), np.ptp(V[:, 2]))), '面積0の面', bad, '有限', bool(np.isfinite(V).all()), '地面の下 %.3f' % V[:, 1].min())
         meshes.append((name, att, F))
+        if p.card is not None and p.card.V: ca, cF = p.card.mesh(); meshes.append((name + '_leaf', ca, cF)); print(' ', name + '_leaf', '三角形', len(cF))
     out = os.path.join(HERE, 'tex', 'flowers.glb'); glbio.write(meshes, out, 'proto3d make_flowers.py (realistic-plant-3d)'); print(out, os.path.getsize(out) // 1024, 'KB')

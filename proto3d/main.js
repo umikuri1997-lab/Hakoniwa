@@ -421,11 +421,16 @@ function smoothNormals(geo){
   geo.setAttribute('normal',new THREE.BufferAttribute(N,3));
 }
 // ---- 花（1から作る。持ち主がきめた）：スキル realistic-plant-3d のやり方で作った tex/flowers.glb（make_flowers.py。形の設計は flowers_spec.json） ----
-let FLOWERSGLB=null;
+let FLOWERSGLB=null,LEAFCARD=null;
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
-    p.parts=[{geo,mat:toon({vertexColors:true,side:THREE.DoubleSide},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark,wind:true}),hull:null}];return}   /* 花には、輪郭線をつけない */
+    p.parts=[{geo,mat:toon({vertexColors:true,side:THREE.DoubleSide},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark,wind:true}),hull:null}];
+    const lf=(await FLOWERSGLB).scene.getObjectByName(p.id+'_leaf');   /* アルファ抜きの葉のカード（持ち主がきめた）：葉の形の絵（透明なふち）を、板にはる */
+    if(lf){LEAFCARD=LEAFCARD||new THREE.TextureLoader().loadAsync('./tex/leaf_rose_card.png').then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t});
+      const lg=lf.geometry.clone();lg.scale(OBJSCALE,OBJSCALE,OBJSCALE);lg.computeVertexNormals();
+      p.parts.push({geo:lg,mat:toon({vertexColors:true,map:await LEAFCARD,alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
+    return}   /* 花には、輪郭線をつけない */
   let root;
   if(p.src==='plants'){PLANTS=PLANTS||gltf.loadAsync('./tex/plants.glb');root=(await PLANTS).scene.getObjectByName(p.id).clone()}
   else{PROPSGLB=PROPSGLB||gltf.loadAsync('./tex/props.glb');root=(await PROPSGLB).scene.getObjectByName(p.id).clone()}
@@ -755,4 +760,4 @@ async function main(){
   requestAnimationFrame(t=>{prev=t;frame(t)});
 }
 main().catch(showErr);
-window.__pm=()=>propMeshes;window.__one=(id,x,z,yaw=0)=>{const p=PROPS.find(q=>q.id===id),m=new THREE.InstancedMesh(p.parts[0].geo,p.parts[0].mat,1);m.setMatrixAt(0,new THREE.Matrix4().makeTranslation(x,groundH(x,z),z).multiply(new THREE.Matrix4().makeRotationY(yaw)));m.frustumCulled=false;scene.add(m);return m};  /* たしかめ用：1株だけ置く */window.__flowers=(x0,z0,yaw=0)=>{PROPS.filter(p=>p.src==='proc').forEach((p,i)=>{const x=x0+(i%5)*.9,z=z0+Math.floor(i/5)*.9,m=new THREE.InstancedMesh(p.parts[0].geo,p.parts[0].mat,1);m.setMatrixAt(0,new THREE.Matrix4().makeTranslation(x,groundH(x,z),z).multiply(new THREE.Matrix4().makeRotationY(yaw)));m.frustumCulled=false;scene.add(m)})};  /* たしかめ用：花をぜんぶならべる */window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
+window.__pm=()=>propMeshes;window.__one=(id,x,z,yaw=0)=>{const p=PROPS.find(q=>q.id===id),M=new THREE.Matrix4().makeTranslation(x,groundH(x,z),z).multiply(new THREE.Matrix4().makeRotationY(yaw));for(const pt of p.parts){const m=new THREE.InstancedMesh(pt.geo,pt.mat,1);m.setMatrixAt(0,M);m.frustumCulled=false;scene.add(m)}};  /* たしかめ用：1株だけ置く */window.__flowers=(x0,z0,yaw=0)=>{PROPS.filter(p=>p.src==='proc').forEach((p,i)=>{const x=x0+(i%5)*.9,z=z0+Math.floor(i/5)*.9,M=new THREE.Matrix4().makeTranslation(x,groundH(x,z),z).multiply(new THREE.Matrix4().makeRotationY(yaw));for(const pt of p.parts){const m=new THREE.InstancedMesh(pt.geo,pt.mat,1);m.setMatrixAt(0,M);m.frustumCulled=false;scene.add(m)}})};  /* たしかめ用：花をぜんぶならべる */window.__look=(x,z)=>{target.set(x,0,z);placeCam()};  // たしかめ用：カメラの見るまん中をうごかす
