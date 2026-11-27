@@ -24,6 +24,7 @@ STEM = (104, 150, 84)                       # 花のくき
 # 木10こ・しげみ3こ・花と草10この、葉の色と花の色（花は、ゲームの花の色に近い色）
 TREE_LEAF = ['oak', 'cedar', 'tree', 'tree', 'tree', 'oak', 'tree', 'tree', 'oak', 'tree']
 FLOWER = ['#8a8fe0', '#f2b14e', '#f07fa6', '#e8604f', '#ffffff', '#a58be0', '#f07fa6', '#ffd75a', '#f2a7c3', '#8a8fe0']
+HEADY = .58                                 # 花がくきとつながっている花：植物の高さのこれより上の三角形は花
 FLOWERY = .3                                # 花：植物の高さのこれより上から始まる部品は花
 TRUNKY = .08                                # 木：植物の高さのこれより下にとどく部品はみき
 UNDERH, UNDERB = .12, 3.0                   # 葉の下のかげ：とどく高さ（植物の高さに対して）・いちばん近いときに暗くするだんの数
@@ -96,6 +97,8 @@ def colors(V, F, cid, fi, name):
         elif row == 'B': col, kd = LEAF['bush'], 'leaf'
         else: col, kd = (hexrgb(FLOWER[q]), 'leaf') if lo > FLOWERY else (STEM, 'leaf') if thin else (LEAF['herb'], 'leaf')   # 花びら・くきも、葉っぱの絵のすじをのせる
         out[m] = col; kind[m] = kd
+    if row == 'F' and not (out == hexrgb(FLOWER[q])).all(1).any():   # 花がくきとつながった1つの形で、花の色がどこにもつかなかった花：上のほう（HEADY より上）の三角形を花の色に
+        out[(P[:, :, 1].mean(1)-y0)/H > HEADY] = hexrgb(FLOWER[q])
     return out, kind
 
 

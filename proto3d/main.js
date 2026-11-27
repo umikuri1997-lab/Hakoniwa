@@ -59,7 +59,8 @@ const BLADES={h:[.12,.26],w:.1,pathPer:30,edgePer:12,fieldPer:13,fieldH:.62,clum
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 const PEBBLE={per:1.6,r:[.04,.11],col:['#a99c88','#c9bfae']};   /* 荒れた土地の小石：1マスあたりの数・大きさ（マス）・色 */
 const CRACK={scale:1.5,w:.07,k:.3};                              /* 荒れた土地のひび：細かさ・線のはば・こさ */
-const RIPPLE={cell:1.7,period:5.5,r:.62,k:.5};   /* 水面の波紋：1つの波紋のマスの大きさ・出るまでの秒・広がる半径・明るさ */
+const WATER={shallow:'#8ed3c4',deep:'#236f86',caus:.16,cloud:.35,alpha:[.5,.94]};   /* 水：岸の近くの色・深い所の色・底にゆれる光のあみ・うつる雲のこさ・すけぐあい（岸・深い所） */
+const RIPPLE={cell:1.7,period:5.5,r:.62,k:.22};   /* 水面の波紋：1つの波紋のマスの大きさ・出るまでの秒・広がる半径・明るさ */
 const GLINT={n:16,k:1.3};                         /* 水面のきらめきの粒：細かさ（1マスあたり）・明るさ */
 const DUST={n:160,every:.22,life:.7,size:.34,dry:'#d9c7a2',grass:'#a6cf7a'};   /* 足もとの土けむり：粒の数（上限）・出す間（秒）・消えるまで（秒）・大きさ（マス）・荒れた土地と草地の色 */
 // ---- しあげ ----
@@ -287,6 +288,9 @@ function bumpAt(px,pz){const x=Math.floor(px),z=Math.floor(pz);if(!inMap(x,z)||i
     if(!inMap(nx,nz)||yTop(nx,nz)!==y||FLAT.has(nx+','+nz)){const t=Math.min(1,Math.max(dx?ex[dx+1]:0,dz?ez[dz+1]:0)/.35);f*=t*t*(3-2*t)}}   /* 段・池・地図のはし・家などの平らなマスとのさかいでは0（すきまを作らない） */
   return GBUMP.amp*(cpuNoise(px*GBUMP.scale+31,pz*GBUMP.scale+17)-.5)*2*f}
 const groundH=(px,pz)=>{const x=Math.floor(px),z=Math.floor(pz);return yTop(x,z)-(inMap(x,z)&&!isW(x,z)?PATHDIP*pmAt(px,pz):0)+bumpAt(px,pz)};
+// 地面の形（上の面を SUB×SUB に分けた板）の上の高さ：草などを、板から浮かせない・うめない
+const meshH=(px,pz)=>{const x=Math.floor(px),z=Math.floor(pz),u=(px-x)*SUB,v=(pz-z)*SUB,i=Math.min(SUB-1,Math.floor(u)),j=Math.min(SUB-1,Math.floor(v)),fx=u-i,fy=v-j,e=.9999,
+  H=(a,b)=>groundH(Math.min(x+e,x+a/SUB),Math.min(z+e,z+b/SUB));return (H(i,j)*(1-fx)+H(i+1,j)*fx)*(1-fy)+(H(i,j+1)*(1-fx)+H(i+1,j+1)*fx)*fy};
 const nearPath=(x,z)=>{for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(pathTile(x+dx,z+dz))return true;return false};
 function buildGround(){
   const P=[],N=[],T=[];
@@ -312,16 +316,21 @@ function buildGround(){
     fragmentShader:`uniform sampler2D uMask;uniform float uTime;uniform vec3 uSunW;varying vec3 vW;\n#include <fog_pars_fragment>\n${NOISE}
       float wv(vec2 p){return fbm(p*1.6+vec2(uTime*.15,uTime*.1))+.5*fbm(p*3.1-vec2(uTime*.12,0.));}
       void main(){vec2 p=vW.xz;float w=texture2D(uMask,(p+${BORDER}.)/${MN}.+(vec2(fbm(p*1.3),fbm(p*1.3+9.))-.5)*.012).g;if(w<.42)discard;
-        float e=.05,h0=wv(p);vec3 N=normalize(vec3((h0-wv(p+vec2(e,0.)))*1.2,1.,(h0-wv(p+vec2(0.,e)))*1.2));    // 水面のゆれ（面の向き）
-        vec3 V=normalize(cameraPosition-vW),Rf=reflect(-V,N);float fr=.06+.94*pow(1.-max(dot(N,V),0.),5.);    // ふちほど空がうつる
+        float e=.04,h0=wv(p);vec3 N=normalize(vec3((h0-wv(p+vec2(e,0.)))*.7,1.,(h0-wv(p+vec2(0.,e)))*.7));    // 水面のゆれ（面の向き）
+        vec3 V=normalize(cameraPosition-vW),Rf=reflect(-V,N);float fr=.03+.97*pow(1.-max(dot(N,V),0.),5.);    // ふちほど空がうつる（フレネル）
+        float dp=smoothstep(.46,.98,w+(fbm(p*.9)-.5)*.12);                                                       // 岸からのはなれぐあい（深さのかわり）
         vec3 sky=mix(lin(${C3(SKY)}),lin(${C3(SKYTOP)}),smoothstep(0.,.6,Rf.y));
-        vec3 deep=mix(lin(${C3(COLS.waterB)}),lin(${C3(COLS.water)}),smoothstep(.45,1.1,h0));
-        vec3 c=mix(deep,sky,clamp(fr*1.6,0.,1.))+vec3(1.,.93,.78)*2.2*pow(max(dot(Rf,uSunW),0.),180.);       // 日の光のきらめき
+        sky=mix(sky,vec3(1.),${WATER.cloud}*smoothstep(.5,.75,fbm(Rf.xz/(Rf.y+.5)*1.4+p*.15+vec2(uTime*.012,0.))));  // うつる雲
+        vec3 body=mix(lin(${C3(WATER.shallow)}),lin(${C3(WATER.deep)}),dp);                                      // 岸の近くは明るい水色、深い所はこい青緑
+        vec2 cw=p+(vec2(fbm(p*1.1+uTime*.06),fbm(p*1.1+7.-uTime*.05))-.5)*1.1;                                    // 光のあみは、ゆがめて、やわらかく（まっすぐな線にしない）
+        float c1=smoothstep(.3,0.,vor(cw*1.9+vec2(uTime*.04,uTime*.025))),c2=smoothstep(.3,0.,vor(cw*3.1-vec2(uTime*.03,0.)+3.));float ca=c1*c1*c2*2.2+.25*c1*c1;
+        body+=vec3(.9,1.,.85)*${WATER.caus}*ca*(1.-dp*.75);                                                       // 底にゆれる光のあみ（浅い所ほどはっきり）
+        vec3 c=mix(body,sky,clamp(fr*1.8+.06,0.,1.))+vec3(1.,.95,.82)*1.6*pow(max(dot(Rf,uSunW),0.),220.);       // 空のうつりこみ・日の光のきらめき
         {vec2 q=p/${RIPPLE.cell},ci=floor(q);float ph=fract(uTime/${RIPPLE.period}+hs(ci)),rr=ph*${RIPPLE.r},dd=length(fract(q)-.5-(vec2(hs(ci+3.1),hs(ci+7.7))-.5)*.4)*${RIPPLE.cell};   /* 波紋：マスごとに、広がって消える輪 */
          c+=vec3(${RIPPLE.k})*smoothstep(.035,0.,abs(dd-rr))*(1.-ph)*smoothstep(0.,.08,ph)*step(.35,hs(ci+1.3));
          vec2 gi=floor(p*${GLINT.n}.);float tw=pow(.5+.5*sin(uTime*2.6+hs(gi)*6.283),12.);c+=vec3(1.,.97,.86)*${GLINT.k}*tw*step(.972,hs(gi+5.))*smoothstep(.3,0.,length(fract(p*${GLINT.n}.)-.5));}   /* きらめきの粒 */
-        float foam=smoothstep(.62,.5,w+.06*sin(uTime*2.+fbm(p*3.)*9.));c=mix(c,lin(${C3(COLS.foam)}),foam*.85);
-        gl_FragColor=vec4(c,mix(.62,.95,max(fr,foam)));\n#include <fog_fragment>\n}`});
+        float foam=smoothstep(.5,.44,w+.03*sin(uTime*1.6+fbm(p*3.)*9.))*(.55+.45*fbm(p*7.+uTime*.2));c=mix(c,lin(${C3(COLS.foam)}),foam*.7);   // 岸の細いあわ
+        gl_FragColor=vec4(c,max(mix(${WATER.alpha[0]},${WATER.alpha[1]},dp),max(fr,foam)));\n#include <fog_fragment>\n}`});
   const water=new THREE.Mesh(wg,wm);water.renderOrder=1;scene.add(water);
 }
 
@@ -334,12 +343,12 @@ function buildBlades(){
   const L=[],M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),camYaw=Math.atan2(CAMDIR.x,CAMDIR.z);seed=77;
   const add=(x,y,z,lean,dir)=>{for(let k=0;k<BLADES.clump;k++){const h=(BLADES.h[0]+rnd()*(BLADES.h[1]-BLADES.h[0]))*(k?.6+rnd()*.4:1),l2=lean+(rnd()-.5)*.5;   /* 1か所に、向きと高さのちがう葉をたばねる */
     E.set(l2*Math.cos(dir),camYaw+(rnd()-.5)*1.5,l2*Math.sin(dir)+(rnd()-.5)*.5,'YXZ');Q.setFromEuler(E);
-    L.push(M.compose(new THREE.Vector3(x+(rnd()-.5)*.07,y,z+(rnd()-.5)*.07),Q,new THREE.Vector3(1,h,1)).clone())}};
+    const bx=x+(rnd()-.5)*.07,bz=z+(rnd()-.5)*.07;L.push(M.compose(new THREE.Vector3(bx,y==null?meshH(bx,bz)-.02:y,bz),Q,new THREE.Vector3(1,h,1)).clone())}};   /* y がなければ、地面の板の上に（少しうめる） */
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){
     if(isW(x,z)||!GRASS[z][x])continue;const y=yTop(x,z);  // とげとげの草は、よみがえった草地だけ
-    if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,groundH(px,pz),pz,(rnd()-.5)*.5,rnd()*6.28)}
+    if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,null,pz,(rnd()-.5)*.5,rnd()*6.28)}
     for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){if(yTop(x+dx,z+dz)>=y-1e-4)continue;
-    if(!FLAT.has(x+','+z))for(let k=0;k<BLADES.fieldPer;k++){const px=x+rnd(),pz=z+rnd();if(pmAt(px,pz)<.01){add(px,groundH(px,pz),pz,(rnd()-.5)*.6,rnd()*6.28);for(let q=1;q<=BLADES.clump;q++){const e=L[L.length-q].elements;e[4]*=BLADES.fieldH;e[5]*=BLADES.fieldH;e[6]*=BLADES.fieldH}}}   /* 草地ぜんたいの短い草 */
+    if(!FLAT.has(x+','+z))for(let k=0;k<BLADES.fieldPer;k++){const px=x+rnd(),pz=z+rnd();if(pmAt(px,pz)<.01){add(px,null,pz,(rnd()-.5)*.6,rnd()*6.28);for(let q=1;q<=BLADES.clump;q++){const e=L[L.length-q].elements;e[4]*=BLADES.fieldH;e[5]*=BLADES.fieldH;e[6]*=BLADES.fieldH}}}   /* 草地ぜんたいの短い草 */
       for(let k=0;k<BLADES.edgePer;k++){const t=rnd(),ex=dx?x+(dx>0?1:0)-dx*.03:x+t,ez=dz?z+(dz>0?1:0)-dz*.03:z+t;add(ex,y,ez,.7+rnd()*.5,Math.atan2(dz,dx))}}
   }
   const m=toon({vertexColors:true,color:BLADES.col[1]},{wind:true});const im=new THREE.InstancedMesh(g,m,L.length);
