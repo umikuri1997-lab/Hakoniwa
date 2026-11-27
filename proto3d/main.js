@@ -421,12 +421,17 @@ function smoothNormals(geo){
   geo.setAttribute('normal',new THREE.BufferAttribute(N,3));
 }
 // ---- 花（1から作る。持ち主がきめた）：スキル realistic-plant-3d のやり方で作った tex/flowers.glb（make_flowers.py。形の設計は flowers_spec.json） ----
-let FLOWERSGLB=null,LEAFCARD=null;
+let FLOWERSGLB=null,LEAFCARD=null,PETALCARD=null;
+const PETALCARD_N=1.4;   /* 花びらのノーマルマップの強さ */
 const LEAFCARD_N=2.2;   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
     p.parts=[{geo,mat:toon({vertexColors:true,side:THREE.DoubleSide},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark,wind:true}),hull:null}];
+    const pt=(await FLOWERSGLB).scene.getObjectByName(p.id+'_petal');   /* アルファ抜きの花びら（持ち主がきめた）：花びらの形の絵（こまかいふち）と、ふちの厚みのノーマルマップ */
+    if(pt){PETALCARD=PETALCARD||Promise.all(['petal_rose_card.png','petal_rose_card_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
+      const [pmap,pnor]=await PETALCARD,pg=pt.geometry.clone();pg.scale(OBJSCALE,OBJSCALE,OBJSCALE);pg.computeVertexNormals();
+      p.parts.push({geo:pg,mat:toon({vertexColors:true,map:pmap,normalMap:pnor,normalScale:new THREE.Vector2(PETALCARD_N,PETALCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
     const lf=(await FLOWERSGLB).scene.getObjectByName(p.id+'_leaf');   /* アルファ抜きの葉のカード（持ち主がきめた）：葉の形の絵（透明なふち）を、板にはる */
     if(lf){LEAFCARD=LEAFCARD||Promise.all(['leaf_rose_card.png','leaf_rose_card_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
       const [lmap,lnor]=await LEAFCARD;   /* lnor：葉のカードのノーマルマップ（ふちへ丸く下がるふくらみ・まん中のすじ・葉脈。厚みがあるように見せる。持ち主がきめた） */

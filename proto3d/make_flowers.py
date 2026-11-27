@@ -23,7 +23,7 @@ STEM = (94, 154, 54)
 
 class Plant:
     """部品（点・面・色・UV）をためて、1つのメッシュにする"""
-    def __init__(self, seed, card=True): self.V = []; self.F = []; self.C = []; self.U = []; self.n = 0; self.rng = np.random.default_rng(seed); self.card = Plant(seed + 1000, False) if card else None   # card：アルファ抜きの葉のカード（べつのメッシュ）
+    def __init__(self, seed, card=True): self.V = []; self.F = []; self.C = []; self.U = []; self.n = 0; self.rng = np.random.default_rng(seed); self.card = Plant(seed + 1000, False) if card else None; self.pcard = Plant(seed + 2000, False) if card else None   # pcard：アルファ抜きの花びら（べつのメッシュ）   # card：アルファ抜きの葉のカード（べつのメッシュ）
 
     def rimmed(self, v, f, c, uv, rows, cols, thick, rim_k=.88):
         """1まいの面（両面にしない）に、ふちだけ厚みをつける（持ち主がきめた）：面のまわりの点を、面のうらへ thick ずらして、帯でつなぐ。
@@ -122,6 +122,32 @@ def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None):
     if npath:   # ノーマルマップ（OpenGL・+Y は絵の上）：形の高さのかたむき＋葉脈
         gy, gx = np.gradient(HT, px); nx = -gx * .9 + DX * .4; ny = gy * .9 + DY * .4; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
         Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
+
+
+def petal_card_texture(path, npath, src, nsrc, size=1024, seed=5):
+    """ばらの花びらの絵（アルファ抜き。持ち主がきめた）：2×2の4とおりの形。1まいの絵のよこ＝花びらのはば（左右 −1〜1）・たて＝つけ根0→先1。
+    形：つけ根はすぼみ、先は広く丸い。ふちは、ゆるくなみうつ（ひだ）・先のまん中に小さなくぼみ・ところどころ小さな切れこみ。
+    色は白に近い明るさのむら（スキルの petal_rose の絵の明るさ。色は点の色でつける）。ノーマル：ふちのきわで下がる（厚みのふち）・たてのすじ"""
+    from PIL import Image
+    rng = np.random.default_rng(seed); S = np.asarray(Image.open(src).convert('L').resize((256, 256)), float); S = S / S.mean()
+    NS = np.asarray(Image.open(nsrc).convert('RGB').resize((256, 256)), float) / 127.5 - 1
+    h2 = size // 2; col = np.zeros((size, size)); al = np.zeros((size, size)); HT = np.zeros((size, size)); DX = np.zeros((size, size)); DY = np.zeros((size, size))
+    yy, xx = np.mgrid[0:h2, 0:h2]; q = (xx + .5) / h2 * 2.16 - 1.08; t = 1.04 - (yy + .5) / h2 * 1.08; px = 2.16 / h2   # すきま：絵のはしに、すこしあまりをのこす（ぼかしで、となりの形がまざらない）
+    for cell in range(4):
+        ph = rng.uniform(0, 6.28, 4); nd = rng.uniform(.04, .08); rf = rng.uniform(.018, .03); nr = rng.integers(2, 4)
+        top = .97 - .07 * q ** 4 - nd * np.exp(-((q - rng.uniform(-.06, .06)) / .1) ** 2) + rf * np.sin(q * math.pi * nr + ph[0]) + .012 * np.sin(q * 17 + ph[1])   # 先：丸く・まん中に小さなくぼみ・ひだ
+        side = .95 - .02 * np.sin(t * 7 + ph[2]) - .1 * np.clip((.25 - t) / .25, 0, 1) ** 1.5   # 横：ゆるくなみうつ。つけ根は少しすぼむ
+        for k in range(rng.integers(1, 3)):   # 小さな切れこみ（ひだのあいだ）
+            c0 = rng.uniform(-.7, .7); top = top - .05 * np.exp(-((q - c0) / .035) ** 2)
+        d = np.minimum((top - t) / px, (side - np.abs(q)) / px)   # ふちまでのきょり（点。つけ根はのぞく：つけ根は花のまん中につながる）
+        a = np.clip(np.minimum(d, (t + .02) / px) + .5, 0, 1); ew = 18.0; hgt = np.sqrt(np.clip(d / ew, 0, 1)) * 1.0   # ふちのきわ ew 点で下がる
+        sx = np.clip(((q + 1) / 2 * 255).astype(int), 0, 255); sy = np.clip(((1 - np.clip(t, 0, 1)) * 255).astype(int), 0, 255)
+        lum = np.clip(.9 + .25 * (S[sy, sx] - 1) + .06 * np.clip(1 - d / 25, 0, 1), .7, 1.1)   # 明るさのむら・ふちは少し明るい（うすい）
+        ns = NS[sy, sx]; cy, cx = divmod(cell, 2); sl = (slice(cy * h2, cy * h2 + h2), slice(cx * h2, cx * h2 + h2))
+        col[sl] = lum; al[sl] = a; HT[sl] = hgt; DX[sl] = ns[..., 0]; DY[sl] = ns[..., 1] + .05 * np.sin(q * 40 + ph[3]) * (t > .1)   # たてのすじ
+    Image.fromarray(np.dstack([np.repeat((col * 262)[..., None], 3, 2), al * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(path)
+    gy, gx = np.gradient(HT * 6.0); nx = -gx * 1 + DX * .3; ny = gy * 1 + DY * .3; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+    Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
 
 
 def rad(az, el):
@@ -283,7 +309,9 @@ def rose(p):
                 v = np.asarray(m.vertices) * K * size * [1, 1, 1.25]; uv = np.asarray(m.visual.uv); t = uv[:, 1:2]; q = uv[:, 0:1]; u = 1 - k / (len(tiers) - 1 or 1)   # u：1 外がわ・0 まん中
                 tip = G(246, 140 + 10 * hue, 170 - 8 * hue) * u + G(226, 82 + 8 * hue, 122 - 6 * hue) * (1 - u); base = G(176, 34, 74 - 6 * hue)
                 c = (base * (1 - t ** .7) + tip * t ** .7) * (.8 + .2 * u) * (1 - .1 * (1 - np.abs(2 * q - 1)) * (1 - t))
-                p.rimmed(place(v), m.faces, c, np.hstack([q * r * 2, t * h]) * K * size, RW, CL, PETAL_T * size, rim_k=1.08)   # ふちは少し明るく（花びらの厚みの切り口）
+                cell = int(rng.integers(0, 4)); cy, cx = divmod(cell, 2)   # 4とおりの形から1つ（絵の 2×2 のます。cy 0 が絵の上）
+                auv = np.hstack([(cx + (2 * q + .08) / 2.16) / 2, ((1 - cy) + (t + .04) / 1.08) / 2])
+                p.pcard.add(place(v), m.faces, c, auv)   # 花びら：アルファ抜きの絵で、ふちをこまかい形にくりぬく（持ち主がきめた）。厚みはノーマルマップのふち
         vv = []; ff = []; cc = []   # まん中の、折りこんだ花びら（スキル v8）：じくをまたいで、まん中の穴を上からおおう
         for i in range(7):
             t = i / 6
@@ -323,6 +351,8 @@ def grass(p):   # 草むら（イネ科）：根もとから細い葉がたば�
 KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass)]
 
 if __name__ == '__main__':
+    PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
+    petal_card_texture(os.path.join(HERE, 'tex', 'petal_rose_card.png'), os.path.join(HERE, 'tex', 'petal_rose_card_n.png'), os.path.join(PT, 'basecolor.png'), os.path.join(PT, 'normal.png'))
     TX = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'leaf_rose')
     leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
@@ -332,5 +362,6 @@ if __name__ == '__main__':
         T = trimesh.Trimesh(V, F, process=False); bad = int((T.area_faces < 1e-12).sum())
         print(name, fn.__name__, '三角形', len(F), '高さ %.2f はば %.2f' % (V[:, 1].max(), max(np.ptp(V[:, 0]), np.ptp(V[:, 2]))), '面積0の面', bad, '有限', bool(np.isfinite(V).all()), '地面の下 %.3f' % V[:, 1].min())
         meshes.append((name, att, F))
+        if p.pcard is not None and p.pcard.V: ca, cF = p.pcard.mesh(); meshes.append((name + '_petal', ca, cF)); print(' ', name + '_petal', '三角形', len(cF))
         if p.card is not None and p.card.V: ca, cF = p.card.mesh(); meshes.append((name + '_leaf', ca, cF)); print(' ', name + '_leaf', '三角形', len(cF))
     out = os.path.join(HERE, 'tex', 'flowers.glb'); glbio.write(meshes, out, 'proto3d make_flowers.py (realistic-plant-3d)'); print(out, os.path.getsize(out) // 1024, 'KB')
