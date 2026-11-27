@@ -12,6 +12,7 @@ sys.path[:0] = [HERE, os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3
 import glbio
 from plant_geometry import leaf as pg_leaf, tube as pg_tube, frame, unit
 from flower_geometry import petal as fg_petal, funnel as fg_funnel
+from rose_curved import rose_petal
 
 MAT_LEAF = 6
 G = lambda *c: np.array(c, float)
@@ -73,7 +74,9 @@ class Plant:
         V = np.vstack(self.V); F = np.vstack(self.F); C = np.vstack(self.C) / 255.0; U = np.vstack(self.U)
         T = V[F]; F = F[np.linalg.norm(np.cross(T[:, 1] - T[:, 0], T[:, 2] - T[:, 0]), axis=1) > 1e-10]   # 面積のない面（玉のてっぺんなど）はのぞく
         V = V[:, [0, 2, 1]] * [1, 1, -1]   # z 上 → y 上（回すだけ。うらがえさない）
-        return {'POSITION': V, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': np.full((len(V), 1), MAT_LEAF), '_UNDER': np.zeros((len(V), 1))}, F
+        import trimesh
+        Nn = np.asarray(trimesh.Trimesh(V, F, process=False).vertex_normals)   # なめらかな面の向きを、GLB に書く（スキル v6）
+        return {'POSITION': V, 'NORMAL': Nn, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': np.full((len(V), 1), MAT_LEAF), '_UNDER': np.zeros((len(V), 1))}, F
 
 
 def rad(az, el):
@@ -215,31 +218,37 @@ def pansy(p):   # パンジー：せの低い株。たまご形でふちが丸�
 
 
 def rose(p):
-    """ばら（園芸のばら。半分〜8分ひらいた花）。スキル v3：同じ輪にならべない・内がわはまきこむ・外がわは開いて先がそる・花びらの重なり・層のあいだの角度のずれ。
-    骨格：木のくき（とげ）。葉：小さな葉5まい（先の1まいと2つい）の複葉が、葉柄で互いちがいにつく。小さな葉は、たまご形でぎざぎざ。花：がく5まいが下へそる・花びらはらせんに"""
-    rng = p.rng; PINK_IN = (196, 40, 84); PINK_A = (216, 62, 104); PINK_B = (246, 138, 166)
-    def bloom(top, ax, n, open_, size):
-        """花：まん中から外へ、137.5度ずつずらして n まい。open_：ひらきぐあい（0 つぼみ〜1 ひらききる）"""
-        for i in range(n):
-            u = i / (n - 1); a = i * 137.5 + rng.uniform(-10, 10); el = 86 - (86 - 42 * (1.15 - open_)) * u ** 1.25 * open_ - (1 - open_) * 4   # 内がわは立つ・外がわほどねる
-            r0 = size * (.01 + .2 * u * open_); o = top + around(ax, a, 0) * r0 + ax * size * (.06 - .1 * u)
-            L = size * (.5 + .34 * u) * rng.uniform(.94, 1.06); W = size * (.52 + .44 * u)   # 外がわも大きくしすぎない（広がったレタスのように見えた）
-            p.petal(o, around(ax, a, el), L, W, PINK_IN if u < .3 else PINK_A, PINK_B, up=ax, rows=14, cols=8, shade=.16 * (1 - u),
-                    bend=.34 - .14 * u, curl=.1 - .3 * u * open_, cup=.36 - .06 * u, twist=rng.uniform(-.16, .16), wave=.015 + .02 * u, tip_width=.72)   # 先は丸く・外がわも、おわんの形をのこす
-        for k in range(5): p.blade(top - ax * size * .02, around(ax, k * 72 + 20, -30 + 50 * (1 - open_)), size * .62, size * .2, (60, 128, 50), (118, 178, 78), up=ax, profile=LANCE, bend=-.35 * open_, cup=.12, twist=0, ripple=0, thick=0, seg=8, col=4)   # がく
-        p.ball(top - ax * size * .1, size * .15, (86, 140, 58), squash=1.2, axis=ax, n=8, m=4)   # 花の下のふくらみ
-    def leafs(P, t, a):
-        """複葉：葉柄 → 2ついの小さな葉 → 先の1まい。葉のじくは、先へたれる"""
-        o = P(t); d = rad(a, 34); L = rng.uniform(.13, .16); ax_ = lambda q: o + d * L * q + G(0, 0, -.22 * L * q * q)
-        p.tube([ax_(0), ax_(.5), ax_(1)], [.0055, .0045, .003], (96, 146, 62), 5)
-        for q, sg in ((.42, 1), (.46, -1), (.74, 1), (.78, -1), (1, 0)):
-            dd = unit(d * (1 if sg == 0 else .55) + rad(a + sg * 78, 8) + G(0, 0, -.1)); sz = L * (.6 if sg == 0 else .5) * rng.uniform(.9, 1.1)
-            p.blade(ax_(q), dd, sz, sz * .58, (38, 108, 44), (98, 168, 62), profile=OVATE, bend=-.18, cup=.1, twist=rng.uniform(-.25, .25), ripple=.02, teeth=4, serration=.09, thick=0, seg=24, col=6)
-    for s_, (az, hh, op, sz, n) in enumerate(((70, .34, .95, .15, 26), (200, .27, .7, .135, 22), (320, .2, .12, .09, 9))):   # ひらいた花・ひらきかけ・つぼみ（高さもかえる）
-        b = rad(az, 0) * .05 * (s_ > 0); P, D = p.stem(b, b + G(0, 0, hh) + rad(az, 0) * (.03 + .05 * s_), .016, .011, rad(az + 90, 0) * .014, color=(84, 128, 56), n=5)
-        top = P(1); ax = unit(D(1) * .6 + unit(rad(az, 0) * .5 + G(0, 0, .85)) * .4); bloom(top, ax, n, op, sz)
-        for k in range(3): t = .2 + .22 * k; a = az + 30 + k * 150; o = P(t); d = rad(a, -15); p.tube([o, o + d * .012, o + d * .02 + G(0, 0, -.004)], [.006, .003, .0006], (164, 96, 70), 4)   # とげ
-        for k in range(3 if s_ < 2 else 2): leafs(P, .16 + .24 * k, az + 60 + k * 137.5)
+    """ばら（園芸のばら。品種はきめていない仮の物）。スキル v6・v7：花びらは、花のじくのまわりにまきつく曲面（rose_curved.rose_petal）。外は広くひらいて先がそり、内ほど小さく立ってまきこむ。
+    見た物：スキルの絵（plant-atlas の Rose 3つ。AIの絵なので、実物のたしかめにはならない）＝おわんの形の花・細く枝わかれするくき・こい緑のたまご形の小さな葉がたくさん・わきの枝につぼみ。
+    骨格：細い木のくき（先へ細く、しなる）から、わきの枝。葉：小さな葉5まいの複葉が互いちがい。花：がく5まい"""
+    rng = p.rng; K = 2.0   # スキルの試作（メートル）→ マス：花のはば 約0.16マス
+    def bloom(top, ax, open_, size):
+        """open_：1 ひらいた花・0 つぼみ。層：(まい数, 半径, 高さ, まきつく角度, ひらき)"""
+        f, sx, ux = frame(ax, (0, 1, 0) if abs(ax[2]) > .9 else (0, 0, 1)); tiers = [(5, .052, .027, 1.55, 1.0), (5, .041, .034, 1.35, .76), (5, .030, .039, 1.52, .48), (4, .019, .042, 1.85, .25), (3, .0105, .041, 2.25, .04), (3, .005, .039, 2.65, 0)]
+        if open_ < .5: tiers = [(3, .022, .05, 2.3, .1), (3, .014, .052, 2.6, 0), (2, .007, .05, 2.9, 0)]   # つぼみ：かたくまいた花びらだけ
+        for k, (n, r, h, span, op) in enumerate(tiers):
+            for i in range(n):
+                a = 2 * math.pi * i / n + k * 2.39996 + rng.uniform(-.08, .08); m = rose_petal(a, r * rng.uniform(.95, 1.05), h * rng.uniform(.94, 1.06), span, op * open_, rng.uniform(0, 6.283), k, rows=12, cols=10)
+                v = np.asarray(m.vertices) * K * size * [1, 1, 1.35];   # 花を、絵のように深いおわんに
+                uv = np.asarray(m.visual.uv); t = uv[:, 1:2]; q = uv[:, 0:1]; u = 1 - k / (len(tiers) - 1 or 1)   # u：1 外がわ・0 まん中
+                c = (G(168, 26, 66) * (1 - t ** .8) + (G(232, 96, 136) * (1 - u) + G(250, 150, 178) * u) * t ** .8) * (.82 + .18 * u)   # つけ根はこく・先は明るく。内がわほど、少しこく
+                p.add(top + v[:, :1] * sx + v[:, 1:2] * ux + v[:, 2:3] * f, m.faces, c, np.hstack([q * r * 2, t * h]) * K * size)
+        for k in range(5): p.blade(top, around(ax, k * 72 + 20, -28 + 60 * (1 - open_)), .075 * size, .026 * size, (50, 112, 44), (104, 160, 70), up=ax, profile=LANCE, bend=-.3 * open_, cup=.1, twist=0, ripple=0, thick=0, seg=8, col=4)   # がく
+        p.ball(top - ax * .012 * size, .016 * size, (78, 128, 54), squash=1.25, axis=ax, n=8, m=4)
+    def leafs(o, a):
+        """複葉：葉柄 → 2ついの小さな葉 → 先の1まい。じくは先へたれる。小さな葉は、たまご形・ぎざぎざ・まん中のすじの両がわがゆるくふくらむ"""
+        d = rad(a, 30); L = rng.uniform(.115, .15); ax_ = lambda q: o + d * L * q + G(0, 0, -.25 * L * q * q); p.tube([ax_(0), ax_(.5), ax_(1)], [.004, .0032, .002], (84, 132, 56), 5)
+        for q, sg in ((.4, 1), (.45, -1), (.72, 1), (.77, -1), (1, 0)):
+            dd = unit(d * (1 if sg == 0 else .5) + rad(a + sg * 80, 6) + G(0, 0, -.12)); sz = L * (.62 if sg == 0 else .5) * rng.uniform(.88, 1.1)
+            p.blade(ax_(q), dd, sz, sz * .62, (30, 92, 38), (78, 146, 56), profile=OVATE, bend=-.2, cup=-.07, twist=rng.uniform(-.3, .3), ripple=.02, teeth=4, serration=.07, thick=0, seg=24, col=4)
+    def cane(base, az, h, lean, r0):
+        return p.stem(base, G(*base) + G(0, 0, h) + rad(az, 0) * lean, r0, r0 * .5, rad(az + 90, 0) * .018 + rad(az, 0) * .02, color=(76, 118, 52), n=6)
+    for s_, (az, h, lean) in enumerate(((70, .36, .05), (200, .29, .1))):   # 根もとから2本のくき。それぞれの先に、ひらいた花
+        b = rad(az, 0) * .03; P, D = cane(b, az, h, lean, .0085); bloom(P(1), unit(D(1) * .5 + unit(rad(az, 0) * .45 + G(0, 0, .9)) * .5), 1 - .2 * s_, 1 - .12 * s_)
+        for k in range(4): leafs(P(.14 + .2 * k), az + 50 + k * 137.5 + rng.uniform(-15, 15))
+        for k in range(3): t = .15 + .25 * k; a = az + 20 + k * 150; o = P(t); d = rad(a, -15); p.tube([o, o + d * .009, o + d * .015 + G(0, 0, -.003)], [.0035, .002, .0005], (150, 84, 62), 4)   # とげ
+        t = .5 + .1 * s_; o = P(t); a = az + (115 if s_ == 0 else -100); hb = .13 + .03 * s_; P2, D2 = p.stem(o, o + rad(a, 52) * hb, .005, .003, G(0, 0, .012), color=(84, 128, 56), n=4)   # わきの枝に、つぼみ
+        bloom(P2(1), D2(1), .1, .62); leafs(P2(.35), a + 100); leafs(P2(.6), a - 120)
 
 
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる

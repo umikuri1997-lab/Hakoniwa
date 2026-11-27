@@ -43,3 +43,6 @@
 ## V3 追加資料
 - `../assets/review_failure_example.jpg`：ユーザー提供のゲーム内出力。改善対象であり模倣する目標ではない。
 - `../assets/flower_primitives.glb`：曲面花弁・連続花冠・花弁の重ね配置の技術見本。完成品ではない。
+
+## V4 追加：画像アトラス
+- [plant-atlas.md](plant-atlas.md) に画像9枚の索引と36種類の形態確認項目を収録。AI生成の参考画像であり、実物写真ではない。

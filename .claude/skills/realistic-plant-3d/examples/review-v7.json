@@ -1,0 +1,15 @@
+{
+  "plant": "", "cultivar": "", "references": [], "assumptions": [],
+  "target_height_m": null, "target_width_m": null, "target_stem_diameter_m": null,
+  "leaf_length_width_ratio": null, "flower_diameter_m": null,
+  "triangle_budget": null, "target_runtime": "", "seed": 41,
+  "gates": [
+    {"id":"G0","status":"not_run","evidence":[],"issues":[],"fixes":[]},
+    {"id":"G1","status":"not_run","evidence":[],"issues":[],"fixes":[]},
+    {"id":"G2","status":"not_run","evidence":[],"issues":[],"fixes":[]},
+    {"id":"G3","status":"not_run","evidence":[],"issues":[],"fixes":[]},
+    {"id":"G4","status":"not_run","evidence":[],"issues":[],"fixes":[]},
+    {"id":"G5","status":"not_run","evidence":[],"issues":[],"fixes":[]},
+    {"id":"G6","status":"not_run","evidence":[],"issues":[],"fixes":[]}
+  ]
+}

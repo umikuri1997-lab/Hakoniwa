@@ -6,10 +6,10 @@ import trimesh
 from plant_geometry import frame, export_glb
 
 
-def surface(vertices, faces, rgba):
+def surface(vertices, faces, rgba, uv=None):
     m = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
     mat = trimesh.visual.material.PBRMaterial(baseColorFactor=list(rgba), roughnessFactor=.78, metallicFactor=0, doubleSided=True)
-    m.visual = trimesh.visual.TextureVisuals(material=mat)
+    m.visual = trimesh.visual.TextureVisuals(uv=uv, material=mat)
     return m
 
 
@@ -20,7 +20,7 @@ def petal(origin, direction, length, width, *, up=(0,0,1), bend=.15, curl=-.12,
     The last row traces a rounded rim rather than converging to a sharp point.
     """
     f,s,u=frame(direction,up); o=np.asarray(origin,float)
-    verts=[]; faces=[]
+    verts=[]; faces=[]; uv=[]
     for i in range(rows+1):
         t=i/rows; a=twist*t
         ss=np.cos(a)*s+np.sin(a)*u; uu=-np.sin(a)*s+np.cos(a)*u
@@ -29,12 +29,12 @@ def petal(origin, direction, length, width, *, up=(0,0,1), bend=.15, curl=-.12,
             q=2*j/cols-1
             x=length*(t-.13*t**7*q*q)
             z=length*(bend*t*t+curl*t**5+cup*q*q*np.sin(np.pi*t*.86)+wave*abs(q)**5*t*t*np.sin(7*np.pi*t+2*q))
-            verts.append(o+x*f+q*w*ss+z*uu)
+            verts.append(o+x*f+q*w*ss+z*uu); uv.append(((q+1)/2,t))
     for i in range(rows):
         for j in range(cols):
             a=i*(cols+1)+j; b=a+cols+1
             faces.extend([(a,b,a+1),(a+1,b,b+1)])
-    return surface(verts,faces,rgba)
+    return surface(verts,faces,rgba,np.asarray(uv))
 
 
 def funnel(origin, height, throat_radius, rim_radius, *, flare=2.8, lobes=5,

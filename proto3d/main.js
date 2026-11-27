@@ -88,7 +88,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={farm:{col:'#7d5638'},rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.3};
-const GLOSS={k:.2,pow:9,sheen:.1,tint:.6};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
+const GLOSS={k:.1,pow:7,sheen:.03,tint:.85};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
 const PETAL={sat:1.15,tex:.5,from:.35,base:.7,tip:1.02,satBase:1.15};   /* from：花のはじまる高さ（植物の高さの割合）・base／tip：つけ根と先の明るさ・satBase：つけ根のあざやかさ */      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */

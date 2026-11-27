@@ -96,4 +96,4 @@ def azimuths(nodes, mode, divergence=137.5, whorl=3):
 
 def export_glb(scene,path):
     """GLB convention Y-up; convert geometry from Z-up once at export."""
-    sc=scene.copy(); sc.apply_transform(trimesh.transformations.rotation_matrix(-np.pi/2,[1,0,0])); sc.export(str(path),file_type='glb')
+    sc=scene.copy(); sc.apply_transform(trimesh.transformations.rotation_matrix(-np.pi/2,[1,0,0])); sc.export(str(path),file_type='glb',include_normals=True,unitize_normals=True)

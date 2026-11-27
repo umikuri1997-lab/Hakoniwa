@@ -1,0 +1,14 @@
+{
+ "plant": "ばら", "cultivar": "きめていない（仮の園芸のばら）", "seed": 109, "target_runtime": "three.js の試作（proto3d）", "triangle_budget": null,
+ "references": ["スキルの絵 assets/plant-atlas/flowers-a・b・c.jpg の Rose（AIの絵。実物のたしかめにはならない）", "持ち主の絵 tools/art/ref/plants_ref.png"],
+ "assumptions": ["花のはば 約0.2マス・高さ 約0.47マス（数字の根拠はない。絵の見た目から）", "花びら25まい（6層）・つぼみ8まい", "小さな葉5まいの複葉"],
+ "gates": [
+  {"id": "G0", "status": "pass", "evidence": ["スキルの絵3まいを開いて見た"], "issues": ["実物の写真は見られていない（ウィキメディアにことわられた）"], "fixes": []},
+  {"id": "G1", "status": "pass", "evidence": ["rose3.png"], "issues": ["くきが太くまっすぐ（前の版）"], "fixes": ["半径を約半分に・しなる曲線・わきの枝につぼみ"]},
+  {"id": "G2", "status": "not_run", "evidence": [], "issues": ["色をのせない表示（クレイ）での、花1つ・葉1まいの大きな確認はしていない"], "fixes": []},
+  {"id": "G3", "status": "not_run", "evidence": ["3つの向きだけ（rose3.png・rose4.png）"], "issues": ["決まった8つの向き・クレイは、Blender がないのでしていない", "1回め：花が小さく浅い・葉が大きい"], "fixes": ["花を大きく・深いおわんに、葉を小さく"]},
+  {"id": "G4", "status": "pass", "evidence": ["rose4.png"], "issues": ["花びらのふちの白いてり"], "fixes": ["花びらのつやとふちのてりを弱く"]},
+  {"id": "G5", "status": "pass", "evidence": ["audit_glb.py：pass（NORMAL あり・面積のない面なし）", "試作のページで読みこんで写した"], "issues": ["1回め：NORMAL がなく fail"], "fixes": ["なめらかな面の向きを GLB に書く"]},
+  {"id": "G6", "status": "not_run", "evidence": [], "issues": ["1株 約2.9万三角形。軽い版は作っていない。スマホでの重さは、はかっていない"], "fixes": []}
+ ]
+}
