@@ -16,7 +16,7 @@ from rose_curved import rose_petal
 from rose_plant_v8 import petal as v8_petal
 
 MAT_LEAF = 6
-PETAL_T = .009   # 花びらのふちの厚み（マス。花の大きさ1のとき。持ち主がきめた：厚く）
+PETAL_T = .004   # 花びらのふちの厚み（マス。花の大きさ1のとき。持ち主がきめた）
 G = lambda *c: np.array(c, float)
 STEM = (94, 154, 54)
 
