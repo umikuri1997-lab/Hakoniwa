@@ -1,0 +1,15 @@
+{
+  "target": {"common_name": null, "scientific_name": null, "cultivar": null, "stage": null, "season": null},
+  "style": {"geometry": "botanically realistic", "material": "realistic unless specified", "use": null},
+  "dimensions_m": {"height": null, "width": null, "depth": null},
+  "architecture": {"growth_habit": null, "branching": null, "leaf_order": null, "internodes": null},
+  "leaf": {"simple_or_compound": null, "outline": null, "margin": null, "venation": null, "attachment": null, "curvature": null, "surface": null},
+  "flower_fruit": {"present": null, "structure": null, "attachment": null},
+  "sources": [],
+  "observations": [],
+  "design_assumptions": [],
+  "unknowns": [],
+  "seed": 42,
+  "outputs": ["blend", "glb", "generator", "preview"],
+  "quality_review": {"status": "not_run", "checks": [], "revisions": []}
+}
