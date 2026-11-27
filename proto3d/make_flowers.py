@@ -111,7 +111,7 @@ def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None):
         m = np.clip((hw * saw - np.abs(w)) * L / px + .5, 0, 1) * (u > 0) * (u < 1)
         sx = np.clip(((w / (W * 1.05) + .5) * 255).astype(int), 0, 255); sy = np.clip(((1 - uc) * 255).astype(int), 0, 255); c = S[sy, sx] * tone * (1 - .12 * np.abs(w) / (W / 2))[..., None]   # ふちは少し暗く
         col[:] = col * (1 - m[..., None]) + c * m[..., None]; al[:] = np.maximum(al, m)
-        a_ = np.clip(np.abs(w) / np.maximum(hw, 1e-6), 0, 1); h = (1 - a_ ** 2) ** .5 * .022 * L * np.sin(np.pi * uc) ** .3 - .006 * L * np.exp(-(w / (.025 * W)) ** 2)   # ふくらみ：ふちへ丸く下がる（厚みに見せる）・まん中のすじは少しくぼむ
+        a_ = np.clip(np.abs(w) / np.maximum(hw, 1e-6), 0, 1); h = (1 - a_ ** 3) ** .5 * .05 * L * np.sin(np.pi * uc) ** .25 - .008 * L * np.exp(-(w / (.025 * W)) ** 2)   # ふちのきわで、急に下がる（厚みのふち）   # ふくらみ：ふちへ丸く下がる（厚みに見せる）・まん中のすじは少しくぼむ
         HT[:] = HT * (1 - m) + h * m
         if NS is not None: nt = NS[sy, sx]; DX[:] = DX * (1 - m) + (nt[..., 0] * n[0] + nt[..., 1] * d[0]) * m; DY[:] = DY * (1 - m) + (nt[..., 0] * n[1] + nt[..., 1] * d[1]) * m   # 葉脈のかたむきを、小さな葉の向きにまわす
     seg((0, 0), (0, .8), .009, (62, 104, 46))
@@ -120,7 +120,7 @@ def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None):
     leaflet((0, .68), rng.uniform(-.05, .05), .31, .58, 1.05)
     img = np.dstack([np.clip(col * 1.35, 0, 255), al * 255]).astype(np.uint8); Image.fromarray(img, 'RGBA').save(path)
     if npath:   # ノーマルマップ（OpenGL・+Y は絵の上）：形の高さのかたむき＋葉脈
-        gy, gx = np.gradient(HT, px); nx = -gx * .55 + DX * .5; ny = gy * .55 + DY * .5; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+        gy, gx = np.gradient(HT, px); nx = -gx * .9 + DX * .4; ny = gy * .9 + DY * .4; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
         Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
 
 
