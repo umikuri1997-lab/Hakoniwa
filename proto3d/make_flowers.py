@@ -357,47 +357,57 @@ def rose(p):
 
 
 def salvia(p):
-    """サルビア（Salvia splendens。草原の花のたねの店にある）。ゲームの絵：赤い花の穂が3本ほど立つ。
-    形（ふつうに知られた形。写真は見られていない）：まっすぐ立つ四角いくき・たまご形でぎざぎざの葉が、向かい合って節ごとに90度まわる（十字対生）。
-    くきの上に、赤いがくと、細長いつつの形の花（先が上下の唇にわかれる）が、輪になって何だんもつく（穂）。花もがくも赤。
-    スキル v9：花はつつ（5角）とがく（玉）だけの軽い形。葉はアルファ抜きのカード（1まいの葉＋葉柄）＋ノーマル"""
-    rng = p.rng; COR = ((196, 22, 26), (250, 64, 46)); CALC = ((140, 14, 22), (206, 34, 36)); DARK = (70, 6, 12)
-    def ring(o, d, ax, length, width, kind, bud=False, bend=0.):
-        """スキルのサルビアの追加データ（salvia_spike.ringmesh）の形：じくにそったつつで、先が上下の唇にわかれる（ふち非対称）。
-        がく（calyx）：鐘の形・たてのすじ・先に上下の唇。花（corolla）：がくからつき出る細長いつつ・上の唇が長い・口の中は暗い。sides 5・rows 3"""
-        d = unit(d); a = unit(np.cross(ax, d)); b = unit(np.cross(d, a)); sides, rows = 5, 3; vs = []; cs = []; fs = []
-        for i in range(rows + 1):
-            t = i / rows
-            for j in range(sides + 1):
-                th = 2 * math.pi * (j % sides) / sides; dor = math.sin(th)
-                if kind == 'calyx': rad = width * (.35 + .65 * math.sin(math.pi * .72 * t)); lip = (.11 * dor + .11 * math.cos(2 * th)) * t ** 6
-                else: rad = width * (.48 + .52 * t ** .7); lip = (.22 * dor + .08 * math.cos(2 * th)) * t ** 6
-                if bud: rad *= 1 - .8 * t ** 5
-                vs.append(o + d * length * (t + lip) + a * rad * math.cos(th) + b * (rad * .82 * dor + bend * t * t))
-                ca, cb = CALC if kind == 'calyx' else COR; rib = .9 + .1 * math.cos(5 * th) if kind == 'calyx' else 1
-                cs.append((G(*ca) * (1 - t) + G(*cb) * t) * rib if not (kind == 'corolla' and i == rows and not bud) else G(*cb) * .9)
-        for i in range(rows):
-            for j in range(sides): k = i * (sides + 1) + j; l = k + sides + 1; fs += [(k, k + 1, l), (k + 1, l + 1, l)]
-        if kind == 'corolla' and not bud:   # 口の中（暗い）：先のふちを、中へすぼめたふた
-            c0 = len(vs); vs.append(o + d * length * .9); cs.append(G(*DARK)); fs += [(c0, rows * (sides + 1) + j + 1, rows * (sides + 1) + j) for j in range(sides)]
-        p.add(vs, fs, cs)
-    def spike(P, D, tiers, top):
-        """花の穂（スキルのサルビアの追加データ）：くきの上 top の長さに、節を tiers だん。節ごとに2〜4花のまとまり（花柄は短い）。
-        上はつぼみ・まん中は花・下は、花が落ちて赤いがくだけのものもまじる。節ごとに向きを少しまわし、上ほど小さく"""
-        for i in range(tiers):
-            u = i / (tiers - 1); t = 1 - top + top * u; o = P(t); ax = D(t); num = 4 if u < .5 else 3 if u < .85 else 2; bud = u > .86
-            for j in range(num):
-                az = 360 * j / num + (i % 2) * 45 + rng.uniform(-8, 8); d = around(ax, az, 46 if not bud else 62); o2 = o + d * .003   # 花は、外へ・ななめ上へ（穂の形を細くまとめる）; o2 = o + d * .003
-                L = (.032 - .012 * u) * rng.uniform(.92, 1.08); w = (.009 - .003 * u) * rng.uniform(.92, 1.08)
-                ring(o2, d, ax, L, w, 'calyx', bud=bud, bend=.003)
-                if not bud and not (u < .3 and (i + j) % 3 == 0):   # 下のほうは、花の落ちたがくもまじる
-                    ring(o2 + d * L * .6 + ax * .002, unit(d - ax * .05), ax, (.042 - .014 * u) * rng.uniform(.9, 1.1), w * .65, 'corolla', bend=-.005 * (1 - u))
-    for s_, (az, h) in enumerate(((20, .36), (140, .31), (260, .28), (80, .22))):
-        b = rad(az, 0) * (.035 if s_ else .01); P, D = p.stem(b, b + G(0, 0, h) + rad(az, 0) * .03, .0075, .005, rad(az + 90, 0) * .008, color=(70, 120, 52), n=4)
-        for n_ in range(3):   # 葉：十字対生（節ごとに90度）。下ほど大きい
-            t = .1 + .16 * n_; L = .14 * (1 - .22 * n_) * rng.uniform(.92, 1.08)
-            for k in (0, 180): place_card(p, P(t), rad(az + 90 * n_ + k + rng.uniform(-12, 12), 25 - 8 * n_), L, L * .85, rng, droop=(.2, .35), fold=(.15, .3), tone=(.8, .98))
-        spike(P, D, 9 if s_ < 3 else 6, .34 if s_ < 3 else .28)
+    """サルビア（Salvia splendens）。本物の写真（NC State Extension の写真4まい・plantasyhongos の接写1まい）を見て、構造を書き出してから作った（持ち主がきめた）：
+    株：はばの広いたまご形の明るい緑の葉（ぎざぎざ）が、向かい合って（十字対生）こんもりした茂みになる。花の穂は葉のすぐ上から立ち、緑のはだかのくきは見えない。
+    穂：じくは赤い。節ごとに、花が2つ向かい合ってつき、節ごとに90度まわる。花は、ふくらんだ赤い鐘のがく（ななめ上を向く・花が落ちてもがくはのこる）と、
+    がくからつき出る長いつつの花（外へ出てから、先が少し下へまがる。上の唇がかぶさる）。穂の先は、つぼみがかたまって、とがる。下の花ほど長く、上ほど短い（三角の穂）"""
+    rng = p.rng; SC = (232, 30, 26); SCD = (176, 14, 20); COR = (244, 52, 32); IN = (90, 8, 12)
+    def sweep(pts, radii, cols, lip=None, sides=5, flat=1., up=None, cap=False):
+        """線にそったつつ（なめらかな面の向き）。radii・cols は輪ごと。lip：さいごの輪の、上がわ（up の向き）だけ先へのばす長さ。flat：よこのつぶれ（1でまるい）"""
+        pts = [G(*q) for q in pts]; n = len(pts); V = []; C = []; F = []
+        for i in range(n):
+            d = unit(pts[min(i + 1, n - 1)] - pts[max(i - 1, 0)]); u0 = unit(up - d * np.dot(up, d)) if up is not None else frame(d)[2]; s0 = unit(np.cross(d, u0))
+            for j in range(sides):
+                th = 2 * math.pi * j / sides; c, sn = math.cos(th), math.sin(th); off = d * (lip * max(0, sn) ** 1.5 if (lip and i == n - 1) else 0)
+                V.append(pts[i] + radii[i] * (s0 * c * flat + u0 * sn) + off); C.append(G(*cols[i]))
+        for i in range(n - 1):
+            for j in range(sides): a = i * sides + j; b = i * sides + (j + 1) % sides; F += [(a, b, a + sides), (b, b + sides, a + sides)]
+        if cap: k = len(V); V.append(pts[-1] + unit(pts[-1] - pts[-2]) * radii[-1] * .6); C.append(G(*cols[-1])); F += [((n - 1) * sides + j, (n - 1) * sides + (j + 1) % sides, k) for j in range(sides)]
+        p.add(V, F, C)
+    def flower(o, d, up, size, stage):
+        """1つの花：stage 0 つぼみ・1 がくだけ（花が落ちた）・2 ひらいた花。o：節・d：外への向き・up：穂のじくの向き"""
+        cdir = unit(d * .62 + up * .78) if stage else unit(d * .35 + up * .94)   # がくは、ななめ上を向く（つぼみは、ほぼ上）
+        L = .03 * size; R = .0145 * size   # がくは、ふっくら（長さとはばが近い）
+        if stage == 0:
+            sweep([o, o + cdir * L * .5, o + cdir * L], [R * .35, R * .7, R * .3], [SCD, SC, SC], cap=True); return
+        tip = o + cdir * L
+        sweep([o, o + cdir * L * .3, o + cdir * L * .7, tip], [R * .3, R * .8, R, R * .95], [SCD, SCD, SC, SC], lip=L * .35, up=up)   # がく：ふくらんだ鐘・上の唇が少し長い
+        if stage == 2:   # 花：がくの口から外へ出て、先が少し下へまがる。上の唇がかぶさる
+            ex = unit(d * .75 + up * .66); dn = unit(d * .95 - up * .15); C0 = o + cdir * L * .55; C1 = C0 + ex * .024 * size; C2 = C1 + unit(ex + dn) * .018 * size; C3 = C2 + dn * .012 * size
+            rr = .0085 * size; sweep([C0, C1, C2, C3], [rr * .9, rr, rr * .95, rr * .7], [COR, COR, COR, COR], lip=.01 * size, up=up, flat=.8, cap=False)
+            sweep([C3 - dn * .002, C3 + dn * .002], [rr * .45, rr * .2], [IN, IN], cap=True)   # 口の中（暗い）
+    def spike(base, ax, nodes, length):
+        """穂：赤いじく。節ごとに花2つ（向かい合い）・節ごとに90度まわる。下ほど大きくひらいた花、上ほどつぼみ。花が落ちてがくだけのものもまじる"""
+        P, D = p.stem(base, G(*base) + ax * length, .0055, .0025, G(0, 0, 0), color=SCD, n=3)
+        az0 = rng.uniform(0, 360)
+        for i in range(nodes):
+            u = i / (nodes - 1); t = .03 + .9 * u; o = P(t); up = D(t); size = 1.15 - .45 * u
+            stage = 0 if u > .72 else 2 if rng.random() < .78 else 1
+            for k in (0, 180): flower(o, around(up, az0 + 90 * i + k + rng.uniform(-10, 10), 0), up, size * rng.uniform(.92, 1.06), stage)
+        for k in range(3): flower(P(1), around(D(1), az0 + k * 120, 0), D(1), .5, 0)   # 先のつぼみのかたまり
+    leaf = lambda o, a, el, L: place_card(p, o, rad(a, el), L, L * .86, rng, droop=(.15, .3), fold=(.15, .28), tone=(.95, 1.12), roll=.35)
+    shoots = ((0, .2, 0, .03), (100, .17, .06, .02), (220, .16, .06, .025), (330, .15, .055, .02))   # 枝：方位・葉の茂みの高さ・根もとのずれ・かたむき
+    for s_, (az, hv, off, lean) in enumerate(shoots):
+        b = rad(az, 0) * off; top = b + G(0, 0, hv) + rad(az, 0) * lean * 2; P, D = p.stem(b, top, .007, .006, G(0, 0, 0), color=(74, 124, 52), n=3)
+        for n_ in range(4):   # 葉：十字対生で、下ほど大きく・ねる。上の葉は穂の根もとをかこむ
+            t = .15 + .27 * n_; L = (.19 - .025 * n_) * rng.uniform(.92, 1.08)
+            for k in (0, 180): leaf(P(t), az + 90 * n_ + k + rng.uniform(-14, 14), 18 + 10 * n_, L)
+        spike(P(1), unit(D(1) * .8 + G(0, 0, .5)), 9 if s_ == 0 else 8, .24 if s_ == 0 else .2 * rng.uniform(.9, 1.05))
+    for k in range(7): leaf(rad(k * 51 + 30, 0) * .02, k * 51 + 30 + rng.uniform(-10, 10), 8, .2 * rng.uniform(.9, 1.05))   # 根もとの大きな葉
+    for k in range(4):   # 花のない、わきの短い枝（葉だけ）：茂みをこんもりさせる
+        az = 50 + k * 90 + rng.uniform(-15, 15); b = rad(az, 0) * .05; P, D = p.stem(b, b + G(0, 0, .12) + rad(az, 0) * .06, .005, .004, G(0, 0, 0), color=(74, 124, 52), n=2)
+        for n_ in range(2):
+            for kk in (0, 180): leaf(P(.4 + .5 * n_), az + 90 * n_ + kk + rng.uniform(-14, 14), 22 + 10 * n_, .17 * rng.uniform(.9, 1.05))
 
 
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
