@@ -24,7 +24,7 @@ STEM = (94, 154, 54)
 
 class Plant:
     """部品（点・面・色・UV）をためて、1つのメッシュにする"""
-    def __init__(self, seed, card=True): self.V = []; self.F = []; self.C = []; self.U = []; self.n = 0; self.rng = np.random.default_rng(seed); self.card = Plant(seed + 1000, False) if card else None; self.pcard = Plant(seed + 2000, False) if card else None   # pcard：アルファ抜きの花びら（べつのメッシュ）   # card：アルファ抜きの葉のカード（べつのメッシュ）
+    def __init__(self, seed, card=True): self.V = []; self.F = []; self.C = []; self.U = []; self.M = []; self.n = 0; self.rng = np.random.default_rng(seed); self.card = Plant(seed + 1000, False) if card else None; self.pcard = Plant(seed + 2000, False) if card else None   # pcard：アルファ抜きの花びら（べつのメッシュ）   # card：アルファ抜きの葉のカード（べつのメッシュ）
 
     def rimmed(self, v, f, c, uv, rows, cols, thick, rim_k=.88):
         """1まいの面（両面にしない）に、ふちだけ厚みをつける（持ち主がきめた）：面のまわりの点を、面のうらへ thick ずらして、帯でつなぐ。
@@ -36,8 +36,9 @@ class Plant:
         for a in range(k): b = (a + 1) % k; rf += [(a, b, k + b), (a, k + b, k + a)]
         self.add(v, f, c, uv); self.add(np.vstack([A, B]), rf, np.vstack([c[loop], c[loop] * rim_k]), np.vstack([uv[loop], uv[loop]]))
 
-    def add(self, v, f, c, uv=None):
+    def add(self, v, f, c, uv=None, mat=None):
         v = np.asarray(v, float); self.V.append(v); self.F.append(np.asarray(f) + self.n); self.C.append(np.asarray(c, float)); self.U.append(np.zeros((len(v), 2)) if uv is None else uv); self.n += len(v)
+        self.M.append(np.full(len(v), MAT_LEAF if mat is None else mat))   # 材質の番号（main.js の MATIDX。木の皮は5）
 
     def blade(self, origin, direction, length, width, ca, cb, *, up=(0, 0, 1), thick=.012, back=.8, seg=8, col=4, **kw):
         """葉・花びら：スキルの leaf()（中心線・はばの形・そり・くぼみ・ねじれ）で曲面を作り、厚みをつける。色は、つけ根 ca から先 cb へ"""
@@ -85,12 +86,12 @@ class Plant:
         self.add(V, F, C)
 
     def mesh(self):
-        V = np.vstack(self.V); F = np.vstack(self.F); C = np.vstack(self.C) / 255.0; U = np.vstack(self.U)
+        V = np.vstack(self.V); F = np.vstack(self.F); C = np.vstack(self.C) / 255.0; U = np.vstack(self.U); MT = np.concatenate(self.M)
         T = V[F]; F = F[np.linalg.norm(np.cross(T[:, 1] - T[:, 0], T[:, 2] - T[:, 0]), axis=1) > 1e-10]   # 面積のない面（玉のてっぺんなど）はのぞく
         V = V[:, [0, 2, 1]] * [1, 1, -1]   # z 上 → y 上（回すだけ。うらがえさない）
         import trimesh
         Nn = np.asarray(trimesh.Trimesh(V, F, process=False).vertex_normals)   # なめらかな面の向きを、GLB に書く（スキル v6）
-        return {'POSITION': V, 'NORMAL': Nn, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': np.full((len(V), 1), MAT_LEAF), '_UNDER': np.zeros((len(V), 1))}, F
+        return {'POSITION': V, 'NORMAL': Nn, 'COLOR_0': np.clip(C, 0, 1) ** 2.2, 'TEXCOORD_0': U, '_MAT': MT[:, None].astype(float), '_UNDER': np.zeros((len(V), 1))}, F
 
 
 def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None, layout=None, stem_c=(62, 104, 46), gain=1.35):
@@ -167,6 +168,21 @@ def sweep(p, pts, radii, cols, lip=None, sides=5, flat=1., up=None, cap=False):
         for j in range(sides): a = i * sides + j; b = i * sides + (j + 1) % sides; F += [(a, b, a + sides), (b, b + sides, a + sides)]
     if cap: k = len(V); V.append(pts[-1] + unit(pts[-1] - pts[-2]) * radii[-1] * .6); C.append(G(*cols[-1])); F += [((n - 1) * sides + j, (n - 1) * sides + (j + 1) % sides, k) for j in range(sides)]
     p.add(V, F, C)
+
+
+def bark_tube(p, pts, radii, col, sides=7, flare=0.):
+    """木のくき・枝：線にそった、先へ細くなるつつ（平行にうつすわくで、ねじれない）。木の皮の絵（材質5）を、まわり・長さにそってはる。
+    flare：根もとのはり出し（根の5つのふくらみ。半径の割合）"""
+    pts = [G(*q) for q in pts]; n = len(pts); V = []; C = []; U = []; F = []; dprev = unit(pts[1] - pts[0]); _, a, b = frame(dprev, (1, 0, 0) if abs(dprev[0]) < .9 else (0, 1, 0)); L = 0.
+    for i in range(n):
+        d = unit(pts[min(i + 1, n - 1)] - pts[max(i - 1, 0)]); a = unit(a - d * np.dot(a, d)); b = unit(np.cross(d, a))
+        if i: L += float(np.linalg.norm(pts[i] - pts[i - 1]))
+        for j in range(sides + 1):
+            th = 2 * math.pi * j / sides; r = radii[i] * (1 + (flare * max(0, math.cos(5 * th)) ** 2 * max(0, 1 - i / 2.5) if flare else 0) + .06 * math.sin(3 * th + i))
+            V.append(pts[i] + r * (a * math.cos(th) + b * math.sin(th))); C.append(G(*col) * (.85 + .15 * (i / (n - 1)))); U.append((j / sides * 2 * math.pi * radii[i] * 2, L * 1.4))
+    for i in range(n - 1):
+        for j in range(sides): q = i * (sides + 1) + j; F += [(q, q + 1, q + sides + 1), (q + 1, q + sides + 2, q + sides + 1)]
+    p.add(V, F, C, np.array(U), mat=5)
 
 
 def place_card(p, o, d, L, Wd, rng, droop=(.18, .3), fold=(.12, .25), tone=(.74, .92), roll=.5):
@@ -653,12 +669,46 @@ def hotaru(p):
             for k in range(6): p.petal(top + d * .028, unit(d + rad(a + k * 60, 0) * .9), .028, .014, (220, 236, 176), (244, 250, 214), up=d, rows=4, cols=3, bend=.1, curl=.05, cup=.2, twist=0, wave=0, tip_width=.3)   # 少しひらいたつぼみ
 
 
+def oak(p):
+    """木（植えた木・森の木。持ち主がきめた：オーク。本物の写真（NC State Extension のシロガシワ・アカガシワ・オウシュウナラ・ライブオーク・バーオーク）を見て、構造を書き出してから作った）：
+    幹：太く短い。根もとが広がって（根のはり出し）、ひくい所で太い枝にわかれる。木の皮はたての割れめのある灰茶色。
+    枝：太い枝が3〜5本、ななめ上と横へ大きく広がり、先で何回もわかれる。樹冠は、高さより横はばが広い、まるく広がった形。
+    葉：深く切れこんだ（まるい山がいくつもある）葉が、枝先にかたまってつく。葉のかたまりのあいだに、すきまと枝が見える。
+    大きさ：ゲームの絵に合わせて、高さ 約2.6マス・はば 約2.6マス（作った形の1.5倍のあと）"""
+    rng = p.rng; BARK = (124, 108, 92)
+    def branch(o, d, L, r, depth, tips):
+        """枝：o から d の向きへ長さ L・太さ r。少し上へまがる。先で2〜3本にわかれる（depth まで）。葉のかたまりをつける所を tips にためる"""
+        pts = [o + d * L * t + G(0, 0, .12 * L * t * t) + unit(np.cross(d, G(0, 0, 1)) + G(0, 0, 1e-6)) * .05 * L * math.sin(math.pi * t) * rng.uniform(-1, 1) for t in (0, .33, .66, 1)]
+        bark_tube(p, pts, [r, r * .85, r * .72, r * .62], BARK, sides=6 if r > .02 else 4); e = pts[-1]; dd = unit(e - pts[-2])
+        if depth == 0 or r < .012: tips.append((e, dd)); return
+        for k in range(rng.integers(2, 4)):
+            az = math.degrees(math.atan2(dd[1], dd[0])) + rng.uniform(-60, 60) + (k - 1) * 40; el = math.degrees(math.asin(max(-1, min(1, dd[2])))) * .6 + rng.uniform(5, 30)
+            branch(e, rad(az, el), L * rng.uniform(.55, .72), r * .62, depth - 1, tips)
+    tips = []
+    trunk = [G(0, 0, 0), G(.01, 0, .18), G(.025, .01, .4), G(.02, .01, .58)]; bark_tube(p, trunk, [.14, .105, .095, .088], BARK, sides=9, flare=.55)   # 幹：太く短い・根もとが広がる
+    az0 = rng.uniform(0, 360)
+    for k in range(5):   # 太い枝：ひくい所から、まわり5方向へ、ななめ上と横へ大きく広がる
+        az = az0 + k * 72 + rng.uniform(-15, 15); el = rng.uniform(25, 40); o = trunk[-1] + G(0, 0, rng.uniform(-.06, .02)) + rad(az, 0) * .03
+        branch(o, rad(az, el), rng.uniform(.4, .5), .06, 2, tips)
+    branch(trunk[-1], rad(rng.uniform(0, 360), 78), .42, .055, 2, tips)   # まん中から上へのびる枝
+    CC, RX, RZ = G(0, 0, 1.2), .9, .5   # 樹冠：横に広いまるい屋根（だ円の玉）。葉のかたまりを、その外がわにならべる（すきまも少しのこす）
+    clumps = [(e + dd * .08, dd) for e, dd in tips]
+    for i in range(26):
+        u = (i + .5) / 26; z = 1 - 1.15 * u; th = i * 2.39996; rr = math.sqrt(max(0, 1 - z * z)); q = CC + G(math.cos(th) * rr * RX, math.sin(th) * rr * RX, z * RZ) * rng.uniform(.85, 1.0)   # 下がわ（z −0.15 より下）はあけて、幹と枝を見せる
+        if rng.random() < .88: clumps.append((q, unit(q - CC)))
+    for e, dd in clumps:   # 葉のかたまり：玉（半径 約0.2）に、葉のカード（深く切れこんだ葉のふさ）を12まいほど。上ほど明るく、下は暗い（樹冠の中のかげ）
+        c0 = e + G(0, 0, .03); lit = max(0., min(1., (c0[2] - .6) / .7))
+        for k in range(12):
+            n = unit(G(*rng.normal(0, 1, 3)) + G(0, 0, .5)); q = c0 + n * rng.uniform(.06, .2); dirc = unit(n * .8 + G(*rng.normal(0, .5, 3))); L = rng.uniform(.26, .34)
+            place_card(p, q - dirc * L * .4, dirc, L, L * .8, rng, droop=(.1, .3), fold=(.15, .3), tone=(.55 + .35 * lit, .7 + .35 * lit), roll=1.2)
+
+
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru)]
+SIZE = {'oak': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak)]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
@@ -682,6 +732,12 @@ if __name__ == '__main__':
     add_drops(nb, nbn, lambda x, y: y > .34 and abs(x - .5) < .28, n=26)
     def hotaru_leaf(seg, leaflet, rng): leaflet((0, .01), 0, .98, 1.0, 1.0, prof=lambda u: np.clip(1 - np.clip(u, 0, 1) ** 6, 0, 1) ** .5 * np.clip(np.clip(u, 0, 1) * 12, 0, 1), teeth=1, tooth=0)   # ヨルボシの葉：同じはばのひも・先はまるい
     TG = os.path.join(TX, '..', 'leaf_grass'); leaf_card_texture(os.path.join(HERE, 'tex', 'card_hotaru_leaf.png'), os.path.join(TG, 'basecolor.png'), nsrc=os.path.join(TG, 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_hotaru_leaf_n.png'), layout=hotaru_leaf, gain=1.05)
+    def oak_leaf(seg, leaflet, rng):   # オークの葉のふさ：小枝に、深く切れこんだ葉（まるい山 5〜7こ）が5まい、互いちがいに
+        lob = lambda u: (np.sin(np.pi * np.clip(u, 0, 1) ** .85) ** .6) * (.55 + .45 * np.abs(np.sin(np.clip(u, 0, 1) * math.pi * 3.5 + .3)) ** .7)
+        seg((0, 0), (0, .62), .01, (96, 80, 60))
+        for k, (y, ang, L) in enumerate(((.12, -55, .36), (.24, 50, .4), (.38, -42, .4), (.5, 38, .36), (.6, 0, .38))):
+            a = math.radians(ang); leaflet((math.sin(a) * .01, y), a + rng.uniform(-.1, .1), L, .62, rng.uniform(.92, 1.08), prof=lob, teeth=1, tooth=0)
+    leaf_card_texture(os.path.join(HERE, 'tex', 'card_oak_leaf.png'), os.path.join(TX, '..', 'leaf_broad', 'basecolor.png'), nsrc=os.path.join(TX, '..', 'leaf_broad', 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_oak_leaf_n.png'), layout=oak_leaf, gain=1.25)
     leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
     meshes = []
