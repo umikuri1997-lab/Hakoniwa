@@ -81,10 +81,10 @@ WALLC = (196, 150, 104); DOORC = (170, 120, 80); FLOORC = (186, 140, 96); WT, WH
 def wall(m):
     """壁のマス（m：となりの壁・ドア 左1・右2・上4・下8）：まん中の柱と、となりへのびる腕"""
     t = WT / 2; L = [box(.5 - t, .5 - t, 0, .5 + t, .5 + t, WH, WALLC, 'wood')]
-    if m & 1: L.append(box(0, .5 - t, 0, .5, .5 + t, WH, WALLC, 'wood'))
-    if m & 2: L.append(box(.5, .5 - t, 0, 1, .5 + t, WH, WALLC, 'wood'))
-    if m & 4: L.append(box(.5 - t, 0, 0, .5 + t, .5, WH, WALLC, 'wood'))
-    if m & 8: L.append(box(.5 - t, .5, 0, .5 + t, 1, WH, WALLC, 'wood'))
+    if m & 1: L.append(box(0, .5 - t, 0, .5 - t, .5 + t, WH, WALLC, 'wood'))   # 腕は柱のはしから（柱とかさねない。同じ場所の面がちらつく）
+    if m & 2: L.append(box(.5 + t, .5 - t, 0, 1, .5 + t, WH, WALLC, 'wood'))
+    if m & 4: L.append(box(.5 - t, 0, 0, .5 + t, .5 - t, WH, WALLC, 'wood'))
+    if m & 8: L.append(box(.5 - t, .5 + t, 0, .5 + t, 1, WH, WALLC, 'wood'))
     return cat(L)
 
 
@@ -92,9 +92,9 @@ def door(h):
     """ドア（h：東西の壁の中）：両わきの柱（はば0.15）・上のかもい（1.4〜2.0）・とびら（はば0.7・高さ1.4・あつさ0.06）"""
     t = WT / 2; L = []
     if h:
-        L += [box(0, .5 - t, 0, .15, .5 + t, WH, WALLC, 'wood'), box(.85, .5 - t, 0, 1, .5 + t, WH, WALLC, 'wood'), box(0, .5 - t, 1.4, 1, .5 + t, WH, WALLC, 'wood'), box(.15, .47, 0, .85, .53, 1.4, DOORC, 'wood')]
+        L += [box(0, .5 - t, 0, .15, .5 + t, 1.4, WALLC, 'wood'), box(.85, .5 - t, 0, 1, .5 + t, 1.4, WALLC, 'wood'), box(0, .5 - t, 1.4, 1, .5 + t, WH, WALLC, 'wood'), box(.15, .47, 0, .85, .53, 1.4, DOORC, 'wood')]
     else:
-        L += [box(.5 - t, 0, 0, .5 + t, .15, WH, WALLC, 'wood'), box(.5 - t, .85, 0, .5 + t, 1, WH, WALLC, 'wood'), box(.5 - t, 0, 1.4, .5 + t, 1, WH, WALLC, 'wood'), box(.47, .15, 0, .53, .85, 1.4, DOORC, 'wood')]
+        L += [box(.5 - t, 0, 0, .5 + t, .15, 1.4, WALLC, 'wood'), box(.5 - t, .85, 0, .5 + t, 1, 1.4, WALLC, 'wood'), box(.5 - t, 0, 1.4, .5 + t, 1, WH, WALLC, 'wood'), box(.47, .15, 0, .53, .85, 1.4, DOORC, 'wood')]
     return cat(L)
 
 

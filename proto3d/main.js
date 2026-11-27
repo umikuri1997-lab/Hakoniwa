@@ -369,6 +369,17 @@ function buildSky(){
 // ---- モデル ----
 const gltf=new GLTFLoader(),fbx=new FBXLoader();
 // 面の向きを、同じ場所の点でならす（UV のさかいで点がわかれていても、なめらかなかげに）
+// 面の向きを、かど（CREASE 度より急な所）ではならさない。平らな面はまっ平らに、丸い面はなめらかに（箱・石づみの面に、三角のかげのすじを出さない）
+const CREASE=40;
+function creaseNormals(geo){
+  const g=geo.index?geo.toNonIndexed():geo,P=g.getAttribute('position'),n=P.count,FN=new Float32Array(n),cosT=Math.cos(CREASE*Math.PI/180),M=new Map();
+  const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),key=i=>Math.round(P.getX(i)*1e4)+','+Math.round(P.getY(i)*1e4)+','+Math.round(P.getZ(i)*1e4),F=[];
+  for(let t=0;t<n/3;t++){a.fromBufferAttribute(P,3*t);b.fromBufferAttribute(P,3*t+1);c.fromBufferAttribute(P,3*t+2);const w=c.sub(b).cross(a.sub(b)).clone(),u=w.clone().normalize();F.push([w,u]);
+    for(let k=0;k<3;k++){const q=key(3*t+k);(M.get(q)||M.set(q,[]).get(q)).push(t)}}
+  const N=new Float32Array(n*3),v=new THREE.Vector3();
+  for(let i=0;i<n;i++){const u=F[(i/3)|0][1];v.set(0,0,0);for(const t of M.get(key(i)))if(F[t][1].dot(u)>cosT)v.add(F[t][0]);v.normalize();N[3*i]=v.x;N[3*i+1]=v.y;N[3*i+2]=v.z}
+  g.setAttribute('normal',new THREE.BufferAttribute(N,3));return g;
+}
 function smoothNormals(geo){
   const P=geo.getAttribute('position'),I=geo.index,M=new Map(),key=i=>Math.round(P.getX(i)*1e4)+','+Math.round(P.getY(i)*1e4)+','+Math.round(P.getZ(i)*1e4);
   const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),n=new THREE.Vector3(),tri=I?I.count/3:P.count/3,vi=k=>I?I.getX(k):k;
@@ -405,7 +416,7 @@ async function loadMapObjs(){
       for(let i=0;i<C.count;i++){const l=Math.min(1.5,Math.max(.6,(.3*C.getX(i)+.59*C.getY(i)+.11*C.getZ(i))/mean));let r=base.r*l,g=base.g*l,bl=base.b*l;
         if(moss){const n=cpuNoise(P.getX(i)*9+3,P.getZ(i)*9+7),t=Math.min(1,Math.max(0,(nc.mossH+(n-.5)*.3-P.getY(i)/H)/.12));r+=(moss.r*l-r)*t;g+=(moss.g*l-g)*t;bl+=(moss.b*l-bl)*t}
         C.setXYZ(i,r,g,bl)}}   /* 色をかえる（明るさのむらはのこす）。岩は下のほうにコケ */
-    MAPPARTS[o.name]={geo,mat:toon({vertexColors:true},{mat:true,uvk:s,span:1}),hull:hullMat({vertexColors:true},dotW())}});
+    MAPPARTS[o.name]={hgeo:geo,geo:creaseNormals(geo.clone()),mat:toon({vertexColors:true},{mat:true,uvk:s,span:1}),hull:hullMat({vertexColors:true},dotW())}});
 }
 const SPMODELS={};
 async function loadSpirit(el){
@@ -478,11 +489,11 @@ function placeMap(){
   }
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){if(!GRASS[z][x]||KIND[z][x]!=='g'||FLAT.has(x+','+z)||SOLID.has(x+','+z)||rnd()>FLOWERS.per)continue;   /* よみがえった草地の花・草 */
     for(let k=0,n=1+Math.floor(rnd()*2);k<n;k++){const px=x+.12+rnd()*.76,pz=z+.12+rnd()*.76,sc=.7+rnd()*.4;if(pmAt(px,pz)>.01)continue;Q.setFromAxisAngle(Y,rnd()*Math.PI*2);S.set(sc,sc,sc);add('P:F'+Math.floor(rnd()*10),M.compose(V.set(px,groundH(px,pz),pz),Q,S).clone())}}
-  const inst=(geo,mat,ms,shadow,hull)=>{const im=new THREE.InstancedMesh(geo,mat,ms.length);ms.forEach((m,i)=>im.setMatrixAt(i,m));im.castShadow=shadow;im.receiveShadow=true;im.computeBoundingSphere();scene.add(im);propMeshes.push(im);
-    if(hull){const hm=new THREE.InstancedMesh(geo,hull,ms.length);ms.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}};  // 背面法の線
+  const inst=(geo,mat,ms,shadow,hull,hgeo)=>{const im=new THREE.InstancedMesh(geo,mat,ms.length);ms.forEach((m,i)=>im.setMatrixAt(i,m));im.castShadow=shadow;im.receiveShadow=true;im.computeBoundingSphere();scene.add(im);propMeshes.push(im);
+    if(hull){const hm=new THREE.InstancedMesh(hgeo||geo,hull,ms.length);ms.forEach((m,i)=>hm.setMatrixAt(i,m));hm.computeBoundingSphere();scene.add(hm);propMeshes.push(hm)}};  // 背面法の線
   for(const [key,ms] of Object.entries(G)){
     if(key.startsWith('P:')){const p=PROPS.find(q=>q.id===key.slice(2));for(const part of p.parts)inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,p.kind!=='tiny',part.hull);continue}
-    const part=MAPPARTS[key];inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,objBase(key)!=='floor',objBase(key)==='floor'?null:part.hull);
+    const part=MAPPARTS[key];inst(OPT.low?lowGeo(part):part.geo,part.mat,ms,objBase(key)!=='floor',objBase(key)==='floor'?null:part.hull,part.hgeo);   /* 背面法の線は、なめらかにならした向きの形で（かどで線が切れない） */
   }
   const bm=new THREE.InstancedMesh(blobGeo,blobMat,Math.max(1,blobs.length));bm.count=blobs.length;blobs.forEach((m,i)=>bm.setMatrixAt(i,m));bm.renderOrder=2;bm.frustumCulled=false;scene.add(bm);propMeshes.push(bm);
   renderer.shadowMap.needsUpdate=true;
