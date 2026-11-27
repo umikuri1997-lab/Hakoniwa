@@ -6,24 +6,29 @@
 - 色（ゲームの色から）：木のみき（いちばん下にとどく部品）は幹の色、ほかは葉の色（植物ごとに、ゲームの木の葉の5色の まん中の色）。
   花と草：下からのびる細い部品はくき、下の大きい部品は葉、上のほう（高さの FLOWERY より上から始まる）の部品は花の色。
 - 植物ごとに、足もとのまん中を原点にし、下のはしを高さ0に。大きさは、もとのまま（試作が高さをきめる）。
+- 材質：点の値 _MAT（試作の main.js の MATIDX）。木のみきは木の皮（bark）、葉は持ち主の葉っぱの絵（leaf）。UV 展開（xatlas、glbio.unwrap）して、絵をはれるようにする。
 - 葉の下のかげ（natcommon.tone5 の under と同じ考え）：点ごとに真上へ線をのばし、ほかの面に UNDERH（植物の高さに対して）より近くで当たれば、
   近いほど暗くするだんの数（UNDERB まで）を、点の値 _UNDER に入れる。"""
-import json, os, struct
+import json, os, struct, sys
 import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import glbio
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'tools', 'art', 'models', 'plants', 'plants.glb')
 OUT = os.path.join(ROOT, 'proto3d', 'tex', 'plants.glb')
-BARK = (196, 124, 84)                       # 幹（nat_tree.py の BARK）
-LEAF = {                                    # 葉：ゲームの木の葉の5色の まん中（nat_tree・nat_oak・nat_cedar）と、草の色
-    'tree': (151, 203, 98), 'oak': (130, 192, 104), 'cedar': (134, 182, 102), 'bush': (120, 188, 105), 'herb': (120, 188, 105)}
-STEM = (112, 170, 92)                       # 花のくき
-# 木10こ・しげみ3こ・花と草10この、葉の色と花の色（花は、ゲームの花の色に近い色）
+BARK = (148, 116, 92)                       # 幹（赤みをへらした茶色。持ち主がたのんだ）
+LEAF = {                                    # 葉：自然な緑（黄色によりすぎない、少し深い緑。木ごとに少しちがう）と、草の色
+    'tree': (104, 160, 82), 'oak': (88, 146, 84), 'cedar': (80, 134, 88), 'bush': (96, 150, 76), 'herb': (78, 132, 64)}
+STEM = (96, 138, 70)                        # 花のくき
+# 木10こ・しげみ3こ・花と草10この、葉の色と花の色（花は、じっさいにある花の色。持ち主がきめた）
 TREE_LEAF = ['oak', 'cedar', 'tree', 'tree', 'tree', 'oak', 'tree', 'tree', 'oak', 'tree']
-FLOWER = ['#8a8fe0', '#f2b14e', '#f07fa6', '#e8604f', '#ffffff', '#a58be0', '#f07fa6', '#ffd75a', '#f2a7c3', '#8a8fe0']
+FLOWER = ['#98a0d4', '#e8b45a', '#e9a3b6', '#d9705f', '#f7f4ea', '#b79bd0', '#e6a0bd', '#f0d67a', '#f1c3cf', '#9bb0de']   # おちついた自然な色（野の花のような、少しくすんだ色。持ち主がきめた）：うすい青むらさき・やわらかいオレンジ・うすいピンク・くすんだ赤・白・うすむらさき・ピンク・やわらかい黄色・さくら色・うすい青
+HEADY = .58                                 # 花がくきとつながっている花：植物の高さのこれより上の三角形は花
 FLOWERY = .3                                # 花：植物の高さのこれより上から始まる部品は花
 TRUNKY = .08                                # 木：植物の高さのこれより下にとどく部品はみき
 UNDERH, UNDERB = .12, 3.0                   # 葉の下のかげ：とどく高さ（植物の高さに対して）・いちばん近いときに暗くするだんの数
+MATIDX = {'bark': 5, 'leaf': 6}             # 材質の番号（main.js の MATIDX と同じ）
 
 
 def load(path):
@@ -83,16 +88,18 @@ def hexrgb(h): return tuple(int(h[i:i+2], 16) for i in (1, 3, 5))
 
 
 def colors(V, F, cid, fi, name):
-    """部品ごとの色（三角形ごと）"""
-    P = V[F[fi]]; y0 = P[:, :, 1].min(); H = P[:, :, 1].max()-y0; row, q = name[0], int(name[1:]); out = np.zeros((len(fi), 3))
+    """部品ごとの色と、しゅるい（bark みき・leaf 葉のかたまり・'' そのほか）（三角形ごと）"""
+    P = V[F[fi]]; y0 = P[:, :, 1].min(); H = P[:, :, 1].max()-y0; row, q = name[0], int(name[1:]); out = np.zeros((len(fi), 3)); kind = np.full(len(fi), '', object)
     for c in np.unique(cid[fi]):
         m = cid[fi] == c; Q = P[m].reshape(-1, 3); lo = (Q[:, 1].min()-y0)/H
         ext = Q.max(0)-Q.min(0); thin = ext[1] > 2.5*max(ext[0], ext[2])
-        if row == 'T': col = BARK if lo < TRUNKY else LEAF[TREE_LEAF[q]]
-        elif row == 'B': col = LEAF['bush']
-        else: col = hexrgb(FLOWER[q]) if lo > FLOWERY else STEM if thin else LEAF['herb']
-        out[m] = col
-    return out
+        if row == 'T': col, kd = (BARK, 'bark') if lo < TRUNKY else (LEAF[TREE_LEAF[q]], 'leaf')
+        elif row == 'B': col, kd = LEAF['bush'], 'leaf'
+        else: col, kd = (hexrgb(FLOWER[q]), 'leaf') if lo > FLOWERY else (STEM, 'leaf') if thin else (LEAF['herb'], 'leaf')   # 花びら・くきも、葉っぱの絵のすじをのせる
+        out[m] = col; kind[m] = kd
+    if row == 'F' and not (out == hexrgb(FLOWER[q])).all(1).any():   # 花がくきとつながった1つの形で、花の色がどこにもつかなかった花：上のほう（HEADY より上）の三角形を花の色に
+        out[(P[:, :, 1].mean(1)-y0)/H > HEADY] = hexrgb(FLOWER[q])
+    return out, kind
 
 
 def glb(meshes, path):
@@ -104,11 +111,12 @@ def glb(meshes, path):
         a = {'bufferView': len(views)-1, 'componentType': ct, 'count': int(arr.size if kind == 'SCALAR' else len(arr)), 'type': kind}
         if mn is not None: a['min'] = mn; a['max'] = mx
         acc.append(a); return len(acc)-1
-    for name, P, C in meshes:
-        U, idx = np.unique(np.round(np.c_[P, C], 6), axis=0, return_inverse=True); P, C = U[:, :3], U[:, 3:]
+    for name, P, C, MT in meshes:
+        U, idx = np.unique(np.round(np.c_[P, C, MT], 6), axis=0, return_inverse=True); P, C, MT = U[:, :3], U[:, 3:6], U[:, 6]
         tri = P[idx.reshape(-1, 3)]; un = under(P, tri, P[:, 1].max()-P[:, 1].min())
-        pi = add(P, 'VEC3', P.min(0).tolist(), P.max(0).tolist()); ci = add(C, 'VEC3'); ui = add(un, 'SCALAR'); ii = add(idx.ravel(), 'SCALAR', ct=5125)
-        ms.append({'name': name, 'primitives': [{'attributes': {'POSITION': pi, 'COLOR_0': ci, '_UNDER': ui}, 'indices': ii}]}); nodes.append({'name': name, 'mesh': len(ms)-1})
+        vm, ni, uv = glbio.unwrap(P, idx.reshape(-1, 3)); P, C, un, MT, idx = P[vm], C[vm], un[vm], MT[vm], ni   # UV 展開（みきに木の皮の絵をはる）
+        pi = add(P, 'VEC3', P.min(0).tolist(), P.max(0).tolist()); ci = add(C, 'VEC3'); ti = add(uv, 'VEC2'); ui = add(un, 'SCALAR'); mi = add(MT, 'SCALAR'); ii = add(idx.ravel(), 'SCALAR', ct=5125)
+        ms.append({'name': name, 'primitives': [{'attributes': {'POSITION': pi, 'COLOR_0': ci, 'TEXCOORD_0': ti, '_UNDER': ui, '_MAT': mi}, 'indices': ii}]}); nodes.append({'name': name, 'mesh': len(ms)-1})
     j = {'asset': {'version': '2.0', 'generator': 'proto3d/make_plants.py'}, 'scene': 0, 'scenes': [{'nodes': list(range(len(nodes)))}],
          'nodes': nodes, 'meshes': ms, 'accessors': acc, 'bufferViews': views, 'buffers': [{'byteLength': len(bins)}]}
     js = json.dumps(j, separators=(',', ':')).encode(); js += b' '*((4-len(js) % 4) % 4); bins += b'\0'*((4-len(bins) % 4) % 4)
@@ -120,8 +128,10 @@ def glb(meshes, path):
 if __name__ == '__main__':
     V, F = load(SRC); cid = comps(V, F); pl, names = plants(V, F, cid); meshes = []
     for k, name in enumerate(names):
-        fi = np.where(pl == k)[0]; P = V[F[fi]]; C = colors(V, F, cid, fi, name)
+        fi = np.where(pl == k)[0]; P = V[F[fi]]; C, kd = colors(V, F, cid, fi, name)
         base = P.reshape(-1, 3); lo = base[:, 1].min(); foot = base[base[:, 1] < lo+.01*(base[:, 1].max()-lo)]
         org = np.array([foot[:, 0].mean(), lo, foot[:, 2].mean()])   # 足もとのまん中
-        meshes.append((name, (P-org).reshape(-1, 3), (np.repeat(C, 3, 0)/255.0)**2.2))   # 色は linear で入れる（glTF の決まり）
-    glb(meshes, OUT); print(OUT, len(meshes), '植物', len(F), '三角形')
+        P = P-org; MT = np.select([kd == 'bark', kd == 'leaf'], [MATIDX['bark'], MATIDX['leaf']], 0).astype(float)
+        rep = lambda a: np.repeat(a, 3, 0)
+        meshes.append((name, P.reshape(-1, 3), (rep(C)/255.0)**2.2, rep(MT)))   # 色は linear で入れる（glTF の決まり）
+    glb(meshes, OUT); print(OUT, len(meshes), '植物', sum(len(m[1])//3 for m in meshes), '三角形')

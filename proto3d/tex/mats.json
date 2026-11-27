@@ -1,0 +1,22 @@
+{
+ "wood": {
+  "span": 2.0,
+  "aspect": 1.0
+ },
+ "stone": {
+  "span": 0.57,
+  "aspect": 1.0
+ },
+ "metal": {
+  "span": 0.65,
+  "aspect": 1.0
+ },
+ "cloth": {
+  "span": 0.72,
+  "aspect": 1.0
+ },
+ "bark": {
+  "span": 0.8,
+  "aspect": 0.5439453125
+ }
+}
