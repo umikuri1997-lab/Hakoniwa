@@ -676,21 +676,26 @@ def oak(p, apples=0):
     葉：深く切れこんだ（まるい山がいくつもある）葉が、枝先にかたまってつく。葉のかたまりのあいだに、すきまと枝が見える。
     大きさ：ゲームの絵に合わせて、高さ 約2.6マス・はば 約2.6マス（作った形の1.5倍のあと）"""
     rng = p.rng; BARK = (124, 108, 92)
-    def branch(o, d, L, r, depth, tips):
-        """枝：o から d の向きへ長さ L・太さ r。少し上へまがる。先で2〜3本にわかれる（depth まで）。葉のかたまりをつける所を tips にためる"""
-        pts = [o + d * L * t + G(0, 0, .12 * L * t * t) + unit(np.cross(d, G(0, 0, 1)) + G(0, 0, 1e-6)) * .05 * L * math.sin(math.pi * t) * rng.uniform(-1, 1) for t in (0, .33, .66, 1)]
-        bark_tube(p, pts, [r, r * .85, r * .72, r * .62], BARK, sides=6 if r > .02 else 4); e = pts[-1]; dd = unit(e - pts[-2])
+    def branch(o, d, L, r, depth, tips, pdir=G(0, 0, 1), pr=None):
+        """枝：o から d の向きへ長さ L・太さ r。先で2〜3本にわかれる（depth まで）。葉のかたまりをつける所を tips にためる。
+        つけ根をなだらかに（持ち主がきめた）：親の枝（pdir の向き・太さ pr）の中からはじまり、はじめは親の向きにそってのびてから、ゆるくまがって外へ出る（3次のベジェ）。
+        つけ根は太く（親の太さに近く）、すぐに自分の太さへ細る（枝のえり）"""
+        pr = pr or r * 1.6; side = unit(np.cross(d, G(0, 0, 1)) + G(0, 0, 1e-6)) * rng.uniform(-1, 1) * .05 * L
+        P0 = o - pdir * pr * .9; P1 = o + pdir * L * .28; P2 = o + d * L * .62 + G(0, 0, .1 * L) + side; P3 = o + d * L + G(0, 0, .1 * L)
+        ts = (0, .1, .22, .38, .58, .8, 1); B = lambda t: P0 * (1 - t) ** 3 + 3 * P1 * t * (1 - t) ** 2 + 3 * P2 * t * t * (1 - t) + P3 * t ** 3
+        pts = [B(t) for t in ts]; rads = [r + (pr * .85 - r) * max(0, 1 - t / .3) ** 2 - r * .38 * t for t in ts]
+        bark_tube(p, pts, rads, BARK, sides=7 if r > .02 else 5); e = pts[-1]; dd = unit(e - pts[-2])
         if depth == 0 or r < .012: tips.append((e, dd)); return
         for k in range(rng.integers(2, 4)):
             az = math.degrees(math.atan2(dd[1], dd[0])) + rng.uniform(-60, 60) + (k - 1) * 40; el = math.degrees(math.asin(max(-1, min(1, dd[2])))) * .6 + rng.uniform(5, 30)
-            branch(e, rad(az, el), L * rng.uniform(.55, .72), r * .62, depth - 1, tips)
+            branch(e, rad(az, el), L * rng.uniform(.55, .72), r * .62, depth - 1, tips, dd, r * .62)
     tips = []
     trunk = [G(0, 0, 0), G(.01, 0, .18), G(.025, .01, .4), G(.02, .01, .58)]; bark_tube(p, trunk, [.14, .105, .095, .088], BARK, sides=9, flare=.55)   # 幹：太く短い・根もとが広がる
     az0 = rng.uniform(0, 360)
     for k in range(5):   # 太い枝：ひくい所から、まわり5方向へ、ななめ上と横へ大きく広がる
-        az = az0 + k * 72 + rng.uniform(-15, 15); el = rng.uniform(25, 40); o = trunk[-1] + G(0, 0, rng.uniform(-.06, .02)) + rad(az, 0) * .03
-        branch(o, rad(az, el), rng.uniform(.4, .5), .06, 2, tips)
-    branch(trunk[-1], rad(rng.uniform(0, 360), 78), .42, .055, 2, tips)   # まん中から上へのびる枝
+        az = az0 + k * 72 + rng.uniform(-15, 15); el = rng.uniform(25, 40); o = trunk[-1] + G(0, 0, rng.uniform(-.08, -.01))   # 幹の中からはじまる
+        branch(o, rad(az, el), rng.uniform(.4, .5), .06, 2, tips, G(0, 0, 1), .085)
+    branch(trunk[-1], rad(rng.uniform(0, 360), 78), .42, .055, 2, tips, G(0, 0, 1), .085)   # まん中から上へのびる枝
     CC, RX, RZ = G(0, 0, 1.2), .9, .5   # 樹冠：横に広いまるい屋根（だ円の玉）。葉のかたまりを、その外がわにならべる（すきまも少しのこす）
     clumps = [(e + dd * .08, dd) for e, dd in tips]
     for i in range(26):
