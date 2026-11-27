@@ -1,0 +1,376 @@
+{
+  "file": "assets/rose_plant_v8.glb",
+  "status": "pass",
+  "errors": [],
+  "warnings": [],
+  "triangles_instanced": 41940,
+  "mesh_nodes": 86,
+  "materials": 3,
+  "images": 9,
+  "bounds_y_up": [
+    [
+      -0.09338709712028503,
+      -0.00035908547579310824,
+      -0.07991569489240645
+    ],
+    [
+      0.08824361860752106,
+      0.2872799038887024,
+      0.06648181378841402
+    ]
+  ],
+  "nodes": [
+    {
+      "node": "terminal_3",
+      "triangles": 708
+    },
+    {
+      "node": "leaflet_3_1_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_3_1_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_3_1_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_3_1_-1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_3_0_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_3_0_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_3_0_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_3_0_-1",
+      "triangles": 24
+    },
+    {
+      "node": "rachis_3",
+      "triangles": 144
+    },
+    {
+      "node": "terminal_2",
+      "triangles": 708
+    },
+    {
+      "node": "leaflet_2_1_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_2_1_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_2_1_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_2_1_-1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_2_0_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_2_0_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_2_0_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_2_0_-1",
+      "triangles": 24
+    },
+    {
+      "node": "rachis_2",
+      "triangles": 144
+    },
+    {
+      "node": "terminal_1",
+      "triangles": 708
+    },
+    {
+      "node": "leaflet_1_2_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_1_2_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_1_2_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_1_2_-1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_1_1_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_1_1_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_1_1_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_1_1_-1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_1_0_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_1_0_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_1_0_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_1_0_-1",
+      "triangles": 24
+    },
+    {
+      "node": "rachis_1",
+      "triangles": 144
+    },
+    {
+      "node": "terminal_0",
+      "triangles": 708
+    },
+    {
+      "node": "leaflet_0_2_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_0_2_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_0_2_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_0_2_-1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_0_1_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_0_1_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_0_1_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_0_1_-1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_0_0_1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_0_0_1",
+      "triangles": 24
+    },
+    {
+      "node": "leaflet_0_0_-1",
+      "triangles": 708
+    },
+    {
+      "node": "petiolule_0_0_-1",
+      "triangles": 24
+    },
+    {
+      "node": "rachis_0",
+      "triangles": 144
+    },
+    {
+      "node": "sepal_4",
+      "triangles": 204
+    },
+    {
+      "node": "sepal_3",
+      "triangles": 204
+    },
+    {
+      "node": "sepal_2",
+      "triangles": 204
+    },
+    {
+      "node": "sepal_1",
+      "triangles": 204
+    },
+    {
+      "node": "sepal_0",
+      "triangles": 204
+    },
+    {
+      "node": "folded_center",
+      "triangles": 432
+    },
+    {
+      "node": "petal_5_2",
+      "triangles": 720
+    },
+    {
+      "node": "petal_5_1",
+      "triangles": 720
+    },
+    {
+      "node": "petal_5_0",
+      "triangles": 720
+    },
+    {
+      "node": "petal_4_3",
+      "triangles": 720
+    },
+    {
+      "node": "petal_4_2",
+      "triangles": 720
+    },
+    {
+      "node": "petal_4_1",
+      "triangles": 720
+    },
+    {
+      "node": "petal_4_0",
+      "triangles": 720
+    },
+    {
+      "node": "petal_3_4",
+      "triangles": 720
+    },
+    {
+      "node": "petal_3_3",
+      "triangles": 720
+    },
+    {
+      "node": "petal_3_2",
+      "triangles": 720
+    },
+    {
+      "node": "petal_3_1",
+      "triangles": 720
+    },
+    {
+      "node": "petal_3_0",
+      "triangles": 720
+    },
+    {
+      "node": "petal_2_5",
+      "triangles": 720
+    },
+    {
+      "node": "petal_2_4",
+      "triangles": 720
+    },
+    {
+      "node": "petal_2_3",
+      "triangles": 720
+    },
+    {
+      "node": "petal_2_2",
+      "triangles": 720
+    },
+    {
+      "node": "petal_2_1",
+      "triangles": 720
+    },
+    {
+      "node": "petal_2_0",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_6",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_5",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_4",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_3",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_2",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_1",
+      "triangles": 720
+    },
+    {
+      "node": "petal_1_0",
+      "triangles": 720
+    },
+    {
+      "node": "petal_0_5",
+      "triangles": 720
+    },
+    {
+      "node": "petal_0_4",
+      "triangles": 720
+    },
+    {
+      "node": "petal_0_3",
+      "triangles": 720
+    },
+    {
+      "node": "petal_0_2",
+      "triangles": 720
+    },
+    {
+      "node": "petal_0_1",
+      "triangles": 720
+    },
+    {
+      "node": "petal_0_0",
+      "triangles": 720
+    },
+    {
+      "node": "main_stem",
+      "triangles": 120
+    }
+  ],
+  "not_checked": [
+    "render appearance",
+    "botanical accuracy",
+    "self intersections",
+    "full glTF conformance",
+    "actual draw calls",
+    "normal values and winding correctness"
+  ]
+}
