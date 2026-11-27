@@ -16,6 +16,7 @@ from rose_curved import rose_petal
 from rose_plant_v8 import petal as v8_petal
 
 MAT_LEAF = 6
+REFLEX = (.62, .22, .5)   # 外がわの花びらのそり返り：はじまる所（つけ根0→先1）・外へ出る長さ（花びらの半径の割合）・下へまがる長さ（花びらの高さの割合）
 PETAL_T = .004   # 花びらのふちの厚み（マス。花の大きさ1のとき。持ち主がきめた）
 G = lambda *c: np.array(c, float)
 STEM = (94, 154, 54)
@@ -307,6 +308,9 @@ def rose(p):
                 a = 2 * math.pi * i / n + k * 2.39996 + rng.uniform(-.09, .09); inner = k >= len(tiers) - 1
                 m = v8_petal(a, r * rng.uniform(.95, 1.05) * (1 + .05 * (i % 2)), h * rng.uniform(.94, 1.06), span, op * open_, rng.uniform(0, 6.283), inner, rows=RW, cols=CL)
                 v = np.asarray(m.vertices) * K * size * [1, 1, 1.25]; uv = np.asarray(m.visual.uv); t = uv[:, 1:2]; q = uv[:, 0:1]; u = 1 - k / (len(tiers) - 1 or 1)   # u：1 外がわ・0 まん中
+                if k == 0 and open_ > .5:   # 外がわの段だけ、花びらの先を外へそり返す（持ち主がきめた）：先ほど、花のじくから外へ出て、下へまがる
+                    rr = np.hypot(v[:, 0], v[:, 1])[:, None] + 1e-9; s3 = np.clip((t - REFLEX[0]) / (1 - REFLEX[0]), 0, 1) ** 2
+                    v = v + np.hstack([v[:, :1] / rr, v[:, 1:2] / rr, np.zeros_like(rr)]) * s3 * REFLEX[1] * r * K * size + np.hstack([np.zeros_like(rr), np.zeros_like(rr), -s3 * REFLEX[2] * h * K * size])
                 tip = G(246, 140 + 10 * hue, 170 - 8 * hue) * u + G(226, 82 + 8 * hue, 122 - 6 * hue) * (1 - u); base = G(176, 34, 74 - 6 * hue)
                 c = (base * (1 - t ** .7) + tip * t ** .7) * (.8 + .2 * u) * (1 - .1 * (1 - np.abs(2 * q - 1)) * (1 - t))
                 cell = int(rng.integers(0, 4)); cy, cx = divmod(cell, 2)   # 4とおりの形から1つ（絵の 2×2 のます。cy 0 が絵の上）
