@@ -176,12 +176,12 @@ const LUM='vec3(.3,.59,.11)';
 const BUMP={mat:.012,leaf:.008,ground:.05,soil:.03,light:LOOK==='c'?.15:LOOK==='a'?.9:.35,e:.004};   /* でこぼこの強さ（材質・葉・地面・畑の土）・でこぼこの向きで明るさをかえる強さ・となりの場所までの長さ（UV） */
 const CLOD={amp:.035,f:11};   /* 畑の土のかたまり：形のでこぼこの高さ（マス）・細かさ */
 const BUMP_FS=`{vec3 sp=-vViewPosition,q0=dFdx(sp),q1=dFdy(sp),bN=normalize(normal);vec2 s0=dFdx(tnUV),s1=dFdy(tnUV);vec3 q1p=cross(q1,bN),q0p=cross(bN,q0),bT=q1p*s0.x+q0p*s1.x,bB=q1p*s0.y+q0p*s1.y;
-  float bd=max(dot(bT,bT),dot(bB,bB));if(bd>0.)tnBump+=normalize(bN-(bT*tnG.x+bB*tnG.y)*inversesqrt(bd))-bN;}
+  float bd=max(dot(bT,bT),dot(bB,bB));if(bd>1e-20&&dot(tnG,tnG)>0.){vec3 nb=bN-(bT*tnG.x+bB*tnG.y)*inversesqrt(bd);if(dot(nb,nb)>1e-6)tnBump+=normalize(nb)-bN;}}   /* こわれた値（0でわる）を作らない：iPhone の GPU で黒い棒になった */
 `;
-const PXSHADE_FS=`{vec3 nV=normalize(normal+tnBump);float sm=.5+.5*dot(nV,uSunV),shd=getShadowMask(),s=sm*mix(${PX.shadow},1.,shd);
+const PXSHADE_FS=`{vec3 nV=normal+tnBump;nV=dot(nV,nV)>1e-6?normalize(nV):normal;float sm=.5+.5*dot(nV,uSunV),shd=getShadowMask(),s=sm*mix(${PX.shadow},1.,shd);
   vec3 b=pow(max(diffuseColor.rgb,0.),vec3(1./2.2));float lit=smoothstep(${CEL.cut-CEL.soft},${CEL.cut+CEL.soft},s);
   vec3 o=mix(pxShade(b,${CEL.shade.toFixed(2)}),pxShade(b,${CEL.light.toFixed(2)}),lit);
-  o=mix(o,pxShade(b,${CEL.hlk.toFixed(2)}),smoothstep(${CEL.hl-CEL.soft},${CEL.hl+CEL.soft},sm)*step(.5,shd));o*=clamp(1.+${BUMP.light}*(dot(nV,uSunV)-dot(normalize(tnGeoN),uSunV)),.55,1.45);   /* でこぼこ（ノーマルマップ・絵から作るでこぼこ）の向きと、もとの面の向き（tnGeoN）の差で、明るさをかえる */outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
+  o=mix(o,pxShade(b,${CEL.hlk.toFixed(2)}),smoothstep(${CEL.hl-CEL.soft},${CEL.hl+CEL.soft},sm)*step(.5,shd));o*=clamp(1.+${BUMP.light}*(dot(nV,uSunV)-dot(tnGeoN,uSunV)/max(length(tnGeoN),1e-4)),.55,1.45);   /* でこぼこ（ノーマルマップ・絵から作るでこぼこ）の向きと、もとの面の向き（tnGeoN）の差で、明るさをかえる */outgoingLight=lin(o)*${PX.gain.toFixed(2)};}
 `;
 // 光のあと：流れる雲のかげ・地面の近くのもや。どの物にもかける
 const AIR_FS=`{float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTime*vec2(${CLOUDSH.speed.join(',')})));outgoingLight*=1.-${CLOUDSH.k}*cs; // 雲のかげ
@@ -256,7 +256,7 @@ float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i)
 float vor(vec2 p){vec2 i=floor(p),f=fract(p);float a=8.,b=8.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));float d=length(g+vec2(hs(i+g),hs(i+g+17.3))-f);if(d<a){b=a;a=d;}else if(d<b)b=d;}return b-a;}   /* ひびのもよう：いちばん近い点と2ばんめの点の差（0がさかいめ） */
 float fbm(vec2 p){return .5*vn(p)+.25*vn(p*2.03+7.)+.125*vn(p*4.01+3.)+.0625*vn(p*8.07+11.);}
 vec3 lin(vec3 c){return pow(c,vec3(2.2));}
-vec3 pxHsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
+vec3 pxHsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-4)),d/(q.x+1e-4),q.x);}
 vec3 pxRgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}
 vec3 pxShade(vec3 c,float d){vec3 h=pxHsv(c);h.z=clamp(h.z*(1.+d*(d>0.?${PX.vUp}:${PX.vDn})),0.,1.);   // 記事の色の式（sRGB の色で）
   if(d<0.){float dh=fract(2./3.-h.x+.5)-.5;h.x=fract(h.x+dh*(-d)*${PX.hue});}else h.y=clamp(h.y*(1.-d*${PX.sat}),0.,1.);return pxRgb(h);}
@@ -656,12 +656,13 @@ const quadGeo=new THREE.PlaneGeometry(2,2),postCam=new THREE.OrthographicCamera(
 const VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
 const pass=(fs,uniforms)=>{const m=new THREE.ShaderMaterial({uniforms,vertexShader:VS,fragmentShader:fs,depthTest:false,depthWrite:false});const s=new THREE.Scene();s.add(new THREE.Mesh(quadGeo,m));return {m,s}};
 const blur=pass(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;
-  void main(){vec4 c=texture2D(t,vUv)*.227;c+=(texture2D(t,vUv+d*1.385)+texture2D(t,vUv-d*1.385))*.316;c+=(texture2D(t,vUv+d*3.23)+texture2D(t,vUv-d*3.23))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
+  vec4 tnOk(vec4 c){return any(isnan(c))||any(isinf(c))?vec4(0.):min(c,vec4(64.));}
+  void main(){vec4 c=tnOk(texture2D(t,vUv))*.227;c+=(tnOk(texture2D(t,vUv+d*1.385))+tnOk(texture2D(t,vUv-d*1.385)))*.316;c+=(tnOk(texture2D(t,vUv+d*3.23))+tnOk(texture2D(t,vUv-d*3.23)))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
 const fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res,crop;varying vec2 vUv;${NOISE}
   uniform sampler2D dz;uniform float cn,cf,focus,pscale;
   float lz(vec2 u){float z=texture2D(dz,u).x;return cn*cf/(cf-z*(cf-cn));}
   void main(){vec2 U=vec2(vUv.x*crop.x,1.-(1.-vUv.y)*crop.y);
-    vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;
+    vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;if(any(isnan(c))||any(isinf(c)))c=bl;if(any(isnan(bl))||any(isinf(bl)))bl=vec3(0.);
    
     float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;                  // 奥行き（カメラからのきょり）とピントの所との差
     float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};
