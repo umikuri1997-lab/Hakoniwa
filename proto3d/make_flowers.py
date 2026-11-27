@@ -669,7 +669,7 @@ def hotaru(p):
             for k in range(6): p.petal(top + d * .028, unit(d + rad(a + k * 60, 0) * .9), .028, .014, (220, 236, 176), (244, 250, 214), up=d, rows=4, cols=3, bend=.1, curl=.05, cup=.2, twist=0, wave=0, tip_width=.3)   # 少しひらいたつぼみ
 
 
-def oak(p):
+def oak(p, apples=0):
     """木（植えた木・森の木。持ち主がきめた：オーク。本物の写真（NC State Extension のシロガシワ・アカガシワ・オウシュウナラ・ライブオーク・バーオーク）を見て、構造を書き出してから作った）：
     幹：太く短い。根もとが広がって（根のはり出し）、ひくい所で太い枝にわかれる。木の皮はたての割れめのある灰茶色。
     枝：太い枝が3〜5本、ななめ上と横へ大きく広がり、先で何回もわかれる。樹冠は、高さより横はばが広い、まるく広がった形。
@@ -701,14 +701,24 @@ def oak(p):
         for k in range(12):
             n = unit(G(*rng.normal(0, 1, 3)) + G(0, 0, .5)); q = c0 + n * rng.uniform(.06, .2); dirc = unit(n * .8 + G(*rng.normal(0, .5, 3))); L = rng.uniform(.26, .34)
             place_card(p, q - dirc * L * .4, dirc, L, L * .8, rng, droop=(.1, .3), fold=(.15, .3), tone=(.55 + .35 * lit, .7 + .35 * lit), roll=1.2)
+    if apples:   # りんご（本物の写真：まるく少しひらたい・赤に黄緑のすじ・へたのくぼみ・短い柄で枝から下がる）：葉のかたまりの外がわの、横〜下に下がる
+        for k in range(apples):
+            e, dd = clumps[int(rng.integers(0, len(clumps)))]; n = unit(G(*rng.normal(0, 1, 2), rng.uniform(-.3, .5))); q = e + n * rng.uniform(.27, .32)   # 葉のかたまりの外がわ（上から見えるように）
+            r = rng.uniform(.055, .065); red = rng.uniform(0, 1); col = (int(196 - 40 * red), int(48 + 30 * (1 - red)), 40)
+            sweep(p, [q + G(0, 0, r * 1.5), q + G(0, 0, r * .85)], [.004, .003], [(96, 80, 50)] * 2, sides=3)   # 柄
+            p.ball(q, r, col, squash=.86, axis=(0, 0, 1), n=8, m=5)   # 実（ややひらたい玉。上ほど赤・下ほど黄みがかる）
+
+
+def fruit(p):   # りんごの木（持ち主がきめた：オークの形を流用して、りんごの実をつける）
+    oak(p, apples=22)
 
 
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'oak': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak)]
+SIZE = {'oak': 1.5, 'fruit': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak), ('fruit', fruit)]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
