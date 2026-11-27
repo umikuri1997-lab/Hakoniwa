@@ -18,6 +18,7 @@ import {SimplifyModifier} from 'three/addons/modifiers/SimplifyModifier.js';
 import {MAP} from './map0.js';
 
 const SPDIR='../tools/art/spirit3d/model/';
+const LOOK=new URLSearchParams(location.search).get('look')||'';   /* たしかめ用：見え方のくらべ（?look=b など） */
 // ---- 見え方 ----
 const MAPN=MAP.n;              // 地形のはば（マス）。ゲームの草原の最初のマップのまん中（make_map.py）
 const BORDER=16;               // まわりに足す地面（マス）
@@ -34,7 +35,7 @@ const SKY='#d7ecf0',SKYTOP='#2f86d6',GROUND='#7f9a5a',FOG=[14,46];  // 地平の
 const HEMI=.8,SUN=2.3,SUNCOL='#ffd9a6',HEMISKY='#a8cdf5';             // 空と地面の光・太陽の光（持ち主の参考の絵：日の光が強く、かげとの差がはっきり）
 const SUNDIR=[-.55,1,.35];                           // 太陽の向き（せかい。左上・手前から）
 const TOON=[.36,.62,1,1];                             // トゥーンの明るさのだん（かげ→光。なめらかにつなぐ）
-const RIM={k:.35,pow:3,col:[1,.96,.86]};             // ふちの光
+const RIM={k:LOOK==='c'?.12:LOOK==='b'?.22:.35,pow:3,col:[1,.96,.86]};             // ふちの光
 const AO=.13;                                        // 葉の下のかげ：_under 1だんごとに暗くする量
 const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：かげ（青むらさき）・日なた（金色）にかける色（PX の前の、もとの考え。いまは PX の青へずらす色で）
 // ドット絵シェーダー（持ち主が送った記事「実践ドット絵シェーダー」mizuooon.hatenablog.jp のやり方）：
@@ -43,7 +44,7 @@ const TEMP={shadow:[.76,.83,1.14],light:[1.05,1.0,.9]};  // 光の温度：か�
 const HULL={w:.8};   // 背面法の線：裏返した形を、ゲームの1ドット×この太さぶん外へふくらませて、いちばん暗いだんの色で描く（輪郭と、物どうしの境界の線）
 const PX={lv:4,vUp:.28,vDn:.85,hue:.28,sat:.15,gain:1.0,edge:.035,shadow:.45,hl:.95,hlk:.32};
 // なめらかなトゥーン（セル画ふう。持ち主がえらんだ）：かげ・光の2だん＋ハイライト。さかいめは細くぼかして、ギザギザをとる
-const CEL={cut:.5,soft:.08,shade:-.3,light:.06,hl:.95,hlk:.18};  // cut：かげと光のさかい（シェーディングマップの明るさ×かげ）・shade／light：色の式にわたす d・hl：ハイライトのさかい・hlk：ハイライトの d
+const CEL=LOOK==='c'?{cut:.5,soft:.25,shade:-.16,light:.04,hl:2,hlk:.001}:LOOK==='b'?{cut:.5,soft:.12,shade:-.24,light:.04,hl:2,hlk:.001}:{cut:.5,soft:.08,shade:-.3,light:.06,hl:.95,hlk:.18};  // cut：かげと光のさかい（シェーディングマップの明るさ×かげ）・shade／light：色の式にわたす d・hl：ハイライトのさかい・hlk：ハイライトの d
 // lv：だんの数・vUp／vDn：明るいがわ・暗いがわの明るさの差・shadow：太陽のかげの中は明るさをこの倍に・hl：シェーディングマップがこれより明るい所はハイライト（hlk だけ明るいだん）・edge：ふちどりにする奥行きの差（カメラからのきょりの割合）
 // シェーディングマップ（記事）：画面から見た面の向き（x 右・y 上）で、太陽のほう（左上・手前）ほど明るい 0.5+0.5×(太陽との内積)
 const MIST={h:1.2,k:.03,col:'#e8f2ea'};               // 地面の近くのもや：この高さ（マス）より下ほど、この色をこのこさで
@@ -88,7 +89,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={farm:{col:'#7d5638'},rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.3};
-const GLOSS={k:.1,pow:7,sheen:.03,tint:.85};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
+const GLOSS=LOOK?{k:.03,pow:7,sheen:.001,tint:.85}:{k:.1,pow:7,sheen:.03,tint:.85};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
 const PETAL={sat:1.15,tex:.5,from:.35,base:.7,tip:1.02,satBase:1.15};   /* from：花のはじまる高さ（植物の高さの割合）・base／tip：つけ根と先の明るさ・satBase：つけ根のあざやかさ */      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
@@ -171,7 +172,7 @@ const LUM='vec3(.3,.59,.11)';
 // ノーマルマップ（持ち主がきめた：ツルツル（金属・水）いがいの、どの物にも）：材質・地面の絵の明るさを高さとして、
 // 絵の上の、となりの場所との高さの差（tnG：UV の向きごとのかたむき）から、面の向きをかたむける。UV の向き（tnUV）は、画面でのかわり方からもとめる。
 // （画面のとなりの点との高さの差から作ると、点ごとにばらばらの向きになって、ザラザラになった。絵はとおくで自動でぼけるので、とおくでもちらつかない）
-const BUMP={mat:.012,leaf:.008,ground:.05,soil:.03,light:.9,e:.004};   /* でこぼこの強さ（材質・葉・地面・畑の土）・でこぼこの向きで明るさをかえる強さ・となりの場所までの長さ（UV） */
+const BUMP={mat:.012,leaf:.008,ground:.05,soil:.03,light:LOOK?(LOOK==='c'?.15:.35):.9,e:.004};   /* でこぼこの強さ（材質・葉・地面・畑の土）・でこぼこの向きで明るさをかえる強さ・となりの場所までの長さ（UV） */
 const CLOD={amp:.035,f:11};   /* 畑の土のかたまり：形のでこぼこの高さ（マス）・細かさ */
 const BUMP_FS=`{vec3 sp=-vViewPosition,q0=dFdx(sp),q1=dFdy(sp),bN=normalize(normal);vec2 s0=dFdx(tnUV),s1=dFdy(tnUV);vec3 q1p=cross(q1,bN),q0p=cross(bN,q0),bT=q1p*s0.x+q0p*s1.x,bB=q1p*s0.y+q0p*s1.y;
   float bd=max(dot(bT,bT),dot(bB,bB));if(bd>0.)tnBump+=normalize(bN-(bT*tnG.x+bB*tnG.y)*inversesqrt(bd))-bN;}
@@ -429,8 +430,8 @@ const flowerTint=r=>{const k=FLVAR.tint[0]+r()*(FLVAR.tint[1]-FLVAR.tint[0]);ret
 let FLOWERSGLB=null,LEAFCARD={},PETALCARD={};
 const PETALCARDTEX={bellf:'card_bellf_petal'};   /* 花ごとの花びらの絵（なければ、ばらの花びら） */
 const LEAFCARDTEX={salvia:'card_salvia_leaf',clover:'card_clover_leaf',bellf:'card_bellf_leaf',lily:'card_lily_leaf',lotus:'card_lotus_leaf',nebari:'card_nebari_leaf',hotaru:'card_hotaru_leaf'};   /* 花ごとの葉のカードの絵（なければ、ばらの葉） */
-const PETALCARD_N=1.4;   /* 花びらのノーマルマップの強さ */
-const LEAFCARD_N=2.2,LEAFCARD_NS={lotus:1.2};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
+const PETALCARD_N=LOOK?.5:1.4;   /* 花びらのノーマルマップの強さ */
+const LEAFCARD_N=LOOK?(LOOK==='c'?.4:.8):2.2,LEAFCARD_NS=LOOK?{}:{lotus:1.2};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
