@@ -106,11 +106,12 @@ def leaf_card_texture(path, src, size=512, seed=7, nsrc=None, npath=None, layout
         a = np.array(a); b = np.array(b); d = b - a; L = np.hypot(*d); t = np.clip(((X - a[0]) * d[0] + (Y - a[1]) * d[1]) / L ** 2, 0, 1)
         r = np.hypot(X - a[0] - t * d[0], Y - a[1] - t * d[1]); ww = w * (1 - .4 * t); k = np.clip((ww - r) / px + .5, 0, 1); col[:] = col * (1 - k[..., None]) + np.array(c) * k[..., None]; al[:] = np.maximum(al, k)
         HT[:] = np.maximum(HT, np.sqrt(np.clip(1 - (r / ww) ** 2, 0, 1)) * ww * k)   # 柄・じくは、まるいつつ
-    def leaflet(b, ang, L, W, tone):
+    def leaflet(b, ang, L, W, tone, prof=None, teeth=8, tooth=.09, chevron=0., notch=0.):   # prof：はばの形（なければ、つけ根がわが広い）・chevron：まん中のV字の白いもようのこさ・notch：先のくぼみ
         d = np.array([math.sin(ang), math.cos(ang)]); n = np.array([d[1], -d[0]]); u = ((X - b[0]) * d[0] + (Y - b[1]) * d[1]) / L; w = ((X - b[0]) * n[0] + (Y - b[1]) * n[1]) / L
-        uc = np.clip(u, 0, 1); hw = W / 2 * np.sin(np.pi * uc) ** .72 * (1.16 - .4 * uc); saw = 1 - .09 * (np.mod(uc * 8, 1)) * (uc > .15)   # ぎざぎざ（先へ向く歯）
-        m = np.clip((hw * saw - np.abs(w)) * L / px + .5, 0, 1) * (u > 0) * (u < 1)
+        uc = np.clip(u, 0, 1); hw = W / 2 * (prof(uc) if prof else np.sin(np.pi * uc) ** .72 * (1.16 - .4 * uc)); saw = 1 - tooth * (np.mod(uc * teeth, 1)) * (uc > .15)   # ぎざぎざ（先へ向く歯）
+        m = np.clip((hw * saw - np.abs(w)) * L / px + .5, 0, 1) * (u > 0) * (u < 1) * ((u + notch * np.exp(-(w / (W * .12)) ** 2)) < 1)   # 先のまん中のくぼみ
         sx = np.clip(((w / (W * 1.05) + .5) * 255).astype(int), 0, 255); sy = np.clip(((1 - uc) * 255).astype(int), 0, 255); c = S[sy, sx] * tone * (1 - .12 * np.abs(w) / (W / 2))[..., None]   # ふちは少し暗く
+        if chevron: v = .3 + .45 * np.abs(w) / (W / 2); k = chevron * np.exp(-((uc - v) / .1) ** 2) * (np.abs(w) < hw * .85); c = c * (1 - k[..., None] * .2) + np.array([170., 200, 160]) * k[..., None] * .55   # V字：白っぽい緑をまぜる   # V字の白いもよう（つけ根がわへひらく）
         col[:] = col * (1 - m[..., None]) + c * m[..., None]; al[:] = np.maximum(al, m)
         a_ = np.clip(np.abs(w) / np.maximum(hw, 1e-6), 0, 1); h = (1 - a_ ** 3) ** .5 * .05 * L * np.sin(np.pi * uc) ** .25 - .008 * L * np.exp(-(w / (.025 * W)) ** 2)   # ふちのきわで、急に下がる（厚みのふち）   # ふくらみ：ふちへ丸く下がる（厚みに見せる）・まん中のすじは少しくぼむ
         HT[:] = HT * (1 - m) + h * m
@@ -151,6 +152,20 @@ def petal_card_texture(path, npath, src, nsrc, size=1024, seed=5):
     Image.fromarray(np.dstack([np.repeat((col * 262)[..., None], 3, 2), al * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(path)
     gy, gx = np.gradient(HT * 6.0); nx = -gx * 1 + DX * .3; ny = gy * 1 + DY * .3; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
     Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
+
+
+def sweep(p, pts, radii, cols, lip=None, sides=5, flat=1., up=None, cap=False):
+    """線にそったつつ（なめらかな面の向き）。radii・cols は輪ごと。lip：さいごの輪の、上がわ（up の向き）だけ先へのばす長さ。flat：よこのつぶれ"""
+    pts = [G(*q) for q in pts]; n = len(pts); V = []; C = []; F = []
+    for i in range(n):
+        d = unit(pts[min(i + 1, n - 1)] - pts[max(i - 1, 0)]); u0 = unit(up - d * np.dot(up, d)) if up is not None else frame(d)[2]; s0 = unit(np.cross(d, u0))
+        for j in range(sides):
+            th = 2 * math.pi * j / sides; c, sn = math.cos(th), math.sin(th); off = d * (lip * max(0, sn) ** 1.5 if (lip and i == n - 1) else 0)
+            V.append(pts[i] + radii[i] * (s0 * c * flat + u0 * sn) + off); C.append(G(*cols[i]))
+    for i in range(n - 1):
+        for j in range(sides): a = i * sides + j; b = i * sides + (j + 1) % sides; F += [(a, b, a + sides), (b, b + sides, a + sides)]
+    if cap: k = len(V); V.append(pts[-1] + unit(pts[-1] - pts[-2]) * radii[-1] * .6); C.append(G(*cols[-1])); F += [((n - 1) * sides + j, (n - 1) * sides + (j + 1) % sides, k) for j in range(sides)]
+    p.add(V, F, C)
 
 
 def place_card(p, o, d, L, Wd, rng, droop=(.18, .3), fold=(.12, .25), tone=(.74, .92), roll=.5):
@@ -410,12 +425,37 @@ def salvia(p):
             for kk in (0, 180): leaf(P(.4 + .5 * n_), az + 90 * n_ + kk + rng.uniform(-14, 14), 22 + 10 * n_, .17 * rng.uniform(.9, 1.05))
 
 
+def clover(p):
+    """シロツメクサ（Trifolium repens）。本物の写真（NC State Extension の6まい）を見て、構造を書き出してから作った：
+    株：地面をはうくきから、長い葉柄がたくさん立ち、葉がじゅうたんのようにしきつめられる。葉：三つ葉が、上を向いてほぼ水平にひらく
+    （小さな葉は、先が広いまるい形・先が少しくぼむ・こまかいぎざぎざ・まん中に白っぽいV字のもよう）。
+    花：葉のない花のくきが葉より高くのび、先にまるい花のかたまり。小さな白い花があつまって外を向く。上はつぼみで緑がかり、下の古い花は下へたれて、うすいピンクや茶色になる"""
+    rng = p.rng; STEMC = (112, 150, 86)
+    for k in range(4):   # はうくき（地面の上の、ひくいつる）
+        a = k * 90 + rng.uniform(-20, 20); pts = [rad(a, 0) * r + G(0, 0, .004) for r in (0, .06, .12)]; sweep(p, pts, [.004, .0035, .003], [STEMC] * 3, sides=4)   # 葉の下にかくれる
+    for i in range(30):   # 三つ葉：長い葉柄の先に、水平な三つ葉のカード（カードのまん中が、葉柄の先）
+        a = i * 137.5 + rng.uniform(-15, 15); r = .02 + .17 * math.sqrt((i + .5) / 30); b = rad(a, 0) * r; h = rng.uniform(.05, .13) * (1.15 - .45 * r / .19)
+        top = b + rad(a + rng.uniform(-40, 40), 0) * .02 + G(0, 0, h); sweep(p, [b, (b + top) / 2 + rad(a, 0) * .008, top], [.0035, .003, .0026], [STEMC] * 3, sides=4)
+        d = rad(rng.uniform(0, 360), rng.uniform(-6, 6)); L = rng.uniform(.17, .21); place_card(p, top - d * L * .5, d, L, L * .75, rng, droop=(0, .04), fold=(.0, .06), tone=(.9, 1.08), roll=.15)
+    for f in range(3):   # 花：葉のない花のくき（葉より高い）＋まるい花のかたまり
+        a = f * 120 + rng.uniform(-30, 30); b = rad(a, 0) * rng.uniform(.05, .14); h = rng.uniform(.18, .23); top = b + rad(a, 0) * .02 + G(0, 0, h)
+        sweep(p, [b, (b + top) / 2 + rad(a + 90, 0) * .01, top], [.004, .0035, .003], [STEMC] * 3, sides=4)
+        R = .028; c = top + G(0, 0, R * .75); p.ball(c, R * .45, (150, 170, 110), n=6, m=3)   # まん中のしん
+        for i in range(44):   # 小さな花：らせんにならべる。上（z>0）はつぼみ・外を向く。下ほど、下へたれて色がかわる
+            u = (i + .5) / 44; z = 1 - 1.7 * u; z = max(-.75, z); ph = i * 2.39996; rr = math.sqrt(1 - z * z); n = G(math.cos(ph) * rr, math.sin(ph) * rr, z)
+            old = z < -.2; base = c + n * R * .45
+            dn = unit(n + G(0, 0, -.9 if old else 0)); L = R * (.9 if not old else 1.0) * rng.uniform(.9, 1.1)
+            col0 = (176, 196, 150) if z > .6 else (246, 244, 236) if not old else (226, 200, 196)
+            col1 = (206, 220, 180) if z > .6 else (255, 255, 252) if not old else (204, 176, 160)
+            sweep(p, [base, base + dn * L * .55, base + dn * L], [.0035, .0042, .0028], [col0, col1, col1], sides=4, cap=True)
+
+
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'F9': 1.5, 'salvia': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia)]
+SIZE = {'F9': 1.5, 'salvia': 1.5, 'clover': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover)]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
@@ -423,6 +463,10 @@ if __name__ == '__main__':
     TX = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'leaf_rose')
     def salvia_leaf(seg, leaflet, rng): seg((0, 0), (0, .2), .012, (70, 116, 50)); leaflet((0, .17), 0, .8, .66, 1.0)   # サルビアの葉：葉柄と、たまご形の葉1まい
     leaf_card_texture(os.path.join(HERE, 'tex', 'card_salvia_leaf.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_salvia_leaf_n.png'), layout=salvia_leaf, gain=1.25)
+    def clover_leaf(seg, leaflet, rng):   # 三つ葉：まん中（0, 0.5）から、3まいの小さな葉。先が広いまるい形・先のくぼみ・V字のもよう
+        ob = lambda u: np.sin(np.pi * np.clip(u, 0, 1) ** 1.35) ** .38 * (.3 + .7 * np.clip(u, 0, 1) ** .45)
+        for a in (0, 120, 240): leaflet((0, .5), math.radians(a + rng.uniform(-6, 6)), .345, 1.0, rng.uniform(.95, 1.05), prof=ob, teeth=14, tooth=.025, chevron=.9, notch=.025)
+    leaf_card_texture(os.path.join(HERE, 'tex', 'card_clover_leaf.png'), os.path.join(TX, '..', 'leaf_broad', 'basecolor.png'), nsrc=os.path.join(TX, '..', 'leaf_broad', 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_clover_leaf_n.png'), layout=clover_leaf, gain=.95)
     leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
     meshes = []
