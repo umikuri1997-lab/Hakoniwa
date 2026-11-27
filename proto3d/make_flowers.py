@@ -239,8 +239,9 @@ def rose(p):
         """複葉：葉柄 → 2ついの小さな葉 → 先の1まい。じくは先へたれる。小さな葉は、たまご形・ぎざぎざ・まん中のすじの両がわがゆるくふくらむ"""
         d = rad(a, 30); L = rng.uniform(.115, .15); ax_ = lambda q: o + d * L * q + G(0, 0, -.25 * L * q * q); p.tube([ax_(0), ax_(.5), ax_(1)], [.004, .0032, .002], (84, 132, 56), 5)
         for q, sg in ((.4, 1), (.45, -1), (.72, 1), (.77, -1), (1, 0)):
-            dd = unit(d * (1 if sg == 0 else .5) + rad(a + sg * 80, 6) + G(0, 0, -.12)); sz = L * (.62 if sg == 0 else .5) * rng.uniform(.88, 1.1)
-            p.blade(ax_(q), dd, sz, sz * .62, (30, 92, 38), (78, 146, 56), profile=OVATE, bend=-.2, cup=-.07, twist=rng.uniform(-.3, .3), ripple=.02, teeth=4, serration=.07, thick=0, seg=24, col=4)
+            dd = unit(d * (1 if sg == 0 else .5) + rad(a + sg * 80, 6) + G(0, 0, rng.uniform(-.55, .25))); sz = L * (.62 if sg == 0 else .5) * rng.uniform(.88, 1.1)   # 小さな葉は、1まいずつ、たれぐあいをかえる（横から見て、ぜんぶ水平の板にならないように）
+            upv = unit(G(0, 0, 1) + rad(a + sg * 80, 0) * rng.uniform(-.5, .5) + rad(rng.uniform(0, 360), 0) * .25)
+            p.blade(ax_(q), dd, sz, sz * .62, (30, 92, 38), (78, 146, 56), up=upv, profile=OVATE, bend=-.2, cup=-.07, twist=rng.uniform(-.3, .3), ripple=.02, teeth=4, serration=.07, thick=0, seg=24, col=4)
     def cane(base, az, h, lean, r0):
         return p.stem(base, G(*base) + G(0, 0, h) + rad(az, 0) * lean, r0, r0 * .5, rad(az + 90, 0) * .018 + rad(az, 0) * .02, color=(76, 118, 52), n=6)
     for s_, (az, h, lean) in enumerate(((70, .36, .05), (200, .29, .1))):   # 根もとから2本のくき。それぞれの先に、ひらいた花
