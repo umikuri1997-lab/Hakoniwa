@@ -791,18 +791,18 @@ def setaria(p, dry=False):
     株：根もとから細い葉とくきがたばで立つ。葉は細長く、先がしなる。くきは細く、先に、ふさふさの円柱形の穂（ねこじゃらし）。穂は重さで先がうなだれる。
     かれたもの：ぜんたいが金色〜うすい茶色。葉は先が下へたれ、ちぢれる"""
     rng = p.rng; LC = (150, 130, 70) if dry else (104, 150, 70); SPK = ((226, 186, 104), (244, 214, 140)) if dry else ((150, 186, 96), (204, 224, 150))
-    for i in range(26):
-        a = i * 137.5 + rng.uniform(-15, 15); L = rng.uniform(.22, .34)
-        place_card(p, rad(a, 0) * .015, rad(a, rng.uniform(50, 80)), L, .04, rng, droop=(.45, .8) if not dry else (.8, 1.2), fold=(.25, .4), tone=(.82, .98), roll=.5)
+    for i in range(26):   # 葉：長く、上へのびて、先だけ弓なりにたれる（本物の写真）
+        a = i * 137.5 + rng.uniform(-15, 15); L = rng.uniform(.3, .44)
+        place_card(p, rad(a, 0) * .015, rad(a, rng.uniform(66, 84)), L, .034, rng, droop=(.3, .55) if not dry else (.6, .9), fold=(.25, .4), tone=(.82, .98), roll=.5)
     for s_ in range(6):
-        a = s_ * 60 + rng.uniform(-20, 20); b = rad(a, 0) * .015; h = rng.uniform(.3, .42); out = rad(a, 0); sg = rng.uniform(.5, .85)   # 穂が重いので、くきは大きくしなる
+        a = s_ * 60 + rng.uniform(-20, 20); b = rad(a, 0) * .015; h = rng.uniform(.34, .46); out = rad(a, 0); sg = rng.uniform(.1, .22)   # くきは、ほぼまっすぐ立つ（本物の写真）。しなるのは上のほうだけ、少し
         P = lambda t, b=b, h=h, out=out, sg=sg: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))
         sweep(p, [P(k / 5) for k in range(6)], [.0028] * 6, [LC] * 6, sides=3)
-        top = P(1); d = unit(P(1) - P(.9)); nod = unit(d + out * .5 - G(0, 0, .9)); L = rng.uniform(.07, .1)   # 穂：先がうなだれる
-        pts = [top + d * L * .3 * t + nod * L * t * t for t in (0, .35, .7, 1)]
-        sweep(p, pts, [.011, .016, .014, .005], [SPK[0], SPK[1], SPK[1], SPK[0]], sides=6, cap=True)   # ふさふさの穂（太めのつつ）
+        top = P(1); d = unit(P(1) - P(.9)); L = rng.uniform(.09, .12)   # 穂：重いのは穂だけ。はじめは上へ、先は外へアーチをえがいてうなだれる（本物の写真）
+        Q0, Q1, Q2, Q3 = top, top + d * L * .55, top + d * L * .75 + out * L * .45, top + d * L * .45 + out * L * .75 - G(0, 0, L * .2); pts = [Q0 * (1 - t) ** 3 + 3 * Q1 * t * (1 - t) ** 2 + 3 * Q2 * t * t * (1 - t) + Q3 * t ** 3 for t in (0, .2, .4, .6, .8, 1)]
+        sweep(p, pts, [.011, .015, .016, .015, .012, .005], [SPK[0], SPK[1], SPK[1], SPK[1], SPK[1], SPK[0]], sides=6, cap=True)   # ふさふさの穂（太めのつつ）
         for k in range(26):   # 穂の毛（のぎ）：短いとげ
-            t = rng.uniform(.1, .95); q = pts[0] * (1 - t) ** 3 + 3 * pts[1] * t * (1 - t) ** 2 + 3 * pts[2] * t * t * (1 - t) + pts[3] * t ** 3; n = unit(G(*rng.normal(0, 1, 3)))
+            t = rng.uniform(.1, .95); q = Q0 * (1 - t) ** 3 + 3 * Q1 * t * (1 - t) ** 2 + 3 * Q2 * t * t * (1 - t) + Q3 * t ** 3; n = unit(G(*rng.normal(0, 1, 3)))
             sweep(p, [q, q + n * .022], [.0014, .0004], [SPK[1], SPK[1]], sides=3)
 
 
