@@ -503,12 +503,47 @@ def bellf(p):
         if s_ < 2: b2 = P(.82); bud(b2 + rad(az + 140, 30) * .01, unit(rad(az + 140, 0) * .4 + G(0, 0, 1)), .9)   # わきのつぼみ
 
 
+def glily(p):
+    """ゆり（白。テッポウユリ Lilium longiflorum）。本物の写真（NC State Extension の3まい）を見て、構造を書き出してから作った：
+    株：じょうぶなくきが1本ずつまっすぐ立つ。細長い葉が、くきのまわりにらせんにぎっしり、ななめ上を向いて先が少したれる。
+    花：くきの先に、横〜少し下を向く長いらっぱ。つけ根は細いつつ（少し緑がかる）・先は6まいの花びらにひらき、先は外へそり返る。
+    花の中：おしべ6本（先に黄色〜オレンジの花粉のふくろ）と、より長いめしべ（先が緑がかる）。つぼみ：細長いこん棒の形・緑がかった白・ななめ上"""
+    rng = p.rng; STEMC = (70, 112, 56); WH0 = (196, 214, 170); WH1 = (250, 250, 244)
+    def trumpet(o, d, L):
+        """らっぱ：o（花の柄の先）から d の向きへ、長さ L"""
+        up = G(0, 0, 1); sd = unit(np.cross(d, up)) if abs(d[2]) < .95 else G(1, 0, 0); uv_ = unit(np.cross(sd, d))
+        tube_end = o + d * L * .5; sweep(p, [o, o + d * L * .18, o + d * L * .36, tube_end], [L * .05, L * .07, L * .1, L * .15], [(150, 180, 110), WH0, (232, 238, 220), WH1], sides=6)   # 細いつつ（つけ根は緑がかる）
+        for k in range(6):   # 花びら：外3まい・内3まい（少しずらす）。つつの口から外へひらき、先は外へそり返る
+            a = k * 60 + (0 if k % 2 else 0) + rng.uniform(-5, 5); r_ = sd * math.cos(math.radians(a)) + uv_ * math.sin(math.radians(a))
+            base = tube_end - d * L * .06 + r_ * L * .1; dirp = unit(d * 1.0 + r_ * .55)
+            p.petal(base, dirp, L * (.58 if k % 2 else .55), L * (.34 if k % 2 else .3), WH0, WH1, up=r_ * -1, rows=8, cols=5, bend=-.05, curl=-.35, cup=.18, twist=rng.uniform(-.08, .08), wave=.015, tip_width=.25)
+        for k in range(6):   # おしべ：細い糸と、先に黄色〜オレンジの花粉のふくろ
+            r_ = sd * math.cos(k * 1.047 + .5) + uv_ * math.sin(k * 1.047 + .5); e = tube_end + d * L * .32 + r_ * L * .07
+            sweep(p, [o + d * L * .3, (o + d * L * .3 + e) / 2 + uv_ * L * .02, e], [.0012, .001, .0009], [(220, 230, 190)] * 3, sides=3); p.ball(e, .0045, (238, 160, 40), squash=1.8, axis=sd, n=5, m=2)
+        e = tube_end + d * L * .42; sweep(p, [o + d * L * .3, e], [.0016, .0013], [(214, 228, 180)] * 2, sides=3); p.ball(e, .004, (150, 190, 70), n=5, m=2)   # めしべ
+    def bud(o, d, L):
+        sweep(p, [o, o + d * L * .3, o + d * L * .75, o + d * L], [L * .05, L * .06, L * .1, L * .03], [(130, 166, 96), (176, 200, 140), (222, 232, 200), (206, 220, 180)], sides=6, cap=True)
+    for s_, (az, h, n_fl) in enumerate(((0, .46, 2), (130, .38, 1), (250, .33, 1))):
+        b = rad(az, 0) * (.0 if not s_ else .05); out = rad(az, 0); sg = .1 * (h / .46) * rng.uniform(.8, 1.2)   # じょうぶなくき：重力のしなりは小さい
+        P = lambda t, b=b, h=h, out=out, sg=sg: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))
+        D = lambda t, P=P: unit(P(min(1, t + .02)) - P(max(0, t - .02)))
+        sweep(p, [P(i / 8) for i in range(9)], [.0075 - .0025 * i / 8 for i in range(9)], [STEMC] * 9, sides=5)
+        for k in range(24):   # 葉：らせんに（137.5度ずつ）ぎっしり。はばのある細長い葉が、弓なりにたれる。上ほど小さく・立つ
+            t = .04 + .037 * k; L = (.19 - .004 * k) * rng.uniform(.9, 1.1)
+            place_card(p, P(t), rad(az + k * 137.5 + rng.uniform(-10, 10), 30 + 1.5 * k), L, L * .4, rng, droop=(.35, .6), fold=(.2, .35), tone=(.7, .85), roll=.3)
+        top = P(1)
+        for f in range(n_fl):   # 花：短い花の柄で、外へ・少し下を向く
+            a = az + f * 160 + rng.uniform(-20, 20); pe = top + rad(a, 40) * .025; sweep(p, [top, pe], [.004, .0035], [STEMC] * 2, sides=4)
+            trumpet(pe, unit(rad(a, -8)), rng.uniform(.17, .19))
+        bo = top + G(0, 0, .002); bud(bo, unit(rad(az + 80, 55)), .1)   # つぼみ：ななめ上
+
+
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf)]
+SIZE = {'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily)]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
@@ -523,6 +558,8 @@ if __name__ == '__main__':
     star_petal_texture(os.path.join(HERE, 'tex', 'card_bellf_petal.png'), os.path.join(HERE, 'tex', 'card_bellf_petal_n.png'))
     def bellf_leaf(seg, leaflet, rng): leaflet((0, .02), 0, .96, .5, 1.0, teeth=11, tooth=.07)   # ききょうの葉：柄がなく、たまご形〜細長い・ぎざぎざ
     leaf_card_texture(os.path.join(HERE, 'tex', 'card_bellf_leaf.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_bellf_leaf_n.png'), layout=bellf_leaf, gain=1.2)
+    def lily_leaf(seg, leaflet, rng): leaflet((0, .01), 0, .98, .52, 1.0, prof=lambda u: np.sin(np.pi * np.clip(u, 0, 1) ** .8) ** .7, teeth=1, tooth=0)   # ゆりの葉：細長く・先がとがる・ぎざぎざなし（平行のすじ）
+    TL = os.path.join(TX, '..', 'leaf_lily'); leaf_card_texture(os.path.join(HERE, 'tex', 'card_lily_leaf.png'), os.path.join(TL, 'basecolor.png'), nsrc=os.path.join(TL, 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_lily_leaf_n.png'), layout=lily_leaf, gain=1.0)
     leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
     meshes = []
