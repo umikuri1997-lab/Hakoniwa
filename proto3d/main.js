@@ -55,7 +55,7 @@ const FALLING={n:22,size:.18};                       // 舞う葉：数・大き
 const BLOB={k:.42};
 const PATHDIP=.12;                                   // 道を草地より下げる高さ（マス）
 const GBUMP={amp:.09,scale:.55,f:1.3,k:.12,t:.001};  // 地面のこぼこ：もりあがりの高さ（マス）・細かさ（形）／面の向きだけのこまかいこぼこ：細かさ・強さ・草の絵から作る強さ
-const BLADES={h:[.16,.3],w:.1,pathPer:34,edgePer:26,fieldPer:46,fieldH:.62,col:['#5e9c48','#93c466']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
+const BLADES={h:[.12,.26],w:.1,pathPer:30,edgePer:12,fieldPer:13,fieldH:.62,clump:4,col:['#58a044','#8fca5c']}; // とげとげの草：高さ・はば（マス）・1マスあたりの数（道のふち・段のふち）・色                                  // 接地のかげ：こさ
 const RAYS={k:.08,col:[1,.9,.66]};                   // 光の筋
 const PEBBLE={per:1.6,r:[.04,.11],col:['#a99c88','#c9bfae']};   /* 荒れた土地の小石：1マスあたりの数・大きさ（マス）・色 */
 const CRACK={scale:1.5,w:.07,k:.3};                              /* 荒れた土地のひび：細かさ・線のはば・こさ */
@@ -86,7 +86,9 @@ const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2
 const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
-const FLOWERS={per:.4};   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
+const FLOWERS={per:.4};
+const PETAL={sat:1.7};      /* 花びらのあざやかさ（もとの色の何倍） */
+const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
 const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
 const objBase=n=>n.split('_')[0];  // 名前の _ のあとは、つなぎ方（壁・畑）・向き（ドア）
@@ -186,7 +188,8 @@ function toon(o={},extra={}){
   ${extra.mat?`{int k=tnK;
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
-      diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);}  // 葉っぱの絵の色（黄緑）は少しだけ
+      diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);
+      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pl=dot(pc,${LUM});diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}),0.)*mix(1.,l,.25);}}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:k==4?texture2D(uMat[4],uv).r:texture2D(uMat[6],uv).g;
     float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
@@ -325,16 +328,18 @@ function buildGround(){
 // とげとげの草：道のふち（草地のがわ）と、段の上のふち（外へかたむけて、ふちからはみ出す）に、細い三角の葉をならべる
 function buildBlades(){
   const g=new THREE.BufferGeometry(),w=BLADES.w/2;
-  g.setAttribute('position',new THREE.Float32BufferAttribute([-w,0,0,w,0,0,0,1,0],3));g.setAttribute('normal',new THREE.Float32BufferAttribute([0,.5,1,0,.5,1,0,.5,1],3));
-  g.setAttribute('color',new THREE.Float32BufferAttribute([.6,.6,.6,.6,.6,.6,1,1,1],3));   // 根もとは暗く
+  {const P=[],N=[],C=[],I=[],K=4;for(let k=0;k<=K;k++){const t=k/K,ww=w*(1-t*t),zz=.28*t*t,c=.78+.22*t;P.push(-ww,t,zz,ww,t,zz);N.push(0,1,0,0,1,0);C.push(c,c,c,c,c,c);if(k<K){const a=2*k;I.push(a,a+1,a+2,a+1,a+3,a+2,a,a+2,a+1,a+1,a+2,a+3)}}   /* 面の向きは上（地面と同じ明るさに）。うらからも見えるように、うら向きの三角も入れる */
+  //   /* 細い葉：先へ細く、しなって前へたおれる。根もとは少し暗く */
+   g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setIndex(I)}
   const L=[],M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),camYaw=Math.atan2(CAMDIR.x,CAMDIR.z);seed=77;
-  const add=(x,y,z,lean,dir)=>{const h=BLADES.h[0]+rnd()*(BLADES.h[1]-BLADES.h[0]);E.set(lean*Math.cos(dir),camYaw+(rnd()-.5)*.9,lean*Math.sin(dir),'YXZ');Q.setFromEuler(E);
-    L.push(M.compose(new THREE.Vector3(x,y,z),Q,new THREE.Vector3(1,h,1)).clone())};
+  const add=(x,y,z,lean,dir)=>{for(let k=0;k<BLADES.clump;k++){const h=(BLADES.h[0]+rnd()*(BLADES.h[1]-BLADES.h[0]))*(k?.6+rnd()*.4:1),l2=lean+(rnd()-.5)*.5;   /* 1か所に、向きと高さのちがう葉をたばねる */
+    E.set(l2*Math.cos(dir),camYaw+(rnd()-.5)*1.5,l2*Math.sin(dir)+(rnd()-.5)*.5,'YXZ');Q.setFromEuler(E);
+    L.push(M.compose(new THREE.Vector3(x+(rnd()-.5)*.07,y,z+(rnd()-.5)*.07),Q,new THREE.Vector3(1,h,1)).clone())}};
   for(let z=0;z<MAPN;z++)for(let x=0;x<MAPN;x++){
     if(isW(x,z)||!GRASS[z][x])continue;const y=yTop(x,z);  // とげとげの草は、よみがえった草地だけ
     if(nearPath(x,z))for(let k=0;k<BLADES.pathPer*10;k++){const px=x+rnd(),pz=z+rnd(),pm=pmAt(px,pz);if(pm>.01&&pm<.5&&rnd()<.5)add(px,groundH(px,pz),pz,(rnd()-.5)*.5,rnd()*6.28)}
     for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){if(yTop(x+dx,z+dz)>=y-1e-4)continue;
-    if(!FLAT.has(x+','+z))for(let k=0;k<BLADES.fieldPer;k++){const px=x+rnd(),pz=z+rnd();if(pmAt(px,pz)<.01){add(px,groundH(px,pz),pz,(rnd()-.5)*.6,rnd()*6.28);L[L.length-1].elements[5]*=BLADES.fieldH;L[L.length-1].elements[4]*=BLADES.fieldH;L[L.length-1].elements[6]*=BLADES.fieldH}}   /* 草地ぜんたいの短い草 */
+    if(!FLAT.has(x+','+z))for(let k=0;k<BLADES.fieldPer;k++){const px=x+rnd(),pz=z+rnd();if(pmAt(px,pz)<.01){add(px,groundH(px,pz),pz,(rnd()-.5)*.6,rnd()*6.28);for(let q=1;q<=BLADES.clump;q++){const e=L[L.length-q].elements;e[4]*=BLADES.fieldH;e[5]*=BLADES.fieldH;e[6]*=BLADES.fieldH}}}   /* 草地ぜんたいの短い草 */
       for(let k=0;k<BLADES.edgePer;k++){const t=rnd(),ex=dx?x+(dx>0?1:0)-dx*.03:x+t,ez=dz?z+(dz>0?1:0)-dz*.03:z+t;add(ex,y,ez,.7+rnd()*.5,Math.atan2(dz,dx))}}
   }
   const m=toon({vertexColors:true,color:BLADES.col[1]},{wind:true});const im=new THREE.InstancedMesh(g,m,L.length);
@@ -402,7 +407,7 @@ async function loadProp(p){
     if(p.src!=='plants'){geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_under',mk(0));geo.deleteAttribute('color')}
     const span=p.src==='plants'?MATSPAN.bark:MATSPAN[p.mat]||1;
     const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span,span,wind:true}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span,span});
-    parts.push({geo,mat,hull:hullMat(p.src==='plants'?{vertexColors:true}:{color:p.tint},dotW())})});
+    parts.push({geo,mat,hull:hullMat(p.src==='plants'?{vertexColors:true}:{color:p.tint},dotW()*(p.kind==='tiny'?TINYHULL:1))})});
   p.parts=parts;
 }
 // 御神木の切り株：なめらかな形を、その場で作る（もとのモデルは粗く、大きくするとガビガビに見えた）。
