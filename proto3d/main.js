@@ -18,7 +18,7 @@ import {SimplifyModifier} from 'three/addons/modifiers/SimplifyModifier.js';
 import {MAP} from './map0.js';
 
 const SPDIR='../tools/art/spirit3d/model/';
-const LOOK=new URLSearchParams(location.search).get('look')||'';   /* たしかめ用：見え方のくらべ（?look=b など） */
+const LOOK=new URLSearchParams(location.search).get('look')||'b';   /* 見え方：b がふだん（持ち主がえらんだ：ひかえめ）。a は前の強い見え方 */   /* たしかめ用：見え方のくらべ（?look=b など） */
 // ---- 見え方 ----
 const MAPN=MAP.n;              // 地形のはば（マス）。ゲームの草原の最初のマップのまん中（make_map.py）
 const BORDER=16;               // まわりに足す地面（マス）
@@ -89,7 +89,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={farm:{col:'#7d5638'},rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.3};
-const GLOSS=LOOK?{k:.03,pow:7,sheen:.001,tint:.85}:{k:.1,pow:7,sheen:.03,tint:.85};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
+const GLOSS=LOOK==='a'?{k:.1,pow:7,sheen:.03,tint:.85}:{k:.03,pow:7,sheen:.001,tint:.85};   /* 花びらの光沢（持ち主がきめた）：つやの明るさ・つやの小ささ（小さいほど、広くやわらかい）・ふちのてり・つやに花びらの色をまぜる割合（白いつやは、プラスチックに見えた） */
 const PETAL={sat:1.15,tex:.5,from:.35,base:.7,tip:1.02,satBase:1.15};   /* from：花のはじまる高さ（植物の高さの割合）・base／tip：つけ根と先の明るさ・satBase：つけ根のあざやかさ */      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
@@ -172,7 +172,7 @@ const LUM='vec3(.3,.59,.11)';
 // ノーマルマップ（持ち主がきめた：ツルツル（金属・水）いがいの、どの物にも）：材質・地面の絵の明るさを高さとして、
 // 絵の上の、となりの場所との高さの差（tnG：UV の向きごとのかたむき）から、面の向きをかたむける。UV の向き（tnUV）は、画面でのかわり方からもとめる。
 // （画面のとなりの点との高さの差から作ると、点ごとにばらばらの向きになって、ザラザラになった。絵はとおくで自動でぼけるので、とおくでもちらつかない）
-const BUMP={mat:.012,leaf:.008,ground:.05,soil:.03,light:LOOK?(LOOK==='c'?.15:.35):.9,e:.004};   /* でこぼこの強さ（材質・葉・地面・畑の土）・でこぼこの向きで明るさをかえる強さ・となりの場所までの長さ（UV） */
+const BUMP={mat:.012,leaf:.008,ground:.05,soil:.03,light:LOOK==='c'?.15:LOOK==='a'?.9:.35,e:.004};   /* でこぼこの強さ（材質・葉・地面・畑の土）・でこぼこの向きで明るさをかえる強さ・となりの場所までの長さ（UV） */
 const CLOD={amp:.035,f:11};   /* 畑の土のかたまり：形のでこぼこの高さ（マス）・細かさ */
 const BUMP_FS=`{vec3 sp=-vViewPosition,q0=dFdx(sp),q1=dFdy(sp),bN=normalize(normal);vec2 s0=dFdx(tnUV),s1=dFdy(tnUV);vec3 q1p=cross(q1,bN),q0p=cross(bN,q0),bT=q1p*s0.x+q0p*s1.x,bB=q1p*s0.y+q0p*s1.y;
   float bd=max(dot(bT,bT),dot(bB,bB));if(bd>0.)tnBump+=normalize(bN-(bT*tnG.x+bB*tnG.y)*inversesqrt(bd))-bN;}
@@ -430,8 +430,8 @@ const flowerTint=r=>{const k=FLVAR.tint[0]+r()*(FLVAR.tint[1]-FLVAR.tint[0]);ret
 let FLOWERSGLB=null,LEAFCARD={},PETALCARD={};
 const PETALCARDTEX={bellf:'card_bellf_petal'};   /* 花ごとの花びらの絵（なければ、ばらの花びら） */
 const LEAFCARDTEX={salvia:'card_salvia_leaf',clover:'card_clover_leaf',bellf:'card_bellf_leaf',lily:'card_lily_leaf',lotus:'card_lotus_leaf',nebari:'card_nebari_leaf',hotaru:'card_hotaru_leaf'};   /* 花ごとの葉のカードの絵（なければ、ばらの葉） */
-const PETALCARD_N=LOOK?.5:1.4;   /* 花びらのノーマルマップの強さ */
-const LEAFCARD_N=LOOK?(LOOK==='c'?.4:.8):2.2,LEAFCARD_NS=LOOK?{}:{lotus:1.2};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
+const PETALCARD_N=LOOK==='a'?1.4:.5;   /* 花びらのノーマルマップの強さ */
+const LEAFCARD_N=LOOK==='c'?.4:LOOK==='a'?2.2:.8,LEAFCARD_NS=LOOK==='a'?{lotus:1.2}:{};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
