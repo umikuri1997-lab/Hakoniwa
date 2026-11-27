@@ -82,7 +82,7 @@ const ELS=['earth','water','fire','wind','wood'];
 // 植物（plants の名前：T 木・B しげみ・F 花と草）。木は1マスに1本、がけのふちには植えない
 const PLANT=(id,h,n,kind)=>({id,h,n,kind,src:'plants'});
 // 岩・小物（props）：tint＝ぬる色（sRGB）・mat＝明るさのむらにする材質の絵
-const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9','G0'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花・G0：草むら */
+const PROPS=[PLANT('T0',1.9,0,'tree'),PLANT('B0',.7,0,'small'),...['F0','F1','F2','F3','F4','F5','F6','F7','F8','F9','G0','salvia'].map((id,i)=>({id,kind:'tiny',src:'proc',i}))];   /* F：その場で作るローポリゴンの花・G0：草むら */
 // マップの物（tex/map.glb）：ゲームのドット絵を作った3Dの設計図から。nat：自然の物（地形に対して OBJSCALE 倍・向きをばらばらに）。piv：まわす・大きくするまん中（マスの左上から）
 const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid:1},kinoko:{nat:1,piv:[.5,.5]},sacred:{nat:1,big:1,piv:[2,2]},statueb:{piv:[0,0]},floor:{piv:[0,0]},door:{piv:[0,0]},hwall:{piv:[0,0],solid:1},farm:{piv:[0,0]}};
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
@@ -421,7 +421,8 @@ function smoothNormals(geo){
   geo.setAttribute('normal',new THREE.BufferAttribute(N,3));
 }
 // ---- 花（1から作る。持ち主がきめた）：スキル realistic-plant-3d のやり方で作った tex/flowers.glb（make_flowers.py。形の設計は flowers_spec.json） ----
-let FLOWERSGLB=null,LEAFCARD=null,PETALCARD=null;
+let FLOWERSGLB=null,LEAFCARD={},PETALCARD=null;
+const LEAFCARDTEX={salvia:'card_salvia_leaf'};   /* 花ごとの葉のカードの絵（なければ、ばらの葉） */
 const PETALCARD_N=1.4;   /* 花びらのノーマルマップの強さ */
 const LEAFCARD_N=2.2;   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
@@ -433,8 +434,8 @@ async function loadProp(p){
       const [pmap,pnor]=await PETALCARD,pg=pt.geometry.clone();pg.scale(OBJSCALE,OBJSCALE,OBJSCALE);pg.computeVertexNormals();
       p.parts.push({geo:pg,mat:toon({vertexColors:true,map:pmap,normalMap:pnor,normalScale:new THREE.Vector2(PETALCARD_N,PETALCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
     const lf=(await FLOWERSGLB).scene.getObjectByName(p.id+'_leaf');   /* アルファ抜きの葉のカード（持ち主がきめた）：葉の形の絵（透明なふち）を、板にはる */
-    if(lf){LEAFCARD=LEAFCARD||Promise.all(['leaf_rose_card.png','leaf_rose_card_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
-      const [lmap,lnor]=await LEAFCARD;   /* lnor：葉のカードのノーマルマップ（ふちへ丸く下がるふくらみ・まん中のすじ・葉脈。厚みがあるように見せる。持ち主がきめた） */
+    if(lf){const cn=LEAFCARDTEX[p.id]||'leaf_rose_card';LEAFCARD[cn]=LEAFCARD[cn]||Promise.all([cn+'.png',cn+'_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
+      const [lmap,lnor]=await LEAFCARD[cn];   /* lnor：葉のカードのノーマルマップ（ふちへ丸く下がるふくらみ・まん中のすじ・葉脈。厚みがあるように見せる。持ち主がきめた） */
       const lg=lf.geometry.clone();lg.scale(OBJSCALE,OBJSCALE,OBJSCALE);lg.computeVertexNormals();
       p.parts.push({geo:lg,mat:toon({vertexColors:true,map:lmap,normalMap:lnor,normalScale:new THREE.Vector2(LEAFCARD_N,LEAFCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
     return}   /* 花には、輪郭線をつけない */
