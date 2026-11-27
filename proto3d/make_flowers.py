@@ -352,6 +352,7 @@ def grass(p):   # 草むら（イネ科）：根もとから細い葉がたば�
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
+SIZE = {'F9': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
 KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass)]
 
 if __name__ == '__main__':
@@ -362,10 +363,10 @@ if __name__ == '__main__':
     import trimesh
     meshes = []
     for i, (name, fn) in enumerate(KINDS):
-        p = Plant(100 + i); fn(p); att, F = p.mesh(); V = att['POSITION']
+        p = Plant(100 + i); fn(p); att, F = p.mesh(); V = att['POSITION'] = att['POSITION'] * SIZE.get(name, 1)
         T = trimesh.Trimesh(V, F, process=False); bad = int((T.area_faces < 1e-12).sum())
         print(name, fn.__name__, '三角形', len(F), '高さ %.2f はば %.2f' % (V[:, 1].max(), max(np.ptp(V[:, 0]), np.ptp(V[:, 2]))), '面積0の面', bad, '有限', bool(np.isfinite(V).all()), '地面の下 %.3f' % V[:, 1].min())
         meshes.append((name, att, F))
-        if p.pcard is not None and p.pcard.V: ca, cF = p.pcard.mesh(); meshes.append((name + '_petal', ca, cF)); print(' ', name + '_petal', '三角形', len(cF))
-        if p.card is not None and p.card.V: ca, cF = p.card.mesh(); meshes.append((name + '_leaf', ca, cF)); print(' ', name + '_leaf', '三角形', len(cF))
+        if p.pcard is not None and p.pcard.V: ca, cF = p.pcard.mesh(); ca['POSITION'] = ca['POSITION'] * SIZE.get(name, 1); meshes.append((name + '_petal', ca, cF)); print(' ', name + '_petal', '三角形', len(cF))
+        if p.card is not None and p.card.V: ca, cF = p.card.mesh(); ca['POSITION'] = ca['POSITION'] * SIZE.get(name, 1); meshes.append((name + '_leaf', ca, cF)); print(' ', name + '_leaf', '三角形', len(cF))
     out = os.path.join(HERE, 'tex', 'flowers.glb'); glbio.write(meshes, out, 'proto3d make_flowers.py (realistic-plant-3d)'); print(out, os.path.getsize(out) // 1024, 'KB')
