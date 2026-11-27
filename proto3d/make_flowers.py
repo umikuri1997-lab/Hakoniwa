@@ -738,12 +738,73 @@ def fruit(p):   # りんごの木（持ち主がきめた：オークの形を�
     oak(p, apples=22)
 
 
+def berry(p):
+    """ベリーの茂み（持ち主がきめた：ブルーベリー。本物の写真（NC State Extension）を見て構造を書き出した）：
+    株：根もとから細い枝（シュート）が何本も立ち、上で細かくわかれて、こんもりまるいしげみになる。
+    葉：小さなだ円の葉が、枝に互いちがい。明るい緑。実：枝先にふさでなる。青むらさきで白い粉（ブルーム）をふき、先に星形のくぼみ。まだのものは緑〜白っぽい"""
+    rng = p.rng; BK = (122, 96, 78); tips = []
+    for s_ in range(7):   # シュート：根もとから立ち、外へ少しかたむく・上で2〜3にわかれる
+        a = s_ * 51.4 + rng.uniform(-15, 15); b = rad(a, 0) * rng.uniform(.02, .08); h = rng.uniform(.3, .42); top = b + G(0, 0, h) + rad(a, 0) * rng.uniform(.08, .16)
+        mid = (b + top) / 2 + rad(a, 0) * .02; bark_tube(p, [b, mid, top], [.009, .007, .005], BK, sides=4)
+        for k in range(rng.integers(2, 4)):
+            d = unit(rad(a + rng.uniform(-60, 60), rng.uniform(15, 55))); e = top + d * rng.uniform(.08, .14); bark_tube(p, [top, (top + e) / 2 + G(0, 0, .01), e], [.005, .004, .003], BK, sides=3); tips.append((e, d))
+    CC = G(0, 0, .42)
+    for i in range(44):   # しげみの外がわ（だ円の玉）にも葉のかたまり：こんもりまるく、枝をかくす
+        u = (i + .5) / 44; z = 1 - 1.55 * u; th = i * 2.39996; rr = math.sqrt(max(0, 1 - z * z)); q = CC + G(math.cos(th) * rr * .4, math.sin(th) * rr * .4, z * .3); tips.append((q, unit(q - CC)))
+    for e, d in tips:   # 葉のかたまり：小枝に互いちがいの小さな葉（カード）を7まい、まるく
+        for k in range(9):
+            n = unit(G(*rng.normal(0, 1, 3)) + G(0, 0, .4) + d * .8); q = e + n * rng.uniform(.02, .08); L = rng.uniform(.15, .19)
+            place_card(p, q - n * L * .3, unit(n + G(*rng.normal(0, .4, 3))), L, L * .7, rng, droop=(.05, .2), fold=(.1, .2), tone=(.8, 1.02), roll=1.2)
+    for e, d in tips[-44::4]:   # 実のふさ（外がわの葉のかたまりに）：枝先の少し下に、5〜8こ
+        c0 = e + d * .07 + G(0, 0, -.02)
+        for k in range(rng.integers(5, 9)):
+            q = c0 + G(*rng.normal(0, .018, 3)); r = rng.uniform(.012, .016); ripe = rng.random() < .7
+            col = (64, 78, 132) if ripe else ((150, 176, 110) if rng.random() < .6 else (206, 214, 190))
+            p.ball(q, r, col, squash=.85, axis=(0, 0, 1), n=7, m=4); p.add([q + G(0, 0, r * .8)], [], [], mat=0) if False else None
+            if ripe: p.ball(q + G(0, 0, -r * .85), r * .35, (40, 46, 80), squash=.4, axis=(0, 0, 1), n=5, m=2)   # 先の星形のくぼみ（こい色）
+
+
+def eleusine(p, dry=False):
+    """ふんばり草（オヒシバ Eleusine indica。本物の写真（NC State Extension）を見て構造を書き出した）：
+    株：根もとから、ひらたい細い葉が地面に近く放射状に広がる（ふまれてもたおれない、ひくい株）。くきは根もとがひらたく、外へかたむいて立つ。
+    穂：くきの先に、指のような細長い穂が3〜6本、放射状にひらく。穂は平たく、小さな粒（小穂）が2列にならぶ"""
+    rng = p.rng; G1 = (110, 150, 74); G2 = (150, 184, 104)
+    for i in range(22):
+        a = i * 137.5 + rng.uniform(-15, 15); L = rng.uniform(.18, .3); place_card(p, rad(a, 0) * .01, rad(a, rng.uniform(15, 45)), L, .045, rng, droop=(.3, .6), fold=(.2, .35), tone=(.82, .98), roll=.4)
+    for s_ in range(4):
+        a = s_ * 90 + rng.uniform(-25, 25); b = rad(a, 0) * .015; top = b + rad(a, 0) * rng.uniform(.06, .12) + G(0, 0, rng.uniform(.18, .26))
+        sweep(p, [b, (b + top) / 2 + rad(a, 0) * .02, top], [.004, .0035, .003], [G1] * 3, sides=4, flat=.6)
+        for k in range(rng.integers(3, 6)):   # 指のような穂
+            d = unit(rad(a + k * 72 + rng.uniform(-15, 15), rng.uniform(30, 60))); L = rng.uniform(.06, .09)
+            pts = [top + d * L * t + G(0, 0, -.015 * t * t) for t in (0, .5, 1)]; sweep(p, pts, [.0045, .004, .0015], [G1, G2, G2], sides=4, flat=.5, cap=True)
+
+
+def setaria(p, dry=False):
+    """しなやかな草（エノコログサ Setaria viridis）／かさかさ草（かれたエノコログサ）。本物の写真（NC State Extension）を見て構造を書き出した：
+    株：根もとから細い葉とくきがたばで立つ。葉は細長く、先がしなる。くきは細く、先に、ふさふさの円柱形の穂（ねこじゃらし）。穂は重さで先がうなだれる。
+    かれたもの：ぜんたいが金色〜うすい茶色。葉は先が下へたれ、ちぢれる"""
+    rng = p.rng; LC = (150, 130, 70) if dry else (104, 150, 70); SPK = ((226, 186, 104), (244, 214, 140)) if dry else ((150, 186, 96), (204, 224, 150))
+    for i in range(26):
+        a = i * 137.5 + rng.uniform(-15, 15); L = rng.uniform(.22, .34)
+        place_card(p, rad(a, 0) * .015, rad(a, rng.uniform(50, 80)), L, .04, rng, droop=(.45, .8) if not dry else (.8, 1.2), fold=(.25, .4), tone=(.82, .98), roll=.5)
+    for s_ in range(6):
+        a = s_ * 60 + rng.uniform(-20, 20); b = rad(a, 0) * .015; h = rng.uniform(.3, .42); out = rad(a, 0); sg = rng.uniform(.25, .45)
+        P = lambda t, b=b, h=h, out=out, sg=sg: b + out * h * sg * t * t * (3 - t) / 2 + G(0, 0, h * (t - .5 * sg * sg * t ** 3))
+        sweep(p, [P(k / 5) for k in range(6)], [.0028] * 6, [LC] * 6, sides=3)
+        top = P(1); d = unit(P(1) - P(.9)); nod = unit(d + out * .7 - G(0, 0, .5)); L = rng.uniform(.07, .1)   # 穂：先がうなだれる
+        pts = [top + d * L * .3 * t + nod * L * t * t for t in (0, .35, .7, 1)]
+        sweep(p, pts, [.011, .016, .014, .005], [SPK[0], SPK[1], SPK[1], SPK[0]], sides=6, cap=True)   # ふさふさの穂（太めのつつ）
+        for k in range(26):   # 穂の毛（のぎ）：短いとげ
+            t = rng.uniform(.1, .95); q = pts[0] * (1 - t) ** 3 + 3 * pts[1] * t * (1 - t) ** 2 + 3 * pts[2] * t * t * (1 - t) + pts[3] * t ** 3; n = unit(G(*rng.normal(0, 1, 3)))
+            sweep(p, [q, q + n * .022], [.0014, .0004], [SPK[1], SPK[1]], sides=3)
+
+
 def grass(p):   # 草むら（イネ科）：根もとから細い葉がたばで出て、先がしなってたれる
     for i in range(12): a = i * 137.5 + p.rng.uniform(-20, 20); p.blade(rad(a, 0) * p.rng.uniform(0, .04), rad(a, p.rng.uniform(55, 80)), p.rng.uniform(.18, .34), .022, (70, 132, 62), (140, 190, 96), profile=LINEAR, bend=-p.rng.uniform(.3, .7), cup=.03, twist=p.rng.uniform(-.5, .5), ripple=0, thick=0, seg=7, col=2)
 
 
-SIZE = {'oak': 1.5, 'fruit': 1.5, 'deadtree': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
-KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak), ('fruit', fruit), ('deadtree', deadtree)]
+SIZE = {'berry': 1.5, 'weedc': 1.3, 'weed0g': 1.3, 'weed0k': 1.3, 'oak': 1.5, 'fruit': 1.5, 'deadtree': 1.5, 'F9': 1.5, 'salvia': 1.5, 'clover': 1.5, 'bellf': 1.5, 'lily': 1.5, 'lotus': 1.5, 'nebari': 1.5, 'hotaru': 1.5}   # 株ぜんたいの大きさ（作った形に対して。持ち主がきめた：ばらは1.5）
+KINDS = [('F0', tulip), ('F1', sunflower), ('F2', lily), ('F3', hydrangea), ('F4', glory), ('F5', cosmos), ('F6', lavender), ('F7', daisy), ('F8', pansy), ('F9', rose), ('G0', grass), ('salvia', salvia), ('clover', clover), ('bellf', bellf), ('lily', glily), ('lotus', lotus), ('nebari', nebari), ('hotaru', hotaru), ('oak', oak), ('fruit', fruit), ('deadtree', deadtree), ('berry', berry), ('weedc', eleusine), ('weed0g', setaria), ('weed0k', lambda p: setaria(p, dry=True))]
 
 if __name__ == '__main__':
     PT = os.path.join(ROOT, '.claude', 'skills', 'realistic-plant-3d', 'assets', 'textures', 'petal_rose')
@@ -773,6 +834,16 @@ if __name__ == '__main__':
         for k, (y, ang, L) in enumerate(((.12, -55, .36), (.24, 50, .4), (.38, -42, .4), (.5, 38, .36), (.6, 0, .38))):
             a = math.radians(ang); leaflet((math.sin(a) * .01, y), a + rng.uniform(-.1, .1), L, .62, rng.uniform(.92, 1.08), prof=lob, teeth=1, tooth=0)
     leaf_card_texture(os.path.join(HERE, 'tex', 'card_oak_leaf.png'), os.path.join(TX, '..', 'leaf_broad', 'basecolor.png'), nsrc=os.path.join(TX, '..', 'leaf_broad', 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_oak_leaf_n.png'), layout=oak_leaf, gain=1.25)
+    def berry_leaf(seg, leaflet, rng):   # ブルーベリーの葉：小枝に、小さなだ円の葉が互いちがいに5まい
+        seg((0, 0), (0, .8), .008, (120, 96, 76))
+        for k, (y, ang) in enumerate(((.12, -50), (.3, 48), (.46, -44), (.6, 40), (.78, 0))): a = math.radians(ang); leaflet((math.sin(a) * .01, y), a + rng.uniform(-.1, .1), .3, .52, rng.uniform(.92, 1.08), prof=lambda u: np.sin(np.pi * np.clip(u, 0, 1)) ** .7, teeth=1, tooth=0)
+    leaf_card_texture(os.path.join(HERE, 'tex', 'card_berry_leaf.png'), os.path.join(TX, '..', 'leaf_broad', 'basecolor.png'), nsrc=os.path.join(TX, '..', 'leaf_broad', 'normal.png'), npath=os.path.join(HERE, 'tex', 'card_berry_leaf_n.png'), layout=berry_leaf, gain=1.3)
+    def blade_leaf(seg, leaflet, rng): leaflet((0, .01), 0, .98, 1.0, 1.0, prof=lambda u: np.clip(1 - np.clip(u, 0, 1) ** 1.6, 0, 1) ** .6 * np.clip(np.clip(u, 0, 1) * 12, 0, 1), teeth=1, tooth=0)   # イネ科の葉：細長く先がとがる
+    for nm, gn, tc in (('card_weed_leaf', 1.05, None), ('card_weeddry_leaf', 1.0, 'dry')):
+        TG = os.path.join(TX, '..', 'leaf_grass'); leaf_card_texture(os.path.join(HERE, 'tex', nm + '.png'), os.path.join(TG, 'basecolor.png'), nsrc=os.path.join(TG, 'normal.png'), npath=os.path.join(HERE, 'tex', nm + '_n.png'), layout=blade_leaf, gain=gn)
+        if tc:   # かれた色（金色〜うすい茶色）にする
+            from PIL import Image
+            im = np.asarray(Image.open(os.path.join(HERE, 'tex', nm + '.png')), float); l = im[..., :3].mean(2, keepdims=True) / 110; im[..., :3] = np.clip(l * np.array([232, 188, 104]), 0, 255); Image.fromarray(im.astype(np.uint8), 'RGBA').save(os.path.join(HERE, 'tex', nm + '.png'))
     leaf_card_texture(os.path.join(HERE, 'tex', 'leaf_rose_card.png'), os.path.join(TX, 'basecolor.png'), nsrc=os.path.join(TX, 'normal.png'), npath=os.path.join(HERE, 'tex', 'leaf_rose_card_n.png'))
     import trimesh
     meshes = []
