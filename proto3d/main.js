@@ -88,7 +88,7 @@ const MAPOBJ={deadtree:{nat:1,piv:[.5,.5],solid:1},rock:{nat:1,piv:[.5,.5],solid
 // 自然の物の色（tex/map.glb の色の明るさのむらはのこし、色をこの色に）。moss：下のほうにのせるコケの色と、のせる高さ（物の高さの割合）
 const NATCOL={farm:{col:'#7d5638'},rock:{col:'#b4b1ab',moss:'#6d8a4c',mossH:.38},deadtree:{col:'#9a8572'}};
 const FLOWERS={per:.4};
-const PETAL={sat:1.05,tex:.75};      /* 花びらのあざやかさ（もとの色の何倍） */
+const PETAL={sat:1.05,tex:.75,from:.35,base:.62,tip:1.12,satBase:1.35};   /* from：花のはじまる高さ（植物の高さの割合）・base／tip：つけ根と先の明るさ・satBase：つけ根のあざやかさ */      /* 花びらのあざやかさ（もとの色の何倍） */
 const TINYHULL=.3;          /* 花・草（細い物）の背面法の線の太さ（ふつうの何倍） */   /* よみがえった草地の花・草（持ち主の植物 F）：1マスに置く割合 */
 const LEAFSOFT={lo:.8,hi:1.12,rim:.3};   /* 木の葉をふんわり：下を向いた面・上を向いた面の明るさ、ふちの光 */
 const MAPPLANT={ntree:'T0',berry:'B0'};   // 木・ベリーのしげみは、持ち主の植物のモデル。雑草（weed）は F のどれか
@@ -189,8 +189,8 @@ function toon(o={},extra={}){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD,...o});
   m.onBeforeCompile=sh=>{curveVS(sh);Object.assign(sh.uniforms,{uMat,uSunV,uViewInv});
     if(extra.wind)sh.vertexShader='#define TN_WIND\n'+sh.vertexShader;
-    sh.vertexShader='attribute float _under,_mat;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
-    sh.fragmentShader='uniform sampler2D uMat[7];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\nfloat tnMh(int k,vec2 u){return k==0?texture2D(uMat[0],u).r:k==1?texture2D(uMat[1],u).r:k==2?texture2D(uMat[2],u).r:k==3?texture2D(uMat[3],u).r:k==4?texture2D(uMat[4],u).r:texture2D(uMat[6],u).g;}\n'+NOISE+sh.fragmentShader
+    sh.vertexShader='attribute float _under,_mat;varying float vOY;varying float vUnder,vMat;varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUnder=_under;vMat=_mat;vUv2=uv;vOY=position.y;').replace(CURVE_VS,CURVE_VS+'\nvWP=cwp0;');
+    sh.fragmentShader='uniform sampler2D uMat[7];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying float vUnder,vMat,vOY;varying vec2 vUv2;varying vec3 vWP;\nfloat tnMh(int k,vec2 u){return k==0?texture2D(uMat[0],u).r:k==1?texture2D(uMat[1],u).r:k==2?texture2D(uMat[2],u).r:k==3?texture2D(uMat[3],u).r:k==4?texture2D(uMat[4],u).r:texture2D(uMat[6],u).g;}\n'+NOISE+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <color_fragment>',`#include <color_fragment>
   int tnK=int(vMat+.5)-1;vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vUv2;
@@ -198,9 +198,10 @@ function toon(o={},extra={}){
     if(k==5){vec3 t=texture2D(uMat[5],vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)}).rgb;float lm=dot(vec3(${LEAFTEX.mean.join(',')}),${LUM}); // 葉：葉っぱの絵のすじと明るさを、植物の色にのせる
       float l=dot(t,${LUM})/lm,gr=step(max(diffuseColor.r,diffuseColor.b),diffuseColor.g); // 花びら（緑でない所）は、すじと明るさだけ
       diffuseColor.rgb=mix(diffuseColor.rgb*l,t*dot(diffuseColor.rgb,${LUM})/lm,.12*gr);
-      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pl=dot(pc,${LUM});diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}),0.)*mix(1.,l,${PETAL.tex});}{vec2 uq=vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)};tnUV=uq;tnG=(vec2(dot(texture2D(uMat[5],uq+vec2(${BUMP.e},0.)).rgb,${LUM}),dot(texture2D(uMat[5],uq+vec2(0.,${BUMP.e})).rgb,${LUM}))/lm-l)*${(BUMP.leaf/BUMP.e).toFixed(3)};}}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
+      if(gr<.5){vec3 pc=diffuseColor.rgb/max(l,1e-3);float pt=${extra.petalH?`smoothstep(${PETAL.from},1.,vOY/${extra.petalH.toFixed(3)})`:'1.'};pc*=mix(${PETAL.base},${PETAL.tip},pt);float pl=dot(pc,${LUM});   /* 花びら：つけ根はこく・あざやかに、先は明るくうすく（じっさいの花びらのグラデーション） */
+      diffuseColor.rgb=max(mix(vec3(pl),pc,${PETAL.sat}*mix(${PETAL.satBase},1.,pt)),0.)*mix(1.,l,${PETAL.tex});}{vec2 uq=vUv2*${(extra.uvk*extra.span/LEAFTEX.span).toFixed(4)};tnUV=uq;tnG=(vec2(dot(texture2D(uMat[5],uq+vec2(${BUMP.e},0.)).rgb,${LUM}),dot(texture2D(uMat[5],uq+vec2(0.,${BUMP.e})).rgb,${LUM}))/lm-l)*${(BUMP.leaf/BUMP.e).toFixed(3)};}}  /* 花びら（緑でない所）：葉っぱの絵はほとんどのせず、色をあざやかに */
     else if(k>=0){vec2 uv=vUv2*${extra.uvk.toFixed(4)};float l=k==0?texture2D(uMat[0],uv).r:k==1?texture2D(uMat[1],uv).r:k==2?texture2D(uMat[2],uv).r:k==3?texture2D(uMat[3],uv).r:k==4?texture2D(uMat[4],uv).r:texture2D(uMat[6],uv).g;
-    float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);tnUV=uv;tnG=(vec2(tnMh(k,uv+vec2(${BUMP.e},0.)),tnMh(k,uv+vec2(0.,${BUMP.e})))-l)*(k==2?0.:k==6?${(BUMP.soil/BUMP.e).toFixed(3)}:${(BUMP.mat/BUMP.e).toFixed(3)});}}`:''}
+    float mk=k==0?${MATK[1].toFixed(2)}:k==1?${MATK[2].toFixed(2)}:k==2?${MATK[3].toFixed(2)}:k==3?${MATK[4].toFixed(2)}:k==4?${MATK[5].toFixed(2)}:${MATK[7].toFixed(2)};diffuseColor.rgb*=mix(1.,l*2.,mk);tnUV=uv;tnG=(vec2(tnMh(k,uv+vec2(${BUMP.e},0.)),tnMh(k,uv+vec2(0.,${BUMP.e})))-l)*(k==2?0.:k==6?${(BUMP.soil/BUMP.e).toFixed(3)}:${(BUMP.mat/BUMP.e).toFixed(3)})${extra.nobump?'*0.':''};}}`:''}
   diffuseColor.rgb*=1.-${AO.toFixed(2)}*vUnder;`)
       .replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+RIM_FS+`
   {vec3 n=normalize(normal),V=normalize(vViewPosition);
@@ -211,7 +212,7 @@ function toon(o={},extra={}){
      outgoingLight=mix(outgoingLight,env*diffuseColor.rgb*2.2,${METAL.refl})+vec3(1.,.95,.85)*${METAL.spec}*pow(max(dot(Rv,uSunV),0.),${METAL.pow}.);}}
 `+AIR_FS+'\n#include <opaque_fragment>');
   };
-  m.customProgramCacheKey=()=>'toon'+(extra.mat?extra.uvk.toFixed(3):'')+(extra.wind?'w':'');
+  m.customProgramCacheKey=()=>'toon'+(extra.mat?extra.uvk.toFixed(3):'')+(extra.wind?'w':'')+(extra.nobump?'n':'')+(extra.petalH?'p'+extra.petalH.toFixed(3):'');
   return m;
 }
 
@@ -428,7 +429,7 @@ async function loadProp(p){
     smoothNormals(geo);const n=geo.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(n).fill(v),1);
     if(p.src!=='plants'){geo.setAttribute('_mat',mk(p.mat?MATIDX[p.mat]:0));geo.setAttribute('_under',mk(0));geo.deleteAttribute('color')}
     const span=p.src==='plants'?MATSPAN.bark:MATSPAN[p.mat]||1;
-    const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span,span,wind:true}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span,span});
+    const mat=p.src==='plants'?toon({vertexColors:true},{mat:true,uvk:s/span,span,wind:true,petalH:p.kind==='tiny'?p.h*OBJSCALE:0}):toon({color:p.tint},{mat:!!p.mat,uvk:s/span,span});
     parts.push({geo,mat,hull:hullMat(p.src==='plants'?{vertexColors:true}:{color:p.tint},dotW()*(p.kind==='tiny'?TINYHULL:1))})});
   p.parts=parts;
 }
@@ -483,7 +484,7 @@ async function loadSpirit(el){
   const g=await fbx.loadAsync(SPDIR+el+'.fbx');
   g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH*OBJSCALE/bb.getSize(new THREE.Vector3()).y;
   g.scale.multiplyScalar(s);
-  const sm=col=>toon({color:col},{mat:true,uvk:s/MATSPAN.cloth,span:MATSPAN.cloth});  // せいれいの体とずきんにも布の絵
+  const sm=col=>toon({color:col},{mat:true,uvk:s/MATSPAN.cloth,span:MATSPAN.cloth,nobump:true});   /* せいれいには、ノーマルマップをかけない（持ち主がきめた） */  // せいれいの体とずきんにも布の絵
   const c=SPCOL[el],flat=col=>{const m=new THREE.MeshBasicMaterial({color:col});m.onBeforeCompile=curveVS;m.customProgramCacheKey=()=>'flat';return m};
   g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;
     {const k=o.geometry.getAttribute('position').count,mk=v=>new THREE.Float32BufferAttribute(new Float32Array(k).fill(v),1);o.geometry.setAttribute('_mat',mk(MATIDX.cloth));o.geometry.setAttribute('_under',mk(0))}
