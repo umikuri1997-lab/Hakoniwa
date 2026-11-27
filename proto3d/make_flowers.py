@@ -199,16 +199,25 @@ def star_petal_texture(path, npath, size=512, lobes=5, rin=.7, col=((232, 232, 2
     Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
 
 
-def round_leaf_texture(path, npath, size=512, col=((150, 186, 150), (84, 140, 96), (60, 112, 78)), seed=4):
-    """まるい葉（ハス）の絵：アルファ抜きのまる・まん中から放射状のすじ（二またにわかれる）・ふちはゆるくなみうつ。色は白っぽい青緑（まん中は明るい）"""
+def round_leaf_texture(path, npath, size=1024, seed=4):
+    """まるい葉（ハス）の絵：2×2の4とおり（持ち主に「機械的すぎ」と言われた）。どれも、ふちの形・すじの本数と間かく・色むらがちがう。
+    すじ：まん中から放射状（間かくをゆらす・ところどころ二また）・うすく。まん中は白っぽいまるいしみ。色：白っぽい青緑に、うすいむら（ノイズ）"""
     from PIL import Image
-    yy, xx = np.mgrid[0:size, 0:size]; X = (xx + .5) / size - .5; Y = .5 - (yy + .5) / size; r = np.hypot(X, Y); th = np.arctan2(Y, X)
-    R = .48 * (1 + .025 * np.sin(th * 7 + 1) + .015 * np.sin(th * 13)); px = 1 / size; d = (R - r) / px; a = np.clip(d + .5, 0, 1); t = np.clip(r / .48, 0, 1)
-    c = np.array(col[0]) * (1 - np.clip(t / .15, 0, 1))[..., None] + np.array(col[1]) * (np.clip(t / .15, 0, 1) * (1 - t))[..., None] + np.array(col[2]) * t[..., None] * np.clip(t / .15, 0, 1)[..., None]
-    n1 = 21; k1 = np.abs(((th * n1 / (2 * math.pi)) % 1) * 2 - 1); n2 = 42; k2 = np.abs(((th * n2 / (2 * math.pi) + .5) % 1) * 2 - 1)
-    v = np.exp(-((1 - k1) / .06) ** 2) * (t > .05) + .6 * np.exp(-((1 - k2) / .05) ** 2) * (t > .5)   # すじ：まん中から21本・外で二またに
-    c = c * (1 + .22 * v[..., None]); Image.fromarray(np.dstack([c, a * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(path)
-    ht = np.sqrt(np.clip(d / 14, 0, 1)) + .3 * v; gy, gx = np.gradient(ht * 3.0); nx = -gx; ny = gy; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
+    rng = np.random.default_rng(seed); h2 = size // 2; col = np.zeros((size, size, 3)); al = np.zeros((size, size)); HT = np.zeros((size, size))
+    yy, xx = np.mgrid[0:h2, 0:h2]; X = (xx + .5) / h2 * 1.08 - .54; Y = .54 - (yy + .5) / h2 * 1.08; r = np.hypot(X, Y); th = np.arctan2(Y, X); px = 1.08 / h2
+    def noise(fx, fy, ph): return np.sin(X * fx + ph) * np.cos(Y * fy - ph * 1.7) + .5 * np.sin((X + Y) * fx * 1.9 + ph * 2.3)
+    for cell in range(4):
+        ph = rng.uniform(0, 6.28, 8); R = .48 * (1 + .03 * np.sin(th * rng.integers(3, 6) + ph[0]) + .02 * np.sin(th * rng.integers(7, 11) + ph[1]) + .012 * np.sin(th * 17 + ph[2]))   # ふち：ゆるいなみ・本数は葉ごと
+        d = (R - r) / px; a = np.clip(d + .5, 0, 1); t = np.clip(r / .48, 0, 1)
+        n1 = rng.integers(17, 23); warp = th + .08 * np.sin(r * 9 + ph[3]) + .05 * np.sin(th * 3 + ph[4])   # すじ：本数は葉ごと・少しうねる
+        k1 = np.abs(((warp * n1 / (2 * math.pi)) % 1) * 2 - 1); k2 = np.abs(((warp * n1 * 2 / (2 * math.pi) + .5) % 1) * 2 - 1)
+        v = np.exp(-((1 - k1) / .05) ** 2) * (t > .06) * (1 - .3 * t) + .45 * np.exp(-((1 - k2) / .04) ** 2) * (t > .45 + .1 * np.sin(th * 5 + ph[5]))
+        base = np.array([70., 124, 84]) + np.array([10., 8, 4]) * noise(7, 6, ph[6])[..., None] + np.array([-14., -10, -6]) * t[..., None] ** 1.5   # 白っぽい青緑・うすいむら・ふちは少しこい
+        spot = np.exp(-(r / .07) ** 2); base = base * (1 - spot[..., None]) + np.array([170., 196, 150]) * spot[..., None]   # まん中のしみ
+        c = base * (1 + .3 * v[..., None])
+        cy, cx = divmod(cell, 2); sl = (slice(cy * h2, cy * h2 + h2), slice(cx * h2, cx * h2 + h2)); col[sl] = c; al[sl] = a; HT[sl] = np.sqrt(np.clip(d / 18, 0, 1)) + .2 * v
+    Image.fromarray(np.dstack([col, al * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(path)
+    gy, gx = np.gradient(HT * 3.0); nx = -gx; ny = gy; nz = np.ones_like(nx); l = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
     Image.fromarray((np.dstack([nx / l, ny / l, nz / l]) * 127.5 + 127.5).clip(0, 255).astype(np.uint8), 'RGB').save(npath)
 
 
@@ -559,14 +568,19 @@ def lotus(p):
     まん中：黄緑の上が平らなじょうごの形（花たく）と、上の小さな穴のつぶ。まわりに黄色いおしべがたくさん。つぼみ：しずくの形（先がピンク・つけ根が緑）。
     原点は水面（y 0）。池のマスに置く"""
     rng = p.rng; STK = (96, 130, 70)
-    def disc(o, nrm, R, cup, rot):
-        """まるい葉の面（4だん×18）：まるい葉の絵（アルファ抜き）をはる。cup：ふちが上へそる高さ（半径の割合）"""
-        f, sx, ux = frame(nrm, (1, 0, 0) if abs(nrm[0]) < .9 else (0, 1, 0)); V = [o + f * .002]; UV = [(.5, .5)]; C = [G(255, 255, 255)]; F = []; NR, NA = 4, 18
+    def disc(o, nrm, R, cup, rot, droop=0., dimple=.05):
+        """まるい葉の面（6だん×24）：まるい葉の絵（4とおりから1つ）をはる。葉ごとに、だ円・ふちのなみ（本数と高さ）・まん中のくぼみ・
+        cup：ふちが上へそる高さ（半径の割合。立つ葉はおわん）・droop：ふちの一方がたれる（立つ葉の、重さでたれたふち）"""
+        f, sx, ux = frame(nrm, (1, 0, 0) if abs(nrm[0]) < .9 else (0, 1, 0)); V = [o - f * dimple * R]; cell = int(rng.integers(0, 4)); cy, cx = divmod(cell, 2)
+        uvc = lambda u, v: ((cx + (u * 1.0 + .54) / 1.08) / 2, ((1 - cy) + (v + .54) / 1.08) / 2); UV = [uvc(0, 0)]; tn = rng.uniform(.88, 1.06); C = [G(255, 255, 255) * tn]; F = []; NR, NA = 6, 24
+        ell = rng.uniform(.88, 1.0); nw = int(rng.integers(3, 6)); aw = rng.uniform(.03, .07); ph = rng.uniform(0, 6.28); da = rng.uniform(0, 6.28)
         for i in range(1, NR + 1):
             rr = i / NR
             for j in range(NA):
-                a = 2 * math.pi * j / NA + rot; w = .012 * R * math.sin(a * 5 + rot) * rr ** 2   # ふちのなみ
-                V.append(o + (sx * math.cos(a) + ux * math.sin(a)) * rr * R + f * (cup * R * rr ** 2 + w)); UV.append((.5 + .5 * rr * math.cos(a - rot) * 1.02, .5 + .5 * rr * math.sin(a - rot) * 1.02)); C.append(G(255, 255, 255))
+                a = 2 * math.pi * j / NA; ca, sa = math.cos(a + rot), math.sin(a + rot)
+                w = R * aw * math.sin(a * nw + ph) * rr ** 2.5 + R * .02 * math.sin(a * 11 + ph * 2) * rr ** 3   # ふちのなみ：葉ごとに本数・高さがちがう
+                z = cup * R * rr ** 2 - dimple * R * (1 - rr) ** 2 + w - droop * R * max(0, math.cos(a - da)) ** 2 * rr ** 3   # まん中は少しくぼむ・おわん・一方のふちがたれる
+                V.append(o + (sx * ca + ux * sa * ell) * rr * R + f * z); UV.append(uvc(.5 * rr * math.cos(a), .5 * rr * math.sin(a))); C.append(G(255, 255, 255) * tn * (1 - .06 * rr))   # 絵は葉ごとにまわる
         for j in range(NA): F.append((0, 1 + j, 1 + (j + 1) % NA))
         for i in range(NR - 1):
             for j in range(NA): a_ = 1 + i * NA + j; b_ = 1 + i * NA + (j + 1) % NA; F += [(a_, a_ + NA, b_), (b_, a_ + NA, b_ + NA)]
@@ -583,11 +597,11 @@ def lotus(p):
                 p.petal(o, rad(a, el + rng.uniform(-6, 6)), L * size, W * size, (250, 248, 232), (250, 236, 240), up=up, rows=8, cols=6, tipc=(232, 96, 150), bend=.02, curl=.02, cup=.22, twist=rng.uniform(-.05, .05), wave=.0, tip_width=.3)
     def bud(top, size):
         up = G(0, 0, 1); sweep(p, [top, top + up * .02 * size, top + up * .06 * size, top + up * .1 * size], [.015 * size, .03 * size, .028 * size, .002 * size], [(110, 150, 70), (196, 210, 150), (236, 150, 180), (230, 100, 150)], sides=8, cap=True)
-    for k in range(4):   # 水にうく葉
-        a = k * 90 + rng.uniform(-25, 25); o = rad(a, 0) * rng.uniform(.1, .2) + G(0, 0, .004); disc(o, G(0, 0, 1), rng.uniform(.1, .13), .03, rng.uniform(0, 6.28))
+    for k in range(6):   # 水にうく葉（水面より少し上。まん中は水にしずめない）
+        a = k * 60 + rng.uniform(-20, 20); o = rad(a, 0) * rng.uniform(.08, .24) + G(0, 0, .016 + .004 * k); disc(o, unit(G(rng.uniform(-.06, .06), rng.uniform(-.06, .06), 1)), rng.uniform(.09, .15), rng.uniform(.0, .05), rng.uniform(0, 6.28), droop=rng.uniform(0, .04), dimple=.0)   # 水にうく葉：大きさ・かたむき・そりを、葉ごとに   # 水面と重ならないよう、少しうかせる（重なると水の色がまざってちらつく）。葉ごとに高さをずらす
     for k in range(2):   # 水面より上に立つ葉：葉柄がまっすぐ立ち、ふちが上へそったおわん
         a = k * 180 + 60 + rng.uniform(-20, 20); b = rad(a, 0) * .12; h = rng.uniform(.14, .2); top = b + rad(a, 0) * .03 + G(0, 0, h)
-        sweep(p, [b, top], [.004, .0035], [STK] * 2, sides=4); disc(top, unit(G(0, 0, 1) + rad(a, 0) * .25), rng.uniform(.1, .12), .25, rng.uniform(0, 6.28))
+        sweep(p, [b, top], [.004, .0035], [STK] * 2, sides=4); disc(top, unit(G(0, 0, 1) + rad(a + rng.uniform(-40, 40), 0) * rng.uniform(.15, .45)), rng.uniform(.09, .13), rng.uniform(.18, .32), rng.uniform(0, 6.28), droop=rng.uniform(.15, .35))   # 立つ葉：おわん・かたむき・一方のふちがたれる
     b = rad(200, 0) * .03; top = b + G(0, 0, .26); sweep(p, [b, (b + top) / 2 + rad(110, 0) * .006, top], [.0045, .004, .0038], [STK] * 3, sides=4); bloom(top, 1.0)   # 花
     b = rad(20, 0) * .14; top = b + G(0, 0, .2); sweep(p, [b, top], [.004, .0035], [STK] * 2, sides=4); bud(top, 1.0)   # つぼみ
 

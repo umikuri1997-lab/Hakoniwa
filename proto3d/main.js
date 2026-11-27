@@ -430,7 +430,7 @@ let FLOWERSGLB=null,LEAFCARD={},PETALCARD={};
 const PETALCARDTEX={bellf:'card_bellf_petal'};   /* 花ごとの花びらの絵（なければ、ばらの花びら） */
 const LEAFCARDTEX={salvia:'card_salvia_leaf',clover:'card_clover_leaf',bellf:'card_bellf_leaf',lily:'card_lily_leaf',lotus:'card_lotus_leaf'};   /* 花ごとの葉のカードの絵（なければ、ばらの葉） */
 const PETALCARD_N=1.4;   /* 花びらのノーマルマップの強さ */
-const LEAFCARD_N=2.2;   /* 葉のカードのノーマルマップの強さ */
+const LEAFCARD_N=2.2,LEAFCARD_NS={lotus:1.2};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
   if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
@@ -443,7 +443,7 @@ async function loadProp(p){
     if(lf){const cn=LEAFCARDTEX[p.id]||'leaf_rose_card';LEAFCARD[cn]=LEAFCARD[cn]||Promise.all([cn+'.png',cn+'_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
       const [lmap,lnor]=await LEAFCARD[cn];   /* lnor：葉のカードのノーマルマップ（ふちへ丸く下がるふくらみ・まん中のすじ・葉脈。厚みがあるように見せる。持ち主がきめた） */
       const lg=lf.geometry.clone();lg.scale(OBJSCALE,OBJSCALE,OBJSCALE);lg.computeVertexNormals();
-      p.parts.push({geo:lg,mat:toon({vertexColors:true,map:lmap,normalMap:lnor,normalScale:new THREE.Vector2(LEAFCARD_N,LEAFCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
+      p.parts.push({geo:lg,mat:toon({vertexColors:true,map:lmap,normalMap:lnor,normalScale:new THREE.Vector2(LEAFCARD_NS[p.id]??LEAFCARD_N,LEAFCARD_NS[p.id]??LEAFCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:true}),hull:null})}
     return}   /* 花には、輪郭線をつけない */
   let root;
   if(p.src==='plants'){PLANTS=PLANTS||gltf.loadAsync('./tex/plants.glb');root=(await PLANTS).scene.getObjectByName(p.id).clone()}
