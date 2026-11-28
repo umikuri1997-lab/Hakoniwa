@@ -19,9 +19,11 @@ const assert=require('node:assert/strict');
     for(let y=Y;y<Y+5;y++)for(let x=X;x<X+5;x++){const j=y*W+x;if(y===Y||y===Y+4||x===X||x===X+4)S.obj[j]='hwall';else S.floor[j]='floor'}S.obj[(Y+4)*W+X+2]='door';recount();
     const h=HOUSES.find(q=>q.inside.has((Y+2)*W+X+2));cam.z=2;cam.x=(X+2.5)*TS-VW/cam.z/2;cam.y=(Y+2.5)*TS-VH/cam.z/2;
     const roofAt=()=>{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);iqRoofDraw(ctx,h,1);ctx.restore();return px(Math.round(ctx.canvas.width/2),Math.round(ctx.canvas.height/2))};
-    const rn=roofAt();S.t=1440*3+12*60;DC.h=-1;const rd=roofAt();return JSON.stringify({g:v.g,r:v.r,top,rn,rd})})()`));
+    const rn=roofAt();S.t=1440*3+12*60;DC.h=-1;const rd=roofAt();return JSON.stringify({g:v.g,r:v.r,top,rn,rd,g3:G3.on,sun:v.sun,amb:v.amb,sky:v.sky,el:v.el})})()`));
   {const g=rgb(tint.g),r=rgb(tint.r);assert.ok(tint.top.every((c,i)=>Math.abs(c-g[i])<=2),'high ledge top gets the ground tint '+tint.top+' / '+tint.g);
-   assert.ok(tint.rd.some(c=>c>0)&&tint.rn.every((c,i)=>Math.abs(c-Math.round(tint.rd[i]*r[i]/255))<=3),'roof gets the roof tint at night '+tint.rn+' / '+tint.rd+' * '+tint.r)}
+   if(tint.g3){/* 3D：屋根は2Dのかけ算をしない（日の光の色 sun・amb で色がつく。js/3d） */assert.ok(tint.rd.some(c=>c>0)&&tint.rn.every((c,i)=>Math.abs(c-tint.rd[i])<=3),'3D: roof is not tinted by the 2D roof layer '+tint.rn+' / '+tint.rd);
+     assert.ok(tint.sun.length===3&&tint.amb.length===3&&tint.sky.length===6&&tint.sun[2]>tint.sun[0]&&tint.el>0,'3D: night light is cool blue '+JSON.stringify(tint))}
+   else assert.ok(tint.rd.some(c=>c>0)&&tint.rn.every((c,i)=>Math.abs(c-Math.round(tint.rd[i]*r[i]/255))<=3),'roof gets the roof tint at night '+tint.rn+' / '+tint.rd+' * '+tint.r)}
   console.log('daycolor: layers change by hour (warm evening, cool blue hour, lit windows at night); ledge tops and roofs tinted');
   assert.deepEqual(errors,[]);
   /* 雲の海（風）：夜は、雲の海の所に s、ほかの地面に g がかかる */

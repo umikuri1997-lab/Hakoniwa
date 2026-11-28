@@ -4,7 +4,8 @@
    - 立てる物：描くあいだ、ctx の drawImage をうけとめ、チップの1コマの絵（atlasFrame）ならその絵と場所だけをおぼえる（3Dのがわで絵のページにつめる）。
      コードで描く所（色の四角・線・文字など）がある物は、その物ぜんぶを、毎コマ描く絵のページ（RASTER）に描く。
    - 地面にはる物（畑・ラグ・置ける所の色・わく・落ち影など）：地面の描き方のまま、地面の絵（クォータービューの地面の点のキャンバス）に描いて、3Dの地形にはる。
-   - ふきだし・エフェクト・夜の暗さなど、上にかさねる物は、いまのキャンバス（#cv）に、3Dのカメラで写した場所へ描く。
+   - ふきだし・エフェクトなど、上にかさねる物は、いまのキャンバス（#cv）に、3Dのカメラで写した場所へ描く。
+   - 時間の色と夜（g3Night・g3End）：日なた・かげ・空の色と日の高さは DAYC。夜の暗さは、上から見た「あかりの地図」を作って3Dの色に入れ、#cv の上の物にも同じ暗さを写す。
    G3（iso.js）：on＝3Dで描く・O＝描き方の点のおき場所（板・地面の絵を描くあいだ）。 */
 const G3K=1,G3RK=2,G3DMAX=2;/* 板の点の細かさ（ゲームの1点＝1）・コードで描く物を描く細かさ（ゲームの1点＝2ドット）・地面の絵の細かさの上限 */
 const G3DEF=[-56,-104,56,28];/* 大きさのわからない物の、描くわく（足もとからのゲームの点） */
@@ -74,7 +75,7 @@ function g3Cap(it,now){const A=it.A;
   G3X.cq=[];G3X.ras=0;G3X.lz=0;G3X.nolift=true;g3Mode(G3K,A.px,A.py,0,0);G3X.rec=true;
   try{standTf(ctx,G3K,A.fx,A.fy,A.px,A.py);it.draw()}catch(e){G3X.ras=1}finally{G3X.rec=false}
   const anc=g3Anc(A);if(G3X.lz)anc[1]+=G3X.lz/LIFT*R3D.HSTEP;
-  if(!G3X.ras){for(const q of G3X.cq){q.a=anc;q.own=it.own;G3X.q.push(q)}G3X.nolift=false;g3Back();return}
+  if(!G3X.ras){G3X.cq.forEach((q,i)=>{q.a=anc;q.own=it.own;q.ly=Math.min(i,2);G3X.q.push(q)});G3X.nolift=false;g3Back();return}
   /* 2回め：コードで描く所がある物は、その物ぜんぶを、毎コマ描く絵のページへ（地面の絵を描いているキャンバスのすみをかりて描き、うつす） */
   const R=g3Box(it,A),kr=G3RK,w=Math.ceil((R[2]-R[0])*kr),h=Math.ceil((R[3]-R[1])*kr),RS=G3X.ras_pg,RW=RS.c.width,RH=RS.c.height,c=ctx.canvas;
   if(w>0&&h>0&&w<=c.width&&h<=c.height){if(G3X.rx+w>RW){G3X.rx=0;G3X.ry+=G3X.rh+1;G3X.rh=0}
@@ -101,8 +102,31 @@ function g3Spirit(r,now){if(r.hidden&&!(typeof peekH==='function'&&peekH(r)))ret
   G3X.spl=G3X.spl||[];G3X.spl.push({el:G3ELS.has(r.elem)?r.elem:'earth',x:r.x,y:y+(walking?Math.abs(Math.sin(v.ph))*.04:0),z:r.y,gy,yaw:v.yaw,sw:walking?Math.sin(v.ph)*.6:0})}
 function g3SpiritOver(r,now){const p=r._g3;if(!p)return;const P=R3D.project(p.x,p.y,p.z),kk=dpr*P.s,fx=r.x*TS,fy=r.y*TS;
   ctx.setTransform(kk*IQSX,0,0,kk*IQSY,dpr*P.x-kk*IQSX*fx,dpr*P.y-kk*IQSY*fy);G3X.nolift=true;G3.sp=true;try{drawRes(r,now)}catch(e){frameErr&&frameErr('g3sp',e)}finally{G3.sp=false;G3X.nolift=false}}
+/* ---- 夜（render の夜の暗さの所でよぶ）：上から見た「あかりの地図」 ----
+   G3LM.c：のこる暗さ（a。はじめ1、2Dの DMK と同じ描き方で、あかりの所をけずる）・G3LM.wc：火のあたたかい光（lighter）。せかいの点で描くので、groundTf は G3.LM の上から見た形になる（iso.js）。
+   3Dの地面・物の板・せいれい・水は、この地図を自分の場所で読む（js/3d/mats.js の tnDark）。#cv の上の物には、地図を画面へ写して同じ暗さ（ふきだしの前なので、2Dと同じ物が暗くなる）。 */
+const G3LMN=512,G3LMM=6,G3LMG=6;/* 地図の大きさ（ドット）・画面のまわりに足すマス・#cv へ写すときの分け方（たて・よこ） */
+const G3LM={c:null,g:null,wc:null,wg:null,tc:null,tg:null,r:null};
+function g3Night(dk,dkc,now,x0,y0,x1,y1){const L=G3LM,N=G3LMN;if(!L.c){for(const k of['c','wc','tc']){L[k]=document.createElement('canvas');L[k].width=L[k].height=N}L.g=L.c.getContext('2d');L.wg=L.wc.getContext('2d');L.tg=L.tc.getContext('2d')}
+  const V=isoView(),X0=Math.floor(V.x0)-G3LMM,Z0=Math.floor(V.y0)-G3LMM,SZ=Math.max(V.x1-V.x0,V.y1-V.y0)+G3LMM*2,s=N/(SZ*TS);L.r=[X0,Z0,SZ,SZ];
+  G3.LM={cs:[L.g,L.wg],s,ox:-X0*TS*s,oy:-Z0*TS*s};const k=dpr*cam.z;
+  try{const g=L.g;g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.globalAlpha=1;g.clearRect(0,0,N,N);g.fillStyle='#fff';g.fillRect(0,0,N,N);
+    const litH=nightCut(g,k,x0,y0,x1,y1,now,false);/* 月明かりの帯（画面の絵）は、まだ3Dにしていない */
+    const w=L.wg;w.setTransform(1,0,0,1,0,0);w.globalAlpha=1;w.globalCompositeOperation='source-over';w.clearRect(0,0,N,N);w.globalCompositeOperation='lighter';w.globalAlpha=.18;nightWarm(w,k,x0,y0,x1,y1,now);w.globalAlpha=1;w.globalCompositeOperation='source-over';
+    G3.LM=null;g3WinLit(litH)}finally{G3.LM=null}
+  G3X.night={dk,dkc,lmr:L.r};
+  /* #cv の上の物にも同じ暗さ：暗さの色の地図を作り、地面（高さ0）の上の点で画面へ写す（遠近があるので、G3LMG×G3LMG に分けて、ひとつずつ3つの点からの形で） */
+  const t=L.tg;t.setTransform(1,0,0,1,0,0);t.globalCompositeOperation='copy';t.drawImage(L.c,0,0);t.globalCompositeOperation='source-in';t.fillStyle='rgb('+dkc.join(',')+')';t.fillRect(0,0,N,N);t.globalCompositeOperation='source-over';
+  const c=ctx,n=G3LMG,d=N/n,P=(i,j)=>R3D.project(X0+SZ*i/n,0,Z0+SZ*j/n);c.save();c.globalCompositeOperation='source-atop';c.globalAlpha=dk;c.imageSmoothingEnabled=true;
+  const Q=[];for(let j=0;j<=n;j++){Q.push([]);for(let i=0;i<=n;i++)Q[j].push(P(i,j))}
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const a=Q[j][i],b=Q[j][i+1],e=Q[j+1][i];c.setTransform((b.x-a.x)/d*dpr,(b.y-a.y)/d*dpr,(e.x-a.x)/d*dpr,(e.y-a.y)/d*dpr,(a.x-i*(b.x-a.x)-j*(e.x-a.x))*dpr,(a.y-i*(b.y-a.y)-j*(e.y-a.y))*dpr);c.drawImage(L.tc,i*d,j*d,d+.5,d+.5,i*d,j*d,d+.5,d+.5)}
+  c.restore()}
+/* 夜の窓のあかり：光った窓の絵を、その壁のマスに立てた板にして、暗さをうけない（iso-conn.js の iqWinList） */
+function g3WinLit(litH){const L=iqWinList(litH,false);if(!L.length)return;const n0=G3X.q.length;
+  for(const w of L){const it={t:1,own:w.q,A:objFoot(w.q%W,(w.q/W)|0,1,1,w.q),draw:()=>{ctx.globalAlpha=w.a;try{iqChip(ctx,w.key,w.q,w.lv)}finally{ctx.globalAlpha=1}}};g3Cap(it,0)}
+  g3Normal();for(let i=n0;i<G3X.q.length;i++){G3X.q[i].lit=1;G3X.q[i].ly=3}}/* 窓の絵より手前 */
 /* ---- 1コマのおわり：3Dを描く ---- */
-function g3End(now){if(!G3.on)return;g3Normal();R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
+function g3End(now){if(!G3.on)return;g3Normal();{const v=dcNow(),n=G3X.night;R3D.light({sun:v.sun,amb:v.amb,sky:v.sky,el:v.el,dk:n?n.dk:0,dkc:n?n.dkc:[0,0,0],lm:n?G3LM.c:null,lw:n?G3LM.wc:null,lmr:n?n.lmr:null});G3X.night=null}/* 時間の色と夜（js/3d/r3d.js の light） */R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
 /* ---- 地形のもと（マップがかわったら、かわった所だけ3Dで作りなおす） ---- */
 function g3World(){const first=G3X.S!==S;if(!first&&++G3X.sync%15)return;
   const n=W*H,hi=new Int8Array(n),kind=new Uint8Array(n),flat=new Uint8Array(n),fcol=new Uint8Array(n*3),fsig=new Int32Array(n),K=R3D.K,RM=typeof riftM==='function'?riftM():null;
