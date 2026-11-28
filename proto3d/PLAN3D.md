@@ -27,7 +27,9 @@
 ## 1 土台のはじめのPR（作っている。ブランチ 3d-base）
 - できた：`js/3d/`（`r3d.js` カメラ・しあげ・window.R3D／`terrain.js` 地形・水・地面にはる絵／`spirits.js` せいれい／`sprites.js` 板／`mats.js`・`look.js` 見え方）、three.js は `js/3d/vendor`。せいれいの形は `tools/3d/bake-spirits.cjs` → `assets/3d/sp-*.bin`、地面の絵は `tools/3d/copy-tex.cjs`。
 - つなぎ（`js/draw-3d.js`・`js/iso.js` の G3）：render の地面の上の物は地面の絵（3Dの地形にはる）、立てる物は ctx.drawImage をうけとめてチップの絵の板に（コードで描く物は毎コマ描く絵のページへ）、せいれいの体は3D（ふきだし・持ち物は #cv に3Dのカメラで写した所へ）。画面⇔せかい（s2w・w2s・camAt・camShift・tapAt・standS・isoView）は3Dのカメラ。
-- まだ：洞窟は2Dのまま（cv3 をかくす）。せいれいの姿勢（すわる・寝る・作業）・時間の色（dcGround）・HD-2D の仕上げ（hdPost）・写真（phTick）は3Dでは、まだ。道・床の色は仮（G3FCOL）。テストの直し・スマホでの重さは見ていない。
+- 板の前後：足もとの線より上は立てた面・下は地面にねかせた面の奥行き（板を2つに分ける）。前の「足もとの順」と同じ前後（テスト `door-order` を3Dの形に）。
+- 自動のテスト（GPUなし・1まい約1.2秒）では、3Dの絵を画面に描く所だけとばす（持ち主がえらんだ）。写真をとるときは `window.G3DRAW=true`（`tools/sim/boot.cjs` の `draw3d`）。
+- まだ：洞窟は2Dのまま（cv3 をかくす。洞窟のあいだは G3.on が false）。せいれいの姿勢（すわる・寝る・作業）・時間の色（dcGround）・HD-2D の仕上げ（hdPost）・写真（phTick）は3Dでは、まだ。道・床の色は仮（G3FCOL）。スマホでの重さは見ていない（1コマの三角は約13万〜34万）。
 
 ## のこり
 - [ ] 1 土台（上の作りで。はじめのPR）
