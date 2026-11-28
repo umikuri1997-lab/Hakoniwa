@@ -49,7 +49,7 @@ export class Terrain{
       if(cx<-1||cz<-1||cx*CH>=M.W+BORDER||cz*CH>=M.H+BORDER)continue;this.buildChunk(cx,cz)}}
   buildChunk(cx,cz){const key=cx+','+cz,old=this.chunks.get(key);if(old){this.scene.remove(old);old.geometry.dispose()}
     const P=[],N=[],T=[],I=[];const M=this.M;
-    const X0=cx===-1?-BORDER:cx*CH,Z0=cz===-1?-BORDER:cz*CH,X1=cx===-1?0:Math.min((cx+1)*CH,M.W+(cx*CH+CH>=M.W?BORDER:0)),Z1=cz===-1?0:Math.min((cz+1)*CH,M.H+(cz*CH+CH>=M.H?BORDER:0));
+    const X0=cx===-1?-BORDER:cx*CH,Z0=cz===-1?-BORDER:cz*CH,X1=cx===-1?0:(cx+1)*CH>=M.W?M.W+BORDER:(cx+1)*CH,Z1=cz===-1?0:(cz+1)*CH>=M.H?M.H+BORDER:(cz+1)*CH;/* さいごの区画は、まわりの地面まで */
     const quad=(vs,n,top)=>{const b=P.length/3;for(let i=0;i<4;i++){P.push(...vs[i]);N.push(...n);T.push(top)}I.push(b,b+1,b+2,b,b+2,b+3)};
     for(let z=Z0;z<Z1;z++)for(let x=X0;x<X1;x++){
       const y=this.yTop(x,z);

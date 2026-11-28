@@ -16,7 +16,7 @@ export class Sprites{
     const t=this.raster.t;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.colorSpace=THREE.SRGBColorSpace;
     this.cap=0;this.mesh=null;this.mat=this.makeMat()}
   makeMat(){const u={uP0:{value:this.pages[0].t},uP1:{value:this.pages[1].t},uP2:{value:this.pages[2].t},uP3:{value:this.pages[3].t},uR:{value:this.raster.t}};
-    return new THREE.ShaderMaterial({uniforms:u,transparent:true,depthWrite:true,depthTest:true,fog:false,
+    return new THREE.ShaderMaterial({uniforms:u,transparent:true,side:THREE.DoubleSide,depthWrite:true,depthTest:true,fog:false,
       vertexShader:`attribute vec3 aAnc;attribute vec2 aOff;attribute vec3 aUvp;attribute float aA;varying vec2 vUv;varying float vP,vA;
         void main(){vec4 va=modelViewMatrix*vec4(aAnc,1.);vec4 p=projectionMatrix*vec4(va.xyz+vec3(aOff.x,-aOff.y,0.)/${ISOPT.toFixed(4)},1.);
           vec4 d=projectionMatrix*vec4(va.xy,va.z+${DEPTHBIAS.toFixed(2)},1.);p.z=d.z/d.w*p.w;gl_Position=p;vUv=aUvp.xy;vP=aUvp.z;vA=aA;}`,
