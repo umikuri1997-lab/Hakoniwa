@@ -89,7 +89,7 @@ function g3Spirit(r,now){if(r.hidden&&!(typeof peekH==='function'&&peekH(r)))ret
 function g3SpiritOver(r,now){const p=r._g3;if(!p)return;const P=R3D.project(p.x,p.y,p.z),kk=dpr*P.s,fx=r.x*TS,fy=r.y*TS;
   ctx.setTransform(kk*IQSX,0,0,kk*IQSY,dpr*P.x-kk*IQSX*fx,dpr*P.y-kk*IQSY*fy);G3X.nolift=true;G3.sp=true;try{drawRes(r,now)}catch(e){frameErr&&frameErr('g3sp',e)}finally{G3.sp=false;G3X.nolift=false}}
 /* ---- 1コマのおわり：3Dを描く ---- */
-function g3End(now){if(!G3.on)return;g3Normal();R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);R3D.render(now)}
+function g3End(now){if(!G3.on)return;g3Normal();R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
 /* ---- 地形のもと（マップがかわったら、かわった所だけ3Dで作りなおす） ---- */
 function g3World(){const first=G3X.S!==S;if(!first&&++G3X.sync%15)return;
   const n=W*H,hi=new Int8Array(n),kind=new Uint8Array(n),flat=new Uint8Array(n),fcol=new Uint8Array(n*3),K=R3D.K,RM=typeof riftM==='function'?riftM():null;

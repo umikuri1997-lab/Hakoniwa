@@ -5,6 +5,7 @@ module.exports=async function(opt={}){
   let server=null;if(!process.env.GAME_URL){server=await require('./serve.cjs')();process.env.GAME_URL='http://127.0.0.1:'+server.address().port}/* サーバーがなければ、自分で立てる */
   const browser=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH,args:['--no-sandbox']}:{});
   const page=await browser.newPage({viewport:opt.viewport||{width:900,height:700},deviceScaleFactor:opt.dpr||1}),errors=[];/* dpr：写す絵の細かさ */
+  if(opt.draw3d)await page.addInitScript(()=>{window.G3DRAW=true});/* draw3d：3Dの絵も描く（写真をとるとき。ふだんのテストは、おそいので描かない） */
   page.on('pageerror',e=>errors.push('PE '+e.message+' @'+((e.stack||'').split('\n')[1]||'').trim().slice(0,160)));
   page.on('console',m=>{if(m.type()==='error')errors.push('CE '+m.text().slice(0,300))});
   await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);window.__noIdle=1;'})});
