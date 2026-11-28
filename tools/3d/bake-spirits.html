@@ -35,11 +35,11 @@ for(const el of ELS){
   /* 骨：名前（three の名前。Blender の名前から「.」をとった物）と、休みのポーズの根もとの場所。点ごとに、どの骨にどれだけつくか（aSI・aSW、4つまで）。
      骨の動きは tools/3d/bake-poses.py が、この名前と場所に合わせて焼く */
   const c=SPCOL[el],bones=[];g.traverse(o=>{if(o.isBone&&!bones.some(b=>b.name===o.name))bones.push(o)});/* 形ごとに同じ名前の骨がある（同じ場所）。名前で1つに */const bi=new Map(bones.map((b,i)=>[b.name,i]));
-  const B={body:[],face:[]},v=new THREE.Vector3(),w=new THREE.Vector3(),col=new THREE.Color();
-  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase(),face=n.startsWith('eye')||n.startsWith('cheek');
+  const B={body:[]},v=new THREE.Vector3(),w=new THREE.Vector3(),col=new THREE.Color();
+  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase();if(n.startsWith('eye')||n.startsWith('cheek'))return;/* 目・ほっぺは3Dの形にしない（顔の面に、表情の絵をはる：bake-poses.py の face） */
     col.set(n.startsWith('eye')?c.eye:n.startsWith('cheek')?c.cheek:n.startsWith('hood')||n.startsWith('hane')?c.hood:n.startsWith('sprout')?SPROUT:n.startsWith('headacc')?HEADACC:CREAM);
     const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry,P=geo.getAttribute('position'),N=geo.getAttribute('normal'),UV=geo.getAttribute('uv'),SI=geo.getAttribute('skinIndex'),SW=geo.getAttribute('skinWeight'),k=P.count;
-    const pos=new Float32Array(k*3),nor=new Float32Array(k*3),uv=new Float32Array(k*2),cl=new Float32Array(k*3),si=new Float32Array(k*4),sw=new Float32Array(k*4),sk=o.isSkinnedMesh&&SI;
+    const pos=new Float32Array(k*3),nor=new Float32Array(k*3),uv=new Float32Array(k*2),cl=new Float32Array(k*3),hd=new Float32Array(k).fill(n.startsWith('head')&&!n.startsWith('headacc')?1:0),wg=new Float32Array(k).fill(n.startsWith('hane')?1:0),si=new Float32Array(k*4),sw=new Float32Array(k*4),sk=o.isSkinnedMesh&&SI;
     let anc=0;for(let a=o;a;a=a.parent)if(a.isBone){anc=bi.get(a.name);break}/* 骨につけた形（スキンでない）は、その骨に。どの骨にもつかない形は、いちばんはじめの骨（root） */
     const nm=new THREE.Matrix3().getNormalMatrix(o.matrixWorld);if(sk)o.geometry=geo;
     for(let i=0;i<k;i++){v.fromBufferAttribute(P,i);
@@ -49,12 +49,12 @@ for(const el of ELS){
       if(sk){for(let q=0;q<4;q++){si[4*i+q]=bi.get(o.skeleton.bones[SI.getComponent(i,q)].name)/255;sw[4*i+q]=SW.getComponent(i,q)}}
       else{si[4*i]=anc/255;sw[4*i]=1}}
     const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.BufferAttribute(pos,3));ng.setAttribute('normal',new THREE.BufferAttribute(nor,3));ng.setAttribute('uv',new THREE.BufferAttribute(uv,2));
-    ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aSI',new THREE.BufferAttribute(si,4));ng.setAttribute('aSW',new THREE.BufferAttribute(sw,4));
-    (face?B.face:B.body).push(creaseSmooth(ng))});
+    ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aSI',new THREE.BufferAttribute(si,4));ng.setAttribute('aSW',new THREE.BufferAttribute(sw,4));ng.setAttribute('aHd',new THREE.BufferAttribute(hd,1));ng.setAttribute('aWG',new THREE.BufferAttribute(wg,1));
+    B.body.push(creaseSmooth(ng))});
   const E={bones:bones.map(b=>b.name),bpos:bones.map(b=>b.getWorldPosition(new THREE.Vector3()).toArray()),scale:s};
   /* 小さい数の形で：場所・UV は Float32、面の向きは Int8、色・骨の番号・骨へのかかり方は Uint8（0〜1。骨の番号は ×255）、番号は Uint16（こえたら Uint32） */
-  const TY={position:[Float32Array,1],uv:[Float32Array,1],normal:[Int8Array,127],color:[Uint8Array,255],aSI:[Uint8Array,255],aSW:[Uint8Array,255]};
-  for(const part of ['body','face']){const L=B[part],P={},nv=L.reduce((t,q)=>t+q.getAttribute('position').count,0);
+  const TY={position:[Float32Array,1],uv:[Float32Array,1],normal:[Int8Array,127],color:[Uint8Array,255],aSI:[Uint8Array,255],aSW:[Uint8Array,255],aHd:[Uint8Array,255],aWG:[Uint8Array,255]};
+  for(const part of ['body']){const L=B[part],P={},nv=L.reduce((t,q)=>t+q.getAttribute('position').count,0);
     for(const a of Object.keys(TY)){const z=L[0].getAttribute(a).itemSize,[C,k]=TY[a],arr=new C(nv*z);let o=0;for(const q of L){const s=q.getAttribute(a).array;for(let i=0;i<s.length;i++)arr[o+i]=k===1?s[i]:Math.round(Math.max(-1,Math.min(1,s[i]))*k);o+=s.length}P[a]={o:put(arr),n:arr.length,z,t:C.name}}
     const ni=L.reduce((t,q)=>t+q.index.count,0),IA=nv<65536?new Uint16Array(ni):new Uint32Array(ni);let o=0,b=0;for(const q of L){const s=q.index.array;for(let i=0;i<s.length;i++)IA[o+i]=s[i]+b;o+=s.length;b+=q.getAttribute('position').count}
     P.index={o:put(IA),n:ni,z:1,t:IA.constructor.name};E[part]=P}

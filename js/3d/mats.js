@@ -52,29 +52,40 @@ outgoingLight=tnDark(outgoingLight,vWP.xz);
 `;
 // せいれいの骨（まとめて描く）：骨の表 uPose（tools/3d/bake-poses.py が焼いた、コマごと・列ごとの 回転 q と場所 t。1つの列に2つの点）。
 // 点は4つまでの列（aSC）に aSW ずつつく。インスタンスの aFr：コマ a・コマ b の表の行と、そのあいだの場所（なめらかにつなぐ）
-export const SPVS=`attribute vec4 aSC,aSW;attribute vec3 aFr;uniform sampler2D uPose;uniform float uNch;
+export const SPVS=`attribute vec4 aSC,aSW,aFr;attribute vec3 aWD;uniform sampler2D uPose;uniform float uNch;
 vec4 spTx(float row,float c,float k){int L=int((row*uNch+c)*2.+k+.5);int W=textureSize(uPose,0).x;return texelFetch(uPose,ivec2(L-(L/W)*W,L/W),0);}
 vec3 spQr(vec4 q,vec3 v){return v+2.*cross(q.xyz,cross(q.xyz,v)+q.w*v);}
 vec3 spP,spN;
-void spSkin(vec3 p,vec3 n){spP=vec3(0.);spN=vec3(0.);for(int i=0;i<4;i++){float w=aSW[i];if(w<=0.)continue;
+void spSkin(vec3 p,vec3 n){p+=aWD*aFr.w;spP=vec3(0.);spN=vec3(0.);for(int i=0;i<4;i++){float w=aSW[i];if(w<=0.)continue;
   vec4 qa=spTx(aFr.x,aSC[i],0.),qb=spTx(aFr.y,aSC[i],0.);if(dot(qa,qb)<0.)qb=-qb;vec4 q=normalize(mix(qa,qb,aFr.z));vec3 t=mix(spTx(aFr.x,aSC[i],1.).xyz,spTx(aFr.y,aSC[i],1.).xyz,aFr.z);
   spP+=w*(spQr(q,p)+t);spN+=w*spQr(q,n);}}
 `;
 function spiritVS(sh,u){Object.assign(sh.uniforms,u);sh.vertexShader=SPVS+sh.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nspSkin(position,objectNormal);objectNormal=spN;').replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spP;')}
+// せいれいの表情（目・まつげ・ほっぺ）：頭（顔）の面に、チップの絵（点）をはる。2Dと同じ式（tools/art/spirit3d/fbx_motion.py の face_fit）：
+// 休みの形の点 vRest → チップの場所 (u,v)（uFu・uFv）。顔の前の面（uFf）にだけ。絵は、属性（uFE の行）ごと・層ごとに、1まいのならび（uFA。bake-poses.py の face）。
+// 層：ほっぺ → 目 → まつげ（2Dと同じ順）。vEx：目の層・まつげの層（−1 でなし）・ほっぺ（0・1）。
+export const FACE_PARS=F=>`uniform vec4 uFu,uFv,uFf;uniform float uFE;uniform sampler2D uFA;varying float vHd;varying vec3 vRest,vEx;
+vec4 fcAt(float L,float u,float v){int x=int(floor(u))-(${F.ax0}),y=int(floor(v))-(${F.ay0});if(x<0||y<0||x>=${F.cw}||y>=${F.ch})return vec4(0.);return texelFetch(uFA,ivec2(int(L)*${F.cw}+x,int(uFE)*${F.ch}+y),0);}
+`;
+export const FACE_FS=`if(vHd>.5&&dot(uFf.xyz,vRest)<uFf.w){float fu=dot(uFu.xyz,vRest)+uFu.w,fv=dot(uFv.xyz,vRest)+uFv.w;vec3 fc=vec3(0.);vec4 q;float fa=0.;
+  for(int k=0;k<3;k++){float L=k==0?(vEx.z>.5?21.:-1.):k==1?vEx.x:vEx.y;if(L<0.)continue;q=fcAt(L,fu,fv);if(q.a>.5){fc=q.rgb;fa=1.;}}
+  if(fa>0.)outgoingLight=lin(fc)*mix(uAmbC,uSunC,.7);}
+`;
 // トゥーンのマテリアル。extra：{cloth:布の絵の UV の倍, spirit:手足のふりの uniforms}
 export function toon(o={},extra={}){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD,...o});
   m.onBeforeCompile=sh=>{projVS(sh);Object.assign(sh.uniforms,nightU({uMat:U.mat,uSunV:U.sunV,uViewInv:U.viewInv}));
     if(extra.spirit)spiritVS(sh,extra.spirit);
-    sh.vertexShader='varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUv2=uv;').replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
-    sh.fragmentShader='uniform sampler2D uMat[1];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying vec2 vUv2;varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader
+    if(extra.face)Object.assign(sh.uniforms,extra.face.u);
+    sh.vertexShader=(extra.face?'attribute float aHd;attribute vec3 aEx;varying float vHd;varying vec3 vRest,vEx;\n':'')+'varying vec2 vUv2;varying vec3 vWP;\n'+sh.vertexShader.replace('void main() {','void main() {\nvUv2=uv;'+(extra.face?'vHd=aHd;vRest=position;vEx=aEx;':'')).replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
+    sh.fragmentShader=(extra.face?FACE_PARS(extra.face):'')+'uniform sampler2D uMat[1];uniform vec3 uSunV;uniform mat3 uViewInv;uniform float uTime;varying vec2 vUv2;varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader
       .replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {')
       .replace('#include <color_fragment>',`#include <color_fragment>
   vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vUv2;
   ${extra.cloth?`{float l=texture2D(uMat[0],vUv2*${extra.cloth.toFixed(4)}).r;diffuseColor.rgb*=mix(1.,l*2.,.65);}`:''}`)
-      .replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+RIM_FS+AIR_FS+'\n#include <opaque_fragment>');
+      .replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+RIM_FS+(extra.face?FACE_FS:'')+AIR_FS+'\n#include <opaque_fragment>');
   };
-  m.customProgramCacheKey=()=>'toon'+(extra.cloth?extra.cloth.toFixed(3):'')+(extra.spirit?'s'+extra.spirit.key:'');
+  m.customProgramCacheKey=()=>'toon'+(extra.cloth?extra.cloth.toFixed(3):'')+(extra.spirit?'s'+extra.spirit.key:'')+(extra.face?'f':'');
   return m;
 }
 // 背面法の線：裏返した形を外へふくらませて、いちばん暗いだんの色で描く
@@ -86,6 +97,6 @@ export function hullMat(o,w,sp){
     sh.fragmentShader='varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader.replace('#include <opaque_fragment>','gl_FragColor=vec4(tnDark(lin(pxShade(pow(max(diffuseColor.rgb,0.),vec3(1./2.2)),-.5)*uAmbC)*.85,vWP.xz),1.);')};
   m.customProgramCacheKey=()=>'hull'+w.toFixed(5)+(o.vertexColors?'v':'')+(sp?'s'+sp.key:'');return m;
 }
-// 色だけ（目・ほっぺ）
-export function flatMat(sp){const m=new THREE.MeshBasicMaterial({vertexColors:true});m.onBeforeCompile=sh=>{projVS(sh);sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nspSkin(position,vec3(0.,1.,0.));transformed=spP;');Object.assign(sh.uniforms,sp);nightU(sh.uniforms);sh.vertexShader=SPVS+'varying vec3 vWP;\n'+sh.vertexShader.replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
-  sh.fragmentShader='varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader.replace('#include <opaque_fragment>','outgoingLight=tnDark(outgoingLight*lin(mix(uAmbC,uSunC,.7)),vWP.xz);\n#include <opaque_fragment>')};m.customProgramCacheKey=()=>'flat'+sp.key;return m}
+// 小さな効果（水のつぶ・つりの糸・うき・波の輪）：色だけ。夜の暗さ・日の光の色は、せいれいと同じにかける
+export function fxMat(m){m.onBeforeCompile=sh=>{projVS(sh);nightU(sh.uniforms);sh.vertexShader='varying vec3 vWP;\n'+sh.vertexShader.replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
+  sh.fragmentShader='varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader.replace('#include <opaque_fragment>','outgoingLight=tnDark(outgoingLight*lin(mix(uAmbC,uSunC,.7)),vWP.xz);\n#include <opaque_fragment>')};m.customProgramCacheKey=()=>'fx';return m}

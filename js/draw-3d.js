@@ -96,12 +96,20 @@ function g3Box(it,A){let b=it.box;if(!b&&it.own>=0){const o=S.obj[anc(it.own)];i
 /* ---- せいれい（3D） ---- */
 const G3ELS=new Set(['earth','water','fire','wind','wood']);
 function g3Spirit(r,now){if(r.hidden&&!(typeof peekH==='function'&&peekH(r)))return;const v=G3X.spv.get(r)||{x:r.x,y:r.y,yaw:Math.PI/4,ph:0,d:0};G3X.spv.set(r,v);
-  const dx=r.x-v.x,dy=r.y-v.y,dd=Math.hypot(dx,dy),walking=dd>.002;if(walking)v.yaw=Math.atan2(dx,dy);else{const fc=v.fc,sv=SPV.get(r),back=fc?fc.back:sv&&sv.back,turn=fc?fc.turn:(sv&&sv.turn)||0,sg=fc?fc.f:r.face,face=back?Math.PI*1.25:Math.PI/4+(sg<0?.5:-.5)*turn;let da=face-v.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));v.yaw+=da*.15}/* 止まっているときの向き：前のコマに drawSpirit がわたした向き（g3Pose） */
+  const dx=r.x-v.x,dy=r.y-v.y,dd=Math.hypot(dx,dy),walking=dd>.002;if(walking)v.yaw=Math.atan2(dx,dy);else{const fc=v.fc,sv=SPV.get(r),back=fc?fc.back:sv&&sv.back,turn=fc?fc.turn:(sv&&sv.turn)||0,sg=fc?fc.f:r.face,face=fc&&fc.bedR!=null?fc.bedR*Math.PI/2/* ベッド：あおむけ。頭はまくらのほう＝顔の向きの反対（頭 北・西・南・東 → 顔 南・東・北・西） */:back?Math.PI*1.25:Math.PI/4+(sg<0?.5:-.5)*turn;let da=face-v.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));v.yaw+=da*.15}/* 止まっているときの向き：前のコマに drawSpirit がわたした向き（g3Pose） */
   v.x=r.x;v.y=r.y;const z=uLift(r),gy=R3D.groundH(r.x,r.y),y=z>0?Math.max(gy,z/LIFT*R3D.HSTEP):gy;
-  const e={el:G3ELS.has(r.elem)?r.elem:'earth',x:r.x,y,z:r.y,gy,yaw:v.yaw,mo:'stand',ph:(now/2000)%1,v};/* 動き（mo・ph）は g3SpiritOver の drawSpirit が g3Pose で書く。よばれないときは立ち姿 */
+  const e={el:G3ELS.has(r.elem)?r.elem:'earth',x:r.x,y,z:r.y,gy,yaw:v.yaw,mo:'stand',ph:(now/2000)%1,v,r};/* 動き（mo・ph）は g3SpiritOver の drawSpirit が g3Pose で書く。よばれないときは立ち姿 */
   G3X.sp.push(r);r._g3={x:r.x,y,z:r.y,gy,e};G3X.spl=G3X.spl||[];G3X.spl.push(e)}
 /* drawSpirit（G3.sp のとき）から：2Dと同じ動きの名前（spMotion）と動きの中の場所（spmPh）、向きを、3Dの姿勢にわたす。首だけ先に向ける歩き（walk_h…）は、3Dでは体をまわすので、ふつうの動き */
-function g3Pose(el,f,o){const e=G3X.cur;if(!e)return;const nm=spMotion(o,o.anim||'').replace(/_h[pn]\d+$/,''),m=typeof SPM!=='undefined'&&SPM[nm];e.mo=nm;e.ph=m?spmPh(m,nm,o,o.t||0):0;e.v.fc={back:!!o.back,turn:o.turn||0,f}}
+function g3Pose(el,f,o,x,y){const e=G3X.cur;if(!e)return;const nm=spMotion(o,o.anim||'').replace(/_h[pn]\d+$/,''),m=typeof SPM!=='undefined'&&SPM[nm];e.mo=nm;e.ph=m?spmPh(m,nm,o,o.t||0):0;g3Face(e,o);g3Fx(e,nm,o);e.ox=x==null?0:x-e.x*TS;e.oy=x==null?0:y-9-e.z*TS;/* 2Dの置き場所（ベッド・いす・ベンチ・遊具・作業台などで、足もとの点からずれる分。ゲームの点） */e.v.fc={back:!!o.back,turn:o.turn||0,f,bedR:o.bed?o.bedR:null};e.bed=!!o.bed}
+/* 道具の先の水・水浴びのしぶき・つりの糸とうきと波（js/3d/fx.js）：どの動きで、どこへ出すか（2Dの spmDraw と同じ。つりの水は、見る水のマス） */
+function g3Fx(e,nm,o){e.an=/^(water|tend|bathe|fish)/.test(nm);e.fx=null;
+  if(nm==='water'||nm==='tend')e.fx={k:'water',t:o.t||0};else if(nm==='bathe')e.fx={k:'bathe',ph:e.ph};
+  else if(e.an&&o.fishTo&&e.r&&e.r.act){const w=fishW(e.r.act.stand);if(w>=0){const tx=w%W+.5,tz=((w/W)|0)+.55;e.fx={k:'fish',t:o.t||0,B:o.fishB,tx,tz,ty:-.16/* 水面（js/3d/terrain.js の水の面の高さ） */}}}}
+/* 表情（目の層）：2Dの drawSpirit（spmDraw）と同じ式。眠る・まばたき・気持ち → 目の絵の名前。まつげ・ほっぺは、せいれいごとの印（vr） */
+function g3Face(e,o){const md=o.sleep||o.floorSleep?'':o.mood==='cry'?'teary':o.mood||'',vr=o.vr;
+  e.fm=o.sleep||o.floorSleep||o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n';
+  e.lash=!!(vr&&vr.lash&&e.fm!=='strain');e.cheek=!!(vr&&vr.cheek)}
 function g3SpiritOver(r,now){const p=r._g3;if(!p)return;const P=R3D.project(p.x,p.y,p.z),kk=dpr*P.s,fx=r.x*TS,fy=r.y*TS;
   ctx.setTransform(kk*IQSX,0,0,kk*IQSY,dpr*P.x-kk*IQSX*fx,dpr*P.y-kk*IQSY*fy);G3X.nolift=true;G3.sp=true;G3X.cur=p.e;try{drawRes(r,now)}catch(e){frameErr&&frameErr('g3sp',e)}finally{G3.sp=false;G3X.nolift=false;G3X.cur=null}}
 /* ---- 夜（render の夜の暗さの所でよぶ）：上から見た「あかりの地図」 ----
@@ -131,7 +139,11 @@ function g3WinLit(litH){const L=iqWinList(litH,false);if(!L.length)return;const 
 function g3Big(now){return now<HDBIG?Math.min(1,(HDBIG-now)/600):0}/* 見せ場のにじみ（hd2d.js の hdPost と同じ） */
 function g3Wx(){/* 天気（HD-2D のとき）：2Dと同じ色（hd2d.js の hdWx）を、こさぶん白からまぜて、3Dの光にかける */if(!HD2D)return null;const w=hdWx();if(!w)return null;
   const k=typeof stormNow==='function'&&stormNow()?'storm':typeof snowNow==='function'&&snowNow()?'snow':'rain';return {k,mul:w[0].split(',').map(c=>255-(255-c)*w[1])}}
-function g3End(now){if(!G3.on)return;g3Normal();{const v=dcNow(),n=G3X.night;R3D.light({hd:HD2D,glow:HDGLOW,big:g3Big(now),wx:g3Wx(),sun:v.sun,amb:v.amb,sky:v.sky,el:v.el,dk:n?n.dk:0,dkc:n?n.dkc:[0,0,0],lm:n?G3LM.c:null,lw:n?G3LM.wc:null,lmr:n?n.lmr:null});G3X.night=null}/* 時間の色と夜（js/3d/r3d.js の light） */R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
+/* 2Dの置き場所のずれ（e.ox・e.oy：ゲームの点。右・下が＋）を、3Dの場所にする：画面で、足もとからそれだけずれた点（見る向きに立てた面の上）。よこは カメラのよこ、たては 上。 */
+function g3Off(e){if(e.ox||e.oy){const P0=R3D.project(e.x,e.y,e.z),Rv=R3D.camRight(),P1=R3D.project(e.x+Rv.x,e.y,e.z+Rv.z),P2=R3D.project(e.x,e.y+1,e.z),dx=P1.x-P0.x,dy=P2.y-P0.y,sx=e.ox*IQSX*P0.s,sy=e.oy*IQSY*P0.s;
+    if(Math.abs(dx)>1e-3){const k=sx/dx;e.x+=Rv.x*k;e.z+=Rv.z*k}if(Math.abs(dy)>1e-3)e.y+=sy/dy}
+  if(e.bed){const D=R3D.ray(e.x,e.y,e.z),a=R3D.project(e.x,e.y,e.z);e.x-=D.x*1.5;e.y-=D.y*1.5;e.z-=D.z*1.5;e.k=a.s/R3D.project(e.x,e.y,e.z).s}/* ベッド：ベッドの絵（立てた板）より手前へ、画面の同じ点のまま（見る向きにそって）出し、遠近で大きくならないよう、同じ大きさに見えるまでちぢめる */}
+function g3End(now){if(!G3.on)return;g3Normal();{const v=dcNow(),n=G3X.night;R3D.light({hd:HD2D,glow:HDGLOW,big:g3Big(now),wx:g3Wx(),sun:v.sun,amb:v.amb,sky:v.sky,el:v.el,dk:n?n.dk:0,dkc:n?n.dkc:[0,0,0],lm:n?G3LM.c:null,lw:n?G3LM.wc:null,lmr:n?n.lmr:null});G3X.night=null}/* 時間の色と夜（js/3d/r3d.js の light） */G3X.spl&&G3X.spl.forEach(g3Off);R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
 /* ---- 地形のもと（マップがかわったら、かわった所だけ3Dで作りなおす） ---- */
 function g3World(){const first=G3X.S!==S;if(!first&&++G3X.sync%15)return;
   const n=W*H,hi=new Int8Array(n),kind=new Uint8Array(n),flat=new Uint8Array(n),fcol=new Uint8Array(n*3),fsig=new Int32Array(n),K=R3D.K,RM=typeof riftM==='function'?riftM():null;
