@@ -4,7 +4,7 @@
 <script type="module">
 import * as THREE from 'three';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
-const SPH=.8,OBJSCALE=1.5,CREASE=60,ELS=['earth','water','fire','wind','wood'],SPLIMB=['thighL','thighR','upper_armL','upper_armR'];
+const SPH=.8,OBJSCALE=1.5,CREASE=60,ELS=['earth','water','fire','wind','wood'];
 const SPCOL={earth:{hood:'#8f6a50',cheek:'#f1b8a8',eye:'#5e3d2a'},water:{hood:'#78c3fb',cheek:'#f4b8b8',eye:'#1d4f7c'},fire:{hood:'#f07a4f',cheek:'#f2ac9f',eye:'#8f3a22'},wind:{hood:'#a6cc8a',cheek:'#f0c0b0',eye:'#456a2a'},wood:{hood:'#6fae4c',cheek:'#f0c0b0',eye:'#3f5e26'}};
 const SPROUT='#5e8f43',HEADACC='#e8cdb0',CREAM='#fdf8ef';
 function creaseSmooth(geo,deg=CREASE){
@@ -32,27 +32,28 @@ for(const el of ELS){
   const g=await fbx.loadAsync('../art/spirit3d/model/'+el+'.fbx');
   g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH*OBJSCALE/bb.getSize(new THREE.Vector3()).y;
   g.scale.multiplyScalar(s);g.updateMatrixWorld(true);
-  const c=SPCOL[el],limb=SPLIMB.map(n=>g.getObjectByName(n)),inG=limb.map(b=>{const S=new Set();if(b)b.traverse(o=>S.add(o.name));return S});
-  const uP=limb.map(b=>b?b.getWorldPosition(new THREE.Vector3()).toArray():[0,0,0]),uA=limb.map(b=>b?new THREE.Vector3(1,0,0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion())).normalize().toArray():[1,0,0]);
+  /* 骨：名前（three の名前。Blender の名前から「.」をとった物）と、休みのポーズの根もとの場所。点ごとに、どの骨にどれだけつくか（aSI・aSW、4つまで）。
+     骨の動きは tools/3d/bake-poses.py が、この名前と場所に合わせて焼く */
+  const c=SPCOL[el],bones=[];g.traverse(o=>{if(o.isBone&&!bones.some(b=>b.name===o.name))bones.push(o)});/* 形ごとに同じ名前の骨がある（同じ場所）。名前で1つに */const bi=new Map(bones.map((b,i)=>[b.name,i]));
   const B={body:[],face:[]},v=new THREE.Vector3(),w=new THREE.Vector3(),col=new THREE.Color();
   g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase(),face=n.startsWith('eye')||n.startsWith('cheek');
     col.set(n.startsWith('eye')?c.eye:n.startsWith('cheek')?c.cheek:n.startsWith('hood')||n.startsWith('hane')?c.hood:n.startsWith('sprout')?SPROUT:n.startsWith('headacc')?HEADACC:CREAM);
     const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry,P=geo.getAttribute('position'),N=geo.getAttribute('normal'),UV=geo.getAttribute('uv'),SI=geo.getAttribute('skinIndex'),SW=geo.getAttribute('skinWeight'),k=P.count;
-    const pos=new Float32Array(k*3),nor=new Float32Array(k*3),uv=new Float32Array(k*2),cl=new Float32Array(k*3),gw=new Float32Array(k*4),sk=o.isSkinnedMesh&&SI;
-    let anc=-1;for(let a=o;a&&anc<0;a=a.parent)for(let q=0;q<4;q++)if(a.isBone&&a.name===SPLIMB[q])anc=q;
+    const pos=new Float32Array(k*3),nor=new Float32Array(k*3),uv=new Float32Array(k*2),cl=new Float32Array(k*3),si=new Float32Array(k*4),sw=new Float32Array(k*4),sk=o.isSkinnedMesh&&SI;
+    let anc=0;for(let a=o;a;a=a.parent)if(a.isBone){anc=bi.get(a.name);break}/* 骨につけた形（スキンでない）は、その骨に。どの骨にもつかない形は、いちばんはじめの骨（root） */
     const nm=new THREE.Matrix3().getNormalMatrix(o.matrixWorld);if(sk)o.geometry=geo;
     for(let i=0;i<k;i++){v.fromBufferAttribute(P,i);
       if(sk){w.copy(v).addScaledVector(new THREE.Vector3().fromBufferAttribute(N,i),.01);o.applyBoneTransform(i,v);o.applyBoneTransform(i,w);w.sub(v).normalize()}else w.fromBufferAttribute(N,i);
       v.applyMatrix4(o.matrixWorld);if(sk)w.transformDirection(o.matrixWorld);else w.applyMatrix3(nm).normalize();
       pos.set([v.x,v.y,v.z],3*i);nor.set([w.x,w.y,w.z],3*i);if(UV)uv.set([UV.getX(i),UV.getY(i)],2*i);cl.set([col.r,col.g,col.b],3*i);
-      if(sk){for(let q=0;q<4;q++){const bi=SI.getComponent(i,q),bw=SW.getComponent(i,q);if(!bw)continue;const bone=o.skeleton.bones[bi];for(let gi=0;gi<4;gi++)if(inG[gi].has(bone.name))gw[4*i+gi]+=bw}}
-      else if(anc>=0)gw[4*i+anc]=1}
+      if(sk){for(let q=0;q<4;q++){si[4*i+q]=bi.get(o.skeleton.bones[SI.getComponent(i,q)].name)/255;sw[4*i+q]=SW.getComponent(i,q)}}
+      else{si[4*i]=anc/255;sw[4*i]=1}}
     const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.BufferAttribute(pos,3));ng.setAttribute('normal',new THREE.BufferAttribute(nor,3));ng.setAttribute('uv',new THREE.BufferAttribute(uv,2));
-    ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aGW',new THREE.BufferAttribute(gw,4));
+    ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aSI',new THREE.BufferAttribute(si,4));ng.setAttribute('aSW',new THREE.BufferAttribute(sw,4));
     (face?B.face:B.body).push(creaseSmooth(ng))});
-  const E={uSpP:uP,uSpA:uA,scale:s};
-  /* 小さい数の形で：場所・UV は Float32、面の向きは Int8、色・手足のかかり方は Uint8（0〜1）、番号は Uint16（こえたら Uint32） */
-  const TY={position:[Float32Array,1],uv:[Float32Array,1],normal:[Int8Array,127],color:[Uint8Array,255],aGW:[Uint8Array,255]};
+  const E={bones:bones.map(b=>b.name),bpos:bones.map(b=>b.getWorldPosition(new THREE.Vector3()).toArray()),scale:s};
+  /* 小さい数の形で：場所・UV は Float32、面の向きは Int8、色・骨の番号・骨へのかかり方は Uint8（0〜1。骨の番号は ×255）、番号は Uint16（こえたら Uint32） */
+  const TY={position:[Float32Array,1],uv:[Float32Array,1],normal:[Int8Array,127],color:[Uint8Array,255],aSI:[Uint8Array,255],aSW:[Uint8Array,255]};
   for(const part of ['body','face']){const L=B[part],P={},nv=L.reduce((t,q)=>t+q.getAttribute('position').count,0);
     for(const a of Object.keys(TY)){const z=L[0].getAttribute(a).itemSize,[C,k]=TY[a],arr=new C(nv*z);let o=0;for(const q of L){const s=q.getAttribute(a).array;for(let i=0;i<s.length;i++)arr[o+i]=k===1?s[i]:Math.round(Math.max(-1,Math.min(1,s[i]))*k);o+=s.length}P[a]={o:put(arr),n:arr.length,z,t:C.name}}
     const ni=L.reduce((t,q)=>t+q.index.count,0),IA=nv<65536?new Uint16Array(ni):new Uint32Array(ni);let o=0,b=0;for(const q of L){const s=q.index.array;for(let i=0;i<s.length;i++)IA[o+i]=s[i]+b;o+=s.length;b+=q.getAttribute('position').count}
