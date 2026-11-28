@@ -9,7 +9,20 @@
 const G3K=1,G3RK=2,G3DMAX=2;/* 板の点の細かさ（ゲームの1点＝1）・コードで描く物を描く細かさ（ゲームの1点＝2ドット）・地面の絵の細かさの上限 */
 const G3DEF=[-56,-104,56,28];/* 大きさのわからない物の、描くわく（足もとからのゲームの点） */
 const G3PATH=new Set(['path','gravel','woodpath','stone','brick']);/* 道（ふちがやわらかい）。ほかの床は、マスのとおりの床 */
-const G3FCOL={path:[217,185,138],gravel:[184,173,156],woodpath:[181,138,92],stone:[189,182,170],brick:[194,122,92],floor:[199,154,102],brickfloor:[184,112,90],stonefloor:[170,164,154],herrfloor:[110,64,48],carpet:[200,106,106]};/* 道・床の色（仮。3段めで、物の形といっしょに作る） */
+const G3FCOL={path:[217,185,138],gravel:[184,173,156],woodpath:[181,138,92],stone:[189,182,170],brick:[194,122,92],floor:[199,154,102],brickfloor:[184,112,90],stonefloor:[170,164,154],herrfloor:[110,64,48],carpet:[200,106,106]};/* 道・床の色（床の絵がまだないマス・絵のページがいっぱいのときだけ） */
+/* 道・床の絵：2Dの描き方（drawFloor・wallMarg。上から見たマスの絵）で1マスずつ描き、同じ絵は1つにまとめて、床の絵のページ（G3FA）につめる。
+   3Dの地面は、マスごとの絵の番号（fslot）で、このページを読む（terrain.js）。 */
+const G3FT=64,G3FN=32;/* 1マスの絵の大きさ（ドット。ゲームの1点＝2ドット）・ページの1行のマスの数（ページは G3FT*G3FN 四方） */
+const G3FA={c:null,g:null,tc:null,tg:null,map:new Map(),n:0,pend:new Set()};
+function g3FloorNeed(j){return S.ground[j]!==1&&(S.floor[j]&&!((HOME_WALLS.has(S.obj[j])||HOME_DOORS.has(S.obj[j]))&&!ROADF.has(S.floor[j]))||HOME_DOORS.has(S.obj[j])||HOME_WALLS.has(S.obj[j]))}
+function g3FloorInit(){const F=G3FA;if(!F.c){F.c=document.createElement('canvas');F.c.width=F.c.height=G3FT*G3FN;F.g=F.c.getContext('2d');F.tc=document.createElement('canvas');F.tc.width=F.tc.height=G3FT;F.tg=F.tc.getContext('2d',{willReadFrequently:true})}}
+function g3FloorCell(j){const F=G3FA;g3FloorInit();
+  const x=j%W,y=(j/W)|0,g=F.tg,k=G3FT/TS,n0=CHPN;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,G3FT,G3FT);g.save();g.beginPath();g.rect(0,0,G3FT,G3FT);g.clip();g.setTransform(k,0,0,k,-x*TS*k,-y*TS*k);g.imageSmoothingEnabled=false;
+  try{if(S.floor[j]&&!((HOME_WALLS.has(S.obj[j])||HOME_DOORS.has(S.obj[j]))&&!ROADF.has(S.floor[j])))drawFloor(g,S.floor[j],x*TS,y*TS,j);if(HOME_DOORS.has(S.obj[j])||HOME_WALLS.has(S.obj[j]))wallMarg(g,j,x*TS,y*TS)}catch(e){}g.restore();
+  if(CHPN!==n0)F.pend.add(j);else F.pend.delete(j);/* 絵のページを読みこみ中：とどいたら描きなおす */
+  const d=new Uint32Array(g.getImageData(0,0,G3FT,G3FT).data.buffer);let h=2166136261,any=0;for(let i=0;i<d.length;i++){const v=d[i];if(v>>>24)any=1;h=Math.imul(h^v,16777619)}if(!any)return -1;
+  const key=h>>>0;let s=F.map.get(key);if(s!=null)return s;if(F.n>=G3FN*G3FN)return -1;s=F.n++;F.map.set(key,s);
+  F.g.clearRect((s%G3FN)*G3FT,((s/G3FN)|0)*G3FT,G3FT,G3FT);F.g.drawImage(F.tc,(s%G3FN)*G3FT,((s/G3FN)|0)*G3FT);F.dirty=true;return s}
 const G3X={q:[],ras:null,rx:0,ry:0,rh:0,used:false,cur:null,dc:null,dr:null,sync:0,S:null,W:null,sp:[],spv:new WeakMap(),z0:null,dpr0:null};
 const C0={};
 function g3Ready(){return !!(window.R3D&&R3D.ok)}
@@ -92,11 +105,16 @@ function g3SpiritOver(r,now){const p=r._g3;if(!p)return;const P=R3D.project(p.x,
 function g3End(now){if(!G3.on)return;g3Normal();R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
 /* ---- 地形のもと（マップがかわったら、かわった所だけ3Dで作りなおす） ---- */
 function g3World(){const first=G3X.S!==S;if(!first&&++G3X.sync%15)return;
-  const n=W*H,hi=new Int8Array(n),kind=new Uint8Array(n),flat=new Uint8Array(n),fcol=new Uint8Array(n*3),K=R3D.K,RM=typeof riftM==='function'?riftM():null;
+  const n=W*H,hi=new Int8Array(n),kind=new Uint8Array(n),flat=new Uint8Array(n),fcol=new Uint8Array(n*3),fsig=new Int32Array(n),K=R3D.K,RM=typeof riftM==='function'?riftM():null;
   for(let j=0;j<n;j++){hi[j]=S.hi?S.hi[j]|0:0;const g=S.ground[j],f=S.floor&&S.floor[j];
     kind[j]=g===1&&!(RM&&RM[j]===1)?K.WATER:g===2?K.FORD:f&&G3PATH.has(f)?K.PATH:f&&BL[f]&&BL[f].floor?K.FLOOR:REV.has(j)?K.GRASS:K.BARE;
     if(f&&G3FCOL[f]){const c=G3FCOL[f];fcol[j*3]=c[0];fcol[j*3+1]=c[1];fcol[j*3+2]=c[2]}
-    flat[j]=S.obj[j]?1:0}
-  if(first||!G3X.W){G3X.S=S;G3X.W={W,H,hi,kind,flat,fcol,stage:WD};R3D.setWorld(G3X.W);return}
-  const o=G3X.W;let x0=W,y0=H,x1=-1,y1=-1;for(let j=0;j<n;j++){if(o.hi[j]!==hi[j]||o.kind[j]!==kind[j]||o.flat[j]!==flat[j]||o.fcol[j*3]!==fcol[j*3]){const x=j%W,y=(j/W)|0;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
-  if(x1<0)return;o.hi.set(hi);o.kind.set(kind);o.flat.set(flat);o.fcol.set(fcol);R3D.dirty(x0,y0,x1,y1)}
+    flat[j]=S.obj[j]?1:0;if(g3FloorNeed(j))fsig[j]=(G3FS[f]||1)*64+(HOME_DOORS.has(S.obj[j])?2:HOME_WALLS.has(S.obj[j])?1:0)+(hi[j]+8)*4096+S.ground[j]*262144}/* 床の絵がかわるもと（となりがかわると、このマスの道のつなぎもかわる） */
+  if(first||!G3X.W){G3X.S=S;g3FloorInit();G3FA.map.clear();G3FA.n=0;G3FA.pend.clear();const fslot=new Int16Array(n).fill(-1);for(let j=0;j<n;j++)if(fsig[j])fslot[j]=g3FloorCell(j);
+    G3X.W={W,H,hi,kind,flat,fcol,fsig,fslot,fart:G3FA.c,stage:WD};G3FA.dirty=false;R3D.setWorld(G3X.W);return}
+  const o=G3X.W;let x0=W,y0=H,x1=-1,y1=-1;const box=j=>{const x=j%W,y=(j/W)|0;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y};
+  const fs=[];for(let j=0;j<n;j++){if(o.fsig[j]!==fsig[j])fs.push(j);if(o.hi[j]!==hi[j]||o.kind[j]!==kind[j]||o.flat[j]!==flat[j]||o.fcol[j*3]!==fcol[j*3]||o.fsig[j]!==fsig[j])box(j)}
+  if(fs.length||G3FA.pend.size&&!(G3X.sync%60)){const R=new Set(G3FA.pend);for(const j of fs){const x=j%W,y=(j/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const q=j+dy*W+dx;if(x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H)R.add(q)}}/* となりの道のつなぎも */
+    o.fsig.set(fsig);for(const j of R){const s=fsig[j]?g3FloorCell(j):-1;if(s!==o.fslot[j]){o.fslot[j]=s;box(j)}}}
+  if(x1<0)return;o.hi.set(hi);o.kind.set(kind);o.flat.set(flat);o.fcol.set(fcol);R3D.dirty(x0,y0,x1,y1,G3FA.dirty);G3FA.dirty=false}
+const G3FS={};BLOCKS.forEach((b,i)=>{G3FS[b]=i+1});/* 床のしゅるいの番号 */
