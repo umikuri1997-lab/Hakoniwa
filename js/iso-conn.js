@@ -154,7 +154,7 @@ function iqRoofOf(h,now){if(!h._rk){h._rw=[...h.set].map(typeAt).filter((v,i,a)=
 let IQRF=0,IQRBF=-1;/* 描いたコマの番号・さいごに屋根を作ったコマ */
 /* 1列ぶんの屋根を描く（時間の色・ぬれた点も） */
 function iqRoofColDraw(c,h,col,G,A,now){const k=dpr*cam.z,O=isoOff(k);c.save();c.setTransform(k/IQRS,0,0,k/IQRS,O[0]+k*col.x0,O[1]+k*col.y0);c.imageSmoothingEnabled=false;c.globalAlpha=A;
-  const r=c===ctx&&dcLayer('r');let im=col.cv;if(r){if(col.tk!==r){if(!col.tint){col.tint=document.createElement('canvas')}const t=col.tint;t.width=col.cv.width;t.height=col.cv.height;const g=t.getContext('2d');g.drawImage(col.cv,0,0);g.globalCompositeOperation='multiply';g.fillStyle=r;g.fillRect(0,0,t.width,t.height);g.globalCompositeOperation='destination-in';g.drawImage(col.cv,0,0);col.tk=r}im=col.tint}/* 屋根の時間の色（daycolor.js の r）：屋根の形にかけ算 */
+  const r=c===ctx&&!G3.on&&dcLayer('r');/* 3D では、屋根も日の光の色（js/3d） */let im=col.cv;if(r){if(col.tk!==r){if(!col.tint){col.tint=document.createElement('canvas')}const t=col.tint;t.width=col.cv.width;t.height=col.cv.height;const g=t.getContext('2d');g.drawImage(col.cv,0,0);g.globalCompositeOperation='multiply';g.fillStyle=r;g.fillRect(0,0,t.width,t.height);g.globalCompositeOperation='destination-in';g.drawImage(col.cv,0,0);col.tk=r}im=col.tint}/* 屋根の時間の色（daycolor.js の r）：屋根の形にかけ算 */
   c.drawImage(im,0,0);
   if(FEELC.wet){c.fillStyle='#eef6ff';let n=0;for(const[cx,gx,gy]of G){if(cx!==col.x)continue;n++;const tw=.35+.25*Math.sin(now/420+h.x0+n*1.7);c.globalAlpha=A*Math.max(0,tw);c.fillRect(Math.round((gx-col.x0)*IQRS),Math.round((gy-col.y0)*IQRS),3+(n%3),2)}}/* あらしの日：ぬれて光る点が、ゆっくりまたたく */
   c.restore()}
@@ -169,9 +169,12 @@ function iqWinHid(q,R){const x=q%W,y=(q/W)|0;for(let dy=-3;dy<=4;dy++)for(let dx
   const a=anc(Y*W+X),o=S.obj[a];if(!o||FLAT.has(o)||iqGrp(o)||!BL[o])continue;const c0=window.CHIPS&&CHIPS[o],ch=c0&&(c0.src||c0);if(!ch||!ch.iso)continue;/* クォータービューの絵（iso:1）だけ。足もとの点から ax・ay ずらして描く */
   const A=objFootJ(a);if(A.x+A.w/2+A.y+A.h/2<=x+y+1)continue;/* 窓よりおくの物 */const P=isoChipAt(ctx,a,0,0,o);if(!P)continue;const k=ch.g===64?.5:1,l=P.x+ch.ax*k,t=P.y+ch.ay*k;
   if(l<R[2]&&l+ch.w*k>R[0]&&t<R[3]&&t+ch.h*k>R[1])return true}return false}
-function iqWinLit(c,litH){const a0=dcNow().win;if(!(a0>0)||!window.CHIPS||!CHIPS['iso:win:window:lit:h']||!S.win)return;
-  for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;c.globalAlpha=Math.min(1,wa*a0);
+function iqWinList(litH,vis){/* 光る窓の一覧 [{q,key,lv,a}]。vis：画面に入るか・手前の物にかくれるかも見る（2D） */const a0=dcNow().win,L=[];if(!(a0>0)||!window.CHIPS||!CHIPS['iso:win:window:lit:h']||!S.win)return L;
+  for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;const a=Math.min(1,wa*a0);
     for(const q of h.set){if(S.win[q]!==1)continue;const o=typeAt(q);if(iqGrp(o)!=='h'||HOME_DOORS.has(o)||iqFront(q))continue;
       const m=iqMask(q,'h'),hz=!!(m&3)||!(m&12);if(h.inside.has(hz?q+W:q+1))continue;/* 家の中を向いた窓（北・西の壁）は、屋根の下 */
-      if(!isoCellVis(q%W,(q/W)|0,TS*2))continue;const key='iso:win:window:lit:'+(hz?'h':'v'),lv=Math.max(0,hiAt(q)),R=iqWinRect(key,q,lv);if(!R||iqWinHid(q,R))continue;iqChip(c,key,q,lv)}}
+      const key='iso:win:window:lit:'+(hz?'h':'v'),lv=Math.max(0,hiAt(q));
+      if(vis){if(!isoCellVis(q%W,(q/W)|0,TS*2))continue;const R=iqWinRect(key,q,lv);if(!R||iqWinHid(q,R))continue}L.push({q,key,lv,a})}}
+  return L}
+function iqWinLit(c,litH){for(const w of iqWinList(litH,true)){c.globalAlpha=w.a;iqChip(c,w.key,w.q,w.lv)}
   c.globalAlpha=1}

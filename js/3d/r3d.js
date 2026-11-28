@@ -1,10 +1,11 @@
 /* ゲームの3Dの描き方（three.js）。今のプログラム（ふつうの script）は window.R3D をよぶ。
    - カメラ：見るまん中（target、マス）と、拡大（z：見るまん中で、ゲームの1点が画面の何 px か）。遠近のあるせまい画角（試作と同じ）。
    - 地形（terrain.js）・せいれい（spirits.js）・立てたドット絵の板（sprites.js）・地面にはる絵（drape：ゲームの今の描き方で描いた、地面の上の物）。
-   - しあげ（試作と同じ）：奥行きのぼかし・すみのかげ・にじみ・光の筋・色。 */
+   - しあげ（試作と同じ）：奥行きのぼかし・すみのかげ・にじみ・光の筋・色。
+   - 時間の色と夜（light）：日なた・かげ・空の色と日の高さ（daycolor.js の DAYC）・夜の暗さとあかりの地図（draw-3d.js の g3Night）。 */
 import * as THREE from 'three';
-import {HSTEP,PITCH,YAW,FOV,ISOPT,MAXPR,SKY,SKYTOP,GROUND,FOG,HEMI,SUN,SUNCOL,HEMISKY,SUNDIR,DOF,SSAO,BLOOM,RAYS,GRADE} from './look.js';
-import {U,C3,NOISE} from './mats.js';
+import {HSTEP,PITCH,YAW,FOV,ISOPT,MAXPR,SKY,GROUND,FOG,HEMI,SUN,SUNCOL,HEMISKY,SUNDIR,DOF,SSAO,BLOOM,RAYS,GRADE} from './look.js';
+import {U,NOISE} from './mats.js';
 import {Terrain,K} from './terrain.js';
 import {Spirits} from './spirits.js';
 import {Sprites,PAGEW} from './sprites.js';
@@ -12,7 +13,8 @@ import {TEX} from './files.js';
 
 const CAMDIR=new THREE.Vector3(Math.sin(YAW)*Math.cos(PITCH),Math.sin(PITCH),Math.cos(YAW)*Math.cos(PITCH));
 let renderer,scene,cam,sun,terrain,spirits,sprites,cv3,PR=1,VW=1,VH=1,zoom=1;
-const target=new THREE.Vector3();
+const target=new THREE.Vector3(),SUNV=new THREE.Vector3(...SUNDIR).normalize();
+const SUNAZ=(()=>{const l=Math.hypot(SUNDIR[0],SUNDIR[2]);return [SUNDIR[0]/l,SUNDIR[2]/l]})();   /* 日の向き（よこ）：いつも左上から。高さだけ時刻でかえる（light） */
 let rtMain=null,rtA=null,rtB=null,W0=0,H0=0,shadowAt=null,drapeTex=null,drapeCv=null;
 const quadGeo=new THREE.PlaneGeometry(2,2),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
@@ -23,7 +25,7 @@ function makePost(){
     vec4 tnOk(vec4 c){return any(isnan(c))||any(isinf(c))?vec4(0.):min(c,vec4(64.));}
     void main(){vec4 c=tnOk(texture2D(t,vUv))*.227;c+=(tnOk(texture2D(t,vUv+d*1.385))+tnOk(texture2D(t,vUv-d*1.385)))*.316;c+=(tnOk(texture2D(t,vUv+d*3.23))+tnOk(texture2D(t,vUv-d*3.23)))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
   fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res;varying vec2 vUv;${NOISE}
-    uniform sampler2D dz;uniform float cn,cf,focus,pscale;
+    uniform sampler2D dz;uniform float cn,cf,focus,pscale,uRay;
     float lz(vec2 u){float z=texture2D(dz,u).x;return cn*cf/(cf-z*(cf-cn));}
     void main(){vec2 U=vUv;
       vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;if(any(isnan(c))||any(isinf(c)))c=bl;if(any(isnan(bl))||any(isinf(bl)))bl=vec3(0.);
@@ -36,20 +38,20 @@ function makePost(){
       c=mix(c,bl,tl);
       c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)}*vec3(${BLOOM.col.join(',')});
       {vec2 dir=normalize(vec2(.55,-1.));float u=dot(U-vec2(0.,1.),vec2(-dir.y,dir.x));float along=dot(U-vec2(0.,1.),dir);
-       float ray=pow(vn(vec2(u*9.+uTime*.05,0.)),3.)*smoothstep(1.3,0.,along)*smoothstep(0.,.15,along);c+=vec3(${RAYS.col.join(',')})*${RAYS.k}*ray;}
+       float ray=pow(vn(vec2(u*9.+uTime*.05,0.)),3.)*smoothstep(1.3,0.,along)*smoothstep(0.,.15,along);c+=vec3(${RAYS.col.join(',')})*${RAYS.k}*ray*uRay;}
       c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),max(c,0.),${GRADE.sat.toFixed(2)});
       c*=${GRADE.exp.toFixed(2)};c=clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.);
       vec2 q=U-.5;c*=1.-${GRADE.vig.toFixed(2)}*smoothstep(.35,.75,length(q));
-      gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime:U.time,res:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40},pscale:{value:1}});
+      gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime:U.time,res:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40},pscale:{value:1},uRay:{value:1}});
 }
 function buildSky(){
   const SKYH=[-.62,-.3],g=new THREE.SphereGeometry(150,32,16);
-  const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{uTime:U.time},
+  const m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{uTime:U.time,uSkyL:U.skyL,uSkyT:U.skyT},
     vertexShader:'varying vec3 vD;void main(){vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-    fragmentShader:`uniform float uTime;varying vec3 vD;${NOISE}
-      void main(){vec3 c=mix(${C3(SKY)},${C3(SKYTOP)},smoothstep(${SKYH[0]},${SKYH[1]},vD.y));
+    fragmentShader:`uniform float uTime;uniform vec3 uSkyL,uSkyT;varying vec3 vD;${NOISE}
+      void main(){vec3 c=mix(uSkyL,uSkyT,smoothstep(${SKYH[0]},${SKYH[1]},vD.y));
         vec2 q=vD.xz/(vD.y+.9)*2.2+vec2(uTime*.01,0.);float cl=smoothstep(.55,.8,fbm(q))*smoothstep(${SKYH[0]},${SKYH[0]}+.12,vD.y);
-        c=mix(c,vec3(1.),cl*.85);gl_FragColor=vec4(lin(c),1.);}`});
+        c=mix(c,min(vec3(1.),uSkyL*1.1+.06),cl*.85);gl_FragColor=vec4(lin(c),1.);}`});
   const sky=new THREE.Mesh(g,m);sky.renderOrder=-1;sky.frustumCulled=false;scene.add(sky);return sky;
 }
 let sky;
@@ -84,7 +86,7 @@ const dist=()=>VH/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*ISOPT*zoom);
 function placeCam(){const d=dist();cam.fov=FOV;cam.position.copy(target).addScaledVector(CAMDIR,d);cam.lookAt(target);cam.near=Math.max(.5,d-60);cam.far=d+90;cam.updateProjectionMatrix();cam.updateMatrixWorld();
   Object.assign(fin.m.uniforms,{cn:{value:cam.near},cf:{value:cam.far},focus:{value:d},pscale:{value:1/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2))}});
   scene.fog.near=d+FOG[0];scene.fog.far=d+FOG[1];sky.position.copy(cam.position);
-  if(!shadowAt||Math.hypot(shadowAt.x-target.x,shadowAt.z-target.z)>6){shadowAt=target.clone();sun.position.copy(target).addScaledVector(new THREE.Vector3(...SUNDIR).normalize(),60);sun.target.position.copy(target);sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
+  if(!shadowAt||Math.hypot(shadowAt.x-target.x,shadowAt.z-target.z)>6){shadowAt=target.clone();sun.position.copy(target).addScaledVector(SUNV,60);sun.target.position.copy(target);sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
 /* 見るまん中（マス）と拡大 */
 function view(x,z,zm,w,h){if(w!==VW||h!==VH)size(w,h);target.set(x,0,z);zoom=zm;placeCam()}
 const V3=new THREE.Vector3();
@@ -103,13 +105,22 @@ function dirty(x0,z0,x1,z1,art){if(!world)return;if(art)terrain.artDirty();terra
 function drape(c,r){const D=terrain.drape;if(!c){D.on.value=0;return}if(drapeTex.image!==c){drapeTex.dispose();drapeTex.image=c}drapeTex.needsUpdate=true;D.r.set(r[0],r[1],r[2],r[3]);D.on.value=1}
 function draw(to,sc,cm){renderer.setRenderTarget(to);renderer.render(sc,cm)}
 function render(now){U.time.value=now/1000;
-  U.sunV.value.set(...SUNDIR).normalize().transformDirection(cam.matrixWorldInverse);U.viewInv.value.setFromMatrix4(cam.matrixWorld);
+  U.sunV.value.copy(SUNV).transformDirection(cam.matrixWorldInverse);U.viewInv.value.setFromMatrix4(cam.matrixWorld);
   draw(rtMain,scene,cam);
   blur.m.uniforms.t.value=rtMain.texture;blur.m.uniforms.d.value.set(1/rtA.width,0);draw(rtA,blur.s,postCam);
   blur.m.uniforms.t.value=rtA.texture;blur.m.uniforms.d.value.set(0,1/rtA.height);draw(rtB,blur.s,postCam);
   draw(null,fin.s,postCam)}
+/* 時間の色と夜。o：{sun,amb（[赤,緑,青] 0〜255）, sky（[地平線3つ, 上3つ]）, el（日の高さ 度）, dk（夜の暗さのこさ）, dkc（暗さの色 0〜255）, lm・lw（あかりの地図のキャンバス：のこる暗さ・あたたかい光）, lmr（地図の場所 [x0,z0,はば,おく] マス）} */
+let lmTex=null,lwTex=null,elNow=null;
+const canTex=c=>{const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.colorSpace=THREE.NoColorSpace;return t};
+function light(o){const v=(u,a,i=0)=>u.value.set(a[i]/255,a[i+1]/255,a[i+2]/255);v(U.sunC,o.sun);v(U.ambC,o.amb);v(U.skyL,o.sky);v(U.skyT,o.sky,3);
+  scene.background.setRGB(o.sky[0]/255,o.sky[1]/255,o.sky[2]/255,THREE.SRGBColorSpace);scene.fog.color.copy(scene.background);
+  if(elNow===null||Math.abs(o.el-elNow)>.25){elNow=o.el;const e=THREE.MathUtils.degToRad(Math.max(3,o.el)),c=Math.cos(e);SUNV.set(SUNAZ[0]*c,Math.sin(e),SUNAZ[1]*c);U.sunW.value.copy(SUNV);sun.position.copy(sun.target.position).addScaledVector(SUNV,60);renderer.shadowMap.needsUpdate=true}/* 高さがかわったら、かげを作りなおす */
+  U.dk.value=o.dk||0;fin.m.uniforms.uRay.value=1-Math.min(1,(o.dk||0)*1.5);
+  if(o.dk>0&&o.lm){if(!lmTex||lmTex.image!==o.lm){if(lmTex)lmTex.dispose();lmTex=canTex(o.lm)}if(!lwTex||lwTex.image!==o.lw){if(lwTex)lwTex.dispose();lwTex=canTex(o.lw)}
+    lmTex.needsUpdate=lwTex.needsUpdate=true;U.lm.value=lmTex;U.lw.value=lwTex;U.lmr.value.set(...o.lmr);v(U.dkC,o.dkc)}else U.dk.value=0}
 function show(on){if(cv3)cv3.style.display=on?'block':'none'}
 const ready=init().then(()=>{window.R3D.ok=true},e=>{window.R3D.err=String(e&&e.stack||e);console.error(e)});
-window.R3D={ready,K,HSTEP,ISOPT,PAGEW,view,project,plane,pick,setWorld,dirty,drape,render,show,
+window.R3D={ready,K,HSTEP,ISOPT,PAGEW,view,project,plane,pick,setWorld,dirty,drape,render,show,light,
   spirits:L=>spirits.set(L),sprites:(Q,r)=>sprites.set(Q,r),raster:()=>sprites.raster,groundH:(x,z)=>terrain.M?terrain.groundH(x,z):0,
   camRight:()=>new THREE.Vector3(1,0,0).applyQuaternion(cam.quaternion),info:()=>renderer.info};

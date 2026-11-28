@@ -15,7 +15,7 @@ const IQFOGH=1.5,IQFOGN=8;/* 霧のあつみ（段の数）と、かさねる枚
 /* マス j の段（0 より下は 0） */
 function isoLv(j){return j>=0&&j<W*H?Math.max(0,hiAt(j)):0}
 /* 地面の描き方を、段 lv の高さに */
-function isoGroundLv(c,lv){groundTf(c,dpr*cam.z);if(lv)c.translate(-lv*IQD,-lv*IQD)}
+function isoGroundLv(c,lv){groundTf(c,dpr*cam.z);if(lv&&!(G3.LM&&G3.LM.cs.includes(c)))c.translate(-lv*IQD,-lv*IQD)}/* 3Dのあかりの地図は上から見た絵なので、高さでずらさない */
 /* 地面の物を描くとき、せかいの点の y からひく高さ（クォータービューは0。段は isoGroundLv でつける） */
 /* 足もと A で立てて描く（おわったら、もとの描き方にもどす） */
 function isoStand(c,A,f){c.save();standTf(c,dpr*cam.z,A.fx,A.fy,A.px,A.py);try{f()}finally{c.restore()}}

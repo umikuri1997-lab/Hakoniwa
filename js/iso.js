@@ -14,10 +14,10 @@ const isoX=(wx,wy)=>(wx-wy)*IQA,isoY=(wx,wy)=>(wx+wy)*IQB;
 function isoInv(ix,iy){const u=ix/IQA,v=iy/IQB;return{x:(u+v)/2,y:(v-u)/2}}
 const camCX=()=>cam.x+VW/cam.z/2,camCY=()=>cam.y+VH/cam.z/2;
 /* 3Dの描き方（draw-3d.js・js/3d）：G3.on のあいだ、地形・せいれいは3D、ほかの物は、この描き方で描いて3Dの板にする。G3.O：描き方の点のおき場所（板・地面にはる絵を描くとき。ゲームの点 (ax,ay) を、キャンバスの (ox,oy) に） */
-const G3={_on:false,O:null,get on(){return this._on&&!(typeof caveOn==='function'&&caveOn())},set on(v){this._on=v}};/* 洞窟（まだ2D）にいるあいだは、いつも 2D の場所の計算 */
+const G3={_on:false,O:null,LM:null,get on(){return this._on&&!(typeof caveOn==='function'&&caveOn())},set on(v){this._on=v}};/* 洞窟（まだ2D）にいるあいだは、いつも 2D の場所の計算 */
 function isoOff(k){if(G3.O){const O=G3.O;return[O.ox-k*O.ax,O.oy-k*O.ay]}const cx=camCX(),cy=camCY();return[dpr*VW/2-k*isoX(cx,cy),dpr*VH/2-k*isoY(cx,cy)]}/* 画面のまん中に、カメラのまん中の点 */
 /* 地面の描き方：せかいの点で描くと、ひし形に */
-function groundTf(c,k){const O=isoOff(k);c.setTransform(k*IQA,k*IQB,-k*IQA,k*IQB,O[0],O[1])}
+function groundTf(c,k){if(G3.LM&&G3.LM.cs.includes(c)){const L=G3.LM;c.setTransform(L.s,0,0,L.s,L.ox,L.oy);return}/* 3Dのあかりの地図（draw-3d.js の g3Night）：上から見たせかいの点で */const O=isoOff(k);c.setTransform(k*IQA,k*IQB,-k*IQA,k*IQB,O[0],O[1])}
 /* 立てる物の描き方：足もとのせかいの点 F（fx,fy）を、画面の点 P（px,py）にうつし、まわりは大きさだけかえて描く */
 function standTf(c,k,fx,fy,px,py){if(G3.on&&!G3.O){const P=g3IsoS(px,py),kk=k/cam.z*P.s;c.setTransform(kk*IQSX,0,0,kk*IQSY,dpr*P.x-kk*IQSX*fx,dpr*P.y-kk*IQSY*fy);return}/* 3D：足もとの点を、3Dのカメラで写した所に */const O=isoOff(k);c.setTransform(k*IQSX,0,0,k*IQSY,k*(px-IQSX*fx)+O[0],k*(py-IQSY*fy)+O[1])}
 /* せかいの点 (wx,wy) を足もとにして、立てる形で描く（高さ lv だんの上） */

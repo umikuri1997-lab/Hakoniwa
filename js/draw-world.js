@@ -176,6 +176,17 @@ function drawDrop(d,now){const dz=liftOf(d.y*W+d.x)/* クォータービュー�
     /* 小さなふくろ */
     {const ch=window.CHIPS&&CHIPS['drop:bag'];if(!(ch&&drawChip(ctx,ch,'drop:bag',d.x*TS,d.y*TS-dz,0))){ctx.fillStyle='rgba(40,25,10,.22)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,3,0,0,7);ctx.fill();ctx.fillStyle='#b5854e';ctx.beginPath();ctx.ellipse(cx,cy+1,8.5,7.5,0,0,7);ctx.fill()}}/* もらった絵（絵がまだ読みこみ中なら、まるいふくろ） */
     ctx.fillStyle='rgba(255,245,170,'+(.4+tw*.6)+')';const sx=cx+7,sy=cy-10,sr=2+tw*2.5;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}
+/* 夜の暗さをけずる（g：暗さの絵。destination-out のまま）：物のあかり・そうび・光のせいれい・場面の火・月明かりの帯（ray）・熱の道・灯りのある家。かえすのは灯りのある家 */
+function nightCut(dmx,k,x0,y0,x1,y1,now,ray){
+  groundTf(dmx,k);dmx.globalCompositeOperation='destination-out';
+    for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
+      const R=L.R*feelFlick(j,o,now);/* 火のあかりは、ゆらめく */isoLitPool(dmx,j,R,L.R)}groundTf(dmx,k);
+    gearLights(dmx);/* そうびの明かり */yamiLights(dmx);/* 光のせいれいの明かり */if(typeof kgrLights==='function')kgrLights(dmx,now);/* 火山の場面の火（kagari.js） */if(ray)rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
+    const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
+    {dmx.imageSmoothingEnabled=true;for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;dmx.globalAlpha=Math.min(1,.75*wa*dcNow().win);isoGroundLv(dmx,isoLv(h.y0*W+h.x0));dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM)}dmx.globalAlpha=1;groundTf(dmx,k)}/* 家のあかりは、夕方に1けんずつともり、夜あけに1けんずつ消える（feelWin） *//* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
+  dmx.globalCompositeOperation='source-over';return litH}
+/* 火のあたたかい光（g：'lighter' でかさねる先。こさは よぶ所で） */
+function nightWarm(g,k,x0,y0,x1,y1,now){for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R*feelFlick(j,o,now);isoLitPool(g,j,R,L.R)}groundTf(g,k);heatGlow(g,x0,x1,y0,y1,0);/* 火のあたたかさを、ほんの少しだけ */}
 function render(now){RFN++;hdFrame();
   if(dirty)rebuildStatic(STATICFULL);
   const g3=g3Begin(),IV=isoView();/* 3D（draw-3d.js）：地形・せいれいは3D。地面の上の物は地面の絵に、立てる物は板に */
@@ -298,18 +309,17 @@ function render(now){RFN++;hdFrame();
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
-  if(dk>0){/* 夜の明かり：暗さを別の絵（DMK）にぬり、明かりの所の暗さをけずる（光の色をかぶせず、地面そのものが明るく見える） */const cv=ctx.canvas;if(DMK.width!==cv.width||DMK.height!==cv.height){DMK.width=cv.width;DMK.height=cv.height}
-    dmx.globalCompositeOperation='source-over';dmx.globalAlpha=1;dmx.setTransform(1,0,0,1,0,0);dmx.clearRect(0,0,DMK.width,DMK.height);dmx.setTransform(dpr,0,0,dpr,0,0);dmx.fillStyle=(BOSSEVE||WD===KUSA&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba('+dcNow().dk.join(',')+',')+dk+')';/* 夜の暗さの色は、時刻ごと（daycolor.js の DAYC の dk） */dmx.fillRect(0,0,VW,VH);
-    groundTf(dmx,k);dmx.globalCompositeOperation='destination-out';
-    for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
-      const R=L.R*feelFlick(j,o,now);/* 火のあかりは、ゆらめく */isoLitPool(dmx,j,R,L.R)}groundTf(dmx,k);
-    gearLights(dmx);/* そうびの明かり */yamiLights(dmx);/* 光のせいれいの明かり */if(typeof kgrLights==='function')kgrLights(dmx,now);/* 火山の場面の火（kagari.js） */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
-    const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
-    {dmx.imageSmoothingEnabled=true;for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;dmx.globalAlpha=Math.min(1,.75*wa*dcNow().win);isoGroundLv(dmx,isoLv(h.y0*W+h.x0));dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM)}dmx.globalAlpha=1;groundTf(dmx,k)}/* 家のあかりは、夕方に1けんずつともり、夜あけに1けんずつ消える（feelWin） *//* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
-    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*.9);ctx.fillStyle=fogPat(ctx);const CS=camScr(),ox=-(CS[0]*dpr*.6+performance.now()*.006)%256,oy=-(CS[1]*dpr*.6)%256;/* 地図といっしょに少し動く（クォータービューも camScr） */ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
-    groundTf(ctx,k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R*feelFlick(j,o,now);isoLitPool(ctx,j,R,L.R)}groundTf(ctx,k);heatGlow(ctx,x0,x1,y0,y1,0);ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
+  if(dk>0){/* 夜の明かり：暗さを別の絵にぬり、明かりの所の暗さをけずる（光の色をかぶせず、地面そのものが明るく見える）。3D は、上から見た「あかりの地図」（draw-3d.js の g3Night）、2D（洞窟）は画面の絵（DMK） */
+    const dkc=BOSSEVE||WD===KUSA&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?[46,10,52]:dcNow().dk;/* 夜の暗さの色は、時刻ごと（daycolor.js の DAYC の dk） */
+    if(g3)g3Night(dk,dkc,now,x0,y0,x1,y1);else{const cv=ctx.canvas;if(DMK.width!==cv.width||DMK.height!==cv.height){DMK.width=cv.width;DMK.height=cv.height}
+    dmx.globalCompositeOperation='source-over';dmx.globalAlpha=1;dmx.setTransform(1,0,0,1,0,0);dmx.clearRect(0,0,DMK.width,DMK.height);dmx.setTransform(dpr,0,0,dpr,0,0);dmx.fillStyle='rgba('+dkc.join(',')+','+dk+')';dmx.fillRect(0,0,VW,VH);
+    const litH=nightCut(dmx,k,x0,y0,x1,y1,now,true);
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);/* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
+    groundTf(ctx,k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;nightWarm(ctx,k,x0,y0,x1,y1,now);ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
     ctx.globalCompositeOperation='source-over';
-    iqWinLit(ctx,litH);/* 窓のあかり：灯りのある家の、外を向いた窓ガラス（iso-conn.js） */
+    iqWinLit(ctx,litH);/* 窓のあかり：灯りのある家の、外を向いた窓ガラス（iso-conn.js） */}
+    ctx.setTransform(1,0,0,1,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*.9);ctx.fillStyle=fogPat(ctx);const CS=camScr(),ox=-(CS[0]*dpr*.6+performance.now()*.006)%256,oy=-(CS[1]*dpr*.6)%256;/* 地図といっしょに少し動く（クォータービューも camScr） */ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） */
+
     ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   if(!g3)hdPost(dk,now);/* HD-2D の仕上げ（3D は js/3d のしあげ）（ふきだし・矢の数・戦いの数字より下） */groundTf(ctx,k);if(!PHSNAP)drawArrowTags(x0,y0,x1,y1);drawFloats();/* 頭の上の短い文字は、夜の暗さの上（夜も読める） */drawCritGlow(ctx,now);if(bubLate)for(const f of bubs)f();drawTopFx();if(typeof ngDraw==='function')ngDraw(now);/* 夜のたからさがしの光るつぶ（nightglow.js）：夜の暗さより上 */if(typeof letterFxDraw==='function'&&!PHSNAP){const T=typeof letterSpot==='function'&&letterSpot();if(T)atPt(ctx,T.x,T.y,()=>letterFxDraw(now));else letterFxDraw(now)}/* クォータービュー：ふうとうを立てて *//* 手紙をとどける小鳥・とどいたふうとう（letter-fx.js） */if(typeof juice2Draw==='function')juice2Draw(now);/* 家ができた光・光のなみ・宝の光の柱は、屋根・夜の暗さより上（juice2.js） */drawBattleFx(now);drawTgtLine(now);drawLeafPrev();ctx.setTransform(dpr,0,0,dpr,0,0);if(typeof drawPickUI==='function')drawPickUI();/* こわすの長おし：マスのわくと指のまわりの輪（build.js） */

@@ -1,8 +1,8 @@
 /* 3Dの地形（試作 proto3d/main.js の地面をうつした物）：段差の高さ・草地とあれ地・道・家の床・水を、ゲームのマップから作る。
    マップは区画（CH×CH マス）に分けて作り、かわった区画だけ作りなおす。 */
 import * as THREE from 'three';
-import {HSTEP,BORDER,PATHDIP,GBUMP,CRACK,WATER,RIPPLE,GLINT,BUMP,GTEX,SKY,SKYTOP,STAGECOL} from './look.js';
-import {C3,U,GRAD,NOISE,BUMP_FS,PXSHADE_FS,AIR_FS,projVS,PROJ_VS} from './mats.js';
+import {HSTEP,BORDER,PATHDIP,GBUMP,CRACK,WATER,RIPPLE,GLINT,BUMP,GTEX,STAGECOL} from './look.js';
+import {C3,U,GRAD,NOISE,BUMP_FS,PXSHADE_FS,AIR_FS,NIGHT_U,nightU,projVS,PROJ_VS} from './mats.js';
 
 export const K={BARE:0,GRASS:1,PATH:2,FLOOR:3,WATER:4,FORD:5};   // マスのしゅるい（ゲームからわたす）
 const MASKR=8,SUB=4,CH=16;
@@ -74,9 +74,9 @@ export class Terrain{
     const C=STAGECOL[stage]||STAGECOL[0],MN=this.MN,MW=this.M.W,MH=this.M.H;
     const m=new THREE.MeshToonMaterial({gradientMap:GRAD}),D=this.drape;
     this.U={uFA:{value:this.atex||null}};
-    m.onBeforeCompile=sh=>{projVS(sh);Object.assign(sh.uniforms,{uFS:{value:this.stex},uFA:this.U.uFA,uMask:{value:this.mask},uFloor:{value:this.ftex},uG:{value:this.gtex},uSunV:U.sunV,uDrape:{get value(){return D.tex}},uDR:{value:D.r},uDOn:D.on});
+    m.onBeforeCompile=sh=>{projVS(sh);Object.assign(sh.uniforms,nightU({uFS:{value:this.stex},uFA:this.U.uFA,uMask:{value:this.mask},uFloor:{value:this.ftex},uG:{value:this.gtex},uSunV:U.sunV,uDrape:{get value(){return D.tex}},uDR:{value:D.r},uDOn:D.on}));
       sh.vertexShader='attribute float aTop;varying vec3 vW,vWP;varying float vTop,vNy;\n'+sh.vertexShader.replace('void main() {','void main() {\nvW=(modelMatrix*vec4(position,1.)).xyz;vTop=aTop;vNy=normal.y;').replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
-      sh.fragmentShader='uniform sampler2D uFS,uFA,uMask,uFloor,uG[3],uDrape;uniform vec4 uDR;uniform float uDOn;uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
+      sh.fragmentShader='uniform sampler2D uFS,uFA,uMask,uFloor,uG[3],uDrape;uniform vec4 uDR;uniform float uDOn;uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+NIGHT_U+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
   vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vW.xz;
   {vec2 p=vW.xz;
    if(vNy>.5){float e=.1,h0=fbm(p*${GBUMP.f}),hx=fbm((p+vec2(e,0.))*${GBUMP.f}),hz=fbm((p+vec2(0.,e))*${GBUMP.f});
@@ -122,25 +122,25 @@ export class Terrain{
     const M=this.M,MN=this.MN,cloud=stage===4;   /* 風のステージの水（雲の海）は、白い雲の色 */
     const sh=cloud?'#f4f8fb':WATER.shallow,dp=cloud?'#c9dbe8':WATER.deep;
     const wg=new THREE.PlaneGeometry(M.W+2*BORDER,M.H+2*BORDER,(M.W+2*BORDER),(M.H+2*BORDER));wg.rotateX(-Math.PI/2);wg.translate(M.W/2,-.16,M.H/2);
-    const wm=new THREE.ShaderMaterial({transparent:true,fog:true,uniforms:{uMask:{value:this.mask},uTime:U.time,uSunW:{value:new THREE.Vector3(-.55,1,.35).normalize()},...THREE.UniformsLib.fog},
+    const wm=new THREE.ShaderMaterial({transparent:true,fog:true,uniforms:nightU({uMask:{value:this.mask},uTime:U.time,uSunW:U.sunW,uSkyL:U.skyL,uSkyT:U.skyT,...THREE.UniformsLib.fog}),
       vertexShader:`uniform float uTime;varying vec3 vW;\n#include <fog_pars_vertex>\nvoid main(){vec3 transformed=position;vW=(modelMatrix*vec4(position,1.)).xyz;${PROJ_VS}\n#include <fog_vertex>\n}`,
-      fragmentShader:`uniform sampler2D uMask;uniform float uTime;uniform vec3 uSunW;varying vec3 vW;\n#include <fog_pars_fragment>\n${NOISE}
+      fragmentShader:`uniform sampler2D uMask;uniform float uTime;uniform vec3 uSunW,uSkyL,uSkyT;varying vec3 vW;\n#include <fog_pars_fragment>\n${NOISE}${NIGHT_U}
         float wv(vec2 p){return fbm(p*1.6+vec2(uTime*.15,uTime*.1))+.5*fbm(p*3.1-vec2(uTime*.12,0.));}
         void main(){vec2 p=vW.xz;float w=texture2D(uMask,(p+${BORDER}.)/${MN}.+(vec2(fbm(p*1.3),fbm(p*1.3+9.))-.5)*.012).g;if(w<.42)discard;
           float e=.04,h0=wv(p);vec3 N=normalize(vec3((h0-wv(p+vec2(e,0.)))*.7,1.,(h0-wv(p+vec2(0.,e)))*.7));
           vec3 V=normalize(cameraPosition-vW),Rf=reflect(-V,N);float fr=.03+.97*pow(1.-max(dot(N,V),0.),5.);
           float dp=smoothstep(.46,.98,w+(fbm(p*.9)-.5)*.12);
-          vec3 sky=mix(lin(${C3(SKY)}),lin(${C3(SKYTOP)}),smoothstep(0.,.6,Rf.y));
+          vec3 sky=mix(lin(uSkyL),lin(uSkyT),smoothstep(0.,.6,Rf.y));
           sky=mix(sky,vec3(1.),${WATER.cloud}*smoothstep(.5,.75,fbm(Rf.xz/(Rf.y+.5)*1.4+p*.15+vec2(uTime*.012,0.))));
-          vec3 body=mix(lin(${C3(sh)}),lin(${C3(dp)}),dp);
+          vec3 body=mix(lin(${C3(sh)}),lin(${C3(dp)}),dp)*lin(mix(uAmbC,uSunC,.6));
           vec2 cw=p+(vec2(fbm(p*1.1+uTime*.06),fbm(p*1.1+7.-uTime*.05))-.5)*1.1;
           float c1=smoothstep(.3,0.,vor(cw*1.9+vec2(uTime*.04,uTime*.025))),c2=smoothstep(.3,0.,vor(cw*3.1-vec2(uTime*.03,0.)+3.));float ca=c1*c1*c2*2.2+.25*c1*c1;
           body+=vec3(.9,1.,.85)*${WATER.caus}*ca*(1.-dp*.75);
-          vec3 c=mix(body,sky,clamp(fr*1.8+.06,0.,1.))+vec3(1.,.95,.82)*1.6*pow(max(dot(Rf,uSunW),0.),220.);
+          vec3 c=mix(body,sky,clamp(fr*1.8+.06,0.,1.))+vec3(1.,.95,.82)*uSunC*1.6*pow(max(dot(Rf,uSunW),0.),220.)*(1.-uDk);
           {vec2 q=p/${RIPPLE.cell},ci=floor(q);float ph=fract(uTime/${RIPPLE.period}+hs(ci)),rr=ph*${RIPPLE.r},dd=length(fract(q)-.5-(vec2(hs(ci+3.1),hs(ci+7.7))-.5)*.4)*${RIPPLE.cell};
            c+=vec3(${RIPPLE.k})*smoothstep(.035,0.,abs(dd-rr))*(1.-ph)*smoothstep(0.,.08,ph)*step(.35,hs(ci+1.3));
            vec2 gi=floor(p*${GLINT.n}.);float tw=pow(.5+.5*sin(uTime*2.6+hs(gi)*6.283),12.);c+=vec3(1.,.97,.86)*${GLINT.k}*tw*step(.972,hs(gi+5.))*smoothstep(.3,0.,length(fract(p*${GLINT.n}.)-.5));}
-          float foam=smoothstep(.5,.44,w+.03*sin(uTime*1.6+fbm(p*3.)*9.))*(.55+.45*fbm(p*7.+uTime*.2));c=mix(c,lin(vec3(.92,.98,1.)),foam*.7);
+          float foam=smoothstep(.5,.44,w+.03*sin(uTime*1.6+fbm(p*3.)*9.))*(.55+.45*fbm(p*7.+uTime*.2));c=mix(c,lin(vec3(.92,.98,1.)*uSunC),foam*.7);c=tnDark(c,p);
           gl_FragColor=vec4(c,max(mix(${WATER.alpha[0]},${WATER.alpha[1]},dp),max(fr,foam)));\n#include <fog_fragment>\n}`});
     this.water=new THREE.Mesh(wg,wm);this.water.renderOrder=1;this.scene.add(this.water);
   }
