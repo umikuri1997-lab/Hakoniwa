@@ -412,16 +412,28 @@ function buildSky(){
 // ---- モデル ----
 const gltf=new GLTFLoader(),fbx=new FBXLoader();
 // 面の向きを、同じ場所の点でならす（UV のさかいで点がわかれていても、なめらかなかげに）
-// 面の向きを、かど（CREASE 度より急な所）ではならさない。平らな面はまっ平らに、丸い面はなめらかに（箱・石づみの面に、三角のかげのすじを出さない）
-const CREASE=40;
-function creaseNormals(geo){
-  const g=geo.index?geo.toNonIndexed():geo,P=g.getAttribute('position'),n=P.count,FN=new Float32Array(n),cosT=Math.cos(CREASE*Math.PI/180),M=new Map();
-  const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),key=i=>Math.round(P.getX(i)*1e4)+','+Math.round(P.getY(i)*1e4)+','+Math.round(P.getZ(i)*1e4),F=[];
-  for(let t=0;t<n/3;t++){a.fromBufferAttribute(P,3*t);b.fromBufferAttribute(P,3*t+1);c.fromBufferAttribute(P,3*t+2);const w=c.sub(b).cross(a.sub(b)).clone(),u=w.clone().normalize();F.push([w,u]);
-    for(let k=0;k<3;k++){const q=key(3*t+k);(M.get(q)||M.set(q,[]).get(q)).push(t)}}
-  const N=new Float32Array(n*3),v=new THREE.Vector3();
-  for(let i=0;i<n;i++){const u=F[(i/3)|0][1];v.set(0,0,0);for(const t of M.get(key(i)))if(F[t][1].dot(u)>cosT)v.add(F[t][0]);v.normalize();N[3*i]=v.x;N[3*i+1]=v.y;N[3*i+2]=v.z}
-  g.setAttribute('normal',new THREE.BufferAttribute(N,3));return g;
+// 角度でスムーズ（持ち主がきめた：60度）：同じ場所の点（UV・色のさかいで分かれた点もふくむ）のまわりの面のうち、向きの差が CREASE 度よりゆるい面だけで、面の向きをならす。
+// きつい所（かど）は、点を分けて、かどをのこす。番号つきの形のまま（点はかどの所だけふえる）。dst：すでにある形に、面の向きだけ書く（点の数と順番が同じとき）
+const CREASE=60;
+function creaseSmooth(geo,deg=CREASE){
+  const P=geo.getAttribute('position'),n=P.count,I=geo.index?geo.index.array:null,T=I?I.length/3:n/3,vi=k=>I?I[k]:k,cosT=Math.cos(deg*Math.PI/180);
+  const W=new Int32Array(n),wk=new Map();for(let i=0;i<n;i++){const k=Math.round(P.getX(i)*1e4)+','+Math.round(P.getY(i)*1e4)+','+Math.round(P.getZ(i)*1e4);let w=wk.get(k);if(w===undefined){w=wk.size;wk.set(k,w)}W[i]=w}   /* 同じ場所の点 */
+  const FN=new Float32Array(T*3),FU=new Float32Array(T*3),cnt=new Int32Array(wk.size+1);
+  for(let t=0;t<T;t++){const a=vi(3*t),b=vi(3*t+1),c=vi(3*t+2),ax=P.getX(a),ay=P.getY(a),az=P.getZ(a),ux=P.getX(b)-ax,uy=P.getY(b)-ay,uz=P.getZ(b)-az,vx=P.getX(c)-ax,vy=P.getY(c)-ay,vz=P.getZ(c)-az;
+    const x=uy*vz-uz*vy,y=uz*vx-ux*vz,z=ux*vy-uy*vx,l=Math.hypot(x,y,z)||1;FN.set([x,y,z],3*t);FU.set([x/l,y/l,z/l],3*t);for(let k=0;k<3;k++)cnt[W[vi(3*t+k)]+1]++}   /* 面の向き（大きさ＝面積） */
+  for(let i=1;i<cnt.length;i++)cnt[i]+=cnt[i-1];const F=new Int32Array(cnt[wk.size]),fill=cnt.slice();
+  for(let t=0;t<T;t++)for(let k=0;k<3;k++)F[fill[W[vi(3*t+k)]]++]=t;   /* 同じ場所の点ごとの、まわりの面 */
+  const NN=new Float32Array(T*9);
+  for(let t=0;t<T;t++)for(let k=0;k<3;k++){const w=W[vi(3*t+k)];let x=0,y=0,z=0;
+    for(let q=cnt[w];q<cnt[w+1];q++){const f=F[q];if(FU[3*f]*FU[3*t]+FU[3*f+1]*FU[3*t+1]+FU[3*f+2]*FU[3*t+2]>=cosT){x+=FN[3*f];y+=FN[3*f+1];z+=FN[3*f+2]}}
+    const l=Math.hypot(x,y,z)||1;NN.set([x/l,y/l,z/l],9*t+3*k)}
+  /* 同じ点で、同じ向きになった角は、1つの点にまとめる（番号つきのまま） */
+  const key=new Map(),src=[],idx=new Uint32Array(T*3),NV=[];
+  for(let c=0;c<T*3;c++){const v=vi(c),k=v+'|'+Math.round(NN[3*c]*1e3)+','+Math.round(NN[3*c+1]*1e3)+','+Math.round(NN[3*c+2]*1e3);let id=key.get(k);
+    if(id===undefined){id=src.length;key.set(k,id);src.push(v);NV.push(NN[3*c],NN[3*c+1],NN[3*c+2])}idx[c]=id}
+  const g=new THREE.BufferGeometry(),m=src.length;
+  for(const [name,a] of Object.entries(geo.attributes)){if(name==='normal')continue;const z=a.itemSize,arr=new a.array.constructor(m*z);for(let i=0;i<m;i++)for(let j=0;j<z;j++)arr[i*z+j]=a.array[src[i]*z+j];g.setAttribute(name,new THREE.BufferAttribute(arr,z,a.normalized))}
+  g.setAttribute('normal',new THREE.Float32BufferAttribute(NV,3));g.setIndex(new THREE.BufferAttribute(m<65536?new Uint16Array(idx):idx,1));return g;
 }
 function smoothNormals(geo){
   const P=geo.getAttribute('position'),I=geo.index,M=new Map(),key=i=>Math.round(P.getX(i)*1e4)+','+Math.round(P.getY(i)*1e4)+','+Math.round(P.getZ(i)*1e4);
@@ -445,16 +457,16 @@ const PETALCARD_N=LOOK==='a'?1.4:.5;   /* 花びらのノーマルマップの�
 const LEAFCARD_N=LOOK==='c'?.4:LOOK==='a'?2.2:.8,LEAFCARD_NS=LOOK==='a'?{lotus:1.2}:{};   /* 葉のカードのノーマルマップの強さ（花ごとにかえる時は LEAFCARD_NS） */   /* 葉のカードのノーマルマップの強さ */
 let PLANTS=null,PROPSGLB=null;const MATSPAN={};
 async function loadProp(p){
-  if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id),geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo.computeVertexNormals();
+  if(p.src==='proc'){FLOWERSGLB=FLOWERSGLB||gltf.loadAsync('./tex/flowers.glb');const o=(await FLOWERSGLB).scene.getObjectByName(p.id);let geo=o.geometry.clone();geo.scale(OBJSCALE,OBJSCALE,OBJSCALE);geo=creaseSmooth(geo);
     p.parts=[{geo,mat:toon({vertexColors:true,side:THREE.DoubleSide},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark,wind:!NOWIND.has(p.id)}),hull:null}];
     const pt=(await FLOWERSGLB).scene.getObjectByName(p.id+'_petal');   /* アルファ抜きの花びら（持ち主がきめた）：花びらの形の絵（こまかいふち）と、ふちの厚みのノーマルマップ */
     if(pt){const pn=PETALCARDTEX[p.id]||'petal_rose_card';PETALCARD[pn]=PETALCARD[pn]||Promise.all([pn+'.png',pn+'_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
-      const [pmap,pnor]=await PETALCARD[pn],pg=pt.geometry.clone();pg.scale(OBJSCALE,OBJSCALE,OBJSCALE);pg.computeVertexNormals();
+      const [pmap,pnor]=await PETALCARD[pn],pg0=pt.geometry.clone();pg0.scale(OBJSCALE,OBJSCALE,OBJSCALE);const pg=creaseSmooth(pg0);
       p.parts.push({geo:pg,mat:toon({vertexColors:true,map:pmap,normalMap:pnor,normalScale:new THREE.Vector2(PETALCARD_N,PETALCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:!NOWIND.has(p.id)}),hull:null})}
     const lf=(await FLOWERSGLB).scene.getObjectByName(p.id+'_leaf');   /* アルファ抜きの葉のカード（持ち主がきめた）：葉の形の絵（透明なふち）を、板にはる */
     if(lf){const cn=LEAFCARDTEX[p.id]||'leaf_rose_card';LEAFCARD[cn]=LEAFCARD[cn]||Promise.all([cn+'.png',cn+'_n.png'].map((f,i)=>new THREE.TextureLoader().loadAsync('./tex/'+f).then(t=>{t.colorSpace=i?THREE.NoColorSpace:THREE.SRGBColorSpace;t.anisotropy=8;return t})));
       const [lmap,lnor]=await LEAFCARD[cn];   /* lnor：葉のカードのノーマルマップ（ふちへ丸く下がるふくらみ・まん中のすじ・葉脈。厚みがあるように見せる。持ち主がきめた） */
-      const lg=lf.geometry.clone();lg.scale(OBJSCALE,OBJSCALE,OBJSCALE);lg.computeVertexNormals();
+      const lg0=lf.geometry.clone();lg0.scale(OBJSCALE,OBJSCALE,OBJSCALE);const lg=creaseSmooth(lg0);
       p.parts.push({geo:lg,mat:toon({vertexColors:true,map:lmap,normalMap:lnor,normalScale:new THREE.Vector2(LEAFCARD_NS[p.id]??LEAFCARD_N,LEAFCARD_NS[p.id]??LEAFCARD_N),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide},{wind:!NOWIND.has(p.id)}),hull:null})}
     return}   /* 花には、輪郭線をつけない */
   let root;
@@ -486,7 +498,7 @@ function buildStump(){
       const g=.5+.5*Math.sin(a*9+1),k=Math.min(1,.25+.75*Math.min(1,y/.25))*(.8+.2*g);col.copy(dark).lerp(bark,k);C.push(col.r,col.g,col.b)}}   /* みぞと根もとは暗く */
   const W=S.seg+1;for(let j=0;j<S.rows;j++)for(let i=0;i<S.seg;i++){const a=j*W+i,b=a+1,c=a+W,d=c+1;I.push(a,c,b,b,c,d)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));
-  g.setAttribute('_mat',new THREE.Float32BufferAttribute(MT,1));g.setAttribute('_under',new THREE.Float32BufferAttribute(new Float32Array(MT.length),1));g.setIndex(I);g.computeVertexNormals();
+  g.setAttribute('_mat',new THREE.Float32BufferAttribute(MT,1));g.setAttribute('_under',new THREE.Float32BufferAttribute(new Float32Array(MT.length),1));g.setIndex(I);g.computeVertexNormals();   /* 線（hg）は、このなめらかな向きで */
   /* 切り口：少しふくらんだ円（ふちは幹の上のはしと同じ形）。年輪の絵 */
   const P2=[0,S.h+.02,0],U2=[.5,.5],I2=[],RN=6;for(let k=1;k<=RN;k++)for(let i=0;i<=S.seg;i++){const a=i/S.seg*Math.PI*2,q=k/RN,r=rad(a,1)*.93*q;P2.push(Math.cos(a)*r,S.h+.02*(1-q*q),Math.sin(a)*r);U2.push(.5+.48*q*Math.cos(a),.5+.48*q*Math.sin(a))}
   for(let i=0;i<S.seg;i++)I2.push(0,2+i,1+i);for(let k=1;k<RN;k++)for(let i=0;i<S.seg;i++){const a=1+(k-1)*W+i,b=a+1,c=a+W,d=c+1;I2.push(a,b,c,b,d,c)}
@@ -500,7 +512,7 @@ function buildStump(){
   x.globalAlpha=.5;x.strokeStyle='#9a7350';for(let k=0;k<7;k++){const a=rn()*6.28,r0=rn()*30,r1=60+rn()*150;x.lineWidth=1+rn()*2;x.beginPath();x.moveTo(N/2+Math.cos(a)*r0,N/2+Math.sin(a)*r0);x.lineTo(N/2+Math.cos(a+.05)*r1,N/2+Math.sin(a+.05)*r1);x.stroke()}
   const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;
   const hg=g.clone();
-  return [{geo:g,hgeo:hg,mat:toon({vertexColors:true},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark}),hull:hullMat({vertexColors:true},dotW())},{geo:g2,mat:toon({map:tex},{}),hull:null}];
+  return [{geo:creaseSmooth(g),hgeo:hg,mat:toon({vertexColors:true},{mat:true,uvk:1/MATSPAN.bark,span:MATSPAN.bark}),hull:hullMat({vertexColors:true},dotW())},{geo:creaseSmooth(g2),mat:toon({map:tex},{}),hull:null}];
 }
 let MAPPARTS={};
 async function loadMapObjs(){
@@ -516,7 +528,7 @@ async function loadMapObjs(){
       for(let i=0;i<C.count;i++){const l=Math.min(1.5,Math.max(.6,(.3*C.getX(i)+.59*C.getY(i)+.11*C.getZ(i))/mean));let r=base.r*l,g=base.g*l,bl=base.b*l;
         if(moss){const n=cpuNoise(P.getX(i)*9+3,P.getZ(i)*9+7),t=Math.min(1,Math.max(0,(nc.mossH+(n-.5)*.3-P.getY(i)/H)/.12));r+=(moss.r*l-r)*t;g+=(moss.g*l-g)*t;bl+=(moss.b*l-bl)*t}
         C.setXYZ(i,r,g,bl)}}   /* 色をかえる（明るさのむらはのこす）。岩は下のほうにコケ */
-    MAPPARTS[o.name]={hgeo:geo,geo:creaseNormals(geo.clone()),mat:toon({vertexColors:true},{mat:true,uvk:s,span:1}),hull:hullMat({vertexColors:true},dotW())}});
+    MAPPARTS[o.name]={hgeo:geo,geo:creaseSmooth(geo),mat:toon({vertexColors:true},{mat:true,uvk:s,span:1}),hull:hullMat({vertexColors:true},dotW())}});
 }
 const SPMODELS={};
 // せいれい：しゅるいごとに、体（トゥーン）・目とほっぺ（色だけ）を、それぞれ1つの形にまとめる（同じしゅるいは、何体でも1回で描く。重さの直し）
@@ -546,7 +558,7 @@ async function loadSpirit(el){
     }
     const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.BufferAttribute(pos,3));ng.setAttribute('normal',new THREE.BufferAttribute(nor,3));ng.setAttribute('uv',new THREE.BufferAttribute(uv,2));
     ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aGW',new THREE.BufferAttribute(gw,4));ng.setAttribute('_mat',new THREE.BufferAttribute(new Float32Array(k).fill(MATIDX.cloth),1));ng.setAttribute('_under',new THREE.BufferAttribute(new Float32Array(k),1));
-    (face?B.face:B.body).push(ng)});
+    (face?B.face:B.body).push(creaseSmooth(ng).toNonIndexed())});   /* 角度でスムーズ（60度）は、部品ごとに */
   const merge=L=>{const out=new THREE.BufferGeometry();for(const a of ['position','normal','uv','color','aGW','_mat','_under']){const z=L[0].getAttribute(a).itemSize,arr=new Float32Array(L.reduce((t,q)=>t+q.getAttribute(a).array.length,0));let o=0;for(const q of L){arr.set(q.getAttribute(a).array,o);o+=q.getAttribute(a).array.length}out.setAttribute(a,new THREE.BufferAttribute(arr,z))}return out};
   const fm=new THREE.MeshBasicMaterial({vertexColors:true});fm.onBeforeCompile=sh=>{curveVS(sh);sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spPos(transformed);');Object.assign(sh.uniforms,u);sh.vertexShader=SPVS+sh.vertexShader};fm.customProgramCacheKey=()=>'flat'+el;
   SPMODELS[el]={body:merge(B.body),face:merge(B.face),
@@ -557,7 +569,7 @@ async function loadSpirit(el){
 const LOWKEEP=.25;
 function lowGeo(part){
   if(!part.low){const g=part.geo.clone();const n=g.getAttribute('position').count;
-    part.low=new SimplifyModifier().modify(g,Math.floor(n*(1-LOWKEEP)));part.low.computeVertexNormals();
+    part.low=new SimplifyModifier().modify(g,Math.floor(n*(1-LOWKEEP)));part.low=creaseSmooth(part.low);
     const m=part.low.getAttribute('position').count,src=part.geo;
     for(const a of ['_mat','_under'])if(src.getAttribute(a))part.low.setAttribute(a,new THREE.Float32BufferAttribute(new Float32Array(m).fill(src.getAttribute(a).getX(0)),1))}   /* _under がない形は 0 */
   return part.low;
