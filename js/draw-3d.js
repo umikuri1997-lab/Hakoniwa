@@ -61,7 +61,7 @@ function g3Cap(it,now){const A=it.A;
   G3X.cq=[];G3X.ras=0;G3X.lz=0;G3X.nolift=true;g3Mode(G3K,A.px,A.py,0,0);G3X.rec=true;
   try{standTf(ctx,G3K,A.fx,A.fy,A.px,A.py);it.draw()}catch(e){G3X.ras=1}finally{G3X.rec=false}
   const anc=g3Anc(A);if(G3X.lz)anc[1]+=G3X.lz/LIFT*R3D.HSTEP;
-  if(!G3X.ras){for(const q of G3X.cq){q.a=anc;G3X.q.push(q)}G3X.nolift=false;g3Back();return}
+  if(!G3X.ras){for(const q of G3X.cq){q.a=anc;q.own=it.own;G3X.q.push(q)}G3X.nolift=false;g3Back();return}
   /* 2回め：コードで描く所がある物は、その物ぜんぶを、毎コマ描く絵のページへ（地面の絵を描いているキャンバスのすみをかりて描き、うつす） */
   const R=g3Box(it,A),kr=G3RK,w=Math.ceil((R[2]-R[0])*kr),h=Math.ceil((R[3]-R[1])*kr),RS=G3X.ras_pg,RW=RS.c.width,RH=RS.c.height,c=ctx.canvas;
   if(w>0&&h>0&&w<=c.width&&h<=c.height){if(G3X.rx+w>RW){G3X.rx=0;G3X.ry+=G3X.rh+1;G3X.rh=0}
@@ -72,7 +72,7 @@ function g3Cap(it,now){const A=it.A;
       ctx.restore();ctx.save();ctx.setTransform(1,0,0,1,0,0);const rg=RS.g;if(!G3X.used){rg.clearRect(0,0,RW,RH);G3X.used=true}
       rg.clearRect(G3X.rx,G3X.ry,w,h);rg.drawImage(c,0,0,w,h,G3X.rx,G3X.ry,w,h);ctx.clearRect(0,0,w,h);C0.drawImage.call(ctx,kc,0,0,w,h,0,0,w,h);ctx.restore();
       const a2=g3Anc(A);if(G3X.lz)a2[1]+=G3X.lz/LIFT*R3D.HSTEP;
-      G3X.q.push({raster:{x:G3X.rx,y:G3X.ry},sx:0,sy:0,sw:w,sh:h,c:[R[0],R[1],R[2],R[1],R[2],R[3],R[0],R[3]],a:a2,al:1});
+      G3X.q.push({raster:{x:G3X.rx,y:G3X.ry},sx:0,sy:0,sw:w,sh:h,c:[R[0],R[1],R[2],R[1],R[2],R[3],R[0],R[3]],a:a2,al:1,own:it.own});
       G3X.rx+=w+1;G3X.rh=Math.max(G3X.rh,h)}}
   G3X.nolift=false;g3Back()}
 function g3Back(){const r=G3X.dr;g3Mode(Math.min(G3DMAX,ctx.canvas.width/r[2]),r[0],r[1],0,0)}

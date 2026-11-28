@@ -35,12 +35,12 @@ export const RAYS={k:.08,col:[1,.9,.66]};
 export const GRADE={warm:[1.0,1.0,1.0],sat:1.0,vig:.15,exp:.9};
 // 地面の色（sRGB）。ステージごと（WD の番号：0 草原・1 火山・2 風・3 土・4 水・5 闇）。草原は試作と同じ
 const KUSAC={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#c4a97c',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',water:'#5cc3e6',foam:'#eafaff'};
-export const STAGECOL={
+export const STAGECOL={   // WD のばんごう（0草原 1火山 2土 3水 4風 5闇）
   0:KUSAC,
   1:{...KUSAC,dry:'#8a7468',path:'#b49a82',pathB:'#9c826c',cliff:'#7a6258'},   // 火山：灰のまじった土・黒っぽい岩
-  2:{...KUSAC,grassA:'#86bd6a',grassB:'#6ea85a',grassC:'#a2cf7c',dry:'#d8c9a6',cliff:'#c9b493'},   // 風：明るい草・白っぽい岩
-  3:{...KUSAC,dry:'#c49a6a',path:'#d6b184',pathB:'#bf966a',cliff:'#a8754a'},   // 土：赤みのある岩の谷
-  4:KUSAC,
+  2:{...KUSAC,dry:'#c49a6a',path:'#d6b184',pathB:'#bf966a',cliff:'#a8754a'},   // 土：赤みのある岩の谷
+  3:KUSAC,   // 水
+  4:{...KUSAC,grassA:'#86bd6a',grassB:'#6ea85a',grassC:'#a2cf7c',dry:'#d8c9a6',cliff:'#c9b493'},   // 風：明るい草・白っぽい岩
   5:{...KUSAC,grassA:'#5f8f58',grassB:'#4b7a4a',grassC:'#73a066',dry:'#8f8578',cliff:'#6f6460'},   // 闇：くらい草とあれ地
 };
 export const COLS=KUSAC;

@@ -138,7 +138,7 @@ export class Terrain{
   /* 画面の光線（せかいの点 o・向き d）と地形があたる所：段の高さの表を、マスごとにたどる。かえすのは {x,z,y,lv}（マス） */
   ray(o,d){const M=this.M;if(!M)return null;let t=0;const tmax=400,stp=.05;
     for(let i=0;t<tmax&&i<12000;i++){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t,tx=Math.floor(x),tz=Math.floor(z);
-      const gy=this.yTop(tx,tz);if(y<=gy){/* 少しもどって、くわしく */let a=t-stp,b=t;for(let k=0;k<8;k++){const c=(a+b)/2,cy=o.y+d.y*c;if(cy<=this.yTop(Math.floor(o.x+d.x*c),Math.floor(o.z+d.z*c)))b=c;else a=c}
+      const gy=this.hAt(tx,tz)*HSTEP;if(y<=gy){/* 少しもどって、くわしく。水のマスは、水面（段の高さ）でとめる */let a=t-stp,b=t;for(let k=0;k<8;k++){const c=(a+b)/2,cy=o.y+d.y*c;if(cy<=this.hAt(Math.floor(o.x+d.x*c),Math.floor(o.z+d.z*c))*HSTEP)b=c;else a=c}
         const X=o.x+d.x*b,Z=o.z+d.z*b,TX=Math.floor(X),TZ=Math.floor(Z);return {x:X,z:Z,y:o.y+d.y*b,lv:this.inMap(TX,TZ)?this.hAt(TX,TZ):0}}
       if(y<-4*HSTEP)break;t+=stp}
     return null}
