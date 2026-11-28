@@ -5,7 +5,7 @@
    480×480、3倍（2マスより大きい物・背の高い物は、上が切れないように2倍。info.json の k）。置く所（大きさ z の四角）のまん中の地面の点を、写す絵の (240,300) におく（立つ物が上へのびるので、少し下）。
    出力フォルダに info.json（id → 置いたマスの大きさ sz）も書く。そのあと tools/gameview_grid.py でひし形のマス目と黄色のわくをつけて webp にする。 */
 const fs=require('fs');const [OUT0,...IDS0]=process.argv.slice(2);const OUT=OUT0.replace(/\/?$/,'/');fs.mkdirSync(OUT,{recursive:true});
-(async()=>{const {browser,page,run,errors}=await require('./sim/boot.cjs')({world:0,viewport:{width:900,height:900}});
+(async()=>{const {browser,page,run,errors}=await require('./sim/boot.cjs')({world:0,draw3d:true,viewport:{width:900,height:900}});
  await run(`(()=>{S.spotSeen=Object.fromEntries(SPOTS.map(s=>[s.k,1]));SPOT_POPS.length=0;document.querySelectorAll(".idea-reveal").forEach(e=>e.remove());GIFT_ACTIVE=false;
   USERPAUSE=true;document.querySelector('#dialog').hidden=true;document.querySelectorAll('.hud,.dock,.quest,#qrow,.qrow,#skill,#toast').forEach(e=>e.style.visibility='hidden');S.res.forEach(r=>r.hidden=true);S.t=Math.floor(S.t/1440)*1440+12*60;S.hold=0;
   aniChip=(a)=>a.in?null:(CHIPS['ani:'+a.k+'#0']||null)})()`);/* 生き物は立つ絵 #0 だけ */

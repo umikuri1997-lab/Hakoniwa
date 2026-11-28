@@ -161,7 +161,7 @@ function iqRoofColDraw(c,h,col,G,A,now){const k=dpr*cam.z,O=isoOff(k);c.save();c
 /* 家ぜんぶの屋根を、いま描く（テスト） */
 function iqRoofDraw(c,h,A){const R=iqRoofOf(h,true);if(!R)return;for(const col of R.cols)iqRoofColDraw(c,h,col,R.glint,A,performance.now())}
 /* 家ごとに、列の屋根を足もとの順に足す（add は draw-world の D に足す関数）。屋根のすけぐあいは、いままでどおり roofAOf */
-function iqRoofsAdd(add,x0,y0,x1,y1){IQRF++;for(const h of HOUSES){if(h.y1<y0-2||h.y0>y1+2||h.x1<x0-2||h.x0>x1+2)continue;const A=roofAOf(h);if(A<=0)continue;const R=iqRoofOf(h);if(!R)continue;for(const col of R.cols)add(col.b0+1.001,3,null,()=>iqRoofColDraw(ctx,h,col,R.glint,A,performance.now()),-1,false,col.x+col.b0+1.35)}}
+function iqRoofsAdd(add,x0,y0,x1,y1){IQRF++;for(const h of HOUSES){if(h.y1<y0-2||h.y0>y1+2||h.x1<x0-2||h.x0>x1+2)continue;const A=roofAOf(h);if(A<=0)continue;const R=iqRoofOf(h);if(!R)continue;const RA=objFoot(h.x0,h.y0,h.x1-h.x0+1,h.y1-h.y0+1,h.y0*W+h.x0);/* 3D：屋根の列は、家の足もとに立てる板（draw-3d.js。2D では、iqRoofColDraw が自分で描き方をきめる） */for(const col of R.cols)add(col.b0+1.001,3,null,()=>iqRoofColDraw(ctx,h,col,R.glint,A,performance.now()),-1,RA,col.x+col.b0+1.35)}}
 /* 夜の窓のあかり：灯りのある家の、外を向いた窓（よこの壁は南の面・たての壁は東の面）を、夜の暗さの上に描く（iso:win:window:lit）。
    こさは、家ごとにともる・消える（feelWin）×時刻（DAYC の win）。手前の背の高い物の絵にかさなる窓は描かない（暗さの上なので、かくれずに出てしまう） */
 function iqWinRect(key,i,lv){const ch=CHIPS[key];if(!ch)return null;const k=ch.g===64?.5:1,wx=(i%W+.5)*TS,wy=(((i/W)|0)+.5)*TS,l=isoX(wx,wy)-ch.ax*k,t=isoY(wx,wy)-lv*IQL-ch.ay*k;return[l,t,l+ch.w*k,t+ch.h*k]}

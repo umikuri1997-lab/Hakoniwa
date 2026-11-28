@@ -8,7 +8,7 @@ const path=require('path'),fs=require('fs'),boot=require(path.join(__dirname,'..
 const [OUT,ID,...NB]=process.argv.slice(2);if(!OUT||!ID){console.log('node tools/art/chipview.cjs <出力フォルダ> <id> [<となりに置く id>...]');process.exit(1)}
 if(!process.env.CHROME_PATH)process.env.CHROME_PATH='/opt/pw-browsers/chromium';
 (async()=>{fs.mkdirSync(path.join(OUT,'gv'),{recursive:true});
-const {browser,page,run,errors}=await boot({viewport:{width:900,height:900}});
+const {browser,page,run,errors}=await boot({draw3d:true,viewport:{width:900,height:900}});
 await page.waitForFunction(()=>sacredEval('assetsOK&&stageReady()'));
 const prep=`S.spotSeen=Object.fromEntries(SPOTS.map(s=>[s.k,1]));USERPAUSE=true;document.querySelectorAll('.hud,.dock,.quest,#qrow,.qrow,#skill,#toast').forEach(e=>e.style.visibility='hidden');S.res.forEach(r=>r.hidden=true);S.t=Math.floor(S.t/1440)*1440+12*60;S.hold=0;
  const X=CX+8,Y=CY+8,clr=()=>{for(let b=-5;b<8;b++)for(let a=-5;a<14;a++){const j=(Y+b)*W+X+a;S.obj[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.floor)S.floor[j]=''}};

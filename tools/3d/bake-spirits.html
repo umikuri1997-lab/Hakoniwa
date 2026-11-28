@@ -1,0 +1,64 @@
+<!doctype html><meta charset="utf-8"><title>bake spirits</title>
+<!-- せいれいの3Dの形を、ゲームで読む形（assets/3d の .bin）に書き出す（tools/3d/bake-spirits.cjs が開く）。やり方は試作 proto3d/main.js の loadSpirit と同じ -->
+<script type="importmap">{"imports":{"three":"../../proto3d/vendor/three.module.min.js","three/addons/":"../../proto3d/vendor/addons/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+const SPH=.8,OBJSCALE=1.5,CREASE=60,ELS=['earth','water','fire','wind','wood'],SPLIMB=['thighL','thighR','upper_armL','upper_armR'];
+const SPCOL={earth:{hood:'#8f6a50',cheek:'#f1b8a8',eye:'#5e3d2a'},water:{hood:'#78c3fb',cheek:'#f4b8b8',eye:'#1d4f7c'},fire:{hood:'#f07a4f',cheek:'#f2ac9f',eye:'#8f3a22'},wind:{hood:'#a6cc8a',cheek:'#f0c0b0',eye:'#456a2a'},wood:{hood:'#6fae4c',cheek:'#f0c0b0',eye:'#3f5e26'}};
+const SPROUT='#5e8f43',HEADACC='#e8cdb0',CREAM='#fdf8ef';
+function creaseSmooth(geo,deg=CREASE){
+  const P=geo.getAttribute('position'),n=P.count,I=geo.index?geo.index.array:null,T=I?I.length/3:n/3,vi=k=>I?I[k]:k,cosT=Math.cos(deg*Math.PI/180);
+  const W=new Int32Array(n),wk=new Map();for(let i=0;i<n;i++){const k=Math.round(P.getX(i)*1e4)+','+Math.round(P.getY(i)*1e4)+','+Math.round(P.getZ(i)*1e4);let w=wk.get(k);if(w===undefined){w=wk.size;wk.set(k,w)}W[i]=w}
+  const FN=new Float32Array(T*3),FU=new Float32Array(T*3),cnt=new Int32Array(wk.size+1);
+  for(let t=0;t<T;t++){const a=vi(3*t),b=vi(3*t+1),c=vi(3*t+2),ax=P.getX(a),ay=P.getY(a),az=P.getZ(a),ux=P.getX(b)-ax,uy=P.getY(b)-ay,uz=P.getZ(b)-az,vx=P.getX(c)-ax,vy=P.getY(c)-ay,vz=P.getZ(c)-az;
+    const x=uy*vz-uz*vy,y=uz*vx-ux*vz,z=ux*vy-uy*vx,l=Math.hypot(x,y,z)||1;FN.set([x,y,z],3*t);FU.set([x/l,y/l,z/l],3*t);for(let k=0;k<3;k++)cnt[W[vi(3*t+k)]+1]++}
+  for(let i=1;i<cnt.length;i++)cnt[i]+=cnt[i-1];const F=new Int32Array(cnt[wk.size]),fill=cnt.slice();
+  for(let t=0;t<T;t++)for(let k=0;k<3;k++)F[fill[W[vi(3*t+k)]]++]=t;
+  const NN=new Float32Array(T*9);
+  for(let t=0;t<T;t++)for(let k=0;k<3;k++){const w=W[vi(3*t+k)];let x=0,y=0,z=0;
+    for(let q=cnt[w];q<cnt[w+1];q++){const f=F[q];if(FU[3*f]*FU[3*t]+FU[3*f+1]*FU[3*t+1]+FU[3*f+2]*FU[3*t+2]>=cosT){x+=FN[3*f];y+=FN[3*f+1];z+=FN[3*f+2]}}
+    const l=Math.hypot(x,y,z)||1;NN.set([x/l,y/l,z/l],9*t+3*k)}
+  const key=new Map(),src=[],idx=new Uint32Array(T*3),NV=[];   /* 同じ点で同じ向きになった角は、1つの点にまとめる（番号つき） */
+  for(let c=0;c<T*3;c++){const v=vi(c),UVa=geo.getAttribute('uv'),k=W[v]+'|'+(UVa?Math.round(UVa.getX(v)*1e4)+','+Math.round(UVa.getY(v)*1e4):'')+'|'+Math.round(NN[3*c]*1e3)+','+Math.round(NN[3*c+1]*1e3)+','+Math.round(NN[3*c+2]*1e3);let id=key.get(k);
+    if(id===undefined){id=src.length;key.set(k,id);src.push(v);NV.push(NN[3*c],NN[3*c+1],NN[3*c+2])}idx[c]=id}
+  const g=new THREE.BufferGeometry(),m=src.length;
+  for(const [name,a] of Object.entries(geo.attributes)){if(name==='normal')continue;const z=a.itemSize,arr=new Float32Array(m*z);for(let i=0;i<m;i++)for(let j=0;j<z;j++)arr[i*z+j]=a.array[src[i]*z+j];g.setAttribute(name,new THREE.BufferAttribute(arr,z))}
+  g.setAttribute('normal',new THREE.Float32BufferAttribute(NV,3));g.setIndex(new THREE.BufferAttribute(idx,1));return g;
+}
+const fbx=new FBXLoader(),out={els:{}},bufs=[];let off=0;
+const put=a=>{while(off%4){bufs.push(new Uint8Array(1));off++}bufs.push(a);const o=off;off+=a.byteLength;return o};
+for(const el of ELS){
+  const g=await fbx.loadAsync('../art/spirit3d/model/'+el+'.fbx');
+  g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),s=SPH*OBJSCALE/bb.getSize(new THREE.Vector3()).y;
+  g.scale.multiplyScalar(s);g.updateMatrixWorld(true);
+  const c=SPCOL[el],limb=SPLIMB.map(n=>g.getObjectByName(n)),inG=limb.map(b=>{const S=new Set();if(b)b.traverse(o=>S.add(o.name));return S});
+  const uP=limb.map(b=>b?b.getWorldPosition(new THREE.Vector3()).toArray():[0,0,0]),uA=limb.map(b=>b?new THREE.Vector3(1,0,0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion())).normalize().toArray():[1,0,0]);
+  const B={body:[],face:[]},v=new THREE.Vector3(),w=new THREE.Vector3(),col=new THREE.Color();
+  g.traverse(o=>{if(!o.isMesh)return;const n=o.name.toLowerCase(),face=n.startsWith('eye')||n.startsWith('cheek');
+    col.set(n.startsWith('eye')?c.eye:n.startsWith('cheek')?c.cheek:n.startsWith('hood')||n.startsWith('hane')?c.hood:n.startsWith('sprout')?SPROUT:n.startsWith('headacc')?HEADACC:CREAM);
+    const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry,P=geo.getAttribute('position'),N=geo.getAttribute('normal'),UV=geo.getAttribute('uv'),SI=geo.getAttribute('skinIndex'),SW=geo.getAttribute('skinWeight'),k=P.count;
+    const pos=new Float32Array(k*3),nor=new Float32Array(k*3),uv=new Float32Array(k*2),cl=new Float32Array(k*3),gw=new Float32Array(k*4),sk=o.isSkinnedMesh&&SI;
+    let anc=-1;for(let a=o;a&&anc<0;a=a.parent)for(let q=0;q<4;q++)if(a.isBone&&a.name===SPLIMB[q])anc=q;
+    const nm=new THREE.Matrix3().getNormalMatrix(o.matrixWorld);if(sk)o.geometry=geo;
+    for(let i=0;i<k;i++){v.fromBufferAttribute(P,i);
+      if(sk){w.copy(v).addScaledVector(new THREE.Vector3().fromBufferAttribute(N,i),.01);o.applyBoneTransform(i,v);o.applyBoneTransform(i,w);w.sub(v).normalize()}else w.fromBufferAttribute(N,i);
+      v.applyMatrix4(o.matrixWorld);if(sk)w.transformDirection(o.matrixWorld);else w.applyMatrix3(nm).normalize();
+      pos.set([v.x,v.y,v.z],3*i);nor.set([w.x,w.y,w.z],3*i);if(UV)uv.set([UV.getX(i),UV.getY(i)],2*i);cl.set([col.r,col.g,col.b],3*i);
+      if(sk){for(let q=0;q<4;q++){const bi=SI.getComponent(i,q),bw=SW.getComponent(i,q);if(!bw)continue;const bone=o.skeleton.bones[bi];for(let gi=0;gi<4;gi++)if(inG[gi].has(bone.name))gw[4*i+gi]+=bw}}
+      else if(anc>=0)gw[4*i+anc]=1}
+    const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.BufferAttribute(pos,3));ng.setAttribute('normal',new THREE.BufferAttribute(nor,3));ng.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+    ng.setAttribute('color',new THREE.BufferAttribute(cl,3));ng.setAttribute('aGW',new THREE.BufferAttribute(gw,4));
+    (face?B.face:B.body).push(creaseSmooth(ng))});
+  const E={uSpP:uP,uSpA:uA,scale:s};
+  /* 小さい数の形で：場所・UV は Float32、面の向きは Int8、色・手足のかかり方は Uint8（0〜1）、番号は Uint16（こえたら Uint32） */
+  const TY={position:[Float32Array,1],uv:[Float32Array,1],normal:[Int8Array,127],color:[Uint8Array,255],aGW:[Uint8Array,255]};
+  for(const part of ['body','face']){const L=B[part],P={},nv=L.reduce((t,q)=>t+q.getAttribute('position').count,0);
+    for(const a of Object.keys(TY)){const z=L[0].getAttribute(a).itemSize,[C,k]=TY[a],arr=new C(nv*z);let o=0;for(const q of L){const s=q.getAttribute(a).array;for(let i=0;i<s.length;i++)arr[o+i]=k===1?s[i]:Math.round(Math.max(-1,Math.min(1,s[i]))*k);o+=s.length}P[a]={o:put(arr),n:arr.length,z,t:C.name}}
+    const ni=L.reduce((t,q)=>t+q.index.count,0),IA=nv<65536?new Uint16Array(ni):new Uint32Array(ni);let o=0,b=0;for(const q of L){const s=q.index.array;for(let i=0;i<s.length;i++)IA[o+i]=s[i]+b;o+=s.length;b+=q.getAttribute('position').count}
+    P.index={o:put(IA),n:ni,z:1,t:IA.constructor.name};E[part]=P}
+  out.els[el]=E}
+const all=new Uint8Array(off);let o=0;for(const b of bufs){all.set(new Uint8Array(b.buffer,b.byteOffset,b.byteLength),o);o+=b.byteLength}
+let bin='';for(let i=0;i<all.length;i+=8192)bin+=String.fromCharCode(...all.subarray(i,i+8192));
+window.__bake={meta:out,b64:btoa(bin)};
+</script>

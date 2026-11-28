@@ -73,7 +73,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2561;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2562;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -240,7 +240,7 @@ function frame(now){
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   seasonStep(prdt,now);feelFrame(now);juiceFrame(now);/* 足音・足もとの反応・場所の音（feel.js） */
   stepLooks(now,rdt);lgTick(now);/* くわしいログ：目標のかわり・ためた物をのこす（log.js） */
-  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){if(typeof caveOn==='function'&&caveOn()){try{caveRender(now)}catch(e){frameErr('caveRender',e)}}/* 洞窟のあいだは、洞窟だけを描く */else{try{render(now)}catch(e){frameErr('render',e)}try{phTick(now)}catch(e){frameErr('photo',e)}}}/* 日記の絵（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
+  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){if(typeof caveOn==='function'&&caveOn()){G3.on=false;if(window.R3D&&R3D.ok)R3D.show(false);/* 洞窟は、まだ2D */try{caveRender(now)}catch(e){frameErr('caveRender',e)}}/* 洞窟のあいだは、洞窟だけを描く */else{try{render(now)}catch(e){frameErr('render',e)}try{phTick(now)}catch(e){frameErr('photo',e)}}}/* 日記の絵（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC){wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||STLD)?'opening':stageSong();if(STLD&&curSong!=='opening'){curSong='opening';step=0;bgmSw=0;nextT=AC.currentTime+.05;bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime)}}/* 「つづきから」などの「マップを読みこみ中…」（STLD）も、オープニングの曲（持ち主がきめた）。遊ぶ曲は鳴らないので、まつ間をおかずにすぐはじめる。村が出たら、うすくして止める */
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
     if(!sacredQuietActive()&&!GIFT_ACTIVE&&(RLVQ.length||S.res.some(q=>q.lvPend>0&&!q.hidden))&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden){if(!RLVQ.length){const r=S.res.find(q=>q.lvPend>0&&!q.hidden);if(r)RLVQ.push({id:r.id,from:rLv(r),to:rLv(r)})}/* えらばずにとじた（読みこみなおした）ごほうび */if(RLVQ.length)rlvShow(RLVQ.shift())}
