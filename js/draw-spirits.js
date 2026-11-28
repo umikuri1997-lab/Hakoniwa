@@ -136,8 +136,10 @@ const MITT=['.##.','####','####','.##.'];/* 食べ物を持つ手：4×4ドッ�
 function drawMitt(c,x,y,D,col,ol){const X=Math.round(x/D)-2,Y=Math.round(y/D)-2;c.fillStyle=ol;for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(MITT[j][i]==='#')for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const q=MITT[j+dy]&&MITT[j+dy][i+dx];if(q!=='#')c.fillRect((X+i+dx)*D,(Y+j+dy)*D,D,D)}
   c.fillStyle=col;for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(MITT[j][i]==='#')c.fillRect((X+i)*D,(Y+j)*D,D,D)}
 const WHAND={gf_open:{s:28,dy:-4},gf_unfold:{s:36,dy:-6},gf_lift:{s:24,at:'n',dy:-10},gf_ear:{s:20,at:'n',dy:-2},gf_wave:{s:26,at:'n',dy:-10},gf_sniff:{s:22,dy:-4},gf_hug:{s:24,dy:0},gf_spin:{s:20,at:'n',dy:6},gf_read:{s:26,dy:-4},gf_peek:{s:20,at:'n',dy:-4},gf_shake:{s:20,at:'n',dy:-6},lnod:{s:22,dy:0},cookprep:{s:30,dy:-6},cookplate:{s:28,at:'tip',dy:-8},cookfry:{s:22,at:'tip',dy:-6},raise:{s:36,dy:0}};/* 手に持つ物の大きさ・場所（at:'tip' は道具の先。raise は頭の上） */
+function spmPh(m,nm,o,t){/* 動きの中の場所（0〜1）：'ph' の動きは進みぐあい（SPMPROG）か o.ph・歩く動きは歩いた道のり（WALKPT）・ほかは時計（t×速さ）。3Dの姿勢（draw-3d.js の g3Pose）も同じ */
+  return m.r==='ph'?(SPMPROG[nm]?Math.max(0,Math.min(.9999,SPMPROG[nm](o)||0)):o.ph==null?0:o.ph):nm==='carry'&&!o.walk?0:o.walk&&o.wd!=null&&typeof m.r==='number'?((o.wd*WALKPT*m.r/WALKR)%1+1)%1:((t*m.r)%1+1)%1}
 function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさね、その上に、ずきん・顔の手前にある、うで・手・道具（G[4]・G[5]）をかさねる */
-  const T=o.iso&&typeof SPMQ!=='undefined'&&SPMQ[nm]&&SPMQ[nm].g[spArt(el)]?SPMQ:SPM;/* クォータービュー：前ななめ・うしろななめの絵（js/spirit-motions-iso.js） */const m=T[nm],G=m&&m.g[spArt(el)];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(SPMPROG[nm]?Math.max(0,Math.min(.9999,SPMPROG[nm](o)||0)):o.ph==null?0:o.ph):nm==='carry'&&!o.walk?0:o.walk&&o.wd!=null&&typeof m.r==='number'?((o.wd*WALKPT*m.r/WALKR)%1+1)%1/* 歩いた道のりで進める（WALKPT） */:((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i,T);if(!cell)return false;
+  const T=o.iso&&typeof SPMQ!=='undefined'&&SPMQ[nm]&&SPMQ[nm].g[spArt(el)]?SPMQ:SPM;/* クォータービュー：前ななめ・うしろななめの絵（js/spirit-motions-iso.js） */const m=T[nm],G=m&&m.g[spArt(el)];if(!G)return false;const dir=back?2:tr?1:0,ph=spmPh(m,nm,o,t),i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i,T);if(!cell)return false;
   const fl=(nm==='fish'||nm==='fishcast'||nm==='fishpull')&&o.fishTo?m.h[dir][i]:null,fT=fl&&[o.isx?x+(o.fishTo[0]-x)/ISOSPX:o.fishTo[0],o.fishTo[1]];/* よこを ISOSPX にのばした中なので、うきの場所はもどす */if(fl&&fl.length>4&&dir===2)drawFishLine(c,x+fl[4]*D*s*f,y+fl[5]*D*s,fT[0],fT[1],t,o.fishB);/* うしろ向き（上の水）：糸とうきは体より奥 */
   const vr=o.vr,e=m.e[spArt(el)][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const cwx=((tr?-4:0)+e[0])*D,cwy=((CROWNY[el]||-66)+e[1])*D;if(o.crown&&!o.bed&&e[2]<2)drawCrown(c,cwx,cwy,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭より先（頭にかくれる） */
@@ -220,7 +222,7 @@ function drawSpiritOL(c,el,x,y,s,f,o){const T=c.getTransform(),k=Math.hypot(T.a,
 function guestDraw(c,x,y,s,f,o){/* 食堂のお客さん（旅の外套、GPT の H-7）：正面・右・うしろの絵。左は右の反転。足もとが x,y */const k=o.back?'guest>2':(o.turn||0)>.5?'guest>1':'guest',ch=window.CHIPS&&CHIPS[k];if(!ch)return false;const im=chipImgs(ch,k)[0];if(!im.ok)return false;
   const q=s/.87,bob=o.walk?Math.round(Math.abs(Math.sin((o.t||0)*9))*2):0,fl=k==='guest>1'&&f<0;c.save();c.translate(x,y-bob);if(fl)c.scale(-1,1);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,ch.ax*q,ch.ay*q,ch.w*q,ch.h*q);c.imageSmoothingEnabled=sm;c.restore();return true}
 function drawSpirit(c,el,x,y,s,f,o){/* 描けたら true（絵がまだ読めていないときは false） */
-  if(G3.sp)return true;/* 3D：せいれいの体は3D（draw-3d.js の g3Spirit）。ここでは、ふきだし・持ち物などだけ */
+  if(G3.sp){g3Pose(el,f,o);return true}/* 3D：せいれいの体は3D（draw-3d.js の g3Spirit）。ここでは、いまの動きと向きを3Dにわたし、ふきだし・持ち物などだけ描く */
   if(isoFaceOK(c)){if(o.front0)o.isoS=1;else{const q=isoFace(o.back,(o.turn||0)>.5,f<0?-1:1);o.back=q.back;o.turn=0;o.hturn=0;o.iso=1;f=q.f}}/* クォータービュー：前ななめ・うしろななめの2つの絵と、左右の反転（iso-face.js）。守り神と話している子（front0）だけは、真正面（持ち主がきめた） */
   if(o.guest&&guestDraw(c,x,y,s,f,o))return true;
   return drawSpiritOL(c,el,x,y,s,f,o)}

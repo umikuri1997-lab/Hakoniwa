@@ -1,6 +1,6 @@
 /* 3Dのマテリアル（試作 proto3d/main.js のシェーダーをうつした物）：トゥーンのかげ2だん・ふちの光・雲のかげ・もや・背面法の線。 */
 import * as THREE from 'three';
-import {TOON,RIM,PX,CEL,MIST,CLOUDSH,BUMP,SPSW} from './look.js';
+import {TOON,RIM,PX,CEL,MIST,CLOUDSH,BUMP} from './look.js';
 
 export const C3=h=>{const c=new THREE.Color(h);c.convertLinearToSRGB();return `vec3(${c.r.toFixed(4)},${c.g.toFixed(4)},${c.b.toFixed(4)})`};
 export const U={time:{value:0},sunV:{value:new THREE.Vector3()},sunW:{value:new THREE.Vector3(-.55,1,.35).normalize()},viewInv:{value:new THREE.Matrix3()},mat:{value:[]},
@@ -50,13 +50,17 @@ export const AIR_FS=`{float cs=smoothstep(.5,.72,fbm(vWP.xz*${CLOUDSH.scale}+uTi
   outgoingLight=mix(outgoingLight,lin(${C3(MIST.col)})*dot(outgoingLight,${LUM})*1.3,${MIST.k}*clamp(1.-vWP.y/${MIST.h},0.,1.));}
 outgoingLight=tnDark(outgoingLight,vWP.xz);
 `;
-// せいれいの手足（まとめて描く）：ももとうでの4つのグループごとに、つけ根（uSpP）のまわりで軸（uSpA）にそって、ふり（aSw）×向きだけまわす
-export const SPVS=`attribute vec4 aGW;attribute float aSw;uniform vec3 uSpP[4],uSpA[4];
-vec3 spRot(vec3 v,vec3 k,float a){float c=cos(a),s=sin(a);return v*c+cross(k,v)*s+k*dot(k,v)*(1.-c);}
-vec3 spPos(vec3 p){vec3 o=p;const vec4 K=vec4(${SPSW.join(',')});for(int g=0;g<4;g++)o+=aGW[g]*(spRot(p-uSpP[g],uSpA[g],aSw*K[g])+uSpP[g]-p);return o;}
-vec3 spNor(vec3 n){vec3 o=n;const vec4 K=vec4(${SPSW.join(',')});for(int g=0;g<4;g++)o+=aGW[g]*(spRot(n,uSpA[g],aSw*K[g])-n);return o;}
+// せいれいの骨（まとめて描く）：骨の表 uPose（tools/3d/bake-poses.py が焼いた、コマごと・列ごとの 回転 q と場所 t。1つの列に2つの点）。
+// 点は4つまでの列（aSC）に aSW ずつつく。インスタンスの aFr：コマ a・コマ b の表の行と、そのあいだの場所（なめらかにつなぐ）
+export const SPVS=`attribute vec4 aSC,aSW;attribute vec3 aFr;uniform sampler2D uPose;uniform float uNch;
+vec4 spTx(float row,float c,float k){int L=int((row*uNch+c)*2.+k+.5);int W=textureSize(uPose,0).x;return texelFetch(uPose,ivec2(L-(L/W)*W,L/W),0);}
+vec3 spQr(vec4 q,vec3 v){return v+2.*cross(q.xyz,cross(q.xyz,v)+q.w*v);}
+vec3 spP,spN;
+void spSkin(vec3 p,vec3 n){spP=vec3(0.);spN=vec3(0.);for(int i=0;i<4;i++){float w=aSW[i];if(w<=0.)continue;
+  vec4 qa=spTx(aFr.x,aSC[i],0.),qb=spTx(aFr.y,aSC[i],0.);if(dot(qa,qb)<0.)qb=-qb;vec4 q=normalize(mix(qa,qb,aFr.z));vec3 t=mix(spTx(aFr.x,aSC[i],1.).xyz,spTx(aFr.y,aSC[i],1.).xyz,aFr.z);
+  spP+=w*(spQr(q,p)+t);spN+=w*spQr(q,n);}}
 `;
-function spiritVS(sh,u){Object.assign(sh.uniforms,u);sh.vertexShader=SPVS+sh.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal=spNor(objectNormal);').replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spPos(transformed);')}
+function spiritVS(sh,u){Object.assign(sh.uniforms,u);sh.vertexShader=SPVS+sh.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nspSkin(position,objectNormal);objectNormal=spN;').replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spP;')}
 // トゥーンのマテリアル。extra：{cloth:布の絵の UV の倍, spirit:手足のふりの uniforms}
 export function toon(o={},extra={}){
   const m=new THREE.MeshToonMaterial({gradientMap:GRAD,...o});
@@ -77,11 +81,11 @@ export function toon(o={},extra={}){
 export function hullMat(o,w,sp){
   const m=new THREE.MeshBasicMaterial({...o,side:THREE.BackSide});
   m.onBeforeCompile=sh=>{projVS(sh);nightU(sh.uniforms);sh.vertexShader='varying vec3 vWP;\n'+sh.vertexShader.replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
-    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',sp?'vec3 transformed=spPos(position)+normalize(spNor(normal))*'+w.toFixed(5)+';':'vec3 transformed=position+normalize(normal)*'+w.toFixed(5)+';');
+    sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>',sp?'spSkin(position,normal);vec3 transformed=spP+normalize(spN)*'+w.toFixed(5)+';':'vec3 transformed=position+normalize(normal)*'+w.toFixed(5)+';');
     if(sp){Object.assign(sh.uniforms,sp);sh.vertexShader=SPVS+sh.vertexShader}
     sh.fragmentShader='varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader.replace('#include <opaque_fragment>','gl_FragColor=vec4(tnDark(lin(pxShade(pow(max(diffuseColor.rgb,0.),vec3(1./2.2)),-.5)*uAmbC)*.85,vWP.xz),1.);')};
   m.customProgramCacheKey=()=>'hull'+w.toFixed(5)+(o.vertexColors?'v':'')+(sp?'s'+sp.key:'');return m;
 }
 // 色だけ（目・ほっぺ）
-export function flatMat(sp){const m=new THREE.MeshBasicMaterial({vertexColors:true});m.onBeforeCompile=sh=>{projVS(sh);sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=spPos(transformed);');Object.assign(sh.uniforms,sp);nightU(sh.uniforms);sh.vertexShader=SPVS+'varying vec3 vWP;\n'+sh.vertexShader.replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
+export function flatMat(sp){const m=new THREE.MeshBasicMaterial({vertexColors:true});m.onBeforeCompile=sh=>{projVS(sh);sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nspSkin(position,vec3(0.,1.,0.));transformed=spP;');Object.assign(sh.uniforms,sp);nightU(sh.uniforms);sh.vertexShader=SPVS+'varying vec3 vWP;\n'+sh.vertexShader.replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
   sh.fragmentShader='varying vec3 vWP;\n'+NOISE+NIGHT_U+sh.fragmentShader.replace('#include <opaque_fragment>','outgoingLight=tnDark(outgoingLight*lin(mix(uAmbC,uSunC,.7)),vWP.xz);\n#include <opaque_fragment>')};m.customProgramCacheKey=()=>'flat'+sp.key;return m}

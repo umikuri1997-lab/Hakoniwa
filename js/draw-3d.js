@@ -96,12 +96,14 @@ function g3Box(it,A){let b=it.box;if(!b&&it.own>=0){const o=S.obj[anc(it.own)];i
 /* ---- せいれい（3D） ---- */
 const G3ELS=new Set(['earth','water','fire','wind','wood']);
 function g3Spirit(r,now){if(r.hidden&&!(typeof peekH==='function'&&peekH(r)))return;const v=G3X.spv.get(r)||{x:r.x,y:r.y,yaw:Math.PI/4,ph:0,d:0};G3X.spv.set(r,v);
-  const dx=r.x-v.x,dy=r.y-v.y,dd=Math.hypot(dx,dy),walking=dd>.002;if(walking){v.yaw=Math.atan2(dx,dy);v.ph+=dd*9}else{const sv=SPV.get(r),face=sv&&sv.back?Math.PI*1.25:Math.PI/4+(r.face<0?.5:-.5)*((sv&&sv.turn)||0);let da=face-v.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));v.yaw+=da*.15}
+  const dx=r.x-v.x,dy=r.y-v.y,dd=Math.hypot(dx,dy),walking=dd>.002;if(walking)v.yaw=Math.atan2(dx,dy);else{const fc=v.fc,sv=SPV.get(r),back=fc?fc.back:sv&&sv.back,turn=fc?fc.turn:(sv&&sv.turn)||0,sg=fc?fc.f:r.face,face=back?Math.PI*1.25:Math.PI/4+(sg<0?.5:-.5)*turn;let da=face-v.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));v.yaw+=da*.15}/* 止まっているときの向き：前のコマに drawSpirit がわたした向き（g3Pose） */
   v.x=r.x;v.y=r.y;const z=uLift(r),gy=R3D.groundH(r.x,r.y),y=z>0?Math.max(gy,z/LIFT*R3D.HSTEP):gy;
-  G3X.sp.push(r);r._g3={x:r.x,y,z:r.y,gy};
-  G3X.spl=G3X.spl||[];G3X.spl.push({el:G3ELS.has(r.elem)?r.elem:'earth',x:r.x,y:y+(walking?Math.abs(Math.sin(v.ph))*.04:0),z:r.y,gy,yaw:v.yaw,sw:walking?Math.sin(v.ph)*.6:0})}
+  const e={el:G3ELS.has(r.elem)?r.elem:'earth',x:r.x,y,z:r.y,gy,yaw:v.yaw,mo:'stand',ph:(now/2000)%1,v};/* 動き（mo・ph）は g3SpiritOver の drawSpirit が g3Pose で書く。よばれないときは立ち姿 */
+  G3X.sp.push(r);r._g3={x:r.x,y,z:r.y,gy,e};G3X.spl=G3X.spl||[];G3X.spl.push(e)}
+/* drawSpirit（G3.sp のとき）から：2Dと同じ動きの名前（spMotion）と動きの中の場所（spmPh）、向きを、3Dの姿勢にわたす。首だけ先に向ける歩き（walk_h…）は、3Dでは体をまわすので、ふつうの動き */
+function g3Pose(el,f,o){const e=G3X.cur;if(!e)return;const nm=spMotion(o,o.anim||'').replace(/_h[pn]\d+$/,''),m=typeof SPM!=='undefined'&&SPM[nm];e.mo=nm;e.ph=m?spmPh(m,nm,o,o.t||0):0;e.v.fc={back:!!o.back,turn:o.turn||0,f}}
 function g3SpiritOver(r,now){const p=r._g3;if(!p)return;const P=R3D.project(p.x,p.y,p.z),kk=dpr*P.s,fx=r.x*TS,fy=r.y*TS;
-  ctx.setTransform(kk*IQSX,0,0,kk*IQSY,dpr*P.x-kk*IQSX*fx,dpr*P.y-kk*IQSY*fy);G3X.nolift=true;G3.sp=true;try{drawRes(r,now)}catch(e){frameErr&&frameErr('g3sp',e)}finally{G3.sp=false;G3X.nolift=false}}
+  ctx.setTransform(kk*IQSX,0,0,kk*IQSY,dpr*P.x-kk*IQSX*fx,dpr*P.y-kk*IQSY*fy);G3X.nolift=true;G3.sp=true;G3X.cur=p.e;try{drawRes(r,now)}catch(e){frameErr&&frameErr('g3sp',e)}finally{G3.sp=false;G3X.nolift=false;G3X.cur=null}}
 /* ---- 夜（render の夜の暗さの所でよぶ）：上から見た「あかりの地図」 ----
    G3LM.c：のこる暗さ（a。はじめ1、2Dの DMK と同じ描き方で、あかりの所をけずる）・G3LM.wc：火のあたたかい光（lighter）。せかいの点で描くので、groundTf は G3.LM の上から見た形になる（iso.js）。
    3Dの地面・物の板・せいれい・水は、この地図を自分の場所で読む（js/3d/mats.js の tnDark）。#cv の上の物には、地図を画面へ写して同じ暗さ（ふきだしの前なので、2Dと同じ物が暗くなる）。 */

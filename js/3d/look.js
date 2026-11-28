@@ -53,7 +53,6 @@ export const SPCOL={earth:{hood:'#8f6a50',cheek:'#f1b8a8',eye:'#5e3d2a'},water:{
   wind:{hood:'#a6cc8a',cheek:'#f0c0b0',eye:'#456a2a'},wood:{hood:'#6fae4c',cheek:'#f0c0b0',eye:'#3f5e26'}};
 export const SPROUT='#5e8f43',HEADACC='#e8cdb0';
 export const ELS=['earth','water','fire','wind','wood'];
-export const SPSW=[1,-1,-.7,.7];   // 左もも・右もも・左うで・右うで のふりの向きと大きさ
 export const MATIDX={wood:1,stone:2,metal:3,cloth:4,bark:5,leaf:6,soil:7};
 export const GTEX={grass:{span:3,lum:.248},dirt:{span:2.5,lum:.316},cliff:{span:2.4,lum:.121}};
 export const CLOTHSPAN=.72;
