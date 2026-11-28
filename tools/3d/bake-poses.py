@@ -3,6 +3,8 @@
   骨：同じ動きしかしない骨（腰と背骨など）は1つにまとめる（「列」）。点ごとの骨の番号（bake-spirits.html の aSI）→ 列は b2c。
   道具：props.py の道具の点（小さな箱のあつまり）をなめらかな面にして（マーチングキューブ → へらす）、手の骨といっしょに動く「列」をもう2つ（手前の手・奥の手）。
   首だけ先に向ける歩き（walk_h…・carry_h…）は焼かない（3Dでは体をなめらかにまわす）。
+  風のはね：たたんだ形（fbx_motion.triangles の hane の式）の、休みの形からのずれ（wing）と、コマごとのたたむ量（wf）。
+  表情の目：表情の目・まつげ・ほっぺのチップ（fbx_build.XL）を、属性の色にして1まいに並べた絵（face）と、頭の点→チップの場所の式（2Dの FM.face_fit と同じ。顔の前の面にだけ）。
 書く物：assets/3d/pose-<中身の番号>.bin と js/3d/pose-data.js。
 使い方: python3 tools/3d/bake-poses.py （先に node tools/3d/bake-spirits.cjs。モデル・motions.py・props.py をかえたら、両方動かす）
 いるもの：pip install bpy scipy scikit-image fast-simplification"""
@@ -11,6 +13,7 @@ import numpy as np
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'art', 'spirit3d'))
 import fbx_motion as FM, props as PR, rig
+import fbx_build as FB
 from core import NEARSIDE
 from motions import MOTIONS, WALKEL
 
@@ -23,6 +26,10 @@ NAMES = [n for n in sorted(MOTIONS) if not re.search(r'_h[pn]\d+$', n)]
 def spdata():
     s = open(os.path.join(ROOT, 'js', '3d', 'spirit-data.js'), encoding='utf8').read()
     return json.loads(s.split('SPDATA=', 1)[1].rstrip().rstrip(';'))
+
+def spbin():
+    s = open(os.path.join(ROOT, 'js', '3d', 'spirit-data.js'), encoding='utf8').read()
+    return open(os.path.join(ROOT, re.search(r"SPFILE='([^']+)'", s).group(1)), 'rb').read()
 
 def fit(B, T):
     """B（Blender・m）→ T（three）の、のびちぢみ・回転・ずらし（Umeyama）"""
@@ -82,18 +89,21 @@ def main():
     used = set(); rows = 0
     for nm in NAMES:
         m = MOTIONS[nm]; meta['mo'][nm] = [rows, m['n'], m['rate']]; rows += m['n']
-    allK = {}; allP = {}; RP = {}
+    allK = {}; allP = {}; RP = {}; HM = {}; WF = np.zeros(rows); WFA = set(); AF = {}
     for el in ELS:
         S = FM.scene(el); E = SD['els'][el]; names = [b.replace('.', '') for b in S['order']]
         hb = E['bones']; B = np.array([S['rest'][S['order'][names.index(h)]][:3, 3] for h in hb]); A, s, err = fit(B, np.array(E['bpos']))
         assert err < 1e-4, (el, err); Ai = np.linalg.inv(A); meta['scale'][el] = s*0.01
-        K = np.zeros((rows, len(hb), 4, 4)); PP = np.zeros((rows, 2, 4, 4)); r = 0
+        K = np.zeros((rows, len(hb), 4, 4)); PP = np.zeros((rows, 2, 4, 4)); H_ = np.zeros((rows, 2, 3)); r = 0
         for nm in NAMES:
             m = MOTIONS[nm]
             for i in range(m['n']):
                 w = 2*np.pi*i/m['n']; p = (WALKEL[el] if nm.startswith('walk') and el in WALKEL else m['f'])(w, FACE)
-                T = FM.pose(el, p, FACE); Rs = rz4(-p.get('spin', 0.0))   # spin：体ごと、たての軸のまわりに（fbx_pixel.render と同じ）
+                T = FM.pose(el, p, FACE); WF[r] = 1.0 if p.get('wingfold') else 0.0; WFA.add(p.get('wingfold', 0)); Rs = rz4(-p.get('spin', 0.0))   # spin：体ごと、たての軸のまわりに（fbx_pixel.render と同じ）
                 for j, h in enumerate(hb): K[r, j] = A@Rs@T[S['order'][names.index(h)]]@Ai
+                for k_, sd in enumerate((NEARSIDE[FACE], -NEARSIDE[FACE])):   # 手のまん中（水浴びのしぶきなど）：手の骨の根もとと先のまん中
+                    bn = 'hand.L' if sd > 0 else 'hand.R'; mid = (S['rest'][bn][:3, 3]+np.array(S['arm'].data.bones[bn].tail_local[:]))/2
+                    H_[r, k_] = (A@Rs@np.r_[(T[bn]@np.r_[mid, 1])[:3], 1])[:3]
                 RP.setdefault(r, (p.get('prop'), p.get('propF')))   # コマごとの道具（コマで出たり消えたりする道具もある：小石）
                 for si, (key, k) in enumerate((('prop', 'N'), ('propF', 'F'))):
                     pn = p.get(key)
@@ -103,7 +113,7 @@ def main():
                     pts, _ = FM.props(el, p, FACE); (U, _), _ = PR.prop(p['prop']); W = (np.c_[U, np.ones(len(U))]@(np.diag([100, 100, 100, 1])@np.linalg.inv(A@Rs)@PP[r, 0]).T)[:, :3]
                     assert np.abs(W-pts[0][0]).max() < 1e-3, (nm, np.abs(W-pts[0][0]).max())
                 r += 1
-        allK[el] = K; allP[el] = PP; print(el, 'ok', flush=True)
+        allK[el] = K; allP[el] = PP; HM[el] = H_; AF[el] = (A, dict(S)); print(el, 'ok', flush=True)
     # 同じ動きしかしない骨を1つの列に（どの属性・どのコマでも同じ）
     nb = len(SD['els'][ELS[0]]['bones']); assert all(SD['els'][el]['bones'] == SD['els'][ELS[0]]['bones'] for el in ELS)
     rep = []; b2c = []
@@ -138,9 +148,38 @@ def main():
         pad = (-off) % 4; bufs.append(b'\0'*pad); off += pad; o = off; bufs.append(a.tobytes()); off += a.nbytes; return o
     for pn in sorted(used):
         V, N, C, Fa = prop_mesh(pn); IA = Fa.astype(np.uint16 if len(V) < 65536 else np.uint32).ravel()
-        meta['props'][pn] = {'position': [put(V.astype(np.float32)), V.size], 'normal': [put(np.round(N*127).astype(np.int8)), N.size],
+        meta['props'][pn] = {'tip': [round(float(x), 3) for x in PR.prop(pn)[1].get('tip', [0, 0, 0])], 'position': [put(V.astype(np.float32)), V.size], 'normal': [put(np.round(N*127).astype(np.int8)), N.size],
                              'color': [put(C.astype(np.uint8)), C.size], 'index': [put(IA), IA.size, IA.dtype.name]}
         print(pn, len(Fa), 'tris', flush=True)
+    # 風のはね：たたんだ形（fbx_motion.triangles と同じ式）の、休みの形からのずれ。形の点（sp-*.bin の aWG の点）ごとに、いちばん近い Blender の点のずれ（three の向き）
+    from scipy.spatial import cKDTree
+    sp = spbin(); SDb = SD['els']; meta['wing'] = {}; meta['wf'] = [round(float(x), 3) for x in WF]
+    assert WFA <= {0, 0.0, 1.1}, WFA
+    for el in ELS:
+        A, S = AF[el]; names = [o for o in S['restV'] if o.lower().startswith('hane')]
+        if not names: continue
+        Pb = SDb[el]['body']; pos = np.frombuffer(sp, np.float32, Pb['position']['n'], Pb['position']['o']).reshape(-1, 3); wg = np.frombuffer(sp, np.uint8, Pb['aWG']['n'], Pb['aWG']['o']) > 0
+        R0 = np.concatenate([S['restV'][n] for n in names]); zr = None; Q = []
+        for n in names:
+            V0 = S['restV'][n]; zr = float(np.median(V0[np.abs(V0[:, 0]) < 10, 2])); dx = V0[:, 0]; dz = V0[:, 2]-zr
+            r_ = np.hypot(dx, dz); th = np.maximum(np.arctan2(dz, np.abs(dx))-1.1, -1.35); Qn = V0.copy(); Qn[:, 0] = np.sign(dx)*r_*np.cos(th); Qn[:, 2] = zr+r_*np.sin(th); Q.append(Qn)
+        Q = np.concatenate(Q); L = A[:3, :3]*0.01; R3 = (A@np.c_[R0*0.01, np.ones(len(R0))].T).T[:, :3]
+        D3 = (Q-R0)@L.T; d, k = cKDTree(R3).query(pos[wg]); assert d.max() < 1e-3, ('hane', el, d.max())
+        W = np.zeros_like(pos); W[wg] = D3[k]; meta['wing'][el] = [put(W.astype(np.float32)), W.size]; print(el, 'wing', int(wg.sum()), 'pts', flush=True)
+    # 表情の目・まつげ・ほっぺ：チップを属性ごとの色にして、1まいに（どのチップも、おなじ「場所の枠」にそろえる：u・v のドットから枠の中の点がきまる）
+    XL = FB.XL; ch = {(el, l): FB.xchip(FB.xkey(l), el) for el in ELS for l in XL}
+    ax0 = min(c[1] for c in ch.values()); ay0 = min(c[2] for c in ch.values()); cw = max(c[1]+c[0].shape[1] for c in ch.values())-ax0; chh = max(c[2]+c[0].shape[0] for c in ch.values())-ay0
+    atlas = np.zeros((chh*len(ELS), cw*len(XL), 4), np.uint8)
+    for ei, el in enumerate(ELS):
+        for li, l in enumerate(XL):
+            a, ax, ay = ch[(el, l)]; atlas[ei*chh+ay-ay0:ei*chh+ay-ay0+a.shape[0], li*cw+ax-ax0:li*cw+ax-ax0+a.shape[1]] = a
+    aff = {}
+    for el in ELS:
+        A, S = AF[el]; M = np.linalg.inv(A); Lm = M[:3, :3]/0.01; tm = M[:3, 3]/0.01   # three → Blender（ドット）
+        F4 = S['feat']; Lf, Rf = F4[0], F4[1]; mx, mz = (Lf[0]+Rf[0])/2, (Lf[2]+Rf[2])/2; sc_ = 19.0/max(1e-6, abs(Rf[0]-Lf[0])); yc = S['HV'][:, 1].mean()
+        aff[el] = {'u': [*(sc_*Lm[0]).tolist(), sc_*(tm[0]-mx)], 'v': [*(-sc_*Lm[2]).tolist(), -40.5-sc_*(tm[2]-mz)], 'f': [*Lm[1].tolist(), float(yc-tm[1])]}   # u = u[:3]·P+u[3]（FM.face_fit）・v・前の面は f[:3]·P < f[3]
+    hq = np.stack([HM[el] for el in ELS]); assert np.abs(hq).max()*TQ < 32767; meta['hm'] = [put(np.round(hq*TQ).astype(np.int16)), hq.size]   # 手のまん中（属性・コマ・手前/奥・xyz。Int16 ×tq）
+    meta['face'] = {'xl': XL, 'cw': int(cw), 'ch': int(chh), 'ax0': int(ax0), 'ay0': int(ay0), 'tex': [put(atlas.reshape(-1)), atlas.size], 'aff': aff}
     PL = sorted(used); meta['plist'] = PL; meta['rp'] = [[PL.index(a) if a else -1 for a in RP[r]] for r in range(rows)]   # コマごとの道具（手前の手・奥の手。plist の番号、なければ −1）
     raw = b''.join(bufs); h = hashlib.sha1(raw).hexdigest()[:10]; d = os.path.join(ROOT, 'assets', '3d')
     for f in os.listdir(d):

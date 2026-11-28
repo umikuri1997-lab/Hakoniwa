@@ -9,11 +9,12 @@ import {HSTEP,PITCH,YAW,FOV,ISOPT,MAXPR,SKY,GROUND,FOG,HEMI,SUN,SUNCOL,HEMISKY,S
 import {U,NOISE} from './mats.js';
 import {Terrain,K} from './terrain.js';
 import {Spirits} from './spirits.js';
+import {Fx} from './fx.js';
 import {Sprites,PAGEW} from './sprites.js';
 import {TEX} from './files.js';
 
 const CAMDIR=new THREE.Vector3(Math.sin(YAW)*Math.cos(PITCH),Math.sin(PITCH),Math.cos(YAW)*Math.cos(PITCH));
-let renderer,scene,cam,sun,terrain,spirits,sprites,cv3,PR=1,VW=1,VH=1,zoom=1;
+let renderer,scene,cam,sun,terrain,spirits,sprites,fx,cv3,PR=1,VW=1,VH=1,zoom=1;
 const target=new THREE.Vector3(),SUNV=new THREE.Vector3(...SUNDIR).normalize();
 const SUNAZ=(()=>{const l=Math.hypot(SUNDIR[0],SUNDIR[2]);return [SUNDIR[0]/l,SUNDIR[2]/l]})();   /* 日の向き（よこ）：いつも左上から。高さだけ時刻でかえる（light） */
 let rtMain=null,rtA=null,rtB=null,W0=0,H0=0,shadowAt=null,drapeTex=null,drapeCv=null;
@@ -73,7 +74,7 @@ async function init(){
   makePost();sky=buildSky();
   const [grass,dirt,cliff,cloth]=await Promise.all([loadTex(TEX.grass,true),loadTex(TEX.dirt,true),loadTex(TEX.cliff,true),loadTex(TEX.cloth,false)]);
   U.mat.value=[cloth];
-  terrain=new Terrain(scene,[grass,dirt,cliff]);spirits=new Spirits(scene);await spirits.load(cloth);sprites=new Sprites(scene);
+  terrain=new Terrain(scene,[grass,dirt,cliff]);spirits=new Spirits(scene);await spirits.load(cloth);fx=new Fx(scene,()=>new THREE.Vector3(1,0,0).applyQuaternion(cam.quaternion));sprites=new Sprites(scene);
   drapeCv=document.createElement('canvas');drapeCv.width=drapeCv.height=4;drapeTex=new THREE.CanvasTexture(drapeCv);drapeTex.colorSpace=THREE.NoColorSpace;drapeTex.magFilter=THREE.NearestFilter;drapeTex.minFilter=THREE.LinearFilter;drapeTex.generateMipmaps=false;
   terrain.drape={tex:drapeTex,r:new THREE.Vector4(0,0,1,1),on:{value:0}};
 }
@@ -127,5 +128,5 @@ function light(o){const v=(u,a,i=0)=>u.value.set(a[i]/255,a[i+1]/255,a[i+2]/255)
 function show(on){if(cv3)cv3.style.display=on?'block':'none'}
 const ready=init().then(()=>{window.R3D.ok=true},e=>{window.R3D.err=String(e&&e.stack||e);console.error(e)});
 window.R3D={ready,K,HSTEP,ISOPT,PAGEW,view,project,plane,pick,setWorld,dirty,drape,render,show,light,
-  spirits:L=>spirits.set(L),sprites:(Q,r)=>sprites.set(Q,r),raster:()=>sprites.raster,groundH:(x,z)=>terrain.M?terrain.groundH(x,z):0,
-  camRight:()=>new THREE.Vector3(1,0,0).applyQuaternion(cam.quaternion),info:()=>renderer.info};
+  spirits:L=>{spirits.set(L);fx&&fx.set(L)},sprites:(Q,r)=>sprites.set(Q,r),raster:()=>sprites.raster,groundH:(x,z)=>terrain.M?terrain.groundH(x,z):0,
+  ray:(x,y,z)=>V3.set(x,y,z).sub(cam.position).normalize().clone(),camRight:()=>new THREE.Vector3(1,0,0).applyQuaternion(cam.quaternion),info:()=>renderer.info};

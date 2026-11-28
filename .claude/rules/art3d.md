@@ -95,3 +95,4 @@ paths:
 - 動きのデータ（`spirit-motions*.js`）の目の行 `e` は、ゲームが描く向きだけ書く（`build.py` の `EYEROWS`・`EYEROWS_ISO`。正面は0、クォータービューは0と2）。ほかの向きを描くようにするときは、そこに足して作りなおす（足さないと、その向きで落ちる）。
 - Blender は `pip install bpy` で入る（`import bpy`。5.3）。植物のスキルの見なおしは `python3 .claude/skills/realistic-plant-3d/scripts/render_review_blender.py -- <1つの物の.glb> <出すフォルダ>`（クレイと材質を8つの向き。1株で約25秒）。
 - 植物を3Dで作る前に、かならず本物の写真を見て、構造（株の形・葉のつき方・花のつき方・花の形と向き・色）を書き出してから作る。写真が見られないときは、つなぎ先を申請して見る（持ち主がきめた）。
+- 3Dのゲーム（`js/3d/`）のせいれい：表情の目・ほっぺ・まつげは、顔の面に2Dと同じ式（`face_fit`）でチップをはる（3Dの目の形は作らない）。はねをたたむ形・手のまん中・道具の先は、`bake-poses.py` が焼く（モデル・motions.py・props.py をかえたら、`bake-spirits.cjs` と両方）。`bake-poses.py` で `FM.scene` が返す辞書は、属性をかえると中身がかわるので、あとで使う分は `dict(S)` でうつしておく。
