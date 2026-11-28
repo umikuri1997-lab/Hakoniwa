@@ -6,6 +6,7 @@ import {C3,U,GRAD,NOISE,BUMP_FS,PXSHADE_FS,AIR_FS,projVS,PROJ_VS} from './mats.j
 
 export const K={BARE:0,GRASS:1,PATH:2,FLOOR:3,WATER:4,FORD:5};   // マスのしゅるい（ゲームからわたす）
 const MASKR=8,SUB=4,CH=16;
+const G3FT=64,G3FN=32;   /* 道・床の絵のページ：1マスのドット・1行のマスの数（draw-3d.js と同じ） */
 const cpuNoise=(()=>{const N=64,v=new Float32Array(N*N);let sd=91;for(let i=0;i<N*N;i++){sd=(sd*16807)%2147483647;v[i]=sd/2147483647}
   const at=(i,j)=>v[((j%N+N)%N)*N+((i%N+N)%N)];return (x,y)=>{const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);
     return (at(i,j)*(1-sx)+at(i+1,j)*sx)*(1-sy)+(at(i,j+1)*(1-sx)+at(i+1,j+1)*sx)*sy}})();
@@ -16,8 +17,11 @@ export class Terrain{
   set(m){const first=!this.M||this.M.W!==m.W||this.M.stage!==m.stage;this.M=m;const MN=m.W+2*BORDER;this.MN=MN;
     if(first){this.dispose();this.mask=new THREE.DataTexture(new Uint8Array(MN*MASKR*MN*MASKR*4),MN*MASKR,MN*MASKR);this.mask.magFilter=this.mask.minFilter=THREE.LinearFilter;
       this.ftex=new THREE.DataTexture(new Uint8Array(m.W*m.H*4),m.W,m.H);this.ftex.magFilter=this.ftex.minFilter=THREE.NearestFilter;
+      this.stex=new THREE.DataTexture(new Uint8Array(m.W*m.H*4),m.W,m.H);this.stex.magFilter=this.stex.minFilter=THREE.NearestFilter;
       this.gmat=this.groundMat(m.stage);this.buildWater(m.stage)}
+    if(m.fart){if(!this.atex||this.atex.image!==m.fart){if(this.atex)this.atex.dispose();const t=new THREE.CanvasTexture(m.fart);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.colorSpace=THREE.NoColorSpace;this.atex=t}else this.atex.needsUpdate=true;this.U.uFA.value=this.atex}
     this.update(0,0,m.W-1,m.H-1)}
+  artDirty(){if(this.atex)this.atex.needsUpdate=true}
   dispose(){for(const c of this.chunks.values()){this.scene.remove(c);c.geometry.dispose()}this.chunks.clear();if(this.water){this.scene.remove(this.water);this.water.geometry.dispose()}}
   inMap(x,z){return x>=0&&z>=0&&x<this.M.W&&z<this.M.H}
   kindAt(x,z){return this.inMap(x,z)?this.M.kind[z*this.M.W+x]:K.BARE}
@@ -43,8 +47,9 @@ export class Terrain{
       d[o]=Math.round(255*this.pmAt(px,pz));d[o+1]=Math.round(255*this.pmAt(px,pz,1));d[o+2]=!this.inMap(x,z)||k===K.BARE||k===K.FORD?255:0;d[o+3]=k===K.FORD?255:0}
     this.mask.needsUpdate=true;
     const f=this.ftex.image.data;for(let z=Math.max(0,z0-1);z<=Math.min(M.H-1,z1+1);z++)for(let x=Math.max(0,x0-1);x<=Math.min(M.W-1,x1+1);x++){const j=z*M.W+x,k=M.kind[j],o=j*4;
-      f[o]=M.fcol[j*3];f[o+1]=M.fcol[j*3+1];f[o+2]=M.fcol[j*3+2];f[o+3]=k===K.FLOOR?255:k===K.PATH?128:0}
-    this.ftex.needsUpdate=true;
+      f[o]=M.fcol[j*3];f[o+1]=M.fcol[j*3+1];f[o+2]=M.fcol[j*3+2];f[o+3]=k===K.FLOOR?255:k===K.PATH?128:0;
+      const sl=M.fslot?M.fslot[j]:-1,a=this.stex.image.data;a[o]=sl<0?0:sl&255;a[o+1]=sl<0?0:sl>>8;a[o+2]=sl<0?0:255;a[o+3]=255}
+    this.ftex.needsUpdate=true;this.stex.needsUpdate=true;
     for(let cz=Math.floor((z0-2)/CH);cz<=Math.floor((z1+2)/CH);cz++)for(let cx=Math.floor((x0-2)/CH);cx<=Math.floor((x1+2)/CH);cx++){
       if(cx<-1||cz<-1||cx*CH>=M.W+BORDER||cz*CH>=M.H+BORDER)continue;this.buildChunk(cx,cz)}}
   buildChunk(cx,cz){const key=cx+','+cz,old=this.chunks.get(key);if(old){this.scene.remove(old);old.geometry.dispose()}
@@ -68,9 +73,10 @@ export class Terrain{
   groundMat(stage){
     const C=STAGECOL[stage]||STAGECOL[0],MN=this.MN,MW=this.M.W,MH=this.M.H;
     const m=new THREE.MeshToonMaterial({gradientMap:GRAD}),D=this.drape;
-    m.onBeforeCompile=sh=>{projVS(sh);Object.assign(sh.uniforms,{uMask:{value:this.mask},uFloor:{value:this.ftex},uG:{value:this.gtex},uSunV:U.sunV,uDrape:{get value(){return D.tex}},uDR:{value:D.r},uDOn:D.on});
+    this.U={uFA:{value:this.atex||null}};
+    m.onBeforeCompile=sh=>{projVS(sh);Object.assign(sh.uniforms,{uFS:{value:this.stex},uFA:this.U.uFA,uMask:{value:this.mask},uFloor:{value:this.ftex},uG:{value:this.gtex},uSunV:U.sunV,uDrape:{get value(){return D.tex}},uDR:{value:D.r},uDOn:D.on});
       sh.vertexShader='attribute float aTop;varying vec3 vW,vWP;varying float vTop,vNy;\n'+sh.vertexShader.replace('void main() {','void main() {\nvW=(modelMatrix*vec4(position,1.)).xyz;vTop=aTop;vNy=normal.y;').replace(PROJ_VS,PROJ_VS+'\nvWP=cwp0;');
-      sh.fragmentShader='uniform sampler2D uMask,uFloor,uG[3],uDrape;uniform vec4 uDR;uniform float uDOn;uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
+      sh.fragmentShader='uniform sampler2D uFS,uFA,uMask,uFloor,uG[3],uDrape;uniform vec4 uDR;uniform float uDOn;uniform float uTime;uniform vec3 uSunV;varying vec3 vW,vWP;varying float vTop,vNy;\n'+NOISE+sh.fragmentShader.replace('void main() {','#include <shadowmask_pars_fragment>\nvoid main() {').replace('#include <normal_fragment_maps>','vec3 tnGeoN=normal;\n#include <normal_fragment_maps>').replace('#include <opaque_fragment>',BUMP_FS+PXSHADE_FS+AIR_FS+'\n#include <opaque_fragment>').replace('#include <color_fragment>',`#include <color_fragment>
   vec3 tnBump=vec3(0.);vec2 tnG=vec2(0.),tnUV=vW.xz;
   {vec2 p=vW.xz;
    if(vNy>.5){float e=.1,h0=fbm(p*${GBUMP.f}),hx=fbm((p+vec2(e,0.))*${GBUMP.f}),hz=fbm((p+vec2(0.,e))*${GBUMP.f});
@@ -94,6 +100,9 @@ export class Terrain{
    g*=1.-.22*smoothstep(.05,.42,pr)*(1.-pm);
    vec3 c=mix(g,pth,pm);
    if(fl.a>.7){vec2 q=fract(p);float pl=fract(q.y*4.+step(.5,fract(q.x*.5+floor(q.y*4.)*.5))*.0);float seam=smoothstep(.0,.06,pl)*smoothstep(1.,.94,pl);c=fl.rgb*(.86+.14*seam)*(.96+.06*vn(p*vec2(2.,12.)));}   /* 家の床：板のすじ（仮） */
+   if(tile.x>=0.&&tile.y>=0.&&tile.x<${MW}.&&tile.y<${MH}.&&vNy>.5){vec4 fs=texture2D(uFS,(tile+.5)/vec2(${MW}.,${MH}.));   /* 道・床の絵（2Dの描き方で描いたマスの絵。draw-3d.js の G3FA） */
+     if(fs.b>.5){float sl=floor(fs.r*255.+.5)+floor(fs.g*255.+.5)*256.;vec2 q=clamp(fract(p),.5/${G3FT}.,1.-.5/${G3FT}.),cell=vec2(mod(sl,${G3FN}.),floor(sl/${G3FN}.));
+       vec4 fa=texture2D(uFA,vec2((cell.x+q.x)/${G3FN}.,1.-(cell.y+q.y)/${G3FN}.));c=mix(c,fa.rgb,fa.a);}}
    if(mk4.a>.5)c=mix(c,${C3(WATER.shallow)},.35);   /* 浅瀬 */
    if(uDOn>.5&&vNy>.5){vec2 ip=vec2((p.x-p.y)*32.,(p.x+p.y)*24.-vTop/${HSTEP}*36.),du=vec2((ip.x-uDR.x)/uDR.z,1.-(ip.y-uDR.y)/uDR.w);   /* 地面にはる絵（ゲームの今の描き方で描いた、地面の上の物）：クォータービューの地面の点で */
      if(du.x>0.&&du.y>0.&&du.x<1.&&du.y<1.){vec4 dc=texture2D(uDrape,du);c=mix(c,dc.rgb,dc.a);}}

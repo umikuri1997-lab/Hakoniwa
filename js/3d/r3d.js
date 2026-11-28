@@ -98,7 +98,7 @@ function plane(sx,sy,y0=0){const {o,d}=rayAt(sx,sy);if(Math.abs(d.y)<1e-6)return
 function pick(sx,sy){const {o,d}=rayAt(sx,sy);return terrain.ray(o,d)}
 let world=null;
 function setWorld(m){world=m;terrain.set(m);renderer.shadowMap.needsUpdate=true}
-function dirty(x0,z0,x1,z1){if(!world)return;terrain.update(x0,z0,x1,z1);renderer.shadowMap.needsUpdate=true}
+function dirty(x0,z0,x1,z1,art){if(!world)return;if(art)terrain.artDirty();terrain.update(x0,z0,x1,z1);renderer.shadowMap.needsUpdate=true}
 /* 地面にはる絵：ゲームの点（クォータービューの地面の点）の四角 r=[x0,y0,w,h] に描いたキャンバス */
 function drape(c,r){const D=terrain.drape;if(!c){D.on.value=0;return}if(drapeTex.image!==c){drapeTex.dispose();drapeTex.image=c}drapeTex.needsUpdate=true;D.r.set(r[0],r[1],r[2],r[3]);D.on.value=1}
 function draw(to,sc,cm){renderer.setRenderTarget(to);renderer.render(sc,cm)}

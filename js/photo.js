@@ -50,7 +50,7 @@ function phSnap(now,F){if(!cv.width||!VW)return null;const C={x:cam.x,y:cam.y,z:
   const k=Math.min(1,PHMAX/Math.max(F.cw,F.ch)),w=Math.max(1,Math.round(F.cw*k)),h=Math.max(1,Math.round(F.ch*k)),o=document.createElement('canvas');o.width=w;o.height=h;
   const fresh=()=>{if(typeof HDC!=='undefined'&&HDC)HDC.n=99};/* HD-2D のにじみのもとを、そのコマで作りなおす */
   try{PHSNAP=1;mode='look';pending=null;selRect=null;MOVESRC=null;cam.z=F.z;cam.x=F.cx-VW/F.z/2;cam.y=F.cy-VH/F.z/2;fresh();render(now);
-    const x=o.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(cv,(VW-F.cw)/2*dpr,(VH-F.ch)/2*dpr,F.cw*dpr,F.ch*dpr,0,0,w,h)}
+    const x=o.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';{const c3=G3.on&&document.getElementById('cv3');if(c3&&c3.width){const r=c3.width/VW;x.drawImage(c3,(VW-F.cw)/2*r,(VH-F.ch)/2*r,F.cw*r,F.ch*r,0,0,w,h)}}/* 3D：3Dの絵（同じコマで描いたすぐあと）の上に、かさねるキャンバス */x.drawImage(cv,(VW-F.cw)/2*dpr,(VH-F.ch)/2*dpr,F.cw*dpr,F.ch*dpr,0,0,w,h)}
   catch(e){o.width=o.height=0;return null}
   finally{PHSNAP=0;mode=keep.mode;pending=keep.pending;selRect=keep.selRect;MOVESRC=keep.MOVESRC;cam.x=C.x;cam.y=C.y;cam.z=C.z;fresh();try{render(now)}catch(e){}}
   return new Promise(ok=>{const fin=b=>{o.width=o.height=0;ok(b)};try{o.toBlob(b=>fin(b),'image/jpeg',.9)}catch(e){fin(null)}})}
