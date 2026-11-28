@@ -220,6 +220,7 @@ function drawSpiritOL(c,el,x,y,s,f,o){const T=c.getTransform(),k=Math.hypot(T.a,
 function guestDraw(c,x,y,s,f,o){/* 食堂のお客さん（旅の外套、GPT の H-7）：正面・右・うしろの絵。左は右の反転。足もとが x,y */const k=o.back?'guest>2':(o.turn||0)>.5?'guest>1':'guest',ch=window.CHIPS&&CHIPS[k];if(!ch)return false;const im=chipImgs(ch,k)[0];if(!im.ok)return false;
   const q=s/.87,bob=o.walk?Math.round(Math.abs(Math.sin((o.t||0)*9))*2):0,fl=k==='guest>1'&&f<0;c.save();c.translate(x,y-bob);if(fl)c.scale(-1,1);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,ch.ax*q,ch.ay*q,ch.w*q,ch.h*q);c.imageSmoothingEnabled=sm;c.restore();return true}
 function drawSpirit(c,el,x,y,s,f,o){/* 描けたら true（絵がまだ読めていないときは false） */
+  if(G3.sp)return true;/* 3D：せいれいの体は3D（draw-3d.js の g3Spirit）。ここでは、ふきだし・持ち物などだけ */
   if(isoFaceOK(c)){if(o.front0)o.isoS=1;else{const q=isoFace(o.back,(o.turn||0)>.5,f<0?-1:1);o.back=q.back;o.turn=0;o.hturn=0;o.iso=1;f=q.f}}/* クォータービュー：前ななめ・うしろななめの2つの絵と、左右の反転（iso-face.js）。守り神と話している子（front0）だけは、真正面（持ち主がきめた） */
   if(o.guest&&guestDraw(c,x,y,s,f,o))return true;
   return drawSpiritOL(c,el,x,y,s,f,o)}

@@ -12,10 +12,11 @@ if(!m){console.error('index.html に読みこみの一覧 U がありません')
 const U=JSON.parse('['+m[1]+']').map(u=>u.split('?')[0]);
 // index.html の中の script（src のない物）も、同じ共通の場所を使うので、先につなぐ
 const parts=[];
-for(const s of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g))parts.push({f:'index.html',t:s[1]});
+for(const s of html.matchAll(/<script(?![^>]*\b(?:src=|type="importmap"))[^>]*>([\s\S]*?)<\/script>/g))parts.push({f:'index.html',t:s[1]});
 for(const u of U)parts.push({f:u,t:fs.readFileSync(path.join(root,u),'utf8')});
 // window.〇〇= で作る名前は、ほかのファイルからは、そのまま名前で使える
 const winG={};for(const p of parts)for(const w of p.t.matchAll(/\bwindow\.([A-Za-z_$][\w$]*)\s*=(?!=)/g))winG[w[1]]='writable';
+/* 3Dの部品（js/3d のモジュール）が window に置く物（window.R3D）も */for(const f of fs.readdirSync(path.join(root,'js','3d')).filter(f=>f.endsWith('.js')))for(const w of fs.readFileSync(path.join(root,'js','3d',f),'utf8').matchAll(/\bwindow\.([A-Za-z_$][\w$]*)\s*=(?!=)/g))winG[w[1]]='writable';
 let src='',map=[];/* map[i] = [ファイル, そのファイルの中のはじめの行] */
 for(const p of parts){const n=src.split('\n').length;map.push([p.f,n]);src+=p.t+'\n;\n'}
 const linter=new Linter({configType:'flat'});
