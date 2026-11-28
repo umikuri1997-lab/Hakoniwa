@@ -126,7 +126,10 @@ function g3WinLit(litH){const L=iqWinList(litH,false);if(!L.length)return;const 
   for(const w of L){const it={t:1,own:w.q,A:objFoot(w.q%W,(w.q/W)|0,1,1,w.q),draw:()=>{ctx.globalAlpha=w.a;try{iqChip(ctx,w.key,w.q,w.lv)}finally{ctx.globalAlpha=1}}};g3Cap(it,0)}
   g3Normal();for(let i=n0;i<G3X.q.length;i++){G3X.q[i].lit=1;G3X.q[i].ly=3}}/* 窓の絵より手前 */
 /* ---- 1コマのおわり：3Dを描く ---- */
-function g3End(now){if(!G3.on)return;g3Normal();{const v=dcNow(),n=G3X.night;R3D.light({sun:v.sun,amb:v.amb,sky:v.sky,el:v.el,dk:n?n.dk:0,dkc:n?n.dkc:[0,0,0],lm:n?G3LM.c:null,lw:n?G3LM.wc:null,lmr:n?n.lmr:null});G3X.night=null}/* 時間の色と夜（js/3d/r3d.js の light） */R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
+function g3Big(now){return now<HDBIG?Math.min(1,(HDBIG-now)/600):0}/* 見せ場のにじみ（hd2d.js の hdPost と同じ） */
+function g3Wx(){/* 天気（HD-2D のとき）：2Dと同じ色（hd2d.js の hdWx）を、こさぶん白からまぜて、3Dの光にかける */if(!HD2D)return null;const w=hdWx();if(!w)return null;
+  const k=typeof stormNow==='function'&&stormNow()?'storm':typeof snowNow==='function'&&snowNow()?'snow':'rain';return {k,mul:w[0].split(',').map(c=>255-(255-c)*w[1])}}
+function g3End(now){if(!G3.on)return;g3Normal();{const v=dcNow(),n=G3X.night;R3D.light({hd:HD2D,glow:HDGLOW,big:g3Big(now),wx:g3Wx(),sun:v.sun,amb:v.amb,sky:v.sky,el:v.el,dk:n?n.dk:0,dkc:n?n.dkc:[0,0,0],lm:n?G3LM.c:null,lw:n?G3LM.wc:null,lmr:n?n.lmr:null});G3X.night=null}/* 時間の色と夜（js/3d/r3d.js の light） */R3D.spirits(G3X.spl||[]);G3X.spl=[];R3D.sprites(G3X.q,G3X.used);if(navigator.webdriver&&!window.G3DRAW)return;/* 自動のテスト（GPUなしで1まい約1.2秒）では、3Dの絵は描かない。写真をとるときは window.G3DRAW=true */R3D.render(now)}
 /* ---- 地形のもと（マップがかわったら、かわった所だけ3Dで作りなおす） ---- */
 function g3World(){const first=G3X.S!==S;if(!first&&++G3X.sync%15)return;
   const n=W*H,hi=new Int8Array(n),kind=new Uint8Array(n),flat=new Uint8Array(n),fcol=new Uint8Array(n*3),fsig=new Int32Array(n),K=R3D.K,RM=typeof riftM==='function'?riftM():null;

@@ -1,10 +1,11 @@
 /* ゲームの3Dの描き方（three.js）。今のプログラム（ふつうの script）は window.R3D をよぶ。
    - カメラ：見るまん中（target、マス）と、拡大（z：見るまん中で、ゲームの1点が画面の何 px か）。遠近のあるせまい画角（試作と同じ）。
    - 地形（terrain.js）・せいれい（spirits.js）・立てたドット絵の板（sprites.js）・地面にはる絵（drape：ゲームの今の描き方で描いた、地面の上の物）。
-   - しあげ（試作と同じ）：奥行きのぼかし・すみのかげ・にじみ・光の筋・色。
+   - しあげ（試作と同じ）：奥行きのぼかし・すみのかげ・にじみ・光の筋・色・四すみ。設定の「HD-2D」が切りなら色だけ、「にじみ」が切りならにじみなし。見せ場（hdBig）はにじみを強く。
+   - 天気（HD-2D のとき）：日なた・かげ・空に2Dと同じ色をかけ、空をはい色に、霧を近く（look.js の WX3）。2Dの時間の光（soft-light）・空気の遠近・雨のもやは、3Dでは日なたの色と霧がするので、かけない。
    - 時間の色と夜（light）：日なた・かげ・空の色と日の高さ（daycolor.js の DAYC）・夜の暗さとあかりの地図（draw-3d.js の g3Night）。 */
 import * as THREE from 'three';
-import {HSTEP,PITCH,YAW,FOV,ISOPT,MAXPR,SKY,GROUND,FOG,HEMI,SUN,SUNCOL,HEMISKY,SUNDIR,DOF,SSAO,BLOOM,RAYS,GRADE} from './look.js';
+import {HSTEP,PITCH,YAW,FOV,ISOPT,MAXPR,SKY,GROUND,FOG,HEMI,SUN,SUNCOL,HEMISKY,SUNDIR,DOF,SSAO,BLOOM,RAYS,GRADE,WX3} from './look.js';
 import {U,NOISE} from './mats.js';
 import {Terrain,K} from './terrain.js';
 import {Spirits} from './spirits.js';
@@ -19,30 +20,30 @@ let rtMain=null,rtA=null,rtB=null,W0=0,H0=0,shadowAt=null,drapeTex=null,drapeCv=
 const quadGeo=new THREE.PlaneGeometry(2,2),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
 const pass=(fs,uniforms)=>{const m=new THREE.ShaderMaterial({uniforms,vertexShader:VS,fragmentShader:fs,depthTest:false,depthWrite:false});const s=new THREE.Scene();s.add(new THREE.Mesh(quadGeo,m));return {m,s}};
-let blur,fin;
+let blur,fin,fogNow=FOG,hdOn=true;
 function makePost(){
   blur=pass(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;
     vec4 tnOk(vec4 c){return any(isnan(c))||any(isinf(c))?vec4(0.):min(c,vec4(64.));}
     void main(){vec4 c=tnOk(texture2D(t,vUv))*.227;c+=(tnOk(texture2D(t,vUv+d*1.385))+tnOk(texture2D(t,vUv-d*1.385)))*.316;c+=(tnOk(texture2D(t,vUv+d*3.23))+tnOk(texture2D(t,vUv-d*3.23)))*.07;gl_FragColor=c;}`,{t:{value:null},d:{value:new THREE.Vector2()}});
   fin=pass(`uniform sampler2D t,b;uniform float uTime;uniform vec2 res;varying vec2 vUv;${NOISE}
-    uniform sampler2D dz;uniform float cn,cf,focus,pscale,uRay;
+    uniform sampler2D dz;uniform float cn,cf,focus,pscale,uRay,uHd,uBloom,uVig;
     float lz(vec2 u){float z=texture2D(dz,u).x;return cn*cf/(cf-z*(cf-cn));}
     void main(){vec2 U=vUv;
       vec3 c=texture2D(t,U).rgb,bl=texture2D(b,U).rgb;if(any(isnan(c))||any(isinf(c)))c=bl;if(any(isnan(bl))||any(isinf(bl)))bl=vec3(0.);
       float zd=texture2D(dz,U).x,zv=cn*cf/(cf-zd*(cf-cn)),dd=(zv-focus)/focus;
-      float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};
-      if(zd<1.){float ry=${SSAO.r}*pscale/zv,rx=ry*res.y/res.x,a0=6.2832*fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715)))),ao=0.;
+      float tl=clamp(dd<0.?-dd/${DOF.near}:dd/${DOF.far},0.,1.)*${DOF.amt.toFixed(2)};if(zd>=1.)tl=${DOF.amt.toFixed(2)};tl*=uHd;
+      if(zd<1.&&uHd>.5){float ry=${SSAO.r}*pscale/zv,rx=ry*res.y/res.x,a0=6.2832*fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715)))),ao=0.;
         for(int i=0;i<6;i++){float a=a0+float(i)*.5236,rr=.35+.65*fract(float(i)*.618+a0);vec2 o=vec2(cos(a)*rx,sin(a)*ry)*rr;
           float z1=lz(U+o),z2=lz(U-o),d=zv-.5*(z1+z2);ao+=clamp((d-${SSAO.bias})/${SSAO.r},0.,1.)*step(abs(zv-z1),${SSAO.max})*step(abs(zv-z2),${SSAO.max});}
         c*=mix(vec3(1.),vec3(.62,.66,.82),clamp(ao/6.*${SSAO.k},0.,1.));}
       c=mix(c,bl,tl);
-      c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)}*vec3(${BLOOM.col.join(',')});
+      c+=max(bl-${BLOOM.th.toFixed(2)},0.)*${BLOOM.k.toFixed(2)}*uBloom*vec3(${BLOOM.col.join(',')});
       {vec2 dir=normalize(vec2(.55,-1.));float u=dot(U-vec2(0.,1.),vec2(-dir.y,dir.x));float along=dot(U-vec2(0.,1.),dir);
        float ray=pow(vn(vec2(u*9.+uTime*.05,0.)),3.)*smoothstep(1.3,0.,along)*smoothstep(0.,.15,along);c+=vec3(${RAYS.col.join(',')})*${RAYS.k}*ray*uRay;}
       c*=vec3(${GRADE.warm.join(',')});float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),max(c,0.),${GRADE.sat.toFixed(2)});
       c*=${GRADE.exp.toFixed(2)};c=clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.);
-      vec2 q=U-.5;c*=1.-${GRADE.vig.toFixed(2)}*smoothstep(.35,.75,length(q));
-      gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime:U.time,res:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40},pscale:{value:1},uRay:{value:1}});
+      vec2 q=U-.5;c*=1.-uVig*smoothstep(.35,.75,length(q));
+      gl_FragColor=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);}`,{t:{value:null},b:{value:null},uTime:U.time,res:{value:new THREE.Vector2(1,1)},dz:{value:null},cn:{value:1},cf:{value:200},focus:{value:40},pscale:{value:1},uRay:{value:1},uHd:{value:1},uBloom:{value:1},uVig:{value:GRADE.vig}});
 }
 function buildSky(){
   const SKYH=[-.62,-.3],g=new THREE.SphereGeometry(150,32,16);
@@ -85,7 +86,7 @@ function size(w,h){VW=w;VH=h;renderer.setSize(w,h,false);cv3.style.width=w+'px';
 const dist=()=>VH/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2)*ISOPT*zoom);
 function placeCam(){const d=dist();cam.fov=FOV;cam.position.copy(target).addScaledVector(CAMDIR,d);cam.lookAt(target);cam.near=Math.max(.5,d-60);cam.far=d+90;cam.updateProjectionMatrix();cam.updateMatrixWorld();
   Object.assign(fin.m.uniforms,{cn:{value:cam.near},cf:{value:cam.far},focus:{value:d},pscale:{value:1/(2*Math.tan(THREE.MathUtils.degToRad(FOV)/2))}});
-  scene.fog.near=d+FOG[0];scene.fog.far=d+FOG[1];sky.position.copy(cam.position);
+  scene.fog.near=d+fogNow[0];scene.fog.far=d+fogNow[1];sky.position.copy(cam.position);
   if(!shadowAt||Math.hypot(shadowAt.x-target.x,shadowAt.z-target.z)>6){shadowAt=target.clone();sun.position.copy(target).addScaledVector(SUNV,60);sun.target.position.copy(target);sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
 /* 見るまん中（マス）と拡大 */
 function view(x,z,zm,w,h){if(w!==VW||h!==VH)size(w,h);target.set(x,0,z);zoom=zm;placeCam()}
@@ -107,16 +108,20 @@ function draw(to,sc,cm){renderer.setRenderTarget(to);renderer.render(sc,cm)}
 function render(now){U.time.value=now/1000;
   U.sunV.value.copy(SUNV).transformDirection(cam.matrixWorldInverse);U.viewInv.value.setFromMatrix4(cam.matrixWorld);
   draw(rtMain,scene,cam);
-  blur.m.uniforms.t.value=rtMain.texture;blur.m.uniforms.d.value.set(1/rtA.width,0);draw(rtA,blur.s,postCam);
-  blur.m.uniforms.t.value=rtA.texture;blur.m.uniforms.d.value.set(0,1/rtA.height);draw(rtB,blur.s,postCam);
+  if(hdOn){blur.m.uniforms.t.value=rtMain.texture;blur.m.uniforms.d.value.set(1/rtA.width,0);draw(rtA,blur.s,postCam);
+  blur.m.uniforms.t.value=rtA.texture;blur.m.uniforms.d.value.set(0,1/rtA.height);draw(rtB,blur.s,postCam)}/* HD-2D が切りなら、ぼかし（奥行き・にじみのもと）は作らない */
   draw(null,fin.s,postCam)}
-/* 時間の色と夜。o：{sun,amb（[赤,緑,青] 0〜255）, sky（[地平線3つ, 上3つ]）, el（日の高さ 度）, dk（夜の暗さのこさ）, dkc（暗さの色 0〜255）, lm・lw（あかりの地図のキャンバス：のこる暗さ・あたたかい光）, lmr（地図の場所 [x0,z0,はば,おく] マス）} */
+/* 時間の色と夜と天気。o：{hd・glow（設定の HD-2D・にじみ）, big（見せ場 0〜1）, wx（天気 {k:'rain'|'storm'|'snow', mul:[赤,緑,青] かける色 0〜255}）, sun,amb（[赤,緑,青] 0〜255）, sky（[地平線3つ, 上3つ]）, el（日の高さ 度）, dk（夜の暗さのこさ）, dkc（暗さの色 0〜255）, lm・lw（あかりの地図のキャンバス：のこる暗さ・あたたかい光）, lmr（地図の場所 [x0,z0,はば,おく] マス）} */
 let lmTex=null,lwTex=null,elNow=null;
 const canTex=c=>{const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.colorSpace=THREE.NoColorSpace;return t};
-function light(o){const v=(u,a,i=0)=>u.value.set(a[i]/255,a[i+1]/255,a[i+2]/255);v(U.sunC,o.sun);v(U.ambC,o.amb);v(U.skyL,o.sky);v(U.skyT,o.sky,3);
-  scene.background.setRGB(o.sky[0]/255,o.sky[1]/255,o.sky[2]/255,THREE.SRGBColorSpace);scene.fog.color.copy(scene.background);
+function light(o){const v=(u,a,i=0)=>u.value.set(a[i]/255,a[i+1]/255,a[i+2]/255);
+  const W=o.wx&&WX3[o.wx.k],m=W?o.wx.mul:[255,255,255],f=i=>m[i%3]/255;let sunc=o.sun,amb=o.amb,sk=o.sky;
+  if(W){amb=amb.map((c,i)=>c*f(i));sunc=sunc.map((c,i)=>(c+(o.amb[i]-c)*W.flat)*f(i));sk=sk.map((c,i)=>{const b=i<3?0:3,l=.299*sk[b]+.587*sk[b+1]+.114*sk[b+2];return (c+(l-c)*W.gray)*f(i)})}/* 天気：2Dと同じ色をかけ、日なたをかげへよせ、空をはい色に */
+  v(U.sunC,sunc);v(U.ambC,amb);v(U.skyL,sk);v(U.skyT,sk,3);fogNow=W?W.fog:FOG;
+  hdOn=o.hd!==false;const dk=o.dk||0;fin.m.uniforms.uHd.value=hdOn?1:0;fin.m.uniforms.uBloom.value=hdOn&&o.glow!==false?1+.35*(o.big||0):0;fin.m.uniforms.uVig.value=hdOn?GRADE.vig*(1-Math.min(1,dk/.5)*.7):0;/* 四すみ：夜は暗さに合わせてうすく（2Dと同じ） */
+  scene.background.setRGB(sk[0]/255,sk[1]/255,sk[2]/255,THREE.SRGBColorSpace);scene.fog.color.copy(scene.background);
   if(elNow===null||Math.abs(o.el-elNow)>.25){elNow=o.el;const e=THREE.MathUtils.degToRad(Math.max(3,o.el)),c=Math.cos(e);SUNV.set(SUNAZ[0]*c,Math.sin(e),SUNAZ[1]*c);U.sunW.value.copy(SUNV);sun.position.copy(sun.target.position).addScaledVector(SUNV,60);renderer.shadowMap.needsUpdate=true}/* 高さがかわったら、かげを作りなおす */
-  U.dk.value=o.dk||0;fin.m.uniforms.uRay.value=1-Math.min(1,(o.dk||0)*1.5);
+  U.dk.value=o.dk||0;fin.m.uniforms.uRay.value=hdOn&&!W?1-Math.min(1,dk*1.5):0;/* 光の筋：夜・天気の日はなし */
   if(o.dk>0&&o.lm){if(!lmTex||lmTex.image!==o.lm){if(lmTex)lmTex.dispose();lmTex=canTex(o.lm)}if(!lwTex||lwTex.image!==o.lw){if(lwTex)lwTex.dispose();lwTex=canTex(o.lw)}
     lmTex.needsUpdate=lwTex.needsUpdate=true;U.lm.value=lmTex;U.lw.value=lwTex;U.lmr.value.set(...o.lmr);v(U.dkC,o.dkc)}else U.dk.value=0}
 function show(on){if(cv3)cv3.style.display=on?'block':'none'}

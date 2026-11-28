@@ -32,6 +32,7 @@ export const DOF={near:.5,far:.8,amt:.4};
 export const SSAO={r:.6,k:1.7,bias:.012,max:1.6};
 export const BLOOM={th:.95,k:.12,col:[1,.86,.62]};
 export const RAYS={k:.08,col:[1,.9,.66]};
+export const WX3={rain:{fog:[6,30],gray:.6,flat:.5},storm:{fog:[2,22],gray:.75,flat:.7},snow:{fog:[8,34],gray:.5,flat:.35}};   // 天気（HD-2D のとき）：霧の近さ・遠さ（見るまん中からマス）・空をはい色にするこさ・日なたをかげの色へよせるこさ（くもりで、かげがうすくなる）。色のかけ算は2Dと同じ hdWx
 export const GRADE={warm:[1.0,1.0,1.0],sat:1.0,vig:.15,exp:.9};
 // 地面の色（sRGB）。ステージごと（WD の番号：0 草原・1 火山・2 風・3 土・4 水・5 闇）。草原は試作と同じ
 const KUSAC={grassA:'#74ad52',grassB:'#5c9848',grassC:'#8dbd5e',dry:'#c4a97c',path:'#d9b98a',pathB:'#c7a173',cliff:'#b98d63',water:'#5cc3e6',foam:'#eafaff'};
